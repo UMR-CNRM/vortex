@@ -1,0 +1,2786 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cycle: al42_arome-op2.40
+        geometry: franmgsp
+        model: arome
+        namespace: '[suite].inline.fr'
+        vapp: arome
+        vconf: 3dvarfr
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r00
+    - default: &id002 !test_names.core.TestParameters
+        cycle: al42_arome-op2.40
+        geometry: franmgsp
+        model: arome
+        namespace: '[suite].multi.fr'
+        vapp: arome
+        vconf: 3dvarfr
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r0
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r1
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r3
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r6
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r9
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: null
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: atm
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/analyse/ICMSHAROMINIT.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: surf
+      kind: analysis
+      model: arome
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/analyse_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/INIT_SURF.fa.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/analyse.sfx
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_01.00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_01.43
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_11.00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_11.43
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_16.00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_16.43
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/ICMSHSURF+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: null
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHAROM+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: atm
+      kind: historic
+      model: arome
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHAROM+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/ICMSHSURF+0043

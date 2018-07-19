@@ -1,0 +1,57 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   geometry: hycomatl2
+            cutoff:
+                - assim
+                - production
+            model: hycom
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: hycom
+            vconf:
+                - atl@fcarp 
+                - atl@anarp
+                - atl@fcoin
+            namespace:
+                - '[suite].multi.fr'
+                - '[suite].inline.fr'
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt: grib
+            suite: oper
+            filling: surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+    # Historic
+    -   commons:
+            kind: historic
+            term:
+                - 0
+                - 6
+                - 24
+                - 43
+            nativefmt: grib
+            suite: oper
+            filling: surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'

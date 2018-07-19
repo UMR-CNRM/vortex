@@ -221,7 +221,7 @@ class ScatCMod5(GenvModelResource):
 
 class BcorIRSea(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -246,7 +246,7 @@ class BcorIRSea(GenvModelResource):
 
 class RmtbError(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -271,7 +271,7 @@ class RmtbError(GenvModelResource):
 
 class ChanSpectral(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -326,7 +326,7 @@ class Correl(GenvModelResource):
 
 class CstLim(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -354,7 +354,7 @@ class CstLim(GenvModelResource):
 
 class RszCoef(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -377,7 +377,7 @@ class RszCoef(GenvModelResource):
 
 class RtCoefAirs(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -399,7 +399,7 @@ class RtCoefAirs(GenvModelResource):
 
 class RtCoefAtovs(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -421,7 +421,7 @@ class RtCoefAtovs(GenvModelResource):
 
 class SigmaB(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -621,8 +621,7 @@ class MatFilter(GenvStaticGeoResource):
         return dict(
             geo     = [{'truncation': self.geometry.truncation},
                        {'stretching': self.geometry.stretching},
-                       self.scope.area,
-                       {'filtering': self.scope.filtering}],
+                       self.scope.area, ],
             radical = 'matfil',
             src     = self.model,
         )

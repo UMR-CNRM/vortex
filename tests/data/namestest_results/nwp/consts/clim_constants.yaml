@@ -1,0 +1,219 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: LAI
+      month: 1
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy43t2_clim-bf.05
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: gget://gco.multi.fr/tampon/giardbazile2000.lai.01.bin.m01
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy43t2_clim-bf.05
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: gget://gco.multi.fr/tampon/giardbazile2000.lai.01.bin.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: LAI
+      month: 11
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/giardbazile2000.lai.01.bin.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/giardbazile2000.lai.01.bin.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: soil_and_veg
+      month: 1
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/giardbazile2000.soil_and_veg.01.tgz
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/giardbazile2000.soil_and_veg.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: soil_and_veg
+      month: 11
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/giardbazile2000.soil_and_veg.01.tgz
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/giardbazile2000.soil_and_veg.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: soil_clim
+      month: null
+      source: arpreanalysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.soil_clim.01.tgz
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.soil_clim.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: soil_clim
+      month: 11
+      source: arpreanalysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.soil_clim.01.tgz.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.soil_clim.01.tgz.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: surfgeopotential
+      month: null
+      source: arpreanalysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.surfgeopotential.01.bin
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.surfgeopotential.01.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: surfgeopotential
+      month: 11
+      source: arpreanalysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.surfgeopotential.01.bin
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/arp_reanalysis.surfgeopotential.01.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: vegetation
+      month: 1
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/giardbazile2000.vegetation.01.bin.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/giardbazile2000.vegetation.01.bin.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global1dg
+      kind: vegetation
+      month: 11
+      source: giardbazile2000
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/giardbazile2000.vegetation.01.bin.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/giardbazile2000.vegetation.01.bin.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global2m5
+      kind: misc_orography
+      source: GTOPO30
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/orography.gtopo30_misc.01.tgz
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/orography.gtopo30_misc.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global2m5
+      kind: urbanisation
+      source: GTOPO30
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/urbanisation.gtopo30.01.bin
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/urbanisation.gtopo30.01.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global2m5
+      kind: water_percentage
+      source: GTOPO30
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/water_percentage.gtopo30.01.bin
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/water_percentage.gtopo30.01.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global5x4
+      kind: aerosols
+      month: 1
+      source: tegen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/tegen.aerosols.01.ascii.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/tegen.aerosols.01.ascii.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global5x4
+      kind: aerosols
+      month: 11
+      source: tegen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/tegen.aerosols.01.ascii.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/tegen.aerosols.01.ascii.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global5x4
+      kind: ozone
+      month: 1
+      source: ugamp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ugamp.ozone.01.ascii.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/ugamp.ozone.01.ascii.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      geometry: global5x4
+      kind: ozone
+      month: 11
+      source: ugamp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ugamp.ozone.01.ascii.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/ugamp.ozone.01.ascii.m11

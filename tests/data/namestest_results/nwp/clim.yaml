@@ -1,0 +1,412 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: null
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        geometry_bdap: frangp0025
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        geometry_bdap: eurat01
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: null
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: null
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: null
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 1
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 1
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 1
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa.m01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 1
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa.m01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 11
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 11
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 11
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa.m11
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: clim_model
+      month: 11
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.franmg-01km30.fa.m11
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.tl1198-c22.fa.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      kind: clim_model
+      month: 1
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_franmg.01km30.03.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/clim_arpege.tl1198.01.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      kind: clim_model
+      month: 11
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_franmg.01km30.03.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/clim_arpege.tl1198.01.m11
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: null
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: null
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: null
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: null
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 1
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 1
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 1
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa.m01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 1
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa.m01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 11
+      namespace: olive.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 11
+      namespace: olive.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/clim/Const.Clim.11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 11
+      namespace: vortex.multi.fr
+      naticefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa.m11
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 11
+      namespace: vortex.multi.fr
+      naticefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/clim.arome.frangp0025.fa.m11
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/clim.arpege.eurat01.fa.m11
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 1
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_dap.frangp0025.04.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/clim_dap.eurat01.02.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: '[geometry_bdap]'
+      kind: clim_bdap
+      month: 11
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_dap.frangp0025.04.m11
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/clim_dap.eurat01.02.m11
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: geometry_plot
+      nativefmt: pdf
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/geometry_plot.franmg-01km30.pdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/geometry_plot.tl1198-c22.pdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: geometry_plot
+      nativefmt: png
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/geometry_plot.franmg-01km30.png
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/geometry_plot.tl1198-c22.png

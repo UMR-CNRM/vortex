@@ -1,0 +1,27 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: franmgsp25
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome@pe-op3.03
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: pefrance
+
+register:
+    genv:
+        - al42_arome@pe-op3.03
+
+todo:
+    # Raw observations
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            - kind: filtering_request
+              filtername:
+                  - synopsis
+                  - diagpi

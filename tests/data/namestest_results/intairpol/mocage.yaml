@@ -1,0 +1,195 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: chemical_bc
+      term: 3
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: mo07_mocage@camsfcst-main.05
+        date: 2018010100
+        geometry: glob22
+        gnamespace: gco.multi.fr
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/vortexdata
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: chemical_bc
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/vortexdata
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: chemical_bc
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/bc22_2018010100.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: chemical_bc
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/bc22_2018010200.nc
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: fire
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/fire.glob22+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: fire
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/fire.glob22+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: fire
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/EMBBGLOB22+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: fire
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/EMBBGLOB22+20180102
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: obsfire
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/obsfire.glob22+0003:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: obsfire
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/obsfire.glob22+0003:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: obsfire
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/GFASfires_20180101.tar.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: obsfire
+      namespace: '[suite].multi.fr'
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/macc/oper/assim/01/GFASfires_20180102.tar.gz
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: topbd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/topbd.mocage
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: topbd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/topbd.mocage
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: ppstats
+      run_eval: base
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/ppstats.mocage-stats.glob22+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: ppstats
+      run_eval: first_level
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/ppstats.mocage-first_level.glob22+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: ppstats
+      run_eval: base
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/ppstats.mocage-stats.glob22+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: ppstats
+      run_eval: first_level
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/ppstats.mocage-first_level.glob22+0006:00.netcdf
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: abcd
+      kind: restart_flag
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/chemical/clim_restart.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      experiment: oper
+      kind: restart_flag
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/mocage/camsfcst/OPER/20180101T0000A/chemical/clim_restart.ascii

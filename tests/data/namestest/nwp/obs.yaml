@@ -1,0 +1,253 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff:
+                - assim
+                - production
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+        - al42_arome-op2.40
+
+todo:
+    # Raw observations
+    -   commons:
+            kind: observations
+            part: conv
+        tests:
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                stage: void
+                format: 
+                - obsoul
+                - grib
+                - bufr
+                - netcdf
+                - hdf5
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                    - "[suite].inline.fr"
+                stage: void
+                part: full
+                format: obsoul 
+            -   experiment:
+                    - oper
+                    - abcd
+                block: observations
+                stage:
+                    - extract
+                    - void
+                format: 
+                - obsoul
+                - grib
+                - bufr
+                - netcdf
+                - hdf5
+    # ODB ECMA observations
+    -   commons:
+            kind: observations
+            part: conv
+            format: odb
+            block: observations
+            layout: ecma
+        tests:
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                stage:
+                    - screen
+                    - matchup
+                    - void
+                part:
+                    - altitude
+                    - surf
+                    - mix
+                    - virtual
+                    - conv
+                    - iasi
+            -   experiment: abcd      
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+                stage:
+                    - split
+                    - build
+                    - cans
+                    - screen
+                    - screening
+    # ODB CCMA observations
+    -   commons:
+            kind: observations
+            part: mix
+            format: odb
+            block: observations
+            layout: ccma
+            stage:
+                - minim
+                - traj
+                - screen
+        tests:
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                part: ground
+                stage: cans
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                model: aladin
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+                part:
+                    - mix
+                    - surf
+            -   experiment: abcd      
+                namespace: olive.multi.fr
+                part:
+                    - mix
+                    - surf
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+                part: surf
+                stage: cans
+            -   experiment: abcd      
+                namespace: olive.multi.fr
+                part: surf
+                stage: cans
+    # Obs Flags
+    -   commons:
+            kind: obsflag
+            part:
+              - conv
+              - iasi
+            block: observations
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   experiment: abcd      
+                namespace: olive.multi.fr
+    # VarBC
+    -   commons:
+            kind: varbc
+            block: whocares
+            stage:
+              - screening
+              - minim
+              - merge
+              - traj
+              - void
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   experiment: abcd      
+                namespace: olive.multi.fr
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                mixmodel:
+                  - aladin
+                  - arpege
+            -   suite: oper
+                namespace: "[suite].inline.fr"
+    # Blacklists
+    -   commons:
+            kind: blacklist
+            block: whocares
+            scope:
+              - loc
+              - local
+              - global
+              - diap
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+            -   suite: oper
+                namespace: "[suite].inline.fr"
+            -   genv: '[cycle]'
+    # RefData
+    -   commons:
+            kind: refdata
+            block: whocares
+            part:
+                - null
+                - surf
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   experiment: abcd      
+                namespace: olive.multi.fr
+            -   suite: oper
+                namespace: "[suite].inline.fr"
+    # ObsMap
+    -   commons:
+            kind: obsmap
+            block: whocares
+            scope:
+                - null
+                - surf
+                - full
+            stage:
+                - build
+                - split
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   experiment: abcd
+                namespace: olive.multi.fr
+            -   genv: '[cycle]'
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+    # Bcor
+    -   commons:
+            kind: bcor
+            block: whocares
+            satbias:
+                - mtop
+                - noaa
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd      
+                namespace: vortex.multi.fr
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+   

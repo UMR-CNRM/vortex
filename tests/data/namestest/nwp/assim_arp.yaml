@@ -1,0 +1,168 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: globalupd399
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf:
+                - 4dvarfr
+                - aearp
+
+register:
+    genv:
+        - cy42_op2.67
+
+todo:
+     # BackgroundStdError
+     -  commons:
+            kind: bgstderr
+            experiment: ABCD
+            block: assim
+        tests:
+            -   kind: 
+                - bgerrstd
+                - bg_stderr
+            -   nativefmt:
+                - grib
+                - ascii
+     -  commons:
+            kind: bgstderr
+            stage:
+                - scr
+                - vor
+                - full
+            origin:
+                - ens
+                - diag
+            term:
+                - 3
+                - 9
+                - 12
+        tests:
+            -   namespace:
+                    - vortex.multi.fr
+                    - olive.multi.fr
+                experiment: ABCD
+                block: assim
+            -   namespace:
+                    - oper.multi.fr
+                    - oper.inline.fr
+                suite: oper
+            -   genv: '[cycle]'
+     # BackgroundErrorNorm
+     -  commons:
+            kind: bgerrnorm
+            experiment: ABCD
+            block: assim
+        tests:
+            -   kind: 
+                - bgerrnorm
+                - bgstdrenorm
+            -   nativefmt:
+                - grib
+                - ascii
+     -  commons:
+            kind: bgstdrenorm
+            term:
+                - 3
+                - 9
+                - 12
+        tests:
+            -   namespace:
+                  - vortex.multi.fr
+                  - olive.multi.fr
+                experiment: ABCD
+                block: assim
+            -   namespace: oper.multi.fr
+                suite: oper
+            -   genv: '[cycle]'        
+     # Wavelets
+     -  commons:
+            kind: wavelet
+            experiment: ABCD
+            block: assim
+        tests:
+            -   kind: 
+                - wavelet
+                - waveletcv
+            -   nativefmt:
+                - fa
+                - ascii
+     -  commons:
+            kind: wavelet
+            term:
+                - 3
+                - 9
+                - 12
+        tests:
+            -   namespace:
+                  - vortex.multi.fr
+                  - olive.multi.fr
+                experiment: ABCD
+                block: assim
+            -   namespace: oper.multi.fr
+                suite: oper
+            -   genv: '[cycle]'
+     # RawCV
+     -  commons:
+            kind: rawcv
+            experiment: ABCD
+            block: assim
+        tests:
+            -   kind: 
+                - rawcv
+                - rcv
+                - increment
+                - minimcv
+            -   nativefmt: unknown
+                experiment: oper
+            -   namespace: olive.multi.fr
+                experiment: ABCD
+     # InternalMinim
+     -  commons:
+            kind:
+                - stpmin
+                - anamin 
+            experiment: ABCD
+            block: assim
+            term:
+                - null
+                - 3
+            nativefmt:
+                - lfi
+                - fa
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd
+            -   namespace: olive.multi.fr
+                geometry:
+                    - globalupd149
+                    - global798
+     # PrecevMap
+     -  commons:
+            kind: precevmap
+            block: assim
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd
+     # PrecevMap
+     -  commons:
+            kind: precev
+            block: assim
+            evnum:
+                - 0
+                - 10
+                - 9999
+        tests:
+            -   experiment:
+                    - oper
+                    - abcd

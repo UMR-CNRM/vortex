@@ -98,7 +98,7 @@ class MntCumulStat(Monitoring):
             ),
             periodicity = dict(
                 values = ['monthly',
-                          'weekly_on_mondays'
+                          'weekly_on_mondays',
                           'weekly_on_sundays'],
                 default = 'monthly',
                 optional =True

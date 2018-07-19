@@ -1,0 +1,1268 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: accumulated_stats
+      nativefmt: binary
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: all
+        stage: atmospheric
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: all
+        stage: can
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: used
+        stage: atmospheric
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: used
+        stage: can
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: &id005 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: all
+        stage: atm
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: &id006 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: all
+        stage: surf
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: &id007 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: used
+        stage: atm
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: &id008 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: used
+        stage: surf
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: &id009 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: all
+        stage: atmospheric
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: &id010 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: all
+        stage: can
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: &id011 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: used
+        stage: atmospheric
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: &id012 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        obs: used
+        stage: can
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: &id013 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: all
+        stage: atm
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: &id014 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: all
+        stage: surf
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: &id015 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: used
+        stage: atm
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: &id016 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        obs: used
+        stage: surf
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: accumulated_stats
+      periodicity: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: accumulated_stats
+      periodicity: monthly
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: accumulated_stats
+      periodicity: weekly_on_mondays
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: accumulated_stats
+      periodicity: weekly_on_sundays
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: accumulated_stats
+      nativefmt: binary
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: accumulated_stats
+      periodicity: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: accumulated_stats
+      periodicity: monthly
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+monthly.bin
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+monthly.bin
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+monthly.bin
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+monthly.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: accumulated_stats
+      periodicity: weekly_on_mondays
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_mondays.bin
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_mondays.bin
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_mondays.bin
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_mondays.bin
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: accumulated_stats
+      periodicity: weekly_on_sundays
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-all+weekly_on_sundays.bin
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-all+weekly_on_sundays.bin
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.atm-used+weekly_on_sundays.bin
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/accumulated_stats.surf-used+weekly_on_sundays.bin
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: monitoring_stats
+      monitor: analysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-used-analysis.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: monitoring_stats
+      monitor: bias
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/monitoring_stats.surf-used-bias.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: monitoring_stats
+      monitor: analysis
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-used-analysis.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-all-analysis.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-all-analysis.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-used-analysis.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-used-analysis.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: monitoring_stats
+      monitor: bias
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-used-bias.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-all-bias.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-all-bias.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.atm-used-bias.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/monitoring_stats.surf-used-bias.txt
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: gross_errors
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: gross_errors
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/gross_errors.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: missing_obs
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: missing_obs
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/missing_obs.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: nbmessages
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: nbmessages
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-used.txt
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/nbmessages.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: gross_errors
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: gross_errors
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/gross_errors.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/gross_errors.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: missing_obs
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: missing_obs
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/missing_obs.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/missing_obs.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: nbmessages
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-used.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: nbmessages
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-all.txt
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-all.txt
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.atm-used.txt
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/nbmessages.surf-used.txt
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-used.txt
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-all.txt
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-all.txt
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.atm-used.txt
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/nbmessages.surf-used.txt
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: abcd
+      kind: obslocation
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id005
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id006
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id007
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id008
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id009
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id010
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id011
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id012
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id013
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id014
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id015
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id016
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/monitoring/obslocation.surf-used.obslocationpack
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: monitoring
+      experiment: oper
+      kind: obslocation
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id005
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id006
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id007
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id008
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id009
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id010
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id011
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id012
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/monitoring/obslocation.surf-used.obslocationpack
+    - default: *id013
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/obslocation.atm-all.obslocationpack
+    - default: *id014
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/obslocation.surf-all.obslocationpack
+    - default: *id015
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/obslocation.atm-used.obslocationpack
+    - default: *id016
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/monitoring/obslocation.surf-used.obslocationpack

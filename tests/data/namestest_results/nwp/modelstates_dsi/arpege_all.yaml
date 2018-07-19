@@ -1,0 +1,3030 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cycle: cy42_op2.67
+        geometry: global798
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: '[suite].inline.fr'
+        vapp: arpege
+        vconf: 4dvarfr
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r00
+    - default: &id002 !test_names.core.TestParameters
+        cycle: cy42_op2.67
+        geometry: global798
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: '[suite].multi.fr'
+        vapp: arpege
+        vconf: 4dvarfr
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r00.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r00.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r06.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r06.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r12.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r12.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.r18.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.r18.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: analysis
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/autres/ICMSHARPEINIT.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: analysis
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/autres/ICMSHARPEINIT.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rAM.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rAM.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/workdir/analyse/ICMSHANALINIT_SURF.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/autres/ICMSHARPEINIT.rCM.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rSX.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rSX.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rPM.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rPM.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/analyse/ICMSHANALINIT_SURF.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPEINIT.rDH.sfx
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/workdir/analyse/RUN5/ICMSHANALINIT_SURF.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/analyse_surface1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPEINIT.rDH.sfx
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/analyse.sfx
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r00
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r06
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r12
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.r18
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0000.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: null
+      kind: historic
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0043.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rAM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rAM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0000.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: atm
+      kind: historic
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0043.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0000.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/ICMSHARPE+0043.sfx.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 1
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHARPE+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 1
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHARPE+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r6/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.sfx.rSX
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r6/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.sfx.rPM
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r12/RUN5/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: null
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: null
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 1
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHPREV+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: atm
+      kind: historic
+      member: 5
+      model: arpege
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: null
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: 4dvarfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/ICMSHARPE+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/icmsharpe+0043.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 1
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHARPE+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 1
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/autres/RUN1/ICMSHARPE+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/production/2018/01/01/r18/RUN1/icmshprev+0043
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 0
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0000.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      member: 5
+      model: surfex
+      nativefmt: fa
+      suite: oper
+      term: 43
+      vconf: aearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/RUN5/ICMSHARPE+0043.sfx.rDH
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r18/RUN5/icmsharpe+0043.sfx

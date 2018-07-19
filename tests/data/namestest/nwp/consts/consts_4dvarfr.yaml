@@ -1,0 +1,83 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+
+todo:
+    # Raw observations
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            - kind:
+                  - batodbconf
+                  - parambator
+            - kind: avgmask
+              sensor:
+                  - ssmis
+                  - atms
+            - kind: coef_model
+            - kind: rtcoef
+            - kind: rrtm
+            - kind: 
+                  - cmod5
+                  - scatcmod5
+            - kind:
+                  - atlas_emissivity
+                  - emiss
+              instrument:
+                  - ssmis
+                  - an1
+              month:
+                  - null
+                  - 01
+                  - 11
+            - kind: emissivity_atlas
+              pack: 1
+            - kind: seaice_lonlat
+            - kind: odbraw
+              layout:
+                  - RSTBIAS
+                  - countryrstrhbias
+                  - sondetyperstrhbias
+            - kind: matfilter
+              scope: glob25
+            - kind: stabal
+              level:
+                  - null
+                  - 96
+              stat:
+                  - bal
+                  - cv
+            - kind: 
+                  - wtable
+                  - wavelet_table
+            - kind:
+                  - amvtrackingerror
+                  - amvbias
+            - kind: lfiscripts
+            - kind: gribapiconf
+              target: def
+              
+    # MatFilter special
+    -   commons:
+            experiment: abcd
+            block: forecast
+            kind: matfilter
+            scope: glob15
+        tests:
+            - namespace:
+                  - vortex.multi.fr
+                  - olive.multi.fr

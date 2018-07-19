@@ -1,0 +1,336 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: null
+      block: forecast
+      experiment: abcd
+      kind: listing
+      task: null
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: null
+      block: forecast
+      experiment: abcd
+      kind: listing
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: surfex
+      block: forecast
+      experiment: abcd
+      kind: listing
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: surfex
+      block: forecast
+      experiment: abcd
+      kind: listing
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      mpi: 1
+      openmp: 1
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.n0001-omp01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.n0001-omp01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      mpi: 1
+      openmp: 1
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.n0001-omp01
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.n0001-omp01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      namespace: '[suite].multi.fr'
+      suite: oper
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/listing.all
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/listing.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      namespace: '[suite].multi.fr'
+      suite: oper
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/listing.all
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/listing.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      part: null
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      part: null
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      part: all
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      part: all
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      seta: 1
+      setb: 1
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.a0001-b0001
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.a0001-b0001
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: listing
+      seta: 1
+      setb: 1
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.a0001-b0001
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.a0001-b0001
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: null
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: null
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: surfex
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.surfex-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.surfex-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: surfex
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.surfex-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.surfex-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      part: null
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      part: null
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      part: all
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: staticlisting
+      part: all
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/forecast/staticlisting.arpege-gruik.all
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: drhook
+      mpi: null
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: drhook
+      mpi: null
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.all
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: drhook
+      mpi: 1
+      task: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.n0001
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.n0001
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: drhook
+      mpi: 1
+      task: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.n0001
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.n0001

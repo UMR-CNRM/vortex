@@ -366,7 +366,6 @@ class GeneralCluster(FlowResource):
     """
 
     _footprint = dict(
-        abstract = True,
         info = 'Clustering stuff',
         attr = dict(
             kind = dict(

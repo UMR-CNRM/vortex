@@ -1,0 +1,1956 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: frangp0025
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: frangp0025
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: null
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.full-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.full-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.full-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.full-surfex.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJSURF+0000.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJSURF+0000.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJSURF+0000.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJSURF+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJSURF+0000.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/TRAJSURF+0000.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJSURF+0000.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/TRAJSURF+0000.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: atm
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.atm-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.atm-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.atm-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.atm-surfex.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/surfanalyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/surfanalyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: null
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/surfanalyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/surfanalyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: null
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/surfanalyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/surfanalyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: dfi
+      kind: analysis
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/surfanalyse
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/surfanalyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      filtering: dfi
+      kind: analysis
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/minim/analyse.sfx
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/minim/analyse.sfx
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/minim/analysis.surf-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/minim/analysis.surf-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/analysis.surf-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/minim/analysis.surf-surfex.glob05.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.full-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.full-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.full-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.full-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.full-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.full-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.full-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.full-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-surfex.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.full-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.full-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.full-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.full-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.atm-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.atm-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.atm-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.atm-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.atm-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.atm-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.atm-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.atm-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-surfex.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.atm-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.atm-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.atm-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.atm-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: null
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: null
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 2
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.surf-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.surf-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.surf-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.surf-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 2
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/mb002/ic/ic.surf-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/mb002/ic/ic.surf-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/mb002/ic/ic.surf-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/mb002/ic/ic.surf-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHSURF+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHSURF+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-surfex.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-surfex.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-surfex.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-surfex.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-surfex.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-surfex.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-surfex.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-surfex.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: initial_condition
+      namespace: olive.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/ic/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/ic/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-arome.frangp0025.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-arpege.glob05.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-arome.frangp0025.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-arpege.glob05.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: initial_condition
+      namespace: vortex.multi.fr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/ic/ic.surf-arome.frangp0025.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/ic/ic.surf-arpege.glob05.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/ic/ic.surf-arome.frangp0025.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/ic/ic.surf-arpege.glob05.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: olive.multi.fr
+      nativefmt: null
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.FRAN+0024.fa
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.GLOB+0024.fa
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.FRAN+0024.fa
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.GLOB+0024.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: olive.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.FRAN+0024.grib
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.GLOB+0024.grib
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.FRAN+0024.grib
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.GLOB+0024.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: olive.multi.fr
+      nativefmt: nc
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.FRAN+0024.netcdf
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/MESONH.GLOB+0024.netcdf
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.FRAN+0024.netcdf
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/MESONH.GLOB+0024.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: vortex.multi.fr
+      nativefmt: null
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.frangp0025+0024:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.glob05+0024:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.frangp0025+0024:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.glob05+0024:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.frangp0025+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.glob05+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.frangp0025+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.glob05+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: mesonh
+      namespace: vortex.multi.fr
+      nativefmt: nc
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.frangp0025+0024:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.mesonh.glob05+0024:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.frangp0025+0024:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.mesonh.glob05+0024:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: null
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: olive.multi.fr
+      nativefmt: nc
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHSURF+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHSURF+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.frangp0025+0024:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.glob05+0024:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.frangp0025+0024:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.glob05+0024:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.frangp0025+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.glob05+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.frangp0025+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.glob05+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: nc
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.frangp0025+0024:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.surfex.glob05+0024:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.frangp0025+0024:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.surfex.glob05+0024:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: olive.multi.fr
+      nativefmt: null
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: olive.multi.fr
+      nativefmt: grib
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: olive.multi.fr
+      nativefmt: nc
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHAROM+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/ICMSHARPE+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHAROM+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/ICMSHARPE+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: null
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.frangp0025+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.glob05+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.frangp0025+0000:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.glob05+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.frangp0025+0024:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.glob05+0024:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.frangp0025+0024:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.glob05+0024:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.frangp0025+0000:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.glob05+0000:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.frangp0025+0000:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.glob05+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: nc
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.frangp0025+0000:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.glob05+0000:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.frangp0025+0000:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.glob05+0000:00.netcdf
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: screening
+      experiment: abcd
+      kind: biasdfi
+      namespace: olive.multi.fr
+      nativefmt: null
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/screening/BIASDFIAROM+0003
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/screening/BIASDFIARPE+0003
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/screening/BIASDFIAROM+0003
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/screening/BIASDFIARPE+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: screening
+      experiment: abcd
+      kind: biasdfi
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/screening/BIASDFIAROM+0003
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/screening/BIASDFIARPE+0003
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/screening/BIASDFIAROM+0003
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/screening/BIASDFIARPE+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: screening
+      experiment: abcd
+      kind: biasdfi
+      namespace: vortex.multi.fr
+      nativefmt: null
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/screening/biasdfi.arome.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/screening/biasdfi.arpege.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/screening/biasdfi.arome.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/screening/biasdfi.arpege.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: screening
+      experiment: abcd
+      kind: biasdfi
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/screening/biasdfi.arome.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/screening/biasdfi.arpege.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/screening/biasdfi.arome.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/screening/biasdfi.arpege.glob05+0003:00.fa

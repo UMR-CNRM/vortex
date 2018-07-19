@@ -1,0 +1,28 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: glob22
+            cutoff: assim
+            model: mocage
+            namespace: vortex.multi.fr
+            cycle: mo07_mocage@camsfcst-main.05
+            gnamespace: 'gco.multi.fr'
+            vapp: mocage
+            vconf: camsfcst
+
+register:
+    genv:
+        - mo07_mocage@camsfcst-main.05
+
+todo:
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            -   kind: emiss_cst
+            -   kind: gribtpl
+                edition:
+                    - null
+                    - 1
+            -   kind: chemical_surf
+            -   kind: firecst

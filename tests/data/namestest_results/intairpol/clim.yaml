@@ -1,0 +1,34 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: chemical_bkup
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: mo07_mocage@camsfcst-main.05
+        date: 2018010100
+        geometry: glob22
+        gnamespace: gco.multi.fr
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: gget://gco.multi.fr/tampon/cams.bc.backup.01.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: clim_misc
+      month: 1
+      source: topmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_mocage.topmodel.01.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: clim_misc
+      month: 11
+      source: topmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/clim_mocage.topmodel.01.m11

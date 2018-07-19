@@ -1,0 +1,41 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   geometry: glob05
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+            kind: gridpoint
+            origin: hst
+            term: 3
+            namespace:
+                - '[suite].multi.fr'
+                - '[suite].inline.fr'
+
+todo:
+    # Gridpoints
+    -   commons:
+            nativefmt:
+                - fa
+                - grib
+            suite: oper
+        tests:
+            -   date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+            -   date: '2018010100'
+                vconf: courtfr
+            -   date:
+                - '2018010106'
+                - '2018010118'
+                member: 1
+                vconf: pearp

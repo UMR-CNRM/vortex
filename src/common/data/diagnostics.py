@@ -13,7 +13,7 @@ __all__ = []
 class ISP(GeoFlowResource):
 
     """
-    Class for Forecasted Satellite Image resource.
+    Class for Forecasted Satellite Image resource. Obsolete.
     Used to be an ``isp`` !
     """
     _footprint = dict(

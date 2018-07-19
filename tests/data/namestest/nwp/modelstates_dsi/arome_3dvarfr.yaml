@@ -1,0 +1,84 @@
+default:
+    style: olive
+    sets:
+        # Arome world
+        -   geometry: franmgsp
+            model: arome
+            cycle: al42_arome-op2.40
+            vapp: arome
+            vconf: 3dvarfr
+            namespace:
+                - '[suite].multi.fr'
+                - '[suite].inline.fr'
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt: fa
+            suite: oper
+            model:
+                - arome
+                - surfex
+            filling:
+                model:
+                    arome:
+                        - null
+                        - atm
+                        - surf
+                    surfex:
+                        - surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010103'
+                - '2018010106'
+                - '2018010109'
+                - '2018010112'
+                - '2018010115'
+                - '2018010118'
+                - '2018010121'
+            -   cutoff: assim
+                date:
+                - '2018010101'
+                - '2018010111'
+                - '2018010116'
+    # Historic
+    -   commons:
+            kind: historic
+            term:
+                - 0
+                - 43
+            nativefmt: fa
+            suite: oper
+            model:
+                - arome
+                - surfex
+            filling:
+                model:
+                    arome:
+                        - null
+                        - atm
+                    surfex:
+                        - surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010103'
+                - '2018010106'
+                - '2018010109'
+                - '2018010112'
+                - '2018010115'
+                - '2018010118'
+                - '2018010121'
+            -   cutoff: assim
+                date:
+                - '2018010101'
+                - '2018010111'
+                - '2018010116'

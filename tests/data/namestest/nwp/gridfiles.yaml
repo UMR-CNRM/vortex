@@ -1,0 +1,92 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: glob05
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: frangp0025
+            cutoff:
+                - assim
+                - production
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+todo:
+    # FA/Gridpoints
+    -   commons:
+            kind: gridpoint
+            nativefmt: fa
+            term: 3
+            block: forecast
+            experiment: abcd
+        tests:
+            -   origin: hst
+                experiment:
+                    - oper
+                    - abcd
+            -   origin: hst
+                namespace: olive.multi.fr
+            -   model: mocage
+                origin:
+                    - hst
+                    - sumo
+                    - interp
+                namespace:
+                    - vortex.multi.fr
+                    - olive.multi.fr
+            -   model: mocage
+                origin:
+                    - hst
+                    - interp
+                suite: dble
+                namespace: '[suite].multi.fr'
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                origin: hst
+                model: ifs
+    # GRIB/Gridpoints
+    -   commons:
+            kind: gridpoint
+            nativefmt: grib
+            term: 3
+            block: forecast
+            experiment: abcd
+        tests:
+            -   origin: hst
+                filtername:
+                    - null
+                    - synopsis
+                experiment:
+                    - oper
+                    - abcd
+            -   origin:
+                    - hst
+                    - ana
+                model: hycom
+                experiment: abcd
+            -   origin: hst
+                namespace: olive.multi.fr
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+                origin: hst
+                model: ifs
+    # GridPointMap
+    -   tests:
+            - kind: gridpointmap
+              block: forecast
+              experiment: abcd
