@@ -9,7 +9,7 @@ import footprints
 
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
-from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
+from vortex.syntax.stdattrs import namespacefp, DelayedEnvValue, Namespace
 from bronx.stdtypes.date import Time
 
 #: No automatic export
@@ -47,41 +47,43 @@ class BdpeProvider(Provider):
         bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
     """
 
-    _footprint = dict(
-        info = 'BDPE provider',
-        attr = dict(
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                default  = Namespace('bdpe.archive.fr'),
-                values   = ['bdpe.archive.fr'],
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'BDPE provider',
+            attr = dict(
+                namespace = dict(
+                    default  = Namespace('bdpe.archive.fr'),
+                    values   = ['bdpe.archive.fr'],
+                ),
+                bdpeid = dict(
+                ),
+                prefered_target = dict(
+                    optional = True,
+                    default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
+                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                ),
+                forbidden_target = dict(
+                    optional = True,
+                    default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
+                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                ),
+                config = dict(
+                    info     = 'A ready to use configuration file object for this storage place.',
+                    type     = GenericConfigParser,
+                    optional = True,
+                    default  = None,
+                ),
+                inifile = dict(
+                    info     = ('The name of the configuration file that will be used (if ' +
+                                '**config** is not provided.'),
+                    optional = True,
+                    default  = '@bdpe-map-resources.ini',
+                ),
             ),
-            bdpeid = dict(
-            ),
-            prefered_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
-            ),
-            forbidden_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
-            ),
-            config = dict(
-                info     = 'A ready to use configuration file object for this storage place.',
-                type     = GenericConfigParser,
-                optional = True,
-                default  = None,
-            ),
-            inifile = dict(
-                info     = ('The name of the configuration file that will be used (if ' +
-                            '**config** is not provided.'),
-                optional = True,
-                default  = '@bdpe-map-resources.ini',
-            ),
+            fastkeys = set(['bdpeid']),
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('BDPE provider init %s', self.__class__)

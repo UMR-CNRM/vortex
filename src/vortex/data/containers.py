@@ -294,7 +294,8 @@ class InCore(Virtual):
                 alias           = ('memlimit', 'spooledlimit', 'maxsize'),
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
-        )
+        ),
+        fastkeys = set(['incore', ])
     )
 
     def __init__(self, *args, **kw):
@@ -416,7 +417,8 @@ class MayFly(Virtual):
                 default         = True,
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
-        )
+        ),
+        fastkeys = set(['mayfly', ])
     )
 
     def __init__(self, *args, **kw):
@@ -562,7 +564,8 @@ class SingleFile(_SingleFileStyle):
                 alias       = ('filepath', 'local'),
                 doc_zorder  = 50,
             ),
-        )
+        ),
+        fastkeys = set(['filename', ])
     )
 
 
@@ -585,7 +588,8 @@ class UnnamedSingleFile(_SingleFileStyle):
                 default = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-        )
+        ),
+        fastkeys = set(['shouldfly', ])
     )
 
     def __init__(self, *args, **kw):

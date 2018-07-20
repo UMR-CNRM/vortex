@@ -40,7 +40,8 @@ class Provider(footprints.FootprintBase):
                 default     = '[glove::vconf]',
                 doc_zorder  = -10
             ),
-        )
+        ),
+        fastkeys = set(['namespace', ]),
     )
 
     def __init__(self, *args, **kw):
@@ -140,7 +141,8 @@ class Magic(Provider):
                 vconf = dict(
                     doc_visibility  = footprints.doc.visibility.GURU,
                 ),
-            )
+            ),
+            fastkeys = set(['magic', ]),
         )
     ]
 
@@ -186,7 +188,8 @@ class Remote(Provider):
             vconf = dict(
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-        )
+        ),
+        fastkeys = set(['remote', ]),
     )
 
     def __init__(self, *args, **kw):
@@ -271,7 +274,8 @@ class Vortex(Provider):
                     default     = False,
                     doc_zorder  = -5,
                 ),
-            )
+            ),
+            fastkeys = set(['block', 'experiment']),
         )
     ]
 

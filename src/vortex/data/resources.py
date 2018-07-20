@@ -30,7 +30,8 @@ class Resource(footprints.FootprintBase):
                 default         = UnknownContent,
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             )
-        )
+        ),
+        fastkeys = set(['kind', 'nativefmt', ]),
     )
 
     def __init__(self, *args, **kw):
@@ -157,7 +158,8 @@ class Unknown(Resource):
             clscontents = dict(
                 default = FormatAdapter,
             ),
-        )
+        ),
+        fastkeys = set(['unknown', ]),
     )
 
     def basename_info(self):

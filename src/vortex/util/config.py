@@ -181,7 +181,7 @@ class GenericReadOnlyConfigParser(object):
                     raise ValueError('Configuration file ' + inifile + ' not found')
             else:
                 autofile = autofile.group(1)
-                glove = sessions.getglove()
+                glove = sessions.current().glove
                 sitefile = glove.siteconf + '/' + autofile
                 persofile = glove.configrc + '/' + autofile
                 if local.path.exists(sitefile):

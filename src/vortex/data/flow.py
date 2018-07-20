@@ -52,6 +52,7 @@ class UnknownFlow(FlowResource):
                     default = FormatAdapter
                 ),
             ),
+            fastkeys = set(['unknownflow', ]),
         )
     ]
 

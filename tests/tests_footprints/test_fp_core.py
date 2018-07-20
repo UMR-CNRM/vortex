@@ -181,7 +181,7 @@ class utFootprint(TestCase):
             only = dict(),
             priority = dict(
                 level = priorities.top.DEFAULT
-            )
+            ),
         )
 
         self.fpbis = Footprint(
@@ -272,7 +272,7 @@ class utFootprint(TestCase):
             'bind': [],
             'info': 'Other stuff',
             'only': {},
-            'priority': {'level': priorities.top.DEBUG}
+            'priority': {'level': priorities.top.DEBUG},
         })
 
     def test_footprint_readonly(self):
@@ -419,32 +419,32 @@ class utFootprint(TestCase):
         guess = dict(nothing='void')
         extras = dict()
         with self.assertRaises(KeyError):
-            u_rv = fp._replacement(nbpass, 'hip', guess, extras, list(guess.keys()))
+            u_rv = fp._replacement(nbpass, 'hip', True, guess, extras, list(guess.keys()), list(), set())
 
-        rv = fp._replacement(nbpass, 'nothing', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'nothing', True, guess, extras, list(guess.keys()), list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(nothing='void'))
 
         guess = dict(nothing='void', stuff1='misc_[stuff2]')
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(footprints.FootprintUnreachableAttr):
-            u_rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
+            u_rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         footprints.logger.setLevel(logging.WARNING)
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0]')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
         todo = list(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
         self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
 
         todo.remove('stuff2')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo', stuff2='foo'))
 
@@ -454,7 +454,7 @@ class utFootprint(TestCase):
         self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
         todo.remove('stuff2')
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo_and_2', stuff2='foo'))
 
@@ -481,32 +481,32 @@ class utFootprint(TestCase):
         self.assertSetEqual(todo, set(['stuff1', 'stuff2', 'somefoo']))
 
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_2', stuff2='foo', somefoo=thisfoo))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justprop]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_3', stuff2='foo', somefoo=thisfoo))
 
         # What if the function doesn't exists ?
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:missing]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='foo', somefoo=thisfoo))
 
         # With a built-in method
         guess, u_inputattr = fp._firstguess(dict(stuff2='[fake:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff2', guess, dict(fake='misc'), todo)
+        rv = fp._replacement(nbpass, 'stuff2', True, guess, dict(fake='misc'), todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='MISC', somefoo=thisfoo))
 
         guess, u_inputattr = fp._firstguess(dict(stuff2='misc_[otherfoo:value]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff2', guess, dict(otherfoo=thisfoo), todo)
+        rv = fp._replacement(nbpass, 'stuff2', True, guess, dict(otherfoo=thisfoo), todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='misc_2', somefoo=thisfoo))
 
         # Mix of attributes and methods
         thisfoo = Foo(value='ToTo')
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value::lower]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_toto', stuff2='foo', somefoo=thisfoo))
 
     def test_footprint_replmethod(self):
@@ -521,23 +521,23 @@ class utFootprint(TestCase):
         self.assertSetEqual(todo, set(['stuff1', 'stuff2']))
 
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_done_2', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit:upper]', somefoo=thisfoo))
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
 
@@ -547,7 +547,7 @@ class utFootprint(TestCase):
         extras = dict()
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0%03d]')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%03d]'))
@@ -555,7 +555,7 @@ class utFootprint(TestCase):
         todo = ['stuff1', ]
         footprints.logger.setLevel(logging.CRITICAL)
         with self.assertRaises(ValueError):
-            rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         footprints.logger.setLevel(logging.WARNING)
 
         # If the replacement target is in extras
@@ -563,7 +563,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]_and_[more%02d]', stuff2='foo'))
         todo = ['stuff1', ]
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo_and_02', stuff2='foo'))
 
@@ -572,7 +572,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justanint%02d]', somefoo=thisfoo))
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justanint%02d]', stuff2='foo'))
         todo = ['stuff1', ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_03', stuff2='foo'))
 
@@ -582,7 +582,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%02d]_and_[more%02d]', stuff2=1))
         todo = ['stuff1', ]
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_01_and_02', stuff2=1))
 
@@ -591,7 +591,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%02d]_and_[more%.upper:s]', more='toto'))
         todo = ['stuff1', ]
         extras = dict(more='toto')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_01_and_TOTO', stuff2=1))
 
@@ -936,7 +936,7 @@ class utFootprintBase(TestCase):
             bind = list(),
             info = 'Not documented',
             only = dict(),
-            priority = dict( level = priorities.top.DEFAULT )
+            priority = dict( level = priorities.top.DEFAULT ),
         ))
 
         with self.assertRaises(KeyError):
