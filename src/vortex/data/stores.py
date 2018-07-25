@@ -1430,11 +1430,13 @@ class VortexOpArchiveStore(VortexArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        vxdate = list(xpath[4])
-        vxdate.insert(4, '/')
-        vxdate.insert(7, '/')
-        vxdate.insert(10, '/')
-        xpath[4] = ''.join(vxdate)
+        if len(xpath) >= 5 and re.match('^\d{8}T\d{2,4}', xpath[4]):
+            # If a date is detected
+            vxdate = list(xpath[4])
+            vxdate.insert(4, '/')
+            vxdate.insert(7, '/')
+            vxdate.insert(10, '/')
+            xpath[4] = ''.join(vxdate)
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
