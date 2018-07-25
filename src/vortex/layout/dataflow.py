@@ -157,7 +157,7 @@ class Section(object):
                     logger.critical('Fatal error with action get %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action get on ???')
-                raise SectionFatalError('Could not get resource [%s]' % str(rc))
+                raise SectionFatalError('Could not get resource {!s}'.format(rc))
         else:
             logger.error('Try to get from an output section')
         return rc
@@ -180,7 +180,7 @@ class Section(object):
                     logger.critical('Fatal error with action put %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action put ???')
-                raise SectionFatalError('Could not put resource [%s]', str(rc))
+                raise SectionFatalError('Could not put resource {!s}'.format(rc))
         else:
             logger.error('Try to put from an input section.')
         return rc

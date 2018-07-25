@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from vortex.algo.components import Parallel, AlgoComponent
 from bronx.stdtypes.date import Date
 
@@ -165,13 +167,13 @@ class Surfex_Parallel(Parallel):
             prep = prep_tomodify("PREP.nc")
 
             if modif_swe:
-                print "APPLY THRESHOLD ON SWE."
+                print("APPLY THRESHOLD ON SWE.")
                 prep.apply_swe_threshold(self.threshold)
 
             if modif_date:
-                print "CHANGE DATE OF THE PREP FILE."
+                print("CHANGE DATE OF THE PREP FILE.")
                 prep.change_date(self.datebegin)
 
             prep.close()
         else:
-            print "DO NOT CHANGE THE PREP FILE."
+            print("DO NOT CHANGE THE PREP FILE.")

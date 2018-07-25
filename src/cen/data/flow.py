@@ -3,16 +3,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.stdtypes.date     import Date, Time
 import footprints
 from footprints.util import rangex
 
 from vortex.data.flow        import GeoFlowResource
-from common.data.obs         import ObsRaw
 from vortex.data.geometries  import MassifGeometry
 from common.data.modelstates import InitialCondition
-from vortex.syntax.stdattrs  import Time
-
-from bronx.stdtypes.date import Date
+from common.data.obs         import ObsRaw
 
 #: No automatic export
 __all__ = []

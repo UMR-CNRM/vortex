@@ -6,9 +6,7 @@ This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
 """
 
-import six
-
-import footprints
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Period, Time
 import abc

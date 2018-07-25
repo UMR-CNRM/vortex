@@ -545,8 +545,8 @@ class PostGeometry(UnstructuredGeometry):
         fmts = 'kind={0:s}, area={1:s}, posts count={2!s}'
         return fmts.format(self.kind, self.area, self.nposts)
 
-# Load default geometries when the module is first imported
 
+# Load default geometries when the module is first imported
 
 def load(inifile='@geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file.

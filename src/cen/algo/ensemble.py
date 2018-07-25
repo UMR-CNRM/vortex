@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from collections import defaultdict
+import io
+import six
+import sys
+
+from bronx.stdtypes.date import Date, Period
+import footprints
 
 from vortex.algo.components import ParaBlindRun, ParaExpresso
 from vortex.tools.parallelism import VortexWorkerBlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
 
-from bronx.stdtypes.date import Date, Period
-
-import footprints
-from __builtin__ import int
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -172,12 +175,12 @@ class _SafranWorker(_S2MWorker):
         _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSG', 'OPSAP', 'OPSAN']
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
-                with open(op_file, 'w') as f:
+                with io.open(op_file, 'w') as f:
                     f.write(rundir + '@\n')
 
         for op_file in _OP_files_individual:
             if not self.system.path.isfile(op_file):
-                with open(op_file, 'w') as f:
+                with io.open(op_file, 'w') as f:
                     f.write(thisdir + '@\n')
 
         self.system.remove('sapfich')
@@ -208,12 +211,12 @@ class _SafranWorker(_S2MWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
+        with io.open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             d.write('0,0,3\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
-            d.write('1,1,{0:s}\n'.format(str(self.posts)))
+            d.write('1,1,{0!s}\n'.format(self.posts))
 
     def get_fichiers_P(self, dates, fatal=True):
         """ Try to guess the corresponding input file"""
@@ -233,7 +236,7 @@ class _SafranWorker(_S2MWorker):
                     # Avoid to take the first P file of the next day
                     # Check for a 6-hour analysis
                     d = date - Period(hours = 6)
-                    oldp = 'P{0:s}_{1:s}'.format(d.yymdh, str(6))
+                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -244,7 +247,7 @@ class _SafranWorker(_S2MWorker):
                     t = 0
                 while not self.system.path.islink(p) and (t <= 108):
                     d = date - Period(hours = t)
-                    oldp = 'P{0:s}_{1:s}'.format(d.yymdh, str(t))
+                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, t)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -281,8 +284,8 @@ class SafraneWorker(_SafranWorker):
             logger.info('Running date : {0:s}'.format(d.ymdh))
             self.sapdat(d, nech)
             # Creation of the 'sapfich' file containing the name of the output file
-            with open('sapfich', 'w') as f:
-                f.write('SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh))
+            with io.open('sapfich', 'w') as f:
+                f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
             list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
             self.local_spawn(list_name)
             # A FAIRE : gérer le fichier fort.79 (mv dans $list/day.$day ?, rejet)
@@ -302,7 +305,7 @@ class SypluieWorker(_SafranWorker):
         self.get_fichiers_P(dates)
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5_ARP')
         # Creation of the 'sapfich' file containing the name of the output file
-        with open('sapfich', 'w') as f:
+        with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
@@ -322,7 +325,7 @@ class SyrpluieWorker(_SafranWorker):
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         self.get_fichiers_P(dates)
         # Creation of the 'sapfich' file containing the name of the output file
-        with open('sapfich', 'w') as f:
+        with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
@@ -341,9 +344,9 @@ class SyvaprWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        if self.check_mandatory_resources(rdict, ['SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh) for d in dates]):
+        if self.check_mandatory_resources(rdict, ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
             for j, d in enumerate(dates):
-                self.link_in('SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh), 'SAFRAN' + str(j + 1))
+                self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
@@ -360,9 +363,9 @@ class SyvafiWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        # if self.check_mandatory_resources(rdict, ['SAPLUI5' + str(day), ]):
+        # if self.check_mandatory_resources(rdict, ['SAPLUI5' + six.text_type(day), ]):
         for j, d in enumerate(dates):
-                self.link_in('SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh), 'SAFRAN' + str(j + 1))
+            self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
@@ -407,10 +410,10 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
         self.link_in('SAPLUI5_ARP' + dates[-1].ymdh, 'SAPLUI5_ARP')
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
-        if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh) for d in dates]):
-            print(['SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh) for d in dates])
+        if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
+            print(['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
             for j, d in enumerate(dates):
-                self.link_in('SAFRANE_d{0:s}_{1:s}'.format(str(day), d.ymdh), 'SAFRAN' + str(j + 1))
+                self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
 
@@ -419,15 +422,15 @@ class SytistWorker(_SafranWorker):
         self.system.remove('sapdat')
 
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
-        with open('sapdat', 'w') as d:
-            d.write(thisdate.strftime('%y,%m,%d,%H,') + str(nech) + '\n')
+        with io.open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             if self.execution == 'forecast':
                 d.write('0,0,3\n')
             elif self.execution == 'analysis':
                 d.write('0,1,0\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
-            d.write('1,1,{0:s}\n'.format(str(self.posts)))
+            d.write('1,1,{0!s}\n'.format(self.posts))
 
 
 class SurfexWorker(_S2MWorker):
@@ -487,16 +490,16 @@ class SurfexWorker(_S2MWorker):
             prep = prep_tomodify("PREP.nc")
 
             if modif_swe:
-                print "APPLY THRESHOLD ON SWE."
+                print("APPLY THRESHOLD ON SWE.")
                 prep.apply_swe_threshold(self.threshold)
 
             if modif_date:
-                print "CHANGE DATE OF THE PREP FILE."
+                print("CHANGE DATE OF THE PREP FILE.")
                 prep.change_date(self.datebegin)
 
             prep.close()
         else:
-            print "DO NOT CHANGE THE PREP FILE."
+            print("DO NOT CHANGE THE PREP FILE.")
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
@@ -561,7 +564,7 @@ class SurfexWorker(_S2MWorker):
             if not namelist_ready:
                 available_namelists = self.find_namelists()
                 if len(available_namelists) > 1:
-                    print "WARNING SEVERAL NAMELISTS AVAILABLE !!!"
+                    print("WARNING SEVERAL NAMELISTS AVAILABLE !!!")
                 for namelist in available_namelists:
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
