@@ -20,7 +20,9 @@ Functions
 
 .. autofunction:: print_tablelike
 
-.. Exceptions
+.. autofunction:: join_list_in_proper_english
+
+..  Exceptions
 .. ----------
 
 
