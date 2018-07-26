@@ -56,6 +56,7 @@ from bronx.stdtypes import date
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
@@ -70,11 +71,9 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 # Optional, non-standard packages
-try:
+yaml_checker = ExternalCodeImportChecker('yaml')
+with yaml_checker as ec_register:
     import yaml
-except ImportError:
-    logger.warning('The YAML package is unavaillable on your system...')
-    pass
 
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'none', re.IGNORECASE)
@@ -104,20 +103,6 @@ FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_P
 
 #: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
 FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
-
-
-class YamlUnavailableError(Exception):
-    pass
-
-
-@nicedeco
-def disabled_if_no_yaml(func_or_cls):
-    """This decorator disables the provided funciotn if yaml is not available."""
-    def error_func(*args, **kw):
-        raise YamlUnavailableError()
-    return (func_or_cls
-            if 'yaml' in sys.modules
-            else error_func)
 
 
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
@@ -2299,7 +2284,7 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
-    @disabled_if_no_yaml
+    @yaml_checker.disabled_if_unavailable
     def yaml_dump(self, obj, destination, **opts):
         """
         Dump a YAML representation of specified **obj** in file **destination**,
@@ -2335,7 +2320,7 @@ class OSExtended(System):
         """
         return self.blind_load(source, gateway=json)
 
-    @disabled_if_no_yaml
+    @yaml_checker.disabled_if_unavailable
     def yaml_load(self, source):
         """
         Load from a YAML representation stored in file **source**,

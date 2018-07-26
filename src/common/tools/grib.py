@@ -186,7 +186,7 @@ class GRIBFilter(_GenericFilter):
 
         # Open the input file using Epygram
         from common.util import usepygram
-        if not usepygram.is_epygram_available('1.0.0'):
+        if not usepygram.epygram_checker.is_available(version='1.0.0'):
             raise AlgoComponentError("Epygram (v1.0.0) needs to be available")
 
         if self._xgrib_support and self._sh.is_xgrib(gribfile):

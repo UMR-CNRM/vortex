@@ -7,19 +7,23 @@ import sys
 import numpy as np
 import random
 
+from bronx.stdtypes.date import Date
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+import footprints
+
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
-from bronx.stdtypes.date import Date
-
-import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
-from snowtools.scores.ensemble import ESCROC_EnsembleScores
-from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
+echecker = ExternalCodeImportChecker('snowtools')
+with echecker:
+    from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
+    from snowtools.scores.ensemble import ESCROC_EnsembleScores
+    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Member(TaylorVortexWorker):
     _footprint = dict(
         info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment without MPI parallelization.',
@@ -83,6 +87,7 @@ class Escroc_Score_Member(TaylorVortexWorker):
         print(inputs)
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Ensemble(TaylorRun):
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
@@ -198,6 +203,7 @@ class Escroc_Score_Ensemble(TaylorRun):
         return local_members
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Subensemble(TaylorVortexWorker):
     _footprint = dict(
         info = 'AlgoComponent designed to compute ensemble scores for a given subensemble.',
@@ -264,6 +270,7 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
         print(inputs)
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Optim_Ensemble(TaylorRun):
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',

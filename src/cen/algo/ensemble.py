@@ -9,6 +9,7 @@ import six
 import sys
 
 from bronx.stdtypes.date import Date, Period
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
 from vortex.algo.components import ParaBlindRun, ParaExpresso
@@ -17,6 +18,16 @@ from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
 
 logger = footprints.loggers.getLogger(__name__)
+
+echecker = ExternalCodeImportChecker('snowtools')
+with echecker:
+    from snowtools.tools.change_prep import prep_tomodify
+    from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
+    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge
+    from snowtools.utils.infomassifs import infomassifs
+    from snowtools.tools.massif_diags import massif_simu
+    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -433,6 +444,7 @@ class SytistWorker(_SafranWorker):
             d.write('1,1,{0!s}\n'.format(self.posts))
 
 
+@echecker.disabled_if_unavailable
 class SurfexWorker(_S2MWorker):
     '''This algo component is designed to run a SURFEX experiment without MPI parallelization.'''
 
@@ -479,9 +491,6 @@ class SurfexWorker(_S2MWorker):
     def modify_prep(self, datebegin_this_run):
         ''' The PREP file needs to be modified if the init date differs from the starting date
          or if a threshold needs to be applied on snow water equivalent.'''
-
-        from snowtools.tools.change_prep import prep_tomodify
-
         modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
         modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit
         modif = modif_swe or modif_date
@@ -514,13 +523,6 @@ class SurfexWorker(_S2MWorker):
         self.postfix()
 
     def _surfex_task(self, rundir, thisdir, rdict):
-
-        from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-        from snowtools.tools.update_namelist import update_surfex_namelist_object
-        from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge
-        from snowtools.utils.infomassifs import infomassifs
-        from snowtools.tools.massif_diags import massif_simu
-
         # ESCROC cases: each member will need to have its own namelist
         # meteo ensemble cases: the forcing modification must be applied to all members and the namelist generation requires that
         # the forcing generation has already be done. Therefore, preprocessing is done in the offline algo in all these cases
@@ -696,6 +698,7 @@ class S2MComponent(ParaBlindRun):
         pass
 
 
+@echecker.disabled_if_unavailable
 class SurfexComponent(S2MComponent):
 
     _footprint = dict(
@@ -732,9 +735,6 @@ class SurfexComponent(S2MComponent):
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-
-        from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
-
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)

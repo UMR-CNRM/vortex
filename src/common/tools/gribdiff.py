@@ -79,8 +79,8 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
         rc = super(GRIBDIFF_Plus, self)._actual_diff(grib1, grib2, skipkeys, **kw)
         if not rc:
             if self._epyavail is None:
-                from common.util.usepygram import is_epygram_available
-                self._epyavail = is_epygram_available('1.0.0')
+                from common.util.usepygram import epygram_checker
+                self._epyavail = epygram_checker.is_available(version='1.0.0')
             if self._epyavail:
                 if self._epycount < self.maxepydiff:
                     from common.util.diffpygram import EpyGribDiff

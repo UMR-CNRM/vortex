@@ -3,17 +3,23 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.algo.components import Parallel, AlgoComponent
-from bronx.stdtypes.date import Date
 
+from bronx.stdtypes.date import Date
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
+
+from vortex.algo.components import Parallel, AlgoComponent
+
 logger = footprints.loggers.getLogger(__name__)
 
-from snowtools.tools.change_prep import prep_tomodify
-from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-from snowtools.tools.update_namelist import update_surfex_namelist_object
+echecker = ExternalCodeImportChecker('snowtools')
+with echecker:
+    from snowtools.tools.change_prep import prep_tomodify
+    from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
+    from snowtools.tools.update_namelist import update_surfex_namelist_object
 
 
+@echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
 
     _footprint = dict(
@@ -86,6 +92,7 @@ class Pgd_Parallel_from_Forcing(Parallel):
         self.system.remove("FORCING.nc")
 
 
+@echecker.disabled_if_unavailable
 class Surfex_Parallel(Parallel):
     '''This algo component is designed to run SURFEX experiments over large domains with MPI parallelization.'''
 

@@ -167,7 +167,7 @@ class FieldBundle(object):
         fid['cumulativeduration'] = fld.validity.cumulativeduration()
         return FieldDesc(hgeo_id, vgeo, ddesc, fid, valid)
 
-    @usepygram.disabled_if_no_epygram('1.0.0')
+    @usepygram.epygram_checker.disabled_if_unavailable(version='1.0.0')
     def read_grib(self, filename):
         """Read in a GRIB file."""
         with usepygram.epy_env_prepare(sessions.current()):

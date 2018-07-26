@@ -73,7 +73,7 @@ class _FakeRH(object):
 class _EpyTestBase(unittest.TestCase):
 
     def setUp(self):
-        if not (numpy_looks_fine and uepy.is_epygram_available('1.0.0')):
+        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0')):
             raise self.skipTest('Epygram >= v1.0.0 is not available')
 
         uepy.epygram.epylog.setLevel('ERROR')

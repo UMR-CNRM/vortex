@@ -127,9 +127,9 @@ class FinalizePGD(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super(FinalizePGD, self).__init__(*args, **kwargs)
-        from common.util.usepygram import is_epygram_available
+        from common.util.usepygram import epygram_checker
         ev = '1.2.14'
-        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
 
     def execute(self, rh, opts):  # @UnusedVariable
@@ -190,9 +190,9 @@ class SetFilteredOrogInPGD(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super(SetFilteredOrogInPGD, self).__init__(*args, **kwargs)
-        from common.util.usepygram import is_epygram_available
+        from common.util.usepygram import epygram_checker
         ev = '1.3.2'
-        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
 
     def execute(self, rh, opts):  # @UnusedVariable
@@ -293,9 +293,9 @@ class MakeLAMDomain(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
-        from common.util.usepygram import is_epygram_available
+        from common.util.usepygram import epygram_checker
         ev = '1.3.2' if self.e_zone_in_pgd else '1.2.14'
-        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
@@ -450,16 +450,15 @@ class MakeGaussGeometry(Parallel):
 
     def __init__(self, *args, **kwargs):
         super(MakeGaussGeometry, self).__init__(*args, **kwargs)
-        from common.util.usepygram import is_epygram_available
+        from common.util.usepygram import epygram_checker
         ev = '1.2.14'
-        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._complete_dimensions()
         self._unit = 4
         self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _complete_dimensions(self):
-        # from common.util.usepygram import epygram
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
         if self.latitudes is None and self.longitudes is None:
             dims = gridpoint_dims_from_truncation({'max': self.truncation},
@@ -625,9 +624,9 @@ class MakeBDAPDomain(AlgoComponent):
 
     def __init__(self, *args, **kwargs):
         super(MakeBDAPDomain, self).__init__(*args, **kwargs)
-        from common.util.usepygram import is_epygram_available
+        from common.util.usepygram import epygram_checker
         ev = '1.2.14'
-        self.algoassert(is_epygram_available(ev), "Epygram >= " + ev +
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         if self.mode == 'boundaries':
             params = ['lonmin', 'lonmax', 'latmin', 'latmax']
