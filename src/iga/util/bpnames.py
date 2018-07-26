@@ -139,7 +139,7 @@ def global_pnames(provider, resource):
     """
     suite_map = dict(dble='dbl', mirr='oper')
     info = getattr(resource, provider.realkind + '_pathinfo',
-                   resource.vortex_pathinfo)()
+                   resource.generic_pathinfo)()
     # patch pearp : the arpege surface analysis from surfex is in 'autres', not in 'fic_day'
     if hasattr(resource, 'model'):
         if resource.model == 'surfex' and provider.vapp == 'arpege':

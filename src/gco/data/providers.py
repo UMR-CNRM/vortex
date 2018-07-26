@@ -73,7 +73,8 @@ class GGet(GcoProvider):
             gget = dict(
                 type = GgetId,
             ),
-        )
+        ),
+        fastkeys = set(['gget']),
     )
 
     def __init__(self, *args, **kw):
@@ -108,7 +109,8 @@ class GEnv(GcoProvider):
                 alias = ('gco_cycle', 'gcocycle', 'cyclegco', 'gcycle'),
                 type = GgetId,
             ),
-        )
+        ),
+        fastkeys = set(['genv']),
     )
 
     def __init__(self, *args, **kw):
@@ -167,7 +169,8 @@ class UGetProvider(_UtypeProvider):
             uget = dict(
                 type = UgetId,
             ),
-        )
+        ),
+        fastkeys = set(['uget']),
     )
 
     @property
@@ -205,7 +208,8 @@ class UEnvProvider(_UtypeProvider):
                         type = UgetId,
                     ),
                 )
-                ]
+                ],
+        fastkeys = set(['uenv']),
     )
 
     def __init__(self, *kargs, **kwargs):

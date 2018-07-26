@@ -1,0 +1,250 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: arpege
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: arpege
+        vconf: 4dvarfr
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.r00
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: arpege
+        namespace: '[suite].multi.fr'
+        origin: hst
+        term: 3
+        vapp: arpege
+        vconf: 4dvarfr
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/HMGLOB05+2018010103
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: arpege
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: arpege
+        vconf: 4dvarfr
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.rAM
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: arpege
+        namespace: '[suite].multi.fr'
+        origin: hst
+        term: 3
+        vapp: arpege
+        vconf: 4dvarfr
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/HMGLOB05+2018010103
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: fa
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/PFARPEGLOB05+0003.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/HMGLOB05+2018010103
+    - default: *id003
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/fic_day/PFARPEGLOB05+0003.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/HMGLOB05+2018010103
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PE00003GLOB05
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/PE00003GLOB05
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErAM003GLOB05
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/PEAM003GLOB05
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+      vconf: courtfr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/bdap/PErCM003GLOB05
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/PE00003GLOB05
+    - default: *id003
+      location: file://oper.inline.fr/arpege/frcourt/oper/data/bdap/PErCM003GLOB05
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/court/2018/01/01/r0/PECM003GLOB05
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010106'
+      member: 1
+      nativefmt: fa
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/fic_day/RUN1/PFARPEGLOB05+0003.r06
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/01/r6/HMGLOB05+2018010109
+    - default: *id003
+      location: file://oper.inline.fr/arpege/pearp/oper/data/fic_day/RUN1/PFARPEGLOB05+0003.rSX
+    - default: *id004
+      location: op://oper.multi.fr/pearp/oper/01/r6/HMGLOB05+2018010109
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010106'
+      member: 1
+      nativefmt: grib
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN1/fc_SX_1_GLOB05_0003
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/01/r6/fc_06_1_GLOB05_0003
+    - default: *id003
+      location: file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN1/fc_SX_1_GLOB05_0003
+    - default: *id004
+      location: op://oper.multi.fr/pearp/oper/01/r6/fc_SX_1_GLOB05_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010106'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.r06
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/HMGLOB05+2018010109
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/HMGLOB05+2018010109
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010106'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PE06003GLOB05
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/PE06003GLOB05
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErSX003GLOB05
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/PESX003GLOB05
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010112'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.r12
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/HMGLOB05+2018010115
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/HMGLOB05+2018010115
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010112'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PE12003GLOB05
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/PE12003GLOB05
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErPM003GLOB05
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/PEPM003GLOB05
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010118'
+      member: 1
+      nativefmt: fa
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/fic_day/RUN1/PFARPEGLOB05+0003.r18
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/01/r18/HMGLOB05+2018010121
+    - default: *id003
+      location: file://oper.inline.fr/arpege/pearp/oper/data/fic_day/RUN1/PFARPEGLOB05+0003.rDH
+    - default: *id004
+      location: op://oper.multi.fr/pearp/oper/01/r18/HMGLOB05+2018010121
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010118'
+      member: 1
+      nativefmt: grib
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN1/fc_DH_1_GLOB05_0003
+    - default: *id002
+      location: op://oper.multi.fr/pearp/oper/01/r18/fc_18_1_GLOB05_0003
+    - default: *id003
+      location: file://oper.inline.fr/arpege/pearp/oper/data/bdap/RUN1/fc_DH_1_GLOB05_0003
+    - default: *id004
+      location: op://oper.multi.fr/pearp/oper/01/r18/fc_DH_1_GLOB05_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010118'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.r18
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/HMGLOB05+2018010121
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/PFARPEGLOB05+0003.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/HMGLOB05+2018010121
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010118'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PE18003GLOB05
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/PE18003GLOB05
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErDH003GLOB05
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/PEDH003GLOB05

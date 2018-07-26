@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-from vortex.syntax.stdattrs import month
+from vortex.syntax.stdattrs import month_deco
 from common.data.consts import GenvModelResource
 from common.data.climfiles import GenericClim
 
@@ -42,7 +42,7 @@ class MonthClimMisc(GenericClim):
      Monthly miscellaneous climatological files
     """
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly climatological files',
             attr = dict(

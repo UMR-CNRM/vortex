@@ -16,8 +16,8 @@ from bronx.stdtypes.date import Date, Time
 import footprints
 
 import vortex
-from common.tools.grib import GRIBFilter
 import common.util.usepygram as uepy
+from common.tools.grib import GRIBFilter
 
 clog = footprints.loggers.getLogger('common')
 clog.setLevel('ERROR')

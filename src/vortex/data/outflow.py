@@ -4,15 +4,15 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .resources  import Resource
-from .geometries import HorizontalGeometry, GaussGeometry, ProjectedGeometry
+from .geometries import hgeometry_deco
 from .contents   import FormatAdapter
-from vortex.syntax.stdattrs import model
+from vortex.syntax.stdattrs import model_deco
 
 #: No automatic export
 __all__ = []
 
 
-class NoDateResource(Resource):
+class StaticResource(Resource):
 
     _abstract = True
     _footprint = dict(
@@ -25,55 +25,39 @@ class NoDateResource(Resource):
     )
 
 
-class ModelResource(NoDateResource):
-
-    _abstract = True
-    _footprint = [ model ]
-
-    def vortex_pathinfo(self):
-        """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
-        return dict(
-            model = self.model,
-            fmt   = self.nativefmt,
-        )
-
-
-class StaticGeoResource(ModelResource):
+class StaticGeoResource(StaticResource):
     """A :class:`ModelResource` bound to a geometry."""
 
     _abstract = True
-    _footprint = dict(
-        attr = dict(
-            geometry = dict(
-                info = "The resource's horizontal geometry.",
-                type = HorizontalGeometry,
-            ),
-            clscontents = dict(
-                default = FormatAdapter,
-            ),
+    _footprint = [
+        hgeometry_deco,
+        dict(
+            attr = dict(
+                clscontents = dict(
+                    default = FormatAdapter,
+                ),
+            )
         )
-    )
+    ]
 
-    def vortex_pathinfo(self):
-        """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
-        return dict(
-            model    = self.model,
-            fmt      = self.nativefmt,
-            geometry = self.geometry,
+
+class ModelResource(StaticResource):
+
+    _abstract = True
+    _footprint = [ model_deco ]
+
+
+class ModelGeoResource(ModelResource):
+    """A :class:`ModelResource` bound to a geometry."""
+
+    _abstract = True
+    _footprint = [
+        hgeometry_deco,
+        dict(
+            attr = dict(
+                clscontents = dict(
+                    default = FormatAdapter,
+                ),
+            )
         )
-
-    def footprint_export_geometry(self):
-        """Return the ``geometry`` attribute as its id tag."""
-        return self.geometry.tag
-
-    def _geo2basename_info(self, add_stretching=True):
-        """Return an array describing the geometry for the Vortex's name builder."""
-        if isinstance(self.geometry, GaussGeometry):
-            lgeo = [{'truncation': self.geometry.truncation}, ]
-            if add_stretching:
-                lgeo.append({'stretching': self.geometry.stretching})
-        elif isinstance(self.geometry, ProjectedGeometry):
-            lgeo = [self.geometry.area, self.geometry.rnice]
-        else:
-            lgeo = self.geometry.area  # Default: always defined
-        return lgeo
+    ]

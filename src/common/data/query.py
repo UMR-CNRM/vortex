@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-from vortex.data.outflow import NoDateResource
+from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
 
 """
@@ -14,7 +14,7 @@ Query files used by various databases.
 __all__ = []
 
 
-class Query(NoDateResource):
+class Query(StaticResource):
     """Class to deal with queries."""
 
     _abstract = True

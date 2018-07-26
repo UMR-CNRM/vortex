@@ -8,7 +8,7 @@ import footprints as fp
 
 from vortex.data import geometries
 from vortex.tools import env
-from vortex.util.names import VortexNameBuilder
+from vortex.tools.names import VortexNameBuilder
 import common.data.boundaries  # @UnusedImport
 
 rcollect = fp.collectors.get(tag='resource')
@@ -30,7 +30,7 @@ class TestLAMBoundary(unittest.TestCase):
         res = fp.proxy.resource(source='arpege', ** self.fpcommon)
         self.assertEqual(res.olive_basename(), 'ELSCFALAD_FRANGP+0004')
         self.assertEqual(res.archive_basename(), 'COUPL0001.r03')
-        self.assertEqual(self.vb.pack(res.basename_info()),
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()),
                          'cpl.arpege.frangp-16km00+0001:00.fa')
 
         e = env.current()
@@ -48,13 +48,13 @@ class TestLAMBoundary(unittest.TestCase):
                                 ** self.fpcommon)
         self.assertEqual(res.olive_basename(), 'ELSCFALAD_FRANGP+0004')
         self.assertEqual(res.archive_basename(), 'COUPL0001.r03')
-        self.assertEqual(self.vb.pack(res.basename_info()),
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()),
                          'cpl.arpege-courtfr-prod.frangp-16km00+0001:00.fa')
 
         res = fp.proxy.resource(source_app='ifs', source_conf='eps',
                                 source_cutoff='assim', ** self.fpcommon)
         self.assertEqual(res.archive_basename(), 'COUPLIFS0001.r03')
-        self.assertEqual(self.vb.pack(res.basename_info()),
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()),
                          'cpl.ifs-eps-assim.frangp-16km00+0001:00.fa')
 
 

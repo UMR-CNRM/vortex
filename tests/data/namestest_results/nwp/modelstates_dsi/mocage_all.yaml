@@ -1,0 +1,320 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: glob15
+        gnamespace: gco.multi.fr
+        model: mocage
+        namespace: '[suite].multi.fr'
+        vapp: mocage
+        vconf: macc
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: glob15
+        gnamespace: gco.multi.fr
+        model: mocage
+        namespace: '[suite].multi.fr'
+        vapp: mocage
+        vconf: macc
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      kind: analysis
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/analyse
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010100
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010100
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010219
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010219
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010106
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010106
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010301
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010301
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010112
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010112
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010307
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010307
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010118
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010118
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010313
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010313
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010100
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010100
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010219
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010219
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010106
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010106
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010301
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010301
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010112
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010112
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010307
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010307
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010118
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010118
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      kind: historic
+      nativefmt: fa
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010313
+    - default: *id002
+      location: op://oper.multi.fr/mocage/oper/01/HMGLOB15+2018010313

@@ -1,0 +1,92 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+            stage:
+                - surf
+                - atm
+            obs:
+                - all
+                - used
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff:
+                - assim
+                - production
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+            stage:
+                - can
+                - atmospheric
+            obs:
+                - all
+                - used
+
+register:
+    genv:
+        - cy42_op2.67
+        - al42_arome-op2.40
+
+todo:
+    # MntCumulStat
+    -   commons:
+            kind: accumulated_stats
+            block: monitoring
+            experiment:
+                - abcd
+                - oper
+        tests:
+            -   nativefmt: binary
+            -   periodicity:
+                    - null
+                    - monthly
+                    - weekly_on_mondays
+                    - weekly_on_sundays
+    # MntCumulStat
+    -   commons:
+            kind: monitoring_stats
+            block: monitoring
+            experiment:
+                - abcd
+                - oper
+            monitor: bias
+        tests:
+            -   nativefmt: ascii
+            -   monitor: analysis
+    # MntGrossErrors/MntNbMessages/MntMissingObs
+    -   commons:
+            kind:
+                - gross_errors
+                - nbmessages
+                - missing_obs
+            block: monitoring
+            experiment:
+                - abcd
+                - oper
+        tests:
+            -   nativefmt:
+                    - ascii
+                    - null
+    # MntObsLocation
+    -   tests:
+            -   kind: obslocation
+                block: monitoring
+                experiment:
+                    - abcd
+                    - oper

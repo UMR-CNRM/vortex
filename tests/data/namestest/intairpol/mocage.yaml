@@ -1,0 +1,88 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: glob22
+            cutoff: assim
+            model: mocage
+            namespace: vortex.multi.fr
+            cycle: mo07_mocage@camsfcst-main.05
+            gnamespace: 'gco.multi.fr'
+            vapp: mocage
+            vconf: camsfcst
+
+register:
+    genv:
+        - mo07_mocage@camsfcst-main.05
+
+todo:
+    # ChemicalBoundaryConditions
+    -   commons:
+            block: chemical
+            kind: chemical_bc
+            term: 3
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+                term:
+                    - 24
+                    - 0
+    # Fire
+    -   commons:
+            block: chemical
+            kind: fire
+            term: 3
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+                term:
+                    - 24
+                    - 0
+    # ObsFire
+    -   commons:
+            block: chemical
+            kind: obsfire
+            term: 3
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+                term:
+                    - 24
+                    - 0
+    # TopBoundaryCondition
+    -   commons:
+            block: chemical
+            kind: topbd
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper
+    # PostPeriodicStats
+    -   commons:
+            block: chemical
+            kind: ppstats
+            run_eval:
+                - base
+                - first_level
+            term: 6
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper
+    # RestartFlag
+    -   commons:
+            block: chemical
+            kind: restart_flag
+        tests:
+            -   experiment:
+                    - abcd
+                    - oper

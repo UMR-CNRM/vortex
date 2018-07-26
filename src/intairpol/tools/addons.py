@@ -24,5 +24,4 @@ class MocageAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_mocage',  # IO polling
-                   )
+    _addonslist = ('iopoll_mocage', )  # IO polling

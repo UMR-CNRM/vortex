@@ -110,7 +110,8 @@ class IgaProvider(Provider):
                     optional = True,
                     default  = IgaCfgParser('@iga-map-resources.ini')
                 ),
-            )
+            ),
+            fastkeys = set(['suite']),
         )
     ]
 
@@ -170,7 +171,8 @@ class SopranoProvider(Provider):
             attr = dict(
                 namespace = dict(
                     values   = ['prod.soprano.fr', 'intgr.soprano.fr'],
-                    default  = 'prod.soprano.fr'
+                    default  = 'prod.soprano.fr',
+                    optional = False
                 ),
                 tube = dict(
                     optional = True,

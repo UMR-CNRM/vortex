@@ -1,0 +1,24 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy43t2_assimens-op1.01
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: aearp
+
+register:
+    genv:
+        - cy43t2_assimens-op1.01
+
+todo:
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            - kind: truncobj
+            - kind: stdpressure

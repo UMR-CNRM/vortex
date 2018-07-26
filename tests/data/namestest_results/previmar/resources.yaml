@@ -1,0 +1,307 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: HUV_ltideonly_forcing
+      kind: SurgesResultNative
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: hycom02_hycom@ang-main.04
+        date: 2018010100
+        geometry: hycomang2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: vortex.multi.fr
+        vapp: hycom
+        vconf: ang@fcaro
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/lssh_global_ms.nc.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: HUV_tideonly_forcing
+      kind: SurgesResultNative
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/ssh_global_ms.nc.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: Pmer
+      kind: Pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_pppts
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: current.ww3
+      kind: SurgesWw3coupling
+      nativefmt: unknown
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/current.ww3.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: info
+      kind: TideOnlyOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/tideonlyout.txt.hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: lssh_global_full.nc
+      kind: SurgesResultNative
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/lssh_global_full.nc.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: maree_global.nc
+      kind: SurgesResultNative
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/maree_global.nc.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: native
+      kind: TideOnlyOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/tideonlyout.nat.hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: preatm
+      kind: ForcingOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.mslprs.full-hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: s_marpts
+      kind: Pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_marpts
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: s_pts
+      kind: Pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_pts
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: s_uvpmax
+      kind: surges_max
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_uvpmax.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: surcote_max
+      kind: surges_max
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_max.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: tauewd
+      kind: ForcingOut
+      nativefmt: unknown
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.tauewd.full-hycom.ang-00dg000.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: txt
+      kind: TideOnlyOut
+      nativefmt: unknown
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/tideonlyout.txt.hycom.ang-00dg000.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: windFF10
+      kind: Pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/s_ffpts
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: windx
+      kind: ForcingOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.wndewd.full-hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      fields: wndnwd
+      kind: ForcingOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.wndnwd.full-hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: bufr_surges
+      timeslot: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/bufr.hycom+0024:00-0000:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: bufr_surges
+      timeslot: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/bufr.hycom+0030:00-0006:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: bufr_surges
+      timeslot: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/bufr.hycom+0048:00-0024:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: surges_tarfile
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/surges_tarfile.hycom.ang-00dg000.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: surges_tarfile
+      nativefmt: tar
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/surges_tarfile.hycom.ang-00dg000.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: dble
+      kind: bufr_surges
+      timeslot: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/DBLE/20180101T0000A/forecast/bufr.hycom+0024:00-0000:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: dble
+      kind: bufr_surges
+      timeslot: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/DBLE/20180101T0000A/forecast/bufr.hycom+0030:00-0006:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: dble
+      kind: bufr_surges
+      timeslot: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/DBLE/20180101T0000A/forecast/bufr.hycom+0048:00-0024:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: HUV_Gironde
+      kind: PtsGironde
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/_huv.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: Hauteur
+      kind: SurgesWw3coupling
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/level.ww3.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: pts
+      kind: TideOnlyOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/tideonlyout.pts.hycom.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: s_max
+      kind: surges_max
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/s_max.ang-00dg000.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: ssh_global_full.nc
+      kind: SurgesResultNative
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/ssh_global_full.nc.ang
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      fields: taunwd
+      kind: ForcingOut
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/ang@fcaro/OPER/20180101T0000A/forecast/forcingout.taunwd.full-hycom.ang-00dg000.ascii

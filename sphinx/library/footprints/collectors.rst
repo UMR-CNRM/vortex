@@ -36,4 +36,10 @@ Base class
    :member-order: alphabetical
 
 
+Utility class that speeds up footprint's resolution
+---------------------------------------------------
 
+.. autoclass:: ResolveCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

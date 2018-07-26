@@ -1,0 +1,73 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: globalupd499
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy43t2_assimens-op1.01
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: aearp
+
+register:
+    genv:
+        - cy43t2_assimens-op1.01
+
+todo:
+    # Rawfiles
+    -   commons:
+            kind: rawfiles
+            nativefmt:
+                - rawfiles
+                - unknown
+            term: 3
+            block: wavelet
+            member: 1
+        tests:
+            - ipert:
+                  - 1
+                  - 165
+              genv: '[cycle]'
+            - experiment: abcd
+              namespace: vortex.multi.fr
+            - suite: dble
+              namespace: '[suite].multi.fr'
+    # RandBFiles
+    -   commons:
+            kind: 
+                - randbfiles
+                - famembers
+            nativefmt:
+                - fa
+                - unknown
+            term: 6
+            block: wavelet
+            member: 1
+        tests:
+            - ipert:
+                  - 1
+                  - 165
+              genv: '[cycle]'
+            - experiment: abcd
+              namespace: vortex.multi.fr
+            - suite: dble
+              namespace: '[suite].multi.fr'
+    # InflationFactor
+    -   commons:
+            kind: 
+                - infl_factor
+                - infl
+            term:
+                - null
+                - 6
+            block: inflation
+        tests:
+            - experiment: abcd
+              namespace:
+                  - vortex.multi.fr
+                  - olive.multi.fr
+            - suite: dble
+              namespace: '[suite].multi.fr'

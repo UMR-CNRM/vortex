@@ -1,0 +1,565 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        geometry: frangp0025
+        kind: gridpoint
+        model: arome
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: arome
+        vconf: 3dvarfr
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r00
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        geometry: frangp0025
+        kind: gridpoint
+        model: arome
+        namespace: '[suite].multi.fr'
+        origin: hst
+        term: 3
+        vapp: arome
+        vconf: 3dvarfr
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/HMFRANGP0025+2018010103
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        geometry: frangp0025
+        kind: gridpoint
+        model: arome
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: arome
+        vconf: 3dvarfr
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r00
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        geometry: frangp0025
+        kind: gridpoint
+        model: arome
+        namespace: '[suite].multi.fr'
+        origin: hst
+        term: 3
+        vapp: arome
+        vconf: 3dvarfr
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/HMFRANGP0025+2018010103
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010101'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r01
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/HMFRANGP0025+2018010104
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r01
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r1/HMFRANGP0025+2018010104
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r03
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/HMFRANGP0025+2018010106
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r03
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/HMFRANGP0025+2018010106
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/HMFRANGP0025+2018010109
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r06
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/HMFRANGP0025+2018010109
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r09
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/HMFRANGP0025+2018010112
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r09
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/HMFRANGP0025+2018010112
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010111'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r11
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/HMFRANGP0025+2018010114
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r11
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r11/HMFRANGP0025+2018010114
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/HMFRANGP0025+2018010115
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r12
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/HMFRANGP0025+2018010115
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r15
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/HMFRANGP0025+2018010118
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r15
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/HMFRANGP0025+2018010118
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010116'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r16
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/HMFRANGP0025+2018010119
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r16
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r16/HMFRANGP0025+2018010119
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/HMFRANGP0025+2018010121
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r18
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/HMFRANGP0025+2018010121
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r21
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/HMFRANGP0025+2018010200
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.r21
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/HMFRANGP0025+2018010200
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rCM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/HMFRANGP0025+2018010103
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/HMFRANGP0025+2018010103
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rTR
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/HMFRANGP0025+2018010106
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rTR
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/HMFRANGP0025+2018010106
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rSX
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/HMFRANGP0025+2018010109
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/HMFRANGP0025+2018010109
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rNF
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/HMFRANGP0025+2018010112
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rNF
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/HMFRANGP0025+2018010112
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rPM
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/HMFRANGP0025+2018010115
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/HMFRANGP0025+2018010115
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rQZ
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/HMFRANGP0025+2018010118
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rQZ
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/HMFRANGP0025+2018010118
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rDH
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/HMFRANGP0025+2018010121
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/HMFRANGP0025+2018010121
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      nativefmt: fa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rVU
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/HMFRANGP0025+2018010200
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PFAROMFRANGP0025+0003.rVU
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/HMFRANGP0025+2018010200
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rAM0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/GRIDFRANGP0025r0_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rAM0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/GRIDFRANGP0025r0_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010103'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rTR0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/GRIDFRANGP0025r3_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rTR0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/GRIDFRANGP0025r3_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rSX0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/GRIDFRANGP0025r6_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rSX0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/GRIDFRANGP0025r6_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010109'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rNF0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/GRIDFRANGP0025r9_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rNF0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/GRIDFRANGP0025r9_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rPM0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/GRIDFRANGP0025r12_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rPM0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/GRIDFRANGP0025r12_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010115'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rQZ0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/GRIDFRANGP0025r15_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rQZ0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/GRIDFRANGP0025r15_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rDH0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/GRIDFRANGP0025r18_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rDH0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/GRIDFRANGP0025r18_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010121'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rVU0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/GRIDFRANGP0025r21_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rVU0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/GRIDFRANGP0025r21_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rAM0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/GRIDFRANGP0025r0_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rAM0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/GRIDFRANGP0025r0_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010103'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rTR0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/GRIDFRANGP0025r3_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rTR0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r3/GRIDFRANGP0025r3_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rSX0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/GRIDFRANGP0025r6_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rSX0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/GRIDFRANGP0025r6_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010109'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rNF0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/GRIDFRANGP0025r9_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rNF0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r9/GRIDFRANGP0025r9_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rPM0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/GRIDFRANGP0025r12_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rPM0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/GRIDFRANGP0025r12_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010115'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rQZ0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/GRIDFRANGP0025r15_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rQZ0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r15/GRIDFRANGP0025r15_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rDH0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/GRIDFRANGP0025r18_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rDH0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/GRIDFRANGP0025r18_0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010121'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rVU0003
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/GRIDFRANGP0025r21_0003
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/bdap/GRIDFRANGP0025rVU0003
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r21/GRIDFRANGP0025r21_0003

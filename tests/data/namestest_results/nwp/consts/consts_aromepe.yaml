@@ -1,0 +1,25 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      filtername: diagpi
+      genv: '[cycle]'
+      kind: filtering_request
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome@pe-op3.03
+        date: 2018010100
+        geometry: franmgsp25
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: pefrance
+      location: gget://gco.multi.fr/tampon/filtering.request.arome.pefrance.05.tgz?extract=filter_diagpi.json
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      filtername: synopsis
+      genv: '[cycle]'
+      kind: filtering_request
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/filtering.request.arome.pefrance.05.tgz?extract=filter_synopsis.json

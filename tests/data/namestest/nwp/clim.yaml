@@ -1,0 +1,82 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            geometry_bdap: eurat01
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            geometry_bdap: frangp0025
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+        - al42_arome-op2.40
+
+todo:
+    # GlobalClim/ClimLAM
+    -   commons:
+            kind: clim_model
+            block: clim
+        tests:
+            -   experiment: abcd
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+                naticefmt:
+                    - null
+                    - fa
+                month:
+                    - null
+                    - 1 
+                    - 11
+            -   genv: '[cycle]'
+                month:
+                    - 1
+                    - 11
+    # ClimBDAP
+    -   commons:
+            kind: clim_bdap
+            block: clim
+            geometry: '[geometry_bdap]'
+        tests:
+            -   experiment: abcd
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+                naticefmt:
+                    - null
+                    - fa
+                month:
+                    - null
+                    - 1 
+                    - 11
+            -   genv: '[cycle]'
+                month:
+                    - 1
+                    - 11
+    # GeometryIllustration
+    -   commons:
+            kind: geometry_plot
+            block: clim
+        tests:
+            -   experiment: abcd
+                nativefmt:
+                    - png
+                    - pdf

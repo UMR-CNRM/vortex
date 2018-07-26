@@ -1,0 +1,58 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bdap_query
+      source: gruik
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bdcp_query
+      source: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bdm_query
+      source: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bdmp_query
+      source: gruik
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/extract.stuff.arpege.73.tgz?extract=gruik

@@ -827,7 +827,8 @@ class SpecialDict(dict):
 
     def __contains__(self, key):
         """Force remapped key ``in`` checking."""
-        return dict.__contains__(self, self.remap(key))
+        return (dict.__contains__(self, key) or  # Try with out a remap first... just in case
+                dict.__contains__(self, self.remap(key)))
 
 
 class LowerCaseDict(SpecialDict):

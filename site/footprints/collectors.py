@@ -269,9 +269,11 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         super(Collector, self).discard(bye)
         self._upd_fasttrack_delete(bye)
 
-    def pickup(self, desc):
+    def pickup_and_cache(self, desc, resolvecache=None):
         """Try to pickup inside the collector an item that could match the description."""
         logger.debug('Pick up a "{:s}" in description {!s} with collector {!r}'.format(self.tag, desc, self))
+        if resolvecache is None:
+            resolvecache = ResolveCache()
         emptywarning = desc.pop('_emptywarning', True)
         mkstdreport = desc.pop('_report', self.report_auto)
         reportstyle = desc.pop('_report_style', self.report_style)
@@ -281,7 +283,7 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         if self.tag in desc and desc[self.tag] is not None:
             logger.debug('A %s is already defined %s', self.tag, str(desc[self.tag]))
         else:
-            desc[self.tag] = self.find_best(desc)
+            desc[self.tag] = self.find_best(desc, resolvecache=resolvecache)
         if desc[self.tag] is not None:
             desc = desc[self.tag].footprint_cleanup(desc)
         elif emptywarning:
@@ -303,14 +305,20 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
                 if reportstyle == config.FACTORIZED2_REPORTINGSTYLE:
                     altreport = self.report_sorted()
                     altreport.dumper()
-        return desc
+        return desc, resolvecache
 
-    def find_any(self, desc):
+    def pickup(self, desc, resolvecache=None):
+        """Try to pickup inside the collector an item that could match the description."""
+        return self.pickup_and_cache(desc, resolvecache=resolvecache)[0]
+
+    def find_any(self, desc, resolvecache=None):
         """
         Return the first item of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search any %s in collector %s', str(desc), str(self._items))
+        if resolvecache is None:
+            resolvecache = ResolveCache()
         requeue = True
         report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
         while requeue:
@@ -318,7 +326,9 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
             if self.report and report_log is not None:
                 report_log.add(collector=self)
             for item in self._fasttrack_subsetting(desc):
-                resolved, u_input = item.footprint_couldbe(desc, report=report_log)  # @UnusedVariable
+                resolved, u_input = item.footprint_couldbe(desc,  # @UnusedVariable
+                                                           resolvecache=resolvecache,
+                                                           report=report_log)
                 if resolved:
                     return item(resolved, checked=True)
             if (self.report == config.ONERROR_REPORTING and
@@ -327,12 +337,14 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
                 report_log = self.report_log
         return None
 
-    def find_all(self, desc):
+    def find_all(self, desc, resolvecache=None):
         """
         Returns all the items of the collector that :meth:`footprint_couldbe`
         as described by argument ``desc``.
         """
         logger.debug('Search all %s in collector %s', str(desc), str(self._items))
+        if resolvecache is None:
+            resolvecache = ResolveCache()
         requeue = True
         report_log = None if self.report == config.ONERROR_REPORTING else self.report_log
         while requeue:
@@ -341,7 +353,9 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
             if self.report and report_log is not None:
                 report_log.add(collector=self)
             for item in self._fasttrack_subsetting(desc):
-                resolved, theinput = item.footprint_couldbe(desc, report=report_log)
+                resolved, theinput = item.footprint_couldbe(desc,
+                                                            resolvecache=resolvecache,
+                                                            report=report_log)
                 if resolved:
                     found.append((item, resolved, theinput))
             if (not found and
@@ -351,13 +365,13 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
                 report_log = self.report_log
         return found
 
-    def find_best(self, desc):
+    def find_best(self, desc, resolvecache=None):
         """
         Returns the best of the items returned by the :meth:`find_all` method
         according to potential priority rules.
         """
         logger.debug('Search best %s in collector %s', str(desc), str(self._items))
-        candidates = self.find_all(desc)
+        candidates = self.find_all(desc, resolvecache=resolvecache)
         if not candidates:
             return None
         if len(candidates) > 1:
@@ -491,3 +505,18 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         has not been selected through the last evaluation.
         """
         return self.report_log.whynot(classname)
+
+
+# Utility classes that cache some results in order to speed-up the resolution
+class ResolveCache(object):
+
+    def __init__(self):
+        setup = config.get()
+        self.defaults = setup.defaults
+        self.extras = setup.extras()
+        self._shallow_cache = dict()
+
+    def get_shallow_fp(self, obj):
+        if obj not in self._shallow_cache:
+            self._shallow_cache[obj] = obj.footprint_as_shallow_dict()
+        return self._shallow_cache[obj]

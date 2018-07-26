@@ -124,10 +124,10 @@ def rload(*args, **kw):
     rhx = []
     for x in footprints.util.expand(rd):
         picked_up = proxy.containers.pickup(  # @UndefinedVariable
-                        proxy.providers.pickup(  # @UndefinedVariable
-                            proxy.resources.pickup(x)  # @UndefinedVariable
-                        )
-                    )
+            * proxy.providers.pickup_and_cache(  # @UndefinedVariable
+                * proxy.resources.pickup_and_cache(x)  # @UndefinedVariable
+            )
+        )
         logger.debug('Resource desc %s', picked_up)
         picked_rh = data.handlers.Handler(picked_up)
         if not picked_rh.complete:

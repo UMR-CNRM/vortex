@@ -1,0 +1,2872 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bg_stderr
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: globalupd399
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: globalupd399
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: aearp
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: globalupd399
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: globalupd399
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: aearp
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgerrstd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.ascii
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.ascii
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.ascii
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: diag
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/sigma_b
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/sigma_b
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: olive.multi.fr
+      origin: ens
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/errgribvor
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/errgribvor
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-diag.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-diag.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: diag
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-diag.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-diag.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-full-ens.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-full-ens.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-scr.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstderr
+      namespace: vortex.multi.fr
+      origin: ens
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstderr.arpege-unbal-ens.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstderr.arpege-unbal-ens.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: diag
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: full
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: full
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: full
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: scr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: scr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: scr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: vor
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: vor
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstderr
+      origin: ens
+      stage: vor
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/errgrib.vor.07.m01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101060000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101060000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_assim.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.inline.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+    - default: *id003
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/errgrib_scr.r0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/aearp/oper/data/fic_day/errgrib_production_dsbscr.20180101120000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: full
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: scr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor.in
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor.in
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: diag
+      stage: vor
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor_production_dsbscr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor_production_dsbscr.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor_production_dsbscr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor_production_dsbscr.in
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: full
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_full
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_full
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_full
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: scr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgrib_scr
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgrib_scr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgrib_scr
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor.in
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor.in
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstderr
+      namespace: oper.multi.fr
+      origin: ens
+      stage: vor
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/errgribvor_production_dsbscr
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/errgribvor_production_dsbscr.in
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/errgribvor_production_dsbscr
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/errgribvor_production_dsbscr.in
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgerrnorm
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgerrnorm
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.ascii
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.ascii
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.ascii
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgerrnorm
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: olive.multi.fr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: olive.multi.fr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: olive.multi.fr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/srenorm.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/srenorm.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: vortex.multi.fr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: vortex.multi.fr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0009:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0009:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0009:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0009:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: bgstdrenorm
+      namespace: vortex.multi.fr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0012:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/bgstdrenorm.arpege.tl399+0012:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0012:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/bgstdrenorm.arpege.tl399+0012:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstdrenorm
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstdrenorm
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: bgstdrenorm
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.srenorm.arpege.tl399.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstdrenorm
+      namespace: oper.multi.fr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/srenorm.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/srenorm.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/srenorm.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/srenorm.399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstdrenorm
+      namespace: oper.multi.fr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/srenorm.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/srenorm.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/srenorm.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/srenorm.399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: bgstdrenorm
+      namespace: oper.multi.fr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/srenorm.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/srenorm.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/srenorm.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/srenorm.399
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      nativefmt: ascii
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.ascii
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.ascii
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.ascii
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.ascii
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      nativefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: waveletcv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: olive.multi.fr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: olive.multi.fr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: olive.multi.fr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/wavelet.cv.t399
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/wavelet.cv.t399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: vortex.multi.fr
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0003:00.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: vortex.multi.fr
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0009:00.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0009:00.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0009:00.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0009:00.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: wavelet
+      namespace: vortex.multi.fr
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0012:00.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/wavelet.arpege.tl399+0012:00.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0012:00.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/wavelet.arpege.tl399+0012:00.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: wavelet
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: wavelet
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: wavelet
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/var.wavelet.arpege.tl399.01.cv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: wavelet
+      namespace: oper.multi.fr
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/wavelet.cv.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/wavelet.cv.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/wavelet.cv.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/wavelet.cv.399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: wavelet
+      namespace: oper.multi.fr
+      suite: oper
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/wavelet.cv.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/wavelet.cv.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/wavelet.cv.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/wavelet.cv.399
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: wavelet
+      namespace: oper.multi.fr
+      suite: oper
+      term: 12
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/wavelet.cv.399
+    - default: *id002
+      location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/wavelet/wavelet.cv.399
+    - default: *id003
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/wavelet.cv.399
+    - default: *id004
+      location: op://oper.multi.fr/aearp/oper/production/2018/01/01/r0/wavelet/wavelet.cv.399
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: increment
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: minimcv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: rawcv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: rawcv
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/MININCR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/MININCR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/MININCR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/MININCR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      kind: rcv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/rawcv.arpege.tl399.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/rawcv.arpege.tl399.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: rawcv
+      nativefmt: unknown
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/rawcv.arpege.tl399.unknown
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/rawcv.arpege.tl399.unknown
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/rawcv.arpege.tl399.unknown
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/rawcv.arpege.tl399.unknown
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: global798
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINHR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINHR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: anamin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/ANAMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/ANAMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: ABCD
+      geometry: globalupd149
+      kind: stpmin
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id002
+      location: olive://olive.multi.fr/ABCD/20180101H00A/assim/STPMINBR
+    - default: *id003
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+    - default: *id004
+      location: olive://olive.multi.fr/ABCD/20180101H00P/assim/STPMINBR
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: anamin
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/anamin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/anamin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: anamin
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/anamin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/anamin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: anamin
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/anamin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/anamin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: anamin
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/anamin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/anamin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: stpmin
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: stpmin
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: stpmin
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: stpmin
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: anamin
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/anamin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/anamin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: anamin
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/anamin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/anamin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/anamin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: anamin
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/anamin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/anamin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: anamin
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/anamin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/anamin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/anamin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: stpmin
+      nativefmt: fa
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/stpmin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/stpmin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: stpmin
+      nativefmt: fa
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/stpmin.arpege.tl399.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/stpmin.arpege.tl399.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/stpmin.arpege.tl399.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: stpmin
+      nativefmt: lfi
+      term: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: stpmin
+      nativefmt: lfi
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/stpmin.arpege.tl399.lfi
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/stpmin.arpege.tl399.lfi
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: abcd
+      kind: precevmap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/precevmap.arpege.json
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/precevmap.arpege.json
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/precevmap.arpege.json
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/precevmap.arpege.json
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      experiment: oper
+      kind: precevmap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/precevmap.arpege.json
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/precevmap.arpege.json
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/precevmap.arpege.json
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/precevmap.arpege.json
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 0
+      experiment: abcd
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/precev.arpege-000.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/precev.arpege-000.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/precev.arpege-000.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/precev.arpege-000.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 0
+      experiment: oper
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/precev.arpege-000.foo
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/precev.arpege-000.foo
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/precev.arpege-000.foo
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/precev.arpege-000.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 10
+      experiment: abcd
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/precev.arpege-010.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/precev.arpege-010.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/precev.arpege-010.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/precev.arpege-010.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 10
+      experiment: oper
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/precev.arpege-010.foo
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/precev.arpege-010.foo
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/precev.arpege-010.foo
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/precev.arpege-010.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 9999
+      experiment: abcd
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/assim/precev.arpege-9999.foo
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000A/assim/precev.arpege-9999.foo
+    - default: *id003
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/assim/precev.arpege-9999.foo
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/aearp/ABCD/20180101T0000P/assim/precev.arpege-9999.foo
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: assim
+      evnum: 9999
+      experiment: oper
+      kind: precev
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/assim/precev.arpege-9999.foo
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000A/assim/precev.arpege-9999.foo
+    - default: *id003
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/assim/precev.arpege-9999.foo
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/aearp/OPER/20180101T0000P/assim/precev.arpege-9999.foo

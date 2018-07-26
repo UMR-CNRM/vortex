@@ -1,0 +1,41 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: hycomang2
+            cutoff: assim
+            model: hycom
+            namespace: vortex.multi.fr
+            cycle: hycom02_hycom@ang-main.04
+            gnamespace: 'gco.multi.fr'
+            vapp: hycom
+            vconf: ang@fcaro 
+
+register:
+    genv:
+        - hycom02_hycom@ang-main.04
+
+todo:
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            -   kind: coefMar
+            -   kind: cteMaree
+            -   kind:
+                    - SurgesNativeGrid
+                    - SurgesForcingData
+                fields:
+                    - regional
+                    - cb
+                    - cbar
+            -   kind:
+                    - ConfigSurges
+                    - BlkdatData
+                param:
+                    - blkdat
+                    - pts
+            -   kind: SurgesInterpFactor
+            -   kind: meshWW3grid
+                param: namcouple
+            -   kind: InterpWW3Model
+                param: interpo

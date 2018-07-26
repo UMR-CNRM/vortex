@@ -2,7 +2,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import unittest
 
-from vortex.util.names import VortexNameBuilder, VortexNameBuilderError
+from vortex.tools.names import VortexNameBuilder, VortexNameBuilderError
+from vortex.tools.names import VortexDateNameBuilder, VortexPeriodNameBuilder, VortexFlatNameBuilder
 
 
 class FakeTime(object):
@@ -12,10 +13,24 @@ class FakeTime(object):
         return '0006:00'
 
 
-class TestNameBuilder(unittest.TestCase):
+class FakeDate(object):
 
-    def testDefaults(self):
-        vb = VortexNameBuilder()
+    @property
+    def stdvortex(self):
+        return '20180101T0000'
+
+
+class FakeDate2(object):
+
+    @property
+    def stdvortex(self):
+        return '20180101T1800'
+
+
+class TestDateNameBuilder(unittest.TestCase):
+
+    def testDateDefaults(self):
+        vb = VortexDateNameBuilder(name='date@std')
         # No defaults provided
         self.assertEqual(vb.pack(dict()), 'vortexdata')
         with self.assertRaises(VortexNameBuilderError):
@@ -29,15 +44,15 @@ class TestNameBuilder(unittest.TestCase):
         self.assertEqual(vb.pack(dict()), 'dummy')
         self.assertEqual(vb.pack(dict(style='obsmap')), 'dummy.none.txt')
         # Defaults at object creation
-        vb = VortexNameBuilder(suffix='test')
+        vb = VortexDateNameBuilder(name='date@std', suffix='test')
         self.assertEqual(vb.pack(dict()), 'vortexdata.test')
         self.assertEqual(vb.pack(dict(style='obs', nativefmt='toto')),
                          'toto-std.void.all.test')
         # Overriding the defaults...
         self.assertEqual(vb.pack(dict(suffix='over')), 'vortexdata.over')
 
-    def testStyleObs(self):
-        vb = VortexNameBuilder()
+    def testDateStyleObsBasename(self):
+        vb = VortexDateNameBuilder(name='date@std')
         self.assertEqual(vb.pack(dict(style='obs', nativefmt='obsoul',
                                       stage='split', part='conv')),
                          'obsoul-std.split.conv')
@@ -46,14 +61,14 @@ class TestNameBuilder(unittest.TestCase):
                                       part='conv')),
                          'odb-ecma.split.conv')
 
-    def testStyleObsmap(self):
-        vb = VortexNameBuilder()
+    def testDateStyleObsmapBasename(self):
+        vb = VortexDateNameBuilder(name='date@std')
         self.assertEqual(vb.pack(dict(style='obsmap', radical='obsmap',
                                       stage='split', fmt='xml')),
                          'obsmap.split.xml')
 
-    def testStyleStd(self):
-        vb = VortexNameBuilder(radical='dummy')
+    def testDateStyleStdBasename(self):
+        vb = VortexDateNameBuilder(name='date@std', radical='dummy')
         # src option:
         self.assertEqual(vb.pack(dict(src='arpege')),
                          'dummy.arpege')
@@ -101,6 +116,191 @@ class TestNameBuilder(unittest.TestCase):
         # number option
         self.assertEqual(vb.pack(dict(number=6)),
                          'dummy.6')
+
+    def testDateStyleStdPathname(self):
+        vb = VortexDateNameBuilder(name='date@std', radical='dummy')
+        # No missing stuff !
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(src='arpege', fmt='.txt',
+                                  vconf='4dvarfr',
+                                  experiment='ABCD',
+                                  flow=[{'date': '2018010100'}, ],
+                                  block='forecast'))
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(src='arpege', fmt='.txt',
+                                  vapp='arpege',
+                                  experiment='ABCD',
+                                  flow=[{'date': '2018010100'}, ],
+                                  block='forecast'))
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(src='arpege', fmt='.txt',
+                                  vapp='arpege', vconf='4dvarfr',
+                                  flow=[{'date': '2018010100'}, ],
+                                  block='forecast'))
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(src='arpege', fmt='.txt',
+                                  vapp='arpege', vconf='4dvarfr',
+                                  experiment='ABCD',
+                                  block='forecast'))
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(src='arpege', fmt='.txt',
+                                  vapp='arpege', vconf='4dvarfr',
+                                  experiment='ABCD',
+                                  flow=[{'date': '2018010100'}, ]))
+        # Ok, let's role !
+        vb = VortexDateNameBuilder(name='date@std', radical='dummy', src='arpege', fmt='txt')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD',
+                                               flow=[{'date': '2018010100'}, ],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/2018010100X/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD',
+                                               flow=[{'date': '2018010100'}, {'shortcutoff': 'assim'}],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/2018010100A/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD',
+                                               flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/20180101T0000A/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD',
+                                               flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                               block='forecast', member=1)),
+                         'arpege/4dvarfr/ABCD/20180101T0000A/mb001/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD',
+                                               flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                               block='forecast', member=99999)),
+                         'arpege/4dvarfr/ABCD/20180101T0000A/mb99999/forecast')
+
+
+class TestProxyNameBuilder(unittest.TestCase):
+
+    def testDefaults(self):
+        vb = VortexNameBuilder()
+        # No defaults provided
+        self.assertEqual(vb.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                      flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                      block='forecast')),
+                         'vortexdata')
+        self.assertEqual(vb.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                      block='forecast')),
+                         'vortexdata')
+        # Update the defaults
+        vb.setdefault(radical='dummy', useless='why?')
+        self.assertIn('useless', vb.defaults)
+        self.assertEqual(vb.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                      flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                      block='forecast')),
+                         'dummy')
+        self.assertEqual(vb.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                      block='forecast')),
+                         'dummy')
+        # Defaults at object creation
+        vb2 = VortexNameBuilder(suffix='test')
+        self.assertEqual(vb2.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                       block='forecast')),
+                         'vortexdata.test')
+        self.assertEqual(vb2.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                       block='forecast', suffix='over')),
+                         'vortexdata.over')
+        # Overriding the defaults...
+        self.assertEqual(vb2.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                       block='forecast', suffix='over')),
+                         'vortexdata.over')
+        # vb, remains...
+        self.assertEqual(vb.pack(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                      block='forecast')),
+                         'dummy')
+
+    def testPeriodStuff(self):
+        vb = VortexPeriodNameBuilder(name='period@std')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               flow=[{'begindate': FakeDate()}, {'enddate': FakeDate2()}, ],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/20180101T0000-20180101T1800/forecast')
+        with self.assertRaises(VortexNameBuilderError):
+            vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                  flow=[{'begindate': FakeDate()}, ],
+                                  block='forecast')),
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               flow=[{'begindate': FakeDate()}, {'enddate': FakeDate2()},
+                                                     {'shortcutoff': 'assim'}],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/20180101T0000A-20180101T1800/forecast')
+        # Basename stuff w/o proxy
+        self.assertEqual(vb.pack_basename(dict(src='arpege',
+                                               vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               flow=[{'begindate': FakeDate()}, {'enddate': FakeDate2()},
+                                                     {'shortcutoff': 'assim'}, {'date': FakeDate()}],
+                                               period=[{'begintime': FakeTime()}, {'endtime': 100}, ],
+                                               block='forecast')),
+                         'vortexdata.arpege.20180101T0000A+0006:00-100')
+        # Basename stuff with proxy
+        vb2 = VortexNameBuilder(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                flow=[{'begindate': FakeDate()}, {'enddate': FakeDate2()}, ],
+                                block='forecast')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege')), 'vortexdata.arpege')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01')),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+0006:00-100')
+
+    def testFlatStuff(self):
+        vb = VortexFlatNameBuilder(name='flat@std')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               flow=[{'begindate': FakeDate()}, ],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/forecast')
+        # Basename stuff w/o proxy
+        self.assertEqual(vb.pack_basename(dict(src='arpege',
+                                               vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                               flow=[{'begindate': FakeDate()}, {'enddate': FakeDate2()},
+                                                     {'shortcutoff': 'assim'}, {'date': FakeDate()}],
+                                               period=[{'begintime': FakeTime()}, {'endtime': 100}, ],
+                                               block='forecast')),
+                         'vortexdata.arpege.20180101T0000A.20180101T0000A-20180101T1800+0006:00-100')
+        # Basename stuff with proxy
+        vb2 = VortexNameBuilder(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                block='forecast')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege')), 'vortexdata.arpege')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01')),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+0006:00-100')
+
+    def testDateProxyStuff(self):
+        # Basename stuff with proxy
+        vb2 = VortexNameBuilder(vapp='arpege', vconf='4dvarfr', experiment='ABCD',
+                                flow=[{'shortcutoff': 'assim'}, {'date': FakeDate()}],
+                                block='forecast')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege')), 'vortexdata.arpege')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01')),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege', term='01',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+01')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege',
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege+0006:00-100')
+        self.assertEqual(vb2.pack_basename(dict(src='arpege',
+                                                flow=[{'shortcutoff': 'assim'}, {'date': FakeDate()},
+                                                      {'begindate': FakeDate()}, {'enddate': FakeDate2()}],
+                                                period=[{'begintime': FakeTime()}, {'endtime': 100}, ],)),
+                         'vortexdata.arpege.20180101T0000A-20180101T1800+0006:00-100')
 
 
 if __name__ == "__main__":
