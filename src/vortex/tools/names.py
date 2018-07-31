@@ -48,8 +48,8 @@ class AbstractVortexNameBuilder(footprints.FootprintBase):
             radical    = 'vortexdata',
         )
         # List of known defaults
-        for k in ['flow', 'src', 'term', 'period', 'geo', 'suffix', 'stage',
-                  'fmt', 'part', 'compute', 'number', 'filtername']:
+        for k in ['flow', 'src', 'term', 'period', 'cen_period', 'geo', 'suffix',
+                  'stage', 'fmt', 'part', 'compute', 'number', 'filtername']:
             self._default[k] = None
         self.setdefault(**kw)
 
@@ -195,7 +195,8 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
     def _pack_pathname_append_block(self, pathbits, d):
         """Pack the provider's block name."""
         if 'block' in d:
-            pathbits.append('_'.join(self._pack_std_items(d['block'])))
+            if d['block']:
+                pathbits.append('_'.join(self._pack_std_items(d['block'])))
         else:
             raise VortexNameBuilderError('The block info key is mandatory')
 
@@ -321,9 +322,44 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     # A Vortex basename may include the following bits
 
-    def _pack_std_basename_timestuff(self, d):  # @UnusedVariable
-        """Adds any info about, date, cutoff, term, period, ..."""
+    def _pack_std_basename_prefixstuff(self, d):  # @UnusedVariable
+        """Adds any info about date, cutoff ..."""
+        name0 = d['radical']
+        name0 += self._join_basename_bit(d, 'src', prefix='.', sep='-')
+        name0 += self._join_basename_bit(d, 'filtername', prefix='.', sep='-')
+        name0 += self._join_basename_bit(d, 'geo', prefix='.', sep='-')
+        name0 += self._join_basename_bit(d, 'compute', prefix='.', sep='-')
+        return name0
+
+    def _pack_std_basename_flowstuff(self, d):  # @UnusedVariable
+        """Adds any info about date, cutoff ..."""
         return ''
+
+    def _pack_std_basename_timestuff(self, d):  # @UnusedVariable
+        """Adds any info about term, period, ..."""
+        name = ''
+        if d['term'] is not None:
+            name += self._join_basename_bit(d, 'term', prefix='+', sep='.')
+        else:
+            if d['period'] is not None:
+                name += self._join_basename_bit(d, 'period', prefix='+', sep='-')
+            elif d['cen_period'] is not None:
+                name += self._join_basename_bit(d, 'cen_period', prefix='_', sep='_')
+        return name
+
+    def _pack_std_basename_suffixstuff(self, d):  # @UnusedVariable
+        """Adds any info about date, cutoff ..."""
+        name1 = ''
+        name1 += self._join_basename_bit(d, 'number', prefix='.', sep='-')
+        name1 += self._join_basename_bit(d, 'fmt', prefix='.', sep='.')
+        name1 += self._join_basename_bit(d, 'suffix', prefix='.', sep='.')
+        return name1
+
+    def _join_basename_bit(self, d, entry, prefix='.', sep='-'):
+        if d[entry] is not None:
+            return prefix + sep.join(self._pack_std_items(d[entry]))
+        else:
+            return ''
 
     # Methods that generates basenames
 
@@ -332,30 +368,10 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         Main entry point to convert a description into a file name
         according to the so-called standard style.
         """
-        name0 = d['radical']
-        if d['src'] is not None:
-            name0 += '.' + '-'.join(self._pack_std_items(d['src']))
-
-        if d['filtername'] is not None:
-            name0 += '.' + d['filtername']
-
-        if d['geo'] is not None:
-            name0 += '.' + '-'.join(self._pack_std_items(d['geo']))
-
-        if d['compute'] is not None:
-            name0 += '.' + '-'.join(self._pack_std_items(d['compute']))
-
-        name1 = ''
-        if d['number'] is not None:
-            name1 += '.' + '-'.join(self._pack_std_items(d['number']))
-
-        if d['fmt'] is not None:
-            name1 += '.' + d['fmt']
-
-        if d['suffix'] is not None:
-            name1 += '.' + '.'.join(self._pack_std_items(d['suffix']))
-
-        return name0.lower() + self._pack_std_basename_timestuff(d) + name1.lower()
+        return (self._pack_std_basename_prefixstuff(d).lower() +
+                self._pack_std_basename_flowstuff(d) +
+                self._pack_std_basename_timestuff(d) +
+                self._pack_std_basename_suffixstuff(d).lower())
 
     # Methods that generates pathnames
 
@@ -381,20 +397,13 @@ class VortexDateNameBuilder(AbstractActualVortexNameBuilder):
 
     # A Vortex basename may include the following bits
 
-    def _pack_std_basename_timestuff(self, d):
+    def _pack_std_basename_flowstuff(self, d):
         """Adds any info about term and period, ..."""
         name = ''
         if d['flow'] is not None:
             pstuff = self._pack_std_items_periodstuff(d['flow'])
             if pstuff:
                 name += '.' + pstuff
-        if d['term'] is not None:
-            name = name + '+' + '-'.join(self._pack_std_items(d['term']))
-        else:
-            if d['period'] is not None:
-                name = name + '+' + '-'.join(self._pack_std_items(d['period']))
-            elif d['cen_period'] is not None:
-                name = name + '_' + '_'.join(self.pack_std_items(d['cen_period']))
         return name
 
     # Methods that generates basenames
@@ -460,19 +469,12 @@ class VortexPeriodNameBuilder(AbstractActualVortexNameBuilder):
 
     # A Vortex basename may include the following bits
 
-    def _pack_std_basename_timestuff(self, d):
+    def _pack_std_basename_flowstuff(self, d):
         name = ''
         if d['flow'] is not None:
             dstuff = self._pack_std_items_datestuff(d['flow'])
             if dstuff:
                 name += '.' + dstuff
-        if d['term'] is not None:
-            name += '+' + '-'.join(self._pack_std_items(d['term']))
-        else:
-            if d['period'] is not None:
-                name += '+' + '-'.join(self._pack_std_items(d['period']))
-            elif d['cen_period'] is not None:
-                name = name + '_' + '_'.join(self.pack_std_items(d['cen_period']))
         return name
 
     # Methods that generates pathnames
@@ -503,7 +505,7 @@ class VortexFlatNameBuilder(AbstractActualVortexNameBuilder):
 
     # A Vortex basename may include the following bits
 
-    def _pack_std_basename_timestuff(self, d):
+    def _pack_std_basename_flowstuff(self, d):
         name = ''
         if d['flow'] is not None:
             dstuff = self._pack_std_items_datestuff(d['flow'])
@@ -512,13 +514,6 @@ class VortexFlatNameBuilder(AbstractActualVortexNameBuilder):
             pstuff = self._pack_std_items_periodstuff(d['flow'])
             if pstuff:
                 name += '.' + pstuff
-        if d['term'] is not None:
-            name += '+' + '-'.join(self._pack_std_items(d['term']))
-        else:
-            if d['period'] is not None:
-                name += '+' + '-'.join(self._pack_std_items(d['period']))
-            elif d['cen_period'] is not None:
-                name = name + '_' + '_'.join(self.pack_std_items(d['cen_period']))
         return name
 
     # Methods that generates pathnames

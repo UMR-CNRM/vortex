@@ -158,7 +158,7 @@ class SurfaceForcing(SurfaceIO):
 
     @property
     def realkind(self):
-        return 'FORCING'
+        return 'forcing'
 
 
 class Pro(SurfaceIO):
@@ -179,7 +179,7 @@ class Pro(SurfaceIO):
 
     @property
     def realkind(self):
-        return "PRO"
+        return "pro"
 
 
 @namebuilding_delete('src')
@@ -232,6 +232,7 @@ class Prep(InitialCondition):
         return 'snowpackstate'
 
 
+@namebuilding_insert('cen_period', lambda self: [self.begindate.y, self.enddate.y])
 class SnowObs(GeoFlowResource):
 
     _footprint = [
@@ -275,11 +276,6 @@ class SnowObs(GeoFlowResource):
     @property
     def realkind(self):
         return "obs_insitu"
-
-    def cenvortex_basename(self):
-        print("CENVORTEX_BASENAME")
-        print(self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt))
-        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class ScoresSnow(SurfaceIO):

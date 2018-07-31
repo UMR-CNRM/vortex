@@ -89,13 +89,12 @@ class climTG(GenvModelGeoResource):
     def realkind(self):
         return 'climTG'
 
-    def basename_info(self):
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [ self.geometry.area, self.geometry.rnice ],
-            radical = self.realkind,
+    def namebuilding_info(self):
+        nbi = super(climTG, self).namebuilding_info()
+        nbi.update(
+            # will work only with the @cen namebuilder:
+            cen_rawbasename = ('init_TG_' + self.geometry.area + '.' +
+                               self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            # With the standard provider, the usual keys will be used.
         )
-
-    def cenvortex_basename(self):
-        """CEN specific naming convention"""
-        return 'init_TG_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        return nbi

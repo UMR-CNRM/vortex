@@ -39,9 +39,15 @@ class PGDRaw(ModelGeoResource):
         """OLIVE specific naming convention."""
         return 'PGDFILE-' + self.geometry.area + '.' + self.nativefmt
 
-    def cenvortex_basename(self):
-        """CEN specific naming convention"""
-        return 'PGD_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
+    def namebuilding_info(self):
+        nbi = super(PGDRaw, self).namebuilding_info()
+        nbi.update(
+            # will work only with the @cen namebuilder:
+            cen_rawbasename = ('PGD_' + self.geometry.area + '.' +
+                               self._extension_remap.get(self.nativefmt, self.nativefmt))
+            # With the standard provider, the usual keys will be used...
+        )
+        return nbi
 
 
 class PGDLFI(PGDRaw):

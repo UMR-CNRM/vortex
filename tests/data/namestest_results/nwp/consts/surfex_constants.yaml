@@ -1,9 +1,9 @@
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
-      block: clim
+      block: ''
       experiment: abcd
       kind: pgdfa
-      namespace: olive.multi.fr
+      namebuild: cen
     results: !test_names.core.TestResults
     - default: &id001 !test_names.core.TestParameters
         cutoff: assim
@@ -15,6 +15,33 @@
         namespace: vortex.multi.fr
         vapp: arome
         vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ''
+      experiment: abcd
+      kind: pgdlfi
+      namebuild: cen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ''
+      experiment: abcd
+      kind: pgdnc
+      namebuild: cen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdfa
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
       location: olive://olive.multi.fr/abcd/clim/PGDFILE-franmg.fa
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
@@ -60,7 +87,7 @@
       namespace: vortex.multi.fr
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.netcdf
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       genv: '[cycle]'

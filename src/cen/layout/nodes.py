@@ -9,10 +9,9 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Period, Time
-import abc
 
 
-class TaskMixIn(abc):
+class TaskMixIn(object):
 
     nightruntime = Time(hour=3, minute=0)
 

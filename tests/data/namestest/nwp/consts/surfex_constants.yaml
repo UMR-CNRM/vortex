@@ -33,6 +33,13 @@ todo:
               namespace:
                   - olive.multi.fr
                   - vortex.multi.fr
+            - kind:
+                - pgdfa
+                - pgdlfi
+                - pgdnc
+              experiment: abcd
+              block: ''
+              namebuild: cen
     # ecoclimap
     -   commons:
             kind: coverparams
