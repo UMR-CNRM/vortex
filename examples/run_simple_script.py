@@ -3,7 +3,9 @@
 
 """
 This example run a simple Hello world script, created on the fly.
-It should run eveywhere.
+It should run everywhere.
+
+Ok 20180731 - GR
 """
 
 # Load useful packages for the examples

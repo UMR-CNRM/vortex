@@ -2,15 +2,22 @@
 # -*- coding: utf-8 -*-
 
 """
-This example get simple resources and put it at different places using the
-available providers.
+Get an analysis using the Vortex provider.
+
+The namespace used is vortex.multi.fr,
+i.e. if the resource is not in the cache,
+it will be looked for in the archive and a copy will be put in the cache.
+
+Can be launched anywhere provided that ftget/ftput (via the .netrc)
+or ftserv on super-computers (via ftmotpass) are configured).
+
+Ok 20180731 - GR
 """
 
 ##### Initializations
 # Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-import pprint
 
 import vortex
 import common
@@ -30,27 +37,27 @@ sh.chdir(workdirectory)
 
 ##### Getting a resource using the Vortex provider
 # Define the date
-rundate = date.Date("201806200300")
+rundate = date.yesterday()
 # Define the resource
-rh1 = toolbox.rh(
+rh = toolbox.rload(
     # Ressource
-    kind = 'mbsample',
-    nbsample = 12,
+    kind = 'analysis',
     date=rundate,
     cutoff = "production",
     model = "arome",
+    geometry="franmgsp",
     # Provider
-    block = "clustering",
-    namespace = 'vortex.archive.fr',
+    block = "minim",
+    namespace = 'vortex.multi.fr',
     experiment = "OPER",
-    vapp = "arome",
-    vconf = "pefrance",
+    vapp = "[model]",
+    vconf = "pifrance",
     # Container
-    local = "test1.json"
+    local = "analysis.fa"
 )
-print(rh1.complete)
-print(rh1.location())
-print(rh1.locate())
-print(rh1.idcard())
+print(rh.complete)
+print(rh.location())
+print(rh.locate())
+print(rh.idcard())
 # Get the resource
-print(rh1.get())
+print(rh.get())
