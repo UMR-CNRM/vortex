@@ -34,19 +34,19 @@ rundate = date.Date("201806200300")
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'mbsample',
-    nbsample = 12,
-    date=rundate,
-    cutoff = "production",
-    model = "arome",
+    kind       = 'mbsample',
+    nbsample   = 12,
+    date       = rundate,
+    cutoff     = "production",
+    model      = "arome",
     # Provider
-    block = "clustering",
-    namespace = 'vortex.archive.fr',
+    block      = "clustering",
+    namespace  = 'vortex.archive.fr',
     experiment = "OPER",
-    vapp = "arome",
-    vconf = "pefrance",
+    vapp       = "arome",
+    vconf      = "pefrance",
     # Container
-    local = "test.json"
+    local      = "test.json"
 )
 print(rh.complete)
 print(rh.location())

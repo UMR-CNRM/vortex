@@ -65,10 +65,10 @@ pprint.pprint(sh.dir())
 
 # Create a ResourceHandler corresponding to this namelist
 namelist_rh = toolbox.rload(
-    kind="namelist",
-    model="arome",
-    local="fort.4",
-    remote= "/".join([workdirectory, namelist_name])
+    kind   = "namelist",
+    model  = "arome",
+    local  = "fort.4",
+    remote = "/".join([workdirectory, namelist_name])
 )[0]
 namelist_rh.get()
 

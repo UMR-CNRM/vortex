@@ -24,7 +24,6 @@ from vortex.data.geometries import Geometry
 from vortex.tools import lfi, odb, grib, ddhpack, rawfiles
 from vortex.tools.actions import actiond as ad
 
-
 # ### would be removed by auto-import... ###
 assert any((common.data, gco.data, iga.data, olive.data, vortex.data))
 assert any((lfi, odb, grib, ddhpack, rawfiles))
@@ -61,11 +60,11 @@ def essai_1():
     # try a folder
     # print(sh.rawfiles_ftput)
     dico = dict(
-        source=os.path.expanduser('~/.tkdiffrc'),
-        destination='test_rawfiles',
-        fmt='rawfiles',
-        hostname='hendrix',
-        logname='lamboleyp',
+        source      = os.path.expanduser('~/.tkdiffrc'),
+        destination = 'test_rawfiles',
+        fmt         = 'rawfiles',
+        hostname    = 'hendrix',
+        logname     = 'lamboleyp',
     )
     sh.ftput(**dico)
 
@@ -73,30 +72,30 @@ def essai_1():
 def essai_2():
     rh = vortex.toolbox.rh(
         # ## role
-        format='fa',
-        local='ICMSHFCST+[term::fmthm]',
+        format     = 'fa',
+        local      = 'ICMSHFCST+[term::fmthm]',
         # rsrc
-        kind='historic',
-        model='arome',
-        term=[0, 1, 6],
+        kind       = 'historic',
+        model      = 'arome',
+        term       = [0, 1, 6],
         # ## provider
-        block='forecast',
-        experiment='oper',
-        namespace='vortex.multi.fr',
+        block      = 'forecast',
+        experiment = 'oper',
+        namespace  = 'vortex.multi.fr',
         # ## defaults
-        cutoff='production',
-        geometry=Geometry(tag='franmgsp25'),
-        date='2017-02-06T00:00:00Z',
-        cycle='al42_arome@ifs-op2.01',
-        gnamespace='gco.multi.fr',
+        cutoff     = 'production',
+        geometry   = Geometry(tag='franmgsp25'),
+        date       = '2017-02-06T00:00:00Z',
+        cycle      = 'al42_arome@ifs-op2.01',
+        gnamespace = 'gco.multi.fr',
         # model = 'arome',
         # namespace = 'vortex.multi.fr',
         # ## other
-        suite='oper',
-        vapp='[model]',
-        vconf='4dvarfr',
-        checkrole='*.grib',
-)
+        suite      = 'oper',
+        vapp       = '[model]',
+        vconf      = '4dvarfr',
+        checkrole  = '*.grib',
+    )
     test_magic = False
     if test_magic:
         p = fpx.provider(magic='function:///common.util.ens.safedrawingfunction')
@@ -126,22 +125,22 @@ def essai_3():
         # intent='inout',
         # role="Namelist",
         # rsrc
-        format='ascii',
-        kind='namelist',
-        source='namel_prep',
+        format     = 'ascii',
+        kind       = 'namelist',
+        source     = 'namel_prep',
         # ## provider
-        genv=the_cycle,
+        genv       = the_cycle,
         # gnamespace='gco.multi.fr',
-        gnamespace='opgco.cache.fr',
+        gnamespace = 'opgco.cache.fr',
         # ## file
-        local='OPTIONS.nam',
+        local      = 'OPTIONS.nam',
         # ## defaults
-        cutoff='production',
-        geometry=Geometry(tag='franmgsp25'),
-        date='2017-02-06T00:00:00Z',
-        cycle=the_cycle,
-        model='arome',
-        namespace='vortex.multi.fr',
+        cutoff     = 'production',
+        geometry   = Geometry(tag='franmgsp25'),
+        date       = '2017-02-06T00:00:00Z',
+        cycle      = the_cycle,
+        model      = 'arome',
+        namespace  = 'vortex.multi.fr',
         # ## other
         # suite='oper',
         # vapp='[model]',

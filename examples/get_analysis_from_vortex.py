@@ -41,19 +41,19 @@ rundate = date.yesterday()
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'analysis',
-    date=rundate,
-    cutoff = "production",
-    model = "arome",
-    geometry="franmgsp",
+    kind       = 'analysis',
+    date       = rundate,
+    cutoff     = "production",
+    model      = "arome",
+    geometry   = "franmgsp",
     # Provider
-    block = "minim",
-    namespace = 'vortex.multi.fr',
+    block      = "minim",
+    namespace  = 'vortex.multi.fr',
     experiment = "OPER",
-    vapp = "[model]",
-    vconf = "pifrance",
+    vapp       = "[model]",
+    vconf      = "pifrance",
     # Container
-    local = "analysis.fa"
+    local      = "analysis.fa"
 )
 print(rh.complete)
 print(rh.location())

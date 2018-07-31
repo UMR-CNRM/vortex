@@ -66,10 +66,10 @@ pprint.pprint(sh.dir())
 
 # Create a ResourceHandler corresponding to this script
 script_rh = toolbox.executable(
-    kind="script",
-    language="python",
-    local="script.py",
-    remote= "/".join([workdirectory, script_name])
+    kind     = "script",
+    language = "python",
+    local    = "script.py",
+    remote   = "/".join([workdirectory, script_name])
 )[0]
 
 
@@ -82,7 +82,7 @@ with sh.cdcontext(tmp_dir, create=True):
     print("The content of the current directory is:")
     pprint.pprint(sh.dir())
     algo = toolbox.algo(
-        engine = "exec",
+        engine      = "exec",
         interpreter = "python",
     )
     algo.run(script_rh)

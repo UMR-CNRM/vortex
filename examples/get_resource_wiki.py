@@ -38,12 +38,12 @@ rh = vortex.toolbox.rh(
     geometry       = Geometry(tag='globalsp2'),
 )
 
-print 'container :', rh.container
-print 'provider :', rh.provider
-print 'resource :', rh.resource
-print 'idcard() :', rh.idcard()
-print 'complete :', rh.complete
-print 'location():', rh.location()
+print('container :', rh.container)
+print('provider :', rh.provider)
+print('resource :', rh.resource)
+print('idcard() :', rh.idcard())
+print('complete :', rh.complete)
+print('location():', rh.location())
 # print 'get()     :', rh.get()
-print 'check() :', rh.check()
-print 'locate() :', rh.locate()
+print('check() :', rh.check())
+print('locate() :', rh.locate())

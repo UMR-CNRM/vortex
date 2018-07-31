@@ -44,19 +44,19 @@ rundate = date.yesterday()
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'analysis',
-    date=rundate,
-    cutoff = "production",
-    model = "arome",
-    geometry="franmgsp",
+    kind       = 'analysis',
+    date       = rundate,
+    cutoff     = "production",
+    model      = "arome",
+    geometry   = "franmgsp",
     # Provider
-    block = "minim",
-    namespace = 'olive.multi.fr',
+    block      = "minim",
+    namespace  = 'olive.multi.fr',
     experiment = "AAAA",
-    vapp = "[model]",
-    vconf = "3dvarfr",
+    vapp       = "[model]",
+    vconf      = "3dvarfr",
     # Container
-    local = "analysis.fa"
+    local      = "analysis.fa"
 )
 print(rh.complete)
 print(rh.location())

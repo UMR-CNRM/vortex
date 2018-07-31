@@ -54,18 +54,17 @@ sh.subtitle('Rundir is ' + rundir)
 
 def get_1():
     tb_uget = toolbox.input(
-        role='InflationFactor',
-        format='ascii',
-        genv='uenv:al42_arome@aefrance-op2.01@meunierlf',
-        geometry='franmgsp38',
-        insitu=False,
-        kind='infl_factor',
-        local='inflation_factor',
-        term=3,
-        cutoff='assim',
-        date='2017-10-11T21:00:00Z',
-        model='arome',
-        # discard=('atms',),
+        role     = 'InflationFactor',
+        format   = 'ascii',
+        genv     = 'uenv:al42_arome@aefrance-op2.01@meunierlf',
+        geometry = 'franmgsp38',
+        insitu   = False,
+        kind     = 'infl_factor',
+        local    = 'inflation_factor',
+        term     = 3,
+        cutoff   = 'assim',
+        date     = '2017-10-11T21:00:00Z',
+        model    = 'arome',
     )
     print(footprints.proxy.resources.report_whynot('common.data.obs.Obsmap'))
     t = tb_uget[0]
@@ -76,14 +75,14 @@ def get_1():
 
 def get_2():
     tb_obsmap = toolbox.input(
-        role='Obsmap',
-        kind='obsmap',
-        local='bator_map',
-        remote='/home/mf/dp/marp/civiatem/batormap_sans_atms',
-        cutoff='production',
-        date=date.now(),
-        model='arome',
-        discard=('atms',)
+        role    = 'Obsmap',
+        kind    = 'obsmap',
+        local   = 'bator_map',
+        remote  = '/home/mf/dp/marp/civiatem/batormap_sans_atms',
+        cutoff  = 'production',
+        date    = date.now(),
+        model   = 'arome',
+        discard = ('atms',)
     )
     print(footprints.proxy.resources.report_whynot('common.data.obs.Obsmap'))
     t = tb_obsmap[0]
@@ -94,16 +93,16 @@ def get_2():
 
 def get_3():
     tb_errgribvor = toolbox.input(
-        role='---',
-        kind='bgstderr',
-        local='errgribvor.tmp',
-        cutoff='assim',
-        geometry='globalupd399',
-        date=date.now(),
-        model='aearp',
-        stage='unbal',
-        experiment='OPER',
-        block='the_block',
+        role       = '---',
+        kind       = 'bgstderr',
+        local      = 'errgribvor.tmp',
+        cutoff     = 'assim',
+        geometry   = 'globalupd399',
+        date       = date.now(),
+        model      = 'aearp',
+        stage      = 'unbal',
+        experiment = 'OPER',
+        block      = 'the_block',
     )
     print(footprints.proxy.resources.report_whynot('common.data.assim.BackgroundStdError'))
     t = tb_errgribvor[0]
@@ -123,19 +122,19 @@ def get_4():
     # et oper.inline n'est pas un cache, au sens Vortex.
     toolbox.active_incache = True
     tb = toolbox.input(
-        date='2018-07-11T00:00:00Z',
-        role='Current',
-        cutoff='production',
-        format='ascii',
-        geometry='globalirr01',
-        kind='WaveCurrent',
-        local='currents.ascii',
-        namespace='[suite].inline.fr',
-        suite='oper',
-        term='0',
-        model='mfwam',
-        vapp='mfwam',
-        vconf='global@cep01',
+        date      = '2018-07-11T00:00:00Z',
+        role      = 'Current',
+        cutoff    = 'production',
+        format    = 'ascii',
+        geometry  = 'globalirr01',
+        kind      = 'WaveCurrent',
+        local     = 'currents.ascii',
+        namespace = '[suite].inline.fr',
+        suite     = 'oper',
+        term      = '0',
+        model     = 'mfwam',
+        vapp      = 'mfwam',
+        vconf     = 'global@cep01',
         # igakey = dict[vapp][vconf] remappé en fin de ./common/tools/igastuff.py
         # igakey='mfwamglocep01',
         # insitu=False,

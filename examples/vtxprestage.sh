@@ -13,7 +13,17 @@ exp=DBLE
 dat1=2018060206
 dat2=2018060406
 vtxprestage.py \
---date="daterangex($dat1,$dat2,PT24H)" --cutoff=production --origin=historic\
---model=arpege --vapp=arpege --vconf=pearp --namespace=olive.archive.fr \
---kind=historic --term=0 --block=restart --experiment=$exp --geometry=globalsp2 \
---format=fa --local='toto_[date:ymd]_r[date:hh]+[term:fmth].[format]'
+--date="daterangex($dat1,$dat2,PT24H)" \
+--cutoff=production \
+--origin=historic \
+--model=arpege \
+--vapp=arpege \
+--vconf=pearp \
+--namespace=olive.archive.fr \
+--kind=historic \
+--term=0 \
+--block=restart \
+--experiment=$exp \
+--geometry=globalsp2 \
+--format=fa \
+--local='toto_[date:ymd]_r[date:hh]+[term:fmth].[format]'

@@ -35,13 +35,13 @@ sh.chdir(workdirectory)
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind="namelist",
-    model="arpege",
-    source="namelistfc",
+    kind   = "namelist",
+    model  = "arpege",
+    source = "namelistfc",
     # Provider
-    genv="cy42_op2.68",
+    genv   = "cy42_op2.68",
     # Container
-    local = "namelistfc"
+    local  = "namelistfc"
 )
 print(rh.complete)
 print(rh.location())

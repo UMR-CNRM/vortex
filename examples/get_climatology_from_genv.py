@@ -37,14 +37,14 @@ runmonth = date.Month("201801010000")
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'clim_bdap',
-    month=runmonth,
-    geometry="EURW1S40",
-    model="arome",
+    kind     = 'clim_bdap',
+    month    = runmonth,
+    geometry = "EURW1S40",
+    model    = "arome",
     # Provider
-    genv="cy42_op2.68",
+    genv     = "cy42_op2.68",
     # Container
-    local = "Const.clim.[geometry::area].[month]"
+    local    = "Const.clim.[geometry::area].[month]"
 )
 print(rh.complete)
 print(rh.location())

@@ -45,17 +45,17 @@ rundate = date.Date("201801010000")
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'analysis',
-    date=rundate,
-    cutoff = "assim",
-    model = "arome",
-    geometry="franmgsp",
+    kind     = 'analysis',
+    date     = rundate,
+    cutoff   = "assim",
+    model    = "arome",
+    geometry = "franmgsp",
     # Provider
-    remote="/home/m/mxpt/mxpt001/arome/oper/assim/2018/01/01/r0/analyse",
-    tube="ftp",
-    hostname="hendrix.meteo.fr",
+    remote   = "/home/m/mxpt/mxpt001/arome/oper/assim/2018/01/01/r0/analyse",
+    tube     = "ftp",
+    hostname = "hendrix.meteo.fr",
     # Container
-    local = "analysis.fa"
+    local    = "analysis.fa"
 )
 print(rh.complete)
 print(rh.location())

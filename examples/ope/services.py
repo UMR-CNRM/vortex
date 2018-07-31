@@ -220,7 +220,7 @@ def test_opmail():
     toolbox.defaults(
         smtpserver=smtpserver,  # usually automatic (but not on my mac)
         sender=me,  # alternative to t.glove.email
-        )
+    )
 
     try_simple_mail = False
     if try_simple_mail:
@@ -242,6 +242,7 @@ def test_opmail():
             attachments=[img],
             extra='extra value',
         )
+
 
 ad.alarm_on()
 ad.mail_on()

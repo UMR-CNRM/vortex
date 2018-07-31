@@ -40,18 +40,18 @@ rundate = date.Date("201801010000")
 # Define the resource
 rh = toolbox.rload(
     # Ressource
-    kind = 'analysis',
-    date=rundate,
-    cutoff = "assim",
-    model = "arome",
-    geometry="franmgsp",
+    kind      = 'analysis',
+    date      = rundate,
+    cutoff    = "assim",
+    model     = "arome",
+    geometry  = "franmgsp",
     # Provider
     namespace = '[suite].multi.fr',
-    suite = "oper",
-    vapp = "[model]",
-    vconf = "3dvarfr",
+    suite     = "oper",
+    vapp      = "[model]",
+    vconf     = "3dvarfr",
     # Container
-    local = "analysis.fa"
+    local     = "analysis.fa"
 )
 print(rh.complete)
 print(rh.location())
