@@ -433,9 +433,11 @@ class utFootprint(TestCase):
 
         guess = dict(nothing='void', stuff1='misc_[stuff2]')
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintUnreachableAttr):
-            fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(footprints.FootprintUnreachableAttr):
+                fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0]')
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
@@ -560,9 +562,11 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%03d]', stuff2='foo'))
         todo = ['stuff1', ]
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(ValueError):
-            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(ValueError):
+                rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         # If the replacement target is in extras
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more%02d]', more=2))
@@ -1064,12 +1068,14 @@ class utFootprintBase(TestCase):
         )
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintFatalError):
-            FootprintTestOne(kind='hip')
+        try:
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestOne(kind='hip')
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            FootprintTestOne(kind='hip', someint=13)
-        footprints.logger.setLevel(logging.WARNING)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestOne(kind='hip', someint=13)
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
@@ -1121,13 +1127,15 @@ class utFootprintBase(TestCase):
         ))
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(AttributeError):
-            fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-                stuff = 'foo',
-                someint = '7',
-            ))
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(AttributeError):
+                fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
+                self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
+                    stuff = 'foo',
+                    someint = '7',
+                ))
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
@@ -1150,15 +1158,17 @@ class utFootprintBase(TestCase):
         thefoo = Foo(inside=2)
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintFatalError):
-            FootprintTestTwo(kind='hip', somefoo=thefoo)
+        try:
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo)
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
-        footprints.logger.setLevel(logging.WARNING)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)

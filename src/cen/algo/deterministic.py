@@ -82,7 +82,8 @@ class Pgd_Parallel_from_Forcing(Parallel):
             ),
             engine = dict(
                 optional = True,
-                default = 'parallel')
+                default = 'parallel'
+            )
         )
     )
 

@@ -728,7 +728,7 @@ class TaylorRun(AlgoComponent):
 
     def _default_common_instructions(self, rh, opts):
         '''Create a common instruction dictionary that will be used by the workers.'''
-        return dict(kind=self.kind, )
+        return dict(kind=self.kind, taskdebug=self.verbose)
 
     def _default_pre_execute(self, rh, opts):
         '''Various initialisations. In particular it creates the task scheduler (Boss).'''
@@ -768,7 +768,7 @@ class TaylorRun(AlgoComponent):
         A usual sequence is::
 
             self._default_pre_execute(rh, opts)
-            common_i = _default_common_instructions(rh, opts)
+            common_i = self._default_common_instructions(rh, opts)
             # Update the common instructions
             common_i.update(dict(someattribute='Toto', ))
 

@@ -6,7 +6,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import io
 import six
-import sys
 
 from bronx.stdtypes.date import Date, Period
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -50,14 +49,10 @@ class _S2MWorker(VortexWorkerBlindRun):
         if self.subdir is not None:
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
-                sys.stdout = open(self.name + ".out", "a", buffering=0)
-                sys.stderr = open(self.name + "_error.out", "a", buffering=0)
                 self._commons(rundir, thisdir, rdict, **kwargs)
 
         else:
             thisdir = rundir
-            sys.stdout = open(self.name + ".out", "a", buffering=0)
-            sys.stderr = open(self.name + "_error.out", "a", buffering=0)
             self._commons(rundir, thisdir, rdict, **kwargs)
 
         return rdict

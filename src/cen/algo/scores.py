@@ -25,6 +25,7 @@ with echecker:
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Member(TaylorVortexWorker):
+
     _footprint = dict(
         info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment without MPI parallelization.',
         attr = dict(
@@ -68,9 +69,6 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
         rdict = dict(rc=True)
 
-        sys.stdout = open(str(self.members[0]) + "_" + self.name + ".out", "a", buffering=0)
-        sys.stderr = open(str(self.members[0]) + "_" + self.name + "_error.out", "a", buffering=0)
-
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
         E = ESCROC_list_scores()
@@ -89,6 +87,7 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Ensemble(TaylorRun):
+
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
         attr = dict(
@@ -247,9 +246,6 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
     def vortex_task(self, **kwargs):
 
         rdict = dict(rc=True)
-
-        sys.stdout = open(str(self.members[0]) + "_" + self.name + ".out", "a", buffering=0)
-        sys.stderr = open(str(self.members[0]) + "_" + self.name + "_error.out", "a", buffering=0)
 
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
