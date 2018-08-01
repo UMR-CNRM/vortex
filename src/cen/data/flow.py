@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from bronx.stdtypes.date     import Time
+from bronx.stdtypes.date     import Date, Time
 import footprints
 from footprints.util import rangex
 
@@ -184,7 +184,7 @@ class Pro(SurfaceIO):
 
 @namebuilding_delete('src')
 @namebuilding_delete('geo')
-@namebuilding_insert('cen_period', lambda self: [self.datevalidity, ])
+@namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
 class Prep(InitialCondition):
     """Class for the SURFEX-Crocus initialisation of the snowpack state."""
 
@@ -193,7 +193,7 @@ class Prep(InitialCondition):
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
                 kind = dict(
-                    values  = ['SnowpackState'],
+                    values  = ['PREP'],
                 ),
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
@@ -215,6 +215,7 @@ class Prep(InitialCondition):
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
                     optional = True,
+                    type = Date,
                     default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
@@ -229,7 +230,7 @@ class Prep(InitialCondition):
 
     @property
     def realkind(self):
-        return 'snowpackstate'
+        return 'PREP'
 
 
 @namebuilding_insert('cen_period', lambda self: [self.begindate.y, self.enddate.y])

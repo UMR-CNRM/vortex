@@ -11,7 +11,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.stdtypes.date import yesterday, Period, Time
 
 
-class TaskMixIn(object):
+class S2MTaskMixIn(object):
 
     nightruntime = Time(hour=3, minute=0)
 
@@ -41,8 +41,10 @@ class TaskMixIn(object):
 
     def get_rundate_forcing(self):
         if self.conf.previ:
+            # SAFRAN only generates new forecasts once a day during the night run
             rundate_forcing = self.conf.rundate.replace(hour=self.nightruntime.hour)
         else:
+            # SAFRAN generates new analyses at each run
             rundate_forcing = self.conf.rundate
         return rundate_forcing
 
@@ -66,7 +68,7 @@ class TaskMixIn(object):
 
     def get_list_geometry(self):
         suffix = '_allslopes'
-        if self.conf.geometry == 'postes':
-            return self.conf.geometry.area
-        elif suffix in self.conf.geometry:
-            return list(self.conf.geometry.replace(suffix, ''))
+        if self.conf.geometry.area == 'postes':
+            return ['alp', 'pyr', 'cor']
+        elif suffix in self.conf.geometry.area:
+            return [self.conf.geometry.area.replace(suffix, '')]

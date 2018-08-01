@@ -7,7 +7,7 @@ from collections import defaultdict
 import io
 import six
 
-from bronx.stdtypes.date import Date, Period
+from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
@@ -476,10 +476,16 @@ class SurfexWorker(_S2MWorker):
             ),
             geometry = dict(
                 info = "Area information in case of an execution on a massif geometry",
-                values = ["alp", "pyr", "cor", "postes"],
+                type = footprints.stdtypes.FPList,
                 optional = True,
                 default = None
             ),
+            daily = dict(
+                info = "If True, split simulations in daily runs",
+                type = bool,
+                optional = True,
+                default = False,
+            )
         )
     )
 
@@ -524,6 +530,8 @@ class SurfexWorker(_S2MWorker):
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow to build PGD and PREP
         namelist_ready = self.kind == 'deterministic'
         need_other_run = True
+        need_other_forcing = True
+        updateloc = True
         datebegin_this_run = self.datebegin
 
         while need_other_run:
@@ -531,32 +539,41 @@ class SurfexWorker(_S2MWorker):
             # Modification of the PREP file
             self.modify_prep(datebegin_this_run)
 
-            if self.kind == "escroc":
-                # ESCROC only : the forcing files are in the father directory (same forcing for all members)
-                forcingdir = rundir
+            if need_other_forcing:
+
+                if self.kind == "escroc":
+                    # ESCROC only : the forcing files are in the father directory (same forcing for all members)
+                    forcingdir = rundir
+                else:
+                    # ensmeteo or ensmeteo+escroc : the forcing files are supposed to be in the subdirectories of each member
+                    # determinstic case : the forcing file(s) is/are in the only directory
+                    forcingdir = thisdir
+
+                if len(self.geometry) > 1:
+                    print ("FORCING AGGREGATION")
+                    forcinglist = []
+                    for massif in self.geometry:
+                        dateforcbegin, dateforcend = get_file_period("FORCING_" + massif, forcingdir + "/" + massif, datebegin_this_run, self.dateend)
+                        forcinglist.append("FORCING_" + massif + ".nc")
+                    forcinput_tomerge(forcinglist, "FORCING.nc",)
+                else:
+                    # Get the first file covering part of the whole simulation period
+                    print ("LOOK FOR FORCING")
+                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
+                    print ("FORCING FOUND")
+
+                    if self.geometry[0] in ["alp", "pyr", "cor"]:
+                        print ("FORCING EXTENSION")
+                        liste_massifs = infomassifs().dicArea[self.geometry[0]]
+                        liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
+                        self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
+                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
+
+            if self.daily:
+                dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
+                need_other_forcing = False
             else:
-                # ensmeteo or ensmeteo+escroc : the forcing files are supposed to be in the subdirectories of each member
-                # determinstic case : the forcing file(s) is/are in the only directory
-                forcingdir = thisdir
-
-            if self.conf.geometry == 'postes':
-                forcinglist = []
-                for massif in self.conf.geometry.area:
-                    dateforcbegin, dateforcend = get_file_period("FORCING_" + massif, forcingdir + "/" + massif, datebegin_this_run, self.dateend)
-                    forcinglist.append("FORCING_" + massif + ".nc")
-                forcinput_tomerge(forcinglist, "FORCING.nc",)
-            else:
-                # Get the first file covering part of the whole simulation period
-                dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
-
-                if self.conf.geometry in ["alp", "pyr", "cor"]:
-
-                    liste_massifs = infomassifs().dicArea[self.massif]
-                    liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
-                    self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
-                    forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
-
-            dateend_this_run = min(self.dateend, dateforcend)
+                dateend_this_run = min(self.dateend, dateforcend)
 
             if not namelist_ready:
                 available_namelists = self.find_namelists()
@@ -565,12 +582,15 @@ class SurfexWorker(_S2MWorker):
                 for namelist in available_namelists:
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
-                    newcontent = update_surfex_namelist_object(namelist.contents, self.datebegin, updateloc=False, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
+                    print("MODIFY THE NAMELIST")
+                    newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)
                     newnam.close()
-
-                namelist_ready = True
+                if self.daily:
+                    updateloc = True
+                else:
+                    namelist_ready = True
 
             # Run surfex offline
             list_name = self.system.path.join(thisdir, 'offline.out')
@@ -580,21 +600,22 @@ class SurfexWorker(_S2MWorker):
             self.system.cp("SURFOUT.nc", "PREP.nc")
 
             # Post-process
-            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc")
+            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
             pro.massif_natural_risk()
             pro.close()
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
-            save_file_period(".", "FORCING.nc", dateforcbegin, dateforcend)
+            if not (need_other_run and not need_other_forcing):
+                save_file_period(".", "FORCING", dateforcbegin, dateforcend)
 
             # Remove the symbolic link for next iteration (not needed since now we rename the forcing just before
 #             self.system.remove("FORCING.nc")
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
-            need_other_run = dateforcend < self.dateend
+            need_other_run = dateend_this_run < self.dateend
 
 
 class Guess(ParaExpresso):
@@ -700,7 +721,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['s2m_offline', 'escroc']
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+escroc']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -721,10 +742,16 @@ class SurfexComponent(S2MComponent):
             ),
             geometry = dict(
                 info = "Area information in case of an execution on a massif geometry",
-                values = ["alp", "pyr", "cor", "postes"],
+                type = footprints.stdtypes.FPList,
                 optional = True,
                 default = None
             ),
+            daily = dict(
+                info = "If True, split simulations in daily runs",
+                type = bool,
+                optional = True,
+                default = False,
+            )
         )
     )
 
@@ -735,7 +762,10 @@ class SurfexComponent(S2MComponent):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        if len(self.members) >= 1000:
+            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        else:
+            subdirs = ['mb{0:03d}'.format(m) for m in self.members]
 
         if self.subensemble:
             escroc = ESCROC_subensembles(self.subensemble, self.members)

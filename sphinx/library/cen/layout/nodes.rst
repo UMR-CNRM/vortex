@@ -12,10 +12,11 @@
 Classes
 -------
 
-.. autoclass:: TaskMixIn
+.. autoclass:: S2MTaskMixIn
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
 
 .. hints
 .. .. autodata:: XXX
