@@ -151,4 +151,7 @@ def get_4():
 
 
 if __name__ == '__main__':
+    get_1()
+    get_2()
+    get_3()
     get_4()

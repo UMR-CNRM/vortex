@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This example get simple resources and put it at different places using the
-available providers.
+This example aims t using a hook on a file get.
 
 Ok 20180801 - GR
 """
@@ -31,8 +30,14 @@ sh.chdir(workdirectory)
 ##### Getting a resource using the Vortex provider
 # Define the date
 rundate = date.yesterday() + date.Period("PT3H")
+
+# Define a hook which will print the size of the file
+def my_hook(t, rh):
+    dname = rh.container.localpath()
+    print("The size of the file get is: {}".format(t.sh.size(dname)))
+
 # Define the resource
-rh1 = toolbox.rload(
+rh = toolbox.rload(
     # Ressource
     kind       = 'mbsample',
     nbsample   = 12,
@@ -48,29 +53,11 @@ rh1 = toolbox.rload(
     # Container
     local      = "test.json"
 )[0]
-print(rh1.complete)
-print(rh1.location())
-print(rh1.locate())
-print(rh1.idcard())
+print(rh.complete)
+print(rh.location())
+print(rh.locate())
+print(rh.idcard())
 # Get the resource
-print(rh1.get())
-
-
-# Put the resource in the Olive tree of files
-rh2 = toolbox.rload(
-    # Ressource
-    kind       = 'mbsample',
-    nbsample   = 12,
-    date       = rundate,
-    cutoff     = "production",
-    model      = "arome",
-    # Provider
-    block      = "clustering",
-    namespace  = 'vortex.cache.fr',
-    experiment = "0000",
-    vapp       = "arome",
-    vconf      = "pefrance",
-    # Container
-    local      = "test.json"
-)[0]
-print(rh2.put())
+print(rh.get())
+# Use the hook defined
+my_hook(t, rh)

@@ -161,5 +161,7 @@ def essai_3():
 
 
 if __name__ == '__main__':
+    essai_1()
+    essai_2()
     essai_3()
     print("That's all, Folks!")
