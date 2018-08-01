@@ -13,12 +13,13 @@ Package
 
 .. autodata:: __all__
 
-Included Modules
-----------------
+Modules
+-------
 
 * :mod:`common.util.async`
 * :mod:`common.util.beacon`
 * :mod:`common.util.diffpygram`
 * :mod:`common.util.ens`
 * :mod:`common.util.hooks`
+* :mod:`common.util.taskdeco`
 * :mod:`common.util.useepygram`
