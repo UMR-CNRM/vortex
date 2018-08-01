@@ -54,7 +54,7 @@ rh = toolbox.rload(
     vconf      = "pifrance",
     # Container
     local      = "analysis.fa"
-)
+)[0]
 print(rh.complete)
 print(rh.location())
 print(rh.locate())

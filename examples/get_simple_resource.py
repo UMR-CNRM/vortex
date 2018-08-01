@@ -4,6 +4,8 @@
 """
 This example get simple resources and put it at different places using the
 available providers.
+
+Ok 20180801 - GR
 """
 
 ##### Initializations
@@ -30,7 +32,7 @@ sh.chdir(workdirectory)
 
 ##### Getting a resource using the Vortex provider
 # Define the date
-rundate = date.Date("201806200300")
+rundate = date.yesterday() + date.Period("PT3H")
 # Define the resource
 rh = toolbox.rload(
     # Ressource
@@ -47,7 +49,7 @@ rh = toolbox.rload(
     vconf      = "pefrance",
     # Container
     local      = "test.json"
-)
+)[0]
 print(rh.complete)
 print(rh.location())
 print(rh.locate())

@@ -45,7 +45,7 @@ rh = toolbox.rload(
     genv     = "cy42_op2.68",
     # Container
     local    = "Const.clim.[geometry::area].[month]"
-)
+)[0]
 print(rh.complete)
 print(rh.location())
 print(rh.locate())

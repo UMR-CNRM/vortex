@@ -42,7 +42,7 @@ rh = toolbox.rload(
     genv   = "cy42_op2.68",
     # Container
     local  = "namelistfc"
-)
+)[0]
 print(rh.complete)
 print(rh.location())
 print(rh.locate())
