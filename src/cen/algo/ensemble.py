@@ -531,6 +531,7 @@ class SurfexWorker(_S2MWorker):
         namelist_ready = self.kind == 'deterministic'
         need_other_run = True
         need_other_forcing = True
+        need_save_forcing = False
         updateloc = True
         datebegin_this_run = self.datebegin
 
@@ -556,6 +557,7 @@ class SurfexWorker(_S2MWorker):
                         dateforcbegin, dateforcend = get_file_period("FORCING_" + massif, forcingdir + "/" + massif, datebegin_this_run, self.dateend)
                         forcinglist.append("FORCING_" + massif + ".nc")
                     forcinput_tomerge(forcinglist, "FORCING.nc",)
+                    need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
                     print ("LOOK FOR FORCING")
@@ -568,6 +570,7 @@ class SurfexWorker(_S2MWorker):
                         liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
                         self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
                         forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
+                        need_save_forcing = True
 
             if self.daily:
                 dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
@@ -607,15 +610,15 @@ class SurfexWorker(_S2MWorker):
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
-            if not (need_other_run and not need_other_forcing):
-                save_file_period(".", "FORCING", dateforcbegin, dateforcend)
-
-            # Remove the symbolic link for next iteration (not needed since now we rename the forcing just before
-#             self.system.remove("FORCING.nc")
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
             need_other_run = dateend_this_run < self.dateend
+
+            if need_save_forcing and not (need_other_run and not need_other_forcing):
+                save_file_period(".", "FORCING", dateforcbegin, dateforcend)
+            # Remove the symbolic link for next iteration (not needed since now we rename the forcing just before
+#             self.system.remove("FORCING.nc")
 
 
 class Guess(ParaExpresso):

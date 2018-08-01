@@ -69,8 +69,21 @@ class S2MTaskMixIn(object):
         return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
 
     def get_list_geometry(self):
+        source_safran, block_safran = self.get_source_safran()
         suffix = '_allslopes'
-        if self.conf.geometry.area == 'postes':
-            return ['alp', 'pyr', 'cor']
-        elif suffix in self.conf.geometry.area:
-            return [self.conf.geometry.area.replace(suffix, '')]
+        if source_safran == "safran":
+            if self.conf.geometry.area == 'postes':
+                return ['alp', 'pyr', 'cor']
+            elif suffix in self.conf.geometry.area:
+                return [self.conf.geometry.area.replace(suffix, '')]
+        else:
+            return [self.conf.geometry.area]
+
+    def get_source_safran(self):
+        if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
+            return "s2m", "meteo"
+        else:
+            if self.conf.geometry.area == 'postes':
+                return "safran", "postes"
+            else:
+                return "safran", "massifs"
