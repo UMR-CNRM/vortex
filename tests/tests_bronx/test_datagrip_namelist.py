@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from decimal import Decimal
 import six
-from unittest import TestCase, main
+from unittest import TestCase, skipUnless, main
 
 from bronx.datagrip import namelist
 import re
@@ -174,6 +174,25 @@ class UtFortranNamelist(TestCase):
         self._encode_tester("'mach\"in", '"\'mach""in"')
         self._encode_tester(True, ".TRUE.")
         self._encode_tester(False, ".FALSE.")
+
+    @skipUnless(namelist.npchecker.is_available(), 'NumPy is not available.')
+    def test_encode_np(self):
+        import numpy as np
+        self._encode_tester(np.int8(20), '20')
+        self._encode_tester(np.int16(1243), '1243')
+        self._encode_tester(np.int32(1243523), '1243523')
+        self._encode_tester(np.int64(1243523), '1243523')
+        self._encode_tester(np.uint8(20), '20')
+        self._encode_tester(np.uint16(12435), '12435')
+        self._encode_tester(np.uint32(1243523), '1243523')
+        self._encode_tester(np.uint64(1243523), '1243523')
+        self._encode_tester(np.float16(0.01258963557898961), '0.0126')
+        self._encode_tester(np.float32(0.01258963557898961), '0.01258964')
+        self._encode_tester(np.float64(0.01258963557898961), '0.0125896355789896')
+        self._encode_tester(np.complex64(complex(0.01258963557898965, 0.01258963557898965)),
+                            '(0.01258964,0.01258964)')
+        self._encode_tester(np.complex128(complex(0.01258963557898965, 0.01258963557898965)),
+                            '(0.0125896355789896,0.0125896355789896)')
 
     def test_namblock(self):
         np = namelist.NamelistParser(macros=('MYMACRO1', 'MYMACRO2'))
