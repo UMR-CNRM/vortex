@@ -13,20 +13,14 @@ Package
 
 .. autodata:: __all__
 
-Exceptions
-----------
+Public Data
+-----------
 
-.. autoclass:: EpygramUnavailableError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+.. autodata:: epygram_checker
+
 
 Functions
 ---------
-
-.. autofunction:: is_epygram_available
-
-.. autofunction:: disabled_if_no_epygram
 
 .. autofunction:: clone_fields
 

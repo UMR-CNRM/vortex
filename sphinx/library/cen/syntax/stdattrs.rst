@@ -6,8 +6,16 @@
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 1.3.1
+.. versionadded:: 1.4.0
 
+
+Public Data
+-----------
+
+
+.. autodata:: cendateperiod
+
+.. autodata:: cendateperiod_deco
 
 Functions
 ---------

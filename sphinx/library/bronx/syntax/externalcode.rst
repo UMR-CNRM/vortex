@@ -8,8 +8,6 @@
 .. sectionauthor:: The Vortex Team & many contributors
 .. versionadded:: 1.4.0
 
-.. autodata:: __all__
-
 
 Exceptions
 ----------

@@ -1,32 +1,31 @@
-:mod:`cen.algo.components` --- TODO Module Header
-=================================================
+:mod:`cen.algo.ensemble` --- TODO description
+=============================================
 
-.. automodule:: cen.algo.components
-   :synopsis: TODO Module Synopsis
+.. automodule:: cen.algo.ensemble
+   :synopsis: TODO description
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 1.1.1
+.. versionadded:: 1.4.0
 
-Package
--------
-
-.. autodata:: __all__
 
 Classes
 -------
 
-.. autoclass:: SurfexWorker
+Taylorism workers
+*****************
+
+.. autoclass:: _S2MWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: OfflineWorker
+.. autoclass:: GuessWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SafranWorker
+.. autoclass:: _SafranWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -40,7 +39,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: SyrpluieWorker
    :show-inheritance:
    :members:
@@ -50,12 +49,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: SyvafiWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: SyrmrrWorker
    :show-inheritance:
    :members:
@@ -66,17 +65,34 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Grib2SafranWorker
+.. autoclass:: SurfexWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Grib2Safran
+AlgoComponents
+**************
+
+.. autoclass:: Guess
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: S2M_component
+.. autoclass:: S2MComponent
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SurfexComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
+.. hints
+.. .. autodata:: XXX
+.. .. autofunction:: XXX
+.. .. autoclass:: EpygramMetadataReader
+..    :show-inheritance:
+..    :members:
+..    :member-order: alphabetical

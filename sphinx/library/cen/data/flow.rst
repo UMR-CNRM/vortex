@@ -8,8 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.1.1
 
-Package
--------
 
 .. autodata:: __all__
 
@@ -30,7 +28,17 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SurfaceIO
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SurfaceForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Pro
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -40,7 +48,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Pro
+.. autoclass:: SnowObs
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ScoresSnow
    :show-inheritance:
    :members:
    :member-order: alphabetical

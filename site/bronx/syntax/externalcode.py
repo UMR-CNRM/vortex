@@ -4,15 +4,17 @@
 """
 A handy class that checks that an external code import worked properly.
 
-If not, decorators are provided to disable portions of code.
+If not, a decorator is provided to disable portions of code.
 
-.. example: Simple use::
+Example of a simple use::
 
     from bronx.syntax.externalcode import ExternalCodeImportChecker
 
     echecker = ExternalCodeImportChecker('anypackage')
     with echecker:
         import anypackage
+
+    print('Did it work ? {!s}'.format(echecker.is_available()))
 
     @echecker.disabled_if_unavailable
     def my_function_based_on_anypackage()
@@ -24,7 +26,11 @@ If not, decorators are provided to disable portions of code.
         def sayhi(self)
             return anypackage.sayhi()
 
-.. example: Also check a version number::
+    # A call to my_function_based_on_anypackage or any attempt to create a
+    # MyClassBasedOnAnypackage object will lead to a ExternalCodeUnavailableError
+    # error if the import statement failed.
+
+Example of that also checks a version number::
 
     from bronx.syntax.externalcode import ExternalCodeImportChecker
 
@@ -59,10 +65,16 @@ class ExternalCodeUnavailableError(Exception):
 
 
 class ExternalCodeImportChecker(object):
+    """
+    Catches any import error and allow for the developer to test whether it
+    succeeded or not.
+
+    See the example above.
+    """
 
     def __init__(self, nickname='external'):
         """
-        :param str nickname: The name of the external code t be imported
+        :param str nickname: The name of the external code to be imported
         """
         self.nickname = nickname
         self._checked_out = None

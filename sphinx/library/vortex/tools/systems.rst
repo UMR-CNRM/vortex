@@ -21,11 +21,6 @@ Exceptions
 .. autoclass:: ExecutionError
    :show-inheritance:
 
-.. autoclass:: YamlUnavailableError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 
 Classes
 -------

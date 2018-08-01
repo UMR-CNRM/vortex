@@ -6,25 +6,19 @@
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 1.3.1
+.. versionadded:: 1.4.0
+
+
+Package
+-------
 
 .. autodata:: __all__
 
 
-Public data
------------
+Included Modules
+----------------
 
-
-Functions
----------
-
-
-Exceptions
-----------
-
-
-Classes
--------
+* :mod:`cen.layout.nodes`
 
 
 .. hints
