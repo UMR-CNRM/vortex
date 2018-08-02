@@ -72,8 +72,8 @@ class S2MTaskMixIn(object):
         source_safran, block_safran = self.get_source_safran()
         suffix = '_allslopes'
         if source_safran == "safran":
-            if self.conf.geometry.area == 'postes':
-                return ['alp', 'pyr', 'cor']
+            if self.conf.geometry.area == "postes":
+                return self.conf.geometry.list.split(",")
             elif suffix in self.conf.geometry.area:
                 return [self.conf.geometry.area.replace(suffix, '')]
         else:

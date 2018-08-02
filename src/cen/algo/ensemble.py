@@ -493,16 +493,16 @@ class SurfexWorker(_S2MWorker):
             prep = prep_tomodify("PREP.nc")
 
             if modif_swe:
-                print "APPLY THRESHOLD ON SWE."
+                print ("APPLY THRESHOLD ON SWE.")
                 prep.apply_swe_threshold(self.threshold)
 
             if modif_date:
-                print "CHANGE DATE OF THE PREP FILE."
+                print ("CHANGE DATE OF THE PREP FILE.")
                 prep.change_date(self.datebegin)
 
             prep.close()
         else:
-            print "DO NOT CHANGE THE PREP FILE."
+            print ("DO NOT CHANGE THE PREP FILE.")
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
@@ -554,8 +554,11 @@ class SurfexWorker(_S2MWorker):
                     print ("FORCING AGGREGATION")
                     forcinglist = []
                     for massif in self.geometry:
-                        dateforcbegin, dateforcend = get_file_period("FORCING_" + massif, forcingdir + "/" + massif, datebegin_this_run, self.dateend)
-                        forcinglist.append("FORCING_" + massif + ".nc")
+                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif, datebegin_this_run, self.dateend)
+                        forcingname = "FORCING_" + massif + ".nc"
+                        self.system.mv("FORCING.nc", forcingname)
+                        forcinglist.append(forcingname)
+
                     forcinput_tomerge(forcinglist, "FORCING.nc",)
                     need_save_forcing = True
                 else:
@@ -581,11 +584,11 @@ class SurfexWorker(_S2MWorker):
             if not namelist_ready:
                 available_namelists = self.find_namelists()
                 if len(available_namelists) > 1:
-                    print "WARNING SEVERAL NAMELISTS AVAILABLE !!!"
+                    print ("WARNING SEVERAL NAMELISTS AVAILABLE !!!")
                 for namelist in available_namelists:
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
-                    print "MODIFY THE NAMELIST"
+                    print ("MODIFY THE NAMELIST")
                     newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)

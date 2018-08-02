@@ -8,7 +8,7 @@ from footprints.util import rangex
 
 from vortex.data.flow        import GeoFlowResource
 from common.data.obs         import ObsRaw
-from vortex.data.geometries  import MassifGeometry
+from vortex.data.geometries  import UnstructuredGeometry, Geometry
 from common.data.modelstates import InitialCondition
 from vortex.syntax.stdattrs  import Time
 
@@ -56,7 +56,7 @@ class SafranGuess(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = UnstructuredGeometry,
                 ),
                 cumul = dict(
                     info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
@@ -111,7 +111,7 @@ class SurfaceIO(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",
@@ -239,7 +239,7 @@ class Prep(InitialCondition):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 filling = dict(
                     value = ['surf', ],
@@ -294,7 +294,7 @@ class SnowObs(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",

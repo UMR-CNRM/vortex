@@ -497,54 +497,6 @@ class CurvlinearGeometry(UnstructuredGeometry):
             fmts = 'kind={0:s}, r={1:s}, global, ni={3!s}, nj={4!s}'
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
-
-class MassifGeometry(UnstructuredGeometry):
-    """Grid describing the partition of a mountain range in massifs."""
-
-    _tag_topcls = False
-
-    def __init__(self, *args, **kw):  # @UnusedVariable
-        """
-        :param str tag: The geometry's name (if no **tag** attributes is provided,
-            the first positional attribute is considered to be the tag name)
-        :param str info: A free description of the geometry
-        :param int nmassif: The number of massifs in this grid
-        :param str area: The grid location
-        """
-        super(MassifGeometry, self).__init__(**kw)
-        self.kind = 'massif'
-        if self.area is None:
-            self.area = self.tag
-
-    def doc_export(self):
-        """Relevant informations to print in the documentation."""
-        fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
-        return fmts.format(self.kind, self.area, self.nmassif)
-
-
-class PostGeometry(UnstructuredGeometry):
-    """Post geometry for Nivology applications"""
-
-    _tag_topcls = False
-
-    def __init__(self, *args, **kw):  # @UnusedVariable
-        """
-        :param str tag: The geometry's name (if no **tag** attributes is provided,
-            the first positional attribute is considered to be the tag name)
-        :param str info: A free description of the geometry
-        :param int nposts: The number of posts in this geometry
-        :param str area: The grid location
-        """
-        super(PostGeometry, self).__init__(**kw)
-        self.kind = 'postes'
-        if self.area is None:
-            self.area = self.tag
-
-    def doc_export(self):
-        """Relevant informations to print in the documentation."""
-        fmts = 'kind={0:s}, area={1:s}, posts count={2!s}'
-        return fmts.format(self.kind, self.area, self.nposts)
-
 # Load default geometries when the module is first imported
 
 
