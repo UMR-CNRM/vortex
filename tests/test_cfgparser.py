@@ -230,9 +230,9 @@ class TestAppConfigDecoder(TestCase):
         self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='global798'),
                                                     geometries.get(tag='globalsp2')])
         trangex = 'rangex(1-35-1)'
-        self.assertListEqual(self.cd(trangex), range(1, 36))
+        self.assertListEqual(self.cd(trangex), list(range(1, 36)))
         trangex = 'rangex(1-35-1,37,38-42-2)'
-        self.assertListEqual(self.cd(trangex), range(1, 36) + [37, 38, 40, 42])
+        self.assertListEqual(self.cd(trangex), list(range(1, 36)) + [37, 38, 40, 42])
         trangex = 'rangex(0-1-0:30)'
         self.assertListEqual(self.cd(trangex), ['0000:00', '0000:30', '0001:00'])
         trangex = 'rangex(start:1 end:3 shift:-1)'
