@@ -11,7 +11,7 @@ import re
 import six
 import sys
 
-from bronx.stdtypes.date import Time
+from bronx.stdtypes.date import Time, Date
 import footprints
 
 #: No automatic export
@@ -44,6 +44,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
                 (suffix_r0, 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
             )
         )
+        
     elif vconf in _arpcourt_vconf:
         map_suffix = {(cutoff, 0): 'rCM'}
     else:
@@ -68,6 +69,8 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
         model_info = vapp[:4].upper()
     elif model == 'hycom':
         model_info = 'HYCOM'
+    elif model == 'mocage':
+        model_info = ''
     else:
         logger.critical('Unknown model <%s> for op names fabrik', model)
         raise ValueError('Unknown model')
@@ -144,9 +147,15 @@ def global_pnames(provider, resource):
     if hasattr(resource, 'model'):
         if resource.model == 'surfex' and provider.vapp == 'arpege':
             info['fmt'] = 'autres'
+        if provider.vapp == 'mocage' and provider.vconf == 'camsfcst':
+            
+            info['model'] = 'macc'
+            info['igakey'] = 'france'
+
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
+            
     # patch: if model is not in info we must provide it through the
     # provider's attributes: model or vapp
     if 'model' not in info:
@@ -200,6 +209,11 @@ def rawfields_bnames(resource, provider):
     else:
         return None
 
+
+def obsfire_bnames(resource, provider):
+    """docstring for obsfirepack_bnames"""
+    return 'GFASfires_' + resource.date.ymd + '.tar.gz'
+    
 
 def geofields_bnames(resource, provider):
     """docstring for geofields_bnames"""
@@ -271,6 +285,9 @@ def historic_bnames(resource, provider):
             else:
                 suffix = '.{0:03d}'.format(resource.term.hour)
         return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
+    
+    if provider.vconf == 'camsfcst':    
+        return 'HM' + resource.geometry.area + '+' + resource.term  
 
     if provider.vconf == 'pearp':
         return 'ICMSHPREV' + '+' + resource.term.fmthour + '.' + suffix
@@ -365,10 +382,19 @@ def gridpoint_bnames(resource, provider):
                  cutoff, reseau, model)
     logger.debug('gridpoint_bnames: member %s', provider.member)
     if resource.nativefmt == 'fa':
-        model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
-                                     vapp=provider.vapp, vconf=provider.vconf)
-        localname = 'PF' + model_info + resource.geometry.area + '+' \
-            + resource.term.fmthour + '.' + suffix
+        if resource.model == 'mocage':
+            if resource.kind == 'gridpoint':
+                model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
+                                             vapp=provider.vapp, vconf=provider.vconf)
+                localname = 'RUN1_HM' + resource.geometry.area + '+' \
+                    + Date(resource.date.ymdh + '/-PT12H').ymdh
+            else:
+                pass
+        else :
+            model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
+                                         vapp=provider.vapp, vconf=provider.vconf)
+            localname = 'PF' + model_info + resource.geometry.area + '+' \
+                + resource.term.fmthour + '.' + suffix
     elif resource.nativefmt == 'grib':
         if resource.model == 'arpege':
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
@@ -392,6 +418,15 @@ def gridpoint_bnames(resource, provider):
             mode = mode_map.get(provider.vconf[4:][:2], None)
             localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour)
             return localname
+        #elif resource.model == 'ifs':
+            # For MACC forecast (camsfcst)
+            #if ressource.cutoff == 'production':
+                #localname = 'MET' + resource.date.ymd + resource.geometry.area + '.grb'
+                #return localname
+            # For MACC assim 
+            #else:
+                #localname = 'MET0utc' + resource.date.ymd + resource.geometry.area + '.grb'        
+
         else:
             return None
     else:
@@ -432,6 +467,10 @@ def boundary_bnames(resource, provider):
         _, suffix = gribNames(cutoff, reseau, model, force_courtfr=is_court)
         nw_term = "{0:03d}".format(term.hour)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
+    elif resource.model == 'mocage':
+        localname = 'RUN1_SM' +  resource.geometry.area + '+' \
+                    + resource.date.ymd
+
     else:
         _, suffix = faNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(resource.term.hour)
@@ -548,6 +587,24 @@ def global_snames(resource, provider):
             bname = 'sst.ostia'
         if resource.origin == 'bdm' and resource.fields == 'seaice':
             bname = 'SSMI.AM'
+
+    if resource.realkind == 'gridpoint':
+        if resource.model == 'ifs':
+            # For MACC forecast (camsfcst)
+            if resource.cutoff == 'production':
+                bname = 'MET' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
+            # For MACC assim 
+            else:
+                bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'   
+
+    if resource.realkind == 'chemical_bc':
+       if resource.model == 'mocage':
+            
+            if resource.cutoff == 'production':
+                bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
+            else:
+                bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh  + '.nc'
+
     if resource.realkind == 'observations':
         suff = map_suffix[(cutoff, resource.date.hour)]
         if vapp == 'arpege':

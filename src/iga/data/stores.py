@@ -89,7 +89,7 @@ class IgaFinder(Finder):
             return self.system.join(self.rootdir, remote['path'])
 
     def fileget(self, remote, local, options):
-        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('fileget on %s (to: %s)', rpath, local)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
