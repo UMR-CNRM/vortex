@@ -430,7 +430,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
-            tbx = zip(tbx)
+            tbx = zip(* tbx)
         with self.env.delta_context(**env_update):
             for binary in tbx:
                 try:
