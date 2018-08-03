@@ -158,11 +158,12 @@ class Unknown(Resource):
         fastkeys = set(['unknown', ]),
     )
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """Keep the Unknown resource unknown."""
-        bdict = dict(radical=self.nickname, )
-        if self.nativefmt not in ('auto', 'autoconfig', 'foo', 'unknown'):
-            bdict['fmt'] = self.nativefmt
+        bdict = super(Unknown, self).namebuilding_info()
+        bdict.update(radical=self.nickname, )
+        if self.nativefmt in ('auto', 'autoconfig', 'foo', 'unknown'):
+            del bdict['fmt']
         return bdict
 
 

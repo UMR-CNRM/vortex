@@ -337,7 +337,7 @@ class MakeLAMDomain(AlgoComponent):
                                                   self.illustration_fmt]),
                                     **self.plot_params)
         dm_extra_params = dict()
-        if self.self.e_zone_in_pgd:
+        if self.e_zone_in_pgd:
             dm_extra_params = dict(Ezone_in_pgd=self.e_zone_in_pgd)
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,

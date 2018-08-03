@@ -107,7 +107,7 @@ class RandBFiles(GeoFlowResource):
         """GGET specific naming convention."""
         if self.ipert is None:
             raise ValueError('ipert is mandatory with the GCO provider')
-        return '.{:03d}'.format(self.ipert) + ".fa"
+        return '.{:03d}.{}'.format(self.ipert, 'fa')
 
 
 class InflationFactor(_BackgroundErrorInfo):

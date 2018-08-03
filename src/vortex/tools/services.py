@@ -13,14 +13,14 @@ from six.moves.configparser import NoOptionError, NoSectionError
 import hashlib
 import io
 import six
+from email import encoders
 from string import Template
 
 from bronx.stdtypes import date
-from bronx.syntax.pretty import Utf8PrettyPrinter
+from bronx.syntax.pretty import EncodedPrettyPrinter
 import footprints
 
 from vortex import sessions
-from vortex.tools.actions import actiond as ad  # @UnusedImport
 from vortex.util.config import GenericConfigParser, load_template
 
 #: No automatic export
@@ -189,7 +189,7 @@ class MailService(Service):
     def get_mimemap(self):
         """Construct and return a map of MIME types."""
         try:
-            md = self._mimemap
+            self._mimemap
         except AttributeError:
             from email.mime.audio import MIMEAudio
             from email.mime.image import MIMEImage
@@ -228,6 +228,7 @@ class MailService(Service):
                     xmsg = MIMEBase(maintype, subtype)
                     with io.open(xtra, 'rb') as fp:
                         xmsg.set_payload(fp.read())
+                    encoders.encode_base64(xmsg)
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
                 multi.attach(xmsg)
         return multi
@@ -235,7 +236,7 @@ class MailService(Service):
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
         msg['From'] = self.sender
-        msg['To']   = self.commaspace.join(self.to.split())
+        msg['To'] = self.commaspace.join(self.to.split())
         if self.is_not_plain_ascii(self.subject):
             from email.header import Header
             msg['Subject'] = Header(self.subject, self.charset)
@@ -255,7 +256,7 @@ class MailService(Service):
         if not self.sh.default_target.isnetworknode:
             import tempfile
             count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
-            with io.open(tmpmsgfile, 'w') as fd:
+            with io.open(tmpmsgfile, 'wb') as fd:
                 fd.write(msgcorpus)
             mailcmd = '{0:s} {1:s} < {2:s}'.format(
                 self.altmailx,
@@ -491,15 +492,15 @@ class HideService(Service):
         """Find a path for hidding files on the same filesystem."""
         username = self.sh.getlogname()
         work_dir = self.sh.path.join(self.sh.find_mount_point(filename), 'work')
-        if self.sh.path.exists(work_dir):
-            hidden_path = self.sh.path.join(work_dir, username, self.headdir)
-        else:
+        if not self.sh.path.exists(work_dir):
             logger.warning("path <%s> doesn't exist", work_dir)
             fullpath = self.sh.path.realpath(filename)
             if username not in fullpath:
                 logger.error('No login <%s> in path <%s>', username, fullpath)
                 raise ValueError('Login name not in actual path for hidding data')
-            hidden_path = self.sh.path.join(fullpath.partition(username)[0], username, self.headdir)
+            work_dir = fullpath.partition(username)[0]
+            logger.debug("using work_dir = <%s>", work_dir)
+        hidden_path = self.sh.path.join(work_dir, username, self.headdir)
         return hidden_path
 
     def __call__(self, *args):
@@ -612,10 +613,11 @@ class PromptService(Service):
 
     def __call__(self, options):
         """Prints what arguments the action was called with."""
-        pf = Utf8PrettyPrinter().pformat
+
+        pf = EncodedPrettyPrinter().pformat
         logger_action = getattr(logger, self.level, logger.warning)
         msg = (self.comment or 'PromptService was called.') + '\noptions = {}'
-        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt> '))
+        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt>'))
         return True
 
 

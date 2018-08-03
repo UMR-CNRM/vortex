@@ -16,7 +16,8 @@ __all__ = [ ]
 logger = footprints.loggers.getLogger(__name__)
 
 
-class ChemicalBoundaryConditions(FlowResource):
+@namebuilding_delete('src')
+class ChemicalBoundaryConditions(GeoFlowResource):
     """Chemical boundary conditions produced by some external model."""
 
     _footprint = [

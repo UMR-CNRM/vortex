@@ -22,3 +22,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Ch4SurfEmissions
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfaceSpeciesConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

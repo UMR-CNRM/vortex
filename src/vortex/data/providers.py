@@ -317,7 +317,7 @@ class Vortex(Provider):
         return self.namespace.netloc
 
     def pathname(self, resource):
-        """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
+        """Constructs pathname of the ``resource`` according to :func:`namebuilding_info`."""
         rinfo = resource.namebuilding_info()
         rinfo.update(
             vapp=self.vapp,
@@ -331,7 +331,7 @@ class Vortex(Provider):
     def basename(self, resource):
         """
         Constructs basename according to current ``namebuild`` factory
-        and resource :func:`~vortex.data.resources.Resource.basename_info`.
+        and resource :func:`~vortex.data.resources.Resource.namebuilding_info`.
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
 

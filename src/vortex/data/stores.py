@@ -819,7 +819,7 @@ class Finder(Store):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract store init %s', self.__class__)
+        logger.debug('Finder store init %s', self.__class__)
         super(Finder, self).__init__(*args, **kw)
 
     @property

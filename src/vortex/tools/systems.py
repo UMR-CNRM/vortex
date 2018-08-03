@@ -48,8 +48,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
 import time
-from datetime import datetime
 
 import footprints
 from bronx.stdtypes import date
@@ -61,7 +61,7 @@ from vortex.gloves import Glove
 from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
-from bronx.syntax.decorators import nicedeco_plusdoc, nicedeco
+from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
 
@@ -84,6 +84,8 @@ istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
 #: Pre-compiled regex to check a boolean false str value
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 
+#: Global lock to protect temporary locale changes
+LOCALE_LOCK = threading.Lock()
 
 _fmtshcmd_docbonus = """
 
@@ -151,7 +153,7 @@ class CdContext(object):
     Context manager for temporarily changing the working directory.
 
     Returns to the initial directory, even when an exception is raised.
-    Has the syntax of system.cd, and can be used through system::
+    Has the syntax of the :meth:`~OSExtended.cd` call, and can be used through an :class:`OSExtended` object::
 
         with sh.cdcontext(newpath, create=True):
             # work in newpath
@@ -172,6 +174,44 @@ class CdContext(object):
         self.sh.cd(self.oldpath)
         if self.clean_onexit:
             self.sh.rm(self.newpath)
+
+
+def setlocale(category, localename=None):
+    """Older Python2 insist on localename being an str and not unicode.
+
+    This was fixed somewhere between Python 2.7.5 and 2.7.12
+    and should be removed some day.
+    """
+    if localename:
+        return locale.setlocale(category, str(localename))
+    return locale.setlocale(category)
+
+
+@contextlib.contextmanager
+def NullContext():
+    """A context that does nothing, but with a context's semantic."""
+    yield
+
+
+@contextlib.contextmanager
+def LocaleContext(category, localename=None, uselock=False):
+    """Context used to locally change the Locale.
+
+    This is used like the :func:`~locale.setlocale` function::
+
+        with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8'):
+            strtime = date.now().strftime('%X')
+
+    The ``locale`` is changed at the process level ; to avoid conflicting changes
+    in a multithread context, use *with care* the additional ``uselock`` argument.
+    """
+    lock = LOCALE_LOCK if uselock else NullContext()
+    with lock:
+        previous = setlocale(category)
+        try:
+            yield setlocale(category, localename)
+        finally:
+            locale.setlocale(category, previous)
 
 
 class System(footprints.FootprintBase):
@@ -347,7 +387,7 @@ class System(footprints.FootprintBase):
     def external(self, key):
         """Return effective module object reference if any, or *None*."""
         try:
-            z = getattr(self, key)  # @UnusedVariable
+            getattr(self, key)
         except AttributeError:
             pass
         return self._xtrack.get(key, None)
@@ -409,7 +449,7 @@ class System(footprints.FootprintBase):
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
 
-        :param list|str testlist: A list of strings that contains the title's text
+        :param list|str textlist: A list of strings that contains the title's text
         :param str tchar: The character used to frame the title text
         :param int autolen: The title width
         """
@@ -419,12 +459,12 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = max([len(text) for text in textlist])
-        print
+        print()
         print(tchar * (nbc + 4))
         for text in textlist:
             print('{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc))
         print(tchar * (nbc + 4))
-        print('')
+        print()
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output.
@@ -834,7 +874,7 @@ class OSExtended(System):
             p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr,
                                  shell=shell, env=localenv)
             p_out, p_err = p.communicate()
-        except ValueError as perr:
+        except ValueError:
             logger.critical(
                 'Weird arguments to Popen ({!s}, stdout={!s}, stderr={!s}, shell={!s})'.format(
                     args, cmdout, cmderr, shell
@@ -844,7 +884,7 @@ class OSExtended(System):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except OSError as perr:
+        except OSError:
             logger.critical('Could not call %s', str(args))
             if fatal:
                 raise
@@ -975,6 +1015,22 @@ class OSExtended(System):
                 self.chmod(filename, self._os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 is_x = True
             return is_x
+        else:
+            return False
+
+    def rperm(self, filename, force=False):
+        """Return whether a **filename** exists and is readable by all or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes readable for all.
+        """
+        if self._os.path.exists(filename):
+            mode = self._os.stat(filename).st_mode
+            is_r = all([bool(mode & i) for i in [stat.S_IRUSR, stat.S_IRGRP, stat.S_IROTH]])
+            if not is_r and force:
+                self.chmod(filename, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                is_r = True
+            return is_r
         else:
             return False
 
@@ -1485,11 +1541,11 @@ class OSExtended(System):
     def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
         """Proceed with some external ftget command on the specified target.
 
-        :param str source: The remote path to get data
-        :param str destination: Path to the filename where to put the data.
-        :param str hostname: The target hostname  (default: *None*).
+        :param str source: the remote path to get data
+        :param str destination: path to the filename where to put the data.
+        :param str hostname: the target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
-        :param CompressionPipeline cpipeline: Unusued (kept for compatibility)
+        :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         return self.ftserv_get(source, destination, hostname, logname)
 
@@ -1649,7 +1705,7 @@ class OSExtended(System):
 
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
-        return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
+        return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
     def rawcp(self, source, destination):
@@ -2089,6 +2145,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
+    # noinspection PyPep8
     def l(self, *args):  # @IgnorePep8
         """
         Proxy to globbing after removing any option. A bit like the
@@ -2140,10 +2197,12 @@ class OSExtended(System):
             zopt.discard('v')
         if autocompress:
             if tarfile.endswith('gz'):
+                # includes the conventional "*.tgz"
                 zopt.add('z')
             else:
                 zopt.discard('z')
             if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+                # includes the conventional "*.tbz"
                 zopt.add('j')
             else:
                 zopt.discard('j')
@@ -2220,41 +2279,13 @@ class OSExtended(System):
             radix = radix[:-4]
         return radix
 
-    def tarfix_in(self, source, destination):
-        """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
-        ok = True
-        if self.is_tarname(source) and not self.is_tarname(destination):
-            logger.info('Untar from get <%s>', source)
-            (destdir, destfile) = self.path.split(self.path.abspath(destination))
-            desttar = self.path.abspath(destination + '.tar')
-            self.remove(desttar)
-            ok = ok and self.move(destination, desttar)
-            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
-            with self.cdcontext(loctmp):
-                ok = ok and self.untar(desttar, output=False)
-                unpacked = self.glob('*')
-                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-                ok = ok and self.remove(desttar)
-            self.rm(loctmp)
-        return (ok, source, destination)
-
-    def tarfix_out(self, source, destination):
-        """
-        Automatically tar the **source** input if **destination** is a tarfile and
-        **source** is not."""
-        ok = True
-        if not self.is_tarname(source) and self.is_tarname(destination):
-            logger.info('Tar before put <%s>', source)
-            sourcetar = self.path.abspath(source + '.tar')
-            (sourcedir, source_rel) = self.path.split(source)
-            (sourcedir, sourcefile) = self.path.split(sourcetar)
-            with self.cdcontext(sourcedir):
-                ok = ok and self.remove(sourcefile)
-                ok = ok and self.tar(sourcefile, source_rel, output=False)
-            return (ok, sourcetar, destination)
-        else:
-            return (ok, source, destination)
+    def tarname_splitext(self, objname):
+        """Like os.path.splitext, but for tar names (e.g. might return ``.tar.gz``)."""
+        if not self.is_tarname(objname):
+            return (objname, '')
+        radix = self.tarname_radix(objname)
+        ext = objname.replace(radix, '')
+        return (radix, ext)
 
     def blind_dump(self, gateway, obj, destination, **opts):
         """

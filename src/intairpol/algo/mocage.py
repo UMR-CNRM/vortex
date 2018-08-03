@@ -364,16 +364,8 @@ class PPCamsBDAP(BlindRun):
             namrh.contents.rewrite(newcontainer)
             newcontainer.cat()
 
-            # Load miscellaneous modules
-            # FIXME: At least before it becomes operational !
-            lpath = r.container.localpath()
-            cmd1 = '. /etc/profile.d/00-modules.sh; module load gcc; module load nco; module load cdo; module load netcdf; module load jasper; module list; ncks -O -v a_hybr_coord,b_hybr_coord ' + lpath + ' HM_HYBRID.nc'
-            cmd2 = '. /etc/profile.d/00-modules.sh; module load gcc; module load nco; module load cdo; module load netcdf; module load jasper; module list; cdo remapbil,regridMACC ' + lpath + ' HMMACC.nc'
-            sh.spawn(cmd1, shell=True, output=False, fatal=True)
-            sh.spawn(cmd2, shell=True, output=False, fatal=True)
-
             # Link in the forecast file
-            self.system.softlink(r.container.localpath(), 'HMFILE')
+            self.system.softlink(r.container.localpath(), 'HMFILE.nc')
 
             # Execute
             super(PPCamsBDAP, self).execute(rh, opts)
@@ -386,7 +378,7 @@ class PPCamsBDAP(BlindRun):
             if self.system.path.exists('MFM_V5+.grib2'):
                 sh.mv('MFM_V5+.grib2', actualname)
 
-            sh.rmall('HMFILE', 'HM_HYBRID.nc', 'HM.nc')
+            sh.rmall('HMFILE.nc', 'HM_HYBRID.nc', 'HM.nc')
 
             # The grib2 output may be promised for BDAP transferts : put method applied to these outputs
             # put these outputs in the cache ; IGA will perform the following actions.
