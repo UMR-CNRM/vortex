@@ -30,4 +30,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: C901
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

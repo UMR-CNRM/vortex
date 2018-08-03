@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
+from vortex.data.contents import DataTemplate
 
 """
 Query files used by various databases.
@@ -132,3 +133,33 @@ class BDMQuery(Query):
     @property
     def realkind(self):
         return 'bdm_query'
+
+
+class MarsQuery(Query):
+    """Class to deal with Mars queries"""
+
+    _footprint = dict(
+        info = 'Mars query',
+        attr = dict(
+            kind = dict(
+                values = ['mars_query']
+            ),
+            gvar = dict(
+                values = ["extract_stuff"],
+                default = "extract_stuff"
+            ),
+            origin = dict(
+                default = "mars",
+                values = ["mars", ],
+                optional = True
+            ),
+            source = dict(),
+            clscontents=dict(
+                default=DataTemplate
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return "mars_query"

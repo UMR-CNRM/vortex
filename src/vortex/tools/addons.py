@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import six
 
+from bronx.syntax.decorators import nicedeco
 import footprints
 
 from vortex.layout import contexts
@@ -274,3 +275,37 @@ class AddonGroup(footprints.FootprintBase):
                                             cycle=self.cycle, verboseload=self.verboseload)
             if self.verboseload:
                 logger.info("%s Addon is: %s", addon, repr(_shadd))
+
+
+def require_external_addon(*addons):
+    """
+    A method decorator usable in addons, that will check if addons listed in
+    **addons** are properly loaded in the parent System object.
+
+    If not, a :class:`RuntimeError` exception will be raised.
+    """
+    @nicedeco
+    def r_addon_decorator(method):
+
+        def decorated(self, *kargs, **kwargs):
+            # Create a cache in self... ugly but efficient !
+            if not hasattr(self, '_require_external_addon_check_cache'):
+                setattr(self, '_require_external_addon_check_cache', set())
+            ko_addons = set()
+            loaded_addons = None
+            for addon in addons:
+                if addon in self._require_external_addon_check_cache:
+                    continue
+                if loaded_addons is None:
+                    loaded_addons = self.sh.loaded_addons()
+                if addon in loaded_addons:
+                    self._require_external_addon_check_cache.add(addon)
+                else:
+                    ko_addons.add(addon)
+            if ko_addons:
+                raise RuntimeError('The following addons are needed to use the {:s} method: {:s}'
+                                   .format(method.__name__, ', '.join(ko_addons)))
+            return method(self, *kargs, **kwargs)
+
+        return decorated
+    return r_addon_decorator

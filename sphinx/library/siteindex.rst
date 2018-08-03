@@ -22,6 +22,11 @@ List of modules.
 .. toctree::
    :maxdepth: 2
    
+   ecmwf_system/index
+
+.. toctree::
+   :maxdepth: 2
+   
    footprints/index
 
 .. toctree::
