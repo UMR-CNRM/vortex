@@ -2,17 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-Package used at ECMWF for ECtrans and ECfs interface.
+ECMWF installations features.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from . import systems
-
 #: No automatic export
 __all__ = []
 
-__version__ = '1.2.2'
-
+__version__ = '1.4.0'
 
 __tocinfoline__ = 'ECMWF installations features'

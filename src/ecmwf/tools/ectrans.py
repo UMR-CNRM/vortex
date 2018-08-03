@@ -4,16 +4,11 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import tempfile
 
 import footprints
 from vortex.tools import addons
 from vortex.tools.systems import fmtshcmd
-from vortex.tools.grib import GRIB_Tool
-from vortex.tools.folder import FolderShell
-from vortex.tools.lfi import LFI_Tool_Raw, LFI_Status
 from .interfaces import ECtrans
-from vortex import proxy
 from vortex.util.config import GenericConfigParser
 
 #: No automatic export
@@ -38,7 +33,7 @@ class ECtransConfigurationError(ECtransError):
     pass
 
 
-class ECtransTools(addons.FtrawEnableAddon):
+class ECtransTools(addons.Addon):
     """
     Handle ECtrans use properly within Vortex.
     """
@@ -51,77 +46,72 @@ class ECtransTools(addons.FtrawEnableAddon):
         )
     )
 
-    def ectrans_gateway_init(self, gateway=None, inifile=None):
+    def _get_ectrans_setting(self, option, section='ectrans', guess=None, inifile=None):
         """
-        Initialize the gateway attribute used by ECtrans.
+        Use the configuration data (from the curent target object or from
+        **inifile**) to find out the appropriate configuration setting in the
+        environment.
+
+        :param option: The configuration key to look for
+        :param section: The configuration section that will be used
+        :param guess: gateway used if provided
+        :param inifile: configuration file in which the gateway is read if provided
+        :return: the appropriate configuration setting
+
+        :note: If the method is unable to find an appropriate value, a
+               :class:`ECtransConfigurationError` exception is raised.
+        """
+        actual_setting = guess
+        # Use inifile first (if provided)
+        if actual_setting is None and inifile is not None:
+            actual_config = GenericConfigParser(inifile=inifile)
+            actual_setting_key = None
+            if (actual_config.has_section(section) and
+                    actual_config.has_option(section, option)):
+                actual_setting_key = actual_config.get("ectrans", "gateway")
+            if actual_setting_key:
+                actual_setting = self.sh.env[actual_setting_key]
+        # Use the system's configuration file otherwise
+        if actual_setting is None:
+            actual_setting_key = self.sh.target().get('{:s}:{:s}'.format(section, option),
+                                                      None)
+            if actual_setting_key:
+                actual_setting = self.sh.env[actual_setting_key]
+        # Check if it worked ?
+        if actual_setting is None:
+            raise ECtransConfigurationError("Could not find a proper value for an ECtrans setting ({:s})."
+                                            .format(option))
+        return actual_setting
+
+    def ectrans_gateway_init(self, gateway=None, inifile=None):
+        """Initialize the gateway attribute used by ECtrans.
+
         :param gateway: gateway used if provided
         :param inifile: configuration file in which the gateway is read if provided
         :return: the gateway to be used by ECtrans
         """
-        actual_gateway = gateway
-        if actual_gateway is None:
-            actual_inifile = inifile
-            actual_gateway_key = None
-            if actual_inifile is not None:
-                actual_config = GenericConfigParser(inifile=actual_inifile)
-                actual_gateway_key = actual_config.get("ectrans", "gateway")
-            if actual_gateway_key is not None:
-                actual_gateway = self.sh.env[actual_gateway_key]
-            if actual_gateway is None:
-                actual_inifile = proxy.target().inifile
-                if actual_inifile is None:
-                    raise ECtransConfigurationError("Could not find a proper configuration file.")
-                else:
-                    actual_config = GenericConfigParser(inifile=actual_inifile)
-                    actual_gateway_key = actual_config.get("ectrans", "gateway")
-                    if actual_gateway_key is not None:
-                        actual_gateway = self.sh.env[actual_gateway_key]
-                    if actual_gateway is None:
-                        raise ECtransConfigurationError("Could not find a proper value for ECtrans gateway.")
-        return actual_gateway
+        return self._get_ectrans_setting('gateway', gateway, inifile)
 
     def ectrans_remote_init(self, remote=None, inifile=None, storage="default"):
-        """
-        Initialize the remote attribute used by Ectrans.
+        """Initialize the remote attribute used by Ectrans.
+
         :param remote: remote used if provided
         :param inifile: configuration file in which the remote is read if provided
         :param storage: the store place
         :return: the remote to be used by ECtrans
         """
-        actual_remote = remote
-        if actual_remote is None:
-            actual_inifile = inifile
-            actual_remote_key = None
-            if actual_inifile is not None:
-                actual_config = GenericConfigParser(inifile=actual_inifile)
-                actual_remote_key = actual_config.get("ectrans", "remote_{}".format(storage))
-            if actual_remote_key is not None:
-                actual_remote = self.sh.env[actual_remote_key]
-            elif storage != "default" and actual_inifile is not None:
-                actual_remote_key = actual_config.get("ectrans", "remote_default")
-            if actual_remote_key is not None:
-                actual_remote = self.sh.env[actual_remote_key]
-            if actual_remote is None:
-                actual_inifile = proxy.target().inifile
-                if actual_inifile is None:
-                    raise ECtransConfigurationError("Could not find a proper configuration file.")
-                else:
-                    actual_config = GenericConfigParser(inifile=actual_inifile)
-                    actual_remote_key = actual_config.get("ectrans", "remote_{}".format(storage))
-                    if actual_remote_key is not None:
-                        actual_remote = self.sh.env[actual_remote_key]
-                    elif storage != "default":
-                        actual_remote_key = actual_config.get("ectrans", "remote_default")
-                    if actual_remote_key is not None:
-                        actual_remote = self.sh.env[actual_remote_key]
-                    if actual_remote is None:
-                        raise ECtransConfigurationError("Could not find a proper value for ECtrans remote.")
-        return actual_remote
+        try:
+            return self._get_ectrans_setting('remote_{:s}'.format(storage), remote, inifile)
+        except ECtransConfigurationError:
+            if storage != 'default':
+                return self._get_ectrans_setting('remote_default', remote, inifile)
+            else:
+                raise
 
     @staticmethod
     def ectrans_defaults_init():
-        """
-        Initialise the default for ECtrans.
+        """Initialise the default for ECtrans.
+
         :return: the different structures used by the ECtrans interface initialised
         """
         list_args = list()
@@ -133,8 +123,8 @@ class ECtransTools(addons.FtrawEnableAddon):
         return list_args, list_options, dict_args
 
     def raw_ectransput(self, source, target, gateway=None, remote=None):
-        """
-        Put a resource using ECtrans (default class).
+        """Put a resource using ECtrans (default class).
+
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
@@ -159,9 +149,10 @@ class ECtransTools(addons.FtrawEnableAddon):
 
     @fmtshcmd
     def ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        Put a resource using ECtrans.
+        """Put a resource using ECtrans.
+
         This class is not used if a particular method format_ectransput exists.
+
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
@@ -176,20 +167,23 @@ class ECtransTools(addons.FtrawEnableAddon):
                                                     gateway=gateway,
                                                     remote=remote)
             else:
-                csource = source + ".tmp"
-                cpipeline.compress2file(source=source,
-                                        destination=csource)
-                rc, dict_args = self.raw_ectransput(source=csource,
-                                                    target=target,
-                                                    gateway=gateway,
-                                                    remote=remote)
+                csource = source + self.sh.safe_filesuffix()
+                try:
+                    cpipeline.compress2file(source=source,
+                                            destination=csource)
+                    rc, dict_args = self.raw_ectransput(source=csource,
+                                                        target=target,
+                                                        gateway=gateway,
+                                                        remote=remote)
+                finally:
+                    self.sh.rm(csource)
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
         return rc, dict_args
 
     def raw_ectransget(self, source, target, gateway, remote):
-        """
-        Get a resource using ECtrans (default class).
+        """Get a resource using ECtrans (default class).
+
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
@@ -210,13 +204,14 @@ class ECtransTools(addons.FtrawEnableAddon):
         )
         del dict_args["source"]
         del dict_args["target"]
-        return rc
+        return rc, dict_args
 
     @fmtshcmd
     def ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        Get a resource using ECtrans.
+        """Get a resource using ECtrans.
+
         This class is not used if a particular method format_ectransput exists.
+
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
@@ -232,175 +227,14 @@ class ECtransTools(addons.FtrawEnableAddon):
                                                 gateway=gateway,
                                                 remote=remote)
         else:
-            ctarget = target + ".tmp"
-            rc, dict_args = self.raw_ectransget(source=source,
-                                                target=ctarget,
-                                                gateway=gateway,
-                                                remote=remote)
-            rc = rc and cpipeline.file2uncompress(source=ctarget,
-                                                  destination=target)
+            ctarget = target + self.sh.safe_filesuffix()
+            try:
+                rc, dict_args = self.raw_ectransget(source=source,
+                                                    target=ctarget,
+                                                    gateway=gateway,
+                                                    remote=remote)
+                rc = rc and cpipeline.file2uncompress(source=ctarget,
+                                                      destination=target)
+            finally:
+                self.sh.rm(ctarget)
         return rc, dict_args
-
-
-class ECtransGRIB_Tool(GRIB_Tool):
-    """
-    Handle Grib files transfers via ECtrans at ECMWF
-    """
-    _footprint = dict(
-        info = 'ECtrans grib system interface',
-        attr = dict(
-            kind = dict(
-                values   = ['grib_ectrans'],
-            )
-        ),
-        priority=dict(
-            level=footprints.priorities.top.TOOLBOX
-        )
-    )
-
-    def grib_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        Put a grib resource using ECtrans.
-        :param source: source file
-        :param target: target file
-        :param gateway: gateway used by ECtrans
-        :param remote: remote used by ECtrans
-        :param cpipeline: compression pipeline used, if provided
-        :return: return code and additional attributes used
-        """
-        if self.is_xgrib(source):
-            if cpipeline is not None:
-                raise IOError("It's not allowed to compress xgrib files.")
-            psource = source + ".tmp"
-            rc1 = self.xgrib_pack(source=source,
-                                  destination=psource)
-            rc, dict_args = self.sh.raw_ectransput(source=psource,
-                                                   target=target,
-                                                   gateway=gateway,
-                                                   remote=remote)
-            rc = rc and rc1 and self.sh.rm(psource)
-            return rc, dict_args
-        else:
-            return self.sh.ectransput(source=source,
-                                      target=target,
-                                      gateway=gateway,
-                                      remote=remote,
-                                      cpipeline=cpipeline)
-
-
-class ECtransFolderShell(FolderShell):
-    """
-    Class to handle ECtrans transfers of Folder objects.
-    """
-    _footprint = dict(
-        info = 'Tools to manipulate folders via ECtrans',
-        attr = dict(
-            kind = dict(
-                values   = ['folder_ectrans'],
-            )
-        ),
-        priority=dict(
-            level=footprints.priorities.top.TOOLBOX
-        )
-    )
-
-    def _folder_ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        Get a folder resource using ECtrans.
-        :param source: source file
-        :param target: target file
-        :param gateway: gateway used by ECtrans
-        :param remote: remote used by ECtrans
-        :param cpipeline: compression pipeline to be used, if provided
-        :return: return code and additional attributes used
-        """
-        # The folder must not be compressed
-        if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
-        ctarget = target + ".tgz"
-        source, target = self._folder_preftget(source, target)
-        # Create a local directory, get the source file and untar it
-        loccwd = self.sh.getcwd()
-        loctmp = tempfile.mkdtemp(prefix="folder_", dir=loccwd)
-        with self.sh.cdcontext(loctmp, create=True):
-            rc, dict_args = self.sh.raw_ectransget(source=source,
-                                                   target=ctarget,
-                                                   gateway=gateway,
-                                                   remote=remote)
-            rc = rc and self.sh.untar(ctarget)
-            rc = rc and self.sh.rm(ctarget)
-            self._folder_postftget(target, loccwd, loctmp)
-        return rc, dict_args
-
-    def _folder_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        Put a folder resource using ECtrans.
-        :param source: source file
-        :param target: target file
-        :param gateway: gateway used by ECtrans
-        :param remote: remote used by ECtrans
-        :param cpipeline: compression pipeline to be used, if provided
-        :return: return code and additional attributes used
-        """
-        if cpipeline is not None:
-            raise IOError("It's not allowed to compress folder like data.")
-        if not target.endswith('.tgz'):
-            target += ".tgz"
-        source = self.sh.path.abspath(source)
-        csource = source + ".tgz"
-        rc1 = self.sh.tar(source)
-        rc, dict_args = self.sh.raw_ectransput(source=csource,
-                                               target=target,
-                                               gateway=gateway,
-                                               remote=remote)
-        rc = rc and rc1 and self.sh.rm(csource)
-        return rc, dict_args
-
-
-class ECtrans_LFI_Tool_Raw(LFI_Tool_Raw):
-    """
-    Abstract class to handle ECtrans transfers of LFI objects.
-    """
-    _footprint = dict(
-        info = 'ECtrans LFI system interface',
-        attr = dict(
-            kind = dict(
-                values   = ['lfi_ectrans'],
-            )
-        ),
-        priority=dict(
-            level=footprints.priorities.top.TOOLBOX
-        )
-    )
-
-    def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """
-        TODO: define xlfi_pack in the parent class
-        :param source: source file
-        :param target: target file
-        :param gateway: gateway used by ECtrans
-        :param remote: remote used by ECtrans
-        :param cpipeline: compression pipeline to be used, if provided
-        :return: return code and additional attributes used
-        """
-        if self.is_xlfi(source):
-            if cpipeline is not None:
-                raise IOError("It's not allowed to compress xlfi files.")
-            psource = source + ".tmp"
-            rc1 = LFI_Status()
-            rc1 = rc1 and self.xlfi_pack(source=source,
-                                         destination=psource)
-            rc, dict_args = self.sh.raw_ectransput(source=psource,
-                                                   target=target,
-                                                   gateway=gateway,
-                                                   remote=remote)
-            rc = rc and rc1 and self.sh.rm(psource)
-            return rc, dict_args
-        else:
-            return self.sh.ectransput(source=source,
-                                      target=target,
-                                      gateway=gateway,
-                                      remote=remote,
-                                      cpipeline=cpipeline)
-
-    fa_ectransput = lfi_ectransput = _std_ectransput

@@ -382,17 +382,17 @@ class C901(IFSParallel):
         surf_fc_files = self.context.sequence.effective_inputs(
             role = "SurfaceModelState"
         )
-        surf_fc_files.sort(key=lambda s: s.rh.resource.term)
+        surf_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
         surf_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in surf_fc_files]
         atm_fc_files = self.context.sequence.effective_inputs(
             role = "AtmosphereModelState"
         )
-        atm_fc_files.sort(key=lambda s: s.rh.resource.term)
+        atm_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
         atm_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_files]
         atm_fc_spe_files = self.context.sequence.effective_inputs(
             role = "AtmosphereModelSpectralState"
         )
-        atm_fc_spe_files.sort(key=lambda s: s.rh.resource.term)
+        atm_fc_spe_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
         atm_fc_spe_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_spe_files]
         current_surf_ana_file = self.context.sequence.effective_inputs(
             role = "SurfaceAnalysis"
@@ -433,7 +433,7 @@ class C901(IFSParallel):
             super(C901, self).execute(rh, opts)
             # Move the output file
             current_term = current_surf_fc_file.rh.resource.term
-            sh.move(self.OUTPUT_FILE_NAME, self.OUTPUT_FILE_NAME+"+{}".format(current_term.fmthm))
+            sh.move(self.OUTPUT_FILE_NAME, self.OUTPUT_FILE_NAME + "+{}".format(current_term.fmthm))
             # Cat all the listings into a single one
             sh.cat(self.OUTPUT_LISTING_NAME, output='NODE.all')
             # Remove unneeded files

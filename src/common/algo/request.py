@@ -524,8 +524,8 @@ class GetMarsResource(AlgoComponent):
             date = a_date,
             substitutions = dict(
                 info = "A dictionary of values to be substituted",
-                type = dict,
-                default = dict(),
+                type = footprints.stdtypes.FPDict,
+                default = footprints.stdtypes.FPDict(),
                 optional = True
             ),
             command = dict(
@@ -573,7 +573,7 @@ class GetMarsResource(AlgoComponent):
                 logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
                 query.container.cat()
                 # Launch the command
-                actual_command = findMarsExtractCommand(command=self.command)
+                actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
                 rc = callMarsExtract(sh=self.system, query_file=query_abspath, fatal=self.fatal,
                                      command=actual_command)
                 if not rc:

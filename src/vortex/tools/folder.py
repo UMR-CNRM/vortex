@@ -23,8 +23,10 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput',
-                               'scpget', 'scpput'])
+_folder_exposed_methods = set(['cp', 'mv',
+                               'ftget', 'rawftget', 'ftput', 'rawftput',
+                               'scpget', 'scpput',
+                               'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
 
 
 def folderize(cls):
@@ -304,6 +306,116 @@ class FolderShell(addons.FtrawEnableAddon):
         rc = ssh.scpput_stream(p.stdout, destination)
         self.sh.pclose(p)
         return rc
+
+    @addons.require_external_addon('ecfs')
+    def _folder_ecfsget(self, source, target, cpipeline=None, options=None):
+        """Get a folder resource using ECfs.
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        # The folder must not be compressed
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        ctarget = target + ".tgz"
+        source, target = self._folder_preftget(source, target)
+        # Create a local directory, get the source file and untar it
+        loccwd = self.sh.getcwd()
+        loctmp = tempfile.mkdtemp(prefix="folder_", dir=loccwd)
+        with self.sh.cdcontext(loctmp, create=True):
+            rc, dict_args = self.sh.ecfsget(source=source,
+                                            target=ctarget,
+                                            options=options)
+            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.rm(ctarget)
+            self._folder_postftget(target, loccwd, loctmp)
+        return rc, dict_args
+
+    @addons.require_external_addon('ecfs')
+    def _folder_ecfsput(self, source, target, cpipeline=None, options=None):
+        """Put a folder resource using ECfs.
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if not target.endswith('.tgz'):
+            target += ".tgz"
+        source = self.sh.path.abspath(source)
+        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        try:
+            rc = self.sh.tar(csource, source)
+            if rc:
+                rc, dict_args = self.sh.ecfsput(source=csource,
+                                                target=target,
+                                                options=options)
+        finally:
+            self.sh.rm(csource)
+        return rc, dict_args
+
+    @addons.require_external_addon('ectrans')
+    def _folder_ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Get a folder resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        # The folder must not be compressed
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        ctarget = target + ".tgz"
+        source, target = self._folder_preftget(source, target)
+        # Create a local directory, get the source file and untar it
+        loccwd = self.sh.getcwd()
+        loctmp = tempfile.mkdtemp(prefix="folder_", dir=loccwd)
+        with self.sh.cdcontext(loctmp, create=True):
+            rc, dict_args = self.sh.raw_ectransget(source=source,
+                                                   target=ctarget,
+                                                   gateway=gateway,
+                                                   remote=remote)
+            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.rm(ctarget)
+            self._folder_postftget(target, loccwd, loctmp)
+        return rc, dict_args
+
+    @addons.require_external_addon('ectrans')
+    def _folder_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Put a folder resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if not target.endswith('.tgz'):
+            target += ".tgz"
+        source = self.sh.path.abspath(source)
+        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        try:
+            rc = self.sh.tar(csource, source)
+            if rc:
+                rc, dict_args = self.sh.raw_ectransput(source=csource,
+                                                       target=target,
+                                                       gateway=gateway,
+                                                       remote=remote)
+        finally:
+            self.sh.rm(csource)
+        return rc, dict_args
 
 
 @folderize

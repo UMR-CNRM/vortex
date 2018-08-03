@@ -150,7 +150,7 @@ class MarsQuery(Query):
             ),
             origin = dict(
                 default = "mars",
-                values = ["mars",],
+                values = ["mars", ],
                 optional = True
             ),
             source = dict(),

@@ -4,7 +4,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-from vortex import proxy
 from vortex.util.config import GenericConfigParser
 
 """
@@ -32,16 +31,16 @@ class MarsGetError(MarsError):
     pass
 
 
-def findMarsExtractCommand(inifile=None, command=None):
+def findMarsExtractCommand(sh, inifile=None, command=None):
     actual_command = command
     if actual_command is None:
         actual_inifile = inifile
         if actual_inifile is None:
-            actual_inifile = proxy.target().inifile
-        if actual_inifile is None:
-            raise MarsConfigurationError("Could not find a proper configuration file.")
-        actual_config = GenericConfigParser(inifile=actual_inifile)
-        actual_command = actual_config.get("mars", "command")
+            actual_command = sh.target().get("mars:command", None)
+        else:
+            actual_config = GenericConfigParser(inifile=actual_inifile)
+            if actual_config.has_section('mars') and actual_config.has_option('mars', 'command'):
+                actual_command = actual_config.get("mars", "command")
         if actual_command is None:
             raise MarsConfigurationError("Could not find a proper command.")
     return actual_command

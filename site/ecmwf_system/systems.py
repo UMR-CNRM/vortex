@@ -16,8 +16,8 @@ logger = footprints.loggers.getLogger(__name__)
 from vortex.tools.targets import Target
 
 
-class ECMWFCray(Target):
-    """Cray Computer."""
+class ECMWFCrayXC(Target):
+    """Cray XC30/40 Computer."""
 
     _abstract = True
     _footprint = dict(
@@ -43,7 +43,7 @@ class ECMWFCray(Target):
             return self.inetname + 'cn'
 
 
-class CCA(ECMWFCray):
+class CCA(ECMWFCrayXC):
     """CCA Computer at ECMWF."""
     # TODO: Check the name and the number of the different CCA nodes
 
@@ -51,10 +51,10 @@ class CCA(ECMWFCray):
         info = 'Cray CCA Supercomputer at ECMWF',
         attr = dict(
             hostname = dict(
-                values = \
-                    [ x + str(y) for x in ('cca',) for y in range(1836) ] + \
-                    [ x + str(y) for x in ('cca-login',) for y in range(1,5) ] + \
-                    [ 'cca-batch' ]
+                values = (
+                    [x + str(y) for x in ('cca',) for y in range(1836)] +
+                    [x + str(y) for x in ('cca-login',) for y in range(1, 5)] +
+                    ['cca-batch', ])
             ),
             inetname = dict(
                 default = 'cca',
@@ -64,7 +64,7 @@ class CCA(ECMWFCray):
     )
 
 
-class CCB(ECMWFCray):
+class CCB(ECMWFCrayXC):
     """CCB Computer at ECMWF."""
     # TODO: Check the name and the number of the different CCB nodes
 
@@ -72,10 +72,10 @@ class CCB(ECMWFCray):
         info = 'Cray CCB Supercomputer at ECMWF',
         attr = dict(
             hostname = dict(
-                values = \
-                    [ x + str(y) for x in ('ccb',) for y in range(1836) ] + \
-                    [ x + str(y) for x in ('ccb-login',) for y in range(1,5) ] + \
-                    [ 'ccb-batch' ]
+                values = (
+                    [x + str(y) for x in ('ccb',) for y in range(1836)] +
+                    [x + str(y) for x in ('ccb-login',) for y in range(1, 5)] +
+                    ['ccb-batch', ])
             ),
             inetname = dict(
                 default = 'ccb',

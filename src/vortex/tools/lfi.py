@@ -390,6 +390,77 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     fa_scpput = lfi_scpput = _std_scpput
 
+    @addons.require_external_addon('ecfs')
+    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+        """TODO: define xlfi_pack in the parent class
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
+            psource = source + self.sh.safe_filesuffix()
+            rc = LFI_Status()
+            try:
+                rc = rc and self.xlfi_pack(source=source,
+                                           destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.ecfsput(source=psource,
+                                                    target=target,
+                                                    options=options)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ecfsput(source=source,
+                                   target=target,
+                                   options=options,
+                                   cpipeline=cpipeline)
+
+    fa_ecfsput = lfi_ecfsput = _std_ecfsput
+
+    @addons.require_external_addon('ectrans')
+    def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """TODO: define xlfi_pack in the parent class
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
+            psource = source + self.sh.safe_filesuffix()
+            rc = LFI_Status()
+            try:
+                rc = rc and self.xlfi_pack(source=source,
+                                           destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.raw_ectransput(source=psource,
+                                                           target=target,
+                                                           gateway=gateway,
+                                                           remote=remote)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ectransput(source=source,
+                                      target=target,
+                                      gateway=gateway,
+                                      remote=remote,
+                                      cpipeline=cpipeline)
+
+    fa_ectransput = lfi_ectransput = _std_ectransput
+
 
 class LFI_Tool_Py(LFI_Tool_Raw):
     """
