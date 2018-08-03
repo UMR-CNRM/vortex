@@ -10,16 +10,20 @@ Can be launched anywhere where Gget or a Gget light are available
 Ok 20180731 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
 
-import vortex
+# #### Initializations
+
+# Load useful packages for the examples
 import common
 import olive
-from vortex import toolbox
+import vortex
 from bronx.stdtypes import date
+from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, olive])
 
 # Initialize environment for examples
 t = vortex.ticket()
@@ -32,8 +36,11 @@ if not sh.path.isdir(workdirectory):
     sh.mkdir(workdirectory)
 sh.chdir(workdirectory)
 
-##### Getting a resource using the Genv provider
+
+# #### Getting a resource using the Genv provider
+
 runmonth = date.Month("201801010000")
+
 # Define the resource
 rh = toolbox.rload(
     # Ressource
@@ -46,9 +53,11 @@ rh = toolbox.rload(
     # Container
     local    = "Const.clim.[geometry::area].[month]"
 )[0]
+
 print(rh.complete)
 print(rh.location())
 print(rh.locate())
 print(rh.idcard())
+
 # Get the resource
 print(rh.get())

@@ -8,14 +8,20 @@ available providers.
 Ok 20180801 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-import vortex
+
+# Load useful packages for the examples
 import common
-from vortex import toolbox
+import vortex
 from bronx.stdtypes import date
+from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, ])
+
+
+# #### Initializations
 
 # Initialize environment for examples
 t = vortex.ticket()
@@ -28,9 +34,12 @@ if not sh.path.isdir(workdirectory):
     sh.mkdir(workdirectory)
 sh.chdir(workdirectory)
 
-##### Getting a resource using the Vortex provider
+
+# #### Getting a resource using the Vortex provider
+
 # Define the date
 rundate = date.yesterday() + date.Period("PT3H")
+
 # Define the resource
 rh1 = toolbox.rload(
     # Ressource
@@ -48,10 +57,12 @@ rh1 = toolbox.rload(
     # Container
     local      = "test.json"
 )[0]
+
 print(rh1.complete)
 print(rh1.location())
 print(rh1.locate())
 print(rh1.idcard())
+
 # Get the resource
 print(rh1.get())
 
@@ -73,4 +84,5 @@ rh2 = toolbox.rload(
     # Container
     local      = "test.json"
 )[0]
+
 print(rh2.put())

@@ -2,19 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-This example aims t using a hook on a file get.
+This example show how to use a hook on a file get.
 
 Ok 20180801 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-import vortex
+# Load useful packages for the examples
 import common
-from vortex import toolbox
+import vortex
 from bronx.stdtypes import date
+from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, ])
+
+
+# #### Initializations
 
 # Initialize environment for examples
 t = vortex.ticket()
@@ -27,14 +32,18 @@ if not sh.path.isdir(workdirectory):
     sh.mkdir(workdirectory)
 sh.chdir(workdirectory)
 
-##### Getting a resource using the Vortex provider
+
+# #### Getting a resource using the Vortex provider
+
 # Define the date
 rundate = date.yesterday() + date.Period("PT3H")
+
 
 # Define a hook which will print the size of the file
 def my_hook(t, rh):
     dname = rh.container.localpath()
     print("The size of the file get is: {}".format(t.sh.size(dname)))
+
 
 # Define the resource
 rh = toolbox.rload(
@@ -53,11 +62,14 @@ rh = toolbox.rload(
     # Container
     local      = "test.json"
 )[0]
+
 print(rh.complete)
 print(rh.location())
 print(rh.locate())
 print(rh.idcard())
+
 # Get the resource
 print(rh.get())
+
 # Use the hook defined
 my_hook(t, rh)

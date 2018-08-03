@@ -16,11 +16,12 @@ The experiment chosen does not always exists and should be change in order to ha
 Ok 20180731 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
 
+# #### Initializations
+
+# Load useful packages for the examples
 import vortex
 import common
 import olive
@@ -38,9 +39,12 @@ if not sh.path.isdir(workdirectory):
     sh.mkdir(workdirectory)
 sh.chdir(workdirectory)
 
-##### Getting a resource using the Vortex provider
+
+# #### Getting a resource using the Vortex provider
+
 # Define the date
 rundate = date.yesterday()
+
 # Define the resource
 rh = toolbox.rload(
     # Ressource
@@ -58,9 +62,11 @@ rh = toolbox.rload(
     # Container
     local      = "analysis.fa"
 )[0]
+
 print(rh.complete)
 print(rh.location())
 print(rh.locate())
 print(rh.idcard())
+
 # Get the resource
 print(rh.get())

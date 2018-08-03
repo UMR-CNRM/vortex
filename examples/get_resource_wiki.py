@@ -2,27 +2,26 @@
 # -*- coding: utf-8 -*-
 
 """
-Exemple du wiki
-http://sicompas/vortex/doku.php/documentation:faq:rhandler
+Various ways to retrieve informations on a resource handler and it's components.
 
 Ok 20180801 - GR
 """
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import common.data
 import olive.data
 import vortex
-from vortex.data.geometries import Geometry
 from bronx.stdtypes import date
+from vortex.data.geometries import Geometry
 
-assert any([common.data, olive.data])
-
+# prevent IDEs from removing seemingly unused imports
+assert any([common, olive])
 
 # Initialize environment for examples
 t = vortex.ticket()
 sh = t.sh
 e = t.env
-
 
 # Change the work directory
 workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
@@ -32,7 +31,6 @@ sh.chdir(workdirectory)
 
 # Define the run date
 rundate = date.today() + date.Period('PT00H')
-
 
 # Define the resource
 rh = vortex.toolbox.rh(
@@ -57,6 +55,6 @@ print('idcard()   :')
 print(rh.idcard())
 print('\ncomplete   : {}\n'.format(rh.complete))
 print('location() : {}\n'.format(rh.location()))
-#print('get()      : {}\n'.format(rh.get()))
+# print('get()      : {}\n'.format(rh.get()))
 print('check()    : {}\n'.format(rh.check()))
 print('locate()   : {}\n'.format(rh.locate()))

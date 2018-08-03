@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This script can only work on Soprano servers (alose, rason, orphie, pagre).
+This script can only run on Soprano servers (alose, rason, orphie, pagre).
 
 The environment must be set before the launch:
 - python2 (2.7 or higher)
@@ -15,27 +15,32 @@ vortexpath="/soprano/home/marp999/vortex/vortex-olive"
 export PYTHONPATH=$PYTHONPATH:$vortexpath/site:$vortexpath/src:$vortexpath/project
 
 This script aims at doing a BDAP extract.
-In Vortex, it is done using an AlgoComponent which use dap3.
+In Vortex, it is done using an AlgoComponent which uses dap3.
 The request file must be provided.
 This script can be used with multiple query files, provided they
 do not have the same local name.
-For each query file, each date and each term, the extraction create
-a directory named query_date_term (query is the local name of the query file)
-in which all the files extracted are put.
+For each query file, each date and each term, the extraction creates
+a directory named query_date_term (where query is the local name of
+the query file), to receive all the extracted files.
 
 Ok 20180801 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
 
-import vortex
+# Load useful packages for the examples
 import common
 import gco
-from vortex import toolbox
+import vortex
 from bronx.stdtypes import date
+from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, gco])
+
+
+# #### Initializations
 
 # Initialize environment for examples
 t = vortex.ticket()
@@ -51,9 +56,11 @@ sh.chdir(workdirectory)
 # Define the rundate
 rundate = date.yesterday()
 
-# Get the request file from the Genv
-# If it is taken from a remote path,
-# replace the first ResourceHandler by the next one (which is commented)
+
+# #### Get the request file from the Genv
+
+# To use a remote path, replace this first ResourceHandler
+# by the next one (which is at present commented)
 rh_input_1 = toolbox.input(
     role   = "Query",
     # Resource
@@ -80,7 +87,7 @@ rh_input_1 = toolbox.input(
 for rh in rh_input_1:
     rh.get()
 
-# Define the BDAP AlgoComponent
+# Define and run the BDAP AlgoComponent
 algo = toolbox.algo(
     command = "dap3",
     date = rundate,

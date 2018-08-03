@@ -52,6 +52,7 @@ toolbox.getinsitu = True    # Lors de la récupération d'une ressource (Input/g
 # dont la définition est commune aux opérations et au mode recherche.
 import common
 
+
 # Ces importations de haut niveau terminées, le travail proprement dit commence.
 # Il est là aussi commode de se définir quelques raccourcis vers des objets stars.
 

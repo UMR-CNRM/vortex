@@ -31,7 +31,7 @@ my_date_range_1 = date.daterange(my_date_1, my_date_2)
 for my_date in my_date_range_1:
     print(my_date)
 
-# List one date in two between those two dates
+# List one date out of two between those two dates
 print("\nCreate the date range between those two dates")
 my_date_range_2 = date.daterange(my_date_1, my_date_2, date.Period("P2D"))
 for my_date in my_date_range_2:

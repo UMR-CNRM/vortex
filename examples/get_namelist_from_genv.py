@@ -10,15 +10,19 @@ Can be launched anywhere where Gget or a Gget light are available
 Ok 20180731 - GR
 """
 
-##### Initializations
-# Load useful packages for the examples
 from __future__ import print_function, division, unicode_literals, absolute_import
 
-
-import vortex
+# Load useful packages for the examples
 import common
 import olive
+import vortex
 from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, olive])
+
+
+# #### Initializations
 
 # Initialize environment for examples
 t = vortex.ticket()
@@ -31,7 +35,9 @@ if not sh.path.isdir(workdirectory):
     sh.mkdir(workdirectory)
 sh.chdir(workdirectory)
 
-##### Getting a resource using the Genv provider
+
+# #### Getting a resource using the Genv provider
+
 # Define the resource
 rh = toolbox.rload(
     # Ressource
@@ -43,9 +49,11 @@ rh = toolbox.rload(
     # Container
     local  = "namelistfc"
 )[0]
+
 print(rh.complete)
 print(rh.location())
 print(rh.locate())
 print(rh.idcard())
+
 # Get the resource
 print(rh.get())

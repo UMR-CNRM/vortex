@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This example run a simple Hello world script, created on the fly.
+This example runs a simple Hello world script, created on the fly.
 It should run everywhere.
 
 Ok 20180731 - GR
@@ -13,9 +13,12 @@ from __future__ import print_function, division, unicode_literals, absolute_impo
 
 import pprint
 
-import vortex
 import common
+import vortex
 from vortex import toolbox
+
+# prevent IDEs from removing seemingly unused imports
+assert any([common, ])
 
 
 # Initialize environment for examples

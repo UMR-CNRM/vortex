@@ -2,20 +2,24 @@
 # -*- coding: utf-8 -*-
 
 """
-Services: routing files.
+OPE Services: routing files.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import sys
-sys.stdout = sys.stderr
-
 import logging
+import pprint
 
 import footprints
 import vortex
+from bronx.stdtypes import date
+from iga.tools import actions
+from iga.tools import services
 from vortex import toolbox
-from vortex.tools import date
+from vortex.tools.actions import actiond as ad
+
+# prevent the IDE from removing seemingly unused imports
+assert any([actions, services])
 
 t = vortex.ticket()
 e = t.env
@@ -25,7 +29,7 @@ sh.trace = True
 e.verbose(True, sh)
 
 # run in a dedicated directory
-rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + date.today().ymd)
+rundir = e.get('RUNDIR', e.get('WORKDIR', '/tmp') + '/rundir/' + date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
 
@@ -33,14 +37,9 @@ sh.subtitle('Rundir is ' + rundir)
 dtime = date.now().compact()
 stime = dtime[:8] + '_' + dtime[8:]
 
-from vortex.tools.actions import actiond as ad
-from iga.tools import actions
-from iga.tools import services
-
 
 def list_actions():
     """List available actions, their kind and status."""
-    import pprint
     sh.title('Actions information')
     sh.subtitle('available actions')
     print(pprint.pformat(ad.actions))
@@ -77,16 +76,20 @@ def test_route():
     # To see what happened, use:
     #    cat $TMPDIR/vortex/router_fake.log
     toolbox.defaults(
-        resuldir       = resuldir,
-        agt_pa_cmd     = 'agt_fake_cmd',
-        agt_pe_cmd     = 'agt_fake_cmd',
-        soprano_target = 'piccolo',
+        resuldir=resuldir,
+        agt_pa_cmd='agt_fake_cmd',
+        agt_pe_cmd='agt_fake_cmd',
+        soprano_target='piccolo',
     )
 
     if sh.sysname == 'Darwin':
+        # cd  ~/tmp/vortex
+        # ln -s ~/at_work/dev/vortex/dev/services/validation/router_fake.sh ./
+        # ln -s router_fake.sh router_pa.sh
+        # ln -s router_fake.sh router_pe.sh
         toolbox.defaults(
-            agt_path = '/Users/pascal/tmp/vortex',
-            sshhost  = sh.hostname,
+            agt_path='/Users/pascal/tmp/vortex',
+            sshhost=sh.hostname,
         )
 
     with open('tempo.dta', 'w') as fp:
@@ -111,8 +114,10 @@ def test_route():
     print("log files were created in", resuldir)
 
 
+# reporting must be on for errors to be sent
 ad.alarm_off()
 ad.mail_off()
+ad.opmail_off()
 ad.report_on()
 ad.route_on()
 
