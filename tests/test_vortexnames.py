@@ -13,6 +13,13 @@ class FakeTime(object):
         return '0006:00'
 
 
+class FakeNegTime(object):
+
+    @property
+    def fmthm(self):
+        return '-0006:00'
+
+
 class FakeDate(object):
 
     @property
@@ -99,16 +106,23 @@ class TestDateNameBuilder(unittest.TestCase):
         # term option
         self.assertEqual(vb.pack(dict(term=6)),
                          'dummy+6')
+        self.assertEqual(vb.pack(dict(term=-6)),
+                         'dummy+6ago')
         self.assertEqual(vb.pack(dict(term=dict(time=6))),
                          'dummy+6')
         self.assertEqual(vb.pack(dict(term=dict(time=FakeTime()))),
                          'dummy+0006:00')
+        self.assertEqual(vb.pack(dict(term=dict(time=FakeNegTime()))),
+                         'dummy+0006:00ago')
         # period option
         self.assertEqual(vb.pack(dict(term=6, period=12)),
                          'dummy+6')
         self.assertEqual(vb.pack(dict(period=dict(begintime=FakeTime(),
                                                   endtime=FakeTime()))),
                          'dummy+0006:00-0006:00')
+        self.assertEqual(vb.pack(dict(period=dict(begintime=FakeNegTime(),
+                                                  endtime=FakeNegTime()))),
+                         'dummy+0006:00ago-0006:00ago')
         # suffix option: already tested in testDefaults:
         # other options
         self.assertEqual(vb.pack(dict(fmt='fa')),

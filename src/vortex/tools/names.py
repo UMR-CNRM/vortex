@@ -281,6 +281,10 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
                 packed.append(self._pack_void_item(i))
         return packed
 
+    def _pack_std_items_negativetimes(self, items):
+        return [(t[1:] + 'ago' if t[0] == '-' else t)
+                for t in self._pack_std_items(items)]
+
     def _pack_std_items_datestuff(self, d, fatal=False):
         """Specialised version of _pack_std_items that deals with date/cutoff pairs."""
         flowdate = None
@@ -339,12 +343,15 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         """Adds any info about term, period, ..."""
         name = ''
         if d['term'] is not None:
-            name += self._join_basename_bit(d, 'term', prefix='+', sep='.')
+            name += self._join_basename_bit(d, 'term', prefix='+', sep='.',
+                                            packcb=self._pack_std_items_negativetimes)
         else:
             if d['period'] is not None:
-                name += self._join_basename_bit(d, 'period', prefix='+', sep='-')
+                name += self._join_basename_bit(d, 'period', prefix='+', sep='-',
+                                                packcb=self._pack_std_items_negativetimes)
             elif d['cen_period'] is not None:
-                name += self._join_basename_bit(d, 'cen_period', prefix='_', sep='_')
+                name += self._join_basename_bit(d, 'cen_period', prefix='_', sep='_',
+                                                packcb=self._pack_std_items_negativetimes)
         return name
 
     def _pack_std_basename_suffixstuff(self, d):  # @UnusedVariable
@@ -355,9 +362,12 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         name1 += self._join_basename_bit(d, 'suffix', prefix='.', sep='.')
         return name1
 
-    def _join_basename_bit(self, d, entry, prefix='.', sep='-'):
+    def _join_basename_bit(self, d, entry, prefix='.', sep='-', packcb=None):
         if d[entry] is not None:
-            return prefix + sep.join(self._pack_std_items(d[entry]))
+            if packcb is None:
+                return prefix + sep.join(self._pack_std_items(d[entry]))
+            else:
+                return prefix + sep.join(packcb(d[entry]))
         else:
             return ''
 
