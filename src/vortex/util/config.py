@@ -512,6 +512,16 @@ class AppConfigStringDecoder(StringDecoder):
 
     def _build_rangex(self, value, remap, subs):
         """Build a dictionary from the **value** string."""
+        # Try to read names arguments
+        try:
+            values = self._sparser(value, itemsep=' ', keysep=':')
+            if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
+                    for k in values.keys()]):
+                return rangex(** {k: self._value_expand(v, remap, subs)
+                                  for k, v in values.items()})
+        except StringDecoderSyntaxError:
+            pass
+        # The usual case...
         return rangex([self._value_expand(v, remap, subs)
                        for v in self._sparser(value, itemsep=',')])
 

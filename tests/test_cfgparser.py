@@ -229,6 +229,16 @@ class TestAppConfigDecoder(TestCase):
         tgeometries = 'geometry(global798,globalsp2)'
         self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='global798'),
                                                     geometries.get(tag='globalsp2')])
+        trangex = 'rangex(1-35-1)'
+        self.assertListEqual(self.cd(trangex), range(1, 36))
+        trangex = 'rangex(1-35-1,37,38-42-2)'
+        self.assertListEqual(self.cd(trangex), range(1, 36) + [37, 38, 40, 42])
+        trangex = 'rangex(0-1-0:30)'
+        self.assertListEqual(self.cd(trangex), ['0000:00', '0000:30', '0001:00'])
+        trangex = 'rangex(start:1 end:3 shift:-1)'
+        self.assertListEqual(self.cd(trangex), [0, 1, 2])
+        trangex = 'rangex(start:1 end:3 shift:-0:30)'
+        self.assertListEqual(self.cd(trangex), ['0000:30', '0001:30', '0002:30'])
 
 
 class _UnitTestTableItem(TableItem):

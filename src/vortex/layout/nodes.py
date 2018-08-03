@@ -144,12 +144,27 @@ class ConfigSet(collections.MutableMapping):
 
 
 class Node(footprints.util.GetByTag, NiceLayout):
-    """Base class type for any element in the logical layout."""
+    """Base class type for any element in the logical layout.
+
+    :param str tag: The node's tag (must be unique !)
+    :param Ticket ticket: The session's ticket that will be used
+    :param str special_prefix: The prefix of any environment variable that should
+                               be exported into ``self.conf``
+    :param str register_cycle_prefix: The callback function used to initialise
+                                      Genv's cycles
+    :param JobAssistant jobassistant: the jobassistant object that might
+                                      be used to find out the **special_prefix**
+                                      and **register_cycle_prefix** callback.
+    :param dict kw: Any other attributes that will be added to ``self.options``
+                    (that will eventually be added to ``self.conf``)
+    """
 
     def __init__(self, kw):
         logger.debug('Node initialisation %s', repr(self))
+        self.options    = dict()
         self.play       = kw.pop('play', False)
         self._ticket    = kw.pop('ticket', None)
+        self._configtag = kw.pop('config_tag', self.tag)
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
         self._cycle_cb  = kw.pop('register_cycle_prefix', None)
         j_assist        = kw.pop('jobassistant', None)
@@ -160,6 +175,25 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self._contents  = list()
         self._aborted   = False
 
+    def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
+        """All the necessary arguments to build a copy of this object."""
+        argsdict = dict(play=self.play,
+                        ticket=self.ticket,
+                        config_tag=self.config_tag,
+                        special_prefix=self._locprefix,
+                        register_cycle_prefix=self._cycle_cb)
+        argsdict.update(self.options)
+        return argsdict
+
+    def loopclone(self, tagsuffix, extras):
+        """Create a copy of the present object by adding a suffix to the tag.
+
+        **extras** items can be added to the copy's options.
+        """
+        kwargs = self._args_loopclone(tagsuffix, extras)
+        kwargs.update(**extras)
+        return self.__class__(tag=self.tag + tagsuffix, **kwargs)
+
     @classmethod
     def tag_clean(cls, tag):
         """Lower case, space-free and underscore-free tag."""
@@ -168,6 +202,10 @@ class Node(footprints.util.GetByTag, NiceLayout):
     @property
     def ticket(self):
         return self._ticket
+
+    @property
+    def config_tag(self):
+        return self._configtag
 
     @property
     def aborted(self):
@@ -234,9 +272,17 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self._conf.update(conf_local)
 
         # This configuration is updated with any section with the current tag name
-        updconf = conf_global.get(self.tag, dict())
+        updconf = conf_global.get(self.config_tag, dict())
         self.nicedump(' '.join(('Configuration for', self.realkind, self.tag)), **updconf)
         self.conf.update(updconf)
+
+        # Add exported local variables
+        self.local2conf()
+
+        # Add potential options
+        if self.options:
+            self.nicedump('Update conf with last minute arguments', **self.options)
+            self.conf.update(self.options)
 
         # Then we broadcast the current configuration to the kids
         for node in self.contents:
@@ -301,11 +347,14 @@ class Node(footprints.util.GetByTag, NiceLayout):
         t = self.ticket
         toolbox.defaults(
             model     = t.glove.vapp,
-            date      = self.conf.rundate,
             namespace = self.conf.get('namespace', Namespace('vortex.cache.fr')),
+            gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
         )
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'model'):
+        if 'rundate' in self.conf:
+            toolbox.defaults['date'] = self.conf.rundate
+
+        for optk in ('cutoff', 'geometry', 'cycle', 'model', ):
             if optk in self.conf:
                 toolbox.defaults[optk] = self.conf.get(optk)
 
@@ -319,8 +368,9 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self.local2conf()
         self.conf2io()
         self.xp2conf()
-        self.nicedump('Update conf with last minute arguments', **kw)
-        self.conf.update(kw)
+        if kw:
+            self.nicedump('Update conf with last minute arguments', **kw)
+            self.conf.update(kw)
         self.cycles()
         self.geometries()
         self.header('Toolbox defaults')
@@ -442,7 +492,13 @@ class Node(footprints.util.GetByTag, NiceLayout):
 
 
 class Family(Node):
-    """Logical group of :class:`Family` or :class:`Task`."""
+    """Logical group of :class:`Family` or :class:`Task`.
+
+     Compared to the usual :class:`Node` class, additional attributes are:
+
+    :param nodes: The list of :class:`Family` or :class:`Task` objects that
+                  are members of this family
+    """
 
     def __init__(self, **kw):
         logger.debug('Family init %s', repr(self))
@@ -470,6 +526,11 @@ class Family(Node):
     def realkind(self):
         return 'family'
 
+    def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
+        baseargs = super(Family, self)._args_loopclone(tagsuffix, extras)
+        baseargs['nodes'] = [node.loopclone(tagsuffix, extras) for node in self._contents]
+        return baseargs
+
     def _setup_context(self, ctx):
         """Build the contexts of all the nodes contained by this family."""
         for node in self.contents:
@@ -477,12 +538,58 @@ class Family(Node):
 
     def run(self, nbpass=0):
         """Execution driver: setup, run kids, complete."""
-        self.setup(**self.options)
+        self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
+        self.setup()
         self.summary()
         for node in self.contents:
             with node:
                 node.run()
         self.complete()
+
+
+class LoopFamily(Family):
+    """
+    Loop on the Family's content according to a variable taken from ``self.conf``.
+
+    Compared to the usual :class:`Family` class, additional attributes are:
+
+    :param str loopconf: The name of the ``self.conf`` entry to loop on
+    :param str loopvariable: The name of the loop control variable (that is
+                             automatically added to the child's self.conf).
+                             By default, **loopconf** without trailing ``s`` is
+                             used.
+    :param str loopsuffix: The suffix that will be added to the child's tag.
+                           By default '+loopvariable{!s}' (where {!s} will be
+                           replaced by the loop control variable's value).
+    """
+
+    def __init__(self, **kw):
+        logger.debug('Family init %s', repr(self))
+        super(LoopFamily, self).__init__(**kw)
+        self._loopconf = kw.pop('loopconf', None)
+        if not self._loopconf:
+            raise ValueError('The "loopconf" named argument must be given')
+        self._loopvariable = kw.pop('_loopvariable', self._loopconf.rstrip('s'))
+        self._loopsuffix = kw.pop('loopsuffix', '+' + self._loopvariable + '{!s}')
+        self._actual_content = None
+
+    def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
+        baseargs = super(LoopFamily, self)._args_loopclone(tagsuffix, extras)
+        baseargs['loopconf'] = self._loopconf
+        baseargs['loopvariable'] = self._loopvariable
+        baseargs['loopsuffix'] = self._loopsuffix
+        return baseargs
+
+    @property
+    def contents(self):
+        if self._actual_content is None:
+            self._actual_content = list()
+            for var in self.conf.get(self._loopconf):
+                extras = {self._loopvariable: var}
+                suffix = self._loopsuffix.format(var)
+                for node in self._contents:
+                    self._actual_content.append(node.loopclone(suffix, extras))
+        return self._actual_content
 
 
 class Task(Node):
@@ -505,18 +612,26 @@ class Task(Node):
     def realkind(self):
         return 'task'
 
+    def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
+        baseargs = super(Task, self)._args_loopclone(tagsuffix, extras)
+        baseargs['steps'] = self.steps
+        baseargs['fetch'] = self.fetch
+        baseargs['compute'] = self.compute
+        baseargs['backup'] = self.backup
+        return baseargs
+
     @property
     def ctx(self):
         return self.ticket.context
 
-    def build(self, **kw):
+    def build(self):
         """Switch to rundir and check the active steps."""
 
         t = self.ticket
         t.sh.title(' '.join(('Build', self.realkind, self.tag)))
 
         # Change actual rundir if specified
-        rundir = kw.get('rundir', None)
+        rundir = self.options.get('rundir', None)
         if rundir:
             t.env.RUNDIR = rundir
             t.sh.cd(rundir, create=True)
@@ -560,8 +675,8 @@ class Task(Node):
     def run(self, nbpass=0):
         """Execution driver: build, setup, refill, process, complete."""
         try:
-            self.build(**self.options)
-            self.setup(**self.options)
+            self.build()
+            self.setup()
             self.summary()
             self.refill()
             self.process()
@@ -669,10 +784,13 @@ class Driver(footprints.util.GetByTag, NiceLayout):
 
         rundate = date or self.rundate
         if rundate is None:
-            raise ValueError('No date provided for this run.')
+            logger.info('No date provided for this run.')
 
         if verbose:
-            self.sh.title(['Starting job', '', jobname, '', 'date ' + rundate.isoformat()])
+            if rundate is None:
+                self.sh.title(['Starting job', '', jobname, ])
+            else:
+                self.sh.title(['Starting job', '', jobname, '', 'date ' + rundate.isoformat()])
 
         # Read once for all the job configuration file
         if self.iniconf is None:
@@ -688,7 +806,8 @@ class Driver(footprints.util.GetByTag, NiceLayout):
         self.conf.update(updconf)
 
         # Recursively set the configuration tree and contexts
-        self.conf.rundate = rundate
+        if rundate is not None:
+            self.conf.rundate = rundate
         for node in self.contents:
             node.setconf(self.conf.copy(), self.jobconf)
             node.build_context()
