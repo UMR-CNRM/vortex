@@ -314,11 +314,13 @@ class SnowObs(GeoFlowResource):
     def realkind(self):
         return "obs_insitu"
 
-    def cenvortex_basename(self):
-        print("CENVORTEX_BASENAME")
-        print(self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt))
-
-        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+    def basename_info(self):
+        return dict(
+            radical    = self.realkind,
+            geo        = self.geometry.area,
+            cen_period = [self.datebegin.y, self.dateend.y],
+            fmt        = self._extension_remap.get(self.nativefmt, self.nativefmt),
+        )
 
 
 class ScoresSnow(SurfaceIO):
@@ -382,3 +384,6 @@ class SafranObsRaw(ObsRaw):
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)
+
+    def reanalysis_basename(self):
+        return self.cendev_basename()
