@@ -672,7 +672,7 @@ class GetByTag(object):
 
     @classmethod
     def tag_classes(cls):
-        """Return a list of current classes that have been registred with the same GetByTag root."""
+        """Return a list of current classes that have been registered with the same GetByTag root."""
         return list(cls._tag_class)
 
     def __copy__(self):

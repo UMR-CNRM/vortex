@@ -19,7 +19,7 @@
         namespace: vortex.multi.fr
         vapp: arome
         vconf: 3dvarfr
-      location: bdpe://bdpe.archive.fr/INTnoOPER/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_OPER_False/20180101T0000P/BDPE_10550+00:00
     - default: &id002 !test_names.core.TestParameters
         cutoff: assim
         cycle: cy42_op2.67
@@ -30,7 +30,7 @@
         namespace: vortex.multi.fr
         vapp: arpege
         vconf: 4dvarfr
-      location: bdpe://bdpe.archive.fr/INTnoOPER/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_OPER_False/20180101T0000P/BDPE_10550+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 10550
@@ -42,9 +42,9 @@
       prefered_target: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPERnoDEV/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPERnoDEV/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 10550
@@ -56,9 +56,9 @@
       prefered_target: INT
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/INTnoDEV/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/INTnoDEV/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       fields: seaice
