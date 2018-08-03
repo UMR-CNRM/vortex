@@ -116,5 +116,6 @@ class TestListingNorms(unittest.TestCase):
         str_out.seek(0)
         self.assertEqual(str_out.read(), self.GPDIFFS_STR)
 
+
 if __name__ == '__main__':
     unittest.main()

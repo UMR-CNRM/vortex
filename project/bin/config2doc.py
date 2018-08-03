@@ -1,8 +1,8 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+"""
 Automatically generates an ReST file based on a given configuration file.
-'''
+"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
@@ -204,7 +204,7 @@ def configtable_rst(indata, outfile, verbose=0):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

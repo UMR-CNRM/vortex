@@ -220,5 +220,6 @@ class utPriorities(TestCase):
 
         rv.restore('original_priorities')
 
+
 if __name__ == '__main__':
     main(verbosity=2)

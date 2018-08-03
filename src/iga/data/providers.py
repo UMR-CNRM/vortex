@@ -22,7 +22,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 #: TODO move in config file
-ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie','aromeaefr',
+ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'aromeaefr',
                 'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 #: TODO move in config file

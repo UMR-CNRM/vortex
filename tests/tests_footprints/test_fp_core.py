@@ -734,8 +734,10 @@ class utFootprint(TestCase):
                 )
             )
         ))
+
         class MoreFoo(Foo):
             pass
+
         class FakeFoo(object):
             pass
 
@@ -805,7 +807,7 @@ class utFootprint(TestCase):
     def test_resolve_only(self):
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                rdate = datetime.date(2013,11,2)
+                rdate = datetime.date(2013, 11, 2)
             )
         ))
 
@@ -814,14 +816,14 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,2))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 2))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -830,25 +832,25 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                rdate = (datetime.date(2013,11,2), datetime.date(2013,11,5))
+                rdate = (datetime.date(2013, 11, 2), datetime.date(2013, 11, 5))
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,2))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 2))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,5))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 5))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,4))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 4))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -857,18 +859,18 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                after_rdate = datetime.date(2013,11,2)
+                after_rdate = datetime.date(2013, 11, 2)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,12,3))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 12, 3))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -877,18 +879,18 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                before_rdate = datetime.date(2013,11,2)
+                before_rdate = datetime.date(2013, 11, 2)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,12,3))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 12, 3))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -897,26 +899,26 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                after_rdate = datetime.date(2013,11,2),
-                before_rdate = datetime.date(2013,11,28)
+                after_rdate = datetime.date(2013, 11, 2),
+                before_rdate = datetime.date(2013, 11, 28)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,29))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 29))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,15))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 15))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))

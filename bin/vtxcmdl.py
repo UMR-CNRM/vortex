@@ -12,7 +12,7 @@ The only mandatory attribute is --local but some commonly used attributes
 have default values (see the list below).
 
 This scripts only supports two notations for the command line:
-`--attribute=value` or `--attribute value`.
+`--attribute=value` or `--atribute value`.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

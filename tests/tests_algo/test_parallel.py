@@ -199,5 +199,6 @@ class TestParallel(unittest.TestCase):
                         '-npernode 8 -np 16 {pwd:s}/fake1 -joke yes : ' +
                         '-npernode 8 -np 8 {pwd:s}/fake2 -joke yes', args)
 
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

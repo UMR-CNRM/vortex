@@ -107,5 +107,6 @@ class UtTimeSlots(unittest.TestCase):
                               'BATOR_WINDOW_LEN': 30,
                               'BATOR_WINDOW_SHIFT': -20})
 
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

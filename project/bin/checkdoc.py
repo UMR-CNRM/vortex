@@ -1,9 +1,9 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Check the documentation and generates missing RST files.
-'''
+"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
@@ -183,7 +183,7 @@ def check_module(rstnames, rstloc, modulename, module, report):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

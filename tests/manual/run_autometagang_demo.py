@@ -4,6 +4,9 @@
 Run the test of AutoMetaGang class.
 """
 
+from __future__ import print_function
+# from __future__ import absolute_import, unicode_literals, division
+
 import multiprocessing as mp
 import time
 
@@ -44,7 +47,7 @@ def test_autogang(args, allowmissing=0, waitlimit=0):
             while not bm.all_done:
                 autometa.state  # Just to keep the states up-to-date
                 time.sleep(0.5)
-            print 'Last meta:', autometa.state
+            print('Last meta:', autometa.state)
 
     finally:
         t.sh.cd(t.env.HOME)

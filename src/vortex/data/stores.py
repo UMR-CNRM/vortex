@@ -1729,7 +1729,7 @@ class VortexVsopCacheStore(MultiStore):
     )
 
     def alternates_netloc(self):
-        '''For Non-Op users, Op caches may be accessed in read-only mode.'''
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
         todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):

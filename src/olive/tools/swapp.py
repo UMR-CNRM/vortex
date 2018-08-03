@@ -144,7 +144,7 @@ def olive_enforce_oneshot(identifier):
 
 
 def olive_gnam_hook_factory(nickname, nam_delta, env=None):
-    '''Hook functions factory to apply namelist delta on a given ressource.'''
+    """Hook functions factory to apply namelist delta on a given ressource."""
     if env is not None:
         # If an Environment object is given: try to substitute variable
         nam_delta = string.Template(nam_delta).substitute(env)
@@ -167,7 +167,7 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
 
 
 def olive_generic_hook_factory(body):
-    '''User-defined hook functions factory.'''
+    """User-defined hook functions factory."""
     lines = body.split("\n")
     # Remove a possibly blank first line
     if re.match('^\s*$', lines[0]):
