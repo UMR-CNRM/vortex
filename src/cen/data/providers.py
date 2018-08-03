@@ -26,14 +26,7 @@ class CenCfgParser(GenericConfigParser):
         """
         if resname is None:
             resname = resource.realkind
-        cutoff = getattr(resource, 'cutoff', None)
 
-        extended_resname = resname + '@' + vapp
-
-        if self.has_section(extended_resname + vconf):
-            resname = extended_resname + vconf
-        elif cutoff is not None and self.has_section(extended_resname + cutoff):
-            resname = extended_resname + cutoff
         return self.get(resname, 'resolvedpath')
 
 
@@ -50,7 +43,8 @@ class S2MReanalysisProvider(Provider):
                 ),
                 storage = dict(
                     values   = ['hendrix.meteo.fr'],
-                    default  = ['hendrix.meteo.fr']
+                    default  = 'hendrix.meteo.fr',
+                    optional = True
                 ),
                 tube = dict(
                     optional = True,
@@ -68,7 +62,7 @@ class S2MReanalysisProvider(Provider):
 
     @property
     def realkind(self):
-        return 's2m_archive'
+        return 'reanalysis'
 
     def scheme(self, resource):
         """The actual scheme is the ``tube`` attribute of the current provider."""
@@ -99,9 +93,8 @@ class S2MReanalysisProvider(Provider):
             else:
                 info['level_two']   = 'guess/p' + season + suffix
 
-        logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)
-        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.storage)
+        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
 
 
 class CenSopranoDevProvider(Provider):

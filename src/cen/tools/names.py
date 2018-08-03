@@ -54,8 +54,7 @@ class AbstractActualCenNameBuilder(AbstractActualVortexNameBuilder):
         name0 = d['radical']
         name0 += self._join_basename_bit(d, 'src', prefix='.', sep='-')
         name0 += self._join_basename_bit(d, 'filtername', prefix='.', sep='-')
-        # 'GEO' PREFIX CHANGED TO '_' COMPARED TO THE STANDARD NAMEBUILDER
-        name0 += self._join_basename_bit(d, 'geo', prefix='_', sep='-')
+        name0 += self._join_basename_bit(d, 'geo', prefix='.', sep='-')
         name0 += self._join_basename_bit(d, 'compute', prefix='.', sep='-')
         return name0
 

@@ -8,7 +8,7 @@ import footprints
 from footprints.util import rangex
 
 from vortex.data.flow        import GeoFlowResource
-from vortex.data.geometries  import MassifGeometry
+from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
 from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 from common.data.modelstates import InitialCondition
@@ -60,7 +60,7 @@ class SafranGuess(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = UnstructuredGeometry,
                 ),
                 cumul = dict(
                     info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
@@ -107,7 +107,7 @@ class SurfaceIO(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 begindate = dict(
                     info = "First date of the forcing file",
@@ -142,7 +142,7 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran', 'obs', 'surfex'],
+                    values = ['safran', 'obs', 's2m'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
@@ -205,7 +205,7 @@ class Prep(InitialCondition):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 filling = dict(
                     value = ['surf', ],
@@ -256,7 +256,7 @@ class SnowObs(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 begindate = dict(
                     info = "First date of the forcing file",
@@ -340,3 +340,6 @@ class SafranObsRaw(ObsRaw):
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)
+
+    def reanalysis_basename(self):
+        return self.cendev_basename()

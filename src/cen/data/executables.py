@@ -16,12 +16,11 @@ logger = footprints.loggers.getLogger(__name__)
 class Safran(SurfaceModel):
     """Base class for the Safran model executables."""
 
-    _abstract  = True
     _footprint = [
         dict(
             info = 'Safran module',
             attr = dict(
-                model = dict(
+                kind = dict(
                     values = ['safrane', 'safrane_dev', 'syrpluie', 'syrpluie_dev', 'syrmrr', 'syrmrr_dev',
                               'sytist', 'sytist_dev', 'syvapr', 'syvapr_dev', 'syrper', 'syrper_dev',
                               'syvafi', 'syvafi_dev', 'sypluie', 'sypluie_dev', 'intercep', 'intercep_dev'],
