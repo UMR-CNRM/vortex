@@ -11,10 +11,9 @@ import six
 import footprints
 
 from bronx.stdtypes.date import yesterday, Period, Time
-import abc
 
 
-class TaskMixIn(abc):
+class S2MTaskMixIn(object):
 
     nightruntime = Time(hour=3, minute=0)
 
@@ -44,8 +43,10 @@ class TaskMixIn(abc):
 
     def get_rundate_forcing(self):
         if self.conf.previ:
+            # SAFRAN only generates new forecasts once a day during the night run
             rundate_forcing = self.conf.rundate.replace(hour=self.nightruntime.hour)
         else:
+            # SAFRAN generates new analyses at each run
             rundate_forcing = self.conf.rundate
         return rundate_forcing
 
@@ -68,8 +69,21 @@ class TaskMixIn(abc):
         return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
 
     def get_list_geometry(self):
+        source_safran, block_safran = self.get_source_safran()
         suffix = '_allslopes'
-        if self.conf.geometry == 'postes':
-            return self.conf.geometry.area
-        elif suffix in self.conf.geometry:
-            return list(self.conf.geometry.replace(suffix, ''))
+        if source_safran == "safran":
+            if self.conf.geometry.area == "postes":
+                return self.conf.geometry.list.split(",")
+            elif suffix in self.conf.geometry.area:
+                return [self.conf.geometry.area.replace(suffix, '')]
+        else:
+            return [self.conf.geometry.area]
+
+    def get_source_safran(self):
+        if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
+            return "s2m", "meteo"
+        else:
+            if self.conf.geometry.area == 'postes':
+                return "safran", "postes"
+            else:
+                return "safran", "massifs"

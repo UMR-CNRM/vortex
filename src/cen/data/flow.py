@@ -8,7 +8,7 @@ from footprints.util import rangex
 
 from vortex.data.flow        import GeoFlowResource
 from common.data.obs         import ObsRaw
-from vortex.data.geometries  import MassifGeometry
+from vortex.data.geometries  import UnstructuredGeometry, Geometry
 from common.data.modelstates import InitialCondition
 from vortex.syntax.stdattrs  import Time
 
@@ -56,7 +56,7 @@ class SafranGuess(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = UnstructuredGeometry,
                 ),
                 cumul = dict(
                     info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
@@ -111,7 +111,7 @@ class SurfaceIO(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",
@@ -160,7 +160,7 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran', 'obs', 'surfex'],
+                    values = ['safran', 'obs', 's2m'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
@@ -181,9 +181,11 @@ class SurfaceForcing(SurfaceIO):
         return 'FORCING'
 
     def basename_info(self):
-        src = list()
+        src = None
         for var in [self.source_app, self.source_conf]:
             if var:
+                if not src:
+                    src = list()
                 src.append(var)
         return dict(
             radical     = self.realkind,
@@ -225,7 +227,7 @@ class Prep(InitialCondition):
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
                 kind = dict(
-                    values  = ['SnowpackState'],
+                    values  = ['PREP'],
                 ),
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
@@ -237,7 +239,7 @@ class Prep(InitialCondition):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 filling = dict(
                     value = ['surf', ],
@@ -247,6 +249,7 @@ class Prep(InitialCondition):
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
                     optional = True,
+                    type = Date,
                     default = '[date]',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
@@ -260,12 +263,12 @@ class Prep(InitialCondition):
 
     @property
     def realkind(self):
-        return 'snowpackstate'
+        return 'PREP'
 
     def basename_info(self):
         return dict(
             radical    = self.realkind,
-            cen_period = [self.datevalidity],
+            cen_period = [self.datevalidity.ymdh],
             fmt        = self._extension_remap.get(self.nativefmt, self.nativefmt),
         )
 
@@ -291,7 +294,7 @@ class SnowObs(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = Geometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",
