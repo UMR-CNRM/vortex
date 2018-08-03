@@ -36,7 +36,7 @@ def findMarsExtractCommand(sh, inifile=None, command=None):
     if actual_command is None:
         actual_inifile = inifile
         if actual_inifile is None:
-            actual_command = sh.target().get("mars:command", None)
+            actual_command = sh.default_target.get("mars:command", None)
         else:
             actual_config = GenericConfigParser(inifile=actual_inifile)
             if actual_config.has_section('mars') and actual_config.has_option('mars', 'command'):

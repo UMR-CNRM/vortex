@@ -61,7 +61,7 @@ class TestParallel(unittest.TestCase):
         algo.context = algo.ticket.context
         algo.env  = algo.ticket.env
         algo.system  = algo.ticket.system()
-        algo.target = algo.system.target()
+        algo.target = algo.system.default_target
         return algo
 
     def assertCmdl(self, ref, new, **extras):

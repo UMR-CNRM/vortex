@@ -73,7 +73,7 @@ class ECtransTools(addons.Addon):
                 actual_setting = self.sh.env[actual_setting_key]
         # Use the system's configuration file otherwise
         if actual_setting is None:
-            actual_setting_key = self.sh.target().get('{:s}:{:s}'.format(section, option),
+            actual_setting_key = self.sh.default_target.get('{:s}:{:s}'.format(section, option),
                                                       None)
             if actual_setting_key:
                 actual_setting = self.sh.env[actual_setting_key]
