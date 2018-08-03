@@ -50,7 +50,7 @@ ja.add_plugin('tmpdir')
 try:
     t, e, sh = ja.setup(actual=locals())
 
-    opts = dict(jobassistant=ja, fullplay=True,
+    opts = dict(jobassistant=ja, play=True,
                 defaults=dict(gnamespace='gco.multi.fr'))
     driver = todo.setup(t, **opts)
     driver.setup()

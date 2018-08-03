@@ -163,7 +163,7 @@ class Node(footprints.util.GetByTag, NiceLayout):
     @classmethod
     def tag_clean(cls, tag):
         """Lower case, space-free and underscore-free tag."""
-        return tag.lower().replace(' ', '').replace('_', '')
+        return tag.lower().replace(' ', '')
 
     @property
     def ticket(self):
