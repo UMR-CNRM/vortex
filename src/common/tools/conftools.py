@@ -148,6 +148,8 @@ class CouplingOffsetConfTool(ConfTool):
                     self._target_hhs[c].add(h)
         else:
             for c, clist in self.cplhhlist.items():
+                if not isinstance(clist, (tuple, list)):
+                    clist = [clist, ]
                 self._target_hhs[c].update([Time(h) for h in clist])
             t_hhbase = self._reshape_inputs(self.cplhhbase, value_reclass=Time)
 

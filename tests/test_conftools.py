@@ -161,7 +161,7 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature."""
 
     _HHLIST = {'assim': range(0, 24),
-               'production': [12, ]}  # Compute only the 12h forecast
+               'production': '12'}  # Compute only the 12h forecast
 
     _BASE = {'assim': {'00': '18', '01': '00', '02': '00', '03': '00', '04': '00',
                        '05': '00', '06': '00', '07': '06', '08': '06', '09': '06',
