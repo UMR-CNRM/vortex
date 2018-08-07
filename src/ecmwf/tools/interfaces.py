@@ -55,6 +55,7 @@ class ECMWFInterface(object):
                                                dict_args=dict_args,
                                                list_options=list_options)
         logger.debug("The command line launched is: {}".format(command_line))
+        command_line = command_line.split()
         return self.system.spawn(command_line, shell = False, output = False)
 
     @staticmethod
@@ -129,8 +130,8 @@ class ECfs(ECMWFInterface):
 
     def __init__(self, system):
         super(ECfs, self).__init__(system=system,
-                             command="ecfs",
-                             command_interface=True)
+                                   command="ecfs",
+                                   command_interface=True)
 
 
 class ECtrans(ECMWFInterface):
@@ -138,5 +139,5 @@ class ECtrans(ECMWFInterface):
 
     def __init__(self, system):
         super(ECtrans, self).__init__(system=system,
-                                command="ectrans",
-                                command_interface=False)
+                                      command="ectrans",
+                                      command_interface=False)

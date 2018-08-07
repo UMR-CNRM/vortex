@@ -52,8 +52,8 @@ class ArchiveECMWF(Archive):
                                              storage=self.actual_storage)
         gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
                                                inifile=self.inifile)
-        return self.sh.ectransget(source=local,
-                                  target=item,
+        return self.sh.ectransget(source=item,
+                                  target=local,
                                   fmt=kwargs.get("fmt", "foo"),
                                   cpipeline=kwargs.get("compressionpipeline", None),
                                   gateway=gateway,

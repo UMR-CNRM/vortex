@@ -18,7 +18,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
-    """Extend current shell with the LFI interface defined by optional arguments."""
+    """Extend current shell with the ECtrans interface defined by optional arguments."""
     kw['shell'] = sh
     return footprints.proxy.addon(**kw)
 
@@ -74,8 +74,8 @@ class ECtransTools(addons.Addon):
         # Use the system's configuration file otherwise
         if actual_setting is None:
             actual_setting_key = self.sh.default_target.get('{:s}:{:s}'.format(section, option),
-                                                      None)
-            if actual_setting_key:
+                                                            None)
+            if actual_setting_key is not None:
                 actual_setting = self.sh.env[actual_setting_key]
         # Check if it worked ?
         if actual_setting is None:
@@ -90,7 +90,9 @@ class ECtransTools(addons.Addon):
         :param inifile: configuration file in which the gateway is read if provided
         :return: the gateway to be used by ECtrans
         """
-        return self._get_ectrans_setting('gateway', gateway, inifile)
+        return self._get_ectrans_setting(option='gateway',
+                                         guess=gateway,
+                                         inifile=inifile)
 
     def ectrans_remote_init(self, remote=None, inifile=None, storage="default"):
         """Initialize the remote attribute used by Ectrans.
@@ -101,10 +103,14 @@ class ECtransTools(addons.Addon):
         :return: the remote to be used by ECtrans
         """
         try:
-            return self._get_ectrans_setting('remote_{:s}'.format(storage), remote, inifile)
+            return self._get_ectrans_setting(option='remote_{:s}'.format(storage),
+                                             guess=remote,
+                                             inifile=inifile)
         except ECtransConfigurationError:
             if storage != 'default':
-                return self._get_ectrans_setting('remote_default', remote, inifile)
+                return self._get_ectrans_setting(option='remote_default',
+                                                 guess=remote,
+                                                 inifile=inifile)
             else:
                 raise
 
@@ -160,7 +166,7 @@ class ECtransTools(addons.Addon):
         :param cpipeline: compression pipeline used if provided
         :return: return code and additional attributes used
         """
-        if self.is_iofile(source):
+        if self.sh.is_iofile(source):
             if cpipeline is None:
                 rc, dict_args = self.raw_ectransput(source=source,
                                                     target=target,
@@ -220,7 +226,7 @@ class ECtransTools(addons.Addon):
         :return: return code and additional attributes used
         """
         if isinstance(target, six.string_types):
-            self.rm(target)
+            self.sh.rm(target)
         if cpipeline is None:
             rc, dict_args = self.raw_ectransget(source=source,
                                                 target=target,

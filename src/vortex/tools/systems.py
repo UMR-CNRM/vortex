@@ -118,7 +118,9 @@ def fmtshcmd(func):
     """
     def formatted_method(self, *args, **kw):
         fmt = kw.pop('fmt', None)
+        print("fmt = {}".format(fmt))
         fmtcall = getattr(self, str(fmt).lower() + '_' + func.__name__, func)
+        print("fmtcall = {}".format(fmtcall))
         if getattr(fmtcall, 'func_extern', False):
             return fmtcall(*args, **kw)
         else:
