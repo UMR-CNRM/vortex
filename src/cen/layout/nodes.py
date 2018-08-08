@@ -66,7 +66,7 @@ class S2MTaskMixIn(object):
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
-        return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
+        return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
     def get_list_geometry(self):
         source_safran, block_safran = self.get_source_safran()
