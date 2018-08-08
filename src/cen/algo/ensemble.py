@@ -450,7 +450,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+escroc'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -535,6 +535,8 @@ class SurfexWorker(_S2MWorker):
         updateloc = True
         datebegin_this_run = self.datebegin
 
+        sytron = self.kind == "ensmeteo+sytron" and self.subdir == "mb036"
+
         while need_other_run:
 
             # Modification of the PREP file
@@ -545,6 +547,9 @@ class SurfexWorker(_S2MWorker):
                 if self.kind == "escroc":
                     # ESCROC only : the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
+                elif sytron:
+                    # ensmeteo+sytron : the forcing files are supposed to be in the subdirectories of each member except for the sytron member
+                    forcingdir = rundir + "/mb035"
                 else:
                     # ensmeteo or ensmeteo+escroc : the forcing files are supposed to be in the subdirectories of each member
                     # determinstic case : the forcing file(s) is/are in the only directory
@@ -582,13 +587,16 @@ class SurfexWorker(_S2MWorker):
                 dateend_this_run = min(self.dateend, dateforcend)
 
             if not namelist_ready:
+                if sytron:
+                    self.copy_if_exists(self.system.path.join(rundir, "OPTIONS_sytron.nam"), "OPTIONS.nam")
+
                 available_namelists = self.find_namelists()
                 if len(available_namelists) > 1:
                     print("WARNING SEVERAL NAMELISTS AVAILABLE !!!")
                 for namelist in available_namelists:
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
-                    print("MODIFY THE NAMELIST")
+                    print("MODIFY THE NAMELIST:" + namelist.container.basename)
                     newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)
@@ -727,7 +735,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+escroc']
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
