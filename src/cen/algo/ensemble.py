@@ -606,7 +606,7 @@ class SurfexWorker(_S2MWorker):
                 for namelist in available_namelists:
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
-                    print ("MODIFY THE NAMELIST:" + namelist.container.basename)
+                    print("MODIFY THE NAMELIST:" + namelist.container.basename)
                     newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)
