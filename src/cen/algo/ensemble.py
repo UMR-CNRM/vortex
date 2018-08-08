@@ -76,6 +76,12 @@ class _S2MWorker(VortexWorkerBlindRun):
         if self.system.path.isfile(local):
             self.system.symlink(local, dest)
 
+    def link_ifnotprovided(self, local, dest):
+        """Link a file if the target does not already exist."""
+        if not self.system.path.islink(dest):
+            if self.system.path.isfile(local):
+                self.system.symlink(local, dest)
+
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
         for line in self.system.dir():
@@ -514,11 +520,15 @@ class SurfexWorker(_S2MWorker):
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
         list_files_copy = ["OPTIONS.nam"]
-        list_files_link = ["PGD.nc", "PREP.nc", "METADATA.xml", "ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
+        list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
+        list_files_link_ifnotprovided = ["PREP.nc"]
+
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)
         for required_link in list_files_link:
             self.link_in(self.system.path.join(rundir, required_link), required_link)
+        for required_link in list_files_link_ifnotprovided:
+            self.link_ifnotprovided(self.system.path.join(rundir, required_link), required_link)
 
         self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
