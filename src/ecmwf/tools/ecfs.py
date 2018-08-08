@@ -83,6 +83,7 @@ class ECfsTools(addons.Addon):
                   list_options=list_options)
         return rc, dict()
 
+    @fmtshcmd
     def ecfscp(self, source, target, options=None):
         """Copy the source file to the target using Ecfs.
 

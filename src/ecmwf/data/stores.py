@@ -91,6 +91,7 @@ class FinderECMWF(Finder):
         cpipeline = options.get("compressionpipeline")
         rc, dict_args = self.system.ecfsget(source=rpath,  # @UnusedVariable
                                             target=local,
+                                            fmt=options.get("fmt", "foo"),
                                             cpipeline=cpipeline,
                                             options=list_options)
         if rc:
@@ -103,6 +104,7 @@ class FinderECMWF(Finder):
         cpipeline = options.get("compressionpipeline")
         rc, dict_args = self.system.ecfsput(source=local,  # @UnusedVariable
                                             target=rpath,
+                                            fmt=options.get("fmt", "foo"),
                                             cpipeline=cpipeline,
                                             options=list_options)
         return rc
