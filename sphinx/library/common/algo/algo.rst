@@ -22,7 +22,7 @@ Included Modules
 * :mod:`common.algo.eda`
 * :mod:`common.algo.eps`
 * :mod:`common.algo.forecasts`
-* :mod:`common.algo.fullposng`
+* :mod:`common.algo.fpserver`
 * :mod:`common.algo.ifsroot`
 * :mod:`common.algo.ifsnaming`
 * :mod:`common.algo.monitoring`

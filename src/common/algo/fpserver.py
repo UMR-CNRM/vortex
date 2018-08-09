@@ -26,8 +26,11 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class FullPosNg(IFSParallel):
-    """Fullpos for geometry transforms & post-processing in IFS-like Models.
+class FullPosServer(IFSParallel):
+    """Fullpos Server for geometry transforms & post-processing in IFS-like Models.
+
+    :note: To use this algocomponent, the c903's server needs to be activated
+           in the namelist (NFPSERVER != 0).
 
     :note: The **io_poll** method is used to retrieve output files. Consequently,
            the corresponding addon needs to be loaded and properly configured.
@@ -61,7 +64,7 @@ class FullPosNg(IFSParallel):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values   = ['fullposng', ],
+                values   = ['fpserver', ],
             ),
             outputid = dict(
                 info     = "The identifier for the encoding of post-processed fields.",
@@ -102,7 +105,7 @@ class FullPosNg(IFSParallel):
         return 'fullpos'
 
     def __init__(self, *args, **kw):
-        super(FullPosNg, self).__init__(*args, **kw)
+        super(FullPosServer, self).__init__(*args, **kw)
         self._flyput_mapping_d = dict()
 
     def flyput_outputmapping(self, item):
@@ -214,7 +217,7 @@ class FullPosNg(IFSParallel):
 
     def prepare(self, rh, opts):
         """Various sanity checks + namelist tweaking."""
-        super(FullPosNg, self).prepare(rh, opts)
+        super(FullPosServer, self).prepare(rh, opts)
 
         inisec, todorh, namxx, anyexpected = self._inputs_discover()
 
@@ -335,7 +338,7 @@ class FullPosNg(IFSParallel):
             # Is there already an Initial Condition file ?
             # If so, start the binary...
             if sh.path.exists(i_init):
-                super(FullPosNg, self).execute(rh, opts)
+                super(FullPosServer, self).execute(rh, opts)
                 # Did the server stopped ?
                 if not self.server_alive():
                     logger.error("Server initialisation failed.")
@@ -358,7 +361,7 @@ class FullPosNg(IFSParallel):
                             sh.cp(sourcepath, i_init, intent='in', fmt=s.rh.container.actualfmt)
                             logger.info('%s copied as %s. For initialisation purposes only.',
                                         sourcepath, i_init,)
-                            super(FullPosNg, self).execute(rh, opts)
+                            super(FullPosServer, self).execute(rh, opts)
                             # Did the server stopped ?
                             if not self.server_alive():
                                 logger.error("Server initialisation failed.")
@@ -369,7 +372,7 @@ class FullPosNg(IFSParallel):
                                          i_fmt, o_raw_re_fmt, o_suffix)
                         self._link_xxt(s.rh, current_i, namxx_map)
                         # Let's go...
-                        super(FullPosNg, self).execute(rh, opts)
+                        super(FullPosServer, self).execute(rh, opts)
                         self._deal_with_promises(outputs_mapping, self._poll_and_move)
                         current_i += 1
                         # Did the server stopped ?
@@ -421,7 +424,7 @@ class FullPosNg(IFSParallel):
                 self.flyput = True
                 self.flymapping = True
             # Let's roll !
-            super(FullPosNg, self).execute(rh, opts)
+            super(FullPosServer, self).execute(rh, opts)
 
         # Map all outputs to destination (using io_poll)
         self._init_poll_and_move(outputs_mapping)
