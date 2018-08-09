@@ -6,13 +6,14 @@ This modules defines the low level physical layout for data handling.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
 from collections import namedtuple, defaultdict
 import json
 import pprint
 import re
-import six
+import traceback
 import weakref
 
 import footprints
@@ -147,7 +148,8 @@ class Section(object):
             try:
                 rc = self.rh.get(**kw)
             except StandardError as e:
-                logger.error('Something wrong (input section): %s', e)
+                logger.error('Something wrong (input section): %s. %s',
+                             e, traceback.format_exc())
                 try:
                     logger.error('Resource %s', self.rh.locate())
                 except StandardError:
@@ -170,7 +172,8 @@ class Section(object):
             try:
                 rc = self.rh.put(**kw)
             except Exception as e:
-                logger.error('Something wrong (output section): %s', e)
+                logger.error('Something wrong (output section): %s. %s',
+                             e, traceback.format_exc())
                 try:
                     logger.error('Resource %s', self.rh.locate())
                 except StandardError:

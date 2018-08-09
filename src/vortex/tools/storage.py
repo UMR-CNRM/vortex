@@ -651,9 +651,9 @@ class Archive(Storage):
         """Actual _delete using ftp."""
         rc = None
         username = kwargs.get('username', None)
-        ftp = self.system.ftp(self.actual_storage, username)
+        ftp = self.sh.ftp(self.actual_storage, username)
         if ftp:
-            if self.check(item, kwargs):
+            if self.check(item, **kwargs):
                 logger.info('ftpdelete on ftp://%s/%s', self.actual_storage, item)
                 rc = ftp.delete(item)
                 ftp.close()
