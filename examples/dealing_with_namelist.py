@@ -34,7 +34,7 @@ sh.chdir(workdirectory)
 
 # Check what is in this directory and clean unused files and subdirectories
 print("The current path is: {}".format(sh.pwd()))
-print("The contents sof the current directory is:")
+print("The contents of the current directory is:")
 pprint.pprint(sh.dir())
 sh.rmall("*")
 
