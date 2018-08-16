@@ -5,7 +5,7 @@
 OPE Services: routing files.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint
@@ -18,7 +18,7 @@ from iga.tools import services
 from vortex import toolbox
 from vortex.tools.actions import actiond as ad
 
-# prevent the IDE from removing seemingly unused imports
+# prevent IDEs from removing seemingly unused imports
 assert any([actions, services])
 
 t = vortex.ticket()

@@ -2,26 +2,35 @@
 # -*- coding: utf-8 -*-
 
 """
-Services: opmail.
+Puts at work some capabilities of the opmail Service.
+
+This Service has been designed to meet operational needs:
+- an adressbook is available for the definition of aliases to address
+  lists, and offers recursive address lists resolution
+- Vortex maintains a catalog of predefined mails, specified as templates:
+  they may contain variables, automatically resolved at send time
+
+Ordinary users are not allowed to use this Service, only operational
+and developper profiles can play with this toy.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import sys
-sys.stdout = sys.stderr
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint
+import sys
 
 import footprints
 import vortex
+from bronx.stdtypes import date
+from iga.tools import actions, services
 from vortex import toolbox
-from vortex.tools import date
 from vortex.tools.actions import actiond as ad
-from iga.tools import actions
-from iga.tools import services
 
-# ask the IDE not to remove seemingly unused imports...
+# cleanly mix stdout and stderr
+sys.stdout = sys.stderr
+
+# prevent IDEs from removing seemingly unused imports
 assert any([actions, services])
 
 t = vortex.ticket()
