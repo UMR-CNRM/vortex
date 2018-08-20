@@ -16,6 +16,8 @@ from bronx.stdtypes.date import yesterday, Period, Time
 class S2MTaskMixIn(object):
 
     nightruntime = Time(hour=3, minute=0)
+    firstassimruntime = Time(hour=6, minute=0)
+    secondassimruntime = Time(hour=9, minute=0)
 
     def get_period(self):
 
@@ -51,14 +53,36 @@ class S2MTaskMixIn(object):
         return rundate_forcing
 
     def get_rundate_prep(self):
+        alternates = []
         if self.conf.previ:
+            # Standard case: use the analysis of the same runtime
             rundate_prep = self.conf.rundate
+            if self.conf.rundate.hour > self.firstassimruntime:
+                # First alternate for 09h run: 06h run
+                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime), "assimilation"))
+            if self.conf.rundate.hour > self.nightruntime:
+                # First alternate for 06h run, second alternate for 09h run: 03h run
+                alternates.append((self.conf.rundate.replace(hour=self.nightruntime), "assimilation"))
+            # Very last alternates (and only one for 03h run: forecast J+4 of day J-4
+            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.nightruntime) - Period(days=4), "production"))
+
         else:
+            # Standard case: use today 03h for 06 et 09h runs, use yesterday 03h for 03h run
             if self.conf.rundate.hour == self.nightruntime.hour:
                 rundate_prep = self.conf.rundate - Period(days=1)
             else:
                 rundate_prep = self.conf.rundate.replace(hour=self.nightruntime.hour)
-        return rundate_prep
+
+            # First alternate : J-2 for night run, J-1 for other runs
+            # Second alternate : J-3 for night run, J-2 for other runs
+            # Third alternate : J-4 for night run, J-3 for other runs
+            alternates.append((rundate_prep - Period(days=1), "assimilation"))
+            alternates.append((rundate_prep - Period(days=2), "assimilation"))
+            alternates.append((rundate_prep - Period(days=3), "assimilation"))
+
+        return rundate_prep, alternates
 
     def get_list_members(self):
         if not self.conf.nmembers:
