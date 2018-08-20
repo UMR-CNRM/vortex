@@ -139,7 +139,7 @@ class ObsODB(Observations):
             return ('odb_cpl.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'minim':
             return ('odb_min.tar', '')
-        elif self.part == 'ground' and self.stage == 'canari':
+        elif self.part in ('ground', 'surf') and self.stage in ('canari', 'surfan'):
             return ('odb_canari.tar', '')
         else:
             logger.error(

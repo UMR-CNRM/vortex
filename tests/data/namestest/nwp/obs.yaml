@@ -113,8 +113,13 @@ todo:
                 namespace: "[suite].multi.fr"
             -   suite: oper
                 namespace: "[suite].multi.fr"
-                part: ground
+                part:
+                    - ground
+                    - surf
                 stage: cans
+                block:
+                    - canari
+                    - surfan
             -   suite: oper
                 namespace: "[suite].multi.fr"
                 model: aladin
