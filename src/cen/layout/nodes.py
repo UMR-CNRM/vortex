@@ -55,16 +55,16 @@ class S2MTaskMixIn(object):
         if self.conf.previ:
             # Standard case: use the analysis of the same runtime
             rundate_prep = self.conf.rundate
-            if self.conf.rundate.hour > self.firstassimruntime:
+            if self.conf.rundate.hour > self.firstassimruntime.hour:
                 # First alternate for 09h run: 06h run
-                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime), "assimilation"))
-            if self.conf.rundate.hour > self.nightruntime:
+                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour), "assimilation"))
+            if self.conf.rundate.hour > self.nightruntime.hour:
                 # First alternate for 06h run, second alternate for 09h run: 03h run
-                alternates.append((self.conf.rundate.replace(hour=self.nightruntime), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour), "assimilation"))
             # Very last alternates (and only one for 03h run: forecast J+4 of day J-4
-            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.nightruntime) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) - Period(days=4), "production"))
 
         else:
             # Standard case: use today 03h for 06 et 09h runs, use yesterday 03h for 03h run
