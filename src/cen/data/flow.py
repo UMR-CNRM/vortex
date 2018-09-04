@@ -109,10 +109,10 @@ class SurfaceIO(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                begindate = dict(
+                datebegin = dict(
                     info = "First date of the forcing file",
                 ),
-                enddate = dict(
+                dateend = dict(
                     info = "Last date of the forcing file",
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
@@ -233,7 +233,7 @@ class Prep(InitialCondition):
         return 'PREP'
 
 
-@namebuilding_insert('cen_period', lambda self: [self.begindate.y, self.enddate.y])
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class SnowObs(GeoFlowResource):
 
     _footprint = [
@@ -258,10 +258,10 @@ class SnowObs(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                begindate = dict(
+                datebegin = dict(
                     info = "First date of the forcing file",
                 ),
-                enddate = dict(
+                dateend = dict(
                     info = "Last date of the forcing file",
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)

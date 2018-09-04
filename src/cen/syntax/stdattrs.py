@@ -18,21 +18,21 @@ from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
 #: Usual definition of a date period for CEN resources.
 
 cendateperiod = footprints.Footprint(info = 'Abstract date period',
-                                     attr = dict(begindate = dict(info = "The resource's begin date.",
-                                                                  alias = ('datebegin', ),
+                                     attr = dict(datebegin = dict(info = "The resource's begin date.",
+                                                                  alias = ('begindate', ),
                                                                   type = Date,
                                                                   optional = False),
-                                                 enddate = dict(info = "The resource's end date.",
-                                                                alias = ('dateend', ),
+                                                 dateend = dict(info = "The resource's end date.",
+                                                                alias = ('enddate', ),
                                                                 type = Date,
                                                                 optional = False),
                                                  ))
 
 cendateperiod_deco = footprints.DecorativeFootprint(
     cendateperiod,
-    decorator = [namebuilding_insert('cen_period', lambda self: [self.begindate.ymdh, self.enddate.ymdh]),
-                 generic_pathname_insert('begindate', lambda self: self.begindate, setdefault=True),
-                 generic_pathname_insert('enddate', lambda self: self.enddate, setdefault=True)])
+    decorator = [namebuilding_insert('cen_period', lambda self: [self.datebegin.ymdh, self.dateend.ymdh]),
+                 generic_pathname_insert('datebegin', lambda self: self.datebegin, setdefault=True),
+                 generic_pathname_insert('dateend', lambda self: self.dateend, setdefault=True)])
 
 
 def show():
