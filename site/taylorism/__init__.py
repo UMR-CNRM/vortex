@@ -94,7 +94,7 @@ taylorism_log = footprints.loggers.getLogger(__name__)
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01
 
-__version__ = '1.0.8'
+__version__ = '1.0.9'
 
 
 # FUNCTIONS
@@ -102,7 +102,7 @@ __version__ = '1.0.8'
 
 def run_as_server(common_instructions=dict(),
                   individual_instructions=dict(),
-                  scheduler=fpx.scheduler(limit='threads', max_threads=0),
+                  scheduler=None,
                   verbose=False,
                   maxlenreport=1024,
                   sharedmemory_common_instructions=dict()):
@@ -126,6 +126,8 @@ def run_as_server(common_instructions=dict(),
         multiprocessing.Array or sharedctypes. For n-dimensional arrays,
         it is advised to be instances of the here-defined :class:`SharedNumpyArray`.
     """
+    if scheduler is None:
+        scheduler = fpx.scheduler(limit='threads', max_threads=0)
     boss = Boss(verbose=verbose, scheduler=scheduler, maxlenreport=maxlenreport,
                 sharedmemory_common_instructions=sharedmemory_common_instructions)
     boss.set_instructions(common_instructions, individual_instructions)
@@ -135,7 +137,7 @@ def run_as_server(common_instructions=dict(),
 
 def batch_main(common_instructions=dict(),
                individual_instructions=dict(),
-               scheduler=fpx.scheduler(limit='threads', max_threads=0),
+               scheduler=None,
                verbose=False,
                maxlenreport=1024,
                print_report=print,
@@ -146,6 +148,8 @@ def batch_main(common_instructions=dict(),
 
     Args and kwargs are those of run_as_server() function.
     """
+    if scheduler is None:
+        scheduler = fpx.scheduler(limit='threads', max_threads=0)
     boss = run_as_server(common_instructions,
                          individual_instructions,
                          scheduler=scheduler,

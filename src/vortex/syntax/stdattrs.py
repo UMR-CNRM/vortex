@@ -14,16 +14,18 @@ import re
 import six
 
 from bronx.stdtypes.date import Date, Time, Month
+from bronx.system import hash as hashutils
 import footprints
 
+from .stddeco import namebuilding_append, namebuilding_insert, generic_pathname_insert
 from vortex.tools import env
-from bronx.system import hash as hashutils
 
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [
-    'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term',
-    'a_nativefmt', 'a_actualfmt', 'a_suite'
+    'a_xpid', 'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_member',
+    'a_date', 'a_cutoff', 'a_term', 'a_nativefmt', 'a_actualfmt', 'a_suite',
+    'a_namespace', 'a_hashalgo', 'a_compressionpipeline', 'a_block', 'a_number'
 ]
 
 #: Default values for atmospheric models.
@@ -49,8 +51,6 @@ knownfmt = set([
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
     'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
-
-# Special classes
 
 
 class DelayedEnvValue(object):
@@ -308,6 +308,31 @@ a_nativefmt = dict(
 
 nativefmt = footprints.Footprint(info = 'Native format', attr = dict(nativefmt = a_nativefmt))
 
+
+def _namebuilding_insert_nativefmt(cls):
+
+    if hasattr(cls, 'namebuilding_info'):
+        original_namebuilding_info = cls.namebuilding_info
+
+        def namebuilding_info(self):
+            vinfo = original_namebuilding_info(self)
+            ext_remap = getattr(self, '_extension_remap', dict())
+            ext_value = ext_remap.get(self.nativefmt, self.nativefmt)
+            if ext_value is not None:
+                vinfo.setdefault('fmt', ext_remap.get(self.nativefmt, self.nativefmt))
+            return vinfo
+
+        namebuilding_info.__doc__ = original_namebuilding_info.__doc__
+        cls.namebuilding_info = namebuilding_info
+
+    return cls
+
+
+nativefmt_deco = footprints.DecorativeFootprint(
+    nativefmt,
+    decorator = [_namebuilding_insert_nativefmt,
+                 generic_pathname_insert('nativefmt', lambda self: self.nativefmt, setdefault=True)])
+
 #: Usual definition of the ``actualfmt`` attribute.
 a_actualfmt = dict(
     info     = "The resource's format.",
@@ -340,6 +365,13 @@ a_cutoff = dict(
 
 cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_cutoff))
 
+cutoff_deco = footprints.DecorativeFootprint(
+    cutoff,
+    decorator = [namebuilding_append('flow',
+                                     lambda self: None if self.cutoff is None else {'shortcutoff': self.cutoff},
+                                     none_discard=True),
+                 generic_pathname_insert('cutoff', lambda self: self.cutoff, setdefault=True)])
+
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
     info     = "The model name (from a source code perspective).",
@@ -355,6 +387,11 @@ a_model = dict(
 
 model = footprints.Footprint(info = 'Abstract model', attr = dict(model = a_model))
 
+model_deco = footprints.DecorativeFootprint(
+    model,
+    decorator = [namebuilding_append('src', lambda self: [self.model, ]),
+                 generic_pathname_insert('model', lambda self: self.model, setdefault=True)])
+
 #: Usual definition of the ``date`` attribute.
 a_date = dict(
     info = "The generating process run date.",
@@ -363,6 +400,30 @@ a_date = dict(
 )
 
 date = footprints.Footprint(info = 'Abstract date', attr = dict(date = a_date))
+
+date_deco = footprints.DecorativeFootprint(
+    date,
+    decorator = [namebuilding_append('flow', lambda self: {'date': self.date}),
+                 generic_pathname_insert('date', lambda self: self.date, setdefault=True)])
+
+#: Usual definition of the ``begindate`` and ``enddate`` attributes.
+
+dateperiod = footprints.Footprint(info = 'Abstract date period',
+                                  attr = dict(begindate = dict(info = "The resource's begin date.",
+                                                               type = Date,
+                                                               optional = False),
+                                              enddate = dict(info = "The resource's end date.",
+                                                             type = Date,
+                                                             optional = False),
+                                              ))
+
+dateperiod_deco = footprints.DecorativeFootprint(
+    dateperiod,
+    decorator = [namebuilding_append('flow',
+                                     lambda self: [{'begindate': self.begindate},
+                                                   {'enddate': self.enddate}]),
+                 generic_pathname_insert('begindate', lambda self: self.begindate, setdefault=True),
+                 generic_pathname_insert('enddate', lambda self: self.enddate, setdefault=True)])
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
@@ -374,6 +435,38 @@ a_month = dict(
 )
 
 month = footprints.Footprint(info = 'Abstract month', attr = dict(month = a_month))
+
+
+def _add_month2gget_basename(cls):
+    """Decorator that appends the month's number at the end of the gget_basename"""
+    original_gget_basename = getattr(cls, 'gget_basename', None)
+    if original_gget_basename is not None:
+
+        def gget_basename(self):
+            """GGET specific naming convention."""
+            return original_gget_basename(self) + '.m{!s}'.format(self.month)
+
+        cls.gget_basename = gget_basename
+    return cls
+
+
+def _add_month2olive_basename(cls):
+    """Decorator that appends the month's number at the end of the olive_basename."""
+    original_olive_basename = getattr(cls, 'olive_basename', None)
+    if original_olive_basename is not None:
+
+        def olive_basename(self):
+            """GGET specific naming convention."""
+            return original_olive_basename(self) + '.{!s}'.format(self.month)
+
+        cls.olive_basename = olive_basename
+    return cls
+
+
+month_deco = footprints.DecorativeFootprint(
+    month,
+    decorator=[namebuilding_append('suffix', lambda self: {'month': self.month}),
+               _add_month2gget_basename, _add_month2olive_basename])
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
@@ -401,6 +494,30 @@ a_term = dict(
 
 term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
 
+term_deco = footprints.DecorativeFootprint(
+    term,
+    decorator = [namebuilding_insert('term',
+                                     lambda self: None if self.term is None else self.term.fmthm,
+                                     none_discard=True, setdefault=True), ])
+
+
+#: Usual definition of the ``begintime`` and ``endtime`` attributes.
+
+timeperiod = footprints.Footprint(info = 'Abstract Time Period',
+                                  attr = dict(begintime = dict(info = "The resource's begin forecast term.",
+                                                               type = Time,
+                                                               optional = False),
+                                              endtime = dict(info = "The resource's end forecast term.",
+                                                             type = Time,
+                                                             optional = False),
+                                              ))
+
+timeperiod_deco = footprints.DecorativeFootprint(
+    timeperiod,
+    decorator = [namebuilding_insert('period',
+                                     lambda self: [{'begintime': self.begintime},
+                                                   {'endtime': self.endtime}]), ])
+
 #: Usual definition of operational suite
 a_suite = dict(
     info   = "The operational suite identifier.",
@@ -420,6 +537,19 @@ a_member = dict(
 
 member = footprints.Footprint(info = 'Abstract member', attr = dict(member = a_member))
 
+#: Usual definition of the ``number`` attribute (e.g. a perturbation number)
+a_number = dict(
+    info    = "Any kind of numbering...",
+    type    = FmtInt,
+    args    = dict(fmt = '03'),
+)
+
+number = footprints.Footprint(info = 'Abstract number', attr = dict(number = a_number))
+
+number_deco = footprints.DecorativeFootprint(
+    number,
+    decorator = [namebuilding_insert('number', lambda self: self.number, setdefault=True), ])
+
 #: Usual definition of the ``block`` attribute
 a_block = dict(
     info     = 'The subpath where to store the data.',
@@ -437,6 +567,7 @@ a_namespace = dict(
 namespacefp = footprints.Footprint(info = 'Abstract namespace',
                                    attr = dict(namespace = a_namespace))
 
+#: Usual definition of the ``storehash`` attribute
 a_hashalgo = dict(
     info = "The hash algorithm used to check data integrity",
     optional = True,
@@ -447,6 +578,7 @@ hashalgo = footprints.Footprint(info = 'Abstract Hash Algo', attr = dict(storeha
 
 hashalgo_avail_list = hashutils.HashAdapter.algorithms()
 
+#: Usual definition of the ``store_compressed`` attribute
 a_compressionpipeline = dict(
     info = "The compression pipeline used for this store",
     optional = True,

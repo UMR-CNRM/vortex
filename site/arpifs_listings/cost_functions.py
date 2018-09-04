@@ -22,7 +22,7 @@ __all__ = ['CostFunctions', ]
 
 
 class CostFunctionsMismatchError(Exception):
-    '''Items from Experiment and Reference CostFunctions do not match.'''
+    """Items from Experiment and Reference CostFunctions do not match."""
     pass
 
 
@@ -111,7 +111,7 @@ class CostFunctionData(object):
 
 
 class CostFunctions(object):
-    '''Object enclosing one or more cost function data.
+    """Object enclosing one or more cost function data.
 
     It behaves mostly like a dictionary:
 
@@ -127,7 +127,7 @@ class CostFunctions(object):
 
         print(cf)
 
-    '''
+    """
 
     # GREPCOST - ITER,SIM,JO,JB,JC,JQ,JP    1   1   1608090.76067       41397.7651306
     # 42.5912100509       0.00000000000       468.896418521
@@ -147,12 +147,12 @@ class CostFunctions(object):
                           r'(?P<J>[\.\+\-Ee\d]+)')
 
     def __init__(self, filename, fcontent=None):
-        '''The constructor call triggers the reading of the file.
+        """The constructor call triggers the reading of the file.
 
         :param filename: Name of the file where the cost function data are read
         :param fcontent: Array of listing lines (if not provided, **filename** is
             opened and read it.
-        '''
+        """
         self.filename = filename
         self._content = OrderedDict()
 

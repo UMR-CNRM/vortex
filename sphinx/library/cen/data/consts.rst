@@ -8,9 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.1.1
 
-Package
--------
-
 .. autodata:: __all__
 
 
@@ -22,7 +19,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Snowr_param
+.. autoclass:: SSA_param
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: climTG
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -16,7 +16,7 @@ import sys
 import types
 
 import footprints
-from footprints import Footprint, FootprintBase
+from footprints import Footprint, DecorativeFootprint, FootprintBase
 from footprints import doc, priorities, reporting, collectors
 from footprints.config import FootprintSetup
 
@@ -148,6 +148,11 @@ class FootprintTestFpAttr(FootprintTestOne):
     )
 
 
+def easy_decorator(cls):
+    cls.easy_decorator_was_here = True
+    return cls
+
+
 @contextmanager
 def capture(command, *args, **kwargs):
     out, sys.stdout = sys.stdout, StringIO()
@@ -181,7 +186,7 @@ class utFootprint(TestCase):
             only = dict(),
             priority = dict(
                 level = priorities.top.DEFAULT
-            )
+            ),
         )
 
         self.fpbis = Footprint(
@@ -197,7 +202,7 @@ class utFootprint(TestCase):
             info = 'Some nice stuff'
         )
 
-        self.fpter = Footprint(
+        self.fpter = DecorativeFootprint(
             attr = dict(
                 stuff1 = dict(
                     alias = ('arg1',)
@@ -208,7 +213,8 @@ class utFootprint(TestCase):
                     default = 1
                 ),
             ),
-            info = 'Some nice stuff'
+            info = 'Some nice stuff',
+            decorator = easy_decorator
         )
 
     def test_footprint_basics(self):
@@ -272,7 +278,7 @@ class utFootprint(TestCase):
             'bind': [],
             'info': 'Other stuff',
             'only': {},
-            'priority': {'level': priorities.top.DEBUG}
+            'priority': {'level': priorities.top.DEBUG},
         })
 
     def test_footprint_readonly(self):
@@ -419,32 +425,34 @@ class utFootprint(TestCase):
         guess = dict(nothing='void')
         extras = dict()
         with self.assertRaises(KeyError):
-            u_rv = fp._replacement(nbpass, 'hip', guess, extras, list(guess.keys()))
+            fp._replacement(nbpass, 'hip', True, guess, extras, list(guess.keys()), list(), set())
 
-        rv = fp._replacement(nbpass, 'nothing', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'nothing', True, guess, extras, list(guess.keys()), list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(nothing='void'))
 
         guess = dict(nothing='void', stuff1='misc_[stuff2]')
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintUnreachableAttr):
-            u_rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(footprints.FootprintUnreachableAttr):
+                fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0]')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]'))
         todo = list(guess.keys())
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
         self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]', stuff2='foo'))
 
         todo.remove('stuff2')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo', stuff2='foo'))
 
@@ -454,7 +462,7 @@ class utFootprint(TestCase):
         self.assertSetEqual(set(todo), set(['stuff1', 'stuff2']))
         todo.remove('stuff2')
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo_and_2', stuff2='foo'))
 
@@ -481,32 +489,32 @@ class utFootprint(TestCase):
         self.assertSetEqual(todo, set(['stuff1', 'stuff2', 'somefoo']))
 
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_2', stuff2='foo', somefoo=thisfoo))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justprop]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_3', stuff2='foo', somefoo=thisfoo))
 
         # What if the function doesn't exists ?
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:missing]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='foo', somefoo=thisfoo))
 
         # With a built-in method
         guess, u_inputattr = fp._firstguess(dict(stuff2='[fake:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff2', guess, dict(fake='misc'), todo)
+        rv = fp._replacement(nbpass, 'stuff2', True, guess, dict(fake='misc'), todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='MISC', somefoo=thisfoo))
 
         guess, u_inputattr = fp._firstguess(dict(stuff2='misc_[otherfoo:value]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff2', guess, dict(otherfoo=thisfoo), todo)
+        rv = fp._replacement(nbpass, 'stuff2', True, guess, dict(otherfoo=thisfoo), todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1=None, stuff2='misc_2', somefoo=thisfoo))
 
         # Mix of attributes and methods
         thisfoo = Foo(value='ToTo')
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:value::lower]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_toto', stuff2='foo', somefoo=thisfoo))
 
     def test_footprint_replmethod(self):
@@ -521,23 +529,23 @@ class utFootprint(TestCase):
         self.assertSetEqual(todo, set(['stuff1', 'stuff2']))
 
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_done_2', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit:upper]', somefoo=thisfoo))
         todo = [ 'stuff1' ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertFalse(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
 
@@ -547,23 +555,25 @@ class utFootprint(TestCase):
         extras = dict()
 
         guess = dict(nothing='void', stuff1='misc_[stuff2#0%03d]')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, list(guess.keys()))
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, list(guess.keys()), list(), set())
         self.assertDictEqual(guess, dict(stuff1='misc_0', nothing='void'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%03d]'))
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%03d]', stuff2='foo'))
         todo = ['stuff1', ]
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(ValueError):
-            rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(ValueError):
+                rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         # If the replacement target is in extras
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2]_and_[more%02d]', more=2))
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2]_and_[more%02d]', stuff2='foo'))
         todo = ['stuff1', ]
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_foo_and_02', stuff2='foo'))
 
@@ -572,7 +582,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justanint%02d]', somefoo=thisfoo))
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justanint%02d]', stuff2='foo'))
         todo = ['stuff1', ]
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_03', stuff2='foo'))
 
@@ -582,7 +592,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[stuff2%02d]_and_[more%02d]', stuff2=1))
         todo = ['stuff1', ]
         extras = dict(more=2)
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_01_and_02', stuff2=1))
 
@@ -591,7 +601,7 @@ class utFootprint(TestCase):
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[stuff2%02d]_and_[more%.upper:s]', more='toto'))
         todo = ['stuff1', ]
         extras = dict(more='toto')
-        rv = fp._replacement(nbpass, 'stuff1', guess, extras, todo)
+        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_01_and_TOTO', stuff2=1))
 
@@ -724,8 +734,10 @@ class utFootprint(TestCase):
                 )
             )
         ))
+
         class MoreFoo(Foo):
             pass
+
         class FakeFoo(object):
             pass
 
@@ -795,7 +807,7 @@ class utFootprint(TestCase):
     def test_resolve_only(self):
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                rdate = datetime.date(2013,11,2)
+                rdate = datetime.date(2013, 11, 2)
             )
         ))
 
@@ -804,14 +816,14 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,2))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 2))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -820,25 +832,25 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                rdate = (datetime.date(2013,11,2), datetime.date(2013,11,5))
+                rdate = (datetime.date(2013, 11, 2), datetime.date(2013, 11, 5))
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,2))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 2))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,5))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 5))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,4))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 4))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -847,18 +859,18 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                after_rdate = datetime.date(2013,11,2)
+                after_rdate = datetime.date(2013, 11, 2)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,12,3))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 12, 3))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -867,18 +879,18 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                before_rdate = datetime.date(2013,11,2)
+                before_rdate = datetime.date(2013, 11, 2)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,12,3))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 12, 3))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
@@ -887,31 +899,56 @@ class utFootprint(TestCase):
 
         fp = Footprint(self.fpbis, dict(
             only = dict(
-                after_rdate = datetime.date(2013,11,2),
-                before_rdate = datetime.date(2013,11,28)
+                after_rdate = datetime.date(2013, 11, 2),
+                before_rdate = datetime.date(2013, 11, 28)
             )
         ))
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,1))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 1))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,29))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 29))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
-        footprints.setup.defaults.update(rdate=datetime.date(2013,11,15))
+        footprints.setup.defaults.update(rdate=datetime.date(2013, 11, 15))
 
         rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
+
+    def test_decorative(self):
+        self.assertListEqual(self.fpter.decorators, [easy_decorator, ])
+        fptmp = self.fpter.as_footprint()
+        self.assertIsInstance(fptmp, Footprint)
+        self.assertEqual(fptmp.as_dict(), self.fpter.as_dict())
+        # Decorative but useless...
+        fpuseless = DecorativeFootprint(
+            attr = dict(
+                stuff1 = dict(
+                ),
+            ),
+            info = 'Some nice stuff',
+        )
+        self.assertListEqual(fpuseless.decorators, [])
+        # Not cool...
+        with self.assertRaises(ValueError):
+            DecorativeFootprint(
+                attr = dict(
+                    stuff1 = dict(
+                    ),
+                ),
+                info = 'Some nice stuff',
+                decorator = [easy_decorator, 'toto', ]
+            )
 
 
 # Base class for footprint classes
@@ -919,6 +956,7 @@ class utFootprint(TestCase):
 class utFootprintBase(TestCase):
 
     def test_metaclass_abstract(self):
+
         class FootprintTestMeta(FootprintBase):
             _abstract = True
 
@@ -936,7 +974,7 @@ class utFootprintBase(TestCase):
             bind = list(),
             info = 'Not documented',
             only = dict(),
-            priority = dict( level = priorities.top.DEFAULT )
+            priority = dict(level = priorities.top.DEFAULT)
         ))
 
         with self.assertRaises(KeyError):
@@ -946,7 +984,7 @@ class utFootprintBase(TestCase):
             self.assertTrue(FootprintTestMeta.footprint_values('foo'))
 
         with self.assertRaises(footprints.FootprintInvalidDefinition):
-            u_ftm = FootprintTestMeta()
+            FootprintTestMeta()
 
     def test_metaclass_empty(self):
         with self.assertRaises(footprints.FootprintInvalidDefinition):
@@ -968,7 +1006,7 @@ class utFootprintBase(TestCase):
 
         del FootprintTestMeta
 
-    def test_metaclass_inheritance(self):
+    def test_metaclass_inheritance_and_merging(self):
         class testA(FootprintBase):
             _footprint = dict(
                 attr = dict(
@@ -979,14 +1017,24 @@ class utFootprintBase(TestCase):
                 )
             )
 
-        class testB(FootprintBase):
-            _footprint = dict(
-                attr = dict(
-                    att1 = dict(default = 'titi'),
-                    att3 = dict(default = 'scrontch',
-                                optional = True),
-                )
+        fpatt3 = Footprint(
+            info = 'Abstract att1',
+            attr = dict(
+                att3 = dict(default = 'scrontch', optional = True),
             )
+        )
+
+        fpatt3_deco = DecorativeFootprint(fpatt3, decorator=[easy_decorator, ])
+
+        class testB(FootprintBase):
+            _footprint = [
+                fpatt3_deco,
+                dict(
+                    attr = dict(
+                        att1 = dict(default = 'titi'),
+                    )
+                )
+            ]
 
         class testC(testB, testA):
             _footprint = dict(
@@ -1003,6 +1051,11 @@ class utFootprintBase(TestCase):
         self.assertEqual(testC._footprint.attr['att3']['default'], 'scrontch')
         self.assertEqual(testC._footprint.attr['att3']['optional'], True)
 
+        # Decorator effect...
+        self.assertTrue(testB.easy_decorator_was_here)
+        self.assertTrue(testC.easy_decorator_was_here)  # Because of the MRO
+        self.assertNotIn('easy_decorator_was_here', testC.__dict__)  # But actually not defined in testC
+
     def test_baseclass_fp1(self):
         self.assertFalse(FootprintTestOne.footprint_abstract())
         self.assertSetEqual(set(FootprintTestOne.footprint_mandatory()),
@@ -1017,12 +1070,14 @@ class utFootprintBase(TestCase):
         )
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintFatalError):
-            u_fp1 = FootprintTestOne(kind='hip')
+        try:
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestOne(kind='hip')
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            u_fp1 = FootprintTestOne(kind='hip', someint=13)
-        footprints.logger.setLevel(logging.WARNING)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestOne(kind='hip', someint=13)
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='hip', someint=7)
         self.assertIsInstance(fp1, FootprintTestOne)
@@ -1065,7 +1120,6 @@ class utFootprintBase(TestCase):
             someint = 8,
         )))
 
-
         fp1 = FootprintTestOne(stuff='foo', someint='7')
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
             kind = 'hop',
@@ -1075,13 +1129,15 @@ class utFootprintBase(TestCase):
         ))
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(AttributeError):
-            fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
-            self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-                stuff = 'foo',
-                someint = '7',
-            ))
-        footprints.logger.setLevel(logging.WARNING)
+        try:
+            with self.assertRaises(AttributeError):
+                fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
+                self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
+                    stuff = 'foo',
+                    someint = '7',
+                ))
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
@@ -1104,15 +1160,17 @@ class utFootprintBase(TestCase):
         thefoo = Foo(inside=2)
 
         footprints.logger.setLevel(logging.CRITICAL)
-        with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo)
+        try:
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo)
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo, someint=13)
 
-        with self.assertRaises(footprints.FootprintFatalError):
-            u_fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
-        footprints.logger.setLevel(logging.WARNING)
+            with self.assertRaises(footprints.FootprintFatalError):
+                FootprintTestTwo(kind='hip', somefoo=thefoo, someint=7)
+        finally:
+            footprints.logger.setLevel(logging.WARNING)
 
         fp2 = FootprintTestTwo(kind='hip', somefoo=thefoo, someint=5)
         self.assertIsInstance(fp2, FootprintTestTwo)
@@ -1366,6 +1424,7 @@ class utProxy(TestCase):
         self.assertIsInstance(footprints.proxy.garbage, types.MethodType)
         self.assertIn('garbage', footprints.proxy)
         self.assertIn('garbages', footprints.proxy)
+
 
 if __name__ == '__main__':
     main(verbosity=2)

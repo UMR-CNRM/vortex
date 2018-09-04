@@ -30,7 +30,10 @@ import $package.$task as todo
 rd_vapp     = '$vapp'
 rd_vconf    = '$vconf'
 rd_cutoff   = '$cutoff'
-rd_rundate  = bronx.stdtypes.date.Date($rundate)
+if $rundate:
+    rd_rundate  = bronx.stdtypes.date.Date($rundate)
+if '$rundates':
+    rd_rundates = bronx.stdtypes.date.daterangex('$rundates')
 rd_member   = $member
 rd_xpid     = '$xpid'
 rd_suitebg  = $suitebg
@@ -50,7 +53,7 @@ ja.add_plugin('tmpdir')
 try:
     t, e, sh = ja.setup(actual=locals())
 
-    opts = dict(jobassistant=ja, fullplay=True,
+    opts = dict(jobassistant=ja, play=True,
                 defaults=dict(gnamespace='gco.multi.fr'))
     driver = todo.setup(t, **opts)
     driver.setup()

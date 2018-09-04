@@ -1,0 +1,33 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: blkdat_nam_file
+      param: full_ana
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: hycom02_hycom@ang-main.04
+        date: 2018010100
+        geometry: hycomang2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: vortex.multi.fr
+        vapp: hycom
+        vconf: ang@fcaro
+      location: gget://gco.multi.fr/tampon/hycom.blkdat_full_ana.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: blkdat_nam_file
+      param: full_prv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.blkdat_full_prv.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: blkdat_nam_file
+      param: ms
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.blkdat_ms.ang.02

@@ -82,20 +82,22 @@ class IgaFinder(Finder):
         logger.debug('IgaFinder store init %s', self.__class__)
         super(IgaFinder, self).__init__(*args, **kw)
 
-    def hostname(self):
-        return self.netloc
-
     def fullpath(self, remote):
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
-            return self.rootdir  + remote['path']
+            return self.system.join(self.rootdir, remote['path'])
 
     def fileget(self, remote, local, options):
-        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
+        logger.info('fileget on %s (to: %s)', rpath, local)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
-        return rc and self._hash_get_check(self.fileget, remote, local, dict())
+        # plpl il y a une bonne raison pour avoir 'dict()' au lieu de 'options' ?
+        rc = rc and self._hash_get_check(self.fileget, remote, local, options)
+        if rc:
+            self._localtarfix(local)
+        return rc
 
 
 class SopranoStore(Store):

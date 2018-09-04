@@ -13,10 +13,11 @@ from vortex import sessions
 from vortex.tools import env
 from bronx.stdtypes.date import Time, Date
 from bronx.datagrip.namelist import NO_SORTING, NamelistSet, NamelistParser
-from vortex.data.outflow import ModelResource, NoDateResource
-from vortex.data.outflow import StaticGeoResource
+from vortex.data.outflow import ModelResource, StaticResource
+from vortex.data.outflow import ModelGeoResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
+from vortex.syntax.stddeco import namebuilding_insert
 from gco.syntax.stdattrs import gvar
 
 #: No automatic export
@@ -464,7 +465,7 @@ class XXTContent(IndexedTable):
         return dict(term=mapdom)
 
 
-class NamelistSelectDef(NoDateResource):
+class NamelistSelectDef(StaticResource):
     """Utility, so-called xxt file."""
     _footprint = [
         cutoff,
@@ -510,7 +511,8 @@ class NamelistSelectDef(NoDateResource):
         return 'extract=' + thesource
 
 
-class GeoBlocks(StaticGeoResource):
+@namebuilding_insert('src', lambda s: s.target)
+class GeoBlocks(ModelGeoResource):
     """Extract of a namelist containing Geometry blocks."""
 
     _footprint = dict(
@@ -536,11 +538,3 @@ class GeoBlocks(StaticGeoResource):
     @property
     def realkind(self):
         return 'geoblocks'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo = self._geo2basename_info(),
-            src = self.target,
-            fmt = self.nativefmt
-        )

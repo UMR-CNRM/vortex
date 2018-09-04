@@ -1,0 +1,46 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy41t1_tsr-op2.01
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+
+register:
+    genv:
+        - cy41t1_tsr-op2.01
+
+todo:
+    # Raw observations
+    -   commons:
+            block: forecast
+        tests:
+            - kind: ctpini_directives_file
+              experiment: abcd
+            - kind: ctpini_ascii_file
+              source:
+                  - levels
+                  - coor
+              genv: '[cycle]'
+            - kind: ctpini_gridpoint
+              experiment: abcd
+              origin:
+                  - PS
+                  - ctpini
+              parameter:
+                  - PMERSOL
+                  - Z20PVU
+                  - T850HPA
+              run_ctpini:
+                  - null
+                  - True
+                  - False
+              term:
+                  - 0
+                  - 24

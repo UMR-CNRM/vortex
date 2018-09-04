@@ -1,0 +1,30 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+
+todo:
+    -   commons:
+            source: gruik
+            genv: '[cycle]'
+        tests:
+            - kind:
+                  - bdap_query
+                  - bdmp_query
+                  - bdcp_query
+                  - bdm_query   

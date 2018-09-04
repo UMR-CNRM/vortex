@@ -116,5 +116,6 @@ class utObservers(TestCase):
         self.assertDictEqual(slurper3.messages,
                              dict(b=['Hey guys!', 'Bye Bye']))
 
+
 if __name__ == '__main__':
     main(verbosity=2)

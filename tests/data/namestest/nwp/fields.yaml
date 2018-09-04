@@ -1,0 +1,122 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+todo:
+    # RawFields BDPE
+    -   commons:
+            bdpeid: 10550
+            kind: rawfields
+            fields: sst
+            origin: ostia
+            nativefmt: netcdf
+            namespace: bdpe.archive.fr
+        tests:
+            -   prefered_target:
+                    - null
+                    - INT
+            -   prefered_target: INT
+                forbidden_target: OPER
+    # RawFields DSI
+    -   commons:
+            kind: rawfields
+            fields:
+                - sst
+                - seaice
+            origin:
+                fields:
+                    sst:
+                        - ostia
+                        - nesdis
+                    seaice: bdm
+        tests:
+            -   suite: oper
+                namespace: '[suite].inline.fr'
+
+    # RawFields
+    -   commons:
+            kind: rawfields
+            fields:
+                - sst
+                - seaice
+                - ocean
+            origin:
+                fields:
+                    sst:
+                        - ostia
+                        - nesdis
+                    seaice:
+                        - bdm
+                        - safosi
+                    ocean: psy4
+            format: netcdf
+        tests:
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+            -   experiment: abcd
+                block: observations
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+    # RawFields
+    -   commons:
+            kind: rawfields
+            fields:
+                - sst
+                - seaice
+                - ocean
+            origin:
+                fields:
+                    sst:
+                        - ostia
+                        - nesdis
+                    seaice:
+                        - bdm
+                        - safosi
+                    ocean: psy4
+            format: netcdf
+        tests:
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+            -   experiment: abcd
+                block: observations
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+    #  GeoFields ALL
+    -   commons:
+            kind: geofields
+            fields:
+                - sst
+                - seaice
+                - ocean
+        tests:
+            -   suite: oper
+                namespace:
+                    - '[suite].multi.fr'
+                    - '[suite].inline.fr'
+            -   experiment: abcd
+                block: observations
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr

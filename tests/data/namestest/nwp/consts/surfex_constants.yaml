@@ -1,0 +1,70 @@
+default:
+    style: olive
+    sets:
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+register:
+    genv:
+        - al42_arome-op2.40
+        - cy42_op2.67
+        - cy43t2_clim-bf.05
+
+todo:
+    # PGD
+    -   commons:
+            kind: pgdfa
+        tests:
+            - genv: '[cycle]'
+            - kind:
+                - pgdfa
+                - pgdlfi
+                - pgdnc
+              experiment: abcd
+              block: clim
+              namespace:
+                  - olive.multi.fr
+                  - vortex.multi.fr
+            - kind:
+                - pgdfa
+                - pgdlfi
+                - pgdnc
+              experiment: abcd
+              block: ''
+              namebuild: cen
+    # ecoclimap
+    -   commons:
+            kind: coverparams
+            genv: cy42_op2.67
+        tests:
+            -   kind: surfexcover
+            -   source: ecoclimap
+    # ISBA
+    -   commons:
+            genv: cy42_op2.67
+        tests:
+            -   kind: isba
+    # Climatology source files for surfex
+    -   commons:
+            genv: cy43t2_clim-bf.05
+        tests:
+            -   source: HWSD
+                kind:
+                    - sand
+                    - clay
+            -   source: ECOCLIMAP_I
+                kind: surface_type
+            -   source: GMTED2010
+                kind: orography
+                geometry: global30s
+            -   source: ETOPO2
+                kind: bathymetry
+                geometry: global2min

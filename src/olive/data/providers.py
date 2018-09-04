@@ -24,7 +24,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 class Olive(Provider):
     """
-    This provider offers accessibility to resources created in the OLIVE framekork
+    This provider offers accessibility to resources created in the OLIVE framework
     using the old perl toolbox.
     """
 
@@ -39,6 +39,7 @@ class Olive(Provider):
                     info     = "The experiment's identifier.",
                 ),
                 namespace = dict(
+                    optional = False,
                     values   = ['olive.cache.fr', 'olive.archive.fr', 'olive.multi.fr', 'multi.olive.fr'],
                     default  = Namespace('olive.cache.fr'),
                     remap    = {
@@ -145,7 +146,8 @@ class OpArchive(Provider):
                     optional = True,
                     default = '',
                 )
-            )
+            ),
+            fastkeys = set(['suite', 'vconf']),
         )
     ]
 
@@ -327,7 +329,8 @@ class RemoteGenericSet(Remote):
         ),
         priority = dict(
             level = footprints.priorities.top.TOOLBOX
-        )
+        ),
+        fastkeys = set(['remote', 'setcontent']),
     )
 
     def pathname(self, resource):

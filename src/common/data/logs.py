@@ -10,6 +10,7 @@ from vortex import sessions
 from vortex.data.flow import FlowResource
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import FmtInt
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
 from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.util.roles import setrole
 
@@ -17,6 +18,9 @@ from vortex.util.roles import setrole
 __all__ = []
 
 
+@namebuilding_insert('src', lambda s: [s.binary, s.task.split('/').pop()])
+@namebuilding_insert('compute', lambda s: s.part)
+@namebuilding_delete('fmt')
 class Listing(FlowResource):
     """Miscellaneous application output from a task processing."""
     _footprint = [
@@ -48,14 +52,6 @@ class Listing(FlowResource):
     @property
     def realkind(self):
         return 'listing'
-
-    def basename_info(self):
-        """Generic information, radical = ``listing``."""
-        return dict(
-            radical = self.realkind,
-            src     = [self.binary, self.task.split('/').pop()],
-            compute = self.part,
-        )
 
     def olive_basename(self):
         """Fake basename for getting olive listings"""
@@ -108,9 +104,9 @@ class ParallelListing(Listing):
         )
     ]
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """From base information of ``listing`` add mpi and openmp values."""
-        info = super(ParallelListing, self).basename_info()
+        info = super(ParallelListing, self).namebuilding_info()
         if self.mpi and self.openmp:
             info['compute'] = [{'mpi': self.mpi}, {'openmp': self.openmp}]
         if self.seta and self.setb:
@@ -118,6 +114,9 @@ class ParallelListing(Listing):
         return info
 
 
+@namebuilding_insert('src', lambda s: [s.binary, s.task.split('/').pop()])
+@namebuilding_insert('compute', lambda s: s.part)
+@namebuilding_delete('fmt')
 class StaticListing(Resource):
     """Miscelanous application output from a task processing, out-of-flow."""
     _footprint = [
@@ -150,15 +149,9 @@ class StaticListing(Resource):
     def realkind(self):
         return 'staticlisting'
 
-    def basename_info(self):
-        """Generic information, radical = ``listing``."""
-        return dict(
-            radical = self.realkind,
-            src     = [self.binary, self.task.split('/').pop()],
-            compute = self.part,
-        )
 
-
+@namebuilding_insert('compute', lambda s: None if s.mpi is None else [{'mpi': s.mpi}, ],
+                     none_discard=True)
 class DrHookListing(Listing):
     """Output produced by DrHook"""
     _footprint = [
@@ -169,7 +162,6 @@ class DrHookListing(Listing):
                 ),
                 mpi = dict(
                     optional = True,
-                    default  = None,
                     type     = FmtInt,
                     args     = dict(fmt = '03'),
                 ),
@@ -180,13 +172,6 @@ class DrHookListing(Listing):
     @property
     def realkind(self):
         return 'drhookprof'
-
-    def basename_info(self):
-        """From base information of ``listing``, add mpi."""
-        info = super(DrHookListing, self).basename_info()
-        if self.mpi:
-            info['compute'] = [{'mpi': self.mpi}, ]
-        return info
 
 
 class Beacon(FlowResource):
@@ -212,15 +197,9 @@ class Beacon(FlowResource):
     def realkind(self):
         return 'beacon'
 
-    def basename_info(self):
-        """Generic information, radical = ``beacon``."""
-        return dict(
-            radical = self.realkind,
-            src     = [self.model],
-            fmt     = self.nativefmt
-        )
 
-
+@namebuilding_insert('src', lambda s: s.task.split('/').pop())
+@namebuilding_insert('compute', lambda s: s.scope)
 class TaskInfo(FlowResource):
     """Task informations."""
     _footprint = [
@@ -251,15 +230,6 @@ class TaskInfo(FlowResource):
     @property
     def realkind(self):
         return 'taskinfo'
-
-    def basename_info(self):
-        """Generic information, radical = ``taskinfo``."""
-        return dict(
-            radical = self.realkind,
-            src     = self.task.split('/').pop(),
-            compute = self.scope,
-            fmt     = self.nativefmt
-        )
 
 
 class SectionsSlice(collections.Sequence):
@@ -406,6 +376,7 @@ class SectionsJsonListContent(DataContent):
         container.updfill(True)
 
 
+@namebuilding_insert('src', lambda s: s.task.split('/').pop())
 class SectionsList(FlowResource):
     """Class to handle a resource that contains a list of Sections in JSON format.
 
@@ -436,11 +407,3 @@ class SectionsList(FlowResource):
     @property
     def realkind(self):
         return "sectionslist"
-
-    def basename_info(self):
-        """Generic information for names factory."""
-        return dict(
-            radical = self.realkind,
-            src     = self.task.split('/').pop(),
-            fmt     = self.nativefmt,
-        )

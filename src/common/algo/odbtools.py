@@ -461,7 +461,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
                 nam.rh.save()
 
     def _default_pre_execute(self, rh, opts):
-        '''Change default initialisation to use LongerFirstScheduler'''
+        """Change default initialisation to use LongerFirstScheduler"""
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
                           scheduler=footprints.proxy.scheduler(limit='threads+memory',
@@ -783,6 +783,11 @@ class OdbMatchup(OdbProcess):
             kind = dict(
                 values = ['matchup'],
             ),
+            fcmalayout = dict(
+                optional = True,
+                value    = ['ecma', 'ccma', 'CCMA', 'ECMA'],
+                remap    = dict(CCMA ='ccma', ECMA = 'ecma'),
+            ),
         )
     )
 
@@ -816,6 +821,8 @@ class OdbMatchup(OdbProcess):
         ccma = obscompressed.pop(0)
         self.layout_screening  = ecma.rh.resource.layout
         self.layout_compressed = ccma.rh.resource.layout
+        self.layout_fcma = (self.layout_compressed if self.fcmalayout is None
+                            else self.fcmalayout)
         ecma_path = sh.path.abspath(ecma.rh.container.localpath())
         ccma_path = sh.path.abspath(ccma.rh.container.localpath())
         self.env.ODB_SRCPATH_CCMA  = ccma_path
@@ -846,7 +853,7 @@ class OdbMatchup(OdbProcess):
             npool    = self.npool,
             nslot    = self.slots.nslot,
             date     = self.date,
-            fcma     = self.layout_compressed,
+            fcma     = self.layout_fcma,
         )
 
 

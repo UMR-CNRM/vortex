@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 
-from common.data.consts import GenvStaticGeoResource
+from common.data.consts import GenvModelGeoResource
 from gco.syntax.stdattrs import gdomain
 
 #: No automatic export
@@ -14,7 +14,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class List(GenvStaticGeoResource):
+class List(GenvModelGeoResource):
 
     _footprint = [
         gdomain,
@@ -41,7 +41,7 @@ class List(GenvStaticGeoResource):
         return 'safran_namelist'
 
 
-class SSA_param(GenvStaticGeoResource):
+class SSA_param(GenvModelGeoResource):
 
     _footprint = dict(
         attr = dict(
@@ -63,7 +63,7 @@ class SSA_param(GenvStaticGeoResource):
         return self.kind
 
 
-class climTG(GenvStaticGeoResource):
+class climTG(GenvModelGeoResource):
     """
     Ground temperature climatological resource.
     """
@@ -89,13 +89,12 @@ class climTG(GenvStaticGeoResource):
     def realkind(self):
         return 'climTG'
 
-    def basename_info(self):
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [ self.geometry.area, self.geometry.rnice ],
-            radical = self.realkind,
+    def namebuilding_info(self):
+        nbi = super(climTG, self).namebuilding_info()
+        nbi.update(
+            # will work only with the @cen namebuilder:
+            cen_rawbasename = ('init_TG_' + self.geometry.area + '.' +
+                               self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            # With the standard provider, the usual keys will be used.
         )
-
-    def cenvortex_basename(self):
-        """CEN specific naming convention"""
-        return 'init_TG_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        return nbi

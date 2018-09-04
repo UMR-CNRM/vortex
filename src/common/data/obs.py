@@ -15,7 +15,7 @@ from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
-from vortex.syntax        import stdattrs
+from vortex.syntax        import stdattrs, stddeco
 
 from gco.syntax.stdattrs  import gvar, GenvKey
 
@@ -25,6 +25,9 @@ __all__ = [ 'Observations' ]
 logger = footprints.loggers.getLogger(__name__)
 
 
+@stddeco.namebuilding_insert('style', lambda s: 'obs')
+@stddeco.namebuilding_insert('stage', lambda s: s.stage)
+@stddeco.namebuilding_insert('part', lambda s: s.part)
 class Observations(GeoFlowResource):
     """
     Abstract observation resource.
@@ -54,16 +57,8 @@ class Observations(GeoFlowResource):
     def realkind(self):
         return 'observations'
 
-    def basename_info(self):
-        """Generic information for names fabric, with style = ``obs``."""
-        return dict(
-            style     = 'obs',
-            nativefmt = self.nativefmt,
-            stage     = self.stage,
-            part      = self.part,
-        )
 
-
+@stddeco.namebuilding_insert('layout', lambda s: s.layout)
 class ObsODB(Observations):
     """
     TODO.
@@ -112,14 +107,6 @@ class ObsODB(Observations):
             ),
         )
     )
-
-    def basename_info(self):
-        """Generic information for names fabric, with style = ``obs``."""
-        d = super(ObsODB, self).basename_info()
-        d.update(
-            layout = self.layout,
-        )
-        return d
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -231,6 +218,8 @@ class ObsRaw(Observations):
             )
 
 
+@stddeco.namebuilding_insert('radical', lambda s: s.kind)
+@stddeco.namebuilding_insert('src', lambda s: [s.part, ])
 class ObsFlags(FlowResource):
     """Class for observations flags."""
 
@@ -252,14 +241,6 @@ class ObsFlags(FlowResource):
     @property
     def realkind(self):
         return 'obsflags'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            src     = [self.part],
-            fmt     = self.nativefmt,
-        )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -291,6 +272,7 @@ class VarBCContent(AlmostListContent):
                 self._metadata = ReadOnlyDict(mdata)
 
 
+@stddeco.namebuilding_append('src', lambda s: [s.stage, ])
 class VarBC(FlowResource):
     """
     VarBC file resource. Contains all the coefficients for the VarBC bias correction scheme.
@@ -328,14 +310,6 @@ class VarBC(FlowResource):
     def realkind(self):
         return 'varbc'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            src     = [self.model, self.stage],
-            fmt     = self.nativefmt,
-        )
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
         olivestage_map = {'screening': 'screen', }
@@ -356,6 +330,7 @@ class VarBC(FlowResource):
         return bname
 
 
+@stddeco.namebuilding_insert('src', lambda s: s.scope)
 class BlackList(FlowResource):
     """
     TODO.
@@ -403,14 +378,6 @@ class BlackList(FlowResource):
     def realkind(self):
         return 'blacklist'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = self.scope,
-        )
-
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
@@ -454,6 +421,7 @@ class ObsRefContent(TextContent):
         )
 
 
+@stddeco.namebuilding_append('src', lambda s: [s.part, ])
 class Refdata(FlowResource):
     """
     TODO.
@@ -483,14 +451,6 @@ class Refdata(FlowResource):
     @property
     def realkind(self):
         return 'refdata'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``refdata``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = [self.model, self.part],
-        )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -624,6 +584,8 @@ class ObsMapContent(TextContent):
             return self.datafmt(part)
 
 
+@stddeco.namebuilding_insert('style', lambda s: 'obsmap')
+@stddeco.namebuilding_insert('stage', lambda s: [s.scope, s.stage])
 class ObsMap(FlowResource):
     """Observation mapping.
 
@@ -708,16 +670,8 @@ class ObsMap(FlowResource):
         else:
             return self.gvar
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``obsmap``."""
-        return dict(
-            style   = 'obsmap',
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            stage   = [self.scope, self.stage]
-        )
 
-
+@stddeco.namebuilding_insert('src', lambda s: s.satbias)
 class Bcor(FlowResource):
     """Bias correction parameters."""
 
@@ -742,14 +696,6 @@ class Bcor(FlowResource):
     @property
     def realkind(self):
         return 'bcor'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = self.satbias,
-        )
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

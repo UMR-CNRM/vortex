@@ -8,55 +8,13 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.1.1
 
-Package
--------
-
 .. autodata:: __all__
+
 
 Classes
 -------
 
 .. autoclass:: Safran
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Safrane
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Syrpluie
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Syrmrr
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Sytist
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Syvapr
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Syrper
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Syvafi
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Sypluie
    :show-inheritance:
    :members:
    :member-order: alphabetical

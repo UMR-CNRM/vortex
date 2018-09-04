@@ -1,24 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import numpy as np
 import random
 
-from vortex.algo.components import ParaBlindRun, TaylorRun
-from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
-
 from bronx.stdtypes.date import Date
-
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
+
+from vortex.algo.components import TaylorRun
+from vortex.tools.parallelism import TaylorVortexWorker
+
 logger = footprints.loggers.getLogger(__name__)
 
-from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
-from snowtools.scores.ensemble import ESCROC_EnsembleScores
-from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
+echecker = ExternalCodeImportChecker('snowtools')
+with echecker:
+    from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
+    from snowtools.scores.ensemble import ESCROC_EnsembleScores
+    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Member(TaylorVortexWorker):
+
     _footprint = dict(
         info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment without MPI parallelization.',
         attr = dict(
@@ -62,11 +68,8 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
         rdict = dict(rc=True)
 
-        sys.stdout = open(str(self.members[0]) + "_" + self.name + ".out", "a", buffering=0)
-        sys.stderr = open(str(self.members[0]) + "_" + self.name + "_error.out", "a", buffering=0)
-
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
-        print list_pro
+        print(list_pro)
         E = ESCROC_list_scores()
         rdict["scores"] = E.compute_scores_allmembers(list_pro, "obs_insitu.nc", self.list_scores, self.list_var)
         rdict["members"] = self.members  # because in the report the members can be in a different order
@@ -75,13 +78,15 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
     def set_env(self, rundir):
         inputs = [x.rh for x in self.context.sequence.effective_inputs()]
-        print 'DBUG'
-        print self.context.sequence.effective_inputs()
-        print dir(self.context.sequence.effective_inputs())
-        print inputs
+        print('DBUG')
+        print(self.context.sequence.effective_inputs())
+        print(dir(self.context.sequence.effective_inputs()))
+        print(inputs)
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Ensemble(TaylorRun):
+
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
         attr = dict(
@@ -146,10 +151,10 @@ class Escroc_Score_Ensemble(TaylorRun):
             scores_task = report["workers_report"][task]["report"]["scores"]
 #             members_task = np.array(self.local_members[task]) - self.local_members[0][0]
             members_task = np.array(report["workers_report"][task]["report"]["members"]) - 1
-            print "DEBUG"
-            print members_task
-            print scores_task[:, :, :].shape
-            print scores_all[:, members_task, :, :].shape
+            print("DEBUG")
+            print(members_task)
+            print(scores_task[:, :, :].shape)
+            print(scores_all[:, members_task, :, :].shape)
             scores_all[:, members_task, :, :] = scores_task[:, :, :, np.newaxis]
 
         scores_dataset = scores_file("scores.nc", "w")
@@ -164,8 +169,8 @@ class Escroc_Score_Ensemble(TaylorRun):
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
 
-        print "local members"
-        print self.local_members[:]
+        print("local members")
+        print(self.local_members[:])
 
         self._add_instructions(common_i, dict(members=self.local_members))
         self._default_post_execute(rh, opts)
@@ -196,6 +201,7 @@ class Escroc_Score_Ensemble(TaylorRun):
         return local_members
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Score_Subensemble(TaylorVortexWorker):
     _footprint = dict(
         info = 'AlgoComponent designed to compute ensemble scores for a given subensemble.',
@@ -240,11 +246,8 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
 
         rdict = dict(rc=True)
 
-        sys.stdout = open(str(self.members[0]) + "_" + self.name + ".out", "a", buffering=0)
-        sys.stderr = open(str(self.members[0]) + "_" + self.name + "_error.out", "a", buffering=0)
-
         list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
-        print list_pro
+        print(list_pro)
         for var in self.list_var:
             E = ESCROC_EnsembleScores(list_pro, "obs_insitu.nc", var)
             crps = E.CRPS()
@@ -256,12 +259,13 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
 
     def set_env(self, rundir):
         inputs = [x.rh for x in self.context.sequence.effective_inputs()]
-        print 'DBUG'
-        print self.context.sequence.effective_inputs()
-        print dir(self.context.sequence.effective_inputs())
-        print inputs
+        print('DBUG')
+        print(self.context.sequence.effective_inputs())
+        print(dir(self.context.sequence.effective_inputs()))
+        print(inputs)
 
 
+@echecker.disabled_if_unavailable
 class Escroc_Optim_Ensemble(TaylorRun):
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
@@ -357,8 +361,8 @@ class Escroc_Optim_Ensemble(TaylorRun):
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
 
-        print "local members"
-        print self.local_members[:]
+        print("local members")
+        print(self.local_members[:])
 
         self._add_instructions(common_i, dict(members=self.local_members))
         self._default_post_execute(rh, opts)
@@ -376,8 +380,8 @@ class Escroc_Optim_Ensemble(TaylorRun):
             for iteration in range(0, niter):
                 listTest = []
                 candidates = self.members[:]
-                print candidates
-                print type(candidates)
+                print(candidates)
+                print(type(candidates))
                 # Randomly select nmembers members
                 for m in range(0, nmembers):
                     member = random.choice(candidates)

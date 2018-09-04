@@ -634,12 +634,12 @@ class Archive(Storage):
             if compressionpipeline:
                 compressionpipeline = compressionpipeline.description_string
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
-                          compressionpipeline=compressionpipeline)
+                          cpipeline=compressionpipeline)
             rc = ad.jeeves(
                 hostname = self.actual_storage,
                 logname = kwargs.get('username', None),
                 todo = 'ftput',
-                rhandler = kwargs.get('rhandler', None),
+                rhandler = kwargs.get('info', None),
                 source = tempo(local),
                 destination = item,
                 original = self.sh.path.abspath(local),

@@ -1,0 +1,2578 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_franmg+0000
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: indiensp
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: indien
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_indien+0000
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_franmg+0000
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: indiensp
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: indien
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_indien+0006
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010100'
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010101'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H01A/coupling/ELSCFALAD_franmg+0001
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H01A/coupling/ELSCFALAD_indien+0001
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H01P/coupling/ELSCFALAD_franmg+0001
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H01P/coupling/ELSCFALAD_indien+0001
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010101'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H01A/coupling/ELSCFALAD_franmg+0007
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H01A/coupling/ELSCFALAD_indien+0007
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H01P/coupling/ELSCFALAD_franmg+0007
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H01P/coupling/ELSCFALAD_indien+0007
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010102'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H02A/coupling/ELSCFALAD_franmg+0002
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H02A/coupling/ELSCFALAD_indien+0002
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H02P/coupling/ELSCFALAD_franmg+0002
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H02P/coupling/ELSCFALAD_indien+0002
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010102'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H02A/coupling/ELSCFALAD_franmg+0008
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H02A/coupling/ELSCFALAD_indien+0008
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H02P/coupling/ELSCFALAD_franmg+0008
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H02P/coupling/ELSCFALAD_indien+0008
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r06
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r06
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rSX
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r06
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r06
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rSX
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r06
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r06
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rSX
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r06
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r06
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rSX
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rSX
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rSX
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0000.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0000.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/COUPL0006.r06
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/COUPL0006.rSX
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010106'
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r6/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r12
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r12
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rPM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r12
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r12
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rPM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r12
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r12
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rPM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r12
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r12
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rPM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rPM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rPM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0000.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0000.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010112'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/COUPL0006.r12
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r12/COUPL0006.rPM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r18
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r18
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rDH
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r18
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r18
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rDH
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r18
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r18
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rDH
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r18
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r18
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rDH
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rDH
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rDH
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: arpege
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0000.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0000.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      date: '2018010118'
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source: ifs
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/COUPL0006.r18
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r18/COUPL0006.rDH
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: fa
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: fa
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: grib
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: grib
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: netcdf
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: netcdf
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: unknown
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.unknown
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.unknown
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.unknown
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: unknown
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.unknown
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.unknown
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.unknown
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: fa
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: fa
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: grib
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: grib
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: netcdf
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.netcdf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.netcdf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.netcdf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: netcdf
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.netcdf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.netcdf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.netcdf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: unknown
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0000:00.unknown
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0000:00.unknown
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0000:00.unknown
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0000:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: unknown
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege.franmg-01km30+0006:00.unknown
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege.indien-02km50+0006:00.unknown
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege.franmg-01km30+0006:00.unknown
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege.indien-02km50+0006:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010100'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_franmg+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_indien+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_franmg+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010100'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_indien+0006
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010101'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H01A/surfan/ELSCFALAD_franmg+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H01A/surfan/ELSCFALAD_indien+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H01P/surfan/ELSCFALAD_franmg+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H01P/surfan/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010101'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H01A/surfan/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H01A/surfan/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H01P/surfan/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H01P/surfan/ELSCFALAD_indien+0006
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010102'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H02A/surfan/ELSCFALAD_franmg+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H02A/surfan/ELSCFALAD_indien+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H02P/surfan/ELSCFALAD_franmg+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H02P/surfan/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      date: '2018010102'
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source: arpege
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H02A/surfan/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H02A/surfan/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H02P/surfan/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H02P/surfan/ELSCFALAD_indien+0006
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_franmg+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_indien+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_franmg+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling/ELSCFALAD_indien+0006
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: fa
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: fa
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: grib
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: grib
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: unknown
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.unknown
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.unknown
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.unknown
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      nativefmt: unknown
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.unknown
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.unknown
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.unknown
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: prod
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: prod
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arome/indien/ABCD/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: fa
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: fa
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: grib
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: grib
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.netcdf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.netcdf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.netcdf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.netcdf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.netcdf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.netcdf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: unknown
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.unknown
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.unknown
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.unknown
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      nativefmt: unknown
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.unknown
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.unknown
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.unknown
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-assim.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: prod
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0000:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: oper
+      kind: boundary
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: prod
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000A/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.franmg-01km30+0006:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arome/indien/OPER/20180101T0000P/coupling/cpl.arpege-4dvarfr-prod.indien-02km50+0006:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: aladin
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id002
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.r00
+    - default: *id003
+      location: file://oper.inline.fr/aladin/france/oper/data/fic_day/ELSCFALADALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/aladin/arome/oper/data/fic_day/ELSCFALADALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: aladin
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rAM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rAM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rAM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: arome
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rAM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rAM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rAM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: arome
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      model: mocage
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: 4dvarfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMfranmg+20180101
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/SMindien+20180101
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMfranmg+20180101
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/SMindien+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: courtfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC000.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      namespace: '[suite].inline.fr'
+      source_app: arpege
+      source_conf: courtfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id002
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ELSCFAROMALBC006.rCM
+    - default: *id004
+      location: file://oper.inline.fr/arome/arome/oper/data/fic_day/ELSCFAROMALBC006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: courtfr
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0000.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0000.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      kind: boundary
+      namespace: '[suite].multi.fr'
+      source_app: arpege
+      source_conf: courtfr
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id002
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/COUPL0006.r00
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+    - default: *id004
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/COUPL0006.rCM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_franmg+0000
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_indien+0000
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_franmg+0000
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_indien+0000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      source_app: arpege
+      source_conf: 4dvarfr
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_franmg+0006
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/surfan/ELSCFALAD_indien+0006
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_franmg+0006
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/surfan/ELSCFALAD_indien+0006

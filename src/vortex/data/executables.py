@@ -80,7 +80,8 @@ class Script(Executable):
                 default  = 'script',
                 values   = ['script'],
             )
-        )
+        ),
+        fastkeys = set(['language', ]),
     )
 
     @property
@@ -105,11 +106,11 @@ class GnuScript(Executable):
                 values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
             ),
             kind = dict(
-                optional = True,
                 default  = 'gnuscript',
                 values   = ['gnuscript', 'argscript'],
             )
-        )
+        ),
+        fastkeys = set(['kind', 'language']),
     )
 
     @property

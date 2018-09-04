@@ -204,18 +204,6 @@ class IFSODB(IFSParallel, odb.OdbComponent):
             if thisloc != thisnam.container.localpath():
                 self.system.softlink(thisnam.container.localpath(), thisloc)
 
-    def lookupodb(self, fatal=True):
-        """Return a list of effective input resources which are odb observations."""
-        allodb = [
-            x for x in self.context.sequence.effective_inputs(kind = 'observations')
-            if x.rh.container.actualfmt == 'odb'
-        ]
-        allodb.sort(key=lambda s: s.rh.resource.part)
-        if not allodb and fatal:
-            logger.critical('Missing ODB input data for %s', self.fullname())
-            raise ValueError('Missing ODB input data')
-        return allodb
-
 
 class Canari(IFSODB):
     """Surface analysis."""

@@ -1,0 +1,27 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: glob22
+            cutoff: assim
+            model: mocage
+            namespace: vortex.multi.fr
+            cycle: mo07_mocage@camsfcst-main.05
+            gnamespace: 'gco.multi.fr'
+            vapp: mocage
+            vconf: camsfcst
+
+register:
+    genv:
+        - mo07_mocage@camsfcst-main.05
+
+todo:
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            -   kind: chemical_bkup
+            -   kind: clim_misc
+                source: topmodel
+                month:
+                    - 1
+                    - 11

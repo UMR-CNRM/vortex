@@ -1,0 +1,68 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff:
+                - assim
+                - production
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+        - al42_arome-op2.40
+
+todo:
+    # DDH old-style
+    -   commons:
+            kind: ddh
+            scope:
+              - dlimited
+              - global
+              - zonal
+            nativefmt:
+              - null
+              - lfa
+              - lfi   
+            term: 24
+        tests:
+            -   suite: oper
+                namespace: "[suite].multi.fr"
+            -   experiment: abcd
+                block: forecast
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr
+    # DDH packs
+    -   commons:
+            kind: ddh
+            scope:
+              - dlimited
+              - global
+              - zonal
+            nativefmt: ddhpack
+        tests:
+            -   block: forecast
+                experiment: abcd
+                namespace:
+                    - olive.multi.fr
+                    - vortex.multi.fr

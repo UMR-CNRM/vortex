@@ -15,7 +15,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_DATASTORE_KIND = 'genv_registred_cycle'
+_DATASTORE_KIND = 'genv_registered_cycle'
 
 genvcmd, genvpath = (None, None)
 

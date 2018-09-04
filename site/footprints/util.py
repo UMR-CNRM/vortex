@@ -672,7 +672,7 @@ class GetByTag(object):
 
     @classmethod
     def tag_classes(cls):
-        """Return a list of current classes that have been registred with the same GetByTag root."""
+        """Return a list of current classes that have been registered with the same GetByTag root."""
         return list(cls._tag_class)
 
     def __copy__(self):
@@ -827,7 +827,8 @@ class SpecialDict(dict):
 
     def __contains__(self, key):
         """Force remapped key ``in`` checking."""
-        return dict.__contains__(self, self.remap(key))
+        return (dict.__contains__(self, key) or  # Try with out a remap first... just in case
+                dict.__contains__(self, self.remap(key)))
 
 
 class LowerCaseDict(SpecialDict):

@@ -17,7 +17,7 @@ import weakref
 
 import footprints
 from footprints.util import mktuple
-from bronx.syntax.pretty import Utf8PrettyPrinter
+from bronx.syntax.pretty import EncodedPrettyPrinter
 
 from vortex.util.roles import setrole
 
@@ -58,7 +58,7 @@ def stripargs_section(**kw):
     opts = dict()
     for opt in [ x for x in section_args if x in kw ]:
         opts[opt] = kw.pop(opt)
-    return ( opts, kw )
+    return (opts, kw)
 
 
 class Section(object):
@@ -157,7 +157,7 @@ class Section(object):
                     logger.critical('Fatal error with action get %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action get on ???')
-                raise SectionFatalError('Could not get resource [%s]' % str(rc))
+                raise SectionFatalError('Could not get resource {!s}'.format(rc))
         else:
             logger.error('Try to get from an output section')
         return rc
@@ -180,7 +180,7 @@ class Section(object):
                     logger.critical('Fatal error with action put %s', self.rh.locate())
                 except StandardError:
                     logger.critical('Fatal error with action put ???')
-                raise SectionFatalError('Could not put resource [%s]', str(rc))
+                raise SectionFatalError('Could not put resource {!s}'.format(rc))
         else:
             logger.error('Try to put from an input section.')
         return rc
@@ -205,6 +205,7 @@ class Section(object):
         # Add the latest stage
         outdict['stage'] = self.stage
         return outdict
+
 
 class Sequence(footprints.observers.Observer):
     """
@@ -299,7 +300,7 @@ class Sequence(footprints.observers.Observer):
 
     @staticmethod
     def _fuzzy_match(stuff, allowed):
-        '''Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex.'''
+        """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
         if (isinstance(allowed, six.string_types) or
                 not isinstance(allowed, collections.Iterable)):
             allowed = [allowed, ]
@@ -316,8 +317,10 @@ class Sequence(footprints.observers.Observer):
         inkind = list()
         if 'role' in kw and kw['role'] is not None:
             selectrole = mktuple(kw['role'])
-            inrole = [x for x in sections if ((x.role is not None and self._fuzzy_match(x.role, selectrole)) or
-                                              (x.alternate is not None and self._fuzzy_match(x.alternate, selectrole)))]
+            inrole = [x for x in sections if (
+                (x.role is not None and self._fuzzy_match(x.role, selectrole)) or
+                (x.alternate is not None and self._fuzzy_match(x.alternate, selectrole))
+            )]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
             inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
@@ -336,9 +339,11 @@ class Sequence(footprints.observers.Observer):
         Similar to :meth:`filtered_inputs` but only walk through the inputs of
         that reached the 'get' or 'expected' stage.
         """
-        return self._section_list_filter([x for x in self.inputs()
-                                          if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()],
-                                         **kw)
+        return self._section_list_filter(
+            [x for x in self.inputs()
+             if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()
+             ],
+            **kw)
 
     def filtered_inputs(self, **kw):
         """Walk through the inputs of the current sequence.
@@ -443,14 +448,14 @@ class SequenceInputsReport(object):
             self._local_map[local][kind].append(insec)
 
     def _local_status(self, local):
-        '''Find out the local resource status (see InputsReportStatus).
+        """Find out the local resource status (see InputsReportStatus).
 
         It returns a tuple that contains:
 
         * The local resource status (see InputsReportStatus)
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
-        '''
+        """
         desc = self._local_map[local]
         # First, check the nominal resource
         nominal = desc['nominal'][-1]
@@ -469,7 +474,7 @@ class SequenceInputsReport(object):
         return status, true_rh, nominal.rh
 
     def synthetic_report(self, detailed=False, only=None):
-        '''Returns a string that describes each local resource with its status.
+        """Returns a string that describes each local resource with its status.
 
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
@@ -477,7 +482,7 @@ class SequenceInputsReport(object):
         :param list[str] only: Output only the listed statuses (statuses are defined in
                                :data:`InputsReportStatus`). By default (*None*), output
                                everything. Note that "alternates" are always shown.
-        '''
+        """
         if only is None:
             # The default is to display everything
             only = list(InputsReportStatus)
@@ -510,7 +515,7 @@ class SequenceInputsReport(object):
         return outstr
 
     def print_report(self, detailed=False, only=None):
-        '''Print a list of each local resource with its status.
+        """Print a list of each local resource with its status.
 
         :param bool detailed: when alternates are used, tell which resource handler
                               is actually used and which one should have been used
@@ -518,18 +523,18 @@ class SequenceInputsReport(object):
         :param list[str] only: Output only the listed statuses (statuses are defined in
                                :data:`InputsReportStatus`). By default (*None*), output
                                everything. Note that "alternates" are always shown.
-        '''
+        """
         print(self.synthetic_report(detailed=detailed, only=only))
 
     def active_alternates(self):
-        '''List the local resource for which an alternative resource has been used.
+        """List the local resource for which an alternative resource has been used.
 
         It returns a dictionary that associates the local resource name with
         a tuple that contains:
 
         * The resource handler that was actually used to get the resource
         * The resource handler that should have been used in the nominal case
-        '''
+        """
         outstack = dict()
         for local in self._local_map:
             status, true_rh, nominal_rh = self._local_status(local)
@@ -538,7 +543,7 @@ class SequenceInputsReport(object):
         return outstack
 
     def missing_resources(self):
-        '''List the missing local resources.'''
+        """List the missing local resources."""
         outstack = dict()
         for local in self._local_map:
             (status, true_rh,  # @UnusedVariable
@@ -744,8 +749,11 @@ class LocalTrackerEntry(object):
         for action in self._actions:
             for internal in self._internals:
                 if len(self._data[internal][action]) > 0:
-                    out += "+ {:4s} / {}\n{}\n".format(action.upper(), internal,
-                                                       Utf8PrettyPrinter().pformat(self._data[internal][action]))
+                    out += "+ {:4s} / {}\n{}\n".format(
+                        action.upper(),
+                        internal,
+                        EncodedPrettyPrinter().pformat(self._data[internal][action])
+                    )
         return out
 
 

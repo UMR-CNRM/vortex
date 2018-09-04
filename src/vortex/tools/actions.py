@@ -301,7 +301,7 @@ class Dispatcher(footprints.util.Catalog):
 
     @property
     def actions(self):
-        """A set of kind names of actual actions registred in that Dispatcher."""
+        """A set of kind names of actual actions registered in that Dispatcher."""
         return set([x.kind for x in self.items()])
 
     def candidates(self, kind):

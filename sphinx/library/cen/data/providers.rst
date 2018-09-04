@@ -8,9 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.1.1
 
-Package
--------
-
 .. autodata:: __all__
 
 
@@ -18,6 +15,11 @@ Classes
 -------
 
 .. autoclass:: CenCfgParser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: S2MReanalysisProvider
    :show-inheritance:
    :members:
    :member-order: alphabetical

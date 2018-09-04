@@ -3,9 +3,12 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-from vortex.syntax.stdattrs import month
+from vortex.syntax.stdattrs import month_deco
 from common.data.consts import GenvModelResource
 from common.data.climfiles import GenericClim
+from vortex.data.geometries import LonlatGeometry
+from gco.syntax.stdattrs import GenvDomain
+
 
 #: No automatic export
 __all__ = []
@@ -42,7 +45,7 @@ class MonthClimMisc(GenericClim):
      Monthly miscellaneous climatological files
     """
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly climatological files',
             attr = dict(
@@ -65,3 +68,69 @@ class MonthClimMisc(GenericClim):
     @property
     def realkind(self):
         return 'clim_misc'
+
+
+class Ch4SurfEmissions(GenericClim):
+    """
+    Class for a CH4 climatology (domain dependnat)
+    A LonlatGeometry object is needed. A Genvkey can be given
+    with a default name retrieved thanks to a GenvDomain object.
+    """
+    _footprint = [
+        dict(
+            info = 'Ch4 climatology',
+            attr = dict(
+                kind = dict(
+                    values = ['emiss_ch4']
+                ),
+                geometry = dict(
+                    type = LonlatGeometry,
+                ),
+                gdomain = dict(
+                    type = GenvDomain,
+                    optional = True,
+                    default = '[geometry::area]'
+                ),
+                gvar = dict(
+                    default = 'emis_surf_ch4_[gdomain]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'emiss_ch4'
+
+
+class SurfaceSpeciesConfig(GenericClim):
+    """
+    Class for a surface species configuration file (domain dependnat)
+    A LonlatGeometry object is needed. A Genvkey can be given
+    with a default name retrieved thanks to a GenvDomain object.
+    """
+    _footprint = [
+        dict(
+            info = 'Surface species configuration',
+            attr = dict(
+                kind = dict(
+                    values = ['surf_species_cfg']
+                ),
+                geometry = dict(
+                    type = LonlatGeometry,
+                ),
+                gdomain = dict(
+                    type = GenvDomain,
+                    optional = True,
+                    default = '[geometry::area]'
+                ),
+                gvar = dict(
+                    default = 'cfgfile_surface_[gdomain]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'surf_species_cfg'

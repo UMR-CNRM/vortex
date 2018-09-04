@@ -16,4 +16,6 @@ Package
 Included Modules
 ----------------
 
-* :mod:`cen.algo.components`
+* :mod:`cen.algo.deterministic`
+* :mod:`cen.algo.ensemble`
+* :mod:`cen.algo.scores`

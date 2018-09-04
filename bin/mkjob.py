@@ -163,7 +163,7 @@ def makejob(job):
         print(_INFO_PRINT_FMT.format(k, v))
 
     def _wrap_launch(jobfile):
-        '''Launch the **jobfile** script using **extra_wrapper*.'''
+        """Launch the **jobfile** script using **extra_wrapper*."""
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
                    if isinstance(tplconf['rundate'], basestring) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,

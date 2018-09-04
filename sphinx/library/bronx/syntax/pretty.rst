@@ -20,7 +20,7 @@ Functions
 Classes
 -------
 
-.. autoclass:: Utf8PrettyPrinter
+.. autoclass:: EncodedPrettyPrinter
    :show-inheritance:
    :members:
    :member-order: alphabetical

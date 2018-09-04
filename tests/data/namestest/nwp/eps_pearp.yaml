@@ -1,0 +1,64 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global798
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: pearp
+
+todo:
+    # PerturbedState
+    -   commons:
+            kind: perturbation
+            term:
+                - null
+                - 3
+            block: svector
+            member: 1
+            number: 3
+        tests:
+            - experiment: abcd
+            - experiment: abcd
+              processing:
+                  - unit
+                  - normed          
+    # SingularVector
+    -   commons:
+            kind: svector
+            nativefmt:
+                - null
+                - fa
+            term:
+                - null
+                - 3
+            block: ic
+            member: 1
+            number: 3
+            zone: oise
+        tests:
+            - experiment: abcd
+              namespace: olive.multi.fr
+            - experiment: abcd
+              zone:
+                  - ateur
+                  - oin
+            - suite: mirr
+              namespace: '[suite].multi.fr'
+    # PopulationList
+    -   commons:
+            experiment: abcd
+            block: ic
+        tests:
+            - kind: mbpopulation
+            - kind:
+                  - mbsample
+                  - mbselect
+              nbsample: 2
+            - kind: physample
+              nbsample: 2

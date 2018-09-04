@@ -1367,7 +1367,7 @@ class AssistedSsh(Ssh):
     - Basic use::
 
         >>> ssh1 = AssistedSsh(sh, 'localhost')
-        >>> print ssh1, ssh1.remote
+        >>> print(ssh1, ssh1.remote)
         <vortex.tools.net.AssistedSsh object at 0x7fac3bb19810> localhost
         >> ssh1.execute("echo -n 'My name is: '; hostname")
         ['My name is: beaufixlogin3']
@@ -1376,15 +1376,15 @@ class AssistedSsh(Ssh):
       defined in the current target-?.ini configuration file)::
 
         >>> ssh2 = AssistedSsh(sh, 'network', virtualnode=True)
-        >>> print ssh2, ssh2.targets  # The list of possible network nodes
+        >>> print(ssh2, ssh2.targets)  # The list of possible network nodes
         ['beaufixlogin0', 'beaufixlogin1', 'beaufixlogin2', 'beaufixlogin3', ]
-        >>> print ssh2, ssh2.remote  # Pick one randomly
+        >>> print(ssh2, ssh2.remote)  # Pick one randomly
         'beaufixlogin2'
 
     - The multiple retries concept::
 
         >>> ssh3 = AssistedSsh(sh, 'network', virtualnode=True, maxtries=3)
-        >>> print ssh3, ssh3.remote  # Pick one randomly
+        >>> print(ssh3, ssh3.remote)  # Pick one randomly
         'beaufixlogin0'
         >>> ssh3.execute("false")
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']

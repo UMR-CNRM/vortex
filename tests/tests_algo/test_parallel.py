@@ -61,7 +61,7 @@ class TestParallel(unittest.TestCase):
         algo.context = algo.ticket.context
         algo.env  = algo.ticket.env
         algo.system  = algo.ticket.system()
-        algo.target = algo.system.target()
+        algo.target = algo.system.default_target
         return algo
 
     def assertCmdl(self, ref, new, **extras):
@@ -198,6 +198,7 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake0 -joke yes : ' +
                         '-npernode 8 -np 16 {pwd:s}/fake1 -joke yes : ' +
                         '-npernode 8 -np 8 {pwd:s}/fake2 -joke yes', args)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

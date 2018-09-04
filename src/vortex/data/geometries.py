@@ -37,8 +37,6 @@ your needs. Currently available concrete geometries are:
     * :class:`ProjectedGeometry` (Any grid defined by a geographical projection, e.g. lambert, ...)
     * :class:`LonlatGeometry` (That's pretty obvious)
     * :class:`CurvlinearGeometry` (Curvlinear grid)
-    * :class:`MassifGeometry` (Partition of a mountain range in massifs)
-    * :class:`PostGeometry` (Ponctual geometry for nivology applications)
 
 For example, let's build a new gaussian grid::
 
@@ -64,6 +62,7 @@ import six
 
 import footprints
 
+from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
 from vortex.util.config import GenericConfigParser
 
 #: No automatic export
@@ -143,6 +142,9 @@ class Geometry(footprints.util.GetByTag):
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
         return tag.lower()
+
+    def export_dict(self):
+        return self.tag
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
@@ -465,6 +467,14 @@ class UnstructuredGeometry(HorizontalGeometry):
         """Standard formatted print representation."""
         return '<{0:s}>'.format(self.strheader())
 
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.area:
+            fmts = 'kind={0:s}, area={1:s}'
+        else:
+            fmts = 'kind={0:s}'
+        return fmts.format(self.kind, self.area)
+
 
 class CurvlinearGeometry(UnstructuredGeometry):
     """Curvlinear grid."""
@@ -497,8 +507,50 @@ class CurvlinearGeometry(UnstructuredGeometry):
             fmts = 'kind={0:s}, r={1:s}, global, ni={3!s}, nj={4!s}'
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
-# Load default geometries when the module is first imported
 
+# Pre-defined footprint attribute for any HorizontalGeometry
+
+#: Usual definition of the ``geometry`` attribute.
+a_hgeometry = dict(
+    info = "The resource's horizontal geometry.",
+    type = HorizontalGeometry,
+)
+
+
+def _add_geo2basename_info(cls):
+    """Decorator that adds a _geo2basename_info to a class."""
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, ]
+            if add_stretching:
+                lgeo.append({'stretching': self.geometry.stretching})
+        elif isinstance(self.geometry, ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = self.geometry.area  # Default: always defined
+        return lgeo
+
+    if not hasattr(cls, '_geo2basename_info'):
+        cls._geo2basename_info = _geo2basename_info
+    return cls
+
+
+#: Abstract footprint definition of the ``geometry`` attribute.
+hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
+                                 attr = dict(geometry = a_hgeometry))
+
+#: Abstract footprint definition of the ``geometry`` attribute with decorators
+#: that alter the ``namebuilding_info`` method
+hgeometry_deco = footprints.DecorativeFootprint(
+    hgeometry,
+    decorator = [_add_geo2basename_info,
+                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
+
+
+# Load default geometries when the module is first imported
 
 def load(inifile='@geometries.ini', refresh=False, verbose=True):
     """Load a set of pre-defined geometries from a configuration file.

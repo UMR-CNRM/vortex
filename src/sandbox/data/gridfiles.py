@@ -32,11 +32,3 @@ class GribInfos(FlowResource):
     @property
     def realkind(self):
         return 'gribinfos'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )

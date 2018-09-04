@@ -234,6 +234,71 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     grib_scpput = _std_scpput
 
+    @addons.require_external_addon('ecfs')
+    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+        """ Put a grib resource using ECfs.
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
+            psource = source + self.sh.safe_filesuffix()
+            try:
+                rc = self.xgrib_pack(source=source,
+                                     destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.ecfsput(source=psource,
+                                                    target=target,
+                                                    options=options)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ecfsput(source=source,
+                                   target=target,
+                                   options=options,
+                                   cpipeline=cpipeline)
+
+    @addons.require_external_addon('ectrans')
+    def grib_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Put a grib resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline used, if provided
+        :return: return code and additional attributes used
+        """
+        if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
+            psource = source + self.sh.safe_filesuffix()
+            try:
+                rc = self.xgrib_pack(source=source,
+                                     destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.raw_ectransput(source=psource,
+                                                           target=target,
+                                                           gateway=gateway,
+                                                           remote=remote)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ectransput(source=source,
+                                      target=target,
+                                      gateway=gateway,
+                                      remote=remote,
+                                      cpipeline=cpipeline)
+
 
 class EcGribComponent(object):
     """Extend Algo Components with GribApi features."""

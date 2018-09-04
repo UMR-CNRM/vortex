@@ -47,6 +47,7 @@ def server(sleep, crash, verb):
 
     sys.exit(0)
 
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Fake server to test the abstract AlgoComponnent.")
