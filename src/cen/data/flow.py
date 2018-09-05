@@ -34,6 +34,7 @@ class SafranObsDateError(ValueError):
 
 @namebuilding_insert('src', lambda s: [s.source_app, s.source_conf])
 @namebuilding_insert('term', lambda s: s.cumul.fmthour)
+@namebuilding_delete('geo')
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
@@ -130,8 +131,8 @@ class SurfaceIO(GeoFlowResource):
         return self.kind
 
 
-@namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 @namebuilding_append('src', lambda self: self.source_conf, none_discard=True)
+@namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 class SurfaceForcing(SurfaceIO):
     """Class for all kind of meteorological forcing files."""
     _footprint = [
