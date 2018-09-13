@@ -795,8 +795,8 @@ class Festat(Parallel):
         i = 0
         for sec in insec:
             i += 1
-            self.system.symlink(sec.rh.container.actualpath(), "{prefix}{number}".format(prefix=self.prefix,
-                                                                                         number=str(i).zfill(3)))
+            self.system.symlink(sec.rh.container.actualpath(),
+                                "{prefix}{number}".format(prefix=self.prefix, number=str(i).zfill(self.nb_digits)))
         # Put the number of sections and the prefix of the input files in the namelist
         namcontents = input_namelist.contents
         logger.info('Setup macro CNAME=%s in %s', self.prefix, input_namelist.container.actualpath())

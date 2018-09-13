@@ -523,7 +523,8 @@ class Stabal(ModelGeoResource):
                     values   = [41, 96],
                 ),
                 nbfiles = dict(
-                    default = None,
+                    default = 0,
+                    optional = True,
                     type = int,
                 ),
                 gvar = dict(
