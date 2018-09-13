@@ -15,6 +15,7 @@ from bronx.stdtypes.tracking import Tracker
 
 from vortex.tools.env import Environment
 import vortex.tools.prestaging
+from vortex.tools.delayedactions import PrivateDelayedActionsHub
 from . import dataflow
 
 #: No automatic export.
@@ -189,6 +190,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._wkdir    = None
         self._record   = False
         self._prestaging_hub = None  # Will be initialised on demand
+        self._delayedactions_hub = None  # Will be initialised on demand
 
         if sequence:
             self._sequence = sequence
@@ -355,11 +357,25 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     @property
     def prestaging_hub(self):
-        """Return the prestaging hub associated with this context."""
+        """Return the prestaging hub associated with this context.
+
+        see :class:`vortex.tools.prestaging` for more details.
+        """
         if self._prestaging_hub is None:
             self._prestaging_hub = vortex.tools.prestaging.get_hub(tag='contextbound_{:s}'.format(self.tag),
                                                                    sh=self.system)
         return self._prestaging_hub
+
+    @property
+    def delayedactions_hub(self):
+        """Return the delayed actions hub associated with this context.
+
+        see :class:`vortex.tools.delayedactions` for more details.
+        """
+        if self._delayedactions_hub is None:
+            self._delayedactions_hub = PrivateDelayedActionsHub(sh=self.system,
+                                                                contextrundir=self.rundir)
+        return self._delayedactions_hub
 
     @property
     def system(self):
@@ -486,3 +502,8 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
             self.clear()
         except TypeError:
             logger.error('Could not clear local context <%s>', self.tag)
+        # Nullify some variable to help during garbage collection
+        self._prestaging_hub = None
+        if self._delayedactions_hub:
+            self._delayedactions_hub.clear()
+            self._delayedactions_hub = None
