@@ -694,8 +694,10 @@ class S2MComponent(ParaBlindRun):
         attr = dict(
             kind = dict(
                 values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
-                          'syvafi', 's2m_offline', 'escroc', 'intercep'],
+                          'syvafi', 'intercep'],
             ),
+            engine = dict(
+                values = ['s2m']),
             members = dict(
                 info = "The members that will be processed",
                 type = footprints.FPList,
@@ -729,13 +731,27 @@ class S2MComponent(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = [None, ] if self.members is None else ['mb{0:03d}'.format(m) for m in self.members]
+        subdirs = self.get_subdirs(rh, opts)
 
         self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
 
     def postfix(self, rh, opts):
         pass
+
+    def get_subdirs(self, rh, opts):
+        """At the moment, the format of subdir directories is taken from the method associated to the namebuilder of a reference input resource handler.
+           This reference is defined by role_ref_namebuilder (not the same for SAFRAN and SURFEX).
+           It is dangerous because the namebuilder of the toolbox.output may differ from this reference.
+           We need to discuss this point with Leffe."""
+        if self.members is None:
+            return [None, ]
+        else:
+            avail_forcing = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+            return [avail_forcing[0].rh.provider.namebuilder._pack_std_item_member(m) for m in self.members]
+
+    def role_ref_namebuilder(self):
+        return 'Ebauche'
 
 
 @echecker.disabled_if_unavailable
@@ -784,12 +800,8 @@ class SurfexComponent(S2MComponent):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        # Note: The number of members and the name of the subdirectories could be
-        # auto-detected using the sequence
-        if len(self.members) >= 1000:
-            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
-        else:
-            subdirs = ['mb{0:03d}'.format(m) for m in self.members]
+
+        subdirs = self.get_subdirs(rh, opts)
 
         if self.subensemble:
             escroc = ESCROC_subensembles(self.subensemble, self.members)
@@ -799,3 +811,6 @@ class SurfexComponent(S2MComponent):
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
+
+    def role_ref_namebuilder(self):
+        return 'Forcing'

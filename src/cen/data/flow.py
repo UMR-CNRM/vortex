@@ -159,7 +159,7 @@ class SurfaceForcing(SurfaceIO):
 
     @property
     def realkind(self):
-        return 'forcing'
+        return 'FORCING'
 
 
 class Pro(SurfaceIO):
@@ -180,7 +180,7 @@ class Pro(SurfaceIO):
 
     @property
     def realkind(self):
-        return "pro"
+        return "PRO"
 
 
 @namebuilding_delete('src')
