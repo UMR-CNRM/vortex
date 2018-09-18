@@ -46,7 +46,7 @@ class _S2MWorker(VortexWorkerBlindRun):
     def vortex_task(self, **kwargs):
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
-        if self.subdir is not None:
+        if self.subdir is not self.system.path.dirname(rundir):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
                 self._commons(rundir, thisdir, rdict, **kwargs)
@@ -698,11 +698,6 @@ class S2MComponent(ParaBlindRun):
             ),
             engine = dict(
                 values = ['s2m']),
-            members = dict(
-                info = "The members that will be processed",
-                type = footprints.FPList,
-                optional = True,
-            ),
             datebegin = a_date,
             dateend = a_date,
             execution = dict(
@@ -740,15 +735,12 @@ class S2MComponent(ParaBlindRun):
         pass
 
     def get_subdirs(self, rh, opts):
-        """At the moment, the format of subdir directories is taken from the method associated to the namebuilder of a reference input resource handler.
-           This reference is defined by role_ref_namebuilder (not the same for SAFRAN and SURFEX).
-           It is dangerous because the namebuilder of the toolbox.output may differ from this reference.
-           We need to discuss this point with Leffe."""
-        if self.members is None:
-            return [None, ]
-        else:
-            avail_forcing = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
-            return [avail_forcing[0].rh.provider.namebuilder._pack_std_item_member(m) for m in self.members]
+        """Get the subdirectories from the effective inputs"""
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = [am.rh.container.dirname for am in avail_members]
+        self.algoassert(len(set(subdirs)) == len(avail_members))
+
+        return subdirs
 
     def role_ref_namebuilder(self):
         return 'Ebauche'
@@ -761,7 +753,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc']
+                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -774,6 +766,11 @@ class SurfexComponent(S2MComponent):
                 type = int,
                 optional = True,
                 default = -999
+            ),
+            members = dict(
+                info = "The members that will be processed",
+                type = footprints.FPList,
+                optional = True,
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
@@ -811,6 +808,15 @@ class SurfexComponent(S2MComponent):
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
+
+    def get_subdirs(self, rh, opts):
+        if self.kind == "escroc":
+            return ['mb{0:04d}'.format(m) for m in self.members]
+        else:
+            subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
+            if self.kind == "ensmeteo+sytron":
+                subdirs.append('mb036')
+            return subdirs
 
     def role_ref_namebuilder(self):
         return 'Forcing'
