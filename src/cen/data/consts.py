@@ -87,14 +87,14 @@ class climTG(GenvModelGeoResource):
 
     @property
     def realkind(self):
-        return 'climTG'
+        return 'init_TG'
 
     def namebuilding_info(self):
+
         nbi = super(climTG, self).namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
-            cen_rawbasename = ('init_TG_' + self.geometry.area + '.' +
-                               self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            cen_rawbasename = (self.realkind + self._extension_remap.get(self.nativefmt, self.nativefmt)),
             # With the standard provider, the usual keys will be used.
         )
         return nbi
