@@ -16,6 +16,8 @@ from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
+from bronx.stdtypes.date import Time, Date
+
 
 #: No automatic export
 __all__ = []
@@ -163,8 +165,10 @@ class OpJobAssistantTest(JobAssistant):
         import iga.tools.actions
 
         ad.add(vortex.tools.actions.SmsGateway())
+        #ad.add(vortex.tools.actions.EcflowGateway())
 
         print('+ SMS candidates =', ad.candidates('sms'))
+        #print('+ ECFLOW candidates =', ad.candidates('ecflow'))
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
@@ -176,11 +180,16 @@ class OpJobAssistantTest(JobAssistant):
         # ----------------------------------------------------------------------
         t.sh.header('SMS Settings')
         ad.sms_info()
+        #ad.ecflow_info()
 
         if t.env.SMSPASS is None:
             ad.sms_off()
+        #if t.envECFLOWPASS is None:
+            #ad.ecflow_off()
 
         ad.sms_init(t.env.SLURM_JOBID)
+        #ad.ecflow_init(t.env.SLURM_JOBID)
+
 
     def register_cycle(self, cycle):
         """Load and register a GCO cycle contents."""
@@ -206,12 +215,14 @@ class OpJobAssistantTest(JobAssistant):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
         ad.sms_complete()
+        #ad.ecflow_compete()
         print('Well done Denis !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
         ad.sms_abort()
+        #ad.ecflow_abort()
         print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
 

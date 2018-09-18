@@ -68,7 +68,7 @@ import $package.$task as todo
 try:
     t, e, sh = ja.setup(actual=locals())
     from vortex.tools.actions import actiond as ad
-    ad.opmail_on()
+    ad.opmail_off()
     ad.dmt_off()
     ad.route_off()
     ad.phase_tune(jname='{0}_phase'.format(op_xpid))

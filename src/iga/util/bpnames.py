@@ -11,7 +11,7 @@ import re
 import six
 import sys
 
-from bronx.stdtypes.date import Time
+from bronx.stdtypes.date import Time, Date
 import footprints
 
 #: No automatic export
@@ -197,6 +197,7 @@ def rawfields_bnames(resource, provider):
         return resource.fields + '.' + resource.origin
     elif resource.fields == 'seaice':
         return 'ice_concent'
+        #return 'ICMSHANALSEAICE.'+ resource.date.ymd 
     else:
         return None
 
@@ -354,7 +355,9 @@ def histsurf_bnames(resource, provider):
         suffix = map_suffix[reseau]
         bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
     else:
-        bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+        #bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+        bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.r' + '{:02d}'.format(reseau)
+        print(bname)
     return bname
 
 
@@ -543,6 +546,10 @@ def global_snames(resource, provider):
 
     bname = None
     vapp = getattr(provider, 'vapp', None)
+    print('DBUG')
+    vconf = getattr(provider, 'vconf',None)
+    print(vapp)
+    print(vconf)
     if resource.realkind == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':
             bname = 'sst.ostia'
@@ -550,10 +557,11 @@ def global_snames(resource, provider):
             bname = 'SSMI.AM'
     if resource.realkind == 'observations':
         suff = map_suffix[(cutoff, resource.date.hour)]
-        if vapp == 'arpege':
-            modsuff = ''
-        else:
-            modsuff = '_' + vapp.upper()
+#        if vapp == 'arpege':
+#            modsuff = ''
+#        else:
+#            modsuff = '_' + vapp.upper()
+        modsuff = ''
         if resource.nativefmt == 'grib':
             if resource.part == 'sev':
                 bname = 'SEVIRI' + modsuff + '.' + suff + '.grb'
@@ -563,19 +571,26 @@ def global_snames(resource, provider):
             elif resource.part == 'prof':
                 bname = 'OBSOUL2F' + modsuff + '.' + suff
             elif resource.part == 'surf':
-                bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
+                if vapp == 'arome':
+                    bname = 'OBSOUL_SURFAN' + '.' + suff
+                else:
+                    bname = 'OBSOUL_SURFAN' + modsuff + '.' + suff
         elif resource.nativefmt == 'bufr':
-            bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
+            if vapp == 'arome':
+                bname = resource.nativefmt.upper() + '.' + resource.part + '.' + suff
+            else:
+                bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
         elif resource.nativefmt == 'netcdf':
             if resource.part == 'sev000':
                 bname = resource.nativefmt.upper() + '.' + resource.part + modsuff + '.' + suff
         logger.debug("global_snames cutoff %s suffixe %s", cutoff, suff)
     if resource.realkind == 'refdata':
         suff = map_suffix[(cutoff, resource.date.hour)]
-        if vapp == 'arpege':
-            modsuff = ''
-        else:
-            modsuff = '_' + vapp.upper()
+#        if vapp == 'arpege':
+#            modsuff = ''
+#        else:
+#            modsuff = '_' + vapp.upper()
+        modsuff = ''
         if resource.part == 'prof':
             bname = 'RD_2' + modsuff + '.' + suff
         elif resource.part == 'conv':
@@ -593,5 +608,11 @@ def global_snames(resource, provider):
             scope = resource.scope[:4].lower()
         else:
             scope = resource.scope
-        bname = 'bm_' + vapp.upper() + '_' + scope + '.' + suff + '.' + resource.date.ymd
+        bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
+#        if vapp == 'arpege':
+#            bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
+#        elif vapp == 'arome' and scope == 'surf':
+#            bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
+#        else:
+#            bname = 'bm_' + vapp.upper() + '_' + scope + '.' + suff + '.' + resource.date.ymd
     return bname
