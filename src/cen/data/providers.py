@@ -26,15 +26,75 @@ class CenCfgParser(GenericConfigParser):
         """
         if resname is None:
             resname = resource.realkind
-        cutoff = getattr(resource, 'cutoff', None)
 
-        extended_resname = resname + '@' + vapp
-
-        if self.has_section(extended_resname + vconf):
-            resname = extended_resname + vconf
-        elif cutoff is not None and self.has_section(extended_resname + cutoff):
-            resname = extended_resname + cutoff
         return self.get(resname, 'resolvedpath')
+
+
+class S2MReanalysisProvider(Provider):
+
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'Provider for S2M reanalysis input resources',
+            attr = dict(
+                namespace = dict(
+                    values   = ['s2m.archive.fr'],
+                    optional  = False,
+                ),
+                storage = dict(
+                    values   = ['hendrix.meteo.fr'],
+                    default  = 'hendrix.meteo.fr',
+                    optional = True
+                ),
+                tube = dict(
+                    optional = True,
+                    values   = ['ftp'],
+                    default  = 'ftp'
+                ),
+                config = dict(
+                    type     = CenCfgParser,
+                    optional = True,
+                    default  = CenCfgParser('@cen-map-resources.ini')
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'reanalysis'
+
+    def scheme(self, resource):
+        """The actual scheme is the ``tube`` attribute of the current provider."""
+        return self.tube
+
+    def netloc(self, resource):
+        """The actual netloc is the ``namespace`` attribute of the current provider."""
+        return self.storage
+
+    def pathname(self, resource):
+        """
+        The actual pathname is the directly obtained from the templated ini file
+        provided through the ``config`` footprint attribute.
+        """
+        info = self.pathinfo(resource)
+        info['level_one'] = self.vconf.split('@')[0]
+        suffix = map_suffix[info['level_one']]
+        season = resource.date.nivologyseason()
+        if resource.realkind == 'observations':
+            if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
+                info['level_two']   = 'obs/rs' + season + suffix
+            elif resource.part == 'nebulosity':
+                info['level_two']   = 'neb/n' + season + suffix
+        elif resource.realkind == 'guess':
+            if resource.source_conf == 'era40':
+                info['level_one'] = 'cep'
+                info['level_two'] = ''
+            else:
+                info['level_two']   = 'guess/p' + season + suffix
+
+        self.config.setall(info)
+        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
 
 
 class CenSopranoDevProvider(Provider):
@@ -91,12 +151,13 @@ class CenSopranoDevProvider(Provider):
         info['level_one'] = self.vconf.split('@')[0]
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason()
-        if resource.realkind in [ 'synop', 'precipitation', 'hourlyobs']:
-            info['level_two']   = 'obs/rs' + season + suffix
-        elif resource.realkind == 'radiosondage':
-            info['level_two']   = 'a' + season + suffix
-        elif resource.realkind == 'nebulosity':
-            info['level_two']   = 'neb/n' + season + suffix
+        if resource.realkind == 'observations':
+            if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
+                info['level_two']   = 'obs/rs' + season + suffix
+            elif resource.part == 'radiosondage':
+                info['level_two']   = 'a' + season + suffix
+            elif resource.part == 'nebulosity':
+                info['level_two']   = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
             info['level_two']   = 'p' + season + suffix
         elif resource.realkind == 'snowpackstate':

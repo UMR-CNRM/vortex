@@ -8,6 +8,7 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.1.1
 
+
 Package
 -------
 
@@ -17,9 +18,13 @@ Package
 Modules
 -------
 
+:mod:`cen.syntax`
+
+
 Included Modules
 ----------------
 
-Classes
--------
-
+:mod:`cen.algo`
+:mod:`cen.data`
+:mod:`cen.layout`
+:mod:`cen.tools`

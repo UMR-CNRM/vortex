@@ -1,0 +1,126 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: cb
+      genv: '[cycle]'
+      kind: SurgesForcingData
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: hycom02_hycom@ang-main.04
+        date: 2018010100
+        geometry: hycomang2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: vortex.multi.fr
+        vapp: hycom
+        vconf: ang@fcaro
+      location: gget://gco.multi.fr/tampon/hycom.cb.ang.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: cb
+      genv: '[cycle]'
+      kind: SurgesNativeGrid
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.cb.ang.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: cbar
+      genv: '[cycle]'
+      kind: SurgesForcingData
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.cbar.ang.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: cbar
+      genv: '[cycle]'
+      kind: SurgesNativeGrid
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.cbar.ang.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: regional
+      genv: '[cycle]'
+      kind: SurgesForcingData
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.regional.ang.02.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: regional
+      genv: '[cycle]'
+      kind: SurgesNativeGrid
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.regional.ang.02.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: BlkdatData
+      param: blkdat
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.blkdat.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: BlkdatData
+      param: pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.pts.ang.06
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: ConfigSurges
+      param: blkdat
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.blkdat.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: ConfigSurges
+      param: pts
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.pts.ang.06
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: InterpWW3Model
+      param: interpo
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.interpo.ang.03.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: SurgesInterpFactor
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.indices_mf.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: coefMar
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.forcing_tide.ang.02.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: cteMaree
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.tide_list.ang.02
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: meshWW3grid
+      param: namcouple
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hycom.namcouple.ang.03

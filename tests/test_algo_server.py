@@ -17,12 +17,7 @@ from vortex import toolbox as tb
 from vortex.algo import components, serversynctools
 
 logger = fp.loggers.getLogger(__name__)
-
-# lsync = fp.loggers.getLogger('vortex.algo.serversynctools')
-# lsync.setLevel('DEBUG')
-
 lopi = fp.loggers.getLogger('bronx.system.interrupt')
-lopi.setLevel('WARNING')
 
 
 class ServerSyncToolQuick(serversynctools.ServerSyncSimpleSocket):
@@ -87,6 +82,9 @@ class TestExpressoServer(unittest.TestCase):
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
 
+        self.oldlopiL = lopi.level
+        lopi.setLevel('WARNING')
+
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_expresso_server')
         self.oldpwd = self.sh.pwd()
@@ -101,8 +99,8 @@ class TestExpressoServer(unittest.TestCase):
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
-
         self.sh.signal_intercept_off()
+        lopi.setLevel(self.oldlopiL)
 
     def _get_fake_server(self, *kargs, **kwargs):
         rhScript = tb.rh(language='python',
@@ -165,6 +163,7 @@ class TestExpressoServer(unittest.TestCase):
         self.sh.sleep(2.5)  # If the subprocess still runs it might produce a file after 3 seconds
         self.assertFalse(self.sh.path.exists('server_decoy_processing_1',),
                          'Checking fake processing')
+
 
 if __name__ == '__main__':
     unittest.main()

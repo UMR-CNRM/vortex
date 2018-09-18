@@ -37,13 +37,6 @@ class Forecast(IFSParallel):
             xpname = dict(
                 default  = 'FCST'
             ),
-            inline = dict(
-                info        = "Do inline post-processing",
-                type        = bool,
-                optional    = True,
-                default     = True,
-                doc_zorder  = -5,
-            ),
             ddhpack = dict(
                 info        = "After run, gather the DDH output file in directories.",
                 type        = bool,
@@ -99,8 +92,6 @@ class Forecast(IFSParallel):
             try:
                 namlocal = namrh.container.actualpath()
                 namc = namrh.contents
-                namc['NAMCT0'].NFPOS = int(self.inline)
-                logger.info("Setup NAMCT0's NFPOS=%d in %s", int(self.inline), namlocal)
                 if self.outputid is not None:
                     namc.setmacro('OUTPUTID', self.outputid)
                     logger.info('Setup macro OUTPUTID=%s in %s', self.outputid, namlocal)

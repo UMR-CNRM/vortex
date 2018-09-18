@@ -31,4 +31,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+Decorators
+----------
+ 
+.. autofunction:: require_external_addon

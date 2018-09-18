@@ -840,6 +840,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%y%m%d')
 
     @property
+    def y(self):
+        """YYYYMMDDHH formated string."""
+        return self.strftime('%Y')
+
+    @property
     def ymdh(self):
         """YYYYMMDDHH formated string."""
         return self.strftime('%Y%m%d%H')
@@ -874,6 +879,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.strftime('%H%M')
 
     @property
+    def dd(self):
+        """DD formated string."""
+        return self.strftime('%d')
+
+    @property
     def hh(self):
         """HH formated string."""
         return self.strftime('%H')
@@ -885,6 +895,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def vortex(self, cutoff='P'):
         """Semi-compact representation for vortex paths."""
         return self.strftime('%Y%m%dT%H%M') + six.text_type(cutoff)[0].upper()
+
+    @property
+    def stdvortex(self):
+        """Semi-compact representation for vortex paths (without cutoff)."""
+        return self.strftime('%Y%m%dT%H%M')
 
     def reallynice(self):
         """Nice and verbose string representation."""
@@ -1048,6 +1063,17 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         else:
             out = a - 'P1D'
         return out.ymd
+
+    def nivologyseason(self):
+        """Return the nivology season of a current date"""
+        if self.month < 8:
+            season_begin = datetime.datetime(self.year - 1, 8, 1)
+            season_end   = datetime.datetime(self.year, 7, 31)
+        else:
+            season_begin = datetime.datetime(self.year, 8, 1)
+            season_end   = datetime.datetime(self.year + 1, 7, 31)
+
+        return season_begin.strftime('%y') + season_end.strftime('%y')
 
 
 class Time(_GetattrCalculatorMixin):

@@ -339,7 +339,7 @@ class BasicInputMonitor(_StateFullMembersList):
                                    self._crawling_threshold):
                     if self._mpquit.is_set():  # Are we ordered to stop ?
                         break
-                    with _MonitorSilencer(self._ctx) as psi:
+                    with _MonitorSilencer(self._ctx, 'inputmonitor_updater') as psi:
                         logger.info("First get on local file: %s",
                                     e.section.rh.container.localpath())
                         e.section.get(incache=True, fatal=False)  # Do not crash at this stage
@@ -376,7 +376,7 @@ class BasicInputMonitor(_StateFullMembersList):
                     # Is the promise file still there or not ?
                     if e.section.rh.is_grabable():
                         visited += 1
-                        with _MonitorSilencer(self._ctx) as psi:
+                        with _MonitorSilencer(self._ctx, 'inputmonitor_updater') as psi:
                             if e.section.rh.is_grabable(check_exists=True):
                                 logger.info("The local resource %s becomes available",
                                             e.section.rh.container.localpath())

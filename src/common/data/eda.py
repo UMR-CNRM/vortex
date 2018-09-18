@@ -7,7 +7,8 @@ import footprints
 
 from vortex.data.flow       import GeoFlowResource
 from common.data.assim      import _BackgroundErrorInfo
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stddeco  import namebuilding_insert
 from gco.syntax.stdattrs    import gvar
 
 #: Automatic export off
@@ -16,11 +17,12 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class RawFiles(GeoFlowResource):
     """Input files for wavelet covariances estimation. To be removed soon."""
 
     _footprint = [
-        term,
+        term_deco,
         gvar,
         dict(
             info = 'Input files for wavelet covariances estimation',
@@ -46,16 +48,6 @@ class RawFiles(GeoFlowResource):
     def realkind(self):
         return self.kind
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-            term    = self.term.fmthm,
-        )
-
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'RAWFILEP(memberfix:member)+{:s}.{:d}'.format(self.term.fmthour, self.geometry.truncation)
@@ -71,11 +63,12 @@ class RawFiles(GeoFlowResource):
         return '.{:03d}.tar'.format(self.ipert)
 
 
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class RandBFiles(GeoFlowResource):
     """Input files for wavelet covariances estimation."""
 
     _footprint = [
-        term,
+        term_deco,
         gvar,
         dict(
             info = 'Input files for wavelet covariances estimation',
@@ -102,16 +95,6 @@ class RandBFiles(GeoFlowResource):
     def realkind(self):
         return 'randbfiles'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-            term    = self.term.fmthm,
-        )
-
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return 'famember(memberfix:member)+{:s}.{:d}'.format(self.term.fmthour, self.geometry.truncation)
@@ -124,7 +107,7 @@ class RandBFiles(GeoFlowResource):
         """GGET specific naming convention."""
         if self.ipert is None:
             raise ValueError('ipert is mandatory with the GCO provider')
-        return '.{:03d}'.format(self.ipert) + ".fa"
+        return '.{:03d}.{}'.format(self.ipert, 'fa')
 
 
 class InflationFactor(_BackgroundErrorInfo):
@@ -132,29 +115,26 @@ class InflationFactor(_BackgroundErrorInfo):
     Inflation factor profiles.
     """
 
-    _footprint = [
-        term,
-        dict(
-            info='Inflation factor profiles',
-            attr=dict(
-                kind=dict(
-                    values=['infl_factor', 'infl', 'inflation_factor'],
-                    remap=dict(autoremap='first'),
-                ),
-                gvar = dict(
-                    default = 'inflation_factor'
-                ),
-                nativefmt=dict(
-                    values=['ascii'],
-                    default='ascii',
-                ),
-                term=dict(
-                    optional=True,
-                    default=3
-                ),
+    _footprint = dict(
+        info='Inflation factor profiles',
+        attr=dict(
+            kind=dict(
+                values=['infl_factor', 'infl', 'inflation_factor'],
+                remap=dict(autoremap='first'),
             ),
-        )
-    ]
+            gvar = dict(
+                default = 'inflation_factor'
+            ),
+            nativefmt=dict(
+                values=['ascii'],
+                default='ascii',
+            ),
+            term=dict(
+                optional=True,
+                default=3
+            ),
+        ),
+    )
 
     @property
     def realkind(self):

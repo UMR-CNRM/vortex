@@ -7,7 +7,7 @@ from bronx.stdtypes.date import Date
 import footprints as fp
 
 from vortex.data import geometries
-from vortex.util.names import VortexNameBuilder
+from vortex.tools.names import VortexNameBuilder
 import common.data.eps  # @UnusedImport
 
 rcollect = fp.collectors.get(tag='resource')
@@ -32,11 +32,11 @@ class TestPerturbedState(unittest.TestCase):
             res.olive_basename()
         with self.assertRaises(NotImplementedError):
             res.archive_basename()
-        self.assertEqual(self.vb.pack(res.basename_info()), answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer)
         res = fp.proxy.resource(processing='unit', ** fpcommon)
-        self.assertEqual(self.vb.pack(res.basename_info()), 'u' + answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), 'u' + answer)
         res = fp.proxy.resource(processing='normed', ** fpcommon)
-        self.assertEqual(self.vb.pack(res.basename_info()), 'n' + answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), 'n' + answer)
 
 
 class TestSingularVector(unittest.TestCase):
@@ -55,7 +55,7 @@ class TestSingularVector(unittest.TestCase):
         res = fp.proxy.resource(** fpcommon)
         self.assertEqual(res.olive_basename(), 'SVARPE015+0000')
         self.assertEqual(res.archive_basename(), 'SVARPE015+0000')
-        self.assertEqual(self.vb.pack(res.basename_info()), answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer)
 
 
 class TestNormCoeff(unittest.TestCase):
@@ -68,10 +68,10 @@ class TestNormCoeff(unittest.TestCase):
                         model='arpege', kind='coeffnorm')
         answer = 'coeff{}.arpege.json'
         res = fp.proxy.resource(** fpcommon)
-        self.assertEqual(self.vb.pack(res.basename_info()), answer.format('sv'))
+        self.assertEqual(self.vb.pack(res.namebuilding_info()), answer.format('sv'))
         for pkind in ('sv', 'bd'):
             res = fp.proxy.resource(pertkind=pkind, ** fpcommon)
-            self.assertEqual(self.vb.pack(res.basename_info()), answer.format(pkind))
+            self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer.format(pkind))
 
 
 class TestSample(unittest.TestCase):
@@ -85,7 +85,7 @@ class TestSample(unittest.TestCase):
         answer = '{}of5.json'
         for skind in ('mbsample', 'physample'):
             res = fp.proxy.resource(kind=skind, ** fpcommon)
-            self.assertEqual(self.vb.pack(res.basename_info()), answer.format(skind))
+            self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer.format(skind))
 
 
 class TestGeneralCluster(unittest.TestCase):
@@ -99,7 +99,7 @@ class TestGeneralCluster(unittest.TestCase):
         answer = 'clustering_{}.txt'
         for sfill in ('population', 'pop', 'members'):
             res = fp.proxy.resource(filling=sfill, ** fpcommon)
-            self.assertEqual(self.vb.pack(res.basename_info()),
+            self.assertEqual(self.vb.pack_basename(res.namebuilding_info()),
                              answer.format({'population': 'pop'}.get(sfill, sfill)))
 
 

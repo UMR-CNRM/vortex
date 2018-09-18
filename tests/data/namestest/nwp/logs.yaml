@@ -1,0 +1,65 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff:
+                - assim
+                - production
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+
+todo:
+    # Listing
+    -   commons:
+            block: forecast
+            experiment: abcd
+            kind: listing
+            task:
+                - null
+                - gruik
+        tests:
+            -   suite: oper
+                namespace: '[suite].multi.fr'
+            -   part:
+                    - null
+                    - all
+            -   binary:
+                    - null
+                    - surfex
+            -   mpi: 1
+                openmp: 1
+            -   seta: 1
+                setb: 1
+    # StaticListing
+    -   commons:
+            block: forecast
+            experiment: abcd
+            kind: staticlisting
+            task:
+                - null
+                - gruik
+        tests:
+            -   part:
+                    - null
+                    - all
+            -   binary:
+                    - null
+                    - surfex
+    # DrHook
+    -   commons:
+            block: forecast
+            experiment: abcd
+            kind: drhook
+            task:
+                - null
+                - gruik
+        tests:
+            -   mpi:
+                    - null
+                    - 1

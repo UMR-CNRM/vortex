@@ -244,5 +244,6 @@ class utReporting(TestCase):
         with capture(fr.dumper) as output:
             self.assertEqual(output, expected_dumper)
 
+
 if __name__ == '__main__':
     main(verbosity=2)

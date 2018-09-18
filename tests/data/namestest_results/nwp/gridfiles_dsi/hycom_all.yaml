@@ -1,0 +1,73 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hyatl001
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: hycom
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: hycom
+        vconf: atl@fcarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_00.003.grb
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hyatl001
+        gnamespace: gco.multi.fr
+        kind: gridpoint
+        model: hycom
+        namespace: '[suite].inline.fr'
+        origin: hst
+        term: 3
+        vapp: hycom
+        vconf: atl@fcarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_00.003.grb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010100'
+      nativefmt: grib
+      suite: oper
+      vconf: med@anarp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/ana_arp_00_MED.003.grb
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/ana_arp_00_MED.003.grb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010106'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_06.003.grb
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_06.003.grb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010112'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_12.003.grb
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_12.003.grb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      date: '2018010118'
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_18.003.grb
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/bdap/prv_arp_18.003.grb

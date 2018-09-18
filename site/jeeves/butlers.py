@@ -204,7 +204,7 @@ class ExitHandler(object):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        """Be sure to call all registred callbacks at exit time."""
+        """Be sure to call all registered callbacks at exit time."""
         self.daemon.info('Context exit ' + repr(self.daemon))
         self.daemon.info('Context exit ' + repr(exc_type))
         if hasattr(exc_value, 'message') and exc_value.message:

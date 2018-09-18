@@ -1,0 +1,3280 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: bufr
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/bufr-std.extract.conv
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/bufr-std.extract.conv
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/bufr-std.extract.conv
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/bufr-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: bufr
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/bufr-std.void.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/bufr-std.void.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/bufr-std.void.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/bufr-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: grib
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/grib-std.extract.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/grib-std.extract.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/grib-std.extract.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/grib-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: grib
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/grib-std.void.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/grib-std.void.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/grib-std.void.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/grib-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: hdf5
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/hdf5-std.extract.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/hdf5-std.extract.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/hdf5-std.extract.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/hdf5-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: hdf5
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/hdf5-std.void.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/hdf5-std.void.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/hdf5-std.void.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/hdf5-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: netcdf
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/netcdf-std.extract.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/netcdf-std.extract.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/netcdf-std.extract.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/netcdf-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: netcdf
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/netcdf-std.void.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/netcdf-std.void.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/netcdf-std.void.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/netcdf-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: obsoul
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/obsoul-std.extract.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/obsoul-std.extract.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/obsoul-std.extract.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/obsoul-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: obsoul
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/obsoul-std.void.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/obsoul-std.void.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/obsoul-std.void.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/obsoul-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: bufr
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/bufr-std.extract.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/bufr-std.extract.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/bufr-std.extract.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/bufr-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: bufr
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/bufr-std.void.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/bufr-std.void.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/bufr-std.void.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/bufr-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: grib
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/grib-std.extract.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/grib-std.extract.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/grib-std.extract.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/grib-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: grib
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/grib-std.void.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/grib-std.void.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/grib-std.void.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/grib-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: hdf5
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/hdf5-std.extract.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/hdf5-std.extract.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/hdf5-std.extract.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/hdf5-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: hdf5
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/hdf5-std.void.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/hdf5-std.void.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/hdf5-std.void.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/hdf5-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: netcdf
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/netcdf-std.extract.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/netcdf-std.extract.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/netcdf-std.extract.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/netcdf-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: netcdf
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/netcdf-std.void.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/netcdf-std.void.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/netcdf-std.void.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/netcdf-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: obsoul
+      kind: observations
+      part: conv
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/obsoul-std.extract.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/obsoul-std.extract.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/obsoul-std.extract.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/obsoul-std.extract.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: obsoul
+      kind: observations
+      part: conv
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/obsoul-std.void.conv
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/obsoul-std.void.conv
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/obsoul-std.void.conv
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/obsoul-std.void.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: bufr
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/bufr.conv
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/bufr.conv
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/bufr.conv
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/bufr.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: grib
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/grib.conv
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/grib.conv
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/grib.conv
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/grib.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: hdf5
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/hdf5.conv
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/hdf5.conv
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/hdf5.conv
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/hdf5.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: netcdf
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/netcdf.conv
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/netcdf.conv
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/netcdf.conv
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/netcdf.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: obsoul
+      kind: observations
+      namespace: '[suite].inline.fr'
+      part: full
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/o.full.1.rAMb
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/o.full.1.00b
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/o.full.1.rAMb
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/o.full.1.rAMb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: obsoul
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/obsoul.conv
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/obsoul.conv
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/obsoul.conv
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/obsoul.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      format: obsoul
+      kind: observations
+      namespace: '[suite].multi.fr'
+      part: full
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/obsoul
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/obsoul
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/obsoul
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/obsoul
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: olive.multi.fr
+      part: conv
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_split_conv.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_split_conv.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_split_conv.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_split_conv.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: olive.multi.fr
+      part: conv
+      stage: cans
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_cans_conv.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_cans_conv.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_cans_conv.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_cans_conv.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: olive.multi.fr
+      part: conv
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_screen_conv.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_screen_conv.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_screen_conv.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_screen_conv.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: olive.multi.fr
+      part: conv
+      stage: screening
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_screen_conv.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_screen_conv.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_screen_conv.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_screen_conv.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: olive.multi.fr
+      part: conv
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_split_conv.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ecma_split_conv.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_split_conv.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ecma_split_conv.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: vortex.multi.fr
+      part: conv
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ecma.build.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ecma.build.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ecma.build.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ecma.build.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: vortex.multi.fr
+      part: conv
+      stage: cans
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ecma.canari.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ecma.canari.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ecma.canari.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ecma.canari.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: vortex.multi.fr
+      part: conv
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ecma.screening.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ecma.screening.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ecma.screening.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ecma.screening.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: vortex.multi.fr
+      part: conv
+      stage: screening
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ecma.screening.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ecma.screening.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ecma.screening.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ecma.screening.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: vortex.multi.fr
+      part: conv
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ecma.build.conv
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ecma.build.conv
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ecma.build.conv
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ecma.build.conv
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: altitude
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: altitude
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: altitude
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.conv&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.conv&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.conv&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.conv&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: conv
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.conv&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.conv&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.conv&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.conv&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: iasi
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.iasi&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.iasi&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.iasi&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.iasi&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: iasi
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: iasi
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.iasi&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.iasi&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.iasi&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.iasi&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=all&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: surf
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.surf&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.surf&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.surf&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA.surf&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: surf
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: surf
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.surf&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA.surf&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.surf&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA.surf&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: virtual
+      stage: matchup
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar?extract=BASE/ECMA&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: virtual
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ecma
+      namespace: '[suite].multi.fr'
+      part: virtual
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA&format=unknown
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ecmascr.tar?extract=ECMA&format=unknown
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA&format=unknown
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA&format=unknown
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: mix
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_min_mix.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_min_mix.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_min_mix.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_min_mix.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: mix
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_screen_mix.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_screen_mix.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_screen_mix.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_screen_mix.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: mix
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_traj_mix.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_traj_mix.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_traj_mix.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_traj_mix.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: surf
+      stage: cans
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_cans_surf.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_cans_surf.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_cans_surf.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_cans_surf.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: surf
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_min_surf.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_min_surf.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_min_surf.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_min_surf.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: surf
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_screen_surf.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_screen_surf.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_screen_surf.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_screen_surf.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: olive.multi.fr
+      part: surf
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_traj_surf.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ccma_traj_surf.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_traj_surf.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/ccma_traj_surf.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.minim.mix
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.minim.mix
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.minim.mix
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.minim.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.screening.mix
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.screening.mix
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.screening.mix
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.screening.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.traj.mix
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.traj.mix
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.traj.mix
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.traj.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: cans
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.canari.surf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.canari.surf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.canari.surf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.canari.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.minim.surf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.minim.surf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.minim.surf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.minim.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.screening.surf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.screening.surf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.screening.surf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.screening.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/odb-ccma.traj.surf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/odb-ccma.traj.surf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/odb-ccma.traj.surf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/odb-ccma.traj.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.minim.mix
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.minim.mix
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.minim.mix
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.minim.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.screening.mix
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.screening.mix
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.screening.mix
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.screening.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: mix
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.traj.mix
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.traj.mix
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.traj.mix
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.traj.mix
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: cans
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.canari.surf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.canari.surf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.canari.surf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.canari.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.minim.surf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.minim.surf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.minim.surf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.minim.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.screening.surf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.screening.surf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.screening.surf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.screening.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: vortex.multi.fr
+      part: surf
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/odb-ccma.traj.surf
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/odb-ccma.traj.surf
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/odb-ccma.traj.surf
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/odb-ccma.traj.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      model: aladin
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_cpl.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_cpl.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_cpl.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_cpl.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      model: aladin
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_ccma_screen.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      model: aladin
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_traj.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_traj.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_traj.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_traj.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: ground
+      stage: cans
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_min.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_min.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_min.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_min.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: screen
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_ccma_screen.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_ccma_screen.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: mix
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_traj.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_traj.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_traj.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_traj.tar
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      kind: obsflag
+      namespace: olive.multi.fr
+      part: conv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/BDM_CQ
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/BDM_CQ
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/BDM_CQ
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/BDM_CQ
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      kind: obsflag
+      namespace: olive.multi.fr
+      part: iasi
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/BDM_CQ
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/BDM_CQ
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/BDM_CQ
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/observations/BDM_CQ
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      kind: obsflag
+      namespace: vortex.multi.fr
+      part: conv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/obsflag.conv.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/obsflag.conv.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/obsflag.conv.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/obsflag.conv.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: abcd
+      kind: obsflag
+      namespace: vortex.multi.fr
+      part: iasi
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/obsflag.iasi.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/obsflag.iasi.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/observations/obsflag.iasi.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/observations/obsflag.iasi.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      kind: obsflag
+      namespace: vortex.multi.fr
+      part: conv
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/obsflag.conv.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/obsflag.conv.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/obsflag.conv.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/obsflag.conv.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: observations
+      experiment: oper
+      kind: obsflag
+      namespace: vortex.multi.fr
+      part: iasi
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/observations/obsflag.iasi.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/observations/obsflag.iasi.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/observations/obsflag.iasi.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/observations/obsflag.iasi.txt
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: olive.multi.fr
+      stage: merge
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.merge
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.merge
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.merge
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.merge
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: olive.multi.fr
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.minim
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.minim
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.minim
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.minim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: olive.multi.fr
+      stage: screening
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.screen
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.screen
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.screen
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.screen
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: olive.multi.fr
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.traj
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.traj
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.traj
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.traj
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: olive.multi.fr
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.void
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/VARBC.void
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.void
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/VARBC.void
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: merge
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/varbc.arome-merge.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/varbc.arpege-merge.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/varbc.arome-merge.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/varbc.arpege-merge.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/varbc.arome-minim.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/varbc.arpege-minim.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/varbc.arome-minim.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/varbc.arpege-minim.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: screening
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/varbc.arome-screening.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/varbc.arpege-screening.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/varbc.arome-screening.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/varbc.arpege-screening.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/varbc.arome-traj.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/varbc.arpege-traj.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/varbc.arome-traj.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/varbc.arpege-traj.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/varbc.arome-void.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/varbc.arpege-void.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/varbc.arome-void.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/varbc.arpege-void.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: merge
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/varbc.arome-merge.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/varbc.arpege-merge.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/varbc.arome-merge.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/varbc.arpege-merge.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: minim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/varbc.arome-minim.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/varbc.arpege-minim.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/varbc.arome-minim.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/varbc.arpege-minim.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: screening
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/varbc.arome-screening.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/varbc.arpege-screening.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/varbc.arome-screening.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/varbc.arpege-screening.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: traj
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/varbc.arome-traj.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/varbc.arpege-traj.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/varbc.arome-traj.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/varbc.arpege-traj.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: varbc
+      namespace: vortex.multi.fr
+      stage: void
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/varbc.arome-void.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/varbc.arpege-void.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/varbc.arome-void.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/varbc.arpege-void.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: aladin
+      namespace: '[suite].multi.fr'
+      stage: merge
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.merge
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.merge
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: aladin
+      namespace: '[suite].multi.fr'
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.minim
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.minim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: aladin
+      namespace: '[suite].multi.fr'
+      stage: screening
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.screening
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.screening
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: aladin
+      namespace: '[suite].multi.fr'
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle_alad
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: aladin
+      namespace: '[suite].multi.fr'
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle_alad
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle_alad
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: arpege
+      namespace: '[suite].multi.fr'
+      stage: merge
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.merge
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.merge
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: arpege
+      namespace: '[suite].multi.fr'
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.minim
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.minim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: arpege
+      namespace: '[suite].multi.fr'
+      stage: screening
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.screening
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.screening
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: arpege
+      namespace: '[suite].multi.fr'
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle_arp
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      mixmodel: arpege
+      namespace: '[suite].multi.fr'
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle_arp
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle_arp
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].inline.fr'
+      stage: merge
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.merge.0
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.merge.0
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.merge.0
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.merge.0
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].inline.fr'
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].inline.fr'
+      stage: screening
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].inline.fr'
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].inline.fr'
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/VARBC.cycle_aro.
+        20180101000000
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/fic_day/VARBC.cycle.r0
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].multi.fr'
+      stage: merge
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.merge
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.merge
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.merge
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].multi.fr'
+      stage: minim
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.minim
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.minim
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.minim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].multi.fr'
+      stage: screening
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.screening
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.screening
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.screening
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].multi.fr'
+      stage: traj
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: varbc
+      namespace: '[suite].multi.fr'
+      stage: void
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/VARBC.cycle
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/VARBC.cycle
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/VARBC.cycle
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/VARBC.cycle
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: diap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/blacklist.global.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/blacklist.global.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: global
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/blacklist.global.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/blacklist.global.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: loc
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/blacklist.local.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/blacklist.local.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: local
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/blacklist.local.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/blacklist.local.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: diap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/blacklist.global.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/blacklist.global.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: global
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/blacklist.global.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/blacklist.global.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/blacklist.global.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: loc
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/blacklist.local.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/blacklist.local.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: blacklist
+      namespace: vortex.multi.fr
+      scope: local
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/blacklist.local.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/blacklist.local.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/blacklist.local.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: blacklist
+      scope: diap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/black_list.diap.201805.01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/black_list.diap.201802.01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/black_list.diap.201805.01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/black_list.diap.201802.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: blacklist
+      scope: global
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/black_list.diap.201805.01
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/black_list.diap.201802.01
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/black_list.diap.201805.01
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/black_list.diap.201802.01
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: blacklist
+      scope: loc
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/black_list.loc.arome.79
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/black_list.loc.arpege.59
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/black_list.loc.arome.79
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/black_list.loc.arpege.59
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: blacklist
+      scope: local
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/black_list.loc.arome.79
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/black_list.loc.arpege.59
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/black_list.loc.arome.79
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/black_list.loc.arpege.59
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].inline.fr'
+      scope: diap
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_NOIRE_LOC
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].inline.fr'
+      scope: global
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_NOIRE_LOC
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_NOIRE_LOC
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].inline.fr'
+      scope: loc
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_LOC
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_LOC
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_LOC
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_LOC
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].inline.fr'
+      scope: local
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_LOC
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_LOC
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/const/autres/LISTE_LOC
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/const/autres/LISTE_LOC
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].multi.fr'
+      scope: diap
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/LISTE_NOIRE_DIAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].multi.fr'
+      scope: global
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/LISTE_NOIRE_DIAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/LISTE_NOIRE_DIAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].multi.fr'
+      scope: loc
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/LISTE_LOC
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/LISTE_LOC
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/LISTE_LOC
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/LISTE_LOC
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: blacklist
+      namespace: '[suite].multi.fr'
+      scope: local
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/LISTE_LOC
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/LISTE_LOC
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/LISTE_LOC
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/LISTE_LOC
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: refdata
+      namespace: olive.multi.fr
+      part: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/refdata.all
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/refdata.all
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/refdata.all
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/refdata.all
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: refdata
+      namespace: olive.multi.fr
+      part: surf
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/refdata.surf
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/refdata.surf
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/refdata.surf
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/refdata.surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: refdata
+      namespace: vortex.multi.fr
+      part: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/refdata.arome-all.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/refdata.arpege-all.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/refdata.arome-all.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/refdata.arpege-all.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: refdata
+      namespace: vortex.multi.fr
+      part: surf
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/refdata.arome-surf.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/refdata.arpege-surf.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/refdata.arome-surf.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/refdata.arpege-surf.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: refdata
+      namespace: vortex.multi.fr
+      part: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/refdata.arome-all.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/refdata.arpege-all.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/refdata.arome-all.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/refdata.arpege-all.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: refdata
+      namespace: vortex.multi.fr
+      part: surf
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/refdata.arome-surf.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/refdata.arpege-surf.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/refdata.arome-surf.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/refdata.arpege-surf.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: refdata
+      namespace: '[suite].inline.fr'
+      part: null
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/refdata.rAM
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.00
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/refdata.rAM
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.rAM
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: refdata
+      namespace: '[suite].inline.fr'
+      part: surf
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/refdata.rAM
+    - default: *id002
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.00
+    - default: *id003
+      location: file://oper.inline.fr/arome/france/oper/data/workdir/obs/refdata.rAM
+    - default: *id004
+      location: file://oper.inline.fr/arpege/france/oper/data/workdir/obs/refdata.rAM
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: null
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: null
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: full
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: full
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: surf
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_build
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_build
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: olive.multi.fr
+      scope: surf
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/whocares/OBSMAP_split
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/whocares/OBSMAP_split
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: null
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-build.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: null
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-split.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: full
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-build.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: full
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-split.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.full-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: surf
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.surface-build.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.surface-build.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.surface-build.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.surface-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: surf
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/obsmap.surface-split.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/obsmap.surface-split.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/obsmap.surface-split.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/obsmap.surface-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: null
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.full-build.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.full-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: null
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.full-split.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.full-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: full
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.full-build.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.full-build.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.full-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: full
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.full-split.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.full-split.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.full-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: surf
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.surface-build.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.surface-build.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.surface-build.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.surface-build.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: obsmap
+      namespace: vortex.multi.fr
+      scope: surf
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/obsmap.surface-split.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/obsmap.surface-split.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/obsmap.surface-split.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/obsmap.surface-split.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: null
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arome.24
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arpege.13
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arome.24
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arpege.13
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: null
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arome.24
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arpege.13
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arome.24
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arpege.13
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: full
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arome.24
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arpege.13
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arome.24
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arpege.13
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: full
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arome.24
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.assim.arpege.13
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arome.24
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.prod.arpege.13
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: surf
+      stage: build
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arome.04
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arpege.04
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arome.04
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arpege.04
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      genv: '[cycle]'
+      kind: obsmap
+      scope: surf
+      stage: split
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arome.04
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arpege.04
+    - default: *id003
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arome.04
+    - default: *id004
+      location: gget://gco.multi.fr/tampon/bator_map.surf.arpege.04
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: null
+      stage: build
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: null
+      stage: split
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: full
+      stage: build
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: full
+      stage: split
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: surf
+      stage: build
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP_surf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: obsmap
+      namespace: '[suite].multi.fr'
+      scope: surf
+      stage: split
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/BATOR_MAP_surf
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/BATOR_MAP_surf
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: bcor
+      namespace: vortex.multi.fr
+      satbias: mtop
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/bcor.mtop.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/bcor.mtop.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/bcor.mtop.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/bcor.mtop.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: abcd
+      kind: bcor
+      namespace: vortex.multi.fr
+      satbias: noaa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/whocares/bcor.noaa.txt
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/whocares/bcor.noaa.txt
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/whocares/bcor.noaa.txt
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/whocares/bcor.noaa.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: bcor
+      namespace: vortex.multi.fr
+      satbias: mtop
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/bcor.mtop.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/bcor.mtop.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/bcor.mtop.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/bcor.mtop.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      experiment: oper
+      kind: bcor
+      namespace: vortex.multi.fr
+      satbias: noaa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/whocares/bcor.noaa.txt
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/whocares/bcor.noaa.txt
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/whocares/bcor.noaa.txt
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/whocares/bcor.noaa.txt
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: bcor
+      namespace: '[suite].multi.fr'
+      satbias: mtop
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/bcor_mtop.dat
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/bcor_mtop.dat
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/bcor_mtop.dat
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/bcor_mtop.dat
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: whocares
+      kind: bcor
+      namespace: '[suite].multi.fr'
+      satbias: noaa
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/bcor_noaa.dat
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/bcor_noaa.dat
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/bcor_noaa.dat
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/bcor_noaa.dat

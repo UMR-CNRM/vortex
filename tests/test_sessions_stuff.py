@@ -130,5 +130,6 @@ class UtSession(TestCase):
         self.assertEqual(self.sh.path.realpath(self.sh.pwd()),
                          self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1)))
 
+
 if __name__ == '__main__':
     main(verbosity=2)

@@ -242,7 +242,6 @@ class Deposit(footprints.util.GetByTag):
         self._minclean    = duration_to_seconds(minclean)
         self._first_clean()
 
-
     @property
     def logger(self):
         return self._logger

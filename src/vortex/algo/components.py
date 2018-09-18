@@ -727,22 +727,22 @@ class TaylorRun(AlgoComponent):
         self._boss = None
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
-        return dict(kind=self.kind, )
+        """Create a common instruction dictionary that will be used by the workers."""
+        return dict(kind=self.kind, taskdebug=self.verbose)
 
     def _default_pre_execute(self, rh, opts):
-        '''Various initialisations. In particular it creates the task scheduler (Boss).'''
+        """Various initialisations. In particular it creates the task scheduler (Boss)."""
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
                           scheduler=footprints.proxy.scheduler(limit='threads', max_threads=self.ntasks))
         self._boss.make_them_work()
 
     def _add_instructions(self, common_i, individual_i):
-        '''Give a new set of instructions to the Boss.'''
+        """Give a new set of instructions to the Boss."""
         self._boss.set_instructions(common_i, individual_i)
 
     def _default_post_execute(self, rh, opts):
-        '''Summarise the results of the various tasks that were run.'''
+        """Summarise the results of the various tasks that were run."""
         logger.info("All the input files were dealt with: now waiting for the parallel processing to finish")
         self._boss.wait_till_finished()
         logger.info("The parallel processing has finished. here are the results:")
@@ -756,7 +756,7 @@ class TaylorRun(AlgoComponent):
             self._default_rc_action(rh, opts, r, rc)
 
     def _default_rc_action(self, rh, opts, report, rc):
-        '''How should we process the return code ?'''
+        """How should we process the return code ?"""
         if not rc:
             logger.warning("Apparently something went sideways with this task (rc=%s).",
                            str(rc))
@@ -768,7 +768,7 @@ class TaylorRun(AlgoComponent):
         A usual sequence is::
 
             self._default_pre_execute(rh, opts)
-            common_i = _default_common_instructions(rh, opts)
+            common_i = self._default_common_instructions(rh, opts)
             # Update the common instructions
             common_i.update(dict(someattribute='Toto', ))
 
@@ -857,7 +857,7 @@ class ParaExpresso(TaylorRun):
         return rh is not None
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
         ddict['progname'] = self.interpreter
         ddict['progargs'] = footprints.FPList([self.absexcutable(rh.container.localpath()), ] +
@@ -943,7 +943,7 @@ class ParaBlindRun(TaylorRun):
         return rc
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
         ddict['progname'] = self.absexcutable(rh.container.localpath())
         ddict['progargs'] = footprints.FPList(self.spawn_command_line(rh))

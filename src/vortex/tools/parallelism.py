@@ -2,11 +2,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from collections import deque, defaultdict
+from collections import defaultdict
 import io
+import logging
 import six
 import sys
 
+from bronx.stdtypes import date
 import footprints
 from footprints import loggers
 import taylorism
@@ -33,11 +35,19 @@ class TaylorVortexWorker(taylorism.Worker):
 
     _abstract = True
     _footprint = dict(
-        kind = (),
+        attr = dict(
+            kind = dict(),
+            taskdebug = dict(
+                info        = 'Dump all stdout/stderr to a file (in real live !)',
+                type        = bool,
+                default     = False,
+                optional    = True,
+            ),
+        )
     )
 
     def _vortex_shortcuts(self):
-        """Setup a few shotcuts."""
+        """Setup a few shortcuts."""
         self.ticket  = vortex.sessions.current()
         self.context = self.ticket.context
         self.system  = self.context.system
@@ -51,9 +61,9 @@ class TaylorVortexWorker(taylorism.Worker):
         return rc
 
     def _task(self, **kwargs):
-        """Should not be overriden anymore: see :meth:`vortex_task`."""
+        """Should not be overridden anymore: see :meth:`vortex_task`."""
         self._vortex_shortcuts()
-        with ParallelSilencer(self.context) as psi:
+        with ParallelSilencer(self.context, self.name, debug=self.taskdebug) as psi:
             rc = self.vortex_task(**kwargs)
             psi_rc = psi.export_result()
         return self._vortex_rc_wrapup(rc, psi_rc)
@@ -123,6 +133,50 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
             rcdict['rc'] = e
         return rcdict
 
+    def find_namelists(self, opts=None):  # @UnusedVariable
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+
+        return namcandidates
+
+
+class TeeLikeStringIO(io.StringIO):
+    """A StringIO variatn that can also write to several files."""
+
+    def __init__(self):
+        super(TeeLikeStringIO, self).__init__()
+        self._tees = set()
+
+    def record_teefile(self, filename, mode='w', line_buffering=True):
+        """Add **filename** to the set of extra logfiles."""
+        self._tees.add(io.open(filename, mode=mode,
+                               buffering=int(line_buffering)))
+
+    def discard_tees(self):
+        """Dismiss all of the extra logfiles."""
+        for teeio in self._tees:
+            teeio.close()
+        self._tees = set()
+
+    def write(self, t):
+        """Write in the present StringIO but also in the extra logfiles."""
+        if six.PY2 and isinstance(t, str):
+            # With Python2, t may not be a unicode string
+            t = t.decode()
+        for teeio in self._tees:
+            teeio.write(t)
+        super(TeeLikeStringIO, self).write(t)
+
+    def filedump(self, filename, mode='w'):
+        """Dump all of the captured data to **filename**."""
+        with io.open(filename, mode=mode) as fhdump:
+            self.seek(0)
+            for line in self:
+                fhdump.write(line)
+
 
 class ParallelSilencer(object):
     """Record everything and suppress all outputs (stdout, loggers, ...).
@@ -142,24 +196,28 @@ class ParallelSilencer(object):
             # do whatever you need with the psi_record
     """
 
-    def __init__(self, context):
+    def __init__(self, context, taskname, debug=False):
         """
 
         :param vortex.layout.contexts.Context context: : The context we will record.
         """
         self._ctx = context
-        # Variables were the records will be stored
-        self._reset_records(handler=False)
+        self._taskdebug = debug
+        self._debugfile = '{:s}_{:s}_stdeo.txt'.format(taskname,
+                                                       date.now().ymdhms)
+        self._ctx_r = None
+        self._io_r = io.StringIO()
         # Other temporary stuff
         self._reset_temporary()
 
-    def _reset_records(self, handler=True):
+    def _reset_records(self):
         """Reset variables were the records are stored."""
-        self._ctx_r = None
-        self._log_r = deque()
-        self._io_r = six.StringIO()
-        if handler:
-            self._slurp_h = loggers.SlurpHandler(self._log_r)
+        self._io_r = TeeLikeStringIO()
+        if self._taskdebug:
+            self._io_r.record_teefile(self._debugfile)
+        self._stream_h = logging.StreamHandler(self._io_r)
+        self._stream_h.setLevel(logging.DEBUG)
+        self._stream_h.setFormatter(loggers.console.formatter)
 
     def _reset_temporary(self):
         """Reset other temporary stuff."""
@@ -174,10 +232,9 @@ class ParallelSilencer(object):
         self._ctx_r = self._ctx.get_recorder()
         # Reset all the log handlers and slurp everything
         for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
-            a_logger.addHandler(self._slurp_h)
+            a_logger.addHandler(self._stream_h)
         for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
-            for a_handler in [h for h in a_logger.handlers
-                              if not isinstance(h, loggers.SlurpHandler)]:
+            for a_handler in [h for h in a_logger.handlers if h is not self._stream_h]:
                 a_logger.removeHandler(a_handler)
                 self._removed_h[a_logger].append(a_handler)
         # Do not speak on stdout/err
@@ -187,9 +244,13 @@ class ParallelSilencer(object):
         sys.stderr = self._io_r
         return self
 
-    def __exit__(self, exctype, excvalue, exctb):
+    def __exit__(self, exctype, excvalue, exctb):  # @UnusedVariable
         """The end of a context."""
         self._stop_recording()
+        if (exctype is not None and
+                not self._taskdebug and self._io_r is not None):
+            # Emergency dump of the outputs (even with debug=False) !
+            self._io_r.filedump(self._debugfile)
 
     def _stop_recording(self):
         """Stop recording and restore everything."""
@@ -198,13 +259,17 @@ class ParallelSilencer(object):
             self._ctx_r.unregister()
             # Restore the loggers
             for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
-                a_logger.removeHandler(self._slurp_h)
+                a_logger.removeHandler(self._stream_h)
             for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
                 for a_handler in self._removed_h[a_logger]:
                     a_logger.addHandler(a_handler)
+            # flush
+            self._stream_h.flush()
             # Restore stdout/err
             sys.stdout = self._prev_stdo
             sys.stderr = self._prev_stde
+            # Remove all tees
+            self._io_r.discard_tees()
             # Cleanup
             self._reset_temporary()
 
@@ -216,7 +281,6 @@ class ParallelSilencer(object):
         self._stop_recording()
         self._io_r.seek(0)
         return dict(context_record=self._ctx_r,
-                    log_record=self._log_r,
                     stdoe_record=self._io_r.readlines())
 
 
@@ -227,8 +291,7 @@ class ParallelResultParser(object):
     :class:`TaylorVortexWorker`. It will:
 
         * update the context with the changes made by the worker ;
-        * display the standard output/error if the worker
-        * display the log messages issued by the worker
+        * display the standard output/error of the worker
     """
 
     def __init__(self, context):
@@ -246,17 +309,11 @@ class ParallelResultParser(object):
         if isinstance(res, Exception):
             raise(res)
         else:
+            sys.stdout.flush()
             logger.info('Parallel processing results for %s', res['name'])
             # Update the context
             logger.info('... Updating the current context ...')
             res['report']['context_record'].replay_in(self.context)
-            # Display the log records
-            if res['report']['log_record']:
-                logger.info('... Dump of the log entries created by the subprocess ...')
-                while res['report']['log_record']:
-                    lrecord = res['report']['log_record'].popleft()
-                    a_logger = loggers.getLogger(lrecord.name)
-                    a_logger.handle(lrecord)
             # Display the stdout
             if res['report']['stdoe_record']:
                 logger.info('... Dump of the mixed standard/error output generated by the subprocess ...')

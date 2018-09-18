@@ -1,0 +1,422 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: ifs
+      namespace: '[suite].multi.fr'
+      nativefmt: fa
+      origin: hst
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: frangp0025
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/PFFPOSFRANGP0025+0003
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/PFFPOSGLOB05+0003
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: frangp0025
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/PFFPOSFRANGP0025+0003
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: glob05
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/PFFPOSGLOB05+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: '[suite].multi.fr'
+      nativefmt: fa
+      origin: hst
+      suite: dble
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://dble.multi.fr/arome/dbl/assim/2018/01/01/r0/HMFRANGP0025+2018010103
+    - default: *id002
+      location: op://dble.multi.fr/arpege/dbl/assim/2018/01/01/r0/HMGLOB05+2018010103
+    - default: *id003
+      location: op://dble.multi.fr/arome/dbl/production/2018/01/01/r0/HMFRANGP0025+2018010103
+    - default: *id004
+      location: op://dble.multi.fr/arpege/dbl/production/2018/01/01/r0/HMGLOB05+2018010103
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: '[suite].multi.fr'
+      nativefmt: fa
+      origin: interp
+      suite: dble
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://dble.multi.fr/arome/dbl/assim/2018/01/01/r0/SMFRANGP0025+20180101
+    - default: *id002
+      location: op://dble.multi.fr/arpege/dbl/assim/2018/01/01/r0/SMGLOB05+20180101
+    - default: *id003
+      location: op://dble.multi.fr/arome/dbl/production/2018/01/01/r0/SMFRANGP0025+20180101
+    - default: *id004
+      location: op://dble.multi.fr/arpege/dbl/production/2018/01/01/r0/SMGLOB05+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: olive.multi.fr
+      nativefmt: fa
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/HMFRANGP0025+0003
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/HMGLOB05+0003
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/HMFRANGP0025+0003
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/HMGLOB05+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: olive.multi.fr
+      nativefmt: fa
+      origin: interp
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/SMFRANGP0025_interp+20180101
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/SMGLOB05_interp+20180101
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/SMFRANGP0025_interp+20180101
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/SMGLOB05_interp+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: olive.multi.fr
+      nativefmt: fa
+      origin: sumo
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/SMFRANGP0025_void+20180101
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/SMGLOB05_void+20180101
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/SMFRANGP0025_void+20180101
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/SMGLOB05_void+20180101
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-forecast.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-forecast.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-forecast.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-forecast.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      origin: interp
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-sumo.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-sumo.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-sumo.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-sumo.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: mocage
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      origin: sumo
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-sumo.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.mocage-sumo.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-sumo.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.mocage-sumo.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      namespace: olive.multi.fr
+      nativefmt: fa
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/PFFPOSHSTFRANGP0025+0003
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/PFFPOSHSTGLOB05+0003
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/PFFPOSHSTFRANGP0025+0003
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/PFFPOSHSTGLOB05+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      nativefmt: fa
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.arpege-forecast.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.arpege-forecast.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      kind: gridpoint
+      nativefmt: fa
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/forecast/grid.arpege-forecast.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/forecast/grid.arpege-forecast.glob05+0003:00.fa
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      filtername: null
+      kind: gridpoint
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.arpege-forecast.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.arpege-forecast.glob05+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      filtername: synopsis
+      kind: gridpoint
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.arome-forecast.synopsis.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.arpege-forecast.synopsis.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.arome-forecast.synopsis.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.arpege-forecast.synopsis.glob05+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: hycom
+      nativefmt: grib
+      origin: ana
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.hycom-analysis.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.hycom-analysis.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.hycom-analysis.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.hycom-analysis.glob05+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: hycom
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/grid.hycom-forecast.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/grid.hycom-forecast.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/grid.hycom-forecast.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/grid.hycom-forecast.glob05+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      model: ifs
+      namespace: '[suite].multi.fr'
+      nativefmt: grib
+      origin: hst
+      suite: oper
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/MET20180101.FRANGP0025.grb
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/MET20180101.GLOB05.grb
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/MET20180101.FRANGP0025.grb
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/MET20180101.GLOB05.grb
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      namespace: olive.multi.fr
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/GRIDHSTFRANGP0025+0003
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/GRIDHSTGLOB05+0003
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/GRIDHSTFRANGP0025+0003
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/GRIDHSTGLOB05+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      filtername: null
+      kind: gridpoint
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/forecast/grid.arpege-forecast.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/forecast/grid.arpege-forecast.glob05+0003:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      filtername: synopsis
+      kind: gridpoint
+      nativefmt: grib
+      origin: hst
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000A/forecast/grid.arome-forecast.synopsis.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000A/forecast/grid.arpege-forecast.synopsis.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/arome/3dvarfr/OPER/20180101T0000P/forecast/grid.arome-forecast.synopsis.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vsop.multi.fr/arpege/4dvarfr/OPER/20180101T0000P/forecast/grid.arpege-forecast.synopsis.glob05+0003:00.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpointmap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/gridpointmap.arome.json
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/gridpointmap.arpege.json
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/gridpointmap.arome.json
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/gridpointmap.arpege.json

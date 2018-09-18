@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import footprints
 
-from vortex.data.outflow import NoDateResource
+from vortex.data.outflow import StaticResource
 from vortex.data.flow    import GeoFlowResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
@@ -42,17 +42,8 @@ class CtpiniDirectiveFile(GeoFlowResource):
     def realkind(self):
         return "ctpini_directives_file"
 
-    def basename_info(self):
-        """Generic informations for the name builder."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = self.model,
-            geo     = self._geo2basename_info(),
-        )
 
-
-class AsciiFiles(NoDateResource):
+class AsciiFiles(StaticResource):
     """
     Class to deal with miscellaneous ascii files coming from genv.
     """
@@ -133,18 +124,15 @@ class GridPointCtpini(GridPoint):
     def realkind(self):
         return "ctpini_gridpoint"
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
-
+        ninfo = super(GridPointCtpini, self).namebuilding_info()
         if self.origin == 'ctpini' and self.run_ctpini is not None:
             source = [self.model, self.origin, self.parameter, self.run_ctpini]
         else:
             source = [self.model, self.origin, self.parameter]
-
-        return dict(
+        ninfo.update(
             radical = 'ctpini-grid',
-            fmt     = self.nativefmt,
             src     = source,
-            geo     = self._geo2basename_info(),
-            term    = self.term.fmthm
         )
+        return ninfo

@@ -1,0 +1,94 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   geometry: global798
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+            namespace:
+                - '[suite].multi.fr'
+                - '[suite].inline.fr'
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt: fa
+            suite: oper
+            model:
+                - arpege
+                - surfex
+            filling:
+                model:
+                    arpege:
+                        - null
+                        - atm
+                        - surf
+                    surfex:
+                        - surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+                vconf:
+                - 4dvarfr
+                - aearp
+                member:
+                    vconf:
+                        4dvarfr: null
+                        aearp: 5
+            -   cutoff: production
+                date: '2018010100'
+                vconf: courtfr
+    # Historic
+    -   commons:
+            kind: historic
+            term:
+                - 0
+                - 43
+            nativefmt: fa
+            suite: oper
+            model:
+                - arpege
+                - surfex
+            filling:
+                model:
+                    arpege:
+                        - null
+                        - atm
+                    surfex:
+                        - surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+                vconf:
+                - 4dvarfr
+                - aearp
+                member:
+                    vconf:
+                        4dvarfr: null
+                        aearp: 5
+            -   cutoff: production
+                date: '2018010100'
+                vconf: courtfr
+            -   cutoff: production
+                date:
+                - '2018010106'
+                - '2018010118'
+                member: 1
+                vconf: pearp

@@ -11,7 +11,8 @@ import footprints
 from bronx.stdtypes.date      import Date, Time
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
-from vortex.syntax.stdattrs   import FmtInt
+from vortex.syntax.stdattrs   import number_deco
+from vortex.syntax.stddeco    import namebuilding_delete, namebuilding_insert
 from common.data.modelstates  import Historic
 
 #: No automatic export
@@ -20,45 +21,36 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+@namebuilding_insert('radical', lambda s: {'unit': 'u', 'normed': 'n'}.get(s.processing, '') + s.realkind)
 class PerturbedState(Historic):
     """
     Class for numbered historic resources, for example perturbations or perturbed states of the EPS.
     """
 
-    _footprint = dict(
-        info = 'Perturbation or perturbed state',
-        attr = dict(
-            kind = dict(
-                values  = ['perturbation', 'perturbed_historic', 'perturbed_state', 'pert'],
-                remap = dict(autoremap = 'first')
-            ),
-            number = dict(
-                type    = FmtInt,
-                args    = dict(fmt = '03'),
-            ),
-            term = dict(
-                type = Time,
-                optional = True,
-                default = Time(0)
-            ),
-            processing = dict(
-                values = ['unit', 'normed'],
-                optional = True,
-            ),
+    _footprint = [
+        number_deco,
+        dict(
+            info = 'Perturbation or perturbed state',
+            attr = dict(
+                kind = dict(
+                    values  = ['perturbation', 'perturbed_historic', 'perturbed_state', 'pert'],
+                    remap = dict(autoremap = 'first')
+                ),
+                term = dict(
+                    optional = True,
+                    default = Time(0)
+                ),
+                processing = dict(
+                    values = ['unit', 'normed'],
+                    optional = True,
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         return 'pert'
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        pr_transform = {'unit': 'u', 'normed': 'n'}
-        d = super(PerturbedState, self).basename_info()
-        d['number'] = self.number
-        d['radical'] = pr_transform.get(self.processing, '') + self.realkind
-        return d
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -69,46 +61,38 @@ class PerturbedState(Historic):
         raise NotImplementedError("Perturbations were previously tar files, not supported yet.")
 
 
+@namebuilding_insert('radical', lambda s: s.realkind + '-' + s.zone)
 class SingularVector(Historic):
     """
     Generic class for resources internal to singular vectors.
     """
-    _footprint = dict(
-        info = 'Singular vector',
-        attr = dict(
-            kind = dict(
-                values  = ['svector'],
-            ),
-            number = dict(
-                type    = FmtInt,
-                args    = dict(fmt = '03'),
-            ),
-            zone = dict(
-                values  = ['ateur', 'hnc', 'hs', 'pno', 'oise', 'an', 'pne',
-                           'oiso', 'ps', 'oin', 'trop1', 'trop2', 'trop3', 'trop4'],
-            ),
-            term = dict(
-                type = Time,
-                optional = True,
-                default = Time(0)
-            ),
-            optime = dict(
-                type = Time,
-                optional = True,
+    _footprint = [
+        number_deco,
+        dict(
+            info = 'Singular vector',
+            attr = dict(
+                kind = dict(
+                    values  = ['svector'],
+                ),
+                zone = dict(
+                    values  = ['ateur', 'hnc', 'hs', 'pno', 'oise', 'an', 'pne',
+                               'oiso', 'ps', 'oin', 'trop1', 'trop2', 'trop3', 'trop4'],
+                ),
+                term = dict(
+                    optional = True,
+                    default = Time(0)
+                ),
+                optime = dict(
+                    type = Time,
+                    optional = True,
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         return 'svector'
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        d = super(SingularVector, self).basename_info()
-        d['number'] = self.number
-        d['radical'] = self.realkind + '-' + self.zone
-        return d
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -149,14 +133,6 @@ class NormCoeff(FlowResource):
     @property
     def realkind(self):
         return 'coeff' + self.pertkind
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )
 
 
 class SampleContent(JsonDictContent):
@@ -236,6 +212,7 @@ class SampleContent(JsonDictContent):
         return me == other
 
 
+@namebuilding_delete('src')
 class PopulationList(FlowResource):
     """
     Description of available data
@@ -262,13 +239,6 @@ class PopulationList(FlowResource):
         )
     )
 
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-        )
-
 
 class MembersPopulation(PopulationList):
 
@@ -286,6 +256,7 @@ class MembersPopulation(PopulationList):
         return 'mbpopulation'
 
 
+@namebuilding_insert('radical', lambda s: '{:s}of{:d}'.format(s.realkind, s.nbsample))
 class Sample(PopulationList):
     """
     Lot drawn out of a set.
@@ -304,13 +275,6 @@ class Sample(PopulationList):
             ),
         )
     )
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = self.realkind + 'of{:d}'.format(self.nbsample),
-            fmt     = self.nativefmt,
-        )
 
 
 class MembersSample(Sample):
@@ -360,13 +324,13 @@ class ClustContent(TextContent):
         return self.data[idx - 1]
 
 
+@namebuilding_delete('src')
 class GeneralCluster(FlowResource):
     """
     Files produced by the clustering step of the LAM PE.
     """
 
     _footprint = dict(
-        abstract = True,
         info = 'Clustering stuff',
         attr = dict(
             kind = dict(
@@ -392,10 +356,3 @@ class GeneralCluster(FlowResource):
     @property
     def realkind(self):
         return 'clustering' + '_' + self.filling
-
-    def basename_info(self):
-        """Generic information for names fabric."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-        )

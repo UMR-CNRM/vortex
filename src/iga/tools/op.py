@@ -121,6 +121,9 @@ class OpJobAssistantTest(JobAssistant):
                 rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
+                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H') 
+
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
@@ -153,7 +156,7 @@ class OpJobAssistantTest(JobAssistant):
         vortex.toolbox.defaults(
             jname = opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
-            sender='dt_dsi_op_iga_sc@meteo.fr',
+            sender='admin_prod_sc@meteo.fr',
         )
 
     def _actions_setup(self, t, **kw):
@@ -196,7 +199,7 @@ class OpJobAssistantTest(JobAssistant):
         t = vortex.ticket()
         from gco.tools import genv
         if cycle in genv.cycles():
-            logger.info('Cycle %s already registred', cycle)
+            logger.info('Cycle %s already registered', cycle)
         else:
             if t.env.OP_GCOCACHE:
                 genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')

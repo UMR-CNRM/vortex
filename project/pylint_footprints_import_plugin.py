@@ -84,4 +84,5 @@ def transform(cls):
             _footprint_members_add(cls)
             break
 
+
 MANAGER.register_transform(scoped_nodes.Class, transform)

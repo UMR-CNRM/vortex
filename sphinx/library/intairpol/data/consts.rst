@@ -37,3 +37,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+   
+.. autoclass:: TopScenario
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CfcScenario
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfaceEmissionsProfilesTable
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: HybridLevels
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

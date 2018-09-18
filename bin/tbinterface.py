@@ -28,8 +28,8 @@ import vortex.tools.lfi  # @UnusedImport
 
 
 NAMESPACES_MAP = dict(swapp=('common', 'gco', 'olive', 'intairpol'),
-                      json=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol'),
-                      xml=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol'),)
+                      json=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),
+                      xml=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),)
 
 COLLECTORS_DFLT = ('container', 'provider', 'resource', 'component')
 

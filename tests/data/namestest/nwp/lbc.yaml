@@ -1,0 +1,114 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: 
+                vconf:
+                    3dvarfr: franmgsp
+                    indien: indiensp
+            cutoff:
+                - assim
+                - production
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            vapp: arome
+            vconf:
+                - 3dvarfr
+                - indien
+
+todo:
+    # LAMBoundary
+    -   commons:
+            kind: boundary
+            block: coupling
+            source: arpege
+            term:
+                - 0
+                - 6
+        tests:
+            -   nativefmt:
+                    - fa
+                    - grib
+                    - netcdf
+                    - unknown
+                experiment:
+                    - oper
+                    - abcd
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                    - "[suite].inline.fr"
+                date:
+                    - '2018010100'
+                    - '2018010106'
+                    - '2018010112'
+                    - '2018010118'
+                model:
+                    - arome
+                    - aladin
+                source:
+                    - arpege
+                    - ifs
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                date:
+                    - '2018010100'
+                    - '2018010106'
+                model: mocage
+            -   namespace: olive.multi.fr
+                experiment: abcd
+                block:
+                    - surfan
+                    - coupling
+                date:
+                    - '2018010100'
+                    - '2018010101'
+                    - '2018010102'
+    # EnhancedLAMBoundary
+    -   commons:
+            kind: boundary
+            block: coupling
+            source_app: arpege
+            source_conf: 4dvarfr
+            term:
+                - 0
+                - 6
+        tests:
+            -   nativefmt:
+                    - fa
+                    - grib
+                    - netcdf
+                    - unknown
+                experiment:
+                    - oper
+                    - abcd
+            -   source_cutoff:
+                    - assim
+                    - prod
+                experiment:
+                    - oper
+                    - abcd
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                    - "[suite].inline.fr"
+                model:
+                    - arome
+                    - aladin
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                    - "[suite].inline.fr"
+                source_conf: courtfr
+            -   suite: oper
+                namespace:
+                    - "[suite].multi.fr"
+                model: mocage
+            -   namespace: olive.multi.fr
+                experiment: abcd
+                block:
+                    - surfan
+                    - coupling
+                    

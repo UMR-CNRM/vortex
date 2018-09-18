@@ -1,0 +1,161 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ''
+      experiment: abcd
+      kind: pgdfa
+      namebuild: cen
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ''
+      experiment: abcd
+      kind: pgdlfi
+      namebuild: cen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ''
+      experiment: abcd
+      kind: pgdnc
+      namebuild: cen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/PGD_franmg.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdfa
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/PGDFILE-franmg.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdfa
+      namespace: vortex.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdlfi
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/PGDFILE-franmg.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdlfi
+      namespace: vortex.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdnc
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/PGDFILE-franmg.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgdnc
+      namespace: vortex.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: pgdfa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_franmg.01km30.04.fa
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy42_op2.67
+      kind: coverparams
+      source: ecoclimap
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ecoclimap.covers.param.04.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy42_op2.67
+      kind: surfexcover
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ecoclimap.covers.param.04.tgz
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy42_op2.67
+      kind: isba
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/analyse.isba.03
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy43t2_clim-bf.05
+      geometry: global2min
+      kind: bathymetry
+      source: ETOPO2
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/etopo2.bathymetry.01.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy43t2_clim-bf.05
+      geometry: global30s
+      kind: orography
+      source: GMTED2010
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/orography.gmted2010_30s0.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy43t2_clim-bf.05
+      kind: clay
+      source: HWSD
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hwsd.clay_v2.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy43t2_clim-bf.05
+      kind: sand
+      source: HWSD
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/hwsd.sand_v2.01.tgz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: cy43t2_clim-bf.05
+      kind: surface_type
+      source: ECOCLIMAP_I
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ecoclimap_i.v1_6.01.tgz

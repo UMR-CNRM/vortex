@@ -3,18 +3,22 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.data.outflow  import NoDateResource
+from vortex.data.outflow  import StaticResource
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import date, cutoff
+from vortex.syntax.stdattrs import date_deco, cutoff_deco
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
 
 #: No automatic export
 __all__ = []
 
 
-class RawFields(NoDateResource):
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_insert('src', lambda s: [s.origin, ])
+@namebuilding_delete('fmt')
+class RawFields(StaticResource):
 
     _footprint = [
-        date, cutoff,
+        date_deco, cutoff_deco,
         dict(
             info = 'File containing a limited list of observations fields',
             attr = dict(
@@ -30,14 +34,6 @@ class RawFields(NoDateResource):
             )
         )
     ]
-
-    def vortex_pathinfo(self):
-        """Default path informations (used by :class:`vortex.data.providers.Vortex`)."""
-        return dict(
-            nativefmt = self.nativefmt,
-            date      = self.date,
-            cutoff    = self.cutoff,
-        )
 
     @property
     def realkind(self):
@@ -61,13 +57,8 @@ class RawFields(NoDateResource):
             bname = '.'.join((self.fields, self.origin))
         return bname
 
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-            src     = [self.origin, ],
-        )
 
-
+@namebuilding_insert('radical', lambda s: s.fields)
 class GeoFields(GeoFlowResource):
 
     _footprint = [
@@ -100,11 +91,3 @@ class GeoFields(GeoFlowResource):
 
     def archive_basename(self):
         return 'icmshanal' + self.fields
-
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-            geo     = self._geo2basename_info(),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )

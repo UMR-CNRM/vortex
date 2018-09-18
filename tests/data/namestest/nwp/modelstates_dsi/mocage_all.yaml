@@ -1,0 +1,49 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   geometry: glob15
+            cutoff:
+                - assim
+                - production
+            model: mocage
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: mocage
+            vconf: macc 
+            namespace:
+                - '[suite].multi.fr'
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt: fa
+            suite: oper
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+    # Historic
+    -   commons:
+            kind: historic
+            term:
+                - 0
+                - 43
+            nativefmt: fa
+            suite: oper
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'

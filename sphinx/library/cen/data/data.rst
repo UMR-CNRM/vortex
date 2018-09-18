@@ -21,4 +21,3 @@ Included Modules
 * :mod:`cen.data.executables`
 * :mod:`cen.data.flow`
 * :mod:`cen.data.providers`
-* :mod:`cen.data.stores`

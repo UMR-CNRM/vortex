@@ -1,0 +1,615 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: null
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLAROM+0024
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLARPE+0024
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLAROM+0024
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: null
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: null
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfa
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfa
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfa
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: lfi
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOAROM+0024
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOARPE+0024
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOAROM+0024
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOARPE+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-global.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-global.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfa
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfa
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-global.franmg-01km30+0024:00.lfa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-global.franmg-01km30+0024:00.lfa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfa
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfi
+      scope: dlimited
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-dlimited.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-dlimited.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfi
+      scope: global
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-global.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-global.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-global.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: lfi
+      scope: zonal
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfi
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfi
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-zonal.franmg-01km30+0024:00.lfi
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-zonal.tl1198-c22+0024:00.lfi
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: null
+      scope: dlimited
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfdlarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfdlarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfdlarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfdlarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: null
+      scope: global
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfglarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfglarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfglarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfglarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: null
+      scope: zonal
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfzoarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfzoarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfzoarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfzoarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfa
+      scope: dlimited
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfdlarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfdlarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfdlarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfdlarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfa
+      scope: global
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfglarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfglarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfglarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfglarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfa
+      scope: zonal
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfzoarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfzoarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfzoarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfzoarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfi
+      scope: dlimited
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfdlarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfdlarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfdlarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfdlarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfi
+      scope: global
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfglarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfglarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfglarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfglarpe+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      kind: ddh
+      namespace: '[suite].multi.fr'
+      nativefmt: lfi
+      scope: zonal
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/dhfzoarom+0024
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/dhfzoarpe+0024
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/dhfzoarom+0024
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/dhfzoarpe+0024
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: ddhpack
+      scope: dlimited
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLAROM.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFDLARPE.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLAROM.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFDLARPE.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: ddhpack
+      scope: global
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLAROM.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFGLARPE.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLAROM.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFGLARPE.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: olive.multi.fr
+      nativefmt: ddhpack
+      scope: zonal
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOAROM.tar
+    - default: *id002
+      location: olive://olive.multi.fr/abcd/20180101H00A/forecast/DHFZOARPE.tar
+    - default: *id003
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOAROM.tar
+    - default: *id004
+      location: olive://olive.multi.fr/abcd/20180101H00P/forecast/DHFZOARPE.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: ddhpack
+      scope: dlimited
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-dlimited.franmg-01km30.ddhpack
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-dlimited.tl1198-c22.ddhpack
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-dlimited.franmg-01km30.ddhpack
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-dlimited.tl1198-c22.ddhpack
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: ddhpack
+      scope: global
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-global.franmg-01km30.ddhpack
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-global.tl1198-c22.ddhpack
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-global.franmg-01km30.ddhpack
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-global.tl1198-c22.ddhpack
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: ddh
+      namespace: vortex.multi.fr
+      nativefmt: ddhpack
+      scope: zonal
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/ddh.arome-zonal.franmg-01km30.ddhpack
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/ddh.arpege-zonal.tl1198-c22.ddhpack
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-zonal.franmg-01km30.ddhpack
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-zonal.tl1198-c22.ddhpack

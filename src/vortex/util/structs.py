@@ -50,12 +50,12 @@ class FootprintCopier(footprints.FootprintBaseMeta):
         # Merge the footprints if necessary
         if cls._footprint is not None:
             if '_footprint' in d:
-                fplist = [cls._footprint, ]
+                fplist = cls._footprint if isinstance(cls._footprint, list) else [cls._footprint, ]
                 if isinstance(d['_footprint'], list):
                     fplist.extend(d['_footprint'])
                 else:
                     fplist.append(d['_footprint'])
-                d['_footprint'] = footprints.Footprint(*fplist, myclsname=n)
+                d['_footprint'] = fplist
             else:
                 d['_footprint'] = cls._footprint
 

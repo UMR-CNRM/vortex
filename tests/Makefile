@@ -11,7 +11,7 @@ NOSE3         = $(shell for p in $(NOSE3list) ; do if which $$p >/dev/null 2>&1 
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
-COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings,bronx,tnt
+COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings,bronx,tnt,ecmwf
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 

@@ -37,7 +37,7 @@ class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
 def is_qualified_user(user=None):
     """Check if current or specified user is documented in users-groups definitions."""
     if not user:
-        user = sessions.getglove().user
+        user = sessions.current().glove.user
     gh = GroupHandler()
     return user in gh.users.users
 
@@ -49,7 +49,7 @@ def is_authorized_user(action='void', user=None):
     the rights had been altered in any ways.
     """
     if not user:
-        user = sessions.getglove().user
+        user = sessions.current().glove.user
     gh = GroupHandler()
     group = gh.users.users.get(user, gh.users.users.get('default'))
     level = gh.users.groups.get(group, 'low')

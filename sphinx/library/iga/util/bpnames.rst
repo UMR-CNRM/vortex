@@ -59,3 +59,5 @@ Functions
 .. autofunction:: SurgesResultNative_bnames
 
 .. autofunction:: bufr_bnames
+
+.. autofunction:: obsfire_bnames

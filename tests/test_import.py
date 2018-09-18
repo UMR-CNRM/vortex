@@ -15,8 +15,8 @@ os.chdir(os.environ['HOME'])
 import footprints as fp
 import vortex
 
-fp.loggers.getLogger('vortex').setLevel('ERROR')
-fp.loggers.getLogger('common').setLevel('ERROR')
+vlog = fp.loggers.getLogger('vortex')
+clog = fp.loggers.getLogger('common')
 
 non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
                     'PIL': ['bronx.datagrip.pyexttiff', ],
@@ -48,6 +48,16 @@ class DynamicTerminal(object):
 
 
 class utImport(TestCase):
+
+    def setUp(self):
+        self.vlogL = vlog.level
+        self.clogL = clog.level
+        vlog.setLevel('ERROR')
+        clog.setLevel('ERROR')
+
+    def tearDown(self):
+        vlog.setLevel(self.vlogL)
+        clog.setLevel(self.clogL)
 
     def test_pyVersion(self):
         sh = vortex.sh()

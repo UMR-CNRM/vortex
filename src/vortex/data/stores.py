@@ -819,7 +819,7 @@ class Finder(Store):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract store init %s', self.__class__)
+        logger.debug('Finder store init %s', self.__class__)
         super(Finder, self).__init__(*args, **kw)
 
     @property
@@ -1430,11 +1430,13 @@ class VortexOpArchiveStore(VortexArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        vxdate = list(xpath[4])
-        vxdate.insert(4, '/')
-        vxdate.insert(7, '/')
-        vxdate.insert(10, '/')
-        xpath[4] = ''.join(vxdate)
+        if len(xpath) >= 5 and re.match('^\d{8}T\d{2,4}', xpath[4]):
+            # If a date is detected
+            vxdate = list(xpath[4])
+            vxdate.insert(4, '/')
+            vxdate.insert(7, '/')
+            vxdate.insert(10, '/')
+            xpath[4] = ''.join(vxdate)
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
@@ -1727,7 +1729,7 @@ class VortexVsopCacheStore(MultiStore):
     )
 
     def alternates_netloc(self):
-        '''For Non-Op users, Op caches may be accessed in read-only mode.'''
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
         todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):

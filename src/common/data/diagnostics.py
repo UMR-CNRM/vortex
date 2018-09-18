@@ -4,7 +4,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import a_term
+from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
 
 #: No automatic export
 __all__ = []
@@ -13,7 +14,7 @@ __all__ = []
 class ISP(GeoFlowResource):
 
     """
-    Class for Forecasted Satellite Image resource.
+    Class for Forecasted Satellite Image resource. Obsolete.
     Used to be an ``isp`` !
     """
     _footprint = dict(
@@ -41,16 +42,9 @@ class ISP(GeoFlowResource):
         """OLIVE specific naming convention."""
         return 'ISP' + self.model[:4].upper()
 
-    def basename_info(self):
-        """Generic information, radical = ``isp``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = self.realkind,
-            src     = self.model,
-        )
 
-
+@namebuilding_insert('radical', lambda s: 'ddh')
+@namebuilding_append('src', lambda s: s.scope)
 class _DDHcommon(GeoFlowResource):
     """
     Abstract class for Horizontal Diagnostics.
@@ -71,31 +65,24 @@ class _DDHcommon(GeoFlowResource):
         )
     )
 
-    def basename_info(self):
-        """Generic information, radical = ``ddh``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = 'ddh',
-            src     = [ self.model, self.scope ],
-        )
-
 
 class DDH(_DDHcommon):
     """
     Class for Horizontal Diagnostics.
     Used to be a ``dhf`` !
     """
-    _footprint = dict(
-        info = 'Diagnostic on Horizontal Domains',
-        attr = dict(
-            nativefmt = dict(
-                values = [ 'lfi', 'lfa' ],
-                default = 'lfi',
-            ),
-            term = a_term
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'Diagnostic on Horizontal Domains',
+            attr = dict(
+                nativefmt = dict(
+                    values = [ 'lfi', 'lfa' ],
+                    default = 'lfi',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -108,11 +95,6 @@ class DDH(_DDHcommon):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'DHF{:s}{:s}+{:s}'.format(self.scope[:2].upper(), self.model[:4].upper(), self.term.fmth)
-
-    def basename_info(self):
-        bdict = super(DDH, self).basename_info()
-        bdict['term'] = self.term.fmthm
-        return bdict
 
 
 class DDHpack(_DDHcommon):

@@ -17,7 +17,6 @@ import vortex
 from vortex.tools.net import Ssh, AssistedSsh
 
 slog = footprints.loggers.getLogger('vortex.tools.systems')
-slog.setLevel(9999)  # No logs at all...
 
 test_host = 'localhost'
 fake_host = 'this-hostname-should-not-exist-in-your-network'
@@ -46,6 +45,9 @@ LOCALSSH_OK = check_localssh()
 class _SshTestBase(unittest.TestCase):
 
     def setUp(self):
+        # Log stuff
+        self.slogL = slog.level
+        slog.setLevel(9999)  # No logs at all...
         # Generate a temporary directory
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
@@ -79,6 +81,8 @@ class _SshTestBase(unittest.TestCase):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
         self.sh.signal_intercept_off()
+        # Log stuff
+        slog.setLevel(self.slogL)
 
 
 class TestSsh(_SshTestBase):

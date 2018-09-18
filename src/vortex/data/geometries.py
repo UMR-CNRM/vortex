@@ -37,7 +37,6 @@ your needs. Currently available concrete geometries are:
     * :class:`ProjectedGeometry` (Any grid defined by a geographical projection, e.g. lambert, ...)
     * :class:`LonlatGeometry` (That's pretty obvious)
     * :class:`CurvlinearGeometry` (Curvlinear grid)
-    * :class:`MassifGeometry` (Partition of a mountain range in massifs)
 
 For example, let's build a new gaussian grid::
 
@@ -63,6 +62,7 @@ import six
 
 import footprints
 
+from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
 from vortex.util.config import GenericConfigParser
 
 #: No automatic export
@@ -143,6 +143,9 @@ class Geometry(footprints.util.GetByTag):
         """Geometries id tags are lower case."""
         return tag.lower()
 
+    def export_dict(self):
+        return self.tag
+
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         return 'kind={:s}'.format(self.kind)
@@ -200,6 +203,7 @@ class HorizontalGeometry(Geometry):
             truncation = None,
             stretching = None,
             nmassif = None,
+            nposts = None,
             lam = True,
             lonmin = None,
             latmin = None,
@@ -213,7 +217,7 @@ class HorizontalGeometry(Geometry):
                 self.__dict__[k] = True
             if isinstance(v, six.string_types) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'truncation'):
+        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'nposts', 'truncation'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
@@ -277,7 +281,7 @@ class HorizontalGeometry(Geometry):
         # Optional infos
         for attr in [k for k in ('area', 'resolution', 'truncation',
                                  'stretching', 'nlon', 'nlat', 'ni', 'nj',
-                                 'nmassif')
+                                 'nmassif', 'nposts')
                      if getattr(self, k, False)]:
             card += "\n{0}{0}{1:10s} : {2!s}".format(indent, attr.title(),
                                                      getattr(self, attr))
@@ -463,6 +467,14 @@ class UnstructuredGeometry(HorizontalGeometry):
         """Standard formatted print representation."""
         return '<{0:s}>'.format(self.strheader())
 
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.area:
+            fmts = 'kind={0:s}, area={1:s}'
+        else:
+            fmts = 'kind={0:s}'
+        return fmts.format(self.kind, self.area)
+
 
 class CurvlinearGeometry(UnstructuredGeometry):
     """Curvlinear grid."""
@@ -496,28 +508,46 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
-class MassifGeometry(UnstructuredGeometry):
-    """Grid describing the partition of a mountain range in massifs."""
+# Pre-defined footprint attribute for any HorizontalGeometry
 
-    _tag_topcls = False
+#: Usual definition of the ``geometry`` attribute.
+a_hgeometry = dict(
+    info = "The resource's horizontal geometry.",
+    type = HorizontalGeometry,
+)
 
-    def __init__(self, *args, **kw):  # @UnusedVariable
-        """
-        :param str tag: The geometry's name (if no **tag** attributes is provided,
-            the first positional attribute is considered to be the tag name)
-        :param str info: A free description of the geometry
-        :param int nmassif: The number of massifs in this grid
-        :param str area: The grid location
-        """
-        super(MassifGeometry, self).__init__(**kw)
-        self.kind = 'massif'
-        if self.area is None:
-            self.area = self.tag
 
-    def doc_export(self):
-        """Relevant informations to print in the documentation."""
-        fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
-        return fmts.format(self.kind, self.area, self.nmassif)
+def _add_geo2basename_info(cls):
+    """Decorator that adds a _geo2basename_info to a class."""
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, ]
+            if add_stretching:
+                lgeo.append({'stretching': self.geometry.stretching})
+        elif isinstance(self.geometry, ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = self.geometry.area  # Default: always defined
+        return lgeo
+
+    if not hasattr(cls, '_geo2basename_info'):
+        cls._geo2basename_info = _geo2basename_info
+    return cls
+
+
+#: Abstract footprint definition of the ``geometry`` attribute.
+hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
+                                 attr = dict(geometry = a_hgeometry))
+
+#: Abstract footprint definition of the ``geometry`` attribute with decorators
+#: that alter the ``namebuilding_info`` method
+hgeometry_deco = footprints.DecorativeFootprint(
+    hgeometry,
+    decorator = [_add_geo2basename_info,
+                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
 
 
 # Load default geometries when the module is first imported

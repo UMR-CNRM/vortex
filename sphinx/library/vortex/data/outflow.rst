@@ -17,7 +17,7 @@ Package
 Classes
 -------
 
-.. autoclass:: NoDateResource
+.. autoclass:: StaticResource
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -28,6 +28,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: StaticGeoResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ModelGeoResource
    :show-inheritance:
    :members:
    :member-order: alphabetical

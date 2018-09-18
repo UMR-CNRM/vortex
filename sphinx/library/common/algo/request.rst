@@ -40,3 +40,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GetMarsResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

@@ -486,6 +486,7 @@ class IOPoll(Script):
             info='IOPoll script',
             attr=dict(
                 kind=dict(
+                    optional = False,
                     values=['iopoll', 'io_poll'],
                     remap=dict(autoremap='first'),
                 ),
@@ -674,6 +675,7 @@ class BDMExecutableBUFR(Script):
                     values  = ['alim.awk', 'alim_olive.awk'],
                 ),
                 kind = dict(
+                    optional = False,
                     values   = ['bdm_bufr_extract', ],
                 ),
                 gvar=dict(

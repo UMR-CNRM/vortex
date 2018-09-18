@@ -21,11 +21,6 @@ Exceptions
 .. autoclass:: ExecutionError
    :show-inheritance:
 
-.. autoclass:: YamlUnavailableError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 
 Classes
 -------
@@ -37,6 +32,11 @@ Misc
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autofunction:: setlocale
+
+.. autofunction:: LocaleContext
+
 
 Generic system objects
 **********************
@@ -102,7 +102,7 @@ Some Python's version specific extra features
 
 Utility Classes
 ---------------
-   
+
 .. autoclass:: CdContext
    :show-inheritance:
    :members:

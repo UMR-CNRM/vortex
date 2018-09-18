@@ -83,6 +83,11 @@ Footprint mechanism
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DecorativeFootprint
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FootprintBaseMeta
    :show-inheritance:
    :members:
