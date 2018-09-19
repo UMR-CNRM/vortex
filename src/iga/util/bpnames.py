@@ -30,7 +30,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
     elif cutoff == 'assim':
         reseau_suff = _reseau
     elif cutoff == 'production':
-        reseau_prod = {'03': 'TR', '06': 'SX', '09': 'NF', '12': 'PM',
+        reseau_prod = {'00': 'AM', '03': 'TR', '06': 'SX', '09': 'NF', '12': 'PM',
                        '15': 'QZ', '18': 'DH', '21': 'VU'}
         reseau_suff = reseau_prod[_reseau]
     else:
