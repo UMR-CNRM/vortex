@@ -235,7 +235,7 @@ class _SafranWorker(_S2MWorker):
         # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
-        for i, date in enumerate(dates):
+        for date in dates:
             p = 'P{0:s}'.format(date.yymdh)
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
@@ -243,8 +243,8 @@ class _SafranWorker(_S2MWorker):
                 if self.system.path.islink(p):
                     self.system.remove(p)
                 # We try to find the P file with format Pyymmddhh_tt (yymmddhh + tt = date)
-                # The maximum time is 96h (4 days)
-                if i == (len(dates) - 1):
+                # The maximum time is 108h (4 days)
+                if date == dates[-1]:
                     # Avoid to take the first P file of the next day
                     # Check for a 6-hour analysis
                     d = date - Period(hours = 6)
@@ -428,6 +428,9 @@ class SytistWorker(_SafranWorker):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
+
+            self.mv_if_exists('FORCING_massif.nc', 'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+            self.mv_if_exists('FORCING_postes.nc', 'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -727,7 +730,6 @@ class S2MComponent(ParaBlindRun):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-
         self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
 
@@ -738,9 +740,9 @@ class S2MComponent(ParaBlindRun):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
         subdirs = [am.rh.container.dirname for am in avail_members]
-        self.algoassert(len(set(subdirs)) == len(avail_members))
+        self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
-        return subdirs
+        return list(set(subdirs))
 
     def role_ref_namebuilder(self):
         return 'Ebauche'
