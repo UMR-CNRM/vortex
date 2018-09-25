@@ -17,6 +17,7 @@ from gco.syntax.stdattrs    import gvar
 #: No automatic export
 __all__ = []
 
+logger = footprints.loggers.getLogger(__name__)
 
 class GenvModelResource(ModelResource):
     """Abstract class for gget driven resources."""
@@ -865,3 +866,29 @@ class TruncObj(GenvModelGeoResource):
     @property
     def realkind(self):
         return 'truncobj'
+
+
+class InterChannelsCorrelations(GenvModelResource):
+    """
+    Inter channels correlations for a specific instrument/sensor.
+    A Genvkey can be given.
+    """
+
+    _footprint = dict(
+        info = 'Inter channel correlations for a given instrument.',
+        attr = dict(
+            kind = dict(
+                values = ['correlations',],
+            ),
+            instrument = dict(
+                values  = ['cris', 'iasi', ],
+                ),
+            gvar = dict(
+                default = 'correlations_[instrument]'
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'correlations'
