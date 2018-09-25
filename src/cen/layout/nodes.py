@@ -8,7 +8,7 @@ for any :mod:`vortex` experiment.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from bronx.stdtypes.date import yesterday, Period, Time
+from bronx.stdtypes.date import yesterday, Date, Period, Time
 
 
 class S2MTaskMixIn(object):
@@ -109,3 +109,19 @@ class S2MTaskMixIn(object):
                 return "safran", "postes"
             else:
                 return "safran", "massifs"
+
+    def get_list_seasons(self, datebegin, dateend):
+
+        list_dates_begin_input = list()
+
+        if datebegin.month >= 8:
+            datebegin_input = Date(datebegin.year, 8, 1, 6, 0, 0)
+        else:
+            datebegin_input = Date(datebegin.year - 1, 8, 1, 6, 0, 0)
+        dateend_input = datebegin_input
+        while dateend_input < dateend:
+            dateend_input = datebegin_input.replace(year= datebegin_input.year + 1)
+            list_dates_begin_input.append(datebegin_input)
+            datebegin_input = dateend_input
+
+        return list_dates_begin_input

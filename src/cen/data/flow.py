@@ -77,11 +77,8 @@ class SafranGuess(GeoFlowResource):
     def realkind(self):
         return 'guess'
 
-    def cendev_basename(self):
-        # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
-        # origin_date = self.date.replace(hour=0)
-        # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
-        # guess files are named PYYMMDDHH
+    def reanalysis_basename(self):
+        # guess files are named PYYMMDDHH in cen re-analysis database
         if self.source_app == 'arpege':
             if self.date.hour in [0, 6, 12, 18]:
                 return 'P' + self.date.yymdh
