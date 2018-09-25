@@ -143,7 +143,11 @@ class _SafranWorker(_S2MWorker):
                 type = int,
                 optional = True,
                 default = 1,
-            )
+            ),
+            execution = dict(
+                values = ['analysis', 'forecast', 'reanalysis', 'reforecast'],
+                optional = True,
+            ),
         )
     )
 
@@ -170,7 +174,7 @@ class _SafranWorker(_S2MWorker):
                 try_dates = [d + Period(hours=h) for h in range(0, 25, 3)]  # We check for 3-hours guess
                 self._days[n] = self.get_fichiers_P(try_dates, fatal=False)
                 d = d + Period(days=1)
-        if ndays == 0:
+        elif ndays == 0:
             logger.warning('The given time period is too short, doing nothing.')
         else:
             logger.warning('datebegin argument must be before dateend argument')
@@ -300,7 +304,9 @@ class SafraneWorker(_SafranWorker):
                 f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
             list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
             self.local_spawn(list_name)
-            # A FAIRE : gérer le fichier fort.79 (mv dans $list/day.$day ?, rejet)
+            # Reanalysis : if the execution was allright we don't need the log file
+            if self.execution in ['reanalysis', 'reforecast']:
+                self.system.remove(list_name)
 
 
 class SypluieWorker(_SafranWorker):
@@ -321,7 +327,9 @@ class SypluieWorker(_SafranWorker):
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
-        # A FAIRE : gérer le fichier fort.78 (mv dans $list/day.$day ?, rejet)
+        # Reanalysis : if the execution was allright we don't need the log file
+#        if self.execution in ['reanalysis', 'reforecast']:
+#            self.system.remove(list_name)
 
 
 class SyrpluieWorker(_SafranWorker):
@@ -341,8 +349,9 @@ class SyrpluieWorker(_SafranWorker):
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
-        # le nom de l'output de syrpluie est géré par le fichier sapfich
-        # self.mv_if_exists('fort.21', 'SAPLUI5' + dates[-1].ymdh)
+        # Reanalysis : if the execution was allright we don't need the log file
+        if self.execution in ['reanalysis', 'reforecast']:
+            self.system.remove(list_name)
 
 
 class SyvaprWorker(_SafranWorker):
@@ -362,6 +371,9 @@ class SyvaprWorker(_SafranWorker):
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
+            # Reanalysis : if the execution was allright we don't need the log file
+            if self.execution in ['reanalysis', 'reforecast']:
+                self.system.remove(list_name)
 
 
 class SyvafiWorker(_SafranWorker):
@@ -382,6 +394,8 @@ class SyvafiWorker(_SafranWorker):
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
         self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
+        if self.execution in ['reanalysis', 'reforecast']:
+            self.system.remove(list_name)
 
 
 class SyrmrrWorker(_SafranWorker):
@@ -403,6 +417,8 @@ class SyrmrrWorker(_SafranWorker):
             self.mv_if_exists('fort.13', 'SAPLUI5' + dates[-1].ymdh)
             self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + dates[-1].ymdh)
             self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + dates[-1].ymdh)
+            if self.execution in ['reanalysis', 'reforecast']:
+                self.system.remove(list_name)
 
 
 class SytistWorker(_SafranWorker):
@@ -412,25 +428,34 @@ class SytistWorker(_SafranWorker):
             kind = dict(
                 values = ['sytist']
             ),
-            execution = dict(
-                values = ['analysis', 'forecast']
-            )
         )
     )
+
+    def _commons(self, rundir, thisdir, rdict, **kwargs):
+        self.system.remove('sapfich')
+        print('Running task {0:s}'.format(self.kind))
+        for day, dates in self.days.items():
+            nech = len(dates) if len(dates) == 9 else 5
+            self.sapdat(dates[-1], nech)
+            self._safran_task(rundir, thisdir, day, dates, rdict)
+
+        self.mv_if_exists('FORCING_massif.nc', 'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+        self.mv_if_exists('FORCING_postes.nc', 'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+
+        self.postfix()
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
         self.link_in('SAPLUI5_ARP' + dates[-1].ymdh, 'SAPLUI5_ARP')
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
         if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
-            print(['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
 
-            self.mv_if_exists('FORCING_massif.nc', 'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
-            self.mv_if_exists('FORCING_postes.nc', 'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+            if self.execution in ['reanalysis', 'reforecast']:
+                self.system.remove(list_name)
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -696,15 +721,16 @@ class S2MComponent(ParaBlindRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
-                          'syvafi', 'intercep'],
+                values   = ['safrane', 'syrpluie', 'syrmrr', 'sytist', 'sypluie', 'syvapr',
+                            'syvafi', 'intercep'],
             ),
             engine = dict(
-                values = ['s2m']),
+                values   = ['s2m']
+            ),
             datebegin = a_date,
-            dateend = a_date,
+            dateend   = a_date,
             execution = dict(
-                values = ['analysis', 'forecast'],
+                values   = ['analysis', 'forecast', 'reforecast'],
                 optional = True,
             )
         )
@@ -740,12 +766,79 @@ class S2MComponent(ParaBlindRun):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
         subdirs = [am.rh.container.dirname for am in avail_members]
-        self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
+        if not self.execution == 'reanalysis':
+            self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
         return list(set(subdirs))
 
     def role_ref_namebuilder(self):
         return 'Ebauche'
+
+
+class S2MReanalysis(S2MComponent):
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel.',
+        attr = dict(
+            execution = dict(
+                values   = ['reanalysis'],
+                optional = False,
+            ),
+        ),
+    )
+
+    def get_subdirs(self, rh, opts):
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = [am.rh.container.dirname for am in avail_members]
+        return list(set(subdirs))
+
+    def get_list_seasons(self, rh, opts):
+        list_dates_begin_input = list()
+        list_dates_end_input = list()
+
+        datebegin_input = self.datebegin
+        if self.datebegin.month >= 8:
+            dateend_input = min(Date(self.datebegin.year + 1, 8, 1, 6, 0, 0), self.dateend)
+        else:
+            dateend_input = min(Date(self.datebegin.year, 8, 1, 6, 0, 0), self.dateend)
+
+        list_dates_begin_input.append(datebegin_input)
+        list_dates_end_input.append(dateend_input)
+
+        while dateend_input < self.dateend:
+            datebegin_input = dateend_input
+            dateend_input = min(datebegin_input.replace(year= datebegin_input.year + 1), self.dateend)
+            list_dates_begin_input.append(datebegin_input)
+            list_dates_end_input.append(dateend_input)
+
+        return list_dates_begin_input, list_dates_end_input
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
+
+        for attribute in self.footprint_attributes:
+            if attribute not in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+        common_i = self._default_common_instructions(rh, opts)
+        # Note: The number of members and the name of the subdirectories could be
+        # auto-detected using the sequence
+        subdirs = self.get_subdirs(rh, opts)
+        print('DBUG')
+        print(subdirs)
+        subdirs.reverse()
+        print(subdirs)
+        list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
+        print(list_dates_begin, list_dates_end)
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end))
+        self._default_post_execute(rh, opts)
 
 
 @echecker.disabled_if_unavailable

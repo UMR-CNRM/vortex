@@ -35,7 +35,7 @@ class S2MReanalysisProvider(Provider):
     _footprint = [
         namespacefp,
         dict(
-            info = 'Provider for S2M reanalysis input resources',
+            info = 'Provider for S2M reanalysis input resources (observations and guess)',
             attr = dict(
                 namespace = dict(
                     values   = ['s2m.archive.fr'],
