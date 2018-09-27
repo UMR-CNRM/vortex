@@ -304,7 +304,7 @@ class Surfex_Ensemble(ParaBlindRun):
         print('stopcount :', self.stopcount)
         if self.stopcount == 1:
             print('')
-            print('copying the fuck conf file')
+            print('copying the conf file')
             print(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
             self.system.cp(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
         # counter for stop (assim + pauses) steps in conf file previously copied to currdir
