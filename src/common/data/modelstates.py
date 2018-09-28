@@ -48,7 +48,7 @@ class Analysis(GeoFlowResource):
                 info     = "The content/coverage of the analysis.",
                 optional = True,
                 default  = 'full',
-                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
+                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full', 'soil'],
                 remap    = dict(
                     surface     = 'surf',
                     atmospheric = 'atm',
