@@ -6,8 +6,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import unittest
 import doctest
 
+from vortex import sessions
+
 from footprints import util
 from vortex.data import geometries
+from vortex.tools import delayedactions
 
 
 class utDocTests(unittest.TestCase):
@@ -20,6 +23,14 @@ class utDocTests(unittest.TestCase):
     def test_doctests(self):
         self.assert_doctests(geometries)
         self.assert_doctests(util)
+        try:
+            self.assert_doctests(delayedactions)
+        finally:
+            # Clean the mess
+            t = sessions.current()
+            a_hub = t.context.delayedactions_hub
+            t.sh.rmtree(a_hub.stagedir)
+            a_hub.clear()
 
 
 if __name__ == '__main__':

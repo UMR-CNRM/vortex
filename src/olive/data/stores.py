@@ -60,24 +60,34 @@ class OliveArchiveStore(ArchiveStore):
             remote['root'] = self.storehead
 
     def olivecheck(self, remote, options):
-        """Remap and ftpcheck sequence."""
+        """Remap and inarchivecheck sequence."""
         self.remap_read(remote, options)
         return self.inarchivecheck(remote, options)
 
     def olivelocate(self, remote, options):
-        """Remap and ftplocate sequence."""
+        """Remap and inarchivelocate sequence."""
         self.remap_read(remote, options)
         return self.inarchivelocate(remote, options)
 
     def oliveprestageinfo(self, remote, options):
-        """Remap and ftpprestageinfo sequence."""
+        """Remap and inarchiveprestageinfo sequence."""
         self.remap_read(remote, options)
         return self.inarchiveprestageinfo(remote, options)
 
     def oliveget(self, remote, local, options):
-        """Remap and ftpget sequence."""
+        """Remap and inarchiveget sequence."""
         self.remap_read(remote, options)
         return self.inarchiveget(remote, local, options)
+
+    def oliveearlyget(self, remote, local, options):
+        """Remap and inarchiveearlyget sequence."""
+        self.remap_read(remote, options)
+        return self.inarchiveearlyget(remote, local, options)
+
+    def olivefinaliseget(self, result_id, remote, local, options):
+        """Remap and inarchivefinaliseget sequence."""
+        self.remap_read(remote, options)
+        return self.inarchivefinaliseget(result_id, remote, local, options)
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
@@ -284,6 +294,30 @@ class OpArchiveStore(ArchiveStore):
                                                local)
                     self.system.rm(heaven)  # Sadly this is a temporary heaven
         return rc
+
+    def opearlyget(self, remote, local, options):
+        """Earlyget from store. Simple stuff only (no extracts or glue) !"""
+        targetpath = local
+        l_remote = copy.copy(remote)
+        extract = l_remote['query'].pop('extract', None)
+        locfmt = l_remote['query'].pop('format', options.get('fmt', 'unknown'))
+        basename = self.system.path.basename(l_remote['path'])
+
+        if extract or self.glue.containsfile(basename):
+            # Give Up !
+            return None
+
+        options_plus = copy.copy(options)
+        options_plus['fmt'] = locfmt
+        if l_remote['path'] is not None:
+            rc = self.inarchiveearlyget(l_remote, targetpath, options_plus)
+        else:
+            rc = None
+        return rc
+
+    def opfinaliseget(self, result_id, remote, local, options):
+        """Finaliseget from store. Simple stuff only (no extracts or glue) !"""
+        return self.inarchivefinaliseget(result_id, remote, local, options)
 
 
 class OpCacheStore(CacheStore):
