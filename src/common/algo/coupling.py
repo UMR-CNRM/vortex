@@ -392,8 +392,8 @@ class C901(IFSParallel):
                 role = file_role
             )
             template = file_template.format(prefix=r"(?P<prefix>\S{4})", suffix=r"(?P<suffix>\S*)")
-            for file in input_files:
-                file_name = file.rh.container.filename
+            for file_s in input_files:
+                file_name = file_s.rh.container.filename
                 find_elements = re.search(template, file_name)
                 if find_elements is None:
                     logger.error("The name of the file %s do not follow the template %s.", file_name, template)
@@ -405,7 +405,7 @@ class C901(IFSParallel):
                         if unique:
                             logger.error("Only one file should be present for each type and each suffix.")
                             raise ValueError("Only one file should be present for each suffix.")
-                    result[file_role][find_elements.group("prefix")].append(file)
+                    result[file_role][find_elements.group("prefix")].append(file_s)
             if result[file_role]:
                 for file_prefix in result[file_role]:
                     result[file_role][file_prefix].sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
@@ -434,9 +434,9 @@ class C901(IFSParallel):
         for file_role in sorted_input_files:
             for file_prefix in sorted_input_files[file_role]:
                 input_validity.append([s.rh.resource.date + s.rh.resource.term
-                                    for s in sorted_input_files[file_role][file_prefix]])
+                                       for s in sorted_input_files[file_role][file_prefix]])
         test_wrong_input_validity = True
-        for i in range(1,len(input_validity)):
+        for i in range(1, len(input_validity)):
             test_wrong_input_validity = test_wrong_input_validity and (input_validity[0] == input_validity[i])
         self.algoassert(test_wrong_input_validity, "The files of each type must have the same validity dates.")
 

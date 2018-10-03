@@ -17,7 +17,6 @@ from gco.syntax.stdattrs    import gvar
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
 
 class GenvModelResource(ModelResource):
     """Abstract class for gget driven resources."""
@@ -878,11 +877,11 @@ class InterChannelsCorrelations(GenvModelResource):
         info = 'Inter channel correlations for a given instrument.',
         attr = dict(
             kind = dict(
-                values = ['correlations',],
+                values = ['correlations', ],
             ),
             instrument = dict(
                 values  = ['cris', 'iasi', ],
-                ),
+            ),
             gvar = dict(
                 default = 'correlations_[instrument]'
             ),
