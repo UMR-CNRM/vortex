@@ -304,7 +304,8 @@ class MakeLAMDomain(AlgoComponent):
         if self.mode == 'center_dims':
             params = ['center_lon', 'center_lat', 'Xpoints_CI', 'Ypoints_CI',
                       'resolution']
-            params_extended = params + ['tilting', 'Iwidth', 'force_projection', 'maximize_CI_in_E']
+            params_extended = params + ['tilting', 'Iwidth', 'force_projection',
+                                        'maximize_CI_in_E', 'reference_lat']
         elif self.mode == 'lonlat_included':
             params = ['lonmin', 'lonmax', 'latmin', 'latmax',
                       'resolution']
