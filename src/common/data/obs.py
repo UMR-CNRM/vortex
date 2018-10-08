@@ -120,17 +120,22 @@ class ObsODB(Observations):
         ecma_map = dict(void='ecmascr.tar',
                         screening='odb_screen.tar',
                         matchup='odb_cpl.tar', complete='odb_cpl.tar')
-        ecma_prefix = dict(matchup='BASE/', complete='BASE/')
+        ecma_prefix = {('matchup', 'arpege'): 'BASE/',
+                       ('complete', 'arpege'): 'BASE/',
+                       ('matchup', 'arome'): 'BASE/',
+                       ('complete', 'arome'): 'BASE/',
+                       ('screening', 'arome'): './'}
         if self.stage in ecma_map and self.layout == 'ecma':
             if re_fullmix.match(self.part):
                 return (ecma_map[self.stage], 'extract=all&format=unknown')
             elif self.part == 'virtual':
                 return (ecma_map[self.stage],
-                        'extract={:s}ECMA&format=unknown'.format(ecma_prefix.get(self.stage, '')))
+                        'extract={:s}ECMA&format=unknown'
+                        .format(ecma_prefix.get((self.stage, self.model), '')))
             else:
                 return (ecma_map[self.stage],
-                        'extract={:s}ECMA.{:s}&format=unknown'.format(ecma_prefix.get(self.stage, ''),
-                                                                      self.part))
+                        'extract={:s}ECMA.{:s}&format=unknown'
+                        .format(ecma_prefix.get((self.stage, self.model), ''), self.part))
         elif self.stage == 'screening' and self.layout == 'ccma':
             return ('odb_ccma_screen.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'traj':

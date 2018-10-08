@@ -771,11 +771,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.conv&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.conv&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
   - !test_names.core.SingleTest
@@ -828,11 +828,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.iasi&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.iasi&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
   - !test_names.core.SingleTest
@@ -942,11 +942,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.surf&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.surf&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
   - !test_names.core.SingleTest
@@ -999,11 +999,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
   - !test_names.core.SingleTest
