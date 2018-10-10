@@ -193,6 +193,7 @@ def _index_auto_generate(outputdir, files):
         radix_m1, lastdirname = os.path.split(radix)
         if lastdirname != '':
             toindex[radix_m1].append(os.path.join(lastdirname, 'index.rst'))
+    toindex = {k: sorted(set(v)) for k, v in toindex.items()}
     toindex_keys = toindex.keys()
     toindex_keys.sort(key=lambda f: f.upper())
     for radix in toindex_keys:

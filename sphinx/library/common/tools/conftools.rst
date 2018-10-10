@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AggregatedCouplingOffsetConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Exceptions
 ----------
 

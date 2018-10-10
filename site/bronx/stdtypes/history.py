@@ -134,6 +134,13 @@ class PrivateHistory(object):
         for c, t, i in self.get(start, end):
             print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt))
 
+    def showgrep(self, key):
+        """
+        Display a selection of history items containing the ``key``.
+        """
+        for c, t, i in self.grep(key):
+            print('[{0:{size}d}]{1:s} : {2:s}'.format(c, self.fmt_timer(t), self.nice(i), size=self.sizefmt))
+
     def showmatch(self, regex):
         """
         Display a selection of history items matching argument ``regex``.

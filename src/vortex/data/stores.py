@@ -234,6 +234,10 @@ class Store(footprints.FootprintBase):
         """Boolean function to check if the current store use a local cache."""
         return False
 
+    def has_fast_check(self):
+        """How fast and reliable is a check call ?"""
+        return False
+
     def _observer_notify(self, action, rc, remote, local=None, options=None):
         strack = options is None or options.get('obs_notify', True)
         if self.storetrack and strack:
@@ -357,16 +361,21 @@ class Store(footprints.FootprintBase):
         remote['path'] = remote['path'] + '.' + self.storehash  # Name of the hash file
         remote['query'].pop('extract', None)  # Ignore any extract request
         try:
-            # First, try to fetch the sum in a real file
-            # (in order to potentially use ftserv...)
-            tempcontainer = footprints.proxy.container(shouldfly=True)
+            tempcontainer = None
             try:
-                rc = callback(remote, tempcontainer.iotarget(), options)
-            except (OSError, IOError):
-                # This may happen if the user has insufficient rights on
-                # the current directory
-                tempcontainer = footprints.proxy.container(incore=True)
-                rc = callback(remote, tempcontainer.iotarget(), options)
+                # First, try to fetch the sum in a real file
+                # (in order to potentially use ftserv...)
+                tempcontainer = footprints.proxy.container(shouldfly=True)
+                try:
+                    rc = callback(remote, tempcontainer.iotarget(), options)
+                except (OSError, IOError, ExecutionError):
+                    # This may happen if the user has insufficient rights on
+                    # the current directory
+                    tempcontainer = footprints.proxy.container(incore=True)
+                    rc = callback(remote, tempcontainer.iotarget(), options)
+            except (OSError, IOError, ExecutionError):
+                logger.warning('Something went very wrong when fetching the hash file ! (assuming rc=False)')
+                rc = False
             # check the hash key
             hadapt = hashutils.HashAdapter(self.storehash)
             rc = rc and hadapt.filecheck(local, tempcontainer)
@@ -375,24 +384,47 @@ class Store(footprints.FootprintBase):
             else:
                 logger.warning("%s hash sanity check failed.", self.storehash)
         finally:
-            tempcontainer.clear()
+            if tempcontainer is not None:
+                tempcontainer.clear()
         return rc
 
-    def get(self, remote, local, options=None):
+    def _actual_get(self, action, remote, local, options=None, result_id=None):
         """Proxy method to dedicated get method according to scheme."""
-        logger.debug('Store get from %s to %s', remote, local)
+        logger.debug('Store %s from %s to %s', action, remote, local)
         if options is not None and options.get('incache', False) and not self.use_cache():
             self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return False
         else:
             if (options is None or (not options.get('insitu', False)) or
                     self.use_cache()):
-                rc = getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
+                if result_id:
+                    rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
+                else:
+                    rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
                 self._observer_notify('get', rc, remote, local=local, options=options)
                 return rc
             else:
                 logger.error('Only cache stores can be used when insitu is True.')
                 return False
+
+    def get(self, remote, local, options=None):
+        """Proxy method to dedicated get method according to scheme."""
+        return self._actual_get('get', remote, local, options)
+
+    def earlyget(self, remote, local, options=None):
+        """Proxy method to dedicated earlyget method according to scheme."""
+        logger.debug('Store earlyget from %s to %s', remote, local)
+        rc = None
+        if options is None or not options.get('incache', False) or self.use_cache():
+            if options is None or (not options.get('insitu', False)) or self.use_cache():
+                available_dget = getattr(self, self.scheme + 'earlyget', None)
+                if available_dget is not None:
+                    rc = available_dget(remote, local, options)
+        return rc
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        """Proxy method to dedicated finaliseget method according to scheme."""
+        return self._actual_get('finaliseget', remote, local, options, result_id=result_id)
 
     def _hash_put(self, callback, local, remote, options=None):
         """Put a hash file next to the 'real' file."""
@@ -538,6 +570,10 @@ class MultiStore(footprints.FootprintBase):
         """Boolean function to check if any included store use a local cache."""
         return any([x.use_cache() for x in self.openedstores])
 
+    def has_fast_check(self):
+        """How fast and reliable is a check call ?"""
+        return all([x.has_fast_check() for x in self.openedstores])
+
     @property
     def readonly(self):
         return all([x.readonly for x in self.openedstores])
@@ -593,9 +629,8 @@ class MultiStore(footprints.FootprintBase):
             rc = rc and sto.prestage(remote.copy(), options)
         return rc
 
-    def get(self, remote, local, options=None):
+    def _refilling_get(self, remote, local, options=None, result_id=None):
         """Go through internal opened stores for the first available resource."""
-        logger.debug('Multistore get from %s to %s', remote, local)
         rc = False
         refill_in_progress = True
         get_options = copy.copy(options) if options is not None else dict()
@@ -603,7 +638,13 @@ class MultiStore(footprints.FootprintBase):
         while refill_in_progress:
             for num, sto in enumerate(self.openedstores):
                 logger.debug('Multistore get at %s', sto)
-                rc = sto.get(remote.copy(), local, get_options)
+                if result_id and num == len(self.openedstores) - 1:
+                    rc = sto.finaliseget(result_id, remote.copy(), local, get_options)
+                    result_id = None  # result_ids can not be re-used during refill
+                else:
+                    rc = sto.get(remote.copy(), local, get_options)
+                    if rc:
+                        result_id = None  # result_ids can not be re-used during refills
                 # Are we trying a refill ? -> find the previous writeable store
                 restores = []
                 if rc and self.refillstore and num > 0:
@@ -633,6 +674,31 @@ class MultiStore(footprints.FootprintBase):
                               "None of the opened store succeeded... that's too bad !",
                               slevel='info')
         return rc
+
+    def get(self, remote, local, options=None):
+        """Go through internal opened stores for the first available resource."""
+        logger.debug('Multistore get from %s to %s', remote, local)
+        return self._refilling_get(remote, local, options)
+
+    def earlyget(self, remote, local, options=None):
+        logger.debug('Multistore earlyget from %s to %s', remote, local)
+        get_options = copy.copy(options) if options is not None else dict()
+        if len(self.openedstores) > 1:
+            first_checkable = all([s.has_fast_check() for s in self.openedstores[:-1]])
+            # Early-fetch is only available on the last resort store...
+            if first_checkable and all([not s.check(remote.copy(), get_options)
+                                        for s in self.openedstores[:-1]]):
+                return self.openedstores[-1].earlyget(remote.copy(), local, get_options)
+            else:
+                return None
+        elif len(self.openedstores) == 1:
+            return self.openedstores[0].earlyget(remote.copy(), local, get_options)
+        else:
+            return None
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        logger.debug('Multistore finaliseget from %s to %s', remote, local)
+        return self._refilling_get(remote, local, options, result_id=result_id)
 
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
@@ -678,6 +744,10 @@ class MagicPlace(Store):
     @property
     def realkind(self):
         return 'magicstore'
+
+    def has_fast_check(self):
+        """A void check is very fast !"""
+        return True
 
     def magiccheck(self, remote, options):
         """Void - Always False."""
@@ -751,6 +821,10 @@ class FunctionStore(Store):
     @property
     def realkind(self):
         return 'functionstore'
+
+    def has_fast_check(self):
+        """A void check is very fast !"""
+        return True
 
     def functioncheck(self, remote, options):
         """Void - Always False."""
@@ -1107,6 +1181,33 @@ class ArchiveStore(Store):
         )
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
+    def inarchiveearlyget(self, remote, local, options):
+        logger.debug('inarchiveearlyget on %s://%s/%s (to: %s)',
+                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.earlyretrieve(
+            self._inarchiveformatpath(remote), local,
+            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
+        )
+        return rc
+
+    def inarchivefinaliseget(self, result_id, remote, local, options):
+        logger.info('inarchivefinaliseget on %s://%s/%s (to: %s)',
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.finaliseretrieve(
+            result_id,
+            self._inarchiveformatpath(remote), local,
+            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
+        )
+        return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
+
     def inarchiveput(self, local, remote, options):
         logger.info('inarchiveput to %s://%s/%s (from: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
@@ -1335,6 +1436,16 @@ class VortexArchiveStore(ArchiveStore):
         remote = self.remap_read(remote, options)
         return self.inarchiveget(remote, local, options)
 
+    def vortexearlyget(self, remote, local, options):
+        """Remap and ftpget sequence."""
+        remote = self.remap_read(remote, options)
+        return self.inarchiveearlyget(remote, local, options)
+
+    def vortexfinaliseget(self, result_id, remote, local, options):
+        """Remap and ftpget sequence."""
+        remote = self.remap_read(remote, options)
+        return self.inarchivefinaliseget(result_id, remote, local, options)
+
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         if not self.storetrue:
@@ -1509,6 +1620,10 @@ class CacheStore(Store):
 
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
+        return True
+
+    def has_fast_check(self):
+        """Because that's why caching is used !"""
         return True
 
     @property
@@ -1868,6 +1983,10 @@ class PromiseStore(footprints.FootprintBase):
         """Shortcut to current system interface."""
         return self._sh
 
+    def has_fast_check(self):
+        """It depends..."""
+        return self.other.has_fast_check()
+
     def mkpromise_info(self, remote, options):
         """Build a dictionary with relevant informations for the promise."""
         return dict(
@@ -1915,7 +2034,7 @@ class PromiseStore(footprints.FootprintBase):
             rc = self.promise.get(remote.copy(), local, options)
         except (IOError, OSError) as e:
             # If something goes wrong, assume that the promise file had been
-            # deleted during the execution of self.promise.get (which can cause
+            # deleted during the execution of self.promise.check (which can cause
             # IOError or OSError to be raised).
             logger.info('An error occured while fetching the promise file: %s', str(e))
             logger.info('Assuming this is a negative result...')
@@ -1931,6 +2050,42 @@ class PromiseStore(footprints.FootprintBase):
             pr_file = self.mkpromise_file(pr_info, local)
             self.system.move(pr_file, local)
             rc = self.delayed = True
+        return rc
+
+    def earlyget(self, remote, local, options=None):
+        """Possible early-get on the target store."""
+        logger.debug('Promise early-get %s', remote)
+        result_id = None
+        if options is None:
+            options = dict()
+        try:
+            rc = (self.promise.has_fast_check and
+                  self.promise.check(remote.copy(), options))
+        except (IOError, OSError) as e:
+            logger.debug('An error occurred while checking for the promise file: %s', str(e))
+            logger.debug('Assuming this is a negative result...')
+            rc = False
+        if not rc:
+            result_id = self.other.earlyget(remote.copy(), local, options)
+        return result_id
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        logger.debug('Promise finalise-get %s', remote)
+        if options is None:
+            options = dict()
+        self.delayed = False
+        logger.info('Try promise from store %s', self.promise)
+        try:
+            rc = self.promise.get(remote.copy(), local, options)
+        except (IOError, OSError) as e:
+            logger.debug('An error occurred while fetching the promise file: %s', str(e))
+            logger.debug('Assuming this is a negative result...')
+            rc = False
+        if rc:
+            self.delayed = True
+        else:
+            logger.info('Try promise from store %s', self.other)
+            rc = self.other.finaliseget(result_id, remote.copy(), local, options)
         return rc
 
     @staticmethod

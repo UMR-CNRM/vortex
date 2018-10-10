@@ -25,7 +25,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 _folder_exposed_methods = set(['cp', 'mv',
-                               'ftget', 'rawftget', 'ftput', 'rawftput',
+                               'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
                                'scpget', 'scpput',
                                'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
 
@@ -139,8 +139,8 @@ class FolderShell(addons.FtrawEnableAddon):
         """Prepare source and destination"""
         if not (source.endswith('.tgz') or source.endswith('.tar.gz') or source.endswith('.tar')):
             source += '.tgz'
+        destination = self.sh.path.abspath(self.sh.path.expanduser(destination))
         self.sh.rm(destination)
-        destination = self.sh.path.abspath(destination)
         return source, destination
 
     def _folder_postftget(self, destination, loccwd, loctmp):
@@ -191,7 +191,7 @@ class FolderShell(addons.FtrawEnableAddon):
                     try:
                         rc = ftp.get(source, self.tmpname + extname)
                         # Auto compress=False -> let tar deal automatically with the compression
-                        self.sh.untar(self.tmpname + extname, autocompress=False)
+                        rc = rc and self.sh.untar(self.tmpname + extname, autocompress=False)
                     finally:
                         self.sh.rm(self.tmpname + extname)
             finally:
@@ -206,7 +206,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw and self.rawftshell is not None:
+        if self.sh.ftraw:
             source, destination = self._folder_preftget(source, destination)
             loccwd = self.sh.getcwd()
             loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
@@ -224,6 +224,43 @@ class FolderShell(addons.FtrawEnableAddon):
             return rc
         else:
             return self._folder_ftget(source, destination, hostname, logname)
+
+    def _folder_batchrawftget(self, source, destination, hostname=None, logname=None,
+                              cpipeline=None):
+        """Use ftserv to fetch several folder-like resources"""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if self.sh.ftraw:
+            loccwd = self.sh.getcwd()
+            actualsources = list()
+            actualdestinations = list()
+            tmpdestinations = list()
+            for s, d in zip(source, destination):
+                actual_s, actual_d = self._folder_preftget(s, d)
+                actualsources.append(actual_s)
+                actualdestinations.append(actual_d)
+                d_dirname = self.sh.path.dirname(actual_d)
+                self.sh.mkdir(d_dirname)
+                d_tmpdir = tempfile.mkdtemp(prefix='folder_', dir=d_dirname)
+                d_extname = self.sh.path.splitext(actual_s)[1]
+                tmpdestinations.append(self.sh.path.join(d_tmpdir, self.tmpname + d_extname))
+
+            rc = self.sh.ftserv_batchget(actualsources, tmpdestinations, hostname, logname)
+            if rc:
+                for d, t in zip(actualdestinations, tmpdestinations):
+                    loctmp = self.sh.path.dirname(t)
+                    self.sh.cd(loctmp)
+                    try:
+                        try:
+                            rc = rc and self.sh.untar(self.sh.path.basename(t), autocompress=False)
+                        finally:
+                            self.sh.rm(t)
+                    finally:
+                        self._folder_postftget(d, loccwd, loctmp)
+
+            return rc
+        else:
+            raise RuntimeError('You are not supposed to land here !')
 
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
                       cpipeline=None, sync=False):

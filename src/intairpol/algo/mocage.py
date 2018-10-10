@@ -438,6 +438,29 @@ class Forecast(Parallel):
 
         super(Forecast, self).prepare(rh, opts)
 
+    def _sorted_inputs_terms(self, **kwargs):
+        """
+        Build a dictionnary that contains a list of sections for each geometry
+        :param kwargs: attributes that will be used to sort the input files
+        :return: a dictionnary like:
+        {'geometry1': [terms1, terms2, ...],
+         'geometry2': [terms1, terms2, ...]
+        }
+        """
+        # Find the input files
+        insec = self.context.sequence.effective_inputs(**kwargs)
+        # Initialize the output dictionnary
+        outdict = dict()
+        # Fill the dictionnary
+        for sec in insec:
+            geo = sec.rh.resource.geometry.area
+            if geo not in outdict:
+                outdict[geo] = list()
+            outdict[geo].append(int(sec.rh.resource.term.fmth))
+        for geo in outdict:
+            outdict[geo].sort()
+        return outdict
+
     def execute(self, rh, opts):
         """Standard execution."""
 
@@ -455,30 +478,31 @@ class Forecast(Parallel):
 
         namrh = namrh[0].rh
 
-        # Evaluate the final forecast's term according to SM and FM files retrieved
-        smrh = self.context.sequence.effective_inputs(
+        # Build dictionnaries which contains the terms for each geometry of FM and SM files
+        smterms = self._sorted_inputs_terms(
             role='SMCoupling',
-            kind='boundary')
-        fmrh = self.context.sequence.effective_inputs(
+            kind='boundary'
+        )
+        fmterms = self._sorted_inputs_terms(
             role='FMFiles',
-            kind='gridpoint')
+            kind='gridpoint'
+        )
 
-        smterms = []
-        fmterms = []
+        # Control of the duration of the run depending on the the SM and FM terms available
+        # Min values indicates whether the resources are nominal or alternate resources
+        minsm = max([min(smterms[geo]) for geo in smterms.keys()])
+        maxsm = min([max(smterms[geo]) for geo in smterms.keys()])
+        # 1 SM file per day and per domain : term 0 is used for the coupling of a 24h run
+        maxsm = maxsm - minsm + 24
 
-        for i in smrh:
-            r = i.rh
-            smterms.append(int(r.resource.term.fmth) + 24)
-            # 1 fichier SM par jour et domaine : l'échéance 00 permet un couplage pour un run +24h ....
+        minfm = max([min(fmterms[geo]) for geo in fmterms.keys()])
+        maxfm = min([max(fmterms[geo]) for geo in fmterms.keys()])
+        maxfm = maxfm - minfm
 
-        for i in fmrh:
-            r = i.rh
-            fmterms.append(r.resource.term.fmth)
-
-        realfcterm = min(max(smterms), max(fmterms))
-        logger.info('Max(fmterms) : %s ', max(fmterms))
-        logger.info('Max(smterms) : %s ', max(smterms))
-        logger.info('Fcterm       : %s ', realfcterm)
+        realfcterm = min(maxsm, maxfm)
+        logger.info('Min Max(fmterms) : %s %s ', minfm, maxfm)
+        logger.info('Min Max(smterms) : %s %s ', minsm, maxsm)
+        logger.info('Fcterm           : %s ', realfcterm)
 
         first = self.basedate
         deltastr = 'PT' + six.text_type(realfcterm) + 'H'

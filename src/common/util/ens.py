@@ -83,10 +83,10 @@ def _checkingfunction_dict(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         # If no nbsample is provided, easy to achieve...
-        nbsample = rhdict['resource'].get('nbsample', 0)
+        nbsample = rhdict['resource'].get('nbsample', None)
         # ...and if no explicit minimum of resources, nbsample is the minimum
-        nbmin = int(options.get('min', [nbsample]).pop())
-        if nbsample < nbmin:
+        nbmin = int(options.get('min', [(0 if nbsample is None else nbsample), ]).pop())
+        if nbsample is not None and nbsample < nbmin:
             logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:

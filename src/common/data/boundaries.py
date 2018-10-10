@@ -10,6 +10,7 @@ from vortex.tools import env
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stddeco import namebuilding_insert
 from vortex.syntax.stdattrs import term_deco, a_cutoff
+from vortex.data.geometries import LonlatGeometry
 
 from common.tools.igastuff import archive_suffix
 
@@ -91,6 +92,14 @@ class _AbstractLAMBoundary(GeoFlowResource):
             model     = self.model,
             nativefmt = self.nativefmt,
         )
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Particular geometry dictionnary for _AbstractLamBoundary class and derivated ones."""
+        if isinstance(self.geometry, LonlatGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = super(_AbstractLAMBoundary, self)._geo2basename_info(add_stretching)
+        return lgeo
 
 
 class LAMBoundary(_AbstractLAMBoundary):
