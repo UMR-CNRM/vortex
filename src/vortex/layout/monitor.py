@@ -155,17 +155,16 @@ class _MonitorSilencer(ParallelSilencer):
                     prevstate=prevstate, state=state, timestamp=ts)
 
 
-class BasicInputMonitor(_StateFullMembersList):
+class ManualInputMonitor(_StateFullMembersList):
     """
-    This object looks into the effective_inputs and check regularly the
-    status of each of the sections. If an expected resource is found the
-    "get" command is issued.
+    This object looks into the *targets* list of :class:`InputMonitorEntry`
+    objects and check regularly the status of each of the enclosed sections. If
+    an expected resource is found the "get" command is issued.
     """
 
     _mcontainer = OrderedDict
 
-    def __init__(self, context, role=None, kind=None,
-                 caching_freq=20, crawling_threshold=100):
+    def __init__(self, context, targets, caching_freq=20, crawling_threshold=100):
         """
         If the list of inputs is too long (see the *crawling_threshold*
         option), not all of the inputs will be checked at once: The first
@@ -178,9 +177,7 @@ class BasicInputMonitor(_StateFullMembersList):
 
         :param vortex.layout.contexts.Context context: The object that is used
             as a source of inputs
-        :param str role: The role of the sections that will be watched
-        :param str kind: The kind of the sections that will be watched (used only
-            if role is not specified)
+        :param targets: The list of :class:`InputMonitorEntry` to look after
         :param int caching_freq: We will update the sections statuses every N
             seconds
         :param int crawling_threshold: Maximum number of section statuses  to
@@ -194,8 +191,6 @@ class BasicInputMonitor(_StateFullMembersList):
 
         self._ctx = context
         self._seq = context.sequence
-        self._role = role
-        self._kind = kind
         self._caching_freq = caching_freq
         self._crawling_threshold = crawling_threshold
         self._inactive_since = time.time()
@@ -207,12 +202,8 @@ class BasicInputMonitor(_StateFullMembersList):
         self._mperror = multiprocessing.Event()
         self._mpjob = None
 
-        assert(not(self._role is None and self._kind is None))
-
         # Generate the first list of sections
-        toclassify = [InputMonitorEntry(x)
-                      for x in self._seq.filtered_inputs(role=self._role,
-                                                         kind=self._kind)]
+        toclassify = list(targets)
 
         # Sort the list of UFOs if sensible (i.e if all resources have a term)
         has_term = 0
@@ -432,6 +423,8 @@ class BasicInputMonitor(_StateFullMembersList):
                 break
             if prp is None:
                 prp = ParallelResultParser(self._ctx)
+            self._ctx.system.highlight("The InputMonitor got news for: {!s}"
+                                       .format(r['name']))
             prp(r)
             self._key_update(r)
 
@@ -503,6 +496,52 @@ class BasicInputMonitor(_StateFullMembersList):
         if rc and exception is not None:
             raise exception("The waiting loop timed-out")
         return rc
+
+
+class BasicInputMonitor(ManualInputMonitor):
+    """
+    This object looks into the effective_inputs and check regularly the
+    status of each of the sections. If an expected resource is found the
+    "get" command is issued.
+    """
+
+    _mcontainer = OrderedDict
+
+    def __init__(self, context, role=None, kind=None,
+                 caching_freq=20, crawling_threshold=100):
+        """
+        If the list of inputs is too long (see the *crawling_threshold*
+        option), not all of the inputs will be checked at once: The first
+        *crawling_threshold* inputs will always be checked and an additional
+        batch of *crawling_threshold* other inputs will be checked (in a round
+        robin manner)
+
+        If the inputs we are looking at have a *term* attribute, the input lists
+        will automatically be ordered according to the *term*.
+
+        :param vortex.layout.contexts.Context context: The object that is used
+            as a source of inputs
+        :param str role: The role of the sections that will be watched
+        :param str kind: The kind of the sections that will be watched (used only
+            if role is not specified)
+        :param int caching_freq: We will update the sections statuses every N
+            seconds
+        :param int crawling_threshold: Maximum number of section statuses  to
+            update at once
+
+        :warning: The state of the sections is looked up by a background process.
+            Consequently the **stop** method must always be called when the
+            processing is done (in order for the background process to terminate).
+        """
+        self._role = role
+        self._kind = kind
+        assert(not(self._role is None and self._kind is None))
+        ManualInputMonitor.__init__(self, context,
+                                    [InputMonitorEntry(x)
+                                     for x in context.sequence.filtered_inputs(role=self._role,
+                                                                               kind=self._kind)],
+                                    caching_freq=caching_freq,
+                                    crawling_threshold=crawling_threshold)
 
 
 class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
