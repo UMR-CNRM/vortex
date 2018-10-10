@@ -539,12 +539,17 @@ class Handler(object):
             logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
             st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
             # Actual get
-            rst = store.get(
-                self.uridata,
-                self.container.iotarget(),
-                st_options,
-            )
-            rst = self._postproc_get(store, rst, extras)
+            try:
+                rst = store.get(
+                    self.uridata,
+                    self.container.iotarget(),
+                    st_options,
+                )
+            except StandardError:
+                rst = False
+                raise
+            finally:
+                rst = self._postproc_get(store, rst, extras)
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -834,6 +839,9 @@ class Handler(object):
             rst = self.container.clear()
             self.history.append(self.container.actualpath(), 'clear', rst)
             self._notifyclear()
+            stage_clear_mapping = dict(expected='checked', get='checked')
+            if self.stage in stage_clear_mapping:
+                self._updstage(stage_clear_mapping[self.stage])
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',

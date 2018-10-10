@@ -132,7 +132,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
                 rh_stack = set()
                 for section in context.sequence.fastsearch(pr_item):
                     if section.rh.as_dict() == pr_item:
-                        section.updstage(info)
+                        context.sequence.section_updstage(section, info)
                         rh_stack.add(section.rh)
                 for rh in rh_stack:
                     rh.external_stage_update(info.get('stage'))
@@ -252,7 +252,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                     # Update the sequence
                     for section in self._sequence.fastsearch(item):
                         if section.rh is item:
-                            section.updstage(info)
+                            self._sequence.section_updstage(section, info)
                 if ('stage' in info) or ('clear' in info):
                     # Update the local tracker
                     self._localtracker.update_rh(item, info)

@@ -10,6 +10,7 @@ import six
 
 import collections
 from collections import namedtuple, defaultdict
+from itertools import imap
 import json
 import pprint
 import re
@@ -48,7 +49,7 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal' ]
+section_args = [ 'role', 'alternate', 'intent', 'fatal', 'coherentgroup' ]
 
 
 def stripargs_section(**kw):
@@ -67,13 +68,17 @@ class Section(object):
 
     def __init__(self, **kw):
         logger.debug('Section initialisation %s', self)
-        self.kind       = ixo.INPUT
-        self.intent     = intent.INOUT
-        self.fatal      = True
-        self._role      = setrole(kw.pop('role', 'anonymous'))
+        self.kind = ixo.INPUT
+        self.intent = intent.INOUT
+        self.fatal = True
+        self._role = setrole(kw.pop('role', 'anonymous'))
         self._alternate = setrole(kw.pop('alternate', None))
-        self._rh        = kw.pop('rh', None)
-        self.stages     = [ kw.pop('stage', 'load') ]
+        self._coherentgroups = kw.pop('coherentgroup', None)
+        self._coherentgroups = set(self._coherentgroups.split(',')
+                                   if self._coherentgroups else [])
+        self._coherentgroups_opened = {g: True for g in self._coherentgroups}
+        self._rh = kw.pop('rh', None)
+        self.stages = [ kw.pop('stage', 'load') ]
         self.__dict__.update(kw)
         # We realy need a ResourceHandler...
         if self.rh is None:
@@ -89,6 +94,29 @@ class Section(object):
     @property
     def alternate(self):
         return self._alternate
+
+    @property
+    def coherentgroups(self):
+        """The list of belonging coherent groups."""
+        return self._coherentgroups
+
+    @property
+    def any_coherentgroup_opened(self):
+        """Is, at least, one belonging coherent group opened ?"""
+        return not self.coherentgroups or any(self._coherentgroups_opened.values())
+
+    def coherent_group_close(self, group):
+        """Close the coherent group (get and put will fail from now and on)."""
+        if group in self._coherentgroups_opened:
+            self._coherentgroups_opened[group] = False
+        # Another group's resource failed, re-checking and possibly deleting myself !
+        if self.stage in ('expected', 'get') and not self.any_coherentgroup_opened:
+            logger.info('Clearing %s because of the coherent group failure.', str(self.rh.container))
+            self.rh.clear()
+
+    def check_groupstatus(self, info):
+        """Given the updstage's info dict, check that a coherent group still holds"""
+        return info.get('stage') != 'void'
 
     @property
     def rh(self):
@@ -138,6 +166,14 @@ class Section(object):
         updmethod = getattr(self, '_updstage_' + info.get('stage'), self._updignore)
         updmethod(info)
 
+    def _stronglocate(self, **kw):
+        """A locate call that can not fail..."""
+        try:
+            loc = self.rh.locate(**kw)
+        except StandardError:
+            loc = '???'
+        return loc
+
     def _fatal_wrap(self, sectiontype, callback, **kw):
         """Launch **callback** and process the returncode/exceptions according to **fatal**."""
         action = {'input': 'get', 'output': 'put'}[sectiontype]
@@ -147,25 +183,32 @@ class Section(object):
         except StandardError as e:
             logger.error('Something wrong (%s section): %s. %s',
                          sectiontype, str(e), traceback.format_exc())
-            try:
-                logger.error('Resource %s', self.rh.locate())
-            except StandardError:
-                logger.error('Resource ???')
+            logger.error('Resource %s', self._stronglocate())
         if not rc and self.fatal:
-            try:
-                logger.critical('Fatal error with action %s %s', action, self.rh.locate())
-            except StandardError:
-                logger.critical('Fatal error with action %s on ???', action)
+            logger.critical('Fatal error with action %s on %s', action, self._stronglocate())
+            raise SectionFatalError('Could not {:s} resource {!s}'.format(action, rc))
+        return rc
+
+    def _just_fail(self, sectiontype, **kw):  # @UnusedVariable
+        """Check if a resource exists but fails anyway."""
+        action = {'input': 'get', 'output': 'put'}[sectiontype]
+        rc = False
+        if self.fatal:
+            logger.critical('Fatal error with action %s on %s', action, self._stronglocate())
             raise SectionFatalError('Could not {:s} resource {!s}'.format(action, rc))
         return rc
 
     def get(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
-            kw['intent'] = self.intent
-            if self.alternate:
-                kw['alternate'] = self.alternate
-            rc = self._fatal_wrap('input', self.rh.get, **kw)
+            if self.any_coherentgroup_opened:
+                kw['intent'] = self.intent
+                if self.alternate:
+                    kw['alternate'] = self.alternate
+                rc = self._fatal_wrap('input', self.rh.get, **kw)
+            else:
+                logger.info("The coherent group is closed... doing nothing.")
+                rc = self._just_fail('input')
         else:
             rc = False
             logger.error('Try to get from an output section')
@@ -174,7 +217,11 @@ class Section(object):
     def finaliseget(self):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.finaliseget`."""
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
-            rc = self._fatal_wrap('input', self.rh.finaliseget)
+            if self.any_coherentgroup_opened:
+                rc = self._fatal_wrap('input', self.rh.finaliseget)
+            else:
+                logger.info("The coherent group is closed... doing nothing.")
+                rc = self._just_fail('input')
         else:
             rc = False
             logger.error('Try to get from an output section')
@@ -184,17 +231,27 @@ class Section(object):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.earlyget`."""
         rc = False
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
-            kw['intent'] = self.intent
-            if self.alternate:
-                kw['alternate'] = self.alternate
-            rc = self.rh.earlyget(** kw)
+            if self.any_coherentgroup_opened:
+                kw['intent'] = self.intent
+                if self.alternate:
+                    kw['alternate'] = self.alternate
+                rc = self.rh.earlyget(** kw)
+            else:
+                rc = None
         return rc
 
     def put(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
         if self.kind == ixo.OUTPUT:
-            kw['intent'] = self.intent
-            rc = self._fatal_wrap('output', self.rh.put, **kw)
+            if self.any_coherentgroup_opened:
+                kw['intent'] = self.intent
+                rc = self._fatal_wrap('output', self.rh.put, **kw)
+            else:
+                logger.info("The coherent group is closed... failing !.")
+                rc = False
+                if self.fatal:
+                    logger.critical('Fatal error with action put on %s', self._stronglocate())
+                    raise SectionFatalError('Could not get resource {!s}'.format(rc))
         else:
             rc = False
             logger.error('Try to put from an input section.')
@@ -236,6 +293,8 @@ class Sequence(footprints.observers.Observer):
         # nothing will prevent the user from trashing the sections list...
         # consequently a WealSet is safer !
         self._sections_hash = defaultdict(weakref.WeakSet)
+        self._coherentgroups = defaultdict(weakref.WeakSet)
+        self._coherentgroups_openings = defaultdict(lambda: True)
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
 
     def __del__(self):
@@ -261,6 +320,10 @@ class Sequence(footprints.observers.Observer):
         if isinstance(candidate, Section):
             self.sections.append(candidate)
             self._sections_hash[candidate.rh.simplified_hashkey].add(candidate)
+            for cgroup in candidate.coherentgroups:
+                self._coherentgroups[cgroup].add(candidate)
+                if not self._coherentgroups_openings[cgroup]:
+                    candidate.coherent_group_close(cgroup)
         else:
             logger.warning('Try to add a non-section object %s in sequence %s', candidate, self)
 
@@ -272,6 +335,8 @@ class Sequence(footprints.observers.Observer):
         if isinstance(candidate, Section):
             self.sections.remove(candidate)
             self._sections_hash[candidate.rh.simplified_hashkey].discard(candidate)
+            for cgroup in candidate.coherentgroups:
+                self._coherentgroups[cgroup].discard(candidate)
         else:
             logger.warning('Try to remove a non-section object %s in sequence %s', candidate, self)
 
@@ -369,8 +434,8 @@ class Sequence(footprints.observers.Observer):
 
         The ``role`` or ``kind`` named arguments are lists that may contain
         strings and/or compiled regular expressions. Regular expressions are c
-        hecked against the input's attributes using the 'search' function
-        (i.e.  ^ should be explicitely added if one wants to match the begining
+        hacked against the input's attributes using the 'search' function
+        (i.e.  ^ should be explicitly added if one wants to match the beginning
         of the string).
         """
         return self._section_list_filter(self.inputs(), **kw)
@@ -391,6 +456,29 @@ class Sequence(footprints.observers.Observer):
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
         return self._section_list_filter(self.outputs(), **kw)
+
+    def coherentgroup_iter(self, cgroup):
+        """Iterate over sections belonging to a given coherentgroup."""
+        c_sections = self._coherentgroups[cgroup]
+        for s in c_sections:
+            yield s
+
+    def section_updstage(self, a_section, info):
+        """
+        Update the section's stage but also check other sections from the same
+        coherent group.
+        """
+        a_section.updstage(info)
+
+        def _s_group_check(s):
+            return s.check_groupstatus(info)
+
+        for cgroup in a_section.coherentgroups:
+            if self._coherentgroups_openings[cgroup]:
+                if not all(imap(_s_group_check, self.coherentgroup_iter(cgroup))):
+                    for c_section in self.coherentgroup_iter(cgroup):
+                        c_section.coherent_group_close(cgroup)
+                    self._coherentgroups_openings[cgroup] = False
 
     def updobsitem(self, item, info):
         """
@@ -477,10 +565,10 @@ class SequenceInputsReport(object):
         status = self._TranslateStage[nominal.stage]
         true_rh = None
         # Look for alternates:
-        if status == InputsReportStatus.MISSING:
+        if status not in (InputsReportStatus.PRESENT, InputsReportStatus.EXPECTED):
             for alter in desc['alternate']:
                 alter_status = self._TranslateStage[alter.stage]
-                if alter_status != InputsReportStatus.MISSING:
+                if alter_status in (InputsReportStatus.PRESENT, InputsReportStatus.EXPECTED):
                     status = alter_status
                     true_rh = alter.rh
                     break
