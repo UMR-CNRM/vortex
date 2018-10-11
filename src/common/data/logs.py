@@ -263,12 +263,19 @@ class SectionsSlice(collections.Sequence):
         :note: A special treatment is made for the 'role' key (the role factory is used
         and the 'alternate' attribute may also be looked for).
 
+        :note: A special case is made for the attribute 'kind' of the resource which can be
+        accessed via the 'resource_kind' attribute (the attribute 'kind' already exists in the class).
+
         :note: if *k* is not found at the top level of the dictionary, the
         'resource', 'provider' and 'container' parts of the 'rh'sub-dictionary
         are also looked for.
         """
         if k == 'role':
             return item[k] or item['alternate']
+        elif k == 'kind':
+            return item['rh']['resource']['kind']
+        elif k == 'section_kind':
+            return item['kind']
         elif k in item:
             return item[k]
         elif k in item['rh']['resource']:
