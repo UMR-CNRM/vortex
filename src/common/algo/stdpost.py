@@ -954,7 +954,7 @@ class _DiagPICommons(FootprintCopier):
                 if 'NAM_DIAG' in x.rh.contents:
                     nmod = self.numod
                     logger.info("Substitute the model number (%d) to namelist entry", nmod)
-                    for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA'):
+                    for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA', 'PSN'):
                         if namk in nam.contents['NAM_DIAG'] and nam.contents['NAM_DIAG'][namk] != 0:
                             nam.contents['NAM_DIAG'][namk] = nmod
                 # We are done with the namelist
