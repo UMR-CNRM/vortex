@@ -607,8 +607,22 @@ class Handler(object):
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
                         if alternate:
-                            logger.info("Alternate is on and the local file exists: ignoring the error.")
-                            rst = True
+                            if not self.container.is_virtual():
+                                lpath = self.container.localpath()
+                                for isec in self._cur_context.sequence.rinputs():
+                                    if (isec.stage in ('get' or 'expected') and
+                                            not isec.rh.container.is_virtual() and
+                                            isec.rh.container.localpath() == lpath):
+                                        rst = True
+                                        break
+                                if rst:
+                                    logger.info("Alternate is on and the local file exists.")
+                                else:
+                                    logger.info("Alternate is on but the local file is not yet matched.")
+                                    self._updstage('void', insitu=True)
+                            else:
+                                logger.info("Alternate is on. The local file exists. The container is virtual.")
+                                rst = True
                         else:
                             logger.info("The resource is already here but doesn't matches the RH description :-(")
                             cur_tracker[iotarget].match_rh('get', self, verbose=True)

@@ -392,7 +392,7 @@ class Sequence(footprints.observers.Observer):
 
     def _section_list_filter(self, sections, **kw):
         if not kw:
-            return sections
+            return list(sections)
         inrole = list()
         inkind = list()
         if 'role' in kw and kw['role'] is not None:
@@ -408,7 +408,15 @@ class Sequence(footprints.observers.Observer):
 
     def inputs(self):
         """Return a list of current sequence sections with ``ixo.INPUT`` or ``ixo.EXEC`` kind."""
-        return [x for x in self.sections if ( x.kind == ixo.INPUT or x.kind == ixo.EXEC )]
+        for s in self.sections:
+            if s.kind == ixo.INPUT or s.kind == ixo.EXEC:
+                yield s
+
+    def rinputs(self):
+        """The reversed list of input sections."""
+        for s in reversed(self.sections):
+            if s.kind == ixo.INPUT or s.kind == ixo.EXEC:
+                yield s
 
     def inputs_report(self):
         """Return a SequenceInputsReport object built using the current sequence."""
@@ -446,7 +454,9 @@ class Sequence(footprints.observers.Observer):
 
     def outputs(self):
         """Return a list of current sequence sections with ``ixo.OUTPUT`` kind."""
-        return [x for x in self.sections if x.kind == ixo.OUTPUT]
+        for s in self.sections:
+            if s.kind == ixo.OUTPUT:
+                yield s
 
     def effective_outputs(self, **kw):
         """
@@ -561,9 +571,15 @@ class SequenceInputsReport(object):
         """
         desc = self._local_map[local]
         # First, check the nominal resource
-        nominal = desc['nominal'][-1]
-        status = self._TranslateStage[nominal.stage]
-        true_rh = None
+        if len(desc['nominal']) > 0:
+            nominal = desc['nominal'][-1]
+            status = self._TranslateStage[nominal.stage]
+            true_rh = nominal.rh
+        else:
+            logger.warning('No nominal section for < %s >. This should not happened !', local)
+            nominal = None
+            status = None
+            true_rh = None
         # Look for alternates:
         if status not in (InputsReportStatus.PRESENT, InputsReportStatus.EXPECTED):
             for alter in desc['alternate']:
@@ -572,9 +588,7 @@ class SequenceInputsReport(object):
                     status = alter_status
                     true_rh = alter.rh
                     break
-        else:
-            true_rh = nominal.rh
-        return status, true_rh, nominal.rh
+        return status, true_rh, (nominal.rh if nominal else None)
 
     def synthetic_report(self, detailed=False, only=None):
         """Returns a string that describes each local resource with its status.
@@ -612,8 +626,9 @@ class SequenceInputsReport(object):
                 if detailed and extrainfo != '':
                     outstr += "  * The following resource is used:\n"
                     outstr += true_rh.idcard(indent=6) + "\n"
-                    outstr += "  * Instead of:"
-                    outstr += nominal_rh.idcard(indent=6) + "\n"
+                    if nominal_rh is not None:
+                        outstr += "  * Instead of:"
+                        outstr += nominal_rh.idcard(indent=6) + "\n"
 
         return outstr
 

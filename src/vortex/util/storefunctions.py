@@ -69,7 +69,7 @@ def dumpinputs(options):
     if vartrue.match(options.get('effective', ['true', ]).pop()):
         sequence = ctx.sequence.effective_inputs()
     else:
-        sequence = ctx.sequence.inputs()
+        sequence = list(ctx.sequence.inputs())
     if len(sequence) == 0:
         raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
     fileout = six.StringIO()
