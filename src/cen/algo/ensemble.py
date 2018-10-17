@@ -909,6 +909,13 @@ class SurfexComponent(S2MComponent):
             return ['mb{0:04d}'.format(m) for m in self.members]
         else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
+
+            if len(self.geometry) > 1:
+                # In the case of a postes geometry, there are 3 effective inputs with forcing file role
+                # (They are concatenated)
+                # Therefore it is necessary to reduce subdirs to 1 single element for each member
+                subdirs = list(set(map(self.system.path.dirname, subdirs)))
+
             if self.kind == "ensmeteo+sytron":
                 subdirs.append('mb036')
             return subdirs

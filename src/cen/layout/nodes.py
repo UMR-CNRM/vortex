@@ -70,15 +70,16 @@ class S2MTaskMixIn(object):
             # Standard case: use today 03h for 06 et 09h runs, use yesterday 03h for 03h run
             if self.conf.rundate.hour == self.nightruntime.hour:
                 rundate_prep = self.conf.rundate - Period(days=1)
+                # First alternate : J-2 for night run, J-1 for other runs
+                # Second alternate : J-3 for night run, J-2 for other runs
+                # Third alternate : J-4 for night run, J-3 for other runs
+                alternates.append((rundate_prep - Period(days=1), "assimilation"))
+                alternates.append((rundate_prep - Period(days=2), "assimilation"))
+                alternates.append((rundate_prep - Period(days=3), "assimilation"))
             else:
                 rundate_prep = self.conf.rundate.replace(hour=self.nightruntime.hour)
-
-            # First alternate : J-2 for night run, J-1 for other runs
-            # Second alternate : J-3 for night run, J-2 for other runs
-            # Third alternate : J-4 for night run, J-3 for other runs
-            alternates.append((rundate_prep - Period(days=1), "assimilation"))
-            alternates.append((rundate_prep - Period(days=2), "assimilation"))
-            alternates.append((rundate_prep - Period(days=3), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=1), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=1), "assimilation"))
 
         return rundate_prep, alternates
 
@@ -88,7 +89,11 @@ class S2MTaskMixIn(object):
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
-        return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
+        if self.conf.geometry.area == "postes":
+            # no sytron members for postes geometry
+            return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
+        else:
+            return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
     def get_list_geometry(self):
         source_safran, block_safran = self.get_source_safran()
