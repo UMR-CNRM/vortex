@@ -269,16 +269,19 @@ class SectionsSlice(collections.Sequence):
         """
         if k == 'role':
             return item[k] or item['alternate']
+        elif k == 'kind' and k in item.get('rh', dict()).get('resource', dict()):
+            return item['rh']['resource'][k]
         elif k in item:
             return item[k]
-        elif k in item['rh']['resource']:
+        elif k in item.get('rh', dict()).get('resource', dict()):
             return item['rh']['resource'][k]
-        elif k in item['rh']['provider']:
+        elif k in item.get('rh', dict()).get('provider', dict()):
             return item['rh']['provider'][k]
-        elif k in item['rh']['container']:
+        elif k in item.get('rh', dict()).get('container', dict()):
             return item['rh']['container'][k]
         else:
-            raise KeyError("'%s' wasn't found in the designated dictionary")
+            raise KeyError("'{:s}' wasn't found in the designated dictionary"
+                           .format(k))
 
     def _sloppy_ckeck(self, item, k, v):
         """Perform a _sloppy_lookup and check the result against *v*."""
@@ -336,7 +339,8 @@ class SectionsSlice(collections.Sequence):
             try:
                 return self._sloppy_lookup(self[0], attr)
             except KeyError:
-                raise AttributeError("%s wasn't found in the unique dictionary", attr)
+                raise AttributeError("'{:s}' wasn't found in the unique dictionary"
+                                     .format(attr))
         elif len(self) == 0:
             raise AttributeError("The current SectionsSlice is empty. No attribute lookup allowed !")
         else:
@@ -346,9 +350,10 @@ class SectionsSlice(collections.Sequence):
                     try:
                         return self._sloppy_lookup(self[idx], attr)
                     except KeyError:
-                        raise AttributeError("'%s' wasn't found in the %d-th dictionary", attr, idx)
+                        raise AttributeError("'{:s}' wasn't found in the {!s}-th dictionary"
+                                             .format(attr, idx))
                 else:
-                    raise AttributeError("A '%s' attribute must be there !", self._INDEX_ATTR)
+                    raise AttributeError("A '{:s}' attribute must be there !".format(self._INDEX_ATTR))
             return _attr_lookup
 
 

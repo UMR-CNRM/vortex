@@ -196,6 +196,7 @@ class UtRhListContent(_BaseDataContentTest):
         self.assertEqual(f2.member, 1)
         self.assertEqual(f2.date, '201805210000')
         self.assertEqual(f2.actualfmt, 'fa')
+        self.assertEqual(f2.kind, 'historic')
         with self.assertRaises(AttributeError):
             f2.gruik
         # Multiple stuff

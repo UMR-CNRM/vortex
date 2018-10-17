@@ -9,7 +9,6 @@ General purpose functions that can be used in conjunction with the
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import json
 
 from footprints import proxy as fpx
 
@@ -74,4 +73,19 @@ def dumpinputs(options):
         raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
     fileout = six.StringIO()
     t.sh.json_dump([s.as_dict() for s in sequence], fileout, indent=4)
+    return fileout
+
+
+def defaultinput(options):
+    """
+    Dump the content of a fake section into a JSON file
+    """
+    prefix = "d_input_"
+    content = dict()
+    for k, v in options.items():
+        if isinstance(k, six.string_types) and k.startswith(prefix):
+            content[k[len(prefix):]] = v
+    t = sessions.current()
+    fileout = six.StringIO()
+    t.sh.json_dump([content, ], fileout, indent=4)
     return fileout
