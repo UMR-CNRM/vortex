@@ -1405,12 +1405,14 @@ class OSExtended(System):
             self.rm(destination)
         ftp = self.ftp(hostname, logname)
         if ftp:
-            if cpipeline is None:
-                rc = ftp.get(source, destination)
-            else:
-                with cpipeline.stream2uncompress(destination) as cdestination:
-                    rc = ftp.get(source, cdestination)
-            ftp.close()
+            try:
+                if cpipeline is None:
+                    rc = ftp.get(source, destination)
+                else:
+                    with cpipeline.stream2uncompress(destination) as cdestination:
+                        rc = ftp.get(source, cdestination)
+            finally:
+                ftp.close()
             return rc
         else:
             return False
@@ -1437,13 +1439,15 @@ class OSExtended(System):
         if self.is_iofile(source):
             ftp = self.ftp(hostname, logname)
             if ftp:
-                if cpipeline is None:
-                    rc = ftp.put(source, destination)
-                else:
-                    with cpipeline.compress2stream(source, iosponge=True) as csource:
-                        # csource is an IoSponge consequently the size attribute exists
-                        rc = ftp.put(csource, destination, size=csource.size)
-                ftp.close()
+                try:
+                    if cpipeline is None:
+                        rc = ftp.put(source, destination)
+                    else:
+                        with cpipeline.compress2stream(source, iosponge=True) as csource:
+                            # csource is an IoSponge consequently the size attribute exists
+                            rc = ftp.put(csource, destination, size=csource.size)
+                finally:
+                    ftp.close()
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
         return rc
