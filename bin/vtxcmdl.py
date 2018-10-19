@@ -253,6 +253,9 @@ def main():
     prestage = args.prestage
     del args.prestage
 
+    # automatically fill genv if need be
+    args.gautofill = True
+
     # Process the action (get/true)
     program_match = re.match('vtx(get|put|prestage)(?:\.py)?$', program_name)
     if program_match is None:
