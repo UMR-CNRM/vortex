@@ -82,7 +82,7 @@ def as_rawstr(cycle):
 
 
 def cycles():
-    """Return curretnly defined cycles."""
+    """Return currently defined cycles."""
     p = handler()
     grep = p.grep(_DATASTORE_KIND, dict())
     return [k.cycle for k in grep.keys()]
