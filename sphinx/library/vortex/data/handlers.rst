@@ -34,3 +34,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Utility classes
+---------------
+
+.. autoclass:: IdCardAttrDumper
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

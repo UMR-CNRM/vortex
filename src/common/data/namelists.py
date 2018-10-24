@@ -205,6 +205,28 @@ class Namelist(ModelResource):
         return 'extract=' + self._find_source()
 
 
+class NamelistDelta(Namelist):
+    """
+    Class for namelist deltas (i.e. small bits of namelists).
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values   = ['namdelta', 'deltanam', ]
+                
+            ),
+            source = dict(
+                default     = 'deltanam.[binary]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'namdelta'
+
+
 class NamelistUtil(Namelist):
     """
     Class for namelists utilities
@@ -214,7 +236,7 @@ class NamelistUtil(Namelist):
         attr = dict(
             kind = dict(
                 values   = ['namelist_util', 'namutil'],
-                remap    = dict(namelist_util = 'namutil'),
+                remap    = dict(autoremap = 'first'),
             ),
             gvar = dict(
                 values   = ['NAMELIST_UTILITIES'],

@@ -246,6 +246,7 @@ def add_section(section, args, kw):
     complete  = kw.pop('complete', False)
     insitu    = kw.get('insitu', False)
     batch     = kw.pop('batch', False)
+    lastfatal = kw.pop('lastfatal', None)
 
     if complete:
         kw['fatal'] = False
@@ -311,7 +312,13 @@ def add_section(section, args, kw):
         doitmethod = sectionmap[section]
 
         # Create a section for each resource handler
-        newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl]
+        if rl and lastfatal is not None:
+            newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl[:-1]]
+            tmpopts = opts.copy()
+            tmpopts['fatal'] = lastfatal
+            newsections.append(push(rh=rl[-1], **tmpopts)[0])
+        else:
+            newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl]
 
         # If insitu and now, try a quiet get...
         do_quick_insitu = section in ('input', 'executable') and insitu and now
@@ -358,6 +365,7 @@ def add_section(section, args, kw):
                             if talkative:
                                 t.sh.subtitle('Finalising all of the delayed actions...')
                             t.context.delayedactions_hub.finalise(* tofinalise)
+                    secok = list()
                     for ir, newsection in enumerate(newsections):
                         rhandler = newsection.rh
                         # If quick get was ok for this resource don't call get again...
@@ -386,9 +394,11 @@ def add_section(section, args, kw):
                                                rhandler.location(fatal=False))
                                 raise VortexForceComplete('Force task complete on resource error')
                         else:
-                            rlok.append(rhandler)
+                            secok.append(newsection)
                         if t.sh.trace:
                             print
+                    rlok.extend([newsection.rh for newsection in secok
+                                 if newsection.any_coherentgroup_opened])
             else:
                 rlok.extend([newsection.rh for newsection in newsections])
 

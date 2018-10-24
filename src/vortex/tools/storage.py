@@ -585,8 +585,10 @@ class Archive(Storage):
                           logname=username,
                           delayed = True)
         if ftp:
-            rc = ftp.netpath(item)
-            ftp.close()
+            try:
+                rc = ftp.netpath(item)
+            finally:
+                ftp.close()
         return rc, dict()
 
     def _ftpprestageinfo(self, item, **kwargs):
@@ -596,7 +598,11 @@ class Archive(Storage):
             ftp = self.sh.ftp(hostname=self.actual_storage,
                               logname=username,
                               delayed = True)
-            username = ftp.logname
+            if ftp:
+                try:
+                    username = ftp.logname
+                finally:
+                    ftp.close
         baseinfo = dict(storage=self.actual_storage,
                         logname=username,
                         location=item, )

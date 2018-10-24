@@ -38,6 +38,52 @@ def observer_board(obsname=None):
     return footprints.observers.get(tag=obsname)
 
 
+class IdCardAttrDumper(footprints.dump.TxtDumper):
+    """Dump a text representation of almost any footprint object..."""
+
+    indent_size = 2
+    max_depth = 2
+
+    def __init__(self):
+        self._indent_first = 4
+
+    def _get_indent_first(self):
+        return self._indent_first
+
+    def _set_indent_first(self, val):
+        self._indent_first = val
+
+    indent_first = property(_get_indent_first, _set_indent_first)
+
+    def dump_fpattrs(self, fpobj, level=0):
+        """Dump the attributes of a footprint based object."""
+        if level + 1 > self.max_depth:
+            return "%s{...}%s" % (
+                self._indent(level, self.break_before_dict_begin),
+                self._indent(level, self.break_after_dict_end)
+            )
+        else:
+            items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
+                                       six.text_type(k),
+                                       self._indent(level + 2, self.break_before_dict_value),
+                                       self._recursive_dump(v, level + 1))
+                     for k, v in sorted(fpobj.footprint_as_shallow_dict().items())]
+            return ' '.join(items)
+
+    def dump_default(self, obj, level=0, nextline=True):
+        """Generic dump function. Concise view for GetByTag objects."""
+        if level + 1 > self.max_depth:
+            return " <%s...>" % type(obj).__class__
+        else:
+            if hasattr(obj, 'tag'):
+                return "{:s} obj: tag={:s}".format(type(obj).__name__, obj.tag)
+            else:
+                parent_dump = super(footprints.dump.TxtDumper, self).dump_default(obj, level,
+                                                                                  nextline and
+                                                                                  self.break_default)
+                return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)
+
+
 class Handler(object):
     """
     The resource handler object gathers a provider, a resource and a container
@@ -291,25 +337,22 @@ class Handler(object):
             '{0}{0}Complete  : {2}',
             '{0}{0}Options   : {3}',
             '{0}{0}Location  : {4}'
-        )).format(
-            tab,
-            self, self.complete, self.options, self.location()
-        )
+        )).format(tab,
+                  self, self.complete, self.options, self.location())
+        if self.hooks:
+            card += '\n{0}{0}Hooks     : {1}'.format(tab, ','.join(list(self.hooks.keys())))
+        d = IdCardAttrDumper(tag='idcarddumper')
+        d.reset()
+        d.indent_first = 2 * len(tab)
         for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
             if obj:
-                thisdoc = "\n".join((
-                    '{0}{1:s} {2!r}',
-                    '{0}{0}Realkind   : {3:s}',
-                    '{0}{0}Attributes : {4:s}'
-                )).format(
-                    tab,
-                    subobj.capitalize(),
-                    obj, obj.realkind, obj.footprint_as_shallow_dict()
-                )
+                thisdoc = '{0}{0}{1:s} {2!r}'.format(tab,
+                                                     subobj.capitalize(), obj)
+                thisdoc += d.dump_fpattrs(obj)
             else:
-                thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())
-            card = card + "\n\n" + thisdoc
+                thisdoc = '{0}{0}{1:s} undefined'.format(tab, subobj.capitalize())
+            card = card + "\n" + thisdoc
         return card
 
     def quickview(self, nb=0, indent=0):
@@ -539,12 +582,17 @@ class Handler(object):
             logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
             st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
             # Actual get
-            rst = store.get(
-                self.uridata,
-                self.container.iotarget(),
-                st_options,
-            )
-            rst = self._postproc_get(store, rst, extras)
+            try:
+                rst = store.get(
+                    self.uridata,
+                    self.container.iotarget(),
+                    st_options,
+                )
+            except StandardError:
+                rst = False
+                raise
+            finally:
+                rst = self._postproc_get(store, rst, extras)
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -602,8 +650,22 @@ class Handler(object):
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
                         if alternate:
-                            logger.info("Alternate is on and the local file exists: ignoring the error.")
-                            rst = True
+                            if not self.container.is_virtual():
+                                lpath = self.container.localpath()
+                                for isec in self._cur_context.sequence.rinputs():
+                                    if (isec.stage in ('get' or 'expected') and
+                                            not isec.rh.container.is_virtual() and
+                                            isec.rh.container.localpath() == lpath):
+                                        rst = True
+                                        break
+                                if rst:
+                                    logger.info("Alternate is on and the local file exists.")
+                                else:
+                                    logger.info("Alternate is on but the local file is not yet matched.")
+                                    self._updstage('void', insitu=True)
+                            else:
+                                logger.info("Alternate is on. The local file exists. The container is virtual.")
+                                rst = True
                         else:
                             logger.info("The resource is already here but doesn't matches the RH description :-(")
                             cur_tracker[iotarget].match_rh('get', self, verbose=True)
@@ -681,6 +743,7 @@ class Handler(object):
         """
         r_opts = extras.copy()
         self._latest_earlyget_opts = r_opts
+        self._latest_earlyget_opts['alternate'] = alternate
         self._latest_earlyget_id = self._get_proxy(self._actual_earlyget, alternate=alternate, **extras)
         return self._latest_earlyget_id
 
@@ -703,7 +766,9 @@ class Handler(object):
                 return True
             elif self._latest_earlyget_id is None:
                 # Delayed get not available... do the usual get !
-                return self._actual_get(** self._latest_earlyget_opts)
+                e_opts = self._latest_earlyget_opts.copy()
+                e_opts['insitu'] = False
+                return self._get_proxy(self._actual_get, ** e_opts)
             else:
                 rst = False
                 store = self.store
@@ -720,7 +785,9 @@ class Handler(object):
                     if not rst:
                         # Delayed get failed... attempt the usual get
                         logger.warning('Delayed get failed ! Reverting to the usual get.')
-                        return self._actual_get(** self._latest_earlyget_opts)
+                        e_opts = self._latest_earlyget_opts.copy()
+                        e_opts['insitu'] = False
+                        return self._get_proxy(self._actual_get, ** e_opts)
                     else:
                         rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
                 else:
@@ -834,6 +901,9 @@ class Handler(object):
             rst = self.container.clear()
             self.history.append(self.container.actualpath(), 'clear', rst)
             self._notifyclear()
+            stage_clear_mapping = dict(expected='checked', get='checked')
+            if self.stage in stage_clear_mapping:
+                self._updstage(stage_clear_mapping[self.stage])
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',

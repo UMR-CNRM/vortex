@@ -322,11 +322,10 @@ class TxtDumper(_AbstractDumper):
     break_before_dict_end = True
     break_after_dict_end = False
 
-    @classmethod
-    def _indent(cls, level=0, nextline=True):
+    def _indent(self, level=0, nextline=True):
         if nextline:
-            return "\n" + cls.indent_space * (cls.indent_first +
-                                              cls.indent_size * level)
+            return "\n" + self.indent_space * (self.indent_first +
+                                               self.indent_size * level)
         else:
             return ""
 
@@ -442,7 +441,6 @@ class TxtDumper(_AbstractDumper):
             )
         else:
             items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
-                                       # self.dump(k, level + 1),
                                        six.text_type(k),
                                        self._indent(level + 2, self.break_before_dict_value),
                                        self._recursive_dump(v, level + 1))
@@ -511,11 +509,12 @@ def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
     :param obj: The object that will be dumped
     """
     _DEBUG('dump_dict', obj)
+    d = TxtDumper()
     items = [
         "%s%s = %s%s," % (
-            TxtDumper._indent(0, break_before_dict_key),
+            d._indent(0, break_before_dict_key),
             six.text_type(k),
-            TxtDumper._indent(1, break_before_dict_value),
+            d._indent(1, break_before_dict_value),
             six.text_type(v)
         ) for k, v in sorted(obj.items(), key=lambda x: x[0])
     ]

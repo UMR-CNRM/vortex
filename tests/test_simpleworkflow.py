@@ -220,6 +220,21 @@ class TestResource2(AbstractTestResource):
         return 'utest2'
 
 
+class TestResource9(AbstractTestResource):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values   = ['utest9', ],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'utest9'
+
+
 # A test hook function that leverage a Content object
 def toto_hook(t, rh, msg='Toto was here...'):
     rh.container.updfill(True)  # Mandatory for put hooks...
@@ -398,8 +413,44 @@ class UtSimpleWorkflow(TestCase):
             a_missing = a_report.missing_resources()
             self.assertEqual(a_missing['utestM_get{:d}'.format(i)].container.filename,
                              'utestM_get{:d}'.format(i))
-            # Cleaining...
+            # Cleaning...
             rhs1[0].clear()
+
+    def test_coherentget(self):
+        desc = self.default_fp_stuff
+        rh0a = toolbox.input(now=True, verbose=True, coherentgroup='toto,titi,tata',
+                             kind='utest1', local = 'utest1_get0a', **desc)
+        rh0b = toolbox.input(now=True, verbose=True, coherentgroup='toto,titi',
+                             kind='utest1', local = 'utest1_get0b', **desc)
+        rh1 = toolbox.input(now=True, verbose=True, coherentgroup='toto',
+                            kind='utest1', local = 'utest1_get1', **desc)
+        rh2 = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='toto',
+                            kind='utest1,utest9,utest2', local = '[kind]_get2', **desc)
+        rh3 = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='toto',
+                            kind='utest1', local = 'utest1_get3', **desc)
+        rh3b = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='titi',
+                             kind='utest9', local = 'utest9_get3b', **desc)
+        rh4 = toolbox.input(now=True, verbose=True,
+                            kind='utest1', local = 'utest1_get4', **desc)
+        self.assertEqual(len(rh0a), 1)
+        self.assertEqual(len(rh0b), 1)
+        self.assertEqual(len(rh1), 1)
+        self.assertListEqual(rh2, list())
+        self.assertListEqual(rh3, list())
+        self.assertListEqual(rh3b, list())
+        self.assertEqual(len(rh4), 1)
+
+        for sec in self.sequence.rinputs():
+            if sec.rh.container.basename in ('utest1_get0b', 'utest1_get1', 'utest1_get2'):
+                self.assertEqual(sec.stage, 'checked')
+            if sec.rh.container.basename in ('utest2_get2', 'utest1_get3'):
+                self.assertEqual(sec.stage, 'load')
+            if sec.rh.container.basename in ('utest9_get2', 'utest9_get3b'):
+                self.assertEqual(sec.stage, 'void')
+            if sec.rh.container.basename in ('utest1_get0a', 'utest1_get4'):
+                self.assertEqual(sec.stage, 'get')
+
+        self.assertListEqual([s.rh for s in self.sequence.effective_inputs()], rh0a + rh4)
 
 
 if __name__ == '__main__':

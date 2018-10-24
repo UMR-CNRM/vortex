@@ -17,3 +17,5 @@ Functions
 .. autofunction:: mergecontents
 
 .. autofunction:: dumpinputs
+
+.. autofunction:: defaultinput
