@@ -125,7 +125,7 @@ class S2MTaskMixIn(object):
             datebegin_input = Date(datebegin.year - 1, 8, 1, 6, 0, 0)
         dateend_input = datebegin_input
         while dateend_input < dateend:
-            dateend_input = datebegin_input.replace(year= datebegin_input.year + 1)
+            dateend_input = datebegin_input.replace(year = datebegin_input.year + 1)
             list_dates_begin_input.append(datebegin_input)
             datebegin_input = dateend_input
 
