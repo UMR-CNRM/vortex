@@ -172,7 +172,7 @@ class _SafranWorker(_S2MWorker):
         if ndays > 0:
             for n in range(1, ndays + 1):
                 try_dates = [d + Period(hours=h) for h in range(0, 25, 3)]  # We check for 3-hours guess
-                self._days[n] = self.get_fichiers_P(try_dates, fatal=False)
+                self._days[n] = self.get_guess(try_dates, fatal=False)
                 d = d + Period(days=1)
         elif ndays == 0:
             logger.warning('The given time period is too short, doing nothing.')
@@ -229,18 +229,21 @@ class _SafranWorker(_S2MWorker):
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with io.open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
-            d.write('0,0,3\n')
+            # In reanalysis execution the RR guess comes from a "weather types" analysis
+            d.write('0,0,0\n')
             d.write('3,1,3,3\n')
-            d.write('0\n')
-            d.write('1,1,{0!s}\n'.format(self.posts))
 
-    def get_fichiers_P(self, dates, fatal=True):
+    def get_guess(self, dates, fatal=False):
         """ Try to guess the corresponding input file"""
         # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
         for date in dates:
-            p = 'P{0:s}'.format(date.yymdh)
+            if date >= Date(2002, 8, 1):
+                prefix = 'P'
+            else:
+                prefix = 'E'
+            p = '{0:s}{1:s}'.format(prefix, date.yymdh)
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
             else:
@@ -273,7 +276,10 @@ class _SafranWorker(_S2MWorker):
                     raise InputCheckerError("Some of the mandatory resources are missing.")
 
         if len(actual_dates) < 5:
-            raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
+            print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
+            print(actual_dates)
+            actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
+            #raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
         elif len(actual_dates) > 5 and len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
@@ -281,6 +287,57 @@ class _SafranWorker(_S2MWorker):
                     actual_dates.remove(date)
 
         return actual_dates
+
+
+class InterCEPWorker(_SafranWorker):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['intercep']
+            ),
+        )
+    )
+
+    def _commons(self, rundir, thisdir, rdict, **kwargs):
+        _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS', 'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'surfz']
+        for nam in _Safran_namelists:
+            self.link_in(self.system.path.join(rundir, nam), nam)
+
+        # Generate the 'OPxxxxx' files containing links for the safran execution.
+        _OP_files_individual = ['OPguess']
+        _OP_files_common = ['OPcep']
+
+        for op_file in _OP_files_individual:
+            if not self.system.path.isfile(op_file):
+                with io.open(op_file, 'w') as f:
+                    f.write(thisdir + '@\n')
+
+        for op_file in _OP_files_common:
+            if not self.system.path.isfile(op_file):
+                with io.open(op_file, 'w') as f:
+                    f.write(rundir + '@\n')
+
+        if self.datebegin < Date(2002, 8, 1):
+            print('Running task {0:s}'.format(self.kind))
+            rundate = self.datebegin.replace(hour=self.day_begins_at)
+            while rundate <= self.dateend and rundate < Date(2002, 8, 1):
+                self.sapdat(rundate)
+                list_name = self.system.path.join(thisdir, self.kind + rundate.ymdh + '.out')
+                self.local_spawn(list_name)
+                rundate = rundate + Period(hours=6)
+        else:
+            print('Guess should already be there, doing nothing')
+
+        self.postfix()
+
+    def sapdat(self, thisdate, nech=5):
+        # Creation of the 'sapdat' file containing the exact date of the file to be processed.
+        self.system.remove('sapdat')
+
+        # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
+        with io.open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
 
 
 class SafraneWorker(_SafranWorker):
@@ -295,7 +352,7 @@ class SafraneWorker(_SafranWorker):
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         nech = len(dates) if len(dates) == 9 else 5
-        self.get_fichiers_P(dates)
+        self.get_guess(dates)
         for d in dates:
             logger.info('Running date : {0:s}'.format(d.ymdh))
             self.sapdat(d, nech)
@@ -305,8 +362,8 @@ class SafraneWorker(_SafranWorker):
             list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
             self.local_spawn(list_name)
             # Reanalysis : if the execution was allright we don't need the log file
-            if self.execution in ['reanalysis', 'reforecast']:
-                self.system.remove(list_name)
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
 
 
 class SypluieWorker(_SafranWorker):
@@ -320,7 +377,7 @@ class SypluieWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        self.get_fichiers_P(dates)
+        self.get_guess(dates)
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5_ARP')
         # Creation of the 'sapfich' file containing the name of the output file
         with io.open('sapfich', 'w') as f:
@@ -330,6 +387,20 @@ class SypluieWorker(_SafranWorker):
         # Reanalysis : if the execution was allright we don't need the log file
 #        if self.execution in ['reanalysis', 'reforecast']:
 #            self.system.remove(list_name)
+
+    def sapdat(self, thisdate, nech=5):
+        # Creation of the 'sapdat' file containing the exact date of the file to be processed.
+        self.system.remove('sapdat')
+
+        # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
+        with io.open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            # In reanalysis execution the RR guess comes from a "weather types" analysis
+            if self.execution == 'reanalysis':
+                d.write('0,0,1\n')
+            else:
+                d.write('0,0,3\n')
+            d.write('3,1,3,3\n')
 
 
 class SyrpluieWorker(_SafranWorker):
@@ -343,15 +414,29 @@ class SyrpluieWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        self.get_fichiers_P(dates)
+        self.get_guess(dates)
         # Creation of the 'sapfich' file containing the name of the output file
         with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
         # Reanalysis : if the execution was allright we don't need the log file
-        if self.execution in ['reanalysis', 'reforecast']:
-            self.system.remove(list_name)
+#        if self.execution in ['reanalysis', 'reforecast']:
+#            self.system.remove(list_name)
+
+    def sapdat(self, thisdate, nech=5):
+        # Creation of the 'sapdat' file containing the exact date of the file to be processed.
+        self.system.remove('sapdat')
+
+        # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
+        with io.open('sapdat', 'w') as d:
+            d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
+            # In reanalysis execution the RR guess comes from a "weather types" analysis
+            if self.execution == 'reanalysis':
+                d.write('0,0,1\n')
+            else:
+                d.write('0,0,3\n')
+            d.write('3,1,3,3\n')
 
 
 class SyvaprWorker(_SafranWorker):
@@ -372,8 +457,8 @@ class SyvaprWorker(_SafranWorker):
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
             # Reanalysis : if the execution was allright we don't need the log file
-            if self.execution in ['reanalysis', 'reforecast']:
-                self.system.remove(list_name)
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
 
 
 class SyvafiWorker(_SafranWorker):
@@ -394,8 +479,8 @@ class SyvafiWorker(_SafranWorker):
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
         self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
-        if self.execution in ['reanalysis', 'reforecast']:
-            self.system.remove(list_name)
+#        if self.execution in ['reanalysis', 'reforecast']:
+#            self.system.remove(list_name)
 
 
 class SyrmrrWorker(_SafranWorker):
@@ -417,8 +502,8 @@ class SyrmrrWorker(_SafranWorker):
             self.mv_if_exists('fort.13', 'SAPLUI5' + dates[-1].ymdh)
             self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + dates[-1].ymdh)
             self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + dates[-1].ymdh)
-            if self.execution in ['reanalysis', 'reforecast']:
-                self.system.remove(list_name)
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
 
 
 class SytistWorker(_SafranWorker):
@@ -454,8 +539,8 @@ class SytistWorker(_SafranWorker):
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             self.local_spawn(list_name)
 
-            if self.execution in ['reanalysis', 'reforecast']:
-                self.system.remove(list_name)
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -464,9 +549,9 @@ class SytistWorker(_SafranWorker):
         # A PASSER EN NAMELIST OU A PARAMETRISER POUR D'AUTRES APPLICATIONS
         with io.open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
-            if self.execution == 'forecast':
-                d.write('0,0,3\n')
-            elif self.execution == 'analysis':
+            if self.execution in ['forecast', 'reforecast']:
+                d.write('0,0,0\n')
+            elif self.execution in ['analysis', 'reanalysis']:
                 d.write('0,1,0\n')
             d.write('3,1,3,3\n')
             d.write('0\n')
@@ -787,6 +872,9 @@ class S2MReanalysis(S2MComponent):
         ),
     )
 
+    def role_ref_namebuilder(self):
+        return 'Observations'
+
     def get_subdirs(self, rh, opts):
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
         subdirs = [am.rh.container.dirname for am in avail_members]
@@ -811,6 +899,9 @@ class S2MReanalysis(S2MComponent):
             list_dates_begin_input.append(datebegin_input)
             list_dates_end_input.append(dateend_input)
 
+        list_dates_begin_input.sort()
+        list_dates_end_input.sort()
+
         return list_dates_begin_input, list_dates_end_input
 
     def _default_common_instructions(self, rh, opts):
@@ -831,12 +922,9 @@ class S2MReanalysis(S2MComponent):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-        print('DBUG')
-        print(subdirs)
-        subdirs.reverse()
-        print(subdirs)
+
+        subdirs.sort()
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
-        print(list_dates_begin, list_dates_end)
         self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end))
         self._default_post_execute(rh, opts)
 
