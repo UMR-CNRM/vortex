@@ -700,6 +700,7 @@ class Handler(object):
         """
         r_opts = extras.copy()
         self._latest_earlyget_opts = r_opts
+        self._latest_earlyget_opts['alternate'] = alternate
         self._latest_earlyget_id = self._get_proxy(self._actual_earlyget, alternate=alternate, **extras)
         return self._latest_earlyget_id
 
@@ -722,7 +723,9 @@ class Handler(object):
                 return True
             elif self._latest_earlyget_id is None:
                 # Delayed get not available... do the usual get !
-                return self._actual_get(** self._latest_earlyget_opts)
+                e_opts = self._latest_earlyget_opts.copy()
+                e_opts['insitu'] = False
+                return self._get_proxy(self._actual_get, ** e_opts)
             else:
                 rst = False
                 store = self.store
@@ -739,7 +742,9 @@ class Handler(object):
                     if not rst:
                         # Delayed get failed... attempt the usual get
                         logger.warning('Delayed get failed ! Reverting to the usual get.')
-                        return self._actual_get(** self._latest_earlyget_opts)
+                        e_opts = self._latest_earlyget_opts.copy()
+                        e_opts['insitu'] = False
+                        return self._get_proxy(self._actual_get, ** e_opts)
                     else:
                         rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
                 else:
