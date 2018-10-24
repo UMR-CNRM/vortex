@@ -625,10 +625,10 @@ class SequenceInputsReport(object):
                 outstr += "* {:8s} {:16s} : {:s}\n".format(status, extrainfo, local)
                 if detailed and extrainfo != '':
                     outstr += "  * The following resource is used:\n"
-                    outstr += true_rh.idcard(indent=6) + "\n"
+                    outstr += true_rh.idcard(indent=4) + "\n"
                     if nominal_rh is not None:
-                        outstr += "  * Instead of:"
-                        outstr += nominal_rh.idcard(indent=6) + "\n"
+                        outstr += "  * Instead of:\n"
+                        outstr += nominal_rh.idcard(indent=4) + "\n"
 
         return outstr
 

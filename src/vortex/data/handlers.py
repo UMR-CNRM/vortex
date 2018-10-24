@@ -38,6 +38,52 @@ def observer_board(obsname=None):
     return footprints.observers.get(tag=obsname)
 
 
+class IdCardAttrDumper(footprints.dump.TxtDumper):
+    """Dump a text representation of almost any footprint object..."""
+
+    indent_size = 2
+    max_depth = 2
+
+    def __init__(self):
+        self._indent_first = 4
+
+    def _get_indent_first(self):
+        return self._indent_first
+
+    def _set_indent_first(self, val):
+        self._indent_first = val
+
+    indent_first = property(_get_indent_first, _set_indent_first)
+
+    def dump_fpattrs(self, fpobj, level=0):
+        """Dump the attributes of a footprint based object."""
+        if level + 1 > self.max_depth:
+            return "%s{...}%s" % (
+                self._indent(level, self.break_before_dict_begin),
+                self._indent(level, self.break_after_dict_end)
+            )
+        else:
+            items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
+                                       six.text_type(k),
+                                       self._indent(level + 2, self.break_before_dict_value),
+                                       self._recursive_dump(v, level + 1))
+                     for k, v in sorted(fpobj.footprint_as_shallow_dict().items())]
+            return ' '.join(items)
+
+    def dump_default(self, obj, level=0, nextline=True):
+        """Generic dump function. Concise view for GetByTag objects."""
+        if level + 1 > self.max_depth:
+            return " <%s...>" % type(obj).__class__
+        else:
+            if hasattr(obj, 'tag'):
+                return "{:s} obj: tag={:s}".format(type(obj).__name__, obj.tag)
+            else:
+                parent_dump = super(footprints.dump.TxtDumper, self).dump_default(obj, level,
+                                                                                  nextline and
+                                                                                  self.break_default)
+                return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)
+
+
 class Handler(object):
     """
     The resource handler object gathers a provider, a resource and a container
@@ -291,25 +337,22 @@ class Handler(object):
             '{0}{0}Complete  : {2}',
             '{0}{0}Options   : {3}',
             '{0}{0}Location  : {4}'
-        )).format(
-            tab,
-            self, self.complete, self.options, self.location()
-        )
+        )).format(tab,
+                  self, self.complete, self.options, self.location())
+        if self.hooks:
+            card += '\n{0}{0}Hooks     : {1}'.format(tab, ','.join(list(self.hooks.keys())))
+        d = IdCardAttrDumper(tag='idcarddumper')
+        d.reset()
+        d.indent_first = 2 * len(tab)
         for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
             if obj:
-                thisdoc = "\n".join((
-                    '{0}{1:s} {2!r}',
-                    '{0}{0}Realkind   : {3:s}',
-                    '{0}{0}Attributes : {4:s}'
-                )).format(
-                    tab,
-                    subobj.capitalize(),
-                    obj, obj.realkind, obj.footprint_as_shallow_dict()
-                )
+                thisdoc = '{0}{0}{1:s} {2!r}'.format(tab,
+                                                     subobj.capitalize(), obj)
+                thisdoc += d.dump_fpattrs(obj)
             else:
-                thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())
-            card = card + "\n\n" + thisdoc
+                thisdoc = '{0}{0}{1:s} undefined'.format(tab, subobj.capitalize())
+            card = card + "\n" + thisdoc
         return card
 
     def quickview(self, nb=0, indent=0):
