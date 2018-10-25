@@ -446,7 +446,7 @@ class Sequence(footprints.observers.Observer):
         (i.e.  ^ should be explicitly added if one wants to match the beginning
         of the string).
         """
-        return self._section_list_filter(self.inputs(), **kw)
+        return self._section_list_filter(list(self.inputs()), **kw)
 
     def executables(self):
         """Return a list of current sequence sections with ``ixo.EXEC`` kind."""
@@ -465,7 +465,7 @@ class Sequence(footprints.observers.Observer):
         it operates as a filter on the inputs list. If both keys are available
         the ``role`` applies first, and then the ``kind`` in case of empty match.
         """
-        return self._section_list_filter(self.outputs(), **kw)
+        return self._section_list_filter(list(self.outputs()), **kw)
 
     def coherentgroup_iter(self, cgroup):
         """Iterate over sections belonging to a given coherentgroup."""
