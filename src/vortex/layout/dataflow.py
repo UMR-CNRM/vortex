@@ -270,6 +270,10 @@ class Section(object):
         for k, v in sorted(vars(self).items()):
             if k == "_rh":
                 outdict["rh"] = v.as_dict()
+            elif k == "_coherentgroups":
+                outdict["coherentgroup"] = ",".join(sorted(v))
+            elif k == "_coherentgroups_opened":
+                continue
             elif k.startswith('_'):
                 outdict[k[1:]] = v
             else:
