@@ -220,7 +220,8 @@ class GcoCentralStore(Store):
                     untaropts = self.ggetconfig.key_untar_properties(gname)
                     sh.smartuntar(local, destdir, output=False, **untaropts)
         else:
-            logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
+            logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
+            rc = False
         return rc
 
     def ggetdelete(self, remote, options):
