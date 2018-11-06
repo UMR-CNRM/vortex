@@ -3,13 +3,11 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import os.path
-
 import footprints
-
+import os
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider, VortexFreeStd
-from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
+from vortex.syntax.stdattrs import namespacefp, FmtInt
 
 #: No automatic export
 __all__ = []
@@ -17,49 +15,6 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
-
-
-class CenVortex(VortexFreeStd):
-    _footprint = [
-        dict(
-            info = 'CEN Vortex provider because we do not want a date in the namespace',
-            attr = dict(
-                member = dict(
-                    type    = FmtInt,
-                    args    = dict(fmt = '04'),
-                    optional = True,
-                ),
-                namespace = dict(
-                    values   = [
-                        'cenvortex.cache.fr', 'cenvortex.archive.fr', 'cenvortex.multi.fr',
-                    ],
-                    default  = Namespace('cenvortex.cache.fr'),
-                ),
-                block = dict(optional = True)
-            )
-        )
-    ]
-
-    def pathname(self, resource):
-        """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
-
-        rpath = [
-            self.vapp,
-            self.vconf,
-            self.experiment,
-        ]
-        print "block="
-        print self.block
-        if self.member is not None:
-            rpath.append(self.nice_member())
-        if self.block:
-            rpath.append(self.block)
-
-        print os.path.join(*rpath)
-        return os.path.join(*rpath)
-
-    def basename(self, resource):
-        return resource.cenvortex_basename()
 
 
 class CenCfgParser(GenericConfigParser):
@@ -221,13 +176,13 @@ class CenSxcenProvider(VortexFreeStd):
             info = 'CEN sxcen.cnrm provider',
             attr = dict(
                 member = dict(
-                    type    = FmtInt,
+                    type    = FmtInt,  # BC quid ? à remplacer
                     args    = dict(fmt = '04'),
                     optional = True,
                 ),
 
                 namespace = dict(
-                    values   = ['cenvortex.sxcen.fr'],
+                    values   = ['vortex.sxcen.fr'],
                     optional  = False,
                 ),
                 storage = dict(
@@ -262,10 +217,7 @@ class CenSxcenProvider(VortexFreeStd):
     def netloc(self, resource):
         """The actual netloc is the ``namespace`` attribute of the current provider."""
         return self.storage
-    
-    def basename(self, resource):
-        return resource.cenvortex_basename()
-    
+
     def pathname(self, resource):
         """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
 
@@ -273,16 +225,17 @@ class CenSxcenProvider(VortexFreeStd):
                  self.vapp,
                  self.vconf,
                  self.experiment,
-        ]
-        print "block="
-        print self.block
+                 ]
+        print("block=")
+        print(self.block)
         if self.member is not None:
-            rpath.append(self.nice_member())
+            print(self.member)
+            rpath.append('mb' + str(self.member))
         if self.block:
             rpath.append(self.block)
 
-        print os.path.join(*rpath)
-        return os.path.join(*rpath)
+        print(os.path.join(*rpath))
+        return(os.path.join(*rpath))
         '''
         """
         The actual pathname is the directly obtained from the templated ini file

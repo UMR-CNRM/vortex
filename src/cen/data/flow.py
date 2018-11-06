@@ -68,7 +68,6 @@ class SafranGuess(GeoFlowResource):
                     type     = Time,
                 ),
             )
-
         )
     ]
 
@@ -220,7 +219,13 @@ class Prep(InitialCondition):
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
                     optional = True
-                )
+                ),
+                stage = dict(
+                    info = "specify for SODA if prep is background or analyzed",
+                    values = ['_an', '_bg', ''],
+                    default= '',
+                    optional = True,
+                ),
             )
         )
     ]
@@ -233,10 +238,11 @@ class Prep(InitialCondition):
 
 
 @namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
-class SnowObsOld(GeoFlowResource):
-	'''
-	Deprecated class
-	'''
+class SnowObs(GeoFlowResource):
+    '''
+    Deprecated class
+    '''
+
     _footprint = [
         cendateperiod_deco,
         dict(
@@ -279,7 +285,7 @@ class SnowObsOld(GeoFlowResource):
     def realkind(self):
         return "obs_insitu"
 
-
+"""
 class SnowObs(ObsRaw):
     '''
     @author : B. Cluzet
@@ -305,7 +311,7 @@ class SnowObs(ObsRaw):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 stage = dict(
                     info = 'processing level of the obs',
@@ -330,6 +336,7 @@ class SnowObs(ObsRaw):
         return "obs"
 
 
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class Snowobs_timeseries(SnowObs):
     '''
     @author : B. Cluzet
@@ -337,8 +344,8 @@ class Snowobs_timeseries(SnowObs):
     '''
 
     _footprint = [
+        cendateperiod_deco,  # let's try this
         dict(
-			cendateperiod_deco  # let's try this
             info = 'Timeseries of snow observations',
             attr = dict(
                 datebegin = dict(
@@ -352,7 +359,7 @@ class Snowobs_timeseries(SnowObs):
                 ),
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values = ['MODIS', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                    values = ['MODIS', 'SENTINEL2', 'TERRAIN', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
                 ),
             )
         )
@@ -365,25 +372,27 @@ class Snowobs_timeseries(SnowObs):
     @property
     def realkind(self):
         return super(Snowobs_1date, self).realkind + '_' + self.part
+"""
 
 
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.ymdh, ])
 class Snowobs_1date(SnowObs):
     '''
     @author : B. Cluzet
     Class for snow obs. (any geom, any sensor) at one date.
+    For that, enforce stage = 1date and set datebegin/dateend to the same value, the date of observation.
     '''
 
     _footprint = [
         dict(
             info = 'snow observation',
             attr = dict(
-                dateobs = dict(
-                    info = "date of the observation file",
-                    type = Date,
-                ),
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values = ['MODIS', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"]
+                    values = ['MODIS', 'SENTINEL2', 'TERRAIN', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
+                    optional = False,
                 ),
                 stage = dict(
                     info = "Enforce 1date",
@@ -393,14 +402,13 @@ class Snowobs_1date(SnowObs):
             )
         )
     ]
+    
+    _extension_remap = dict(netcdf='nc')
 
-    @property
-    def period(self):
-        return self.dateobs.ymdh
 
     @property
     def realkind(self):
-        return super(Snowobs_1date, self).realkind + '_' + self.part
+        return 'obs_' + str(self.part) + '_' +str(self.geometry.area)
 
 
 class ScoresSnow(SurfaceIO):

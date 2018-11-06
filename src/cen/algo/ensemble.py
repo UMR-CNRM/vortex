@@ -6,12 +6,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import io
 import six
+import os
+import random
 
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
-from vortex.algo.components import ParaBlindRun, ParaExpresso
+from vortex.algo.components import ParaBlindRun, ParaExpresso, Parallel
 from vortex.tools.parallelism import VortexWorkerBlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
@@ -27,6 +29,7 @@ with echecker:
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+    from snowtools.tasks.vortex_kitchen import vortex_conf_file
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -78,7 +81,7 @@ class _S2MWorker(VortexWorkerBlindRun):
 
     def link_ifnotprovided(self, local, dest):
         """Link a file if the target does not already exist."""
-        if not self.system.path.islink(dest):
+        if not self.system.path.islink(dest) and not self.system.path.isfile(dest):
             if self.system.path.isfile(local):
                 self.system.symlink(local, dest)
 
@@ -279,7 +282,7 @@ class _SafranWorker(_S2MWorker):
             print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             print(actual_dates)
             actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-            #raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
+            # raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
         elif len(actual_dates) > 5 and len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
@@ -569,7 +572,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -604,7 +607,7 @@ class SurfexWorker(_S2MWorker):
                 type = bool,
                 optional = True,
                 default = False,
-            )
+            ),
         )
     )
 
@@ -635,6 +638,11 @@ class SurfexWorker(_S2MWorker):
         list_files_copy = ["OPTIONS.nam"]
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
+        if self.kind == 'croco':  # in croco case, both PREP.nc and PREP_yyyymmddhh.nc exist in local dir as FILES
+            pass
+            # self.set_env(thisdir)
+            # list_files_link_ifnotprovided.remove("PREP.nc")
+            # self.link_in(self.system.path.join())
 
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)
@@ -674,7 +682,7 @@ class SurfexWorker(_S2MWorker):
                     # ensmeteo+sytron : the forcing files are supposed to be in the subdirectories of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
                 else:
-                    # ensmeteo or ensmeteo+escroc : the forcing files are supposed to be in the subdirectories of each member
+                    # ensmeteo or ensmeteo+escroc or croco: the forcing files are supposed to be in the subdirectories of each member
                     # determinstic case : the forcing file(s) is/are in the only directory
                     forcingdir = thisdir
 
@@ -720,7 +728,9 @@ class SurfexWorker(_S2MWorker):
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
                     print("MODIFY THE NAMELIST:" + namelist.container.basename)
-                    newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
+                    newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc,
+                                                               physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
+
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)
                     newnam.close()
@@ -936,7 +946,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc']
+                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -956,8 +966,8 @@ class SurfexComponent(S2MComponent):
                 optional = True,
             ),
             subensemble = dict(
-                info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus"],
+                info = "Name of the subensemble (define which physical options are used",
+                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes"],
                 optional = True,
             ),
             geometry = dict(
@@ -971,7 +981,25 @@ class SurfexComponent(S2MComponent):
                 type = bool,
                 optional = True,
                 default = False,
-            )
+            ),
+            confvapp = dict(
+                info = "vapp",
+                type = str,
+                optional = True,
+                default = None
+            ),
+            confvconf = dict(
+                info = "vconf",
+                type = str,
+                optional = True,
+                default = None
+            ),
+            stopcount = dict(
+                info = 'counter for stop steps in the assim sequence',
+                type = int,
+                optional = True,
+                default = 1,
+            ),
         )
     )
 
@@ -980,16 +1008,30 @@ class SurfexComponent(S2MComponent):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
+        # Note: The number of members and the name of the subdirectories could be
+        # auto-detected using the sequence
+        subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        print('stopcount :', self.stopcount)
 
-        subdirs = self.get_subdirs(rh, opts)
+        if self.stopcount == 1:
+            print('')
+            print('copying the conf file')
+            # print(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
+            # self.system.cp(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
 
         if self.subensemble:
             escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
             self._add_instructions(common_i, dict(subdir=subdirs, physical_options=physical_options, snow_parameters=snow_parameters))
+            membersId = escroc.members  # Escroc members ids in case of rand selection for ex.
+            # counter for stop (assim + pauses) steps in conf file previously copied to currdir
+            conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
+            conffile.write_field('membersId_' + '{0:03d}'.format(self.stopcount), membersId)
+            conffile.close()
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
+
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
@@ -1010,3 +1052,98 @@ class SurfexComponent(S2MComponent):
 
     def role_ref_namebuilder(self):
         return 'Forcing'
+
+
+@echecker.disabled_if_unavailable
+class SodaWorker(Parallel):
+    '''
+    worker for a SODA run (designed for Particle filtering for snow)
+    @author: B. Cluzet 2018-05-24
+    '''
+    _footprint = dict(
+        info = 'AlgoComponent that runs domain-parallelized soda',
+        attr = dict(
+            kind = dict(
+                values = ['s2m_soda']
+            ),
+            binary = dict(
+                values = ['SODA'],
+                optional = False
+            ),
+            datebegin=dict(
+                type = Date,
+                optional = True
+            ),
+            dateend=dict(
+                type = Date,
+                optional = True
+            ),
+            dateassim=dict(
+                type = Date,
+                optional = False
+            ),
+            members = dict(
+                info = "The members that will be processed",
+                type = footprints.FPList,
+                optional = False
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        super(SodaWorker, self).prepare(rh, opts)
+
+        self.mbdirs = ['../mb{0:04d}'.format(m) for m in self.members]
+
+        os.chdir('workSODA')
+
+        # symbolic links for each prep from each member dir to the soda dir
+        jj = 0
+        for dirIt in self.mbdirs:
+            os.symlink(dirIt + '/PREP_' + self.dateassim.ymdh + '.nc', 'PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj + 1) + '.nc' )
+            jj += 1
+        # symbolic link from a virtual PREP.nc to the first member (for SODA date-reading reasons)
+        os.symlink(self.mbdirs[0] + '/PREP_' + self.dateassim.ymdh + '.nc', 'PREP.nc' )
+
+        # the following should be done only once on the first soda day
+        if not os.path.islink('PGD.nc'):
+            os.symlink('../PGD.nc', 'PGD.nc')
+            os.symlink('../mb0001/OPTIONS.nam', 'OPTIONS.nam')  # take the first member namelist since the root one NENS might not be properly updated by the user
+            os.symlink('../ecoclimapI_covers_param.bin', 'ecoclimapI_covers_param.bin')
+            os.symlink('../ecoclimapII_eu_covers_param.bin', 'ecoclimapII_eu_covers_param.bin')
+            os.symlink('../drdt_bst_fit_60.nc', 'drdt_bst_fit_60.nc')
+            os.symlink('../SODA', 'SODA')
+
+    def execute(self, rh, opts):
+        # run SODA
+        super(SodaWorker, self).execute(rh, opts)
+
+    def postfix(self, rh, opts):
+        # rename and mix surfout files for next offline assim
+        # rename background preps
+        # delete soda symbolic links
+        os.unlink('PREP.nc')
+
+        memberslistmix = self.members
+        # random.shuffle(memberslistmix)  # deactivated for now (5/11/18)
+        jj = 0
+        for dirIt in self.mbdirs:
+            strmixnumber = str(memberslistmix[jj])
+            os.unlink('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(jj + 1) + '.nc')
+            os.remove(dirIt + '/PREP.nc')
+            self.system.mv(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + "_bg.nc")
+            self.system.mv("SURFOUT" + strmixnumber + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + ".nc")
+            os.symlink(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + '/PREP.nc')
+            jj += 1
+
+        # adapt the following line whenever the ISBA_analysis is available
+        # save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
+
+        # Remove the symbolic link for next iteration (useless for now since filename changes (no overwriting)
+        # self.system.remove("FORCING.nc")
+
+        # Prepare next iteration if needed
+        # datebegin_this_run = dateend_this_run
+        # need_other_run = dateforcend < self.dateend
+        os.chdir('..')
+

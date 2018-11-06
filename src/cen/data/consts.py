@@ -7,6 +7,7 @@ import footprints
 
 from common.data.consts import GenvModelGeoResource
 from gco.syntax.stdattrs import gdomain
+from vortex.data.resources import Resource
 
 #: No automatic export
 __all__ = []
@@ -98,3 +99,32 @@ class climTG(GenvModelGeoResource):
             # With the standard provider, the usual keys will be used.
         )
         return nbi
+
+
+class ConfFile(Resource):
+    """
+    Vortex configuration file.
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                type = str,
+                values =['ini_file', ],
+            ),
+            nativefmt = dict(
+                optional = True
+            ),
+            vapp = dict(
+                type = str,
+                values = ['s2m'],
+            ),
+            vconf = dict(
+                type = str,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return self.vapp + '_' + self.vconf
