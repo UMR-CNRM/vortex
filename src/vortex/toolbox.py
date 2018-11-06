@@ -5,22 +5,25 @@
 Top level interface for accessing the VORTEX facilities.
 
 This module does not provides any class, constant, or any nice object.
-It defines a very basic interface to some (possibly) powefull capacities
+It defines a very basic interface to some (possibly) powerful capacities
 of the :mod:`vortex` toolbox.
 """
-
-#: Automatic export of superstar interface.
-__all__ = [ 'rload', 'rget', 'rput' ]
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from contextlib import contextmanager
 import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 from vortex.util.structs import History
+
+#: Automatic export of superstar interface.
+__all__ = [ 'rload', 'rget', 'rput' ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults
@@ -63,7 +66,7 @@ def show_toolbox_settings(ljust=24):
                  'metadatacheck', 'incache')]:
         kval = globals().get(key, None)
         if kval is not None:
-            print '+', key.ljust(ljust), '=', kval
+            print('+', key.ljust(ljust), '=', kval)
 
 
 def quickview(args, nb=0, indent=0):
@@ -78,7 +81,7 @@ def quickview(args, nb=0, indent=0):
         if quickview:
             quickview(nb, indent)
         else:
-            print '{0:02d}. {1:s}'.format(nb, x)
+            print('{0:02d}. {1:s}'.format(nb, x))
 
 
 class VortexToolboxDescError(Exception):
@@ -121,10 +124,10 @@ def rload(*args, **kw):
     rhx = []
     for x in footprints.util.expand(rd):
         picked_up = proxy.containers.pickup(  # @UndefinedVariable
-                        proxy.providers.pickup(  # @UndefinedVariable
-                            proxy.resources.pickup(x)  # @UndefinedVariable
-                        )
-                    )
+            * proxy.providers.pickup_and_cache(  # @UndefinedVariable
+                * proxy.resources.pickup_and_cache(x)  # @UndefinedVariable
+            )
+        )
         logger.debug('Resource desc %s', picked_up)
         picked_rh = data.handlers.Handler(picked_up)
         if not picked_rh.complete:
@@ -168,9 +171,9 @@ def rput(*args, **kw):
 
 def nicedump(msg, **kw):
     """Simple dump the **kw** dict content with ``msg`` as header."""
-    print '#', msg, ':'
-    for k, v in sorted(kw.iteritems()):
-        print '+', k.ljust(12), '=', str(v)
+    print('#', msg, ':')
+    for k, v in sorted(six.iteritems(kw)):
+        print('+', k.ljust(12), '=', str(v))
     print
 
 
@@ -179,7 +182,9 @@ def _tb_isolate(t, loglevel):
     """Handle the context and logger (internal use only)."""
     # Switch off autorecording of the current context
     ctx = t.context
-    ctx.record_off()
+    recordswitch = ctx.record
+    if recordswitch:
+        ctx.record_off()
     # Possibly change the log level if necessary
     if loglevel is not None:
         oldlevel = t.loglevel
@@ -189,7 +194,8 @@ def _tb_isolate(t, loglevel):
     finally:
         if loglevel is not None:
             t.setloglevel(oldlevel)
-        ctx.record_on()
+        if recordswitch:
+            ctx.record_on()
 
 
 def add_section(section, args, kw):
@@ -315,37 +321,39 @@ def add_section(section, args, kw):
 
         # If not insitu, not now, or if the quiet get failed
         if not (do_quick_insitu and all(quickget)):
-            # Create a section for each resource handler, and perform action on demand
-            for ir, newsection in enumerate(newsections):
-                rhandler = newsection.rh
-                ok = True
-                if now:
-                    if talkative:
-                        t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
-                                                                           len(rl)))
-                        rhandler.quickview(nb=ir + 1, indent=0)
-                        t.sh.header('Action ' + doitmethod)
-                        logger.info('%s %s ...', doitmethod.upper(),
-                                    rhandler.location(fatal=False))
-                    # If quick get was ok for this resource don't  call get again...
-                    ok = do_quick_insitu and quickget[ir]
-                    ok = ok or getattr(newsection, doitmethod)(**cmdopts)
-                    if talkative:
-                        t.sh.header('Result from ' + doitmethod)
-                        logger.info('%s returns [%s]', doitmethod.upper(), ok)
-                    if talkative and not ok:
-                        logger.error('Could not %s resource %s',
-                                     doitmethod, rhandler.container.localpath())
-                        print t.line
-                    if not ok:
-                        if complete:
-                            logger.warning('Force complete for %s',
-                                           rhandler.location(fatal=False))
-                            raise VortexForceComplete('Force task complete on resource error')
-                    if t.sh.trace:
-                        print
-                if ok:
-                    rlok.append(rhandler)
+            if now:
+                with t.sh.ftppool():
+                    # Create a section for each resource handler, and perform action on demand
+                    for ir, newsection in enumerate(newsections):
+                        rhandler = newsection.rh
+                        if talkative:
+                            t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
+                                                                               len(rl)))
+                            rhandler.quickview(nb=ir + 1, indent=0)
+                            t.sh.header('Action ' + doitmethod)
+                            logger.info('%s %s ...', doitmethod.upper(),
+                                        rhandler.location(fatal=False))
+                        # If quick get was ok for this resource don't  call get again...
+                        ok = do_quick_insitu and quickget[ir]
+                        ok = ok or getattr(newsection, doitmethod)(**cmdopts)
+                        if talkative:
+                            t.sh.header('Result from ' + doitmethod)
+                            logger.info('%s returns [%s]', doitmethod.upper(), ok)
+                        if talkative and not ok:
+                            logger.error('Could not %s resource %s',
+                                         doitmethod, rhandler.container.localpath())
+                            print(t.line)
+                        if not ok:
+                            if complete:
+                                logger.warning('Force complete for %s',
+                                               rhandler.location(fatal=False))
+                                raise VortexForceComplete('Force task complete on resource error')
+                        else:
+                            rlok.append(rhandler)
+                        if t.sh.trace:
+                            print
+            else:
+                rlok.extend([newsection.rh for newsection in newsections])
 
     return rlok
 
@@ -407,6 +415,12 @@ def output(*args, **kw):
     :return: A list of :class:`vortex.data.handlers.Handler` objects (associated
         with the newly created class:`~vortex.layout.dataflow.Section` objects).
     """
+    # Strip the metadatacheck option depending on active_metadatacheck
+    if not active_promise:
+        for target in ('promised', 'expected'):
+            if target in kw and kw[target]:
+                logger.info("The %s argument is removed since active_promise=False.", target)
+                del kw[target]
     return add_section('output', args, kw)
 
 
@@ -510,7 +524,7 @@ def algo(*args, **kw):
 
         ok = proxy.component(**kw)  # @UndefinedVariable
         if ok and talkative:
-            print t.line
+            print(t.line)
             ok.quickview(nb=1, indent=0)
 
     return ok
@@ -576,9 +590,9 @@ def diff(*args, **kw):
         # Let the magic of footprints resolution operate...
         for ir, rhandler in enumerate(rload(*args, **kwclean)):
             if talkative:
-                print t.line
+                print(t.line)
                 rhandler.quickview(nb=ir + 1, indent=0)
-                print t.line
+                print(t.line)
             if not rhandler.complete:
                 logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
                 if fatal:
@@ -695,9 +709,9 @@ def print_namespaces(**kw):
     nd = namespaces(**kw)
     justify = max([len(x) for x in nd.keys()])
     linesep = ",\n" + ' ' * (justify + len(prefix) + 2)
-    for k, v in sorted(nd.iteritems()):
+    for k, v in sorted(six.iteritems(nd)):
         nice_v = linesep.join(v) if len(v) > 1 else v[0]
-        print prefix + k.ljust(justify), '[' + nice_v + ']'
+        print(prefix + k.ljust(justify), '[' + nice_v + ']')
 
 
 def clear_promises(clear=None, netloc='promise.cache.fr', scheme='vortex',

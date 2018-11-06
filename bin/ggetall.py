@@ -19,9 +19,10 @@ Description files for option -f may include comments (introduced by '#')
 and  blank lines. The usual separators are allowed (space, tab, newline).
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
+import locale
 import os
 import re
 import sys
@@ -31,6 +32,8 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
                     os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
+
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
 DEFAULT_OPER_CYCLES_FILE = 'oper_cycles'
 DEFAULT_DBLE_CYCLES_FILE = 'dble_cycles'

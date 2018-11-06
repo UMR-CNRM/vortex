@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
+import six
 import socket
 import sys
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.util import config
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class ServerSyncTool(footprints.FootprintBase):
@@ -106,7 +110,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
                 python  = sys.executable,
                 address = self._socket.getsockname(),
             ))
-        t.sh.chmod(self.medium, 0555)
+        t.sh.chmod(self.medium, 0o555)
 
     def __del__(self):
         if self._socket_conn is not None:
@@ -121,8 +125,8 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         if self._socket_conn is not None:
             logger.info('Sending "%s" to the server.', mess)
             # NB: For send/recv, the settimeout also applies...
-            self._socket_conn.send(mess)
-            repl = self._socket_conn.recv(255)
+            self._socket_conn.send(six.binary_type(mess))
+            repl = str(self._socket_conn.recv(255))
             logger.info('Server replied "%s".', repl)
             if repl != 'OK':
                 raise ValueError(mess + ' failed')

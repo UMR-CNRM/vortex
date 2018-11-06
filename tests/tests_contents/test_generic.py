@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import json
 from unittest import TestCase, main
 
@@ -10,7 +12,7 @@ from vortex.data.containers import CONTAINER_INCORELIMIT, InCore
 
 class _BaseDataContentTest(TestCase):
 
-    _data = b'Very short fake data'
+    _data = 'Very short fake data'
     _temporize = False
     _container_limit = CONTAINER_INCORELIMIT
 
@@ -181,7 +183,6 @@ class UtTextContent(_BaseDataContentTest):
         self.assertEqual(ct.is_diffable(), True)
         self.assertEqual(ct.formatted_data(ct[0]),
                          'i=1 name=blop real=3.5')
-        self.assertEqual(str(ct), '\n'.join([str(t) for t in TEXT_E]))
 
 
 class UtDataRawContent(_BaseDataContentTest):

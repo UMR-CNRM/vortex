@@ -1,20 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: Automatic export off
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 
 from bronx.stdtypes.date import Time
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
-from vortex.syntax.stdattrs import FmtInt, term
+from vortex.syntax.stddeco  import namebuilding_append, namebuilding_insert
+from vortex.syntax.stdattrs import FmtInt, term_deco
 from gco.syntax.stdattrs    import gvar
 
+#: Automatic export off
+__all__ = []
 
+logger = footprints.loggers.getLogger(__name__)
+
+
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class _BackgroundErrorInfo(GeoFlowResource):
     """
     A generic class for data in grib format related to the background error.
@@ -22,14 +27,13 @@ class _BackgroundErrorInfo(GeoFlowResource):
 
     _abstract = True
     _footprint = [
-        term,
+        term_deco,
         gvar,
         dict(
             info='Background standard deviation',
             attr=dict(
                 term=dict(
                     optional=True,
-                    values=[3, 6, 9, 12],
                     default=3
                 ),
                 nativefmt=dict(
@@ -45,16 +49,6 @@ class _BackgroundErrorInfo(GeoFlowResource):
     @property
     def realkind(self):
         return 'bgstdinfo'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model, ],
-            term    = self.term.fmthm,
-        )
 
 
 class BackgroundStdError(_BackgroundErrorInfo):
@@ -106,9 +100,9 @@ class BackgroundStdError(_BackgroundErrorInfo):
     def realkind(self):
         return 'bgstderr'
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """Generic information for names fabric, with radical = ``bcor``."""
-        infos = super(BackgroundStdError, self).basename_info()
+        infos = super(BackgroundStdError, self).namebuilding_info()
         infos['src'].append(self.stage)
         if self.stage != 'scr':
             infos['src'].append(self.origin)
@@ -159,11 +153,11 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'srenorm.' + str(self.geometry.truncation)
+        return 'srenorm.{!s}'.format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'srenorm.t' + str(self.geometry.truncation)
+        return 'srenorm.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""
@@ -176,13 +170,14 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
         )
 
 
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class Wavelet(GeoFlowResource):
     """
     Background error wavelet covariances.
     """
 
     _footprint = [
-        term,
+        term_deco,
         gvar,
         dict(
             info = 'Background error wavelet covariances',
@@ -206,23 +201,13 @@ class Wavelet(GeoFlowResource):
     def realkind(self):
         return 'wavelet'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-            term    = self.term.fmthm,
-        )
-
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'wavelet.cv.' + str(self.geometry.truncation)
+        return 'wavelet.cv.{!s}'.format(self.geometry.truncation)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'wavelet.cv.t' + str(self.geometry.truncation)
+        return 'wavelet.cv.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""
@@ -235,6 +220,7 @@ class Wavelet(GeoFlowResource):
         )
 
 
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class RawControlVector(GeoFlowResource):
     """
     Raw Control Vector as issued by minimisation, playing the role of an Increment.
@@ -254,20 +240,12 @@ class RawControlVector(GeoFlowResource):
     def realkind(self):
         return 'rawcv'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'MININCR'
 
 
+@namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class InternalMinim(GeoFlowResource):
     """
     Generic class for resources internal to minimisation.
@@ -287,15 +265,6 @@ class InternalMinim(GeoFlowResource):
             ),
         )
     )
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            geo     = self._geo2basename_info(add_stretching=False),
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )
 
     def olive_suffixtr(self):
         """Return BR or HR specific OLIVE suffix according to geo streching."""
@@ -373,15 +342,8 @@ class PrecevMap(FlowResource):
     def realkind(self):
         return 'precevmap'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = [self.model],
-        )
 
-
+@namebuilding_append('src', lambda s: str(s.evnum))
 class Precev(FlowResource):
     """
     Precondionning eigenvectors as produced by minimisation.
@@ -403,11 +365,3 @@ class Precev(FlowResource):
     @property
     def realkind(self):
         return 'precev'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.realkind,
-            fmt     = self.nativefmt,
-            src     = [self.model, str(self.evnum)],
-        )

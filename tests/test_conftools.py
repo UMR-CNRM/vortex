@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import unittest
 
 from bronx.stdtypes.date import Date, Time, Month
@@ -339,21 +341,21 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
     def test_weird_coupling_refill(self):
         self.assertEqual(self.wtool.refill_terms('2016123118', 'production', 'arpege', '4dvarfr', 'arpege'),
                          {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('18-48-1')],
-                                   str(Date(2016, 12, 31, 00, 0)): [Time(h) for h in rangex('24-126-1')],
+                                   str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
                                    }})
         self.assertEqual(self.wtool.refill_terms('2016123118', 'production', 'arpege', '4dvarfr', 'oops'),
                          {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('12-30-1')],
-                                   str(Date(2016, 12, 31, 00, 0)): [Time(h) for h in rangex('18-24-1')],
+                                   str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('18-24-1')],
                                    }})
         self.assertEqual(self.wtool.refill_terms('2016123112', 'production', 'arpege', '4dvarfr', 'arpege'),
                          {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('18-30-1')],
-                                   str(Date(2016, 12, 31, 00, 0)): [Time(h) for h in rangex('24-126-1')],
+                                   str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
                                    str(Date(2016, 12, 30, 12, 0)): [Time(h) for h in rangex('30-42-1')],
                                    }})
         self.assertListEqual(self.wtool.refill_dates('2016123112', 'production', 'arpege', '4dvarfr'),
                              ['2016-12-30T12:00:00Z', '2016-12-31T12:00:00Z', '2016-12-31T00:00:00Z'])
         self.assertListEqual(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr'),
-                             [Month(12, year=2016), Month(01, year=2017)])
+                             [Month(12, year=2016), Month(1, year=2017)])
 
 
 if __name__ == "__main__":

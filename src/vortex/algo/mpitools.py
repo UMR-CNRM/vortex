@@ -71,16 +71,20 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
 import shlex
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools import env
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class MpiException(Exception):
@@ -92,7 +96,7 @@ class MpiTool(footprints.FootprintBase):
     """Root class for any :class:`MpiTool` subclass."""
 
     _abstract  = True
-    _collector = ('mpitool',)
+    _collector = ('mpitool', )
     _footprint = dict(
         info = 'MpiTool class in charge of a particular MPI implementation',
         attr = dict(
@@ -216,13 +220,13 @@ class MpiTool(footprints.FootprintBase):
     def mkcmdline(self, args):
         """Builds the MPI command line.
 
-        :param list args: Command line arguments for each of the binaries.
+        :param list[str] args: Command line arguments for each of the binaries.
         """
         cmdl = [ self.launcher, ]
         for k, v in self._reshaped_mpiopts().items():
-            cmdl.append(self.optprefix + str(k))
+            cmdl.append(self.optprefix + six.text_type(k))
             if v is not None:
-                cmdl.append(str(v))
+                cmdl.append(six.text_type(v))
         effective = 0
         for i, bin_obj in enumerate(self.binaries):
             if bin_obj.master is None:
@@ -234,9 +238,9 @@ class MpiTool(footprints.FootprintBase):
                 e_options = self._hook_binary_mpiopts(bin_obj.expanded_options())
                 for k in sorted(e_options.keys()):
                     if k in self.optmap:
-                        cmdl.append(self.optprefix + str(self.optmap[k]))
+                        cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
                         if e_options[k] is not None:
-                            cmdl.append(str(e_options[k]))
+                            cmdl.append(six.text_type(e_options[k]))
                 if self.optsep:
                     cmdl.append(self.optsep)
                 cmdl.append(bin_obj.master)
@@ -286,7 +290,7 @@ class MpiTool(footprints.FootprintBase):
             for k, v in self.target.config.items('mpienv'):
                 if k not in self.env:
                     logger.debug('Setting MPI env %s = %s', k, v)
-                    self.env[k] = str(v)
+                    self.env[k] = six.text_type(v)
         # Call the dedicated method en registered MPI binaries
         for bin_obj in self.binaries:
             bin_obj.setup_environment(opts)

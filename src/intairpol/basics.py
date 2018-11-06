@@ -5,31 +5,20 @@
 TODO: Module documentation
 """
 
+from __future__ import absolute_import, print_function, division, unicode_literals
+
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue
 
-from bronx.fancies.dispatch import upfirst
+from bronx.fancies.multicfg import upfirst
 from bronx.stdtypes.date import now
+
+logger = footprints.loggers.getLogger(__name__)
 
 #: Recognition of package name
 ALTNAMES = ('intairpol', 'airpol', 'airtools')
-
-
-def airpath(thispath=None):
-    """Return effective rootpath, if any in the one specified."""
-    sh = vortex.sh()
-    if thispath is None:
-        thispath = sh.pwd()
-    lpath = [x for x in thispath.split('/') if len(x) > 1 ]
-    while len(lpath) > 0 and lpath[-1] not in ALTNAMES:
-        lpath.pop()
-    if lpath:
-        return sh.path.join('/', *lpath)
-    else:
-        return None
 
 
 class AirTool(footprints.FootprintBase):
@@ -80,7 +69,7 @@ class AirTool(footprints.FootprintBase):
             ),
             bkup_path = dict(
                 optional = True,
-                default  = DelayedEnvValue('INTAIRPOL_BKUP_PATH', upfirst('bkup')),
+                default  = DelayedEnvValue('INTAIRPOL_BKUP_PATH', upfirst('bkup') or vortex.sh().env['HOME'] + '/bkup'),
             ),
         )
     )

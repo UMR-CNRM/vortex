@@ -5,17 +5,27 @@
 This modules defines the physical layout.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
+
 import footprints
+from bronx.stdtypes.history  import PrivateHistory
+from bronx.stdtypes.tracking import Tracker
+
 from vortex.tools.env import Environment
-from vortex.util.structs import Tracker, PrivateHistory
+import vortex.tools.prestaging
 from . import dataflow
 
 #: No automatic export.
 __all__ = []
+
 logger = footprints.loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 _STORES_OBSBOARD = 'Stores-Activity'
+
+_PRESTAGE_REQ_ACTION = 'prestage_req'
 
 
 # Module Interface
@@ -68,6 +78,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
         self._binded_context = None
         self._tracker_recorder = None
         self._stages_recorder = None
+        self._prestaging_recorder = None
 
     def __del__(self):
         self.unregister()
@@ -85,6 +96,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
         self._binded_context = context
         self._tracker_recorder = dataflow.LocalTracker()
         self._stages_recorder = list()
+        self._prestaging_recorder = list()
         footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
         footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
 
@@ -104,6 +116,8 @@ class ContextObserverRecorder(footprints.observers.Observer):
                 self._tracker_recorder.update_rh(item, info)
             elif info['observerboard'] == _STORES_OBSBOARD:
                 self._tracker_recorder.update_store(item, info)
+                if info['action'] == _PRESTAGE_REQ_ACTION:
+                    self._prestaging_recorder.append(info)
 
     def replay_in(self, context):
         """Replays the observer's record in a given context.
@@ -125,6 +139,11 @@ class ContextObserverRecorder(footprints.observers.Observer):
         if self._tracker_recorder is not None:
             logger.info('The recorder is updating the LocalTracker for context <%s>', context.tag)
             context.localtracker.append(self._tracker_recorder)
+        # Finally the prestaging requests
+        if self._prestaging_recorder:
+            logger.info('The recorder is replaying prestaging requests for context <%s>', context.tag)
+            for info in self._prestaging_recorder:
+                context.prestaging_hub(** info)
 
 
 class DiffHistory(PrivateHistory):
@@ -133,7 +152,7 @@ class DiffHistory(PrivateHistory):
     def append_record(self, rc, localcontainer, remotehandler):
         """Adds a new diff record in the current DiffHistory."""
         rcmap = {True: 'PASS', False: 'FAIL'}
-        containerstr = (str(localcontainer) if localcontainer.is_virtual()
+        containerstr = (six.text_type(localcontainer) if localcontainer.is_virtual()
                         else localcontainer.localpath())
         self.append('{:s}: {:s} (Ref: {!s})'.format(rcmap[bool(rc)], containerstr,
                                                     remotehandler.provider))
@@ -164,11 +183,12 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._path     = path + '/' + self.tag
         self._session  = None
         self._rundir   = None
-        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, str(id(self))))
+        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, six.text_type(id(self))))
         self._fstore   = dict()
         self._fstamps  = set()
         self._wkdir    = None
-        self._record   = True
+        self._record   = False
+        self._prestaging_hub = None  # Will be initialised on demand
 
         if sequence:
             self._sequence = sequence
@@ -225,17 +245,20 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         """
         if self.active:
             logger.debug('Notified %s upd item %s', self, item)
-            if (info['observerboard'] == _RHANDLERS_OBSBOARD and
-                    'stage' in info):
-                # Update the sequence
-                for section in self._sequence.fastsearch(item):
-                    if section.rh is item:
-                        section.updstage(info)
-                # Update the local tracker
-                self._localtracker.update_rh(item, info)
+            if info['observerboard'] == _RHANDLERS_OBSBOARD:
+                if 'stage' in info:
+                    # Update the sequence
+                    for section in self._sequence.fastsearch(item):
+                        if section.rh is item:
+                            section.updstage(info)
+                if ('stage' in info) or ('clear' in info):
+                    # Update the local tracker
+                    self._localtracker.update_rh(item, info)
             elif info['observerboard'] == _STORES_OBSBOARD:
                 # Update the local tracker
                 self._localtracker.update_store(item, info)
+                if info['action'] == _PRESTAGE_REQ_ACTION:
+                    self.prestaging_hub.record(** info)
 
     def get_recorder(self):
         """Return a :obj:`ContextObserverRecorder` object recording the changes in this Context."""
@@ -331,6 +354,14 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
             return self._env
 
     @property
+    def prestaging_hub(self):
+        """Return the prestaging hub associated with this context."""
+        if self._prestaging_hub is None:
+            self._prestaging_hub = vortex.tools.prestaging.get_hub(tag='contextbound_{:s}'.format(self.tag),
+                                                                   sh=self.system)
+        return self._prestaging_hub
+
+    @property
     def system(self):
         """Return the :class:`~vortex.tools.env.System` object associated to the root session."""
         return self.session.system()
@@ -370,7 +401,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     def stamp(self, tag='default'):
         """Return a stamp name that could be used for any generic purpose."""
-        return self._stamp + '.' + str(tag)
+        return self._stamp + '.' + six.text_type(tag)
 
     def fstrack_stamp(self, tag='default'):
         """Set a stamp to track changes on the filesystem."""
@@ -400,12 +431,17 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self.system.trace = bkuptrace
         return fscheck
 
+    @property
+    def record(self):
+        """Automatic recording of section while loading resource handlers."""
+        return self._record
+
     def record_off(self):
         """Avoid automatic recording of section while loading resource handlers."""
         self._record = False
 
     def record_on(self):
-        """Restore default value to void context as it was before any :func:`record_off` call."""
+        """Activate automatic recording of section while loading resource handlers."""
         self._record = True
 
     def clear_promises(self, netloc='promise.cache.fr', scheme='vortex', storeoptions=None):

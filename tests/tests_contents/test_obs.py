@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from unittest import main
 import os
 import sys
@@ -21,7 +23,7 @@ class _FakeResource(object):
         self.other = 1
 
 
-VBC_T = """VARBC_cycle.version005
+VBC_T = b"""VARBC_cycle.version005
 MINI  20000101         0
       1624     10980
 ix=1
@@ -50,7 +52,7 @@ class UtVarBCContentLimited(_BaseDataContentTest):
         self.assertTrue(ct.metadata_check(resource, delta=dict(date='-PT6H')))
         # The VarBC file size is too big wrt _container_limit : it fails...
         with self.assertRaises(DataSizeTooBig):
-            print len(ct)
+            print(len(ct))
 
 
 class UtVarBCContent(_BaseDataContentTest):
@@ -63,11 +65,11 @@ class UtVarBCContent(_BaseDataContentTest):
         self.assertEqual(len(ct), 13)  # This time _container_limit is big enough
 
 
-REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT                                          
+REFDATA_T = b"""conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT                                          
 acar BUFR acar 20170410 00
 tovhirs BUFR hirs 20170410 00"""
 
-REFDATA_R = """conv     OBSOUL   conv             20170410 0
+REFDATA_R = b"""conv     OBSOUL   conv             20170410 0
 acar     BUFR     acar             20170410 00
 tovhirs  BUFR     hirs             20170410 00
 """
@@ -92,7 +94,7 @@ class UtRefdataContent(_BaseDataContentTest):
         self.assertEqual(outincore.read(), REFDATA_R)
 
 
-OBSMAP_T = """conv conv OBSOUL conv
+OBSMAP_T = b"""conv conv OBSOUL conv
 # Blop
 conv acar BUFR acar
 conv airep BUFR airep
@@ -143,6 +145,16 @@ class UtObsMapContent(_BaseDataContentTest):
         ct = obs.ObsMapContent(discarded=set(['conv:a[a-i]', ]))
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[3], ])
+        # Only
+        ct = obs.ObsMapContent(only=set(['conv', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[0], OBSMAP_E[1], OBSMAP_E[2], ])
+        ct = obs.ObsMapContent(only=set(['conv:a[a-i]', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[1], OBSMAP_E[2], ])
+        ct = obs.ObsMapContent(only=set(['conv', ]), discarded=set(['conv:a[a-i]', ]))
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.data, [OBSMAP_E[0], ])
 
 
 if __name__ == '__main__':

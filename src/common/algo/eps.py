@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
-import re
 import copy
+import io
+import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
-from .ifsroot import IFSParallel
 from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
 from vortex.tools import grib
+from .ifsroot import IFSParallel
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Svect(IFSParallel):
@@ -45,7 +50,7 @@ class Svect(IFSParallel):
         return 'svector'
 
 
-class Combi(BlindRun, grib.GribApiComponent):
+class Combi(BlindRun, grib.EcGribComponent):
     """Build the initial conditions of the EPS."""
 
     _abstract = True
@@ -54,7 +59,7 @@ class Combi(BlindRun, grib.GribApiComponent):
         """Set some variables according to target definition."""
         super(Combi, self).prepare(rh, opts)
         self.export('drhook_not_mpi')
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
     def execute(self, rh, opts):
         """Standard Combi execution."""
@@ -162,7 +167,7 @@ class CombiSV(CombiPert):
                     '\n'.join(['- {0:8s}: {1.available:3d} ({1.expected:3d} expected).'.format(z, n)
                                for z, n in nbVect.items()]))
         # Writing the singular vectors per areas in a json file
-        with open(self.info_fname, 'w') as fhinfo:
+        with io.open(self.info_fname, 'wb') as fhinfo:
             self.system.json_dump(nbVect, fhinfo)
 
         # Tweak the namelists
@@ -307,7 +312,7 @@ class CombiIC(Combi):
             # or zero if one control ic (hypothesis: odd nbic)
             nbPert = nbPert or (nbBd - 1 if nbBd == self.nbic + 1 or
                                 (nbBd == self.nbic and self.nbic % 2 != 0)
-                                else self.nbic / 2)
+                                else self.nbic // 2)
 
         # Dealing with initial conditions from the assimilation ensemble
         # the mean value may be present among the AE inputs: remove it
@@ -420,7 +425,7 @@ class SurfCombiIC(BlindRun):
         namsec[0].rh.save()
 
 
-class Clustering(BlindRun, grib.GribApiComponent):
+class Clustering(BlindRun, grib.EcGribComponent):
     """Select by clustering a sample of members among the whole set."""
 
     _footprint = dict(
@@ -448,7 +453,7 @@ class Clustering(BlindRun, grib.GribApiComponent):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
 
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')
@@ -466,15 +471,15 @@ class Clustering(BlindRun, grib.GribApiComponent):
                 for (i, grib) in enumerate(grib_sections):
                     # If the grib file matches, let's go
                     if all([grib.rh.wide_key_lookup(key, exports=True) == value
-                            for (key, value) in elt.iteritems()]):
+                            for (key, value) in elt.items()]):
                         sublist_ids.append(i)
                 # Stack the gribs in fileList
-                fileList.extend(sorted([grib_sections[i].rh.container.localpath()
+                fileList.extend(sorted([six.text_type(grib_sections[i].rh.container.localpath())
                                         for i in sublist_ids]))
                 for i in reversed(sublist_ids):
                     del grib_sections[i]
         else:
-            fileList = sorted([grib.rh.container.localpath()
+            fileList = sorted([six.text_type(grib.rh.container.localpath())
                                for grib in grib_sections])
 
         if (self.nbmembers is None or self.nbmembers > self.nbclust):
@@ -489,7 +494,7 @@ class Clustering(BlindRun, grib.GribApiComponent):
             namsec[0].rh.save()
             namsec[0].rh.container.cat()
 
-            with open(self.fileoutput, 'w') as optFile:
+            with io.open(self.fileoutput, 'w') as optFile:
                 optFile.write('\n'.join(fileList))
 
     def execute(self, rh, opts):
@@ -501,9 +506,12 @@ class Clustering(BlindRun, grib.GribApiComponent):
         # if not, generate face outputs
         else:
             logger.info("Generating fake outputs with %d members", self.nbmembers)
-            with open('ASCII_RMCLUST', 'w') as fdrm:
-                fdrm.write("\n".join([str(i) for i in range(1, self.nbmembers + 1)]))
-            with open('ASCII_POPCLUST', 'w') as fdpop:
+            with io.open('ASCII_CLUST', 'w') as fdcl:
+                fdcl.write("\n".join(['{0:3d} {1:3d} {0:3d}'.format(i, 1)
+                                      for i in range(1, self.nbmembers + 1)]))
+            with io.open('ASCII_RMCLUST', 'w') as fdrm:
+                fdrm.write("\n".join([six.text_type(i) for i in range(1, self.nbmembers + 1)]))
+            with io.open('ASCII_POPCLUST', 'w') as fdpop:
                 fdpop.write("\n".join(['1', ] * self.nbmembers))
 
     def postfix(self, rh, opts):
@@ -514,10 +522,19 @@ class Clustering(BlindRun, grib.GribApiComponent):
         if avail_json:
             logger.info("Creating a JSON output...")
             # Read the clustering information
-            with open('ASCII_RMCLUST') as fdrm:
-                cluster_members = [int(m) for m in fdrm.readlines()]
-            with open('ASCII_POPCLUST') as fdpop:
-                cluster_sizes = [int(s) for s in fdpop.readlines()]
+            if self.system.path.exists('ASCII_CLUST'):
+                # New format for clustering outputs
+                with io.open('ASCII_CLUST', 'r') as fdcl:
+                    cluster_members = list()
+                    cluster_sizes = list()
+                    for l in [l.split() for l in fdcl.readlines()]:
+                        cluster_members.append(int(l[0]))
+                        cluster_sizes.append(int(l[1]))
+            else:
+                with io.open('ASCII_RMCLUST', 'r') as fdrm:
+                    cluster_members = [int(m) for m in fdrm.readlines()]
+                with io.open('ASCII_POPCLUST', 'r') as fdpop:
+                    cluster_sizes = [int(s) for s in fdpop.readlines()]
             # Update the population JSON
             mycontent = copy.deepcopy(avail_json[0].rh.contents)
             mycontent.data['resource_kind'] = 'mbsample'

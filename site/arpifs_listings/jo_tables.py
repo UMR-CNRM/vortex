@@ -18,7 +18,7 @@ DEFAULT_JO_THRESHOLD = 0.0003
 
 
 class JoTablesMismatchError(Exception):
-    '''Items from Experiment and Reference JoTables do not match.'''
+    """Items from Experiment and Reference JoTables do not match."""
     pass
 
 
@@ -37,14 +37,14 @@ def _compute_diff(exp, ref):
 
 
 def _chk_diff(exp, ref, thres, bw=False):
-    '''Internal function to check if the relative difference is within bounds.
+    """Internal function to check if the relative difference is within bounds.
     If not trigger the use of the red color
 
     :param exp: Value to test (float or int)
     :param ref: Ref value
     :param thres: Threshold
     :param bw: Black & White flag
-    '''
+    """
 
     diff, reldiff = _compute_diff(exp, ref)
     # Set colors
@@ -101,7 +101,7 @@ class _JoMixin(object):
         return reversed(groups)
 
     def parse_line(self, line):
-        '''Recursively process one line of the listing file.'''
+        """Recursively process one line of the listing file."""
         if self._cur_child is not None:
             # Pass the input line to the child object
             mres = self._re_end.match(line)
@@ -140,14 +140,14 @@ class JoVariable(object):
     """Object containing data on a given variable."""
 
     def __init__(self, name, n=0, jo=0, obserr=0, bgerr=0, dummy=False):
-        '''
+        """
 
         :param name: Name of the variable
         :param n: Number of obs
         :param jo: Jo
         :param obserr: Observation Error
         :param bgerr: Background Error
-        '''
+        """
         self.name = name.upper()
         self.n = int(n)
         self.jo = float(jo)
@@ -195,13 +195,13 @@ class JoVariable(object):
                    jothres=DEFAULT_JO_THRESHOLD,
                    bw=False,
                    out=sys.stdout):
-        '''Print the summary of the difference between two variables.
+        """Print the summary of the difference between two variables.
 
         :param ref: Reference objet (to be compared to)
         :param nthres: Alert threshold on the ObsCount
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
-        '''
+        """
         self._item_write(ref, out, bw, 'n', 'ObsCount', nthres, item_f='%15d')
         self._item_write(ref, out, bw, 'jo', 'Jo', jothres)
         if self.obserr != ref.obserr:
@@ -229,11 +229,11 @@ class JoSensor(_JoMixinPlus):
     _ChildClass = JoVariable
 
     def __init__(self, name, idnum=-9999, dummy=False):
-        '''
+        """
 
         :param idnum: Codetype Id
         :param name: Name of the sensor
-        '''
+        """
         super(JoSensor, self).__init__(name)
         self.id = int(idnum)
         self.dummy = dummy
@@ -266,14 +266,14 @@ class JoSensor(_JoMixinPlus):
                    jothres=DEFAULT_JO_THRESHOLD,
                    bw=False,
                    out=sys.stdout):
-        '''
+        """
         Print the summary of the difference between two sensors
 
         :param ref: Reference objet (to be compared to)
         :param nthres: Alert threshold on the ObsCount
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
-        '''
+        """
         _write_n(out, '  %s' % (self.name))
         for vname in self._diff_superset(ref):
             self[vname].print_diff(ref[vname],
@@ -293,11 +293,11 @@ class JoObstype(_JoMixinPlus):
     _ChildClass = JoSensor
 
     def __init__(self, name, idnum=-9999, dummy=False):
-        '''
+        """
 
         :param idnum: Obstype Id
         :param name: Name of the Obstype
-        '''
+        """
         super(JoObstype, self).__init__(name)
         self.id = int(idnum)
         self.ntotal = 0
@@ -364,13 +364,13 @@ class JoObstype(_JoMixinPlus):
                    jothres=DEFAULT_JO_THRESHOLD,
                    bw=False,
                    out=sys.stdout):
-        '''Print the summary of the difference between two obstypes.
+        """Print the summary of the difference between two obstypes.
 
         :param ref: Reference objet (to be compared to)
         :param nthres: Alert threshold on the ObsCount
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
-        '''
+        """
         _write_n(out, 'Obstype %3d: %s' % (self.id, self.name))
         _write_n(out, '')
         for sname in self._diff_superset(ref):
@@ -389,11 +389,11 @@ class JoObstype(_JoMixinPlus):
         _write_n(out, '')
 
     def end_of_group(self, *kargs):
-        '''Record the obstype ObsCount and Jo.
+        """Record the obstype ObsCount and Jo.
 
         :param ntotal: obstype ObsCount
         :param jo: obstype Jo
-        '''
+        """
         self.ntotal = int(kargs[0])
         self.jo = float(kargs[1])
 
@@ -454,14 +454,14 @@ class JoTable(_JoMixinPlus):
                    bw=False,
                    out=sys.stdout,
                    onlymaxdiff=False):
-        '''Print the summary of the difference between two JO-tables.
+        """Print the summary of the difference between two JO-tables.
 
         :param ref: Reference objet (to be compared to)
         :param nthres: Alert threshold on the ObsCount
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
         :param onlymaxdiff: Only max difference is printed for each table
-        '''
+        """
         _write_n(out, '=====================')
         if onlymaxdiff:
             maxdiff = self.maxdiff(ref)
@@ -492,17 +492,17 @@ class JoTable(_JoMixinPlus):
         _write_n(out, '')
 
     def end_of_group(self, *kargs):
-        ''' Record the global ObsCount and Jo.
+        """ Record the global ObsCount and Jo.
 
         :param ntotal: Global ObsCount
         :param jo: Global Jo
-        '''
+        """
         self.ntotal = int(kargs[0])
         self.jo = float(kargs[1])
 
 
 class JoTables(_JoMixin):
-    '''Object enclosing one or more JO-table.'''
+    """Object enclosing one or more JO-table."""
 
     _ChildClass = JoTable
     _re_begin = re.compile(r'^\s*Diagnostic JO-table \(JOT\) (.*)$')
@@ -510,12 +510,12 @@ class JoTables(_JoMixin):
                          r'([\d.E+-]+)\s+[\d.E+-]+\s*$')
 
     def __init__(self, filename, fcontent=None):
-        '''The constructor call triggers the reading of the file.
+        """The constructor call triggers the reading of the file.
 
         :param filename: Name of the file where the Jo-tables are read
         :param fcontent: Array of listing lines (if not provided, **filename** is
             opened and read it.
-        '''
+        """
         super(JoTables, self).__init__(filename)
         self.filename = filename
 
@@ -540,7 +540,7 @@ class JoTables(_JoMixin):
                 all([self[k] == other[k] for k in self.keys()]))
 
     def print_head(self, ref, out=sys.stdout):
-        ''' Print very useful generic informations.'''
+        """ Print very useful generic informations."""
         _write_n(out, 'Experiment Jo Tables read from file: %s' % self.filename)
         _write_n(out, 'Reference  Jo Tables read from file: %s' % ref.filename)
         _write_n(out, '')
@@ -572,7 +572,7 @@ class JoTables(_JoMixin):
                    bw=False,
                    out=sys.stdout,
                    onlymaxdiff=False):
-        '''Print the summary of the differences between JO-tables.
+        """Print the summary of the differences between JO-tables.
 
         The :class:`JoTablesMismatchError` exception may be raised if the
         object to compare to (ref) doesn't have the same structure.
@@ -582,7 +582,7 @@ class JoTables(_JoMixin):
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
         :param onlymaxdiff: Only max difference is printed for each table
-        '''
+        """
         self._allow_diff(ref)
         for tname in self.keys():
             self[tname].print_diff(ref[tname],

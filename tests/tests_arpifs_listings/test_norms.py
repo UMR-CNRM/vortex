@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import os
 import re
 import six
@@ -34,7 +35,7 @@ class TestListingNorms(unittest.TestCase):
 
     @staticmethod
     def _ingest(fname):
-        with open(_find_testfile(fname), 'r') as fh:
+        with io.open(_find_testfile(fname), 'r') as fh:
             return [l.rstrip("\n") for l in fh]
 
     def test_single(self):
@@ -114,6 +115,7 @@ class TestListingNorms(unittest.TestCase):
         ncomp.write(str_out, onlymaxdiff=True)
         str_out.seek(0)
         self.assertEqual(str_out.read(), self.GPDIFFS_STR)
+
 
 if __name__ == '__main__':
     unittest.main()

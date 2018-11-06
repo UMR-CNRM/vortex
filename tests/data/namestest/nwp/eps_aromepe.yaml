@@ -1,0 +1,26 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: franmgsp25
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome@pe-op3.03
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: pefrance
+
+todo:
+    # GeneralCluster
+    -   commons:
+            experiment: abcd
+            block: ic
+            nativefmt:
+                - null
+                - ascii
+        tests:
+            - kind: clustering
+              filling: full
+   

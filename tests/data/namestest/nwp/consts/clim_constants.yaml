@@ -1,0 +1,69 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy43t2_clim-bf.05
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+        # Arome world
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: cy43t2_clim-bf.05
+            gnamespace: 'gco.multi.fr'
+            vapp: arome
+            vconf: 3dvarfr
+
+register:
+    genv:
+        - cy43t2_clim-bf.05
+
+todo:
+    # Climatololy input files (genv only)
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            -   geometry: global2m5
+                kind:
+                    - misc_orography
+                    - urbanisation
+                    - water_percentage
+                source: GTOPO30
+            -   geometry: global1dg
+                month:
+                    - 01
+                    - 11
+                kind:
+                    - soil_and_veg
+                    - LAI
+                    - vegetation
+                source: giardbazile2000
+            -   geometry: global1dg
+                month:
+                    - null
+                    - 11
+                kind:
+                    - soil_clim
+                    - surfgeopotential
+                source:
+                    - arpreanalysis
+            -   geometry: global5x4
+                month:
+                    - 01
+                    - 11
+                kind: ozone
+                source: ugamp
+            -   geometry: global5x4
+                month:
+                    - 01
+                    - 11
+                kind: aerosols
+                source: tegen

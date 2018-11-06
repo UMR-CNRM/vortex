@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 from bronx.stdtypes import date
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
+from common.algo.ifsroot import IFSParallel
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
 
 from .forecasts import FullPos
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class Coupling(FullPos):
@@ -56,7 +60,8 @@ class Coupling(FullPos):
             kind = ('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
-        infile = 'ICMSH{0:s}INIT'.format(self.xpname)
+        ininc = self.naming_convention('ic', rh)
+        infile = ininc()
         isMany = len(cplsec) > 1
         outprefix = 'PF{0:s}AREA'.format(self.xpname)
 
@@ -68,18 +73,20 @@ class Coupling(FullPos):
                                                                  'SurfaceCouplingSource'))
         cplsurf.sort(key=lambda s: s.rh.resource.term)
         surfacing = bool(cplsurf)
-        infilesurf = 'ICMSH{0:s}INIT.sfx'.format(self.xpname)
+        inisurfnc = self.naming_convention('ic', rh, model='surfex')
+        infilesurf = inisurfnc()
         if surfacing:
             # Link in the Surfex's PGD
+            sclimnc = self.naming_convention(kind='targetclim', rh=rh, model='surfex')
             self.setlink(
                 initrole = ('ClimPGD', ),
                 initkind = ('pgdfa', 'pgdlfi'),
-                initname = 'const.clim.sfx.AREA',
+                initname = sclimnc(area='AREA')
             )
 
         for sec in cplsec:
             r = sec.rh
-            sh.subtitle('Loop on {0:s}'.format(str(r.resource)))
+            sh.subtitle('Loop on {0!s}'.format(r.resource))
 
             # First attempt to set actual date as the one of the source model
             actualdate = r.resource.date + r.resource.term
@@ -133,25 +140,12 @@ class Coupling(FullPos):
 
             # Find out actual monthly climatological resource
             actualmonth = date.Month(actualdate)
-
-            def checkmonth(actualrh):
-                return bool(actualrh.resource.month == actualmonth)
-
-            sh.remove('Const.Clim')
-            self.setlink(
-                initrole = ('GlobalClim', 'InitialClim'),
-                initkind = 'clim_model',
-                initname = 'Const.Clim',
-                inittest = checkmonth
-            )
-
-            sh.remove('const.clim.AREA')
-            self.setlink(
-                initrole = ('LocalClim', 'TargetClim'),
-                initkind = 'clim_model',
-                initname = 'const.clim.AREA',
-                inittest = checkmonth
-            )
+            self.climfile_fixer(rh, convkind='modelclim', month=actualmonth,
+                                inputrole=('GlobalClim', 'InitialClim'),
+                                inputkind='clim_model')
+            self.climfile_fixer(rh, convkind='targetclim', month=actualmonth,
+                                inputrole=('LocalClim', 'TargetClim'),
+                                inputkind='clim_model', area='AREA')
 
             # Standard execution
             super(Coupling, self).execute(rh, opts)
@@ -353,3 +347,95 @@ class Prep(BlindRun):
             # Some cleaning
             sh.rmall('*.des', fmt = r.container.actualfmt)
             sh.rmall('PREP1.*', fmt = r.container.actualfmt)
+
+
+class C901(IFSParallel):
+    """Run of C931 configuration"""
+
+    _footprint = dict(
+        info = "Run C901 configuration",
+        attr = dict(
+            kind = dict(
+                values = ["c901", ]
+            ),
+
+        )
+    )
+
+    ATM_FC_FILE = "ICMUAa001INIT"
+    ATM_FC_SPE_FILE = "ICMSHa001INIT"
+    SURF_FC_FILE = "ICMGGa001INIT"
+    SURF_ANA_FILE = "ICMGGb001INIT"
+    OROGRAPHY_SPE_FILE = "ICMSHb001INIT"
+    OUTPUT_FILE_NAME = "CN90xa001INIT"
+    OUTPUT_LISTING_NAME = "NODE.001_01"
+
+    @property
+    def realkind(self):
+        return "c901"
+
+    def execute(self, rh, opts):
+        """Loop on the various files provided"""
+
+        sh = self.system
+
+        surf_fc_files = self.context.sequence.effective_inputs(
+            role = "SurfaceModelState"
+        )
+        surf_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
+        surf_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in surf_fc_files]
+        atm_fc_files = self.context.sequence.effective_inputs(
+            role = "AtmosphereModelState"
+        )
+        atm_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
+        atm_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_files]
+        atm_fc_spe_files = self.context.sequence.effective_inputs(
+            role = "AtmosphereModelSpectralState"
+        )
+        atm_fc_spe_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
+        atm_fc_spe_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_spe_files]
+        current_surf_ana_file = self.context.sequence.effective_inputs(
+            role = "SurfaceAnalysis"
+        )[0]
+        current_orography_spe_file = self.context.sequence.effective_inputs(
+            role = "OrographySpectralState"
+        )[0]
+
+        self.algoassert(surf_fc_files_terms != atm_fc_files_terms or surf_fc_files_terms != atm_fc_spe_files_terms,
+                        "The files of each type must have the same validity dates.")
+
+        for current_surf_fc_file in surf_fc_files:
+            # Create the needed links for the run
+            self.algoassert(sh.path.exists(self.SURF_FC_FILE),
+                            "The file {} already exists. It should not.".format(self.SURF_FC_FILE))
+            sh.cp(current_surf_fc_file.rh.container.iotarget(), self.SURF_FC_FILE, intent="in")
+            current_atm_fc_file = atm_fc_files.pop()
+            self.algoassert(sh.path.exists(self.ATM_FC_FILE),
+                            "The file {} already exists. It should not.".format(self.ATM_FC_FILE))
+            sh.cp(current_atm_fc_file.rh.container.iotarget(), self.ATM_FC_FILE, intent='in')
+            current_atm_fc_spe_file = atm_fc_spe_files.pop()
+            self.algoassert(sh.path.exists(self.ATM_FC_SPE_FILE),
+                            "The file {} already exists. It should not.".format(self.ATM_FC_SPE_FILE))
+            sh.cp(current_atm_fc_spe_file.rh.container.iotarget(), self.ATM_FC_SPE_FILE, intent='in')
+            self.algoassert(sh.path.exists(self.SURF_ANA_FILE),
+                            "The file {} already exists. It should not.".format(self.SURF_ANA_FILE))
+            sh.cp(current_surf_ana_file.rh.container.iotarget(), self.SURF_ANA_FILE, intent='in')
+            self.algoassert(sh.path.exists(self.OROGRAPHY_SPE_FILE),
+                            "The file {} already exists. It should not.".format(self.OROGRAPHY_SPE_FILE))
+            sh.cp(current_orography_spe_file.rh.container.iotarget(), self.OROGRAPHY_SPE_FILE, intent='in')
+            # Find the validity date and the associated climatology file
+            actual_date = current_surf_fc_file.resource.date + current_surf_fc_file.resource.term
+            actualmonth = date.Month(actual_date)
+            self.climfile_fixer(rh, convkind='modelclim', month=actualmonth,
+                                inputrole=('GlobalClim', 'InitialClim'),
+                                inputkind='clim_model')
+            # Standard execution
+            super(C901, self).execute(rh, opts)
+            # Move the output file
+            current_term = current_surf_fc_file.rh.resource.term
+            sh.move(self.OUTPUT_FILE_NAME, self.OUTPUT_FILE_NAME + "+{}".format(current_term.fmthm))
+            # Cat all the listings into a single one
+            sh.cat(self.OUTPUT_LISTING_NAME, output='NODE.all')
+            # Remove unneeded files
+            sh.rmall(self.ATM_FC_FILE, self.ATM_FC_SPE_FILE, self.SURF_FC_FILE, self.SURF_ANA_FILE,
+                     self.OROGRAPHY_SPE_FILE, self.OUTPUT_LISTING_NAME, 'std*')

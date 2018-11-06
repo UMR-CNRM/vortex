@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import tempfile
 from unittest import TestCase, main
 
@@ -127,6 +129,7 @@ class UtSession(TestCase):
         # The working directory was restored
         self.assertEqual(self.sh.path.realpath(self.sh.pwd()),
                          self.sh.path.join(self.tmpdir, '{0:s}/scrontch/toto'.format(self.tag1)))
+
 
 if __name__ == '__main__':
     main(verbosity=2)

@@ -6,13 +6,21 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from unittest import TestCase, main
 import importlib
 import json
+import os
 import sys
+
+# Otherwise os.getcwd may fail with nose
+os.chdir(os.environ['HOME'])
 
 import footprints as fp
 import vortex
 
-fp.loggers.getLogger('vortex').setLevel('ERROR')
-fp.loggers.getLogger('common').setLevel('ERROR')
+vlog = fp.loggers.getLogger('vortex')
+clog = fp.loggers.getLogger('common')
+
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
+                    'PIL': ['bronx.datagrip.pyexttiff', ],
+                    'numpy': ['bronx.datagrip.pyexttiff', ], }
 
 
 class DynamicTerminal(object):
@@ -41,16 +49,38 @@ class DynamicTerminal(object):
 
 class utImport(TestCase):
 
+    def setUp(self):
+        self.vlogL = vlog.level
+        self.clogL = clog.level
+        vlog.setLevel('ERROR')
+        clog.setLevel('ERROR')
+
+    def tearDown(self):
+        vlog.setLevel(self.vlogL)
+        clog.setLevel(self.clogL)
+
     def test_pyVersion(self):
         sh = vortex.sh()
         self.assertTrue(sh.python > '2.7')
 
+    def _test_ignore_modules(self):
+        exclude = set()
+        for dep, modlist in non_standard_dep.items():
+            try:
+                importlib.import_module(dep)
+            except ImportError:
+                print("!!! {} is unavailable on this system. Skipping the import test for {!s}".
+                      format(dep, modlist))
+                exclude.update(modlist)
+        return list(exclude)
+
     def test_importModules(self):
         sh = vortex.sh()
+        exclude = self._test_ignore_modules()
         # Try to import all modules
         modules = sh.vortex_modules()
-        with DynamicTerminal("> importing module ", len(modules)) as nterm:
-            for modname in modules:
+        with DynamicTerminal("> importing module ", len(modules) - len(exclude)) as nterm:
+            for modname in [m for m in modules if m not in exclude]:
                 nterm.increment(modname)
                 self.assertTrue(importlib.import_module(modname))
         # Then dump all the footprints

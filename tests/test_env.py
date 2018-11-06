@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-import os, logging
-logging.basicConfig(level=logging.ERROR)
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import logging
+import os
 
 from unittest import TestCase, main
 
 from common.data.modelstates import Analysis
 from vortex.data import geometries
 from vortex.tools.env import Environment
+
+logging.basicConfig(level=logging.ERROR)
 
 
 class UtEnv(TestCase):
@@ -140,7 +144,7 @@ class UtEnv(TestCase):
 
     def test_encoding(self):
         e = Environment(active=True)
-        e['toto'] = range(1, 4)
+        e['toto'] = list(range(1, 4))
         self.assertEqual(os.environ['TOTO'], '[1, 2, 3]')
         e['toto'] = dict(toto = 2, fun = 'coucou')
         self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
@@ -156,7 +160,7 @@ class UtEnv(TestCase):
 
     def test_delta(self):
         e = Environment()
-        e['toto'] = range(1, 4)
+        e['toto'] = list(range(1, 4))
         e.delta(titi='truc')
         self.assertIn('toto', e)
         self.assertIn('titi', e)
@@ -164,7 +168,7 @@ class UtEnv(TestCase):
         self.assertEqual(e.TOTO, 'titi')
         self.assertEqual(e.TITI, 'truc')
         e.rewind()
-        self.assertEqual(e.TOTO, range(1, 4))
+        self.assertEqual(e.TOTO, list(range(1, 4)))
         self.assertEqual(e.TITI, 'truc')
         e.rewind()
         self.assertNotIn('titi', e)
@@ -178,7 +182,7 @@ class UtEnv(TestCase):
             self.assertEqual(e.TOTO, 'titi')
             self.assertEqual(e.TITI, 'truc')
             e.rewind()
-            self.assertEqual(e.TOTO, range(1, 4))
+            self.assertEqual(e.TOTO, list(range(1, 4)))
             self.assertEqual(e.TITI, 'truc')
         self.assertNotIn('titi', e)
         with self.assertRaises(RuntimeError):

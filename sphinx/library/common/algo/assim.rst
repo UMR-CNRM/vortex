@@ -16,16 +16,6 @@ Package
 Classes
 -------
 
-.. autoclass:: Anamix
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Canari
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: IFSODB
    :show-inheritance:
    :members:
@@ -36,27 +26,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MergeVarBC
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Minim
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: PseudoTrajectory
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: SstGrb2Ascii
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: SeaIceAnalysis
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -71,7 +41,42 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MergeVarBC
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PseudoTrajectory
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Anamix
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Canari
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SstAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SstGrb2Ascii
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SeaIceAnalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IceNetCDF2Ascii
    :show-inheritance:
    :members:
    :member-order: alphabetical

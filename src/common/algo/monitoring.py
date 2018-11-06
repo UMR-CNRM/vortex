@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: Automatic export of Observations class
-__all__ = [ ]
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
 from common.algo.odbtools import OdbProcess
+
+#: Automatic export of Monitoring class
+__all__ = [ ]
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OdbMonitoring(OdbProcess):
@@ -66,28 +68,30 @@ class OdbMonitoring(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsmatchup = [
+        obsatm = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('matchup') and x.resource.part == 'virtual'
+            if (x.rh.resource.stage.startswith('matchup') or
+                x.rh.resource.stage.startswith('screening')) and x.rh.resource.part == 'virtual'
         ]
 
         obssurf = [
             x for x in self.input_obs()
-            if x.resource.stage.startswith('canari') and (x.resource.part == 'surf' or x.resource.part == 'ground')
+            if x.rh.resource.stage.startswith('canari') and (x.rh.resource.part == 'surf' or
+                                                             x.rh.resource.part == 'ground')
         ]
 
         # One database at a time
-        if not obsmatchup and self.stage == 'atm':
-            raise ValueError('Could not find any ODB matchup input')
+        if not obsatm and self.stage == 'atm':
+            raise ValueError('Could not find any ODB matchup or screening ECMA database')
         if not obssurf and self.stage == 'surf':
-            raise ValueError('Could not find any ODB surface input')
+            raise ValueError('Could not find any ODB surface ECMA database')
 
         # Set actual ODB paths
-        if obsmatchup:
-            ecma = obsmatchup.pop(0)
+        if obsatm:
+            ecma = obsatm.pop(0)
         else:
             ecma = obssurf.pop(0)
-        ecma_path = sh.path.abspath(ecma.container.localpath())
+        ecma_path = sh.path.abspath(ecma.rh.container.localpath())
         self.env.ODB_SRCPATH_ECMA = ecma_path
         logger.info('Setting ODB env %s = %s.', 'ODB_SRCPATH_ECMA', ecma_path)
         self.env.ODB_DATAPATH_ECMA = ecma_path

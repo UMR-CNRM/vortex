@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 from __future__ import print_function, absolute_import, unicode_literals
+
+import io
 import tempfile
 import os
 import unittest
@@ -12,7 +15,7 @@ class TestDictCSV(unittest.TestCase):
 
     def setUp(self):
         self.testfilename = tempfile.mkstemp()[1]
-        with open(self.testfilename, 'w') as f:
+        with io.open(self.testfilename, 'w') as f:
             f.write(';\n')
             f.write('main\n')
             f.write('a:1;b:ok\n')

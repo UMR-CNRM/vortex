@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os
 
 import logging
 import footprints
 logging.basicConfig(level=logging.ERROR)
 
-from ConfigParser import InterpolationMissingOptionError, NoSectionError, NoOptionError
+from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
 from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, \
@@ -227,6 +229,16 @@ class TestAppConfigDecoder(TestCase):
         tgeometries = 'geometry(global798,globalsp2)'
         self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='global798'),
                                                     geometries.get(tag='globalsp2')])
+        trangex = 'rangex(1-35-1)'
+        self.assertListEqual(self.cd(trangex), list(range(1, 36)))
+        trangex = 'rangex(1-35-1,37,38-42-2)'
+        self.assertListEqual(self.cd(trangex), list(range(1, 36)) + [37, 38, 40, 42])
+        trangex = 'rangex(0-1-0:30)'
+        self.assertListEqual(self.cd(trangex), ['0000:00', '0000:30', '0001:00'])
+        trangex = 'rangex(start:1 end:3 shift:-1)'
+        self.assertListEqual(self.cd(trangex), [0, 1, 2])
+        trangex = 'rangex(start:1 end:3 shift:-0:30)'
+        self.assertListEqual(self.cd(trangex), ['0000:30', '0001:30', '0002:30'])
 
 
 class _UnitTestTableItem(TableItem):
@@ -311,8 +323,8 @@ Localisation : HELLO"""
     def test_bare(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
                                           version = 'bare')
-        self.assertItemsEqual(c_conf.groups(), ['utest_chemical', 'utest_volcanic'])
-        self.assertItemsEqual(c_conf.keys(), ['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO'])
+        self.assertEqual(set(c_conf.groups()), set(['utest_chemical', 'utest_volcanic']))
+        self.assertEqual(set(c_conf.keys()), set(['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO']))
         self.assertEqual(len(c_conf.tablelist), 3)
         self.assertIsInstance(c_conf.tablelist[0], _UnitTestTableItem)
         self.assertListEqual(c_conf.find('somewhere'), [c_conf.get('ARDOUKOBA')])

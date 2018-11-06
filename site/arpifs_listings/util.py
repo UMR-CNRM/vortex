@@ -3,8 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import six
+import io
 import re
+import six
 
 #: No automatic export
 __all__ = []
@@ -19,9 +20,15 @@ re_for_fortran_scientific_format = re.compile(_sign + _dot + _digits + _exp)
 _sign = '(?P<sign>' + _sign + ')'
 _digits = '(?P<digits>' + _digits + ')'
 _exp = 'E?(?P<exp>(\+|\-)\d{2,3})'
+
+# useful patterns
 re_for_fortran_scientific_format_groups = re.compile(_sign + _dot + _digits + _exp + '$')
+re_for_nan = re.compile('\s*N|nA|aN|n\s*')
+# useful error codes
 PARSING_ERROR_CODE = 999
 CRASHED_JOB_ERROR_CODE = -1
+MISSING_OUTPUT_ERROR_CODE = -2
+FOUND_NAN_ERROR_CODE = -3
 
 
 def find_line_containing(pattern, lines):
@@ -61,6 +68,8 @@ def diverging_digit(t, r):
         digit = number_of_different_digits(t, r)
         if digit == 0:
             digit = None
+        elif digit < 0:
+            pass
         else:
             r_re = re_for_fortran_scientific_format_groups.match(r)
             digits_len = len(r_re.group('digits'))
@@ -133,10 +142,13 @@ def number_of_different_digits(t, r):
                         break
             digit = digits_len - digit
         else:
-            if not t_re:
-                raise ParsingError('unable to parse test float: ' + t_re)
-            if not r_re:
-                raise ParsingError('unable to parse ref float: ' + r_re)
+            if re_for_nan.match(t) or re_for_nan.match(r):
+                digit = FOUND_NAN_ERROR_CODE
+            else:
+                if not t_re:
+                    raise ParsingError('unable to parse test float: ' + t)
+                if not r_re:
+                    raise ParsingError('unable to parse ref float: ' + r)
     return digit
 
 
@@ -165,6 +177,17 @@ def get_maxint(container, infinity=-999):
     return digit
 
 
+def get_worst(a_list):
+    """
+    Get the worst, i.e. max or FOUND_NAN_ERROR_CODE, value of a list.
+    """
+    if FOUND_NAN_ERROR_CODE in a_list:
+        worst = FOUND_NAN_ERROR_CODE
+    else:
+        worst = max(a_list)
+    return worst
+
+
 def read_listing(source):
     """
     Read a listing, given its (either given as its filename or already read as a
@@ -173,8 +196,8 @@ def read_listing(source):
     if isinstance(source, list):
         lines = source
     elif isinstance(source, six.string_types):
-        with open(source, 'r') as listfh:
-            lines = [six.u(l).rstrip("\n") for l in listfh]
+        with io.open(source, 'r') as listfh:
+            lines = [l.rstrip("\n") for l in listfh]
     return lines
 
 

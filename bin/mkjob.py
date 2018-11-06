@@ -1,11 +1,15 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
+import io
+import locale
 import os
 import re
 from shutil import copyfile
+import six
 import sys
 import tempfile
 
@@ -22,6 +26,8 @@ for d in pathdirs:
     if os.path.isdir(d):
         sys.path.insert(0, d)
 
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+
 import bronx.stdtypes.date
 import vortex
 from vortex.layout.jobs import mkjob
@@ -34,11 +40,12 @@ DEFAULT_JOB_FILE = 'create_job'
 
 def parse_command_line():
     description = "Create or modify vortex jobs for a specific application"
-    parser = argparse.ArgumentParser(description=description)
+    parser = argparse.ArgumentParser(description=description,
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     helpstr = ('file containing a list of dict describing all the jobs of the ' +
-               'application (defaults to "%(default)s"). This file must have ' +
-               'dict-like lines such as: name=jobname task=taskname')
+               'application. This file must have dict-like lines such as: ' +
+               'name=jobname task=taskname')
     parser.add_argument('-f', '--file', help=helpstr, default=DEFAULT_JOB_FILE)
     parser.add_argument('-n', '--name', nargs='+', help="Name(s) of the job(s) to handle " +
                         "(must match the corresponding name(s) in the 'create_job' file")
@@ -67,7 +74,7 @@ def parse_command_line():
     # Si un descriptif est passé manuellement (avec l'option -j) on ne traite que lui
     if not args.job and os.path.isfile(args.file):
         report.append('Generation of the jobs defined in the file : {} \n'.format(args.file))
-        with open(args.file, 'r') as fp:
+        with io.open(args.file, 'r') as fp:
             for line in fp.readlines():
                 if bool(line.rstrip()):
                     job = make_cmdline(line.rstrip())
@@ -101,7 +108,7 @@ def list_jobs(jobs):
 
 def make_cmdline(description):
     t = vortex.ticket()
-    if type(description) is str:
+    if isinstance(description, six.string_types):
         description = description.split(' ')
     return t.sh.rawopts(description)
 
@@ -156,7 +163,7 @@ def makejob(job):
         print(_INFO_PRINT_FMT.format(k, v))
 
     def _wrap_launch(jobfile):
-        '''Launch the **jobfile** script using **extra_wrapper*.'''
+        """Launch the **jobfile** script using **extra_wrapper*."""
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
                    if isinstance(tplconf['rundate'], basestring) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
@@ -171,25 +178,35 @@ def makejob(job):
         print(cmd)
         t.sh.spawn(cmd, output=False, shell=True)
 
+    # Add an encoding line inside the script
+    # NB: The first line may be shebang (preserve it)
+    s_corejob = corejob.split("\n")
+    encoding_line = '# -*- coding: {} -*-'.format(tplconf['scriptencoding'])
+    if s_corejob and re.match(r'^#!', s_corejob[0]):
+        s_corejob.insert(1, encoding_line)
+    else:
+        s_corejob.insert(0, encoding_line)
+    corejob = "\n".join(s_corejob)
+
     if tplconf.get('extra_wrapper', None):
         # Launch the script with the designated wrapper
         if tplconf.get('extra_wrapper_keep', False):
             # In this case, we generate the job file as usual and it is kept
-            with open(tplconf['file'], 'w') as job:
-                job.write(corejob)
+            with io.open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
+                jobfh.write(corejob)
             _wrap_launch(tplconf['file'])
         else:
             # Here the job is written in a temporary file submitted and deleted
             with tempfile.NamedTemporaryFile(prefix=re.sub(r'\.py$', '', tplconf['file']) + '_',
-                                             dir=tplconf['pwd'], bufsize=0) as job:
-                job.write(corejob)
-                job.flush()
-                t.sh.fsync(job)
-                _wrap_launch(job.name)
+                                             dir=tplconf['pwd'], mode='w+b') as jobfh:
+                jobfh.write(corejob.encode(tplconf['scriptencoding']))
+                jobfh.flush()
+                t.sh.fsync(jobfh)
+                _wrap_launch(jobfh.name)
     else:
         # Just create the job file...
-        with open(tplconf['file'], 'w') as job:
-            job.write(corejob)
+        with io.open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
+            jobfh.write(corejob)
 
     t.sh.header('Job creation completed')
 

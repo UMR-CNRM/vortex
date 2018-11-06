@@ -1,12 +1,20 @@
+from __future__ import print_function, division, absolute_import, unicode_literals
+
 from cProfile import Profile
 # from meliae import scanner
 import pstats
 import os
 import datetime
 
-pr = Profile()
-pr.enable()
+do_cprofiles = True
 
+if do_cprofiles:
+    pr = Profile()
+    pr.enable()
+
+t0 = datetime.datetime.utcnow()
+
+import bronx.stdtypes.date
 import footprints as fp
 
 import vortex  # @UnusedImport
@@ -14,17 +22,12 @@ import olive  # @UnusedImport
 import gco  # @UnusedImport
 from vortex import toolbox
 
-fp.collectors.get(tag='resource').fasttrack = ('kind',)
-
 n_loads = 10000
 
-fp.setup.fastmode = True
-fp.setup.fastkeys = ('kind', 'namespace')
-
 fp.setup.defaults = dict(model='arpege',
-                         date='2016010100',
+                         date=bronx.stdtypes.date.Date('2016010100'),
                          cutoff='assim',
-                         geometry='global798')
+                         geometry=vortex.data.geometries.get(tag='global798'), )
 
 for n in range(n_loads):
 
@@ -39,12 +42,17 @@ for n in range(n_loads):
                     block='forecast',
                     )
 
-pr.disable()
-ps = pstats.Stats(pr).sort_stats('cumulative')
+t1 = datetime.datetime.utcnow()
+print('Real time spent (nloads: {:d}): {:f} seconds.'.format(n_loads,
+                                                             (t1 - t0).total_seconds()))
 
-# Save to file
-radix = (os.environ['HOME'] + '/footprint_rh_' +
-         datetime.datetime.utcnow().isoformat())
-ps.dump_stats(radix + '.prof')
+if do_cprofiles:
+    pr.disable()
+    ps = pstats.Stats(pr).sort_stats('cumulative')
 
-# scanner.dump_all_objects(radix + '.mem')
+    # Save to file
+    radix = (os.environ['HOME'] + '/footprint_rh_' +
+             datetime.datetime.utcnow().isoformat())
+    ps.dump_stats(radix + '.prof')
+
+    # scanner.dump_all_objects(radix + '.mem')

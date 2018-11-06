@@ -22,7 +22,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GenvStaticGeoResource
+.. autoclass:: GenvModelGeoResource
    :show-inheritance:
    :members:
    :member-order: alphabetical

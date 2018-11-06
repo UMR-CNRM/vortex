@@ -21,6 +21,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: GetBDMPResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GetBDCPResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: GetBDMBufr
    :show-inheritance:
    :members:
@@ -30,3 +40,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GetMarsResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

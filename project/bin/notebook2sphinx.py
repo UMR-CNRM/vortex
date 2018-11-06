@@ -1,10 +1,11 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+"""
 Automatically convert notebooks to a set of RST files.
-'''
+"""
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, division, unicode_literals
+
 import shutil
 
 argparse_epilog = '''
@@ -59,21 +60,21 @@ _NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.abs
 
 
 class DefaultPackaging(object):
-    '''The default class to alter exports.'''
+    """The default class to alter exports."""
 
     def __call__(self, rst, resources):
         return rst, resources
 
 
 class DefaultExporter(object):
-    '''The default class to export notebook's file.'''
+    """The default class to export notebook's file."""
 
     def __init__(self, packager, tarname):
         self._packager = packager
         self._tarname = tarname
 
     def _ipynb_convert(self, a_file):
-        '''Actually convert the notebook.'''
+        """Actually convert the notebook."""
         myname = os.path.splitext(os.path.basename(a_file))[0]
         exporter = RSTExporter(template_path=[_NBCONVERT_TEMPLATES, ],
                                template_file=rst_tplfile)
@@ -84,11 +85,11 @@ class DefaultExporter(object):
         return rst, resources
 
     def _add_automatic_ref(self, rst, myname):
-        '''Add an automatic reference in the export.'''
+        """Add an automatic reference in the export."""
         return '.. _nbook-{:s}:\n\n{:s}'.format(myname, rst.encode('utf-8'))
 
     def _add_download(self, rst, a_file):
-        '''Add a download link in the export.'''
+        """Add a download link in the export."""
         radix = os.path.split(a_file)[0]
         nback = 0
         while radix:
@@ -105,7 +106,7 @@ class DefaultExporter(object):
         return (statement + rst + statement)
 
     def _rst_alter(self, rst, resources, a_file):
-        '''Control the way the exports are altered.'''
+        """Control the way the exports are altered."""
         myname = resources['unique_key']
         rst = self._add_automatic_ref(rst, myname)
         rst = self._add_download(rst, a_file)
@@ -113,7 +114,7 @@ class DefaultExporter(object):
         return rst, resources
 
     def _rst_dump(self, rst, resources, outputdir, a_file):
-        '''Actualy dump the export file to disk.'''
+        """Actualy dump the export file to disk."""
         rst_out = os.path.join(outputdir, os.path.splitext(a_file)[0] + '.rst')
         ipnb_out = os.path.join(outputdir, a_file)
         rst_out = os.path.normpath(rst_out)
@@ -134,14 +135,14 @@ class DefaultExporter(object):
         shutil.copy(a_file, ipnb_out)
 
     def __call__(self, outputdir, a_file):
-        '''Export a given notebook.'''
+        """Export a given notebook."""
         rst, resources = self._ipynb_convert(a_file)
         rst, resources = self._rst_alter(rst, resources, a_file)
         self._rst_dump(rst, resources, outputdir, a_file)
 
 
 def _crawl_notebooks():
-    '''Lists the notebooks.'''
+    """Lists the notebooks."""
     files = list()
     for (dirpath, _, filenames) in os.walk('.'):
         if os.path.basename(dirpath) in _DIR_DISCARD:
@@ -153,7 +154,7 @@ def _crawl_notebooks():
 
 
 def _crawl_images():
-    '''Lists the images.'''
+    """Lists the images."""
     files = list()
     for (dirpath, _, filenames) in os.walk('.'):
         if os.path.basename(dirpath) in _DIR_DISCARD:
@@ -165,7 +166,7 @@ def _crawl_images():
 
 
 def _tar_notebooks(tarname, files):
-    '''Create a tar file that contains all the notebook files.'''
+    """Create a tar file that contains all the notebook files."""
     logger.info("Output tar file is: %s", tarname)
     tarext = os.path.splitext(tarname)[1]
     tarmode_extra = ':' + tarext[1:] if tarext in ('.bz2', '.gz') else ''
@@ -180,7 +181,7 @@ def _tar_notebooks(tarname, files):
 
 
 def _index_auto_generate(outputdir, files):
-    '''Generate all the needed index.rst files.'''
+    """Generate all the needed index.rst files."""
     # Order the notebooks alphabetically but ignore the case
     toindex = collections.defaultdict(list)
     files.sort(key=lambda f: f.upper())
@@ -211,7 +212,7 @@ def _index_auto_generate(outputdir, files):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

@@ -8,63 +8,31 @@ When loaded, this module discards any FootprintBase resource collected as a cont
 in EPyGrAM package.
 """
 
-import sys
-from distutils.version import LooseVersion
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.stdtypes.date import Date, Time, Period
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 from footprints import proxy as fpx
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
 
-try:
+logger = footprints.loggers.getLogger(__name__)
+
+epygram_checker = ExternalCodeImportChecker('epygram')
+with epygram_checker as ec_register:
     import epygram  # @UnusedImport
-    logger.info('Epygram %s loaded.', LooseVersion(epygram.__version__))
-except ImportError:
-    pass
+    ec_register.update(version=epygram.__version__)
+    logger.info('Epygram %s loaded.', str(epygram.__version__))
+
 
 footprints.proxy.containers.discard_package('epygram', verbose=False)
 
 __all__ = []
 
 
-def is_epygram_available(minimal_version='0.0.0'):
-    """Is epygram available ?
-
-    :param str minimal_version: The minimal version we are looking for.
-    """
-    return (('epygram' in sys.modules) and
-            (LooseVersion(epygram.__version__) >= LooseVersion(minimal_version)))
-
-
-class EpygramUnavailableError(Exception):
-    pass
-
-
-def disabled_if_no_epygram(minimal_version_or_name):
-    """This decorator disables the provided object if epygram is not available.
-
-    :param str minimal_version_or_name: The minimal version we are looking for.
-    """
-    minimal_version = ('0.0.0'
-                       if callable(minimal_version_or_name)
-                       else minimal_version_or_name)
-
-    def actual_disabled_if_no_epygram(func_or_cls):
-        def error_func(*args, **kw):
-            raise EpygramUnavailableError()
-        return (func_or_cls
-                if is_epygram_available(minimal_version)
-                else error_func)
-
-    if callable(minimal_version_or_name):
-        return actual_disabled_if_no_epygram(minimal_version_or_name)
-    return actual_disabled_if_no_epygram
-
-
-@disabled_if_no_epygram
+@epygram_checker.disabled_if_unavailable
 def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
     """Clone any existing fields ending with``source`` to some new field."""
     # Prepare sources names
@@ -138,10 +106,12 @@ def epy_env_prepare(t):
     # Clean trash...
     del localenv.GRIB_SAMPLES_PATH
     del localenv.GRIB_DEFINITION_PATH
+    del localenv.ECCODES_SAMPLES_PATH
+    del localenv.ECCODES_DEFINITION_PATH
     return localenv
 
 
-@disabled_if_no_epygram
+@epygram_checker.disabled_if_unavailable
 def addfield(t, rh, fieldsource, fieldtarget, constvalue, pack=None):
     """Provider hook for adding a field through cloning."""
     if rh.container.exists():
@@ -154,7 +124,7 @@ def addfield(t, rh, fieldsource, fieldtarget, constvalue, pack=None):
                        rh.container.localpath())
 
 
-@disabled_if_no_epygram
+@epygram_checker.disabled_if_unavailable
 def copyfield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (but do not overwrite existing fields)."""
     if rh.container.exists():
@@ -166,7 +136,7 @@ def copyfield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
                        rh.container.localpath())
 
 
-@disabled_if_no_epygram
+@epygram_checker.disabled_if_unavailable
 def overwritefield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
     """Provider hook for copying fields between FA files (overwrite existing fields)."""
     if rh.container.exists():
@@ -201,7 +171,7 @@ class EpygramMetadataReader(MetaDataReader):
         raise NotImplementedError("Abstract method")
 
 
-@disabled_if_no_epygram
+@epygram_checker.disabled_if_unavailable
 class FaMetadataReader(EpygramMetadataReader):
 
     _footprint = dict(
@@ -219,7 +189,7 @@ class FaMetadataReader(EpygramMetadataReader):
             return epyf.validity.getbasis(), epyf.validity.term()
 
 
-@disabled_if_no_epygram('1.0.0')
+@epygram_checker.disabled_if_unavailable(version='1.0.0')
 class GribMetadataReader(EpygramMetadataReader):
 
     _footprint = dict(
@@ -248,7 +218,7 @@ class GribMetadataReader(EpygramMetadataReader):
             return bundle.pop()
 
 
-@disabled_if_no_epygram('1.2.11')
+@epygram_checker.disabled_if_unavailable(version='1.2.11')
 def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
                             outname=None,
                             fieldslist=None,
@@ -265,6 +235,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
     :param field_prefix: prefix to add to field name in FA
     :param pack: packing for fields to write
     """
+    dm = epygram.geometries.domain_making
 
     def sfxlfi2fa_field(fld, geom):
         fldout = fpx.fields.almost_clone(fld,
@@ -283,8 +254,7 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
         with epy_env_prepare(t):
             pgdin = fpx.dataformats.almost_clone(rh_pgdlfi.contents.data,
                                                  true3d=True)
-
-            geom, spgeom = epygram.geometries.domain_making.build_geom_from_e923nam(nam923blocks)
+            geom, spgeom = dm.build.build_geom_from_e923nam(nam923blocks)  # TODO: Arpege case
             validity = epygram.base.FieldValidity(date_time=Date(1994, 5, 31, 0),  # Date of birth of ALADIN
                                                   term=Period(0))
             pgdout = epygram.formats.resource(filename=outname,
@@ -302,10 +272,10 @@ def mk_pgdfa923_from_pgdlfi(t, rh_pgdlfi, nam923blocks,
                        outname)
 
 
-@disabled_if_no_epygram('1.0.0')
+@epygram_checker.disabled_if_unavailable(version='1.0.0')
 def empty_fa(t, rh, empty_name):
     """
-    Create an empty FA file with fielname **empty_name**,
+    Create an empty FA file with fieldname **empty_name**,
     creating header from given existing FA resource handler **rh**.
 
     :return: the empty epygram resource, closed
@@ -326,3 +296,20 @@ def empty_fa(t, rh, empty_name):
     else:
         raise IOError('Try to copy header from a missing resource <%s>',
                       rh.container.localpath())
+
+
+@epygram_checker.disabled_if_unavailable(version='1.0.0')
+def geopotentiel2zs(t, rh, rhsource, pack=None):
+    """Copy surface geopotential from clim to zs in PGD."""
+    from bronx.meteo.constants import g0
+    if rh.container.exists():
+        with epy_env_prepare(t):
+            orog = rhsource.contents.data.readfield('SURFGEOPOTENTIEL')
+            orog.operation('/', g0)
+            orog.fid['FA'] = 'SFX.ZS'
+            rh.contents.data.close()
+            rh.contents.data.open(openmode='a')
+            rh.contents.data.writefield(orog, compression=pack)
+    else:
+        logger.warning('Try to copy field on a missing resource <%s>',
+                       rh.container.localpath())

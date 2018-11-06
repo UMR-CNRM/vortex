@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import re
+import six
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.tools import env
 from bronx.stdtypes.date import Time, Date
 from bronx.datagrip.namelist import NO_SORTING, NamelistSet, NamelistParser
-from vortex.data.outflow import ModelResource, NoDateResource
-from vortex.data.outflow import StaticGeoResource
+from vortex.data.outflow import ModelResource, StaticResource
+from vortex.data.outflow import ModelGeoResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
+from vortex.syntax.stddeco import namebuilding_insert
 from gco.syntax.stdattrs import gvar
 
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
@@ -100,8 +105,7 @@ class NamelistContent(AlmostDictContent):
             raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset
         for macro, value in self._macros.items():
-                for namblock in filter(lambda x: macro in x.macros(), self.values()):
-                    namblock.addmacro(macro, value)
+            self._data.setmacro(macro, value)
 
     def rewrite(self, container, sorting=NO_SORTING):
         """
@@ -186,7 +190,7 @@ class Namelist(ModelResource):
                         logger.warning('%s already begins the %s, %s is ignored.',
                                        datedSource[date],
                                        date.strftime('%d of %b.'), dateNsource[0])
-            datedSource = sorted(datedSource.iteritems(), reverse=True)
+            datedSource = sorted(datedSource.items(), reverse=True)
             source = datedSource[0][1]
             for dateNsource in datedSource:
                 if self.date >= dateNsource[0]:
@@ -253,7 +257,7 @@ class NamelistTerm(Namelist):
             fp = None
 
         try:
-            with open('xxt.def', 'r') as f:
+            with io.open('xxt.def', 'r') as f:
                 lines = f.readlines()
         except IOError:
             logger.error('Could not open file xxt.def')
@@ -396,8 +400,14 @@ class XXTContent(IndexedTable):
             return None
         else:
             value = None
-            tkey = self.get(t.fmthm, self.get(str(t.hour), None))
-            if tkey is not None:
+            try:
+                t = Time(t)
+            except (ValueError, TypeError):
+                return None
+            tkey = self.get(t.fmthm, self.get(six.text_type(t.hour), None))
+            if tkey is None:
+                logger.warning('No entry found in the XXT file for term = %s.', t.fmthm)
+            else:
                 try:
                     value = tkey[n]
                 except IndexError:
@@ -427,24 +437,24 @@ class XXTContent(IndexedTable):
 
             select_seen = dict()
             for term in [ x for x in allterms if x <= maxterm ]:
-                tvalue = self.get(term.fmthm, self.get(str(term.hour), None))
+                tvalue = self.get(term.fmthm, self.get(six.text_type(term.hour), None))
                 sh = sessions.system()
                 if tvalue[0] is not None and sh.path.exists(tvalue[0]):
                     # Do not waste time on duplicated selects...
                     if tvalue[1] not in select_seen:
                         fortp = NamelistParser()
-                        with open(tvalue[0], 'r') as fd:
+                        with io.open(tvalue[0], 'r') as fd:
                             xx = fortp.parse(fd.read())
                         domains = set()
                         for nb in xx.values():
-                            for domlist in [ y for x, y in nb.iteritems() if x.startswith('CLD') ]:
+                            for domlist in [ y for x, y in nb.items() if x.startswith('CLD') ]:
                                 domains = domains | set(domlist.pop().split(':'))
                         select_seen[tvalue[1]] = domains
                     else:
                         domains = select_seen[tvalue[1]]
                     mapdom[term.fmthm] = list(domains)
                     if term.minute == 0:
-                        mapdom[str(term.hour)] = list(domains)
+                        mapdom[six.text_type(term.hour)] = list(domains)
 
             self._cachedomains_term = maxterm
             self._cachedomains = mapdom
@@ -455,7 +465,7 @@ class XXTContent(IndexedTable):
         return dict(term=mapdom)
 
 
-class NamelistSelectDef(NoDateResource):
+class NamelistSelectDef(StaticResource):
     """Utility, so-called xxt file."""
     _footprint = [
         cutoff,
@@ -501,14 +511,14 @@ class NamelistSelectDef(NoDateResource):
         return 'extract=' + thesource
 
 
-class GeoBlocks(StaticGeoResource):
+@namebuilding_insert('src', lambda s: s.target)
+class GeoBlocks(ModelGeoResource):
     """Extract of a namelist containing Geometry blocks."""
 
     _footprint = dict(
         attr = dict(
             kind = dict(
                 info = "Geometry blocks of namelist.",
-                type = str,
                 values = ['geoblocks']
             ),
             clscontents = dict(
@@ -516,7 +526,6 @@ class GeoBlocks(StaticGeoResource):
             ),
             target = dict(
                 info = "Scope that should use these blocks.",
-                type = str,
             ),
             nativefmt = dict(
                 optional = True,
@@ -529,11 +538,3 @@ class GeoBlocks(StaticGeoResource):
     @property
     def realkind(self):
         return 'geoblocks'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo = self._geo2basename_info(),
-            src = [self.model, self.target],
-            fmt = self.nativefmt
-        )

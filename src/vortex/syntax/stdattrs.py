@@ -7,20 +7,25 @@ of attributes description that could be used in the footprint definition of any
 class which follow the :class:`footprints.Footprint` syntax.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import copy
 import re
+import six
 
 from bronx.stdtypes.date import Date, Time, Month
+from bronx.system import hash as hashutils
 import footprints
 
+from .stddeco import namebuilding_append, namebuilding_insert, generic_pathname_insert
 from vortex.tools import env
-from bronx.system import hash as hashutils
 
 
 #: Export a set of attributes :data:`a_model`, :data:`a_date`, etc..
 __all__ = [
-    'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_date', 'a_cutoff', 'a_term',
-    'a_nativefmt', 'a_actualfmt', 'a_suite'
+    'a_xpid', 'a_month', 'a_domain', 'a_truncation', 'a_model', 'a_member',
+    'a_date', 'a_cutoff', 'a_term', 'a_nativefmt', 'a_actualfmt', 'a_suite',
+    'a_namespace', 'a_hashalgo', 'a_compressionpipeline', 'a_block', 'a_number'
 ]
 
 #: Default values for atmospheric models.
@@ -31,7 +36,8 @@ models = set([
 ])
 
 #: Default values for the most common binaries.
-binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'mesonh', 'safran', 'surfex'])
+binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
+                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd'])
 utilities = set(['batodb'])
 
 #: Default attributes excluded from `repr` display
@@ -40,13 +46,11 @@ notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 #: Known formats
 knownfmt = set([
     'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
-    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib',
+    'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
-    'obslocationpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
+    'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
-
-# Special classes
 
 
 class DelayedEnvValue(object):
@@ -102,7 +106,7 @@ class DelayedInit(object):
                                               else repr(self.__proxied))
 
     def __str__(self):
-        return repr(self) if self.__proxied is None else str(self.__proxied)
+        return repr(self) if self.__proxied is None else six.text_type(self.__proxied)
 
 
 class FmtInt(int):
@@ -125,7 +129,7 @@ class FmtInt(int):
         return '{0:{fmt}d}'.format(value, fmt=self._fmt)
 
 
-class XPid(str):
+class XPid(six.text_type):
     """Basestring wrapper for experiment ids (abstract)."""
     pass
 
@@ -135,11 +139,11 @@ class LegacyXPid(XPid):
     def __new__(cls, value):
         if len(value) != 4 or '@' in value:
             raise ValueError('XPid should be a 4 digits string')
-        return str.__new__(cls, value.upper())
+        return six.text_type.__new__(cls, value.upper())
 
     def isoper(self):
         """Return true if current value looks like an op id."""
-        return str(self) in opsuites
+        return six.text_type(self) in opsuites
 
 
 class FreeXPid(XPid):
@@ -151,7 +155,7 @@ class FreeXPid(XPid):
         if not cls._re_valid.match(value):
             raise ValueError('XPid should be something like "id@location" (not "{:s}")'
                              .format(value))
-        return str.__new__(cls, value)
+        return six.text_type.__new__(cls, value)
 
     @property
     def id(self):
@@ -167,7 +171,7 @@ opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
 
-class Namespace(str):
+class Namespace(six.text_type):
     """Basestring wrapper for namespaces (as net domains)."""
     def __new__(cls, value):
         value = value.lower()
@@ -186,7 +190,7 @@ class Namespace(str):
             port = None
         if 0 < value.count('.') < 2:
             raise ValueError('Namespace should contain one or at least 3 fields')
-        thisns = str.__new__(cls, value)
+        thisns = six.text_type.__new__(cls, value)
         thisns._port = int(port) if port else None
         thisns._user = netuser
         thisns._pass = netpass
@@ -224,7 +228,7 @@ class Namespace(str):
 class Latitude(float):
     """Bounded floating point value with N-S nice representation."""
     def __new__(cls, value):
-        value = str(value).lower()
+        value = six.text_type(value).lower()
         if value.endswith('n'):
             value = value[:-1]
         elif value.endswith('s'):
@@ -237,7 +241,7 @@ class Latitude(float):
 
     def nice(self):
         ns = 'N' if self >= 0 else 'S'
-        return str(self).strip('-') + ns
+        return six.text_type(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -247,7 +251,7 @@ class Latitude(float):
 class Longitude(float):
     """Bounded floating point value with E-W nice representation."""
     def __new__(cls, value):
-        value = str(value).lower()
+        value = six.text_type(value).lower()
         if value.endswith('e'):
             value = value[:-1]
         elif value.endswith('w'):
@@ -260,7 +264,7 @@ class Longitude(float):
 
     def nice(self):
         ns = 'E' if self >= 0 else 'W'
-        return str(self).strip('-') + ns
+        return six.text_type(self).strip('-') + ns
 
     @property
     def hemisphere(self):
@@ -304,6 +308,31 @@ a_nativefmt = dict(
 
 nativefmt = footprints.Footprint(info = 'Native format', attr = dict(nativefmt = a_nativefmt))
 
+
+def _namebuilding_insert_nativefmt(cls):
+
+    if hasattr(cls, 'namebuilding_info'):
+        original_namebuilding_info = cls.namebuilding_info
+
+        def namebuilding_info(self):
+            vinfo = original_namebuilding_info(self)
+            ext_remap = getattr(self, '_extension_remap', dict())
+            ext_value = ext_remap.get(self.nativefmt, self.nativefmt)
+            if ext_value is not None:
+                vinfo.setdefault('fmt', ext_remap.get(self.nativefmt, self.nativefmt))
+            return vinfo
+
+        namebuilding_info.__doc__ = original_namebuilding_info.__doc__
+        cls.namebuilding_info = namebuilding_info
+
+    return cls
+
+
+nativefmt_deco = footprints.DecorativeFootprint(
+    nativefmt,
+    decorator = [_namebuilding_insert_nativefmt,
+                 generic_pathname_insert('nativefmt', lambda self: self.nativefmt, setdefault=True)])
+
 #: Usual definition of the ``actualfmt`` attribute.
 a_actualfmt = dict(
     info     = "The resource's format.",
@@ -319,7 +348,6 @@ actualfmt = footprints.Footprint(info = 'Actual data format', attr = dict(actual
 #: Usual definition of the ``cutoff`` attribute.
 a_cutoff = dict(
     info     = "The cutoff type of the generating process.",
-    type     = str,
     optional = False,
     alias    = ('cut',),
     values   = [
@@ -337,11 +365,17 @@ a_cutoff = dict(
 
 cutoff = footprints.Footprint(info = 'Abstract cutoff', attr = dict(cutoff = a_cutoff))
 
+cutoff_deco = footprints.DecorativeFootprint(
+    cutoff,
+    decorator = [namebuilding_append('flow',
+                                     lambda self: None if self.cutoff is None else {'shortcutoff': self.cutoff},
+                                     none_discard=True),
+                 generic_pathname_insert('cutoff', lambda self: self.cutoff, setdefault=True)])
+
 #: Usual definition of the ``model`` attribute.
 a_model = dict(
     info     = "The model name (from a source code perspective).",
-    type     = str,
-    alias    = ('engine', 'turtle'),
+    alias    = ('turtle', ),
     optional = False,
     values   = models,
     remap    = dict(
@@ -353,6 +387,11 @@ a_model = dict(
 
 model = footprints.Footprint(info = 'Abstract model', attr = dict(model = a_model))
 
+model_deco = footprints.DecorativeFootprint(
+    model,
+    decorator = [namebuilding_append('src', lambda self: [self.model, ]),
+                 generic_pathname_insert('model', lambda self: self.model, setdefault=True)])
+
 #: Usual definition of the ``date`` attribute.
 a_date = dict(
     info = "The generating process run date.",
@@ -361,6 +400,30 @@ a_date = dict(
 )
 
 date = footprints.Footprint(info = 'Abstract date', attr = dict(date = a_date))
+
+date_deco = footprints.DecorativeFootprint(
+    date,
+    decorator = [namebuilding_append('flow', lambda self: {'date': self.date}),
+                 generic_pathname_insert('date', lambda self: self.date, setdefault=True)])
+
+#: Usual definition of the ``begindate`` and ``enddate`` attributes.
+
+dateperiod = footprints.Footprint(info = 'Abstract date period',
+                                  attr = dict(begindate = dict(info = "The resource's begin date.",
+                                                               type = Date,
+                                                               optional = False),
+                                              enddate = dict(info = "The resource's end date.",
+                                                             type = Date,
+                                                             optional = False),
+                                              ))
+
+dateperiod_deco = footprints.DecorativeFootprint(
+    dateperiod,
+    decorator = [namebuilding_append('flow',
+                                     lambda self: [{'begindate': self.begindate},
+                                                   {'enddate': self.enddate}]),
+                 generic_pathname_insert('begindate', lambda self: self.begindate, setdefault=True),
+                 generic_pathname_insert('enddate', lambda self: self.enddate, setdefault=True)])
 
 #: Usual definition of the ``month`` attribute.
 a_month = dict(
@@ -372,6 +435,38 @@ a_month = dict(
 )
 
 month = footprints.Footprint(info = 'Abstract month', attr = dict(month = a_month))
+
+
+def _add_month2gget_basename(cls):
+    """Decorator that appends the month's number at the end of the gget_basename"""
+    original_gget_basename = getattr(cls, 'gget_basename', None)
+    if original_gget_basename is not None:
+
+        def gget_basename(self):
+            """GGET specific naming convention."""
+            return original_gget_basename(self) + '.m{!s}'.format(self.month)
+
+        cls.gget_basename = gget_basename
+    return cls
+
+
+def _add_month2olive_basename(cls):
+    """Decorator that appends the month's number at the end of the olive_basename."""
+    original_olive_basename = getattr(cls, 'olive_basename', None)
+    if original_olive_basename is not None:
+
+        def olive_basename(self):
+            """GGET specific naming convention."""
+            return original_olive_basename(self) + '.{!s}'.format(self.month)
+
+        cls.olive_basename = olive_basename
+    return cls
+
+
+month_deco = footprints.DecorativeFootprint(
+    month,
+    decorator=[namebuilding_append('suffix', lambda self: {'month': self.month}),
+               _add_month2gget_basename, _add_month2olive_basename])
 
 #: Usual definition of the ``truncation`` attribute.
 a_truncation = dict(
@@ -385,7 +480,6 @@ truncation = footprints.Footprint(info = 'Abstract truncation', attr = dict(trun
 #: Usual definition of the ``domain`` attribute.
 a_domain = dict(
     info     = "The resource's geographical domain.",
-    type     = str,
     optional = False,
 )
 
@@ -399,6 +493,30 @@ a_term = dict(
 )
 
 term = footprints.Footprint(info = 'Abstract term', attr = dict(term = a_term))
+
+term_deco = footprints.DecorativeFootprint(
+    term,
+    decorator = [namebuilding_insert('term',
+                                     lambda self: None if self.term is None else self.term.fmthm,
+                                     none_discard=True, setdefault=True), ])
+
+
+#: Usual definition of the ``begintime`` and ``endtime`` attributes.
+
+timeperiod = footprints.Footprint(info = 'Abstract Time Period',
+                                  attr = dict(begintime = dict(info = "The resource's begin forecast term.",
+                                                               type = Time,
+                                                               optional = False),
+                                              endtime = dict(info = "The resource's end forecast term.",
+                                                             type = Time,
+                                                             optional = False),
+                                              ))
+
+timeperiod_deco = footprints.DecorativeFootprint(
+    timeperiod,
+    decorator = [namebuilding_insert('period',
+                                     lambda self: [{'begintime': self.begintime},
+                                                   {'endtime': self.endtime}]), ])
 
 #: Usual definition of operational suite
 a_suite = dict(
@@ -419,6 +537,19 @@ a_member = dict(
 
 member = footprints.Footprint(info = 'Abstract member', attr = dict(member = a_member))
 
+#: Usual definition of the ``number`` attribute (e.g. a perturbation number)
+a_number = dict(
+    info    = "Any kind of numbering...",
+    type    = FmtInt,
+    args    = dict(fmt = '03'),
+)
+
+number = footprints.Footprint(info = 'Abstract number', attr = dict(number = a_number))
+
+number_deco = footprints.DecorativeFootprint(
+    number,
+    decorator = [namebuilding_insert('number', lambda self: self.number, setdefault=True), ])
+
 #: Usual definition of the ``block`` attribute
 a_block = dict(
     info     = 'The subpath where to store the data.',
@@ -436,6 +567,7 @@ a_namespace = dict(
 namespacefp = footprints.Footprint(info = 'Abstract namespace',
                                    attr = dict(namespace = a_namespace))
 
+#: Usual definition of the ``storehash`` attribute
 a_hashalgo = dict(
     info = "The hash algorithm used to check data integrity",
     optional = True,
@@ -446,6 +578,7 @@ hashalgo = footprints.Footprint(info = 'Abstract Hash Algo', attr = dict(storeha
 
 hashalgo_avail_list = hashutils.HashAdapter.algorithms()
 
+#: Usual definition of the ``store_compressed`` attribute
 a_compressionpipeline = dict(
     info = "The compression pipeline used for this store",
     optional = True,
@@ -459,4 +592,4 @@ def show():
     """Returns available items and their type."""
     dmod = globals()
     for stda in sorted(filter(lambda x: x.startswith('a_') or type(dmod[x]) == footprints.Footprint, dmod.keys())):
-        print '{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda])
+        print('{0} ( {1} ) :\n  {2}\n'.format(stda, type(dmod[stda]).__name__, dmod[stda]))

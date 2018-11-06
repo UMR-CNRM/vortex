@@ -8,6 +8,7 @@ Actions specific to operational needs.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
+import six
 
 import footprints
 from vortex.data.handlers import Handler
@@ -60,15 +61,20 @@ class OpMail(Action):
     Class responsible for sending pre-defined mails.
     """
 
-    def __init__(self, kind='opmail', service='opmail', active=True, directory=None, catalog=None):
+    def __init__(self, kind='opmail', service='opmail', active=True,
+                 directory=None, catalog=None, inputs_charset=None):
         super(OpMail, self).__init__(kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@opmail-address-book.ini')
-        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini')
+        self.directory = directory or Directory('@opmail-address-book.ini',
+                                                encoding=inputs_charset)
+        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
+                                                      encoding=inputs_charset)
+        self.inputs_charset = inputs_charset
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""
         kw.setdefault('directory', self.directory)
         kw.setdefault('catalog', self.catalog)
+        kw.setdefault('inputs_charset', self.inputs_charset)
         return super(OpMail, self).service_info(**kw)
 
     def execute(self, *args, **kw):
@@ -177,8 +183,8 @@ class OpPhase(Action):
 
         def isiterable(item):
             return (
-                isinstance(item, collections.Iterable)
-                and not isinstance(item, basestring)
+                isinstance(item, collections.Iterable) and
+                not isinstance(item, six.string_types)
             )
 
         def flatten(iterable):
@@ -324,4 +330,5 @@ class OpPhase(Action):
         return actiond.jeeves(**jeeves_opts)
 
 
-actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail(), *OpPhase.actions())
+actiond.add(SendAlarm(), Route(), DMTEvent(), OpMail(inputs_charset='utf-8'),
+            *OpPhase.actions())

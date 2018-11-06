@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import io
 import re
-import urlparse
+import six
+from six.moves.urllib import parse as urlparse
 
 import footprints
 
@@ -42,7 +45,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     xgrib_index_get = _std_grib_index_get
 
     def _std_grib_index_write(self, destination, gribpaths):
-        gribparts = [unicode(urlparse.urlunparse(('file', '', path, '', '', '')))
+        gribparts = [six.text_type(urlparse.urlunparse(('file', '', path, '', '', '')))
                      for path in gribpaths]
         tmpfile = destination + self.sh.safe_filesuffix()
         with io.open(tmpfile, 'w') as fd:
@@ -52,9 +55,9 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     def is_xgrib(self, source):
         """Check if the given ``source`` is a multipart-GRIB file."""
         rc = False
-        if source and isinstance(source, basestring) and self.sh.path.exists(source):
+        if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
-                rc = fd.read(7) == 'file://'
+                rc = fd.read(7) == b'file://'
         return rc
 
     def _backend_cp(self, source, destination, intent='in'):
@@ -93,7 +96,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         # Might be multipart
         if self.is_xgrib(source):
             rc = True
-            if isinstance(destination, basestring) and not pack:
+            if isinstance(destination, six.string_types) and not pack:
                 idx = self._std_grib_index_get(source)
                 destdir = self.sh.path.abspath(self.sh.path.expanduser(destination) + ".d")
                 rc = rc and self.sh.mkdir(destdir)
@@ -103,7 +106,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     rc = rc and self.sh._backend_cp(a_mpart, target_idx[-1], intent=intent)
                     rc = rc and self._std_grib_index_write(destination, target_idx)
                 if intent == 'in':
-                    self.sh.chmod(destination, 0444)
+                    self.sh.chmod(destination, 0o444)
             else:
                 rc = rc and self.xgrib_pack(source, destination)
         else:
@@ -142,13 +145,13 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     def xgrib_pack(self, source, destination, intent='in'):
         """Manually pack a multi GRIB."""
-        if isinstance(destination, basestring):
+        if isinstance(destination, six.string_types):
             tmpfile = destination + self.sh.safe_filesuffix()
             with io.open(tmpfile, 'wb') as fd:
                 p = self._pack_stream(source, stdout=fd)
             self.sh.pclose(p)
             if intent == 'in':
-                self.sh.chmod(tmpfile, 0444)
+                self.sh.chmod(tmpfile, 0o444)
             return self.sh.move(tmpfile, destination)
         else:
             p = self._pack_stream(source, stdout=destination)
@@ -156,7 +159,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return True
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None):
+                   cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -180,10 +183,10 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return rc
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline)
+                                 logname=logname, cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -191,22 +194,22 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             if self.sh.ftraw and self.rawftshell is not None:
                 # Copy the GRIB pieces individually
                 pieces = self.xgrib_index_get(source)
-                newsources = [self.sh.copy2ftspool(piece) for piece in pieces]
+                newsources = [six.text_type(self.sh.copy2ftspool(piece)) for piece in pieces]
                 request = newsources[0] + '.request'
-                with open(request, 'w') as request_fh:
+                with io.open(request, 'w') as request_fh:
                     request_fh.writelines('\n'.join(newsources))
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,
                                         hostname=hostname, logname=logname,
-                                        specialshell=self.rawftshell)
+                                        specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(request)
                 return rc
             else:
                 return self._std_ftput(source, destination,
-                                       hostname=hostname, logname=logname)
+                                       hostname=hostname, logname=logname, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline)
+                                    logname=logname, cpipeline=cpipeline, sync=sync)
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput
@@ -231,52 +234,186 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     grib_scpput = _std_scpput
 
+    @addons.require_external_addon('ecfs')
+    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+        """ Put a grib resource using ECfs.
 
-class GribApiComponent(object):
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
+            psource = source + self.sh.safe_filesuffix()
+            try:
+                rc = self.xgrib_pack(source=source,
+                                     destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.ecfsput(source=psource,
+                                                    target=target,
+                                                    options=options)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ecfsput(source=source,
+                                   target=target,
+                                   options=options,
+                                   cpipeline=cpipeline)
+
+    @addons.require_external_addon('ectrans')
+    def grib_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Put a grib resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline used, if provided
+        :return: return code and additional attributes used
+        """
+        if self.is_xgrib(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xgrib files.")
+            psource = source + self.sh.safe_filesuffix()
+            try:
+                rc = self.xgrib_pack(source=source,
+                                     destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.raw_ectransput(source=psource,
+                                                           target=target,
+                                                           gateway=gateway,
+                                                           remote=remote)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ectransput(source=source,
+                                      target=target,
+                                      gateway=gateway,
+                                      remote=remote,
+                                      cpipeline=cpipeline)
+
+
+class EcGribComponent(object):
     """Extend Algo Components with GribApi features."""
 
-    def gribapi_setup(self, rh, opts):
-        # First set the GRIB-API paths by inspecting the binary
+    def _ecgrib_libs_detext(self, rh):
+        """Run ldd and tries to find ecCodes or grib_api libraries locations."""
         libs = self.system.ldd(rh.container.localpath()) if rh is not None else {}
+        eccodes_lib = None
         gribapi_lib = None
-        for lib in libs.iterkeys():
+        for lib, path in libs.items():
+            if re.match(r'^libeccodes(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
+                eccodes_lib = path
             if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
-                gribapi_lib = lib
-                break
+                gribapi_lib = path
+        return eccodes_lib, gribapi_lib
+
+    def _ecgrib_additional_config(self, a_role, a_var):
+        """Add axtra definitions/samples to the library path."""
+        for gdef in self.context.sequence.effective_inputs(role=a_role):
+            local_path = gdef.rh.container.localpath()
+            new_path = (local_path if self.system.path.isdir(local_path)
+                        else self.system.path.dirname(local_path))
+            # NB: Grib-API doesn't understand relative paths...
+            new_path = self.system.path.abspath(new_path)
+            self.env.setgenericpath(a_var, new_path, pos=0)
+
+    def _gribapi_envsetup(self, gribapi_lib):
+        """Setup environment variables for grib_api."""
+        defvar = 'GRIB_DEFINITION_PATH'
+        samplevar = 'GRIB_SAMPLES_PATH'
         if gribapi_lib is not None:
-            gribapi_root = self.system.path.dirname(libs[gribapi_lib])
+            gribapi_root = self.system.path.dirname(gribapi_lib)
             gribapi_root = self.system.path.split(gribapi_root)[0]
             gribapi_share = self.system.path.join(gribapi_root, 'share', 'grib_api')
-            if 'GRIB_DEFINITION_PATH' not in self.env:
+            if defvar not in self.env:
                 # This one is for compatibility with old versions of the gribapi !
-                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                self.env.setgenericpath(defvar,
                                         self.system.path.join(gribapi_root, 'share', 'definitions'))
                 # This should be the lastest one:
-                self.env.setgenericpath('GRIB_DEFINITION_PATH',
+                self.env.setgenericpath(defvar,
                                         self.system.path.join(gribapi_share, 'definitions'))
-            if 'GRIB_SAMPLES_PATH' not in self.env:
+            if samplevar not in self.env:
                 # This one is for compatibility with old versions of the gribapi !
-                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                self.env.setgenericpath(samplevar,
                                         self.system.path.join(gribapi_root, 'ifs_samples', 'grib1'))
                 # This should be the lastest one:
-                self.env.setgenericpath('GRIB_SAMPLES_PATH',
+                self.env.setgenericpath(samplevar,
                                         self.system.path.join(gribapi_share, 'ifs_samples', 'grib1'))
         else:
             # Use the default GRIB-API config if the ldd approach fails
             self.export('gribapi')
-        # Then, inspect the context to look for customised search paths
-        for a_role, a_var in (('AdditionalGribAPIDefinitions', 'GRIB_DEFINITION_PATH'),
-                              ('AdditionalGribAPISamples', 'GRIB_SAMPLES_PATH')):
-            for gdef in self.context.sequence.effective_inputs(role=a_role):
-                local_path = gdef.rh.container.localpath()
-                new_path = (local_path if self.system.path.isdir(local_path)
-                            else self.system.path.dirname(local_path))
-                # NB: Grib-API doesn't understand relative paths...
-                new_path = self.system.path.abspath(new_path)
-                self.env.setgenericpath(a_var, new_path, pos=0)
+        return defvar, samplevar
+
+    def gribapi_setup(self, rh, opts):
+        """Setup the grib_api related stuff."""
+        _, gribapi_lib = self._ecgrib_libs_detext(rh)
+        defvar, samplevar = self._gribapi_envsetup(gribapi_lib)
+        self._ecgrib_additional_config('AdditionalGribAPIDefinitions', defvar)
+        self._ecgrib_additional_config('AdditionalGribAPISamples', samplevar)
         # Recap
-        for a_var in ('GRIB_DEFINITION_PATH', 'GRIB_SAMPLES_PATH'):
+        for a_var in (defvar, samplevar):
             logger.info('After gribapi_setup %s = %s', a_var, self.env.getvar(a_var))
+
+    def _eccodes_envsetup(self, eccodes_lib):
+        """Setup environment variables for ecCodes."""
+        dep_warn = ("%s is left unconfigured because the old grib_api's variable is defined." +
+                    "Please remove that !")
+        eccodes_root = self.system.path.dirname(eccodes_lib)
+        eccodes_root = self.system.path.split(eccodes_root)[0]
+        eccodes_share = self.system.path.join(eccodes_root, 'share', 'eccodes')
+        defvar = 'ECCODES_DEFINITION_PATH'
+        if defvar not in self.env:
+            if 'GRIB_DEFINITION_PATH' in self.env:
+                logger.warning(dep_warn, defvar)
+                defvar = 'GRIB_DEFINITION_PATH'
+            else:
+                self.env.setgenericpath(defvar, self.system.path.join(eccodes_share, 'definitions'))
+        samplevar = 'ECCODES_SAMPLES_PATH'
+        if samplevar not in self.env:
+            if 'GRIB_SAMPLES_PATH' in self.env:
+                logger.warning(dep_warn, samplevar)
+                samplevar = 'GRIB_SAMPLES_PATH'
+            else:
+                self.env.setgenericpath(samplevar,
+                                        self.system.path.join(eccodes_share, 'ifs_samples', 'grib1'))
+        return defvar, samplevar
+
+    def eccodes_setup(self, rh, opts, compat=False, fatal=True):
+        """Setup the grib_api related stuff.
+
+        If **compat** is ``True`` and ecCodes is not found, the old grib_api
+        will be set-up. Otherwise, it will just return (if **fatal** is ``False``)
+        or raise an exception (if **fatal** is ``True``).
+        """
+        # Detect the library's path and setup appropriate variables
+        eccodes_lib, gribapi_lib = self._ecgrib_libs_detext(rh)
+        if eccodes_lib is not None:
+            defvar, samplevar = self._eccodes_envsetup(eccodes_lib)
+        elif compat:
+            defvar, samplevar = self._gribapi_envsetup(gribapi_lib)
+        else:
+            if fatal:
+                raise RuntimeError('No suitable configuration found for ecCodes.')
+            else:
+                logger.error("ecCodes was not found !")
+                return
+        # Then, inspect the context to look for customised search paths
+        self._ecgrib_additional_config(('AdditionalGribAPIDefinitions', 'AdditionalEcCodesDefinitions'),
+                                       defvar)
+        self._ecgrib_additional_config(('AdditionalGribAPISamples', 'AdditionalEcCodesSamples'),
+                                       samplevar)
+        # Recap
+        for a_var in (defvar, samplevar):
+            logger.info('After eccodes_setup (compat=%s) : %s = %s', str(compat),
+                        a_var, self.env.getvar(a_var))
 
 
 class GRIBAPI_Tool(addons.Addon):

@@ -10,7 +10,7 @@ it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
@@ -205,7 +205,7 @@ class FlowSchedulerGateway(Action):
     Send a child command to any ECMWF's workfow scheduler.
     """
 
-    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable'],
+    _KNOWN_CMD = dict(sms=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'variable', 'fix'],
                       ecflow=['abort', 'complete', 'event', 'init', 'label', 'meter', 'msg'])
 
     def __init__(self, kind='flow', service=None, active=True, permanent=True):
@@ -301,7 +301,7 @@ class Dispatcher(footprints.util.Catalog):
 
     @property
     def actions(self):
-        """A set of kind names of actual actions registred in that Dispatcher."""
+        """A set of kind names of actual actions registered in that Dispatcher."""
         return set([x.kind for x in self.items()])
 
     def candidates(self, kind):

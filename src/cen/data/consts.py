@@ -1,20 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from common.data.consts import GenvModelGeoResource
+from gco.syntax.stdattrs import gdomain
+
 #: No automatic export
 __all__ = []
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
 
-from common.data.consts import GenvStaticGeoResource
-from gco.syntax.stdattrs import gdomain
-from vortex.util.config import IniConf
-from vortex.data.resources import Resource
-from common.data.namelists import Namelist
 
-
-class List(GenvStaticGeoResource):
+class List(GenvModelGeoResource):
 
     _footprint = [
         gdomain,
@@ -23,7 +23,7 @@ class List(GenvStaticGeoResource):
             attr = dict(
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 'carpost',
-                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata'],
+                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata', 'NORELo', 'NORELm'],
                 ),
                 nativefmt = dict(
                     values  = ['ascii'],
@@ -41,15 +41,15 @@ class List(GenvStaticGeoResource):
         return 'safran_namelist'
 
 
-class SSA_param(GenvStaticGeoResource):
+class Params(GenvModelGeoResource):
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ["ssa_params"],
+                values = ['ssa_params', 'surfz'],
             ),
             nativefmt = dict(
-                values  = ['netcdf', 'nc'],
+                values  = ['netcdf', 'nc', 'ascii'],
                 default = 'netcdf',
             ),
             gvar = dict(
@@ -63,7 +63,7 @@ class SSA_param(GenvStaticGeoResource):
         return self.kind
 
 
-class climTG(GenvStaticGeoResource):
+class climTG(GenvModelGeoResource):
     """
     Ground temperature climatological resource.
     """
@@ -87,74 +87,14 @@ class climTG(GenvStaticGeoResource):
 
     @property
     def realkind(self):
-        return 'climTG'
+        return 'init_TG'
 
-    def basename_info(self):
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [ self.geometry.area, self.geometry.rnice ],
-            radical = self.realkind,
+    def namebuilding_info(self):
+
+        nbi = super(climTG, self).namebuilding_info()
+        nbi.update(
+            # will work only with the @cen namebuilder:
+            cen_rawbasename = (self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            # With the standard provider, the usual keys will be used.
         )
-
-    def cenvortex_basename(self):
-        """CEN specific naming convention"""
-        return 'init_TG_' + self.geometry.area + '.' + self._extension_remap.get(self.nativefmt, self.nativefmt)
-
-
-class ConfFile(Resource):
-    """
-    Vortex configuration file.
-    """
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                type = str,
-                values =['ini_file', ],
-            ),
-            nativefmt = dict(
-                optional = True
-            ),
-            vapp = dict(
-                type = str,
-                values = ['s2m'],
-            ),
-            vconf = dict(
-                type = str,
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return ''
-
-    def cenvortex_basename(self):
-        return self.vapp + '_' + self.vconf + '.ini'
-
-
-class CenNamelist(Namelist):
-    """
-    Cen namelist (resource for toolbox output)
-    """
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                type = str,
-                values = ['cen_namelist', ],
-                outcast = ['namelist', ],
-            ),
-            model = dict(
-                values = ['surfex', ],
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return ''
-
-    def cenvortex_basename(self):
-        return 'OPTIONS.nam'
-    
-    
+        return nbi

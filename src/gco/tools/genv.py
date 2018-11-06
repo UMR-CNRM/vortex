@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
+
 import footprints
 
 import vortex
@@ -11,7 +15,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_DATASTORE_KIND = 'genv_registred_cycle'
+_DATASTORE_KIND = 'genv_registered_cycle'
 
 genvcmd, genvpath = (None, None)
 
@@ -97,12 +101,12 @@ def autofill(cycle, gcout=None, writes_dump=False, cacheroot='.'):
         sh = vortex.sh()
         cachefile = sh.path.join(cacheroot, '{:s}_vortex_genv_cache'.format(cycle))
         if sh.path.isfile(cachefile):
-            with open(cachefile, 'r') as genvfh:
+            with io.open(cachefile, 'r') as genvfh:
                 gcout = [l.rstrip('\n') for l in genvfh.readlines()]
         else:
             gcout = vortex.sh().spawn([actualgenv(), cycle], output=True)
             if writes_dump:
-                with open(cachefile, 'w') as genvfh:
+                with io.open(cachefile, 'w') as genvfh:
                     genvfh.writelines([l + "\n" for l in gcout])
     if gcout:
         gcdict = dict()

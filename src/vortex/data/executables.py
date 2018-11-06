@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
-from resources import Resource
+from .resources import Resource
 from vortex.syntax.stdattrs import a_model
 from vortex.util.config import JacketConfigParser
+
+#: No automatic export
+__all__ = []
 
 
 class Jacket(object):
@@ -54,6 +56,10 @@ class Executable(Resource):
         )
     )
 
+    def stdin_text(self, **opts):
+        """Abstract method."""
+        return None
+
 
 class Script(Executable):
     """Basic interpreted executable associated to a specific language."""
@@ -74,7 +80,8 @@ class Script(Executable):
                 default  = 'script',
                 values   = ['script'],
             )
-        )
+        ),
+        fastkeys = set(['language', ]),
     )
 
     @property
@@ -87,6 +94,32 @@ class Script(Executable):
             return ''
         else:
             return self.rawopts
+
+
+class GnuScript(Executable):
+    """Basic interpreted executable with standard command line arguments."""
+
+    _footprint = dict(
+        attr = dict(
+            language = dict(
+                info     = "The programming language",
+                values   = ['perl', 'python', 'ksh', 'bash', 'sh', 'awk'],
+            ),
+            kind = dict(
+                default  = 'gnuscript',
+                values   = ['gnuscript', 'argscript'],
+            )
+        ),
+        fastkeys = set(['kind', 'language']),
+    )
+
+    @property
+    def realkind(self):
+        return 'script'
+
+    def command_line(self, **opts):
+        """Returns a blank separated list of options."""
+        return ' '.join(['--' + k + ' ' + ' '.join([str(x) for x in footprints.util.mktuple(v)]) for k, v in opts.items()])
 
 
 class Binary(Executable):
@@ -203,6 +236,28 @@ class SurfaceModel(Binary):
     @property
     def realkind(self):
         return 'surfacemodel'
+
+    def command_line(self, **opts):
+        """Abstract method."""
+        return ''
+
+
+class ChemistryModel(Binary):
+
+    _abstract  = True
+    _footprint = dict(
+        info = 'Base class for Chemistry models.',
+        attr = dict(
+            model = a_model,
+            kind  = dict(
+                values = ['chemistrymodel'],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'chemistrymodel'
 
     def command_line(self, **opts):
         """Abstract method."""

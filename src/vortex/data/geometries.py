@@ -21,13 +21,13 @@ To retrieve and browse an already defined geometry, please use the module's
 interface methods, :func:`get`, :func:`keys`, :func:`values` and :func:`items`::
 
     >>> from vortex.data import geometries
-    >>> print geometries.get(tag="global798")
+    >>> print(geometries.get(tag="global798"))
     <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
 
 It is also possible to retrieve an existing geometry using the :class:`Geometry`
 class constructor::
 
-    >>> print geometries.Geometry("global798")
+    >>> print(geometries.Geometry("global798"))
     <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
 
 To build a new geometry, you need to pick the concrete geometry class that fits
@@ -37,7 +37,6 @@ your needs. Currently available concrete geometries are:
     * :class:`ProjectedGeometry` (Any grid defined by a geographical projection, e.g. lambert, ...)
     * :class:`LonlatGeometry` (That's pretty obvious)
     * :class:`CurvlinearGeometry` (Curvlinear grid)
-    * :class:`MassifGeometry` (Partition of a mountain range in massifs)
 
 For example, let's build a new gaussian grid::
 
@@ -47,7 +46,7 @@ For example, let's build a new gaussian grid::
     ...                          stretching=2.1, area='France',  # 2.1 stretching over France
     ...                          new=True)  # Mandatory to create new geometries
     <vortex.data.geometries.GaussGeometry object at 0x...>
-    >>> print geometries.Geometry("global2198")
+    >>> print(geometries.Geometry("global2198"))
     <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' t=2198 c=2.1>
 
 (From that moment on, the new geometry is available globally in Vortex)
@@ -56,17 +55,20 @@ Each geometry has its own attributes: please refers to each of the concrete
 class documentation for more details.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import six
 
 import footprints
 
+from vortex.syntax.stddeco import namebuilding_insert, generic_pathname_insert
 from vortex.util.config import GenericConfigParser
-
-logger = footprints.loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -127,6 +129,7 @@ class Geometry(footprints.util.GetByTag):
         self.inifile = None
         self.__dict__.update(kw)
         self.kind    = 'abstract'
+        self._init_attributes = {k: v for k, v in kw.items() if v is not None}
         logger.debug('Abstract Geometry init kw=%s', str(kw))
 
     @classmethod
@@ -138,11 +141,23 @@ class Geometry(footprints.util.GetByTag):
     @classmethod
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
-        # return tag.lower() B. Cluzet strange bug with lautaret geom
-        return tag
+        return tag.lower()
+        #  # return tag.lower()  B. Cluzet uncomment if strange bug with lautaret geom
+        # return tag
+    def export_dict(self):
+        return self.tag
+
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         return 'kind={:s}'.format(self.kind)
+
+    def to_inifile(self):
+        """Format geometry to put in the inifile."""
+        self._init_attributes.update(kind=self.kind)
+        s = '[{}]\n'.format(self.tag)
+        for k in sorted(self._init_attributes.keys()):
+            s += '{:10s} = {}\n'.format(k, self._init_attributes[k])
+        return s
 
 
 class VerticalGeometry(Geometry):
@@ -189,6 +204,7 @@ class HorizontalGeometry(Geometry):
             truncation = None,
             stretching = None,
             nmassif = None,
+            nposts = None,
             lam = True,
             lonmin = None,
             latmin = None,
@@ -196,13 +212,13 @@ class HorizontalGeometry(Geometry):
         desc.update(kw)
         super(HorizontalGeometry, self).__init__(**desc)
         for k, v in self.__dict__.items():
-            if isinstance(v, basestring) and re.match('none', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('none', v, re.IGNORECASE):
                 self.__dict__[k] = None
-            if isinstance(v, basestring) and re.match('true', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('true', v, re.IGNORECASE):
                 self.__dict__[k] = True
-            if isinstance(v, basestring) and re.match('false', v, re.IGNORECASE):
+            if isinstance(v, six.string_types) and re.match('false', v, re.IGNORECASE):
                 self.__dict__[k] = False
-        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'truncation'):
+        for item in ('nlon', 'nlat', 'ni', 'nj', 'nmassif', 'nposts', 'truncation'):
             cv = getattr(self, item)
             if cv is not None:
                 setattr(self, item, int(cv))
@@ -261,12 +277,12 @@ class HorizontalGeometry(Geometry):
         card = "\n".join((
             '{0}Geometry {1!r}',
             '{0}{0}Info       : {2:s}',
-            '{0}{0}LAM        : {3:s}',
-        )).format(indent, self, self.info, str(self.lam))
+            '{0}{0}LAM        : {3!s}',
+        )).format(indent, self, self.info, self.lam)
         # Optional infos
         for attr in [k for k in ('area', 'resolution', 'truncation',
                                  'stretching', 'nlon', 'nlat', 'ni', 'nj',
-                                 'nmassif')
+                                 'nmassif', 'nposts')
                      if getattr(self, k, False)]:
             card += "\n{0}{0}{1:10s} : {2!s}".format(indent, attr.title(),
                                                      getattr(self, attr))
@@ -452,6 +468,14 @@ class UnstructuredGeometry(HorizontalGeometry):
         """Standard formatted print representation."""
         return '<{0:s}>'.format(self.strheader())
 
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.area:
+            fmts = 'kind={0:s}, area={1:s}'
+        else:
+            fmts = 'kind={0:s}'
+        return fmts.format(self.kind, self.area)
+
 
 class CurvlinearGeometry(UnstructuredGeometry):
     """Curvlinear grid."""
@@ -485,28 +509,46 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
-class MassifGeometry(UnstructuredGeometry):
-    """Grid describing the partition of a mountain range in massifs."""
+# Pre-defined footprint attribute for any HorizontalGeometry
 
-    _tag_topcls = False
+#: Usual definition of the ``geometry`` attribute.
+a_hgeometry = dict(
+    info = "The resource's horizontal geometry.",
+    type = HorizontalGeometry,
+)
 
-    def __init__(self, *args, **kw):  # @UnusedVariable
-        """
-        :param str tag: The geometry's name (if no **tag** attributes is provided,
-            the first positional attribute is considered to be the tag name)
-        :param str info: A free description of the geometry
-        :param int nmassif: The number of massifs in this grid
-        :param str area: The grid location
-        """
-        super(MassifGeometry, self).__init__(**kw)
-        self.kind = 'massif'
-        if self.area is None:
-            self.area = self.tag
 
-    def doc_export(self):
-        """Relevant informations to print in the documentation."""
-        fmts = 'kind={0:s}, area={1:s}, massif count={2!s}'
-        return fmts.format(self.kind, self.area, self.nmassif)
+def _add_geo2basename_info(cls):
+    """Decorator that adds a _geo2basename_info to a class."""
+
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, GaussGeometry):
+            lgeo = [{'truncation': self.geometry.truncation}, ]
+            if add_stretching:
+                lgeo.append({'stretching': self.geometry.stretching})
+        elif isinstance(self.geometry, ProjectedGeometry):
+            lgeo = [self.geometry.area, self.geometry.rnice]
+        else:
+            lgeo = self.geometry.area  # Default: always defined
+        return lgeo
+
+    if not hasattr(cls, '_geo2basename_info'):
+        cls._geo2basename_info = _geo2basename_info
+    return cls
+
+
+#: Abstract footprint definition of the ``geometry`` attribute.
+hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
+                                 attr = dict(geometry = a_hgeometry))
+
+#: Abstract footprint definition of the ``geometry`` attribute with decorators
+#: that alter the ``namebuilding_info`` method
+hgeometry_deco = footprints.DecorativeFootprint(
+    hgeometry,
+    decorator = [_add_geo2basename_info,
+                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
 
 
 # Load default geometries when the module is first imported
@@ -526,7 +568,7 @@ def load(inifile='@geometries.ini', refresh=False, verbose=True):
         except IndexError:
             raise AttributeError('Kind={:s} is unknown (for geometry [{:s}])'.format(gkind, item))
         if verbose:
-            print '+ Load', item.ljust(16), 'as', thisclass
+            print('+ Load', item.ljust(16), 'as', thisclass)
         if refresh:
             # Always recreate the Geometry...
             thisclass(tag=item, new=True, **gdesc)

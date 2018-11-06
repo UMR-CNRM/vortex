@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
-from vortex.data.outflow import NoDateResource
+from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
+from vortex.data.contents import DataTemplate
 
 """
 Query files used by various databases.
@@ -14,7 +15,7 @@ Query files used by various databases.
 __all__ = []
 
 
-class Query(NoDateResource):
+class Query(StaticResource):
     """Class to deal with queries."""
 
     _abstract = True
@@ -56,6 +57,58 @@ class BDAPQuery(Query):
         return 'bdap_query'
 
 
+class BDMPQuery(Query):
+    """Class to deal with BDMP queries."""
+    _footprint = dict(
+        info = 'BDMP query',
+        attr = dict(
+            kind = dict(
+                values = ['bdmp_query']
+            ),
+            gvar = dict(
+                values  = ['extract_stuff'],
+                default = 'extract_stuff'
+            ),
+            origin = dict(
+                default = 'bdmp',
+                values  = ['bdmp'],
+                optional = True
+            ),
+            source = dict(),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bdmp_query'
+
+
+class BDCPQuery(Query):
+    """Class to deal with BDCP queries."""
+    _footprint = dict(
+        info = 'BDCP query',
+        attr = dict(
+            kind = dict(
+                values = ['bdcp_query']
+            ),
+            gvar = dict(
+                values  = ['extract_stuff'],
+                default = 'extract_stuff'
+            ),
+            origin = dict(
+                default = 'bdcp',
+                values  = ['bdcp'],
+                optional = True
+            ),
+            source = dict(),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bdcp_query'
+
+
 class BDMQuery(Query):
     """Class to deal with BDM queries."""
     _footprint = dict(
@@ -80,3 +133,33 @@ class BDMQuery(Query):
     @property
     def realkind(self):
         return 'bdm_query'
+
+
+class MarsQuery(Query):
+    """Class to deal with Mars queries"""
+
+    _footprint = dict(
+        info = 'Mars query',
+        attr = dict(
+            kind = dict(
+                values = ['mars_query']
+            ),
+            gvar = dict(
+                values = ["extract_stuff"],
+                default = "extract_stuff"
+            ),
+            origin = dict(
+                default = "mars",
+                values = ["mars", ],
+                optional = True
+            ),
+            source = dict(),
+            clscontents=dict(
+                default=DataTemplate
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return "mars_query"

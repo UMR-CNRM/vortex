@@ -26,3 +26,19 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: UnknownFlow
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PeriodFlowResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GeoPeriodFlowResource
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

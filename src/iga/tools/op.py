@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import re
+import six
 from tempfile import mkdtemp
 
 import bronx.stdtypes.date
 import vortex  # @UnusedImport
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
@@ -40,7 +45,7 @@ class OpJobAssistantTest(JobAssistant):
             profile = opd.get('op_suite', 'oper')
         )
 
-        print gl.idcard()
+        print(gl.idcard())
 
         # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
@@ -114,6 +119,9 @@ class OpJobAssistantTest(JobAssistant):
                 rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
+                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H') 
+
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
@@ -136,7 +144,7 @@ class OpJobAssistantTest(JobAssistant):
 
         t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
         t.sh.cd(t.env.RUNDIR, create=True)
-        t.sh.chmod(t.env.RUNDIR, 0755)
+        t.sh.chmod(t.env.RUNDIR, 0o755)
         t.rundir = t.sh.getcwd()
         logger.info('Current rundir <%s>', t.rundir)
 
@@ -146,7 +154,7 @@ class OpJobAssistantTest(JobAssistant):
         vortex.toolbox.defaults(
             jname = opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
-            sender='dt_dsi_op_iga_sc@meteo.fr',
+            sender='admin_prod_sc@meteo.fr',
         )
 
     def _actions_setup(self, t, **kw):
@@ -159,10 +167,10 @@ class OpJobAssistantTest(JobAssistant):
 
         ad.add(vortex.tools.actions.SmsGateway())
 
-        print '+ SMS candidates =', ad.candidates('sms')
+        print('+ SMS candidates =', ad.candidates('sms'))
 
-        print '+ JEEVES candidates =', ad.candidates('jeeves')
-        print '+ JEEVES default =', vortex.toolbox.defaults.get('jname')
+        print('+ JEEVES candidates =', ad.candidates('jeeves'))
+        print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
 
         # ----------------------------------------------------------------------
         t.sh.header('START message to op MESSDAYF reporting file')
@@ -182,7 +190,7 @@ class OpJobAssistantTest(JobAssistant):
         t = vortex.ticket()
         from gco.tools import genv
         if cycle in genv.cycles():
-            logger.info('Cycle %s already registred', cycle)
+            logger.info('Cycle %s already registered', cycle)
         else:
             if t.env.OP_GCOCACHE:
                 genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
@@ -195,24 +203,24 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 logger.error('No contents defined for cycle %s or bad opcycle path %s', cycle, genvdef)
                 raise ValueError('Bad cycle value')
-            print genv.as_rawstr(cycle=cycle)
+            print(genv.as_rawstr(cycle=cycle))
 
     def complete(self):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
         ad.sms_complete()
-        print 'Well done Denis !'
+        print('Well done Denis !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
         ad.sms_abort()
-        print 'Bad luck...'
+        print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
 
     def finalise(self):
         super(OpJobAssistantTest, self).finalise()
-        print 'Bye bye Op...'
+        print('Bye bye Op...')
 
 
 class OpJobAssistant(OpJobAssistantTest):
@@ -239,9 +247,9 @@ class OpJobAssistant(OpJobAssistantTest):
             if 'DATA_OUTPUT_ARCH_PATH' in t.env:
                 option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
             tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
-            print tfile
-            print option_insertion
-            with open(tfile, "w") as f:
+            print(tfile)
+            print(option_insertion)
+            with io.open(tfile, "w") as f:
                 f.write(option_insertion)
 
     def rescue(self):
@@ -337,7 +345,7 @@ def filteractive(r, dic):
     """ this function returns the filter status """
     filter_active = True
     if dic is not None:
-        for k, w in dic.iteritems():
+        for k, w in six.iteritems(dic):
             if not get_resource_value(r, k) in w:
                 logger.info('filter not active : {} = {} actual value : {}'.
                             format(k, w, get_resource_value(r, k)))
@@ -345,7 +353,9 @@ def filteractive(r, dic):
     return filter_active
 
 
-def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None, routingkey=None, selkeyproductid=None, targetname=None, transmet=None):
+def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None,
+                         routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
+                         header_infile=True, **kw):
     """Hook functions factory to route files while the execution is running.
 
     :param str kind: kind use to route
@@ -356,13 +366,15 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
     :param str routingkey: the BD routing key
     :param str selkeyproductid: (example: area, term, fields ...)
     :param str targetname:
-    :param str transmet:
+    :param dict transmet:
+    :param bool header_infile: use to add transmet header in routing file
     """
 
     def hook_route(t, rh):
         kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
                       filename=rh.container.abspath, soprano_target=soprano_target,
-                      routingkey=routingkey, targetname=targetname, transmet=transmet)
+                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      header_infile=header_infile, **kw)
 
         if selkeyproductid:
             if isinstance(productid, dict):
@@ -380,7 +392,7 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
         if filteractive(rh, optfilter):
             ad.route(** kwargs)
-            print t.prompt, 'routing file = ', rh
+            print(t.prompt, 'routing file = ', rh)
 
     return hook_route
 
@@ -393,6 +405,6 @@ def opphase_hook_factory(optfilter=None):
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
-            print t.prompt, 'phasing file = ', rh
+            print(t.prompt, 'phasing file = ', rh)
 
     return hook_phase

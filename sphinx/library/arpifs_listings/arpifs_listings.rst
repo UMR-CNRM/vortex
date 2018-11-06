@@ -16,6 +16,7 @@ Modules
 Included Modules
 ----------------
 
+* :mod:`arpifs_listings.cost_functions`
 * :mod:`arpifs_listings.jo_tables`
 * :mod:`arpifs_listings.listings`
 * :mod:`arpifs_listings.norms`

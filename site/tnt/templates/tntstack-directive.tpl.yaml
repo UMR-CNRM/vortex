@@ -1,0 +1,185 @@
+# The aim of tntstack.py is to apply a series of "actions" on a pack of
+# namelists (or possibly other files). Most of the time, the action consists
+# in applying a TNT directive to a given namelist file in order to alter its
+#content. However, simpler actions like delete, move, ... are also available.
+#
+# As can be seen in this template, tntstack.py's directive files are in YAML
+# format. Therefore, this file must be a valid YAML document (the reader will
+# refer to the many documentations available on the Internet).
+#
+# The tntstack.py's directive, is built as dictionary with two possible
+# entries:
+# - directives: A dictionary where several TNT directives can be described.
+#               These TNT directives (addition of namelist blocks, of keys, ...)
+#               will be usable later on in the todolist's actions (see below). 
+# - todolist: The (ordered) list of actions to perform on the namelist pack. 
+#
+
+# In the following template, let's consider that this directive file is applied
+# to a namelist's pack located under ~/my_namelist_pack (the present directive
+# file will be called tntstack_dir.yaml and is located in the 
+# ~/tntstack_example directory. The meaning of the other files present in this 
+# directory will be described later on).
+#
+#   $ cd ~/tntstack_example
+#   $ ls
+#   geo499c1.yaml
+#   namelist_prep_template
+#   tntstack_dir.yaml
+#   $ cd ~/my_namelist_pack.
+#   $ ls
+#   namelist_fp0
+#   namelist_fp1
+#   namelist_previ_sfx
+#   namelist_screening1
+#   namelist_screening2
+#   namelist_surf
+#   something_else
+#   something_strange
+#   something_useless1
+#   something_useless2
+#   unkonwn_namelist
+#   $ tntstack.py -v -d ~/tntstack_example/tntstack_dir.yaml
+
+
+# Description of the "directives" dictionary: 
+# -------------------------------------------
+
+directives:
+
+    # Each directive is given a name (e.g. "surfexdiags")
+
+    surfexdiags:
+        # It can consist of any entry understandable by the TNT script (see the
+        # tnt.py script and its YAML template directive file that can be generated
+        # using the -D command). In the following example:
+        # - The CSELECT and LSELECT keys are removed from the NAM_WRITE_DIAG_SURFN
+        #   namelist. Please note that CSELECT will be removed but also keys like
+        #   CSELECT(1), CSELECT(2:10) or CSELECT%LACTIVE.
+        # - The LPROVAR_TO_DIAG of the NAM_WRITE_DIAG_SURFN namelist is set to
+        #   .TRUE.
+        keys_to_remove:
+            NAM_WRITE_DIAG_SURFN:
+                - LSELECT
+                - CSELECT
+        keys_to_set:
+            NAM_WRITE_DIAG_SURFN:
+                LPROVAR_TO_DIAG: true
+
+  
+    # Another TNT directive example called "geo499c1"
+
+    geo499c1:
+        # The content of the TNT directive can be stored in a separate file (it
+        # can be very useful when a large amount of changes is needed)
+        #
+        # In the following example, the "geo499c1.yaml" file will be used. It
+        # will be looked for in the directory where the tntstack.py's directive
+        # lies.
+        #
+        # The syntax of such a directive file is the same as with the tnt.py command.
+        # It can be either a .yaml file or a .py file (the file extension is
+        # meaningful since it allows tnt.py and tntstack.py to detect the
+        # directive's file format).  
+        external: geo499c1.yaml
+
+
+    # Another TNT directive example called "dfi"
+
+    dfi:
+        # The TNT directive can also consists of "simple" namelist bits that
+        # will be merged into the target namelist.
+        namdelta: "
+            &NAMDFI
+                NSTDFI=45,
+            /
+            "
+
+
+# todolist: i.e. the (ordered) list of actions to be performed on the namelist pack:
+# ----------------------------------------------------------------------------------
+
+todolist:
+
+    # 1. Update the "namelist_screening1" and "namelist_screening2" files
+    #    using the "dfi" and "geo1798c22" directives. 
+
+    - action: tnt
+      namelist: namelist_screen*  # UNIX-like wildcards can be used
+      directive:  # The directive entry can be a unique directive name or a list
+                  # of directive names
+        - dfi
+        - geo499c1
+    
+    # 2. Update the "namelist_previ_sfx" and "namelist_surf" files using
+    # the "surfexdiags" directive
+
+    - action: tnt
+      namelist:
+          - namelist_previ_sfx
+          - namelist_surf
+      directive: surfexdiags
+      
+    # One can see that, with the "tnt" action, both the "namelist" and "directive"
+    # entries can be unique names or list of names.
+    # If sensible, namelist names will be expanded according to UNIX-like wildcards
+      
+    # 3. Create a new "namelist_screening3" file that will simply be a copy
+    #    of "namelist_screening1".
+
+    - action: create
+      target: namelist_screening3
+      copy: namelist_screening1 
+
+    # 4. Create a new "namelist_fp2" file that will be generated from
+    #    "namelist_fp1" be applying the "geo1798c22" and "surfexdiags" directives
+
+    - action: create
+      target: namelist_fp2
+      namelist: namelist_fp1
+      directive:
+          - geo499c1
+          - surfexdiags
+    
+    # 5. Create a new "namelist_prep" file by copying an external file.
+
+    - action: create
+      target: namelist_prep
+      external: namelist_prep_template  # The "namelist_prep_template" file will
+                                        # be looked for in the directory where
+                                        # the present tntstack.py directive lies
+ 
+    # 6. Delete the "something_useless1", "something_useless2" and 
+    #    "something_strange" files
+
+    - action: delete
+      namelist:
+          - something_useless[12]  # UNIX-like wildcards are expanded
+          - something_strange
+    
+    # 7. Create a symbolic link called "namelist_fp3"
+    
+    - action: link
+      target: namelist_fp3
+      namelist: namelist_prep
+
+    # 8. Rename "namelist_surf" into "namelist_surfex"
+
+    - action: move
+      target: namelist_surfex
+      namelist: namelist_surf
+
+    # 9. The "clean_untouched" action allows to delete any file that was not
+    #    affected by the previous actions. Consequently, if you want to use
+    #    the "clean_untouched" action but retain a file without modifying it,
+    #    just use the "touch" command:
+
+    - action: touch
+      namelist:
+          - unknown_namelist
+          - namelist_fp*
+    
+    # 10. Remove any unused file (or empty sub-directories).
+    #     (in this example, it results in the deletion of the "something_else" file)
+
+    - action: clean_untouched 

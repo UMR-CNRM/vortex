@@ -8,7 +8,7 @@ Using the factory :func:`get` should provide a convenient way to register
 to an undetermined number of items hold by :class:`ObserverBoard` objects.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import copy
 

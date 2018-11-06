@@ -1,13 +1,14 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 import argparse
 import importlib
 import json
 import os
 import re
+import six
 import sys
 from xml.dom import minidom
 
@@ -27,8 +28,8 @@ import vortex.tools.lfi  # @UnusedImport
 
 
 NAMESPACES_MAP = dict(swapp=('common', 'gco', 'olive', 'intairpol'),
-                      json=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol'),
-                      xml=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol'),)
+                      json=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),
+                      xml=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),)
 
 COLLECTORS_DFLT = ('container', 'provider', 'resource', 'component')
 
@@ -54,7 +55,7 @@ def swapp_exporter(collectors, abstract, filebase):
             attrs = c.footprint_retrieve().attr
             for a in attrs.keys():
                 if 'values' in attrs[a]:
-                    extra = a + '(' + ','.join([str(x) for x in attrs[a]['values']]) + ')'
+                    extra = a + '(' + ','.join([six.text_type(x) for x in attrs[a]['values']]) + ')'
                 else:
                     extra = a
                 if attrs[a]['optional']:

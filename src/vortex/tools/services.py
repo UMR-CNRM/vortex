@@ -7,23 +7,26 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from six.moves.configparser import NoOptionError, NoSectionError
+import hashlib
+import io
+import six
+from email import encoders
+from string import Template
+
+from bronx.stdtypes import date
+from bronx.syntax.pretty import EncodedPrettyPrinter
+import footprints
+
+from vortex import sessions
+from vortex.util.config import GenericConfigParser, load_template
+
 #: No automatic export
 __all__ = []
 
-import os
-import hashlib
-from string import Template
-from ConfigParser import NoOptionError, NoSectionError
-
-from bronx.stdtypes import date
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex import sessions
-from vortex.tools.actions import actiond as ad
-from vortex.util.config import GenericConfigParser, load_template
-from vortex.util.structs import Utf8PrettyPrinter
-
 
 # See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']
@@ -122,7 +125,7 @@ class MailService(Service):
                 optional = True,
                 default  = '',
                 alias    = ('contents', 'body'),
-                type     = unicode,
+                type     = six.text_type,
             ),
             filename = dict(
                 optional = True,
@@ -134,7 +137,9 @@ class MailService(Service):
                 default  = footprints.FPList(),
                 alias    = ('files', 'attach'),
             ),
-            subject = dict(),
+            subject = dict(
+                type     = six.text_type,
+            ),
             smtpserver = dict(
                 optional = True,
                 default  = 'localhost',
@@ -144,8 +149,13 @@ class MailService(Service):
                 default  = '/usr/sbin/sendmail',
             ),
             charset = dict(
+                info     = 'The encoding that should be used when sending the email',
                 optional = True,
                 default  = 'utf-8',
+            ),
+            inputs_charset = dict(
+                info     = 'The encoding that should be used when reading input files',
+                optional = True,
             ),
             commaspace = dict(
                 optional = True,
@@ -168,7 +178,7 @@ class MailService(Service):
         """Returns the internal body contents as a MIMEText object."""
         body = self.message
         if self.filename:
-            with open(self.filename, 'r') as tmp:
+            with io.open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
                 body += tmp.read()
         mimetext = self.get_mimemap().get('text')
         if self.is_not_plain_ascii(body):
@@ -179,7 +189,7 @@ class MailService(Service):
     def get_mimemap(self):
         """Construct and return a map of MIME types."""
         try:
-            md = self._mimemap
+            self._mimemap
         except AttributeError:
             from email.mime.audio import MIMEAudio
             from email.mime.image import MIMEImage
@@ -201,7 +211,7 @@ class MailService(Service):
         for xtra in self.attachments:
             if isinstance(xtra, MIMEBase):
                 multi.attach(xtra)
-            elif os.path.isfile(xtra):
+            elif self.sh.path.isfile(xtra):
                 import mimetypes
                 ctype, encoding = mimetypes.guess_type(xtra)
                 if ctype is None or encoding is not None:
@@ -212,14 +222,13 @@ class MailService(Service):
                 mimemap = self.get_mimemap()
                 mimeclass = mimemap.get(maintype, None)
                 if mimeclass:
-                    fp = open(xtra)
-                    xmsg = mimeclass(fp.read(), _subtype=subtype)
-                    fp.close()
+                    with io.open(xtra, 'rb') as fp:
+                        xmsg = mimeclass(fp.read(), _subtype=subtype)
                 else:
                     xmsg = MIMEBase(maintype, subtype)
-                    fp = open(xtra, 'rb')
-                    xmsg.set_payload(fp.read())
-                    fp.close()
+                    with io.open(xtra, 'rb') as fp:
+                        xmsg.set_payload(fp.read())
+                    encoders.encode_base64(xmsg)
                 xmsg.add_header('Content-Disposition', 'attachment', filename=xtra)
                 multi.attach(xmsg)
         return multi
@@ -227,7 +236,7 @@ class MailService(Service):
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
         msg['From'] = self.sender
-        msg['To']   = self.commaspace.join(self.to.split())
+        msg['To'] = self.commaspace.join(self.to.split())
         if self.is_not_plain_ascii(self.subject):
             from email.header import Header
             msg['Subject'] = Header(self.subject, self.charset)
@@ -247,7 +256,7 @@ class MailService(Service):
         if not self.sh.default_target.isnetworknode:
             import tempfile
             count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
-            with open(tmpmsgfile, 'w') as fd:
+            with io.open(tmpmsgfile, 'wb') as fd:
                 fd.write(msgcorpus)
             mailcmd = '{0:s} {1:s} < {2:s}'.format(
                 self.altmailx,
@@ -454,7 +463,10 @@ class JeevesService(Service):
 
 class HideService(Service):
     """
-    Some service to hide data... for later use, perhaps...
+    A service to hide data.
+
+    Mainly used to store files to be handled asynchronously
+    (and then deleted) by Jeeves.
     """
 
     _footprint = dict(
@@ -470,7 +482,7 @@ class HideService(Service):
             ),
             headdir = dict(
                 optional = True,
-                default  = 'tempo',
+                default  = 'hidden',
             ),
             asfmt = dict(
                 optional = True,
@@ -482,27 +494,33 @@ class HideService(Service):
     def find_rootdir(self, filename):
         """Find a path for hidding files on the same filesystem."""
         username = self.sh.getlogname()
-        fullpath = self.sh.path.realpath(filename)
-        if username not in fullpath:
-            logger.error('No login <%s> in path <%s>', username, fullpath)
-            raise ValueError('Login name not in actual path for hidding data')
-        return self.sh.path.join(fullpath.partition(username)[0], username, self.headdir)
+        work_dir = self.sh.path.join(self.sh.find_mount_point(filename), 'work')
+        if not self.sh.path.exists(work_dir):
+            logger.warning("path <%s> doesn't exist", work_dir)
+            fullpath = self.sh.path.realpath(filename)
+            if username not in fullpath:
+                logger.error('No login <%s> in path <%s>', username, fullpath)
+                raise ValueError('Login name not in actual path for hidding data')
+            work_dir = fullpath.partition(username)[0]
+            logger.debug("using work_dir = <%s>", work_dir)
+        hidden_path = self.sh.path.join(work_dir, username, self.headdir)
+        return hidden_path
 
-    def __call__(self, *args):
-        """Main action: ..."""
-        for filename in args:
-            actual_rootdir = self.rootdir or self.find_rootdir(filename)
-            destination = self.sh.path.join(
-                actual_rootdir,
-                '.'.join((
-                    'HIDDEN',
-                    date.now().strftime('%Y%m%d%H%M%S.%f'),
-                    'P{0:06d}'.format(self.sh.getpid()),
-                    hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
-                ))
-            )
-            self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
-            return destination
+    def __call__(self, filename):
+        """Main action: hide a cheap copy this file under a unique name."""
+
+        actual_rootdir = self.rootdir or self.find_rootdir(filename)
+        destination = self.sh.path.join(
+            actual_rootdir,
+            '.'.join((
+                'HIDDEN',
+                date.now().strftime('%Y%m%d%H%M%S.%f'),
+                'P{0:06d}'.format(self.sh.getpid()),
+                hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
+            ))
+        )
+        self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
+        return destination
 
 
 class Directory(object):
@@ -512,9 +530,9 @@ class Directory(object):
     Directory (en) means Annuaire (fr).
     """
 
-    def __init__(self, inifile, domain='meteo.fr'):
+    def __init__(self, inifile, domain='meteo.fr', encoding=None):
         """Keep aliases in memory, as a dict of sets."""
-        config = GenericConfigParser(inifile)
+        config = GenericConfigParser(inifile, encoding=encoding)
         try:
             self.domain = config.get('general', 'default_domain')
         except NoOptionError:
@@ -531,7 +549,7 @@ class Directory(object):
         """Build a space separated list of unique mail addresses
            from a string that may reference aliases."""
         addresses = set()
-        for item in definition.replace(',', ' ').split():
+        for item in definition.lower().replace(',', ' ').split():
             if item in self.aliases:
                 addresses |= self.aliases[item]
             else:
@@ -543,7 +561,7 @@ class Directory(object):
     def __str__(self):
         return '\n'.join(sorted(
             ['{}: {}'.format(k, ' '.join(sorted(v)))
-             for (k, v) in self.aliases.iteritems()]
+             for (k, v) in six.iteritems(self.aliases)]
         ))
 
     def _flatten(self):
@@ -553,14 +571,14 @@ class Directory(object):
         while changed:
             changed = False
             count += 1
-            for kref, vref in self.aliases.iteritems():
+            for kref, vref in six.iteritems(self.aliases):
                 if kref in vref:
                     logger.error('Cycle detected in the aliases directory.\n'
                                  'offending key: %s.\n'
                                  'directory being flattened:\n%s',
                                  str(kref), str(self))
                     raise ValueError('Cycle for key <{}> in directory definition'.format(kref))
-                for k, v in self.aliases.iteritems():
+                for k, v in six.iteritems(self.aliases):
                     if kref in v:
                         v -= {kref}
                         v |= vref
@@ -598,10 +616,11 @@ class PromptService(Service):
 
     def __call__(self, options):
         """Prints what arguments the action was called with."""
-        pf = Utf8PrettyPrinter().pformat
+
+        pf = EncodedPrettyPrinter().pformat
         logger_action = getattr(logger, self.level, logger.warning)
         msg = (self.comment or 'PromptService was called.') + '\noptions = {}'
-        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt> '))
+        logger_action(msg.format(pf(options)).replace('\n', '\n<prompt>'))
         return True
 
 
@@ -656,11 +675,11 @@ class TemplatedMailService(MailService):
 
     def header(self):
         """String prepended to the message body."""
-        return ''
+        return u''
 
     def trailer(self):
         """String appended to the message body."""
-        return ''
+        return u''
 
     def deactivated(self):
         """Return True to eventually prevent the mail from being sent."""
@@ -726,7 +745,7 @@ class TemplatedMailService(MailService):
             tplfile = self.section.get('template', self.id)
             tplfile = self._template_name_rewrite(tplfile)
             try:
-                tpl = load_template(self.ticket, tplfile)
+                tpl = load_template(self.ticket, tplfile, encoding=self.inputs_charset)
             except ValueError as exc:
                 logger.error('{}'.format(exc.message))
                 return None
@@ -780,6 +799,9 @@ class TemplatedMailService(MailService):
             return False
 
         tpldict = self.substitution_dictionary(add_ons)
+        # Convert everything to unicode
+        for k in tpldict.keys():
+            tpldict[k] = six.text_type(tpldict[k])
 
         self.message = self.get_message(tpldict)
         if self.message is None:

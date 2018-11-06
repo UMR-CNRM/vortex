@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import io
 import re
+import six
 
+from bronx.stdtypes import date as bdate
 import footprints
-from vortex import tools
+
+from vortex.layout.dataflow import intent
 from . import folder
 
 #: No automatic export
@@ -74,6 +77,14 @@ class OdbDriver(object):
                 IOASSIGN = self.sh.path.abspath('IOASSIGN'),
             )
 
+    def is_rw_or_overwrite_method(self, dbsection):
+        """If the input database is not fetch with intent=inout, add the proper env variable."""
+        if dbsection.intent == intent.IN:
+            if not int(self.env.get('ODB_OVERWRITE_METHOD', 0)):
+                logger.info('The input ODB database: %s is read-only. Setting ODB_OVERWRITE_METHOD to 1.',
+                            dbsection.rh.container.localpath())
+                self.env.ODB_OVERWRITE_METHOD = 1
+
     def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma'):
         """Build IO-Assign table."""
         iopath   = self.target.get('odbtools:rootdir', self.env.TMPDIR)
@@ -83,7 +94,7 @@ class OdbDriver(object):
         ioassign = self.sh.path.abspath(ioassign)
         self.sh.xperm(ioassign, force=True)
         self.env.ODB_IOASSIGN_BINARY = ioassign
-        self.sh.spawn([iocmd, '-l' + layout.upper(), '-n' + str(npool)], output=False)
+        self.sh.spawn([iocmd, '-l' + layout.upper(), '-n' + six.text_type(npool)], output=False)
 
     def ioassign_merge(self, ioassign='ioassign.x', layout='ecma', odbnames=None):
         """Build IO-Assign table."""
@@ -121,12 +132,24 @@ class OdbComponent(object):
             )
         return self._odb
 
+    def lookupodb(self, fatal=True):
+        """Return a list of effective input resources which are odb observations."""
+        allodb = [
+            x for x in self.context.sequence.effective_inputs(kind = 'observations')
+            if x.rh.container.actualfmt == 'odb'
+        ]
+        allodb.sort(key=lambda s: s.rh.resource.part)
+        if not allodb and fatal:
+            logger.critical('Missing ODB input data for %s', self.fullname())
+            raise ValueError('Missing ODB input data')
+        return allodb
+
 
 class TimeSlots(object):
     """Handling of assimilation time slots."""
 
     def __init__(self, nslot=7, start='-PT3H', window='PT6H', chunk=None, center=True):
-        if isinstance(nslot, basestring):
+        if isinstance(nslot, six.string_types):
             info = [x.strip() for x in nslot.split('/')]
             nslot = info[0]
             if len(info) > 1:
@@ -140,15 +163,15 @@ class TimeSlots(object):
                     chunk = info[3]
         self.nslot  = int(nslot)
         self.center = center if self.nslot > 1 else False
-        self.start  = tools.date.Period(start)
-        self.window = tools.date.Period(window)
+        self.start  = bdate.Period(start)
+        self.window = bdate.Period(window)
         if chunk is None:
             cslot = self.nslot - 1 if self.center else self.nslot
-            chunk = 'PT' + str((self.window.length // max(1, cslot)) // 60) + 'M'
-        self.chunk = self.window if self.nslot < 2 else tools.date.Period(chunk)
+            chunk = 'PT' + six.text_type((self.window.length // max(1, cslot)) // 60) + 'M'
+        self.chunk = self.window if self.nslot < 2 else bdate.Period(chunk)
 
     def __eq__(self, other):
-        if isinstance(other, basestring):
+        if isinstance(other, six.string_types):
             try:
                 other = TimeSlots(other)
             except ValueError:
@@ -182,7 +205,7 @@ class TimeSlots(object):
 
     def as_bounds(self, date):
         """Return time slots as a list of compact date values."""
-        date = tools.date.Date(date)
+        date = bdate.Date(date)
         boundlist = [date + self.start, ]
         for x in self.as_slots():
             boundlist.append(boundlist[-1] + x)
@@ -211,7 +234,7 @@ class TimeSlots(object):
         """Fill the specified ``filename`` wih the current list of time slots at this ``date``."""
         with io.open(filename, 'w') as fd:
             for x in self.as_bounds(date):
-                fd.write(unicode(x + '\n'))
+                fd.write(six.text_type(x) + '\n')
             nbx = fd.tell()
         return nbx
 

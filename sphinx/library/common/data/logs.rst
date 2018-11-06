@@ -41,3 +41,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: TaskInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SectionsSlice
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SectionsJsonListContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: SectionsList
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

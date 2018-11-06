@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
 
-from vortex.data.flow     import FlowResource
+from vortex.data.flow import FlowResource
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
 from common.data.consts import GenvModelResource
 
 #: Automatic export of Observations class
@@ -12,6 +15,7 @@ __all__ = [ ]
 logger = footprints.loggers.getLogger(__name__)
 
 
+@namebuilding_insert('src', lambda s: [s.stage, s.obs])
 class Monitoring(FlowResource):
     """Abstract monitoring resource."""
 
@@ -41,14 +45,6 @@ class Monitoring(FlowResource):
     @property
     def realkind(self):
         return 'monitoring'
-
-    def basename_info(self):
-        """Generic information for names fabric, with style = ``obs``."""
-        return dict(
-            radical = self.realkind,
-            fmt = self.nativefmt,
-            src     = [self.stage, self.obs],
-        )
 
 
 class MntObsThreshold(GenvModelResource):
@@ -80,6 +76,7 @@ class MntObsThreshold(GenvModelResource):
         return 'extract=' + self.source
 
 
+@namebuilding_insert('period', lambda s: s.periodicity)
 class MntCumulStat(Monitoring):
     """Accumulated statistics file."""
 
@@ -96,7 +93,7 @@ class MntCumulStat(Monitoring):
             ),
             periodicity = dict(
                 values = ['monthly',
-                          'weekly_on_mondays'
+                          'weekly_on_mondays',
                           'weekly_on_sundays'],
                 default = 'monthly',
                 optional =True
@@ -108,12 +105,8 @@ class MntCumulStat(Monitoring):
     def realkind(self):
         return 'accumulated_stats'
 
-    def basename_info(self):
-        d = super(MntCumulStat, self).basename_info()
-        d['period'] = self.periodicity
-        return d
 
-
+@namebuilding_append('src', lambda s: s.monitor)
 class MntStat(Monitoring):
     """Monitoring statistics file."""
 
@@ -138,11 +131,6 @@ class MntStat(Monitoring):
     @property
     def realkind(self):
         return 'monitoring_stats'
-
-    def basename_info(self):
-        d = super(MntStat, self).basename_info()
-        d['src'].append(self.monitor)
-        return d
 
 
 class MntGrossErrors(Monitoring):

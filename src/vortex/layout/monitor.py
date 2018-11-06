@@ -6,10 +6,13 @@ This module defines generic classes that are used to check the state of a list o
 sections
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from collections import defaultdict, namedtuple, OrderedDict
 from itertools import islice, compress
-import Queue
 import multiprocessing
+import six
+from six.moves import queue
 import sys
 import time
 import traceback
@@ -281,7 +284,7 @@ class BasicInputMonitor(_StateFullMembersList):
         queue to another. That's why it's not public.
         """
         for st in self._mstates:
-            for e in self._members[st].itervalues():
+            for e in six.itervalues(self._members[st]):
                 yield e
 
     def _find_state(self, e, onfails=EntrySt.failed):
@@ -332,11 +335,11 @@ class BasicInputMonitor(_StateFullMembersList):
 
                 # Crawl into the ufo list
                 # Always process the first self._crawling_threshold elements
-                for k, e in islice(self._members[EntrySt.ufo].iteritems(),
+                for k, e in islice(six.iteritems(self._members[EntrySt.ufo]),
                                    self._crawling_threshold):
                     if self._mpquit.is_set():  # Are we ordered to stop ?
                         break
-                    with _MonitorSilencer(self._ctx) as psi:
+                    with _MonitorSilencer(self._ctx, 'inputmonitor_updater') as psi:
                         logger.info("First get on local file: %s",
                                     e.section.rh.container.localpath())
                         e.section.get(incache=True, fatal=False)  # Do not crash at this stage
@@ -355,7 +358,7 @@ class BasicInputMonitor(_StateFullMembersList):
 
                 # Crawl into the chosen items of the  expected list
                 (visited, found, kangaroo_incr) = (0, 0, 0)
-                for i, (k, e) in enumerate(compress(self._members[EntrySt.expected].iteritems(),
+                for i, (k, e) in enumerate(compress(six.iteritems(self._members[EntrySt.expected]),
                                                     exp_compress)):
                     if self._mpquit.is_set():  # Are we ordered to stop ?
                         break
@@ -373,7 +376,7 @@ class BasicInputMonitor(_StateFullMembersList):
                     # Is the promise file still there or not ?
                     if e.section.rh.is_grabable():
                         visited += 1
-                        with _MonitorSilencer(self._ctx) as psi:
+                        with _MonitorSilencer(self._ctx, 'inputmonitor_updater') as psi:
                             if e.section.rh.is_grabable(check_exists=True):
                                 logger.info("The local resource %s becomes available",
                                             e.section.rh.container.localpath())
@@ -406,12 +409,12 @@ class BasicInputMonitor(_StateFullMembersList):
         self._ctx.system.signal_intercept_on()
         try:
             self._background_updater()
-        except:
+        except Exception:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            print 'Exception type: ' + str(exc_type)
-            print 'Exception info: ' + str(exc_value)
-            print 'Traceback:'
-            print "\n".join(traceback.format_tb(exc_traceback))
+            print('Exception type: {!s}'.format(exc_type))
+            print('Exception info: {!s}'.format(exc_value))
+            print('Traceback:')
+            print("\n".join(traceback.format_tb(exc_traceback)))
             # Alert the main process of the error
             self._mperror.set()
 
@@ -427,7 +430,7 @@ class BasicInputMonitor(_StateFullMembersList):
         while True:
             try:
                 r = self._mpqueue.get_nowait()
-            except Queue.Empty:
+            except queue.Empty:
                 break
             if prp is None:
                 prp = ParallelResultParser(self._ctx)
@@ -497,7 +500,7 @@ class BasicInputMonitor(_StateFullMembersList):
             logger.error("The waiting loop timed out (%d seconds)", timeout)
             logger.error("The following files are still unaccounted for: %s",
                          ",".join([e.section.rh.container.localpath()
-                                   for e in self.expected.itervalues()]))
+                                   for e in six.itervalues(self.expected)]))
             rc = True
         if rc and exception is not None:
             raise exception("The waiting loop timed-out")
@@ -537,7 +540,7 @@ class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
             return 'Anonymous'
         else:
             return ", ".join(['{:s}={!s}'.format(k, v)
-                              for k, v in self.info.iteritems()])
+                              for k, v in self.info.items()])
 
     def add_member(self, *members):
         """Introduce one or several members to the Gang."""
@@ -713,7 +716,7 @@ class AutoMetaGang(MetaGang):
 
         :param vortex.layout.monitor.BasicInputMonitor bm: The BasicInputMonitor
                                                            that will be explored
-        :param list grouping_keys: The attributes that are used to discriminate the gangs
+        :param list[str] grouping_keys: The attributes that are used to discriminate the gangs
         :param int allowmissing: The number of missing members allowed for a gang
             (It will be used to initialise the member gangs *minsize* attribute)
         :param int waitlimit: The *waitlimit* attribute of the member gangs
@@ -725,7 +728,7 @@ class AutoMetaGang(MetaGang):
                              for key in grouping_keys])
             mdict[entryid].append(entry)
         # Finalise the Gangs setup and use them...
-        for entryid, members in mdict.iteritems():
+        for entryid, members in six.iteritems(mdict):
             gang = BasicGang(waitlimit=waitlimit,
                              minsize=len(members) - allowmissing)
             gang.add_member(* members)

@@ -11,11 +11,13 @@ NOSE3         = $(shell for p in $(NOSE3list) ; do if which $$p >/dev/null 2>&1 
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
-COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings,bronx
+COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings,bronx,tnt,ecmwf
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 
-PY3READY      = tests_bronx tests_footprints tests_arpifs_listings test_taylorism
+PY3READY      = tests_bronx tests_footprints tests_arpifs_listings tests_tnt test_taylorism \
+				test_cfgparser test_iosponge test_sessions_stuff test_layoutnodes \
+				test_syntax test_toolsodb test_vortexnames test_import
 
 all: check
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import division
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
@@ -171,15 +171,38 @@ class utDate(TestCase):
 
     def test_date_substract(self):
         rv = date.Date("20110831")
-        td = timedelta(days=1)
-
-        vd2 = rv - td
+        # Date/Period operation
+        vd2 = rv - timedelta(days=1)
         self.assertTrue(isinstance(vd2, date.Date))
         self.assertEqual(vd2.compact(), "20110830000000")
-
-        vd2 = rv + date.Period("-P1D")
+        vd2 = rv - date.Period("P1D")
         self.assertTrue(isinstance(vd2, date.Date))
         self.assertEqual(vd2.compact(), "20110830000000")
+        vd2 = rv - "P1D"
+        self.assertTrue(isinstance(vd2, date.Date))
+        self.assertEqual(vd2.compact(), "20110830000000")
+        # Date/Date Operation
+        rv = date.Date("20110831")
+        vd2 = rv - date.Date("20110830")
+        self.assertTrue(isinstance(vd2, date.Period))
+        self.assertEqual(vd2.days, 1)
+        vd2 = rv - "20110830"
+        self.assertTrue(isinstance(vd2, date.Period))
+        self.assertEqual(vd2.days, 1)
+        # Reversed substraction
+        rv = date.Date("20110831")
+        vd2 = "20110830" - rv
+        self.assertTrue(isinstance(vd2, date.Period))
+        self.assertEqual(vd2.days, -1)
+        vd2 = "2011083018" - rv
+        self.assertTrue(isinstance(vd2, date.Period))
+        self.assertEqual(vd2.days, -1)
+        self.assertEqual(vd2.seconds, 18 * 3600)
+        # Impossible ???
+        with self.assertRaises(ValueError):
+            vd2 = 'PT1D' - rv
+        with self.assertRaises(ValueError):
+            vd2 = date.Period('PT1D') - rv
 
     def test_date_replace(self):
         args = [

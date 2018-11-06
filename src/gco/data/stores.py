@@ -2,11 +2,14 @@
 # -*- coding:Utf-8 -*-
 # pylint: disable=unused-argument
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import ast
 import collections
 import copy
 import hashlib
 import re
+import six
 
 import footprints
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
@@ -38,16 +41,16 @@ class GcoStoreConfig(GenericConfigParser):
         except (SyntaxError, ValueError):
             return value
 
-    def setfile(self, inifile):
+    def setfile(self, inifile, encoding=None):
         """Read the specified ``inifile`` as new configuration."""
-        super(GcoStoreConfig, self).setfile(inifile)
+        super(GcoStoreConfig, self).setfile(inifile, encoding=None)
         # Create a regex cache for later use in key_properties
         for section in self.sections():
             k_re = re.compile(section)
             self._config_re_cache[k_re] = {k: self._decoder(v)
                                            for k, v in self.items(section)}
         self._config_defaults = {k: self._decoder(v)
-                                 for k, v in self.defaults().iteritems()}
+                                 for k, v in six.iteritems(self.defaults())}
 
     def key_properties(self, ggetkey):
         """See if a given *ggetkey* matches one of the sections of the configuration file.
@@ -60,7 +63,7 @@ class GcoStoreConfig(GenericConfigParser):
             if self.file is None:
                 raise RuntimeError("A configuration file must be setup first")
             myconf = self._config_defaults
-            for section_re, section_conf in self._config_re_cache.iteritems():
+            for section_re, section_conf in six.iteritems(self._config_re_cache):
                 if section_re.match(ggetkey):
                     myconf = section_conf
                     break
@@ -69,7 +72,7 @@ class GcoStoreConfig(GenericConfigParser):
 
     def key_untar_properties(self, ggetkey):
         """Filtered version of **key_properties** with only untar related data."""
-        return {k: v for k, v in self.key_properties(ggetkey).iteritems()
+        return {k: v for k, v in six.iteritems(self.key_properties(ggetkey))
                 if k in ['uniquelevel_ignore']}
 
 
@@ -130,8 +133,8 @@ class GcoCentralStore(Store):
         """Return actual (gtool, garchive, tampon, gname)."""
         tg = self.system.default_target
 
-        l = rpath.lstrip('/').split('/')
-        gname = l.pop()
+        lpath = rpath.lstrip('/').split('/')
+        gname = lpath.pop()
 
         if 'GGET_TAMPON' in self.system.env:
             tampon = self.system.env.GGET_TAMPON
@@ -139,7 +142,7 @@ class GcoCentralStore(Store):
             rootdir = self.ggetroot
             if rootdir is None:
                 rootdir = tg.get('gco:rootdir', '')
-            tampon = rootdir + '/' + '/'.join(l)
+            tampon = rootdir + '/' + '/'.join(lpath)
 
         gcmd = self.ggetcmd
         if gcmd is None:
@@ -348,10 +351,13 @@ class _UgetStoreMixin(object):
                     else:
                         untaropts = self.ugetconfig.key_untar_properties(uname)
                         rc = len(self.system.smartuntar(uname, destdir, output=False, **untaropts)) > 0
+                # Otherwise, assume that the file to extract is in a directory
+                else:
+                    destdir = self.system.path.realpath(uname)
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
                 # Automatic untar if needed... (the local file needs to end with a tar extension)
-                if (isinstance(local, basestring) and not self.system.path.isdir(local) and
+                if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
                         self.system.is_tarname(local) and self.system.is_tarfile(local)):
                     destdir = self.system.path.dirname(self.system.path.realpath(local))
                     untaropts = self.ugetconfig.key_untar_properties(uname)
@@ -427,16 +433,54 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
             remote['root'] = self._actual_storeroot(f_uuid)
         return remote
 
+    def _list_remap(self, remote):
+        """Reformulates the remote path to compatible vortex namespace."""
+        rlist = []
+        xpath = remote['path'].split('/')
+        if re.match('^@(\w+)$', xpath[2]):
+            f_uuid = UgetId('uget:fake' + xpath[2])
+            for h in range(16):
+                a_remote = copy.copy(remote)
+                a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
+                                                         re.sub('0x(.)', r'\1', hex(h)))
+                rlist.append(a_remote)
+        else:
+            f_uuid = UgetId('uget:' + xpath[2])
+            a_remote = copy.copy(remote)
+            a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
+                                                     self._hashdir(f_uuid.id), f_uuid.id)
+            rlist.append(a_remote)
+        for a_remote in rlist:
+            if 'root' not in a_remote:
+                a_remote['root'] = self._actual_storeroot(f_uuid)
+        return rlist
+
     def ugetcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
-        return self.ftpcheck(self._universal_remap(remote), options)
+        return self.inarchivecheck(self._universal_remap(remote), options)
 
     def ugetlocate(self, remote, options):
         """Remap and ftplocate sequence."""
-        return self.ftplocate(self._universal_remap(remote), options)
+        return self.inarchivelocate(self._universal_remap(remote), options)
+
+    def ugetlist(self, remote, options):
+        """Remap and ftplocate sequence."""
+        stuff = set()
+        with self.system.ftppool():
+            for a_remote in self._list_remap(remote):
+                rc = self.inarchivelist(a_remote, options)
+                if isinstance(rc, list):
+                    stuff.update(rc)
+                elif rc is True:
+                    return rc
+        return sorted([s for s in stuff if not (s.endswith('.' + self.storehash) and s[:-(len(self.storehash) + 1)] in stuff)])
+
+    def ugetprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        return self.inarchiveprestageinfo(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
-        return self.ftpget(remote, local, options)
+        return self.inarchiveget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -448,11 +492,11 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         if not self.storetrue:
             logger.info("put deactivated for %s", str(local))
             return True
-        return self.ftpput(local, self._universal_remap(remote), options)
+        return self.inarchiveput(local, self._universal_remap(remote), options)
 
     def ugetdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
-        return self.ftpdelete(self._universal_remap(remote), options)
+        return self.inarchivedelete(self._universal_remap(remote), options)
 
 
 class _UgetCacheStore(CacheStore, _UgetStoreMixin):
@@ -493,6 +537,18 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
         return remote
 
+    def _list_remap(self, remote):
+        """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
+        xpath = remote['path'].split('/')
+        if re.match('^@(\w+)$', xpath[2]):
+            f_uuid = UgetId('uget:fake' + xpath[2])
+            remote['path'] = self.system.path.join(f_uuid.location, xpath[1])
+        else:
+            f_uuid = UgetId('uget:' + xpath[2])
+            remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
+        return remote
+
     def ugetcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
         return self.incachecheck(self._universal_remap(remote), options)
@@ -500,6 +556,14 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
     def ugetlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(self._universal_remap(remote), options)
+
+    def ugetlist(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        return self.incachelist(self._list_remap(remote), options)
+
+    def ugetprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(self._universal_remap(remote), options)
 
     def _actual_get(self, remote, local, options):
         return self.incacheget(remote, local, options)
@@ -557,6 +621,65 @@ class UgetHackCacheStore(_UgetCacheStore):
             )
         )
     )
+
+    def _alternate_source(self, remote, options):
+        """
+        If the target remote file is a tar/tgz file, check if a directory with
+        the same name (but without any extension) exists.
+        """
+        parrentsource = super(UgetHackCacheStore, self).ugetlocate(remote, options)
+        alternate_remote = None
+        sh = self.system
+        if sh.is_tarname(parrentsource):
+            tar_ts = sh.stat(parrentsource).st_mtime if sh.path.isfile(parrentsource) else 0
+            source_tarradix = sh.tarname_radix(parrentsource)
+            # Check if the directory exists...
+            if sh.path.isdir(source_tarradix):
+                alternate_remote = copy.copy(remote)
+                alternate_remote['path'] = alternate_remote['path'].replace(sh.path.basename(parrentsource),
+                                                                            sh.path.basename(source_tarradix))
+                tarradix_ts = max([sh.stat(tfile).st_mtime for tfile in sh.ffind(source_tarradix)])
+            if alternate_remote is not None and tarradix_ts > tar_ts:
+                # Do something only if the content of the directory is more recent
+                # than the Tar file
+                if options is not None and options.get('auto_repack', False):
+                    print("Recreating < {:s} > based on < {:s} >.".format(
+                          sh.path.basename(parrentsource), source_tarradix))
+                    with self.system.cdcontext(self.system.path.dirname(source_tarradix)):
+                        self.system.tar(parrentsource,
+                                        self.system.path.basename(source_tarradix))
+                else:
+                    remote = alternate_remote
+        return remote, alternate_remote
+
+    def ugetlocate(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        a_remote, _ = self._alternate_source(remote, options)
+        return super(UgetHackCacheStore, self).ugetlocate(a_remote, options)
+
+    def ugetcheck(self, remote, options):
+        """Proxy to :meth:`incachecheck`."""
+        a_remote, a_altremote = self._alternate_source(remote, options)
+        options = options.copy() if options is not None else dict()
+        # Also check if the data is a regular file with the notable exception
+        # of expanded tarfiles (see _alternate_source above) and specific data
+        # format (e.g. ODB databases)
+        options.setdefault('isfile', not (a_remote == a_altremote or
+                                          'fmt' in options))
+        return super(UgetHackCacheStore, self).ugetcheck(a_remote, options)
+
+    def ugetget(self, remote, local, options):
+        """Proxy to :meth:`incacheget`."""
+        a_remote, _ = self._alternate_source(remote, options)
+        return super(UgetHackCacheStore, self).ugetget(a_remote, local, options)
+
+    def ugetdelete(self, remote, options):
+        """Proxy to :meth:`incachedelete`."""
+        _, a_remote = self._alternate_source(remote, options)
+        rc = super(UgetHackCacheStore, self).ugetdelete(remote, options)
+        if a_remote is not None:
+            rc = rc and super(UgetHackCacheStore, self).ugetdelete(a_remote, options)
+        return rc
 
 
 class UgetStore(MultiStore):

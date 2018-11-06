@@ -26,6 +26,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TeeLikeStringIO
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ParallelSilencer
    :show-inheritance:
    :members:

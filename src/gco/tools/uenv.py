@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import re
 
 import footprints
@@ -15,8 +17,9 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_DATASTORE_KIND = 'uenv_registred_cycle'
+_DATASTORE_KIND = 'uenv_registered_cycle'
 
+_UENV_IGNORE_RE = re.compile(r'^(?:\s*(?:#|//|!).*|\s*)$')
 _UENV_LINE_RE = re.compile(r'^[^=]+=')
 
 
@@ -52,7 +55,7 @@ def contents(cycle, scheme=None, netloc=None):
             tmplocal = footprints.proxy.container(shouldfly=True)
             rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
         except (OSError, IOError) as e:
-            print e
+            print(e)
             try:
                 # This may happen if the user has insufficient rights on
                 # the current directory
@@ -64,7 +67,9 @@ def contents(cycle, scheme=None, netloc=None):
             raise UenvError("The {:s} cycle was not found".format(uri_s))
         tmplocal.seek(0)
         for i, item in enumerate(tmplocal.readlines()):
-            if _UENV_LINE_RE.match(item):
+            if _UENV_IGNORE_RE.match(item):
+                pass
+            elif _UENV_LINE_RE.match(item):
                 k, v = item.split('=', 1)
                 cycle = v.rstrip("\n").strip('"')
                 try:

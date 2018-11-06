@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelResource
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class GenvUsageModelResource(GenvModelResource):
@@ -104,7 +107,7 @@ class SurgesNativeGrid(GenvModelResource):
                     default = '[model]_[fields]_[gdomain]_tgz',
                 ),
                 fields = dict(
-                    values  = ['regional', 'cb'],
+                    values  = ['regional', 'cb', 'cbar'],
                 ),
             )
         )
@@ -132,7 +135,8 @@ class ConfSurges(GenvUsageModelResource):
                 ),
                 param = dict(
                     values  = ['pts', 'savefield', 'ports', 'blkdat',
-                               'blkdat_cmo', 'patch', 'run', 'run_red'],
+                               'blkdat_cmo', 'blkdat_shom', 'blkdat_ms', 'blkdat_full',
+                               'patch', 'run', 'run_red'],
                 ),
             )
         )

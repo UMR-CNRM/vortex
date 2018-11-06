@@ -15,3 +15,12 @@ Functions
 ---------
 
 .. autofunction:: smooth_string
+
+
+Classes
+-------
+
+.. autoclass:: EncodedPrettyPrinter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

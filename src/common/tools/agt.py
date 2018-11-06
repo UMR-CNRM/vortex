@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
 
@@ -41,5 +41,5 @@ def agt_actual_command(sh, binary_name, args, extraenv=None):
     if extraenv is not None and isinstance(extraenv, collections.Mapping):
         context = ' ; '.join([context, ] +
                              ["export {}={}".format(key.upper(), value)
-                              for (key, value) in extraenv.iteritems()])
+                              for (key, value) in extraenv.items()])
     return '{} ; {} {}'.format(context, sh.path.join(agt_path, agt_bin), args)

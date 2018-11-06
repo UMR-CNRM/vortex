@@ -5,7 +5,7 @@
 Utility functions of the :mod:`footprints` package.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import re
 import copy
@@ -34,13 +34,13 @@ def dictmerge(d1, d2):
         >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
         >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
         >>> dictmerge(a, b)
-        {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}}
+        {u'name': u'clim model', u'attr': {u'model': {u'values': (u'arpege', u'arome')}, u'truncation': {u'type': u'int', u'optional': u'False'}}}
 
         >>> dictmerge({'a':'1'},{'b':'2'})
-        {'a': '1', 'b': '2'}
+        {u'a': u'1', u'b': u'2'}
 
         >>> dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}})
-        {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}}
+        {u'a': u'1', u'i': {u'b': u'2', u'f': {u'g': u'5'}}, u'c': {u'h': u'6', u'e': u'7', u'd': u'3'}}
     """
 
     for key, value in six.iteritems(d2):
@@ -85,7 +85,7 @@ class TimeInt(int):
     """
 
     def __new__(cls, ti, tm=None):
-        ti = str(ti)
+        ti = six.text_type(ti)
         if not re.match(r'-?\d*(?::\d\d+)?$', ti):
             raise ValueError('{} is not a valid TimeInt'.format(ti))
         if ti.startswith('-'):
@@ -125,7 +125,7 @@ class TimeInt(int):
 
     def __str__(self):
         if self.is_int():
-            return str(self.ti)
+            return six.text_type(self.ti)
         else:
             return self.str_time
 
@@ -211,7 +211,7 @@ class TimeInt(int):
 
     @property
     def value(self):
-        return self.ti if self.is_int() else str(self)
+        return self.ti if self.is_int() else six.text_type(self)
 
 
 def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
@@ -231,24 +231,24 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         [24, 27, 30, 33, 36]
         >>> rangex(0, 12, 3, shift=24)
         [24, 27, 30, 33, 36]
-        >>> rangex('0-12-3', shift=24, fmt='%03d')
-        ['024', '027', '030', '033', '036']
+        >>> print(', '.join(rangex('0-12-3', shift=24, fmt='%03d')))
+        024, 027, 030, 033, 036
 
     Hour/Minutes examples::
 
-        >>> rangex(0, 3, '0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex('0:00', '3:00', '0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex(0, 3, '0:30', shift=24)
-        ['0024:00', '0024:30', '0025:00', '0025:30', '0026:00', '0026:30', '0027:00']
+        >>> print(', '.join(rangex(0, 3, '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex('0:00', '3:00', '0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex(0, 3, '0:30', shift=24)))
+        0024:00, 0024:30, 0025:00, 0025:30, 0026:00, 0026:30, 0027:00
 
     It also works with negative values::
 
-        >>> rangex(3, 0,'-0:30')
-        ['0000:00', '0000:30', '0001:00', '0001:30', '0002:00', '0002:30', '0003:00']
-        >>> rangex(-3, 0,'0:30')
-        ['-0000:30', '-0001:00', '-0001:30', '-0002:00', '-0002:30', '-0003:00', '0000:00']
+        >>> print(', '.join(rangex(3, 0,'-0:30')))
+        0000:00, 0000:30, 0001:00, 0001:30, 0002:00, 0002:30, 0003:00
+        >>> print(', '.join(rangex(-3, 0,'0:30')))
+        -0000:30, -0001:00, -0001:30, -0002:00, -0002:30, -0003:00, 0000:00
         >>> rangex(-3, 0, 1)
         [-3, -2, -1, 0]
 
@@ -263,8 +263,8 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     if start is None:
         return list()
 
-    pstarts = ([str(s) for s in start]
-               if isinstance(start, (list, tuple)) else str(start).split(','))
+    pstarts = ([six.text_type(s) for s in start]
+               if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
     for pstart in pstarts:
 
         if re.search('_', pstart):
@@ -321,7 +321,7 @@ def rangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                        for i, x in enumerate(pvalues)]
 
         if prefix is not None:
-            pvalues = [ prefix + str(x) for x in pvalues ]
+            pvalues = [ prefix + six.text_type(x) for x in pvalues ]
         rangevalues.extend(pvalues)
 
     return sorted(set(rangevalues))
@@ -334,10 +334,10 @@ def inplace(desc, key, value, globs=None):
     Examples::
 
         >>> inplace({'test':'alpha'}, 'ajout', 'beta')
-        {'test': 'alpha', 'ajout': 'beta'}
+        {u'test': u'alpha', u'ajout': u'beta'}
 
         >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
-        {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}}
+        {u'test': u'alpha', u'ajout': u'beta', u'recurs': {u'a': 1, u'b': 2}}
     """
     newd = copy.deepcopy(desc)
     newd[key] = value
@@ -348,6 +348,94 @@ def inplace(desc, key, value, globs=None):
     return newd
 
 
+def _parse_globs(todo):
+    """Process the **todo** string that contains ``glob`` statements.
+
+    Nested brackets are dealt with.
+
+    Returns a 3-elements tuple consisting of:
+
+        * A set that contains the glob's names ;
+        * The compiled regular expression that can be used to select the files
+          and detect the glob's expressions ;
+        * The python's glob string that can be used to look for files.
+
+    """
+    gstart = re.compile('^{glob:(\w+):')
+    glob_names = set()
+    finalglob = ''
+    finalpattern = ''
+    curbuffer = ''
+    curname = None
+    bracket_count = 0
+
+    def glob2re(cbuffer):
+        """Convert a Unix glob string to a regular expression (very crude)."""
+        fpattern = ''
+        for c in cbuffer:
+            if c == '*':
+                fpattern += '.*'
+            elif c == '?':
+                fpattern += '.'
+            else:
+                fpattern += re.escape(c)
+        return fpattern
+
+    while todo:
+        # Usual text processing
+        if not curname:
+            gmatch = gstart.match(todo)
+            if gmatch:
+                # Starting a glob pattern match
+                if curbuffer:
+                    finalpattern += glob2re(curbuffer)
+                    finalglob += curbuffer
+                    curbuffer = ''
+                curname = gmatch.group(1)
+                if curname in glob_names:
+                    raise ValueError("Duplicated glob's name ('{:s}' has already been defined)"
+                                     .format(curname))
+                glob_names.add(curname)
+                todo = gstart.sub('', todo)
+                continue
+        # Pattern processing
+        else:
+            if (not curbuffer or curbuffer[-1] != '\\') and todo[0] == '{':
+                # Opening bracket detected
+                bracket_count += 1
+            elif (not curbuffer or curbuffer[-1] != '\\') and todo[0] == '}':
+                # Closing bracket detected
+                if bracket_count:
+                    bracket_count -= 1
+                else:
+                    # Pattern definition is done
+                    try:
+                        re.compile(curbuffer)
+                    except re.error:
+                        raise ValueError("Unable to compile << {:s} >> for glob's name = << {:s} >>"
+                                         .format(curbuffer, curname))
+                    finalpattern += '(?P<{:s}>{:s})'.format(curname, curbuffer)
+                    finalglob += '*'
+                    curname = None
+                    curbuffer = ''
+                    todo = todo[1:]
+                    continue
+
+        curbuffer += todo[0]
+        todo = todo[1:]
+
+    if curname:
+        raise ValueError("Unbalanced brackets in << {:s} >> for glob's name = << {:s} >>"
+                         .format(curbuffer, curname))
+
+    if curbuffer:
+        # Save the remain
+        finalpattern += glob2re(curbuffer)
+        finalglob += curbuffer
+
+    return glob_names, re.compile('^' + finalpattern + '$'), finalglob
+
+
 def expand(desc):
     """
     Expand the given description according to iterable or expandable arguments.
@@ -355,23 +443,23 @@ def expand(desc):
     List expansion::
 
         >>> expand( {'test': 'alpha'} )
-        [{'test': 'alpha'}]
+        [{u'test': u'alpha'}]
 
         >>> expand( { 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ] } )
-        [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}]
+        [{u'test': u'alpha', u'niv2': u'a'}, {u'test': u'alpha', u'niv2': u'b'}, {u'test': u'alpha', u'niv2': u'c'}]
 
         >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
-        [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}]
+        [{u'test': u'alpha', u'niv2': u'x'}, {u'test': u'alpha', u'niv2': u'y'}, {u'test': u'alpha', u'niv2': u'z'}]
 
         >>> expand({'test': 'alpha', 'niv2': 'range(1,3)'})
-        [{'test': 'alpha', 'niv2': 1}, {'test': 'alpha', 'niv2': 2}, {'test': 'alpha', 'niv2': 3}]
+        [{u'test': u'alpha', u'niv2': 1}, {u'test': u'alpha', u'niv2': 2}, {u'test': u'alpha', u'niv2': 3}]
         >>> expand({'test': 'alpha', 'niv2': 'range(0,6,3)'})
-        [{'test': 'alpha', 'niv2': 0}, {'test': 'alpha', 'niv2': 3}, {'test': 'alpha', 'niv2': 6}]
+        [{u'test': u'alpha', u'niv2': 0}, {u'test': u'alpha', u'niv2': 3}, {u'test': u'alpha', u'niv2': 6}]
 
     List expansion + dictionary matching::
 
         >>> expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}})
-        [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x'}, {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y'}]
+        [{u'test': u'alpha', u'niv3': u'niv2 is x', u'niv2': u'x'}, {u'test': u'alpha', u'niv3': u'niv2 is y', u'niv2': u'y'}]
 
     Globbing::
 
@@ -425,32 +513,16 @@ def expand(desc):
                     newld.extend([ inplace(d, k, x) for x in v.split(',') ])
                     somechanges = True
                     break
-                if isinstance(v, six.string_types) and re.search(r'{glob:', v):
+                if isinstance(v, six.string_types) and re.search(r'{glob:\w+:', v):
                     logger.debug(' > Globbing from string %s', v)
-                    vglob = v
-                    globitems = list()
-
-                    def getglob(matchobj):
-                        globitems.append([matchobj.group(1), matchobj.group(2)])
-                        return '*'
-                    vglob = re.sub(r'{glob:(\w+):([^\}]+)}', getglob, vglob)
-                    ngrp = 0
-                    while re.search(r'{glob:', v):
-                        v = re.sub(r'{glob:\w+:([^\}]+)}', '{' + str(ngrp) + '}', v, count=1)
-                        ngrp += 1
-                    v = v.replace('+', r'\+')
-                    v = v.replace('.', r'\.')
-                    ngrp = 0
-                    while re.search(r'{\d+}', v):
-                        v = re.sub(r'{\d+}', '(' + globitems[ngrp][1] + ')', v, count=1)
-                        ngrp += 1
+                    g_names, g_re, g_glob = _parse_globs(v)
                     repld = list()
-                    for filename in glob.glob(vglob):
-                        m = re.search(r'^' + v + r'$', filename)
+                    for filename in glob.glob(g_glob):
+                        m = g_re.match(filename)
                         if m:
                             globmap = dict()
-                            for i, g in enumerate(globitems):
-                                globmap[g[0]] = m.group(i + 1)
+                            for g in g_names:
+                                globmap[g] = m.group(g)
                             repld.append(inplace(d, k, filename, globmap))
                     newld.extend(repld)
                     somechanges = True
@@ -459,7 +531,7 @@ def expand(desc):
                     for dk in [ x for x in v.keys() if x in d ]:
                         dv = d[dk]
                         if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
-                            newld.append(inplace(d, k, v[dk][str(dv)]))
+                            newld.append(inplace(d, k, v[dk][six.text_type(dv)]))
                             somechanges = True
                             break
                     if somechanges:
@@ -600,7 +672,7 @@ class GetByTag(object):
 
     @classmethod
     def tag_classes(cls):
-        """Return a list of current classes that have been registred with the same GetByTag root."""
+        """Return a list of current classes that have been registered with the same GetByTag root."""
         return list(cls._tag_class)
 
     def __copy__(self):
@@ -640,12 +712,8 @@ class Catalog(object):
 
     def __init__(self, **kw):
         logger.debug('Abstract %s init', self.__class__)
-        self._weak  = kw.pop('weak', False)
         self._items = kw.pop('items', list())
-        if self._weak:
-            self._items = WeakSet(self._items)
-        else:
-            self._items = set(self._items)
+        self.weak = kw.pop('weak', False)
         self.__dict__.update(kw)
 
     @classmethod
@@ -658,10 +726,19 @@ class Catalog(object):
         """Boolean value, true if there is at least one item in the catalog."""
         return bool(self._items)
 
-    @property
-    def weak(self):
+    def _get_weak(self):
         """Boolean value, true if the catalog is built with weak references."""
         return self._weak
+
+    def _set_weak(self, switch):
+        """Set boolean value, true if the catalog should be made of weak references."""
+        self._weak = bool(switch)
+        if self._weak:
+            self._items = WeakSet(self._items)
+        else:
+            self._items = set(self._items)
+
+    weak = property(_get_weak, _set_weak)
 
     def items(self):
         """A list, copy of the catalog items."""
@@ -750,7 +827,8 @@ class SpecialDict(dict):
 
     def __contains__(self, key):
         """Force remapped key ``in`` checking."""
-        return dict.__contains__(self, self.remap(key))
+        return (dict.__contains__(self, key) or  # Try with out a remap first... just in case
+                dict.__contains__(self, self.remap(key)))
 
 
 class LowerCaseDict(SpecialDict):

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from unittest import TestCase, main
 
 from bronx.datagrip import namelist as fortran
@@ -106,7 +108,7 @@ class UtNamelistContent(TestCase):
     def test_merge(self):
         # Test removes
         self.namcontent.merge({}, rmkeys=('A ', 'z'), rmblocks=('MySecondOne', ))
-        self.assertSetEqual(set(self.namcontent.keys()), set(('MyNamelistTest', )))
+        self.assertSetEqual(set(self.namcontent.keys()), set(('MYNAMELISTTEST', )))
         self.assertNotIn('A ', self.namcontent['MyNamelistTest'])
         self.assertNotIn('Z', self.namcontent['MyNamelistTest'])
         # Test clear

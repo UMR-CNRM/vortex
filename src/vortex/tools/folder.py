@@ -8,21 +8,26 @@ In any kind of cache directories, the folder structure is kept as is. When
 data are sent using FTP or SSH, a tar file is created on the fly.
 """
 
-from __future__ import division
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import tempfile
 
+import six
+
 import footprints
-from . import addons
 from vortex.util.iosponge import IoSponge
+from . import addons
 
 #: No automatic export
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
-_folder_exposed_methods = set(['cp', 'mv', 'ftget', 'rawftget', 'ftput', 'rawftput',
-                               'scpget', 'scpput'])
+_folder_exposed_methods = set(['cp', 'mv',
+                               'ftget', 'rawftget', 'ftput', 'rawftput',
+                               'scpget', 'scpput',
+                               'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
 
 
 def folderize(cls):
@@ -72,26 +77,26 @@ class FolderShell(addons.FtrawEnableAddon):
         rc, source, destination = self.sh.tarfix_out(source, destination)
         rc = rc and self.sh.cp(source, destination, intent=intent)
         if rc:
-            rc, source, destination = self.sh.tarfix_in(source, destination)
+            rc, source, destination = self.tarfix_in(source, destination)
             if rc and intent == 'inout':
-                self.sh.stderr('chmod', 0644, destination)
+                self.sh.stderr('chmod', 0o644, destination)
                 oldtrace, self.sh.trace = self.sh.trace, False
                 for infile in self.sh.ffind(destination):
-                    self.sh.chmod(infile, 0644)
+                    self.sh.chmod(infile, 0o644)
                 self.sh.trace = oldtrace
         return rc
 
     def _folder_mv(self, source, destination):
         """Shortcut to :meth:`move` method (file or directory)."""
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             rc = self.sh.hybridcp(source, destination)
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 rc = rc and self.sh.remove(source)
         else:
             rc, source, destination = self.sh.tarfix_out(source, destination)
             rc = rc and self.sh.move(source, destination)
             if rc:
-                rc, source, destination = self.sh.tarfix_in(source, destination)
+                rc, source, destination = self.tarfix_in(source, destination)
         return rc
 
     def _folder_credentials(self, hostname=None, logname=None):
@@ -113,7 +118,7 @@ class FolderShell(addons.FtrawEnableAddon):
     def _folder_unpack_stream(self, stdin=True, options='xvf'):
         return self.sh.popen(
             # the z option is omitted consequently it also works if the file is not compressed
-            ['tar', options, '-'], stdin = stdin, bufsize = 8192, )
+            ['tar', options, '-'], stdin=stdin, bufsize=8192, )
 
     def _packed_size(self, source):
         """Size of the final file, must be exact or be an overestimation.
@@ -132,7 +137,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_preftget(self, source, destination):
         """Prepare source and destination"""
-        if not (source.endswith('.tgz') or source.endswith('.tar')):
+        if not (source.endswith('.tgz') or source.endswith('.tar.gz') or source.endswith('.tar')):
             source += '.tgz'
         self.sh.rm(destination)
         destination = self.sh.path.abspath(destination)
@@ -221,7 +226,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return self._folder_ftget(source, destination, hostname, logname)
 
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -247,7 +252,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return False
 
     def _folder_rawftput(self, source, destination, hostname=None, logname=None,
-                         cpipeline=None):
+                         cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -257,16 +262,16 @@ class FolderShell(addons.FtrawEnableAddon):
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
-            with open(request, 'w') as request_fh:
-                request_fh.write(self.sh.path.dirname(newsource))
+            with io.open(request, 'w') as request_fh:
+                request_fh.write(six.text_type(self.sh.path.dirname(newsource)))
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,
                                     hostname=hostname, logname=logname,
-                                    specialshell=self.rawftshell)
+                                    specialshell=self.rawftshell, sync=sync)
             self.sh.rm(request)
             return rc
         else:
-            return self._folder_ftput(source, destination, hostname, logname)
+            return self._folder_ftput(source, destination, hostname, logname, sync=sync)
 
     def _folder_scpget(self, source, destination, hostname, logname=None, cpipeline=None):
         """Retrieve a folder using scp."""
@@ -302,6 +307,163 @@ class FolderShell(addons.FtrawEnableAddon):
         rc = ssh.scpput_stream(p.stdout, destination)
         self.sh.pclose(p)
         return rc
+
+    @addons.require_external_addon('ecfs')
+    def _folder_ecfsget(self, source, target, cpipeline=None, options=None):
+        """Get a folder resource using ECfs.
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        # The folder must not be compressed
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        ctarget = target + ".tgz"
+        source, target = self._folder_preftget(source, target)
+        # Create a local directory, get the source file and untar it
+        loccwd = self.sh.getcwd()
+        loctmp = tempfile.mkdtemp(prefix="folder_", dir=loccwd)
+        with self.sh.cdcontext(loctmp, create=True):
+            rc, dict_args = self.sh.ecfsget(source=source,
+                                            target=ctarget,
+                                            options=options)
+            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.rm(ctarget)
+            self._folder_postftget(target, loccwd, loctmp)
+        return rc, dict_args
+
+    @addons.require_external_addon('ecfs')
+    def _folder_ecfsput(self, source, target, cpipeline=None, options=None):
+        """Put a folder resource using ECfs.
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if not target.endswith('.tgz'):
+            target += ".tgz"
+        source = self.sh.path.abspath(source)
+        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        try:
+            rc = self.sh.tar(csource, source)
+            if rc:
+                rc, dict_args = self.sh.ecfsput(source=csource,
+                                                target=target,
+                                                options=options)
+        finally:
+            self.sh.rm(csource)
+        return rc, dict_args
+
+    @addons.require_external_addon('ectrans')
+    def _folder_ectransget(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Get a folder resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        # The folder must not be compressed
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        ctarget = target + ".tgz"
+        source, target = self._folder_preftget(source, target)
+        # Create a local directory, get the source file and untar it
+        loccwd = self.sh.getcwd()
+        loctmp = tempfile.mkdtemp(prefix="folder_", dir=loccwd)
+        with self.sh.cdcontext(loctmp, create=True):
+            rc, dict_args = self.sh.raw_ectransget(source=source,
+                                                   target=ctarget,
+                                                   gateway=gateway,
+                                                   remote=remote)
+            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.rm(ctarget)
+            self._folder_postftget(target, loccwd, loctmp)
+        return rc, dict_args
+
+    @addons.require_external_addon('ectrans')
+    def _folder_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """Put a folder resource using ECtrans.
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if not target.endswith('.tgz'):
+            target += ".tgz"
+        source = self.sh.path.abspath(source)
+        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        try:
+            rc = self.sh.tar(csource, source)
+            if rc:
+                rc, dict_args = self.sh.raw_ectransput(source=csource,
+                                                       target=target,
+                                                       gateway=gateway,
+                                                       remote=remote)
+        finally:
+            self.sh.rm(csource)
+        return rc, dict_args
+
+    def tarfix_in(self, source, destination):
+        """Automatically untar **source** if **source** is a tarfile and **destination** is not.
+
+        This is called after a copy was blindly done: a ``source='foo.tgz'`` might have
+        been copied to ``destination='bar'``, which must be untarred here.
+        """
+        ok = True
+        sh = self.sh
+        if sh.is_tarname(source) and not sh.is_tarname(destination):
+            logger.info('tarfix_in: untar from get <%s> to <%s>', source, destination)
+            (destdir, destfile) = sh.path.split(sh.path.abspath(destination))
+            tar_ext = sh.tarname_splitext(source)[1]
+            desttar = sh.path.abspath(destination + tar_ext)
+            sh.remove(desttar)
+            ok = ok and sh.move(destination, desttar)
+            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
+            with sh.cdcontext(loctmp):
+                ok = ok and sh.untar(desttar, output=False)
+                unpacked = sh.glob('*')
+                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
+                ok = ok and sh.move(unpacked[0], sh.path.join(destdir, destfile))
+                ok = ok and sh.remove(desttar)
+            sh.rm(loctmp)
+        return (ok, source, destination)
+
+    def tarfix_out(self, source, destination):
+        """Automatically tar **source** if **destination** is a tarfile and **source** is not.
+
+        This is called after a copy was blindly done: a directory might have been copied
+        to ``destination='foo.tgz'`` or ``destination='foo.tar.bz2'``.
+        The tar and compression implied by the name must be addressed here.
+        """
+        ok = True
+        sh = self.sh
+        if sh.is_tarname(destination) and not sh.is_tarname(source):
+            logger.info('tarfix_out: tar before put <%s> to <%s>', source, destination)
+            tar_ext = sh.tarname_splitext(destination)[1]
+            sourcetar = sh.path.abspath(source + tar_ext)
+            source_rel = sh.path.basename(source)
+            (sourcedir, sourcefile) = sh.path.split(sourcetar)
+            with sh.cdcontext(sourcedir):
+                ok = ok and sh.remove(sourcefile)
+                ok = ok and sh.tar(sourcefile, source_rel, output=False)
+            return (ok, sourcetar, destination)
+        else:
+            return (ok, source, destination)
 
 
 @folderize
@@ -367,6 +529,23 @@ class ObsLocationPackShell(FolderShell):
         attr = dict(
             kind = dict(
                 values   = ['obslocationpack'],
+            ),
+        )
+    )
+
+
+@folderize
+class ObsFirePackShell(FolderShell):
+    """
+    Default interface to Obs Fire packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Obs Location packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['obsfirepack'],
             ),
         )
     )

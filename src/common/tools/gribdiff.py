@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
+import six
+
 import footprints
 
 from vortex.tools.grib import GRIBAPI_Tool
@@ -42,7 +47,7 @@ class _GRIBDIFF_Plus_Res(object):
 
     def differences(self):
         """Print detailed informations about the diff."""
-        print self._epydiff_res
+        print(self._epydiff_res)
 
 
 class GRIBDIFF_Plus(GRIBAPI_Tool):
@@ -74,16 +79,16 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
         rc = super(GRIBDIFF_Plus, self)._actual_diff(grib1, grib2, skipkeys, **kw)
         if not rc:
             if self._epyavail is None:
-                from common.util.usepygram import is_epygram_available
-                self._epyavail = is_epygram_available('1.0.0')
+                from common.util.usepygram import epygram_checker
+                self._epyavail = epygram_checker.is_available(version='1.0.0')
             if self._epyavail:
                 if self._epycount < self.maxepydiff:
                     from common.util.diffpygram import EpyGribDiff
                     gdiff = EpyGribDiff(grib2, grib1)  # Ref file is first...
                     self._epycount += 1
-                    res = _GRIBDIFF_Plus_Res(rc, True, str(gdiff))
+                    res = _GRIBDIFF_Plus_Res(rc, True, six.text_type(gdiff))
                     # Save the detailed diff
-                    with open(grib1 + "_epygram_diffstats.log", "w") as outfh:
+                    with io.open(grib1 + "_epygram_diffstats.log", "w") as outfh:
                         outfh.write(gdiff.format_diff(detailed=True))
                 else:
                     res = _GRIBDIFF_Plus_Res(rc, False,

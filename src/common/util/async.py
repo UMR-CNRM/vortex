@@ -4,7 +4,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.util.worker import VortexWorker
-from vortex.tools import compression
+from vortex.tools import compression, systems
 
 #: No automatic export
 __all__ = []
@@ -44,6 +44,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
     with VortexWorker(logger=logger) as vwork:
         sh = vwork.vortex.sh()
         sh.trace = False
+        sh.ftpflavour = systems.FTP_FLAVOUR.STD  # Because errors are handled directly by jeeves
 
         data = vwork.get_dataset(ask)
         if phasemode:

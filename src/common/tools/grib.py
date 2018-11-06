@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import json
+import six
 
 import footprints
 
@@ -67,7 +70,7 @@ class _GenericFilter(object):
         for a_filter in filters:
             if isinstance(a_filter, dict):
                 self._filters.append(a_filter)
-            elif isinstance(a_filter, basestring):
+            elif isinstance(a_filter, six.string_types):
                 self._filters.append(json.loads(a_filter))
             elif isinstance(a_filter, Context):
                 for a_request in a_filter.sequence.effective_inputs(kind='filtering_request'):
@@ -81,13 +84,13 @@ class _GenericFilter(object):
     def _is_dict_superset(full, subset):
         """Finds out if the full dictionary contains and matches subset."""
         superset_ok = True
-        for k, v in subset.iteritems():
+        for k, v in six.iteritems(subset):
             # Ignore the comments...
             if k.startswith('comment'):
                 continue
             # Check for the key inside the full dictionary
             try:
-                fullvalue = full[str(k)]
+                fullvalue = full[six.text_type(k)]
             except KeyError:
                 superset_ok = False
                 break
@@ -183,7 +186,7 @@ class GRIBFilter(_GenericFilter):
 
         # Open the input file using Epygram
         from common.util import usepygram
-        if not usepygram.is_epygram_available('1.0.0'):
+        if not usepygram.epygram_checker.is_available(version='1.0.0'):
             raise AlgoComponentError("Epygram (v1.0.0) needs to be available")
 
         if self._xgrib_support and self._sh.is_xgrib(gribfile):
@@ -206,10 +209,12 @@ class GRIBFilter(_GenericFilter):
         for a_filter in self._filters:
             f_name = outfile_fmt.format(filtername=a_filter['filter_name'])
             out_filelist.append(f_name)
+            # It would be a lot better to use io.opern but grib_api is very anoing !
             out_data.append(open(f_name, 'wb'))
         if self.concatenate:
             f_name = outfile_fmt.format(filtername=self.CONCATENATE_FILTER)
             out_filelist.append(f_name)
+            # It would be a lot better to use io.opern but grib_api is very anoing !
             out_cat = open(f_name, 'wb')
 
         with usepygram.epy_env_prepare(sessions.current()):

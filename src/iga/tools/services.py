@@ -24,27 +24,34 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
 import locale
 import logging
 import random
 import re
 import socket
-from StringIO import StringIO
 from logging.handlers import SysLogHandler
 
+import six
+from six import StringIO
+
+import footprints
+import vortex
 from bronx.stdtypes import date
 from bronx.stdtypes.date import Time
-import footprints
-from footprints.stdtypes import FPDict
-import vortex
 from common.tools.agt import agt_actual_command
+from footprints.stdtypes import FPDict
+from iga.tools.transmet import get_ttaaii_transmet_sh
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.syntax.stdattrs import a_term, a_domain
 from vortex.tools.actions import actiond as ad
 from vortex.tools.schedulers import SMS
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
+from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
-from iga.tools.transmet import get_ttaaii_transmet_sh
+
 #: Export nothing
 __all__ = []
 
@@ -75,7 +82,7 @@ class LogFacility(int):
     """
 
     def __new__(cls, value):
-        if isinstance(value, basestring):
+        if isinstance(value, six.string_types):
             value = value.lower()
             if value.startswith('log_'):
                 value = value[4:]
@@ -85,15 +92,15 @@ class LogFacility(int):
                 logger.error('Could not get a SysLog value for name ' + value)
                 raise
         if value not in SysLogHandler.facility_names.values():
-            raise ValueError('Not a SysLog facility value: ' + str(value))
+            raise ValueError('Not a SysLog facility value: {!s}'.format(value))
         return int.__new__(cls, value)
 
     def name(self):
         """Reverse access: deduce the name from the integer value."""
-        for s, n in SysLogHandler.facility_names.iteritems():
+        for s, n in six.iteritems(SysLogHandler.facility_names):
             if self == n:
                 return s
-        raise ValueError('Not a SysLog facility value: ' + str(self))
+        raise ValueError('Not a SysLog facility value: {!s}'.format(self))
 
 
 class AlarmService(Service):
@@ -196,8 +203,8 @@ class AlarmProxyService(AlarmService):
         info = 'Alarm Proxy Service',
         attr = dict(
             issyslognode = dict(
-                values = [str(False), ],
-                default = '[systemtarget:issyslognode]',
+                values   = [six.text_type(False), ],
+                default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
         )
@@ -273,7 +280,7 @@ class AlarmLogService(AlarmService):
                 access   = 'rwx',
             ),
             issyslognode = dict(
-                values   = [str(True), ],
+                values   = [six.text_type(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -310,7 +317,7 @@ class AlarmRemoteService(AlarmService):
                 default  = socket.SOCK_DGRAM,
             ),
             issyslognode = dict(
-                values   = [str(True), ],
+                values   = [six.text_type(True), ],
                 default  = '[systemtarget:issyslognode]',
                 optional = True
             ),
@@ -363,6 +370,11 @@ class RoutingService(Service):
             ),
             sshhost   = dict(
                 optional = True,
+            ),
+            maxtries = dict(
+                type     = int,
+                optional = True,
+                default  = 5,
             ),
         )
     )
@@ -449,10 +461,10 @@ class RoutingService(Service):
             if self.sh.default_target.isagtnode:
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
             else:
-                sshobj = self.sh.ssh(hostname='agt', virtualnode=True)
+                sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)
         else:
-            sshobj = self.sh.ssh(hostname=self.sshhost)
+            sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
             rc = sshobj.execute(cmdline)
 
         if self._actual_targetname:
@@ -465,7 +477,7 @@ class RoutingService(Service):
         if not rc:
             # BDM call has no term
             if hasattr(self, 'term'):
-                term = ' echeance ' + str(self.term)
+                term = ' echeance {!s}'.format(self.term)
             else:
                 term = ''
             text = "{0.taskname} Pb envoi {0.realkind} id {0.productid}{term}".format(self, term=term)
@@ -618,7 +630,7 @@ class BdpeService(RoutingService):
         """Return the actual routing key to use for the 'router_pe' call."""
 
         rule = self.iniparser.get(self.soprano_target, 'rule_exclude')
-        if re.match(rule, str(self.productid)):
+        if re.match(rule, six.text_type(self.productid)):
             msg = 'Pas de routage du produit {productid} sur {soprano_target} ({filename})'.format(
                 productid=self.productid,
                 filename=self.filename,
@@ -699,6 +711,11 @@ class TransmetService(BdpeService):
                 values    = ['TTAAII', 'gfnc'],
                 optional  = True,
                 default   = 'TTAAII',
+            ),
+            header_infile = dict(
+                optional  = True,
+                type      = bool,
+                default   = True,
             )
         )
     )
@@ -719,7 +736,7 @@ class TransmetService(BdpeService):
                 actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
                                                                  actual_transmet, self.filename,
-                                                                 self.scriptdir)
+                                                                 self.scriptdir, self.header_infile)
                 logger.debug('filename transmet : %s', self._filename_transmet)
             else:
                 logger.error('version_header : %s not implemented', self.version_header)
@@ -825,11 +842,13 @@ class DayfileReportService(FileReportService):
         defaults to spooldir for these parts of centralized log files.
         """
         name = ''.join([
-            str(date.now().epoch),
+            date.now().strftime('%Y%m%d%H%M%S.%f'),
             '_',
-            self.env.get('NQSID', ''),
+            self.env.get('SLURM_JOBID', ''),
+            six.text_type(self.sh.getpid()),
+            '_',
             '1' if 'DEBUT' in self.mode else '0',
-            str(random.random()),
+            six.text_type(random.random()),
         ])
         final = self.sh.path.join(
             self.actual_value(
@@ -874,7 +893,7 @@ class DayfileReportService(FileReportService):
             target = final + '.tmp'
 
         self.sh.filecocoon(target)
-        with open(target, 'a') as fp:
+        with io.open(target, 'a') as fp:
             fp.write(self.infos)
         if not self.filename:
             self.sh.mv(target, final)
@@ -901,7 +920,7 @@ class SMSOpService(SMS):
         else:
             stamp = date.now().compact()
             self.variable(varname, stamp)
-            self.label('etat', str(status) + ': ' + stamp + ' ' + str(comment))
+            self.label('etat', six.text_type(status) + ': ' + stamp + ' ' + six.text_type(comment))
 
     def close_init(self, *args):
         """Set starting date as a XCDP variable."""
@@ -970,7 +989,7 @@ class DMTEventService(Service):
 
     def get_dmtinfo(self):
         """The pair of usefull information to forward to monitor."""
-        return [self.resource_name, str(self.resource_flag)]
+        return [self.resource_name, six.text_type(self.resource_flag)]
 
     def get_cmdline(self):
         """Complete command line that runs the soprano command."""
@@ -1048,16 +1067,17 @@ class OpMailService(TemplatedMailService):
 
     def header(self):
         """String prepended to the message body."""
-        locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-        stamp = date.now().strftime('%A %d %B %Y à %X locales')
-        return 'Mail envoyé le {}\n--\n\n'.format(stamp)
+        now = date.now()
+        with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8', uselock=True):
+            stamp1 = now.strftime('%A %d %B %Y')
+            stamp2 = now.strftime('%X')
+        return 'Mail envoyé le {} à {} locales.\n--\n\n'.format(stamp1, stamp2)
 
     def trailer(self):
         """String appended to the message body."""
-        return ('\n--\nEnvoi automatique par Vortex {} ' +
-                'pour <{}@{}>\n').format(vortex.__version__,
-                                         self.env.user,
-                                         self.sh.default_target.inetname)
+        return ('\n--\nEnvoi automatique par Vortex {} pour <{}@{}>.\n'
+                .format(vortex.__version__,
+                        self.env.user, self.sh.default_target.inetname))
 
     def __call__(self, *args):
         """Main action as inherited, and prompts.

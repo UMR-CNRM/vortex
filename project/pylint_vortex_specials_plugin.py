@@ -1,9 +1,12 @@
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from astroid import MANAGER
 from astroid import scoped_nodes
 from astroid import Instance
 
 import os
 import re
+import six
 import glob
 
 VORTEXBASE = os.path.dirname(os.path.abspath(__file__))
@@ -21,7 +24,7 @@ def register(linter):
 def transform(cls):
     # Add some of the default attributes of geometry objects
     if cls.name == 'HorizontalGeometry':
-        str_ast = MANAGER.ast_from_class(str)
+        str_ast = MANAGER.ast_from_class(six.text_type)
         float_ast = MANAGER.ast_from_class(float)
         bool_ast = MANAGER.ast_from_class(bool)
         for attr in HGEO_str:
@@ -34,7 +37,7 @@ def transform(cls):
     if cls.name == 'System':
         for proxymod in ('os', 'shutil', 'resource'):
             new_ast = MANAGER.ast_from_module_name(proxymod)
-            for proxy_local, proxy_class_ast in new_ast.locals.iteritems():
+            for proxy_local, proxy_class_ast in new_ast.locals.items():
                 if proxy_local not in cls.locals:
                     cls.locals[proxy_local] = proxy_class_ast
     # Some very common priorities

@@ -1,20 +1,25 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from bronx.stdtypes.date     import Date, Time
+import footprints
+from footprints.util import rangex
+
+from vortex.data.flow        import GeoFlowResource
+from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
+from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
+
+from common.data.modelstates import InitialCondition
+from common.data.obs         import ObsRaw
+
+from cen.syntax.stdattrs     import cendateperiod_deco
+
 #: No automatic export
 __all__ = []
 
-import footprints
-from footprints.util import rangex
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.data.flow        import GeoFlowResource
-from common.data.obs         import ObsRaw
-from vortex.data.geometries  import MassifGeometry
-from common.data.modelstates import InitialCondition
-from vortex.syntax.stdattrs  import term
-
-from bronx.stdtypes.date import Date
 
 
 class SafranObsDateError(ValueError):
@@ -27,11 +32,13 @@ class SafranObsDateError(ValueError):
         )
 
 
+@namebuilding_insert('src', lambda s: [s.source_app, s.source_conf])
+@namebuilding_insert('term', lambda s: s.cumul.fmthour)
+@namebuilding_delete('geo')
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
     _footprint = [
-        term,
         dict(
             info = 'Safran guess',
             attr = dict(
@@ -47,16 +54,18 @@ class SafranGuess(GeoFlowResource):
                     optional = True,
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', ],
-                    optional = True,
+                    values = ['arpege', 'arome', 'ifs'],
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps'],
-                    optional = True,
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'eps', 'pearo', 'era40'],
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = UnstructuredGeometry,
+                ),
+                cumul = dict(
+                    info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
+                    type     = Time,
                 ),
             )
 
@@ -69,30 +78,24 @@ class SafranGuess(GeoFlowResource):
     def realkind(self):
         return 'guess'
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            src     = [self.source_app, self.source_conf],
-            term    = self.term.fmthour,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
-
-    def cendev_basename(self):
-        # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
-        # origin_date = self.date.replace(hour=0)
-        # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
-        # guess files are named PYYMMDDHH
-        if self.date.hour in [0, 6, 12, 18]:
-            return 'P' + self.date.yymdh
-        else:
-            raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
+    def reanalysis_basename(self):
+        # guess files are named PYYMMDDHH in cen re-analysis database
+        if self.source_app == 'arpege':
+            if self.date.hour in [0, 6, 12, 18]:
+                return 'P' + self.date.yymdh
+            else:
+                raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
+        elif self.conf.source_app == 'cep':
+            return 'cep_' + self.data.nivologyseason()
 
 
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
 class SurfaceIO(GeoFlowResource):
 
     _abstract = True
     _footprint = [
+        cendateperiod_deco,
         dict(
             info = 'SURFEX input or output file',
             attr = dict(
@@ -103,20 +106,18 @@ class SurfaceIO(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",
-                    type = Date,
                 ),
                 dateend = dict(
                     info = "Last date of the forcing file",
-                    type = Date,
-                    optional = True,
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
-                    optional = True)
+                    optional = True,
+                ),
             )
         )
     ]
@@ -127,15 +128,11 @@ class SurfaceIO(GeoFlowResource):
     def realkind(self):
         return self.kind
 
-    def cenvortex_basename(self):
 
-        for var in [self.realkind, self.datebegin.ymdh, self.dateend.ymdh, self._extension_remap.get(self.nativefmt, self.nativefmt)]:
-            print type(var), var
-        return self.realkind + "_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-
-
+@namebuilding_append('src', lambda self: self.source_conf, none_discard=True)
+@namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 class SurfaceForcing(SurfaceIO):
-    """Class for the safrane output files."""
+    """Class for all kind of meteorological forcing files."""
     _footprint = [
         dict(
             info = 'Safran-produced forcing file',
@@ -144,7 +141,15 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran'],
+                    values = ['safran', 'obs', 's2m'],
+                ),
+                source_app = dict(
+                    values = ['arpege', 'arome', 'ifs', ],
+                    optional = True
+                ),
+                source_conf = dict(
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
+                    optional = True
                 ),
             )
         )
@@ -152,7 +157,7 @@ class SurfaceForcing(SurfaceIO):
 
     @property
     def realkind(self):
-        return "FORCING"
+        return 'FORCING'
 
 
 class Pro(SurfaceIO):
@@ -176,6 +181,9 @@ class Pro(SurfaceIO):
         return "PRO"
 
 
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
+@namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
 class Prep(InitialCondition):
     """Class for the SURFEX-Crocus initialisation of the snowpack state."""
 
@@ -184,7 +192,7 @@ class Prep(InitialCondition):
             info = 'Instant SURFEX-Crocus Snowpack state',
             attr = dict(
                 kind = dict(
-                    values  = ['SnowpackState'],
+                    values  = ['PREP'],
                 ),
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
@@ -196,21 +204,23 @@ class Prep(InitialCondition):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 filling = dict(
                     value = ['surf', ],
                     default = 'surf',
                 ),
+                # In operational applications, date is used to refer to the run time but the validity date of the file can be different.
+                # In research applications, there is only the validity date which makes sense.
+                datevalidity = dict(
+                    optional = True,
+                    type = Date,
+                    default = '[date]',
+                ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
-                    optional = True),
-                stage = dict(
-                    info = "specify for SODA if prep is background or analyzed",
-                    values = ['_an', '_bg', ''],
-                    default= '',
-                    optional = True,
-                ),
+                    optional = True
+                )
             )
         )
     ]
@@ -219,25 +229,16 @@ class Prep(InitialCondition):
 
     @property
     def realkind(self):
-        return 'snowpackstate'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo     = self.geometry.area,
-            fmt     = self._extension_remap.get(self.nativefmt, self.nativefmt),
-        )
-
-    def cenvortex_basename(self):
-
-        return 'PREP_' + self.date.ymdh + self.stage + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
+        return 'PREP'
 
 
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class SnowObsOld(GeoFlowResource):
-    '''
-    Deprecated class
-    '''
+	'''
+	Deprecated class
+	'''
     _footprint = [
+        cendateperiod_deco,
         dict(
             info = 'Observations of snow for model evaluation',
             attr = dict(
@@ -256,19 +257,18 @@ class SnowObsOld(GeoFlowResource):
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
-                    type = MassifGeometry,
+                    type = HorizontalGeometry,
                 ),
                 datebegin = dict(
                     info = "First date of the forcing file",
-                    type = Date,
                 ),
                 dateend = dict(
                     info = "Last date of the forcing file",
-                    type = Date,
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
                 cutoff = dict(
-                    optional = True)
+                    optional = True
+                )
             )
         )
     ]
@@ -278,12 +278,6 @@ class SnowObsOld(GeoFlowResource):
     @property
     def realkind(self):
         return "obs_insitu"
-
-    def cenvortex_basename(self):
-        print "CENVORTEX_BASENAME"
-        print self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-
-        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
 
 
 class SnowObs(ObsRaw):
@@ -335,12 +329,6 @@ class SnowObs(ObsRaw):
     def realkind(self):
         return "obs"
 
-    def cenvortex_basename(self):
-        print "CENVORTEX_BASENAME"
-        print self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-
-        return self.realkind + "_" + self.geometry.area + "_" + self.datebegin.y + "_" + self.dateend.y + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-
 
 class Snowobs_timeseries(SnowObs):
     '''
@@ -350,6 +338,7 @@ class Snowobs_timeseries(SnowObs):
 
     _footprint = [
         dict(
+			cendateperiod_deco  # let's try this
             info = 'Timeseries of snow observations',
             attr = dict(
                 datebegin = dict(
@@ -376,12 +365,6 @@ class Snowobs_timeseries(SnowObs):
     @property
     def realkind(self):
         return super(Snowobs_1date, self).realkind + '_' + self.part
-
-    def cenvortex_basename(self):
-        print "CENVORTEX_BASENAME"
-        name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-        print name
-        return name
 
 
 class Snowobs_1date(SnowObs):
@@ -419,15 +402,10 @@ class Snowobs_1date(SnowObs):
     def realkind(self):
         return super(Snowobs_1date, self).realkind + '_' + self.part
 
-    def cenvortex_basename(self):
-        print "CENVORTEX_BASENAME"
-        name = self.realkind + "_" + self.geometry.area + "_" + self.period + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)
-        print name
-        return name
-
 
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
+
     _footprint = [
         dict(
             info = 'Safran-produced forcing file',
@@ -486,3 +464,6 @@ class SafranObsRaw(ObsRaw):
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)
+
+    def reanalysis_basename(self):
+        return self.cendev_basename()

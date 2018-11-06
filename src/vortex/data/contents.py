@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
+import six
 from string import Template
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from vortex import sessions
-from vortex.util.structs import ReadOnlyDict
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class DataContentError(ValueError):
@@ -29,7 +33,7 @@ class DataContent(object):
         self._data      = None
         self._metadata  = ReadOnlyDict()
         self._size      = 0
-        for k, v in kw.iteritems():
+        for k, v in six.iteritems(kw):
             self.__dict__['_' + k] = v
 
     def __getattr__(self, attr):
@@ -73,7 +77,7 @@ class DataContent(object):
                          'The check will always succeed...')
         delta = delta or {}
         outcome = True
-        for mkey, mval in self.metadata.iteritems():
+        for mkey, mval in six.iteritems(self.metadata):
             if hasattr(resource, mkey):
                 cval = getattr(resource, mkey)
                 if mkey in delta:
@@ -173,11 +177,11 @@ class AlmostDictContent(DataContent):
             yield t
 
     def __contains__(self, item):
-        return self.has_key(self.fmtkey(item))
+        return self.fmtkey(item) in self._data
 
     def has_key(self, item):
         """Dict-like behavior looking for the formatted ``item`` in internal data."""
-        return self.fmtkey(item) in self._data
+        return item in self
 
     def merge(self, *kargs):
         """Merge several data contents into one."""
@@ -216,28 +220,11 @@ class JsonDictContent(AlmostDictContent):
     The internal data is supposed to be read from a json file.
     """
 
-    @classmethod
-    def _unicode2str(cls, jsdecode):
-        """Try to convert Unicode string into *regular* strings"""
-        if isinstance(jsdecode, dict):
-            return {cls._unicode2str(key): cls._unicode2str(value)
-                    for key, value in jsdecode.iteritems()}
-        elif isinstance(jsdecode, list):
-            return [cls._unicode2str(value) for value in jsdecode]
-        elif isinstance(jsdecode, unicode):
-            try:
-                return jsdecode.encode()
-            except UnicodeEncodeError:
-                return jsdecode
-        else:
-            return jsdecode
-
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
         container.rewind()
         self._data = t.sh.json_load(container.iotarget())
-        self._data = self._unicode2str(self._data)
         self._size = container.totalsize
 
     def rewrite(self, container):
@@ -379,7 +366,7 @@ class TextContent(AlmostListContent):
             catlist = self[0:3] + ['...'] + self[-3:]
         else:
             catlist = self[:]
-        return '\n'.join([ str(x) for x in catlist ])
+        return '\n'.join([six.text_type(x) for x in catlist])
 
     def _actual_slurp(self, container):
         self._data.extend([ x.split() for x in container if not x.startswith('#') ])
@@ -389,7 +376,7 @@ class TextContent(AlmostListContent):
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
         if self._fmt is None:
-            return ' '.join([str(x) for x in item])
+            return ' '.join([six.text_type(x) for x in item])
         else:
             return self._fmt.format(*item)
 
@@ -500,12 +487,12 @@ class FormatAdapter(DataContent):
 
 
 class MetaDataReader(footprints.FootprintBase):
-    '''
+    """
     Abstract class for any MetaDataReader.
 
     Note: _do_delayed_init have to be subclassed. That's where the content of the
     container is actually read.
-    '''
+    """
 
     _abstract  = True
     _collector = ('metadatareader',)
@@ -525,17 +512,17 @@ class MetaDataReader(footprints.FootprintBase):
 
     @property
     def _data(self):
-        '''Internal: check if one needs to intialise the _datahide dict.'''
+        """Internal: check if one needs to intialise the _datahide dict."""
         if self._datahide is None and self._content_in is not None:
             self._do_delayed_init()
         return self._datahide
 
     def content_init(self, thecontent):
-        '''Set the data content that will be used to read the metadata'''
+        """Set the data content that will be used to read the metadata"""
         self._content_in = thecontent
 
     def _do_delayed_init(self):
-        '''Internal: actually initialise the _data array. Have to be subclassed !'''
+        """Internal: actually initialise the _data array. Have to be subclassed !"""
         raise NotImplementedError
 
     def __getitem__(self, key):
@@ -546,6 +533,13 @@ class MetaDataReader(footprints.FootprintBase):
 
     def __iter__(self):
         return iter(self._data)
+
+    def items(self):
+        """Iterate over the metadata."""
+        if six.PY3:
+            return self.iteritems()
+        else:
+            return {k: v for k, v in self.iteritems()}
 
     def iteritems(self):
         for k in self:
@@ -558,4 +552,4 @@ class MetaDataReader(footprints.FootprintBase):
             return repr(self._data)
 
     def __str__(self):
-        return str(self._data)
+        return six.text_type(self._data)

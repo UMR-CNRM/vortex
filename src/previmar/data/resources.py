@@ -1,20 +1,27 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import Date, Time, Period
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
 from common.data.modelstates import InitialCondition
 
+#: No automatic export
+__all__ = []
 
+logger = footprints.loggers.getLogger(__name__)
+
+
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
 class SolutionPoint(FlowResource):
-    """Class for point solutions of the HYCOM model i.e s*pts (ascii file)."""
+    """Class for port solutions of the HYCOM model i.e s*pts (ascii file)."""
     _footprint = dict(
         info = 'Surges model point solution',
         attr = dict(
@@ -45,12 +52,10 @@ class SolutionPoint(FlowResource):
     def realkind(self):
         return 'pts'
 
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-        )
 
-
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_insert('geo', lambda s: [s.geometry.area, s.geometry.rnice])
+@namebuilding_delete('src')
 class SolutionMaxGrid(GeoFlowResource):
     """Class for solutions interpolated on MF grid, i.e s*max (ascii file)."""
     _footprint = dict(
@@ -77,14 +82,10 @@ class SolutionMaxGrid(GeoFlowResource):
     def realkind(self):
         return 'smax'
 
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            fmt     = self.nativefmt,
-        )
 
-
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
 class CouplingWw3Write(GeoFlowResource):
     """Class for Nested solutions of the HYCOM model (coupling file)."""
     _footprint = dict(
@@ -111,13 +112,10 @@ class CouplingWw3Write(GeoFlowResource):
     def realkind(self):
         return 'SurgesWw3coupling'
 
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-            geo     = self.geometry.area,
-        )
 
-
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
 class SurgesResultNative(GeoFlowResource):
     """Class for grid solutions of the HYCOM model (netcdf file)."""
     _footprint = dict(
@@ -134,7 +132,8 @@ class SurgesResultNative(GeoFlowResource):
                 values = ['HUV_ltideonly_forcing', 'lssh_global_ms.nc',
                           'HUV_ltide_wind_forcing', 'lssh_global_full.nc',
                           'HUV_tideonly_forcing', 'HUV_tide_wind_forcing',
-                          'ssh_global_full.nc', 'ssh_global_ms.nc'],
+                          'ssh_global_full.nc', 'ssh_global_ms.nc',
+                          'ssh_global.nc', 'maree_global.nc'],
                 remap = {
                     'HUV_ltideonly_forcing': 'lssh_global_ms.nc',
                     'HUV_tideonly_forcing': 'ssh_global_ms.nc',
@@ -149,18 +148,15 @@ class SurgesResultNative(GeoFlowResource):
     def realkind(self):
         return 'SurgesResultNative'
 
-    def basename_info(self):
-        return dict(
-            radical = self.fields,
-            geo     = self.geometry.area,
-        )
 
-
+@namebuilding_delete('fmt')
+@namebuilding_insert('period', lambda s: [{'endtime': s.timeslot + Period('PT24H')},
+                                          {'begintime': s.timeslot}, ])
 class BufrPoint(FlowResource):
     """Class for point solutions of the HYCOM model i.e bufr."""
     _footprint = dict(
         info = ('Surges model temporal solution bufr (for 24h period) (2d current (u,v) ' +
-                'Pmer, U10, V10, surcote and (Hauteur d eau Maree SHOM for ATL))'),
+                'Pmer, U10, V10, surcote and (Hauteur d eau Maree))'),
         attr = dict(
             kind = dict(
                 values = ['bufr_surges'],
@@ -180,15 +176,9 @@ class BufrPoint(FlowResource):
     def realkind(self):
         return 'bufr'
 
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            period  = dict(begintime=self.timeslot,
-                           endtime=self.timeslot + Period('PT24H')),
-            src     = self.model,
-        )
 
-
+@namebuilding_insert('radical', lambda s: s.realkind + '.' + s.fields)
+@namebuilding_insert('geo', lambda s: [s.geometry.area, s.geometry.rnice])
 class ForcingOutData(InitialCondition):
     """Class of a Stress, wind and pressure forcing interpolated on native grid Hycom
     and min max values."""
@@ -202,7 +192,14 @@ class ForcingOutData(InitialCondition):
                 values  = ['ascii', 'unknown'],
             ),
             fields = dict(
-                values  = ['preatm', 'tauewd', 'taunwd', 'windx', 'windy'],
+                values  = ['preatm', 'tauewd', 'taunwd',
+                           'windx', 'windy', 'mslprs',
+                           'wndnwd', 'wndewd'],
+                remap = {
+                    'windx': 'wndewd',
+                    'windy': 'wndnwd',
+                    'preatm': 'mslprs',
+                },
             ),
         )
     )
@@ -211,14 +208,34 @@ class ForcingOutData(InitialCondition):
     def realkind(self):
         return 'ForcingOut'
 
-    def basename_info(self):
-        lgeo = [self.geometry.area, self.geometry.rnice]
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = lgeo,
-            radical = self.realkind + '.' + self.fields,
-            src     = [self.filling, self.model],
+
+@namebuilding_insert('radical', lambda s: s.realkind + '.' + s.fields)
+@namebuilding_insert('geo', lambda s: [s.geometry.area, s.geometry.rnice])
+@namebuilding_insert('src', lambda s: [s.model, ])
+class TideOnlyOut(InitialCondition):
+    """."""
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            kind = dict(
+                values  = ['TideOnlyOut']
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'unknown'],
+            ),
+            fields = dict(
+                values  = ['pts', 'nat', 'native', 'txt', 'info'],
+                remap = {
+                    'info': 'txt',
+                    'native': 'nat',
+                },
+            ),
         )
+    )
+
+    @property
+    def realkind(self):
+        return 'TideOnlyOut'
 
 
 class ConfigData(Resource):
@@ -256,6 +273,7 @@ class Rules_fileGrib(Resource):
     )
 
 
+@namebuilding_insert('geo', lambda s: [s.geometry.area, s.geometry.rnice])
 class TarResult(GeoFlowResource):
     """Class of tarfile for surges result"""
     _footprint = dict(
@@ -274,11 +292,3 @@ class TarResult(GeoFlowResource):
     @property
     def realkind(self):
         return 'surges_tarfile'
-
-    def basename_info(self):
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            radical = self.realkind,
-            src     = self.model,
-        )

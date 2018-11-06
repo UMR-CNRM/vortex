@@ -21,6 +21,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SimulationSurges
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: IniZeroSurges
    :show-inheritance:
    :members:

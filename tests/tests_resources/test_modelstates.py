@@ -1,4 +1,6 @@
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import unittest
 
 from bronx.stdtypes.date import Date
@@ -7,7 +9,7 @@ import footprints as fp
 from vortex.data import geometries
 import common.data.modelstates  # @UnusedImport
 
-from vortex.util.names import VortexNameBuilder
+from vortex.tools.names import VortexNameBuilder
 
 rcollect = fp.collectors.get(tag='resource')
 rcollect.fasttrack = ('kind', )
@@ -26,7 +28,7 @@ class TestAnalysis(unittest.TestCase):
                         model='arpege', kind='analysis', geometry=self.geo)
         answer = 'analysis.surf-arpege.tl798-c24.fa'
         res = fp.proxy.resource(filling='surf', ** fpcommon)
-        self.assertEqual(self.vb.pack(res.basename_info()), answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer)
 
 
 class TestInitialCondition(unittest.TestCase):
@@ -45,7 +47,7 @@ class TestInitialCondition(unittest.TestCase):
         self.assertEqual(res.olive_basename(), 'ICMSHARPE+0000')
         with self.assertRaises(NotImplementedError):
             res.archive_basename()
-        self.assertEqual(self.vb.pack(res.basename_info()), answer)
+        self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer)
 
 
 if __name__ == "__main__":

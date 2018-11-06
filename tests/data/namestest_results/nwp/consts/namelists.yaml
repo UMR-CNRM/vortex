@@ -1,0 +1,144 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: batodb
+      genv: '[cycle]'
+      kind: namutil
+      source: screen
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: al42_arome-op2.40
+        date: 2018010100
+        geometry: franmgsp
+        gnamespace: gco.multi.fr
+        model: arome
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: 3dvarfr
+      location: gget://gco.multi.fr/tampon/ut42_arome-op2.08.nam?extract=screen
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: gget://gco.multi.fr/tampon/ut42_op2.07.nam?extract=screen
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      binary: utilities
+      genv: '[cycle]'
+      kind: namutil
+      source: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/ut42_arome-op2.08.nam?extract=screen
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/ut42_op2.07.nam?extract=screen
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namelist
+      source: screen
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=screen
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=screen
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namelistfp
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=namel_arome
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=namel_arpege
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namselect
+      term: 9
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=namel_arome
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=namel_arpege
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namselectdef
+      source: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=xxt.def.assim
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=xxt.def.assim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namselectdef
+      source: toto
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=toto
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=toto
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: namterm
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=namel_arome
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=namel_arpege
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: xxtdef
+      source: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=xxt.def.assim
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=xxt.def.assim
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: xxtdef
+      source: toto
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/al42_arome-op2.15.nam?extract=toto
+    - default: *id002
+      location: gget://gco.multi.fr/tampon/cy42_op2.23.nam?extract=toto
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: geoblocks
+      nativefmt: null
+      target: toto
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/geoblocks.toto.franmg-01km30.nam
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/geoblocks.toto.tl1198-c22.nam
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: geoblocks
+      nativefmt: nam
+      target: toto
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/geoblocks.toto.franmg-01km30.nam
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/clim/geoblocks.toto.tl1198-c22.nam

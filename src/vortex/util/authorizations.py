@@ -8,17 +8,20 @@ not. Via the sessions module, glove et environment objects support the
 verification.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 from collections import namedtuple
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
@@ -34,7 +37,7 @@ class GroupHandler(namedtuple('PermsUsersHandler', ('perms', 'users'))):
 def is_qualified_user(user=None):
     """Check if current or specified user is documented in users-groups definitions."""
     if not user:
-        user = sessions.getglove().user
+        user = sessions.current().glove.user
     gh = GroupHandler()
     return user in gh.users.users
 
@@ -46,7 +49,7 @@ def is_authorized_user(action='void', user=None):
     the rights had been altered in any ways.
     """
     if not user:
-        user = sessions.getglove().user
+        user = sessions.current().glove.user
     gh = GroupHandler()
     group = gh.users.users.get(user, gh.users.users.get('default'))
     level = gh.users.groups.get(group, 'low')

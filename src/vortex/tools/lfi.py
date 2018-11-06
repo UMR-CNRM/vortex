@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import io
 import re
+import six
 
 import footprints
-from vortex.util.structs import Tracker
+
+from bronx.stdtypes.tracking import Tracker
+
 from . import addons
 
 #: Export nothing
@@ -83,7 +88,7 @@ class LFI_Status(object):
             if maxlines is None:
                 maxlines = len(self.stdout) + 1
             for l in self.stdout[:maxlines]:
-                print l
+                print(l)
 
     def __nonzero__(self):
         return bool(self.rc in self.ok)
@@ -131,20 +136,32 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         )
     )
 
+    def __init__(self, *args, **kw):
+        """LFI tools initialisation."""
+        super(LFI_Tool_Raw, self).__init__(*args, **kw)
+        self._lfitools_path = None
+
+    @property
+    def lfitools_path(self):
+        if self._lfitools_path is None:
+            self._lfitools_path = self.actual_path + '/' + self.actual_cmd
+            self.sh.xperm(self._lfitools_path, force=True)
+        return self._lfitools_path
+
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
+        self.env.LFITOOLS = self.lfitools_path
         return super(LFI_Tool_Raw, self)._spawn(cmd, **kw)
 
     def _spawn_wrap(self, func, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
-        self.env.LFITOOLS = self.actual_path + '/' + self.actual_cmd
+        self.env.LFITOOLS = self.lfitools_path
         return super(LFI_Tool_Raw, self)._spawn_wrap(['lfi_' + func, ] + cmd, **kw)
 
     def is_xlfi(self, source):
         """Check if the given ``source`` is a multipart-lfi file."""
         rc = False
-        if source and isinstance(source, basestring) and self.sh.path.exists(source):
+        if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
                 rc = fd.read(8) == 'LFI_ALTM'
         return rc
@@ -185,15 +202,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
         maxprint = kw.pop('maxprint', 2)
         if maxprint:
-            cmd.extend(['--max-print-diff', str(maxprint)])
+            cmd.extend(['--max-print-diff', six.text_type(maxprint)])
 
         skipfields = kw.pop('skipfields', 0)
         if skipfields:
-            cmd.extend(['--lfi-skip-fields', str(skipfields)])
+            cmd.extend(['--lfi-skip-fields', six.text_type(skipfields)])
 
         skiplength = kw.pop('skiplength', 0)
         if skiplength:
-            cmd.extend(['--lfi-skip-length', str(skiplength)])
+            cmd.extend(['--lfi-skip-length', six.text_type(skiplength)])
 
         kw['output'] = True
 
@@ -244,7 +261,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         return None
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None):
+                   cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -279,10 +296,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             return st
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline)
+                                 logname=logname, cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -291,14 +308,14 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
                                         hostname=hostname, logname=logname,
-                                        specialshell=self.rawftshell)
+                                        specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(newsource)  # Delete the request file
                 return rc
             else:
-                return self._std_ftput(source, destination, hostname, logname)
+                return self._std_ftput(source, destination, hostname, logname, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline)
+                                    logname=logname, cpipeline=cpipeline, sync=sync)
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_rawftput
@@ -373,6 +390,77 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     fa_scpput = lfi_scpput = _std_scpput
 
+    @addons.require_external_addon('ecfs')
+    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+        """TODO: define xlfi_pack in the parent class
+
+        :param source: source file
+        :param target: target file
+        :param cpipeline: compression pipeline to be used, if provided
+        :param options: list of options to be used
+        :return: return code and additional attributes used
+        """
+        if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
+            psource = source + self.sh.safe_filesuffix()
+            rc = LFI_Status()
+            try:
+                rc = rc and self.xlfi_pack(source=source,
+                                           destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.ecfsput(source=psource,
+                                                    target=target,
+                                                    options=options)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ecfsput(source=source,
+                                   target=target,
+                                   options=options,
+                                   cpipeline=cpipeline)
+
+    fa_ecfsput = lfi_ecfsput = _std_ecfsput
+
+    @addons.require_external_addon('ectrans')
+    def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+        """TODO: define xlfi_pack in the parent class
+
+        :param source: source file
+        :param target: target file
+        :param gateway: gateway used by ECtrans
+        :param remote: remote used by ECtrans
+        :param cpipeline: compression pipeline to be used, if provided
+        :return: return code and additional attributes used
+        """
+        if self.is_xlfi(source):
+            if cpipeline is not None:
+                raise IOError("It's not allowed to compress xlfi files.")
+            psource = source + self.sh.safe_filesuffix()
+            rc = LFI_Status()
+            try:
+                rc = rc and self.xlfi_pack(source=source,
+                                           destination=psource)
+                dict_args = dict()
+                if rc:
+                    rc, dict_args = self.sh.raw_ectransput(source=psource,
+                                                           target=target,
+                                                           gateway=gateway,
+                                                           remote=remote)
+            finally:
+                self.sh.rm(psource)
+            return rc, dict_args
+        else:
+            return self.sh.ectransput(source=source,
+                                      target=target,
+                                      gateway=gateway,
+                                      remote=remote,
+                                      cpipeline=cpipeline)
+
+    fa_ectransput = lfi_ectransput = _std_ectransput
+
 
 class LFI_Tool_Py(LFI_Tool_Raw):
     """
@@ -423,7 +511,7 @@ class LFI_Tool_Py(LFI_Tool_Raw):
             logger.warning('Suspicious packing <%s>', source)
         rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination],
                          output=False)
-        self.sh.chmod(destination, 0444)
+        self.sh.chmod(destination, 0o444)
         return rc
 
     def _cp_pack_write(self, source, destination):
@@ -431,19 +519,19 @@ class LFI_Tool_Py(LFI_Tool_Raw):
             logger.warning('Suspicious packing <%s>', source)
         rc = self._spawn(['lfi_alt_pack', '--lfi-file-in', source, '--lfi-file-out', destination],
                          output=False)
-        self.sh.chmod(destination, 0644)
+        self.sh.chmod(destination, 0o644)
         return rc
 
     def _cp_copy_read(self, source, destination):
         rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination],
                          output=False)
-        self.sh.chmod(destination, 0444)
+        self.sh.chmod(destination, 0o444)
         return rc
 
     def _cp_copy_write(self, source, destination):
         rc = self._spawn(['lfi_alt_copy', '--lfi-file-in', source, '--lfi-file-out', destination],
                          output=False)
-        self.sh.chmod(destination, 0644)
+        self.sh.chmod(destination, 0o644)
         return rc
 
     _cp_aspack_fsok_read  = _cp_pack_read
@@ -501,9 +589,9 @@ class LFI_Tool_Py(LFI_Tool_Raw):
             st = LFI_Status()
             st.rc = self.sh.mv(source, destination)
             if intent == 'in':
-                self.sh.chmod(destination, 0444)
+                self.sh.chmod(destination, 0o444)
             else:
-                self.sh.chmod(destination, 0644)
+                self.sh.chmod(destination, 0o644)
         return st
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
@@ -579,7 +667,7 @@ class IO_Poll(addons.Addon):
             if not self.sh.path.exists('fort.4'):
                 raise IOError('The proc_io option or a fort.4 file should be provided.')
         else:
-            cmd.extend(['--nproc_io', str(nproc_io)])
+            cmd.extend(['--nproc_io', six.text_type(nproc_io)])
 
         # Catch the file processed
         rawout = self._spawn(cmd)

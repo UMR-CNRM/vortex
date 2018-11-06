@@ -2,14 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
+import io
 import sys
 from collections import OrderedDict
 
-from .util import PARSING_ERROR_CODE
+from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE, get_worst
 from .norms import NormsSet, NormsComparison
 from .jo_tables import JoTables, DEFAULT_N_THRESHOLD, DEFAULT_JO_THRESHOLD
+from .cost_functions import CostFunctions
 from .TLAD import ADTest, TLTest
 
 #: No automatic export
@@ -28,10 +29,10 @@ class OutputListing(object):
 
         :param filename: name of the file to read in
         :param pattern_type: type of pattern to compare, among
-                             ('norms', 'Jo-tables', 'AD-test', 'TL-test')
+                             ('norms', 'Jo-tables', 'costs', 'AD-test', 'TL-test')
         """
-        assert pattern_type in ('norms', 'Jo-tables', 'AD-test', 'TL-test'), \
-               "unknown pattern: " + pattern_type
+        assert pattern_type in ('norms', 'Jo-tables', 'costs', 'AD-test', 'TL-test'), \
+            "unknown pattern: " + pattern_type
 
         # init
         self.filename = filename
@@ -40,12 +41,13 @@ class OutputListing(object):
 
         self.normset = None
         self.jo_tables = None
+        self.costs = None
         self.ad_test = None
         self.tl_test = None
 
         # read listing in file
-        with open(self.filename, 'r') as f:
-            self.lines = [six.u(l).rstrip("\n") for l in f]  # to remove trailing '\n'
+        with io.open(self.filename, 'r') as f:
+            self.lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
 
     def __len__(self):
         return len(self.lines)
@@ -64,6 +66,8 @@ class OutputListing(object):
             n = len(self.normset)
         elif self.pattern_type == 'Jo-tables':
             n = len(self.jo_tables)
+        elif self.pattern_type == 'costs':
+            n = len(self.costs)
         elif self.pattern_type == 'AD-test':
             n = 1
         elif self.pattern_type == 'TL-test':
@@ -80,6 +84,8 @@ class OutputListing(object):
             self.parse_norms(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'Jo-tables':
             self.parse_jo_tables(flush_after_reading=flush_after_reading)
+        elif self.pattern_type == 'costs':
+            self.parse_costs(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'AD-test':
             self.parse_AD_test(flush_after_reading=flush_after_reading)
         elif self.pattern_type == 'TL-test':
@@ -111,6 +117,17 @@ class OutputListing(object):
         If **flush_after_reading**, get rid of listing after reading Jo-tables.
         """
         self.jo_tables = JoTables(self.filename, self.lines)
+        if flush_after_reading:
+            self.flush_listing()
+
+    # Jo-tables
+    def parse_costs(self, flush_after_reading=False):
+        """
+        Look for and read each cost function information
+
+        If **flush_after_reading**, get rid of listing after reading data.
+        """
+        self.costs = CostFunctions(self.filename, self.lines)
         if flush_after_reading:
             self.flush_listing()
 
@@ -160,7 +177,7 @@ def compare_norms(test, ref,
                   which='first_and_last_spectral',
                   out=sys.stdout,
                   onlymaxdiff=False,
-                  **ignored_kwargs):
+                  **_):
     """Compare two 'norms' pattern-type output listings.
 
     :param which: either 'all' to compare norms for all steps found in listings,
@@ -279,7 +296,7 @@ def compare_norms(test, ref,
         fig.savefig(pngname, bbox_inches='tight', dpi=300)
 
     if mode == 'get_worst':
-        return max(worstdigits)
+        return get_worst(worstdigits)
     elif mode == 'get_worst_by_step':
         return worstdigits
     else:
@@ -292,7 +309,7 @@ def compare_jo_tables(test, ref,
                       jothres=DEFAULT_JO_THRESHOLD,
                       bw=False,
                       onlymaxdiff=False,
-                      **ignored_kwargs):
+                      **_):
     """
     Compare two 'Jo-tables' pattern-type output listings.
 
@@ -326,7 +343,7 @@ def compare_jo_tables(test, ref,
 def compare_AD_tests(test, ref,
                      mode='text',
                      out=sys.stdout,
-                     **ignored_kwargs):
+                     **_):
     """
     Compare two adjoint tests, return the absolute difference of both scores.
 
@@ -349,6 +366,8 @@ def compare_AD_tests(test, ref,
     if mode == 'get_worst':
         if PARSING_ERROR_CODE in (test.ad_test.score, ref.ad_test.score):
             comp = PARSING_ERROR_CODE
+        elif FOUND_NAN_ERROR_CODE in (test.ad_test.score, ref.ad_test.score):
+            comp = FOUND_NAN_ERROR_CODE
         elif test.ad_test.zero_overflow in (test.ad_test.score, ref.ad_test.score):
             comp = test.ad_test.zero_overflow
         else:
@@ -364,7 +383,7 @@ def compare_AD_tests(test, ref,
 def compare_TL_tests(test, ref,
                      mode='plot',
                      out='TL-tests.png',
-                     ** ignored_kwargs):
+                     **_):
     """
     Compare two tangent linear tests, return the absolute difference of both
     scores.
@@ -389,6 +408,8 @@ def compare_TL_tests(test, ref,
     if mode == 'get_worst':
         if PARSING_ERROR_CODE in (test.tl_test.score, ref.tl_test.score):
             comp = PARSING_ERROR_CODE
+        elif FOUND_NAN_ERROR_CODE in (test.tl_test.score, ref.tl_test.score):
+            comp = FOUND_NAN_ERROR_CODE
         else:
             comp = abs(test.tl_test.score - ref.tl_test.score)
         return comp

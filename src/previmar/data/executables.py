@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 from bronx.stdtypes.date import Date
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.data.executables import BlackBox, Script, OceanographicModel
 from gco.syntax.stdattrs import gdomain, gvar
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class MasterSurges(OceanographicModel):
@@ -41,7 +46,7 @@ class MasterSurges(OceanographicModel):
                 coupling_nprocs = dict(
                     type     = int,
                     optional = True,
-                    default  = 1,
+                    default  = 0,
                 ),
                 num_exp = dict(
                     type     = int,
@@ -58,10 +63,10 @@ class MasterSurges(OceanographicModel):
 
     def command_line(self, **opts):
         if self.coupling_exec:
-            name_simu_arg = [self.rundir, self.coupling_exec, str(self.coupling_nprocs)]
+            name_simu_arg = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
         else:
             name_simu_arg = [self.rundir] * 3
-        name_simu_arg += str( self.num_exp )
+        name_simu_arg += [six.text_type( self.num_exp ), ]
         cmd = ' '.join(name_simu_arg)
         return cmd
 
@@ -100,13 +105,38 @@ class InterpolationSurges(MasterSurges):
     ]
 
     def command_line(self, **opts):
-        name_simu_arg  = [self.rundir, self.coupling_exec, str(self.coupling_nprocs)]
-        name_simu_arg += str( self.num_exp )
+        name_simu_arg  = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
+        name_simu_arg += [six.text_type( self.num_exp ), ]
         name_simu_arg += [self.version, self.version_cible]
-        name_simu_arg += str( self.bloc_increment )
+        name_simu_arg += [six.text_type( self.bloc_increment ), ]
 
         cmd = ' '.join(name_simu_arg)
         return cmd
+
+
+class SimulationSurges(MasterSurges):
+    """Base class for the master of simulation of a surges model, either Full or tideonly simulation"""
+    _footprint = [
+        gvar,
+        gdomain,
+        dict(
+            info = 'Simulation surges difference because full simulation need coupling execution',
+            attr = dict(
+                kind = dict(
+                    values = ['SimuSurges']
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_main_[gdomain]_[param]',
+                ),
+                param = dict(
+                    optional = True,
+                    type     = str,
+                    default  = 'full',
+                    values   = ['ms', 'full'],
+                ),
+            )
+        )
+    ]
 
 
 class IniZeroSurges(BlackBox):
@@ -242,7 +272,7 @@ class WW3writeSurges(BlackBox):
 
     def command_line(self, **opts):
         name_simu_arg = [self.rundir] * 1
-        name_simu_arg += str( self.num_exp )
+        name_simu_arg += [six.text_type(self.num_exp), ]
         cmd = ' '.join(name_simu_arg)
         return cmd
 

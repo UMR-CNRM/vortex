@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
 
-from vortex.data.outflow    import NoDateResource, ModelResource, StaticGeoResource
+from vortex.data.outflow    import StaticResource, ModelResource, ModelGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
 from vortex.data.contents   import TextContent, JsonDictContent
-from vortex.syntax.stdattrs import month
+from vortex.syntax.stdattrs import month_deco
+from vortex.syntax.stddeco  import namebuilding_append, namebuilding_delete, namebuilding_insert
+
 
 from gco.syntax.stdattrs    import gvar
+
+#: No automatic export
+__all__ = []
 
 
 class GenvModelResource(ModelResource):
@@ -21,7 +25,7 @@ class GenvModelResource(ModelResource):
     _footprint = [ gvar, ]
 
 
-class GenvStaticGeoResource(StaticGeoResource):
+class GenvModelGeoResource(ModelGeoResource):
     """Abstract class for gget driven resources."""
 
     _abstract  = True
@@ -219,7 +223,7 @@ class ScatCMod5(GenvModelResource):
 
 class BcorIRSea(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -244,7 +248,7 @@ class BcorIRSea(GenvModelResource):
 
 class RmtbError(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -269,7 +273,7 @@ class RmtbError(GenvModelResource):
 
 class ChanSpectral(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -324,7 +328,7 @@ class Correl(GenvModelResource):
 
 class CstLim(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -352,7 +356,7 @@ class CstLim(GenvModelResource):
 
 class RszCoef(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -375,7 +379,7 @@ class RszCoef(GenvModelResource):
 
 class RtCoefAirs(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -397,7 +401,7 @@ class RtCoefAirs(GenvModelResource):
 
 class RtCoefAtovs(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -419,7 +423,7 @@ class RtCoefAtovs(GenvModelResource):
 
 class SigmaB(GenvModelResource):
     """
-    TODO.
+    Obsolete.
     A Genvkey can be given.
     """
     _footprint = dict(
@@ -492,7 +496,7 @@ class AtlasMonthlyEmissivityInstrument(AtlasEmissivityInstrument):
     A Genvkey can be given.
     """
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly emissivity atlas for a given instrument(s).',
             attr = dict(
@@ -502,10 +506,6 @@ class AtlasMonthlyEmissivityInstrument(AtlasEmissivityInstrument):
             )
         ),
     ]
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
 
 
 class AtlasEmissivityPack(AtlasEmissivity):
@@ -526,7 +526,7 @@ class AtlasEmissivityPack(AtlasEmissivity):
     )
 
 
-class SeaIceLonLat(GenvStaticGeoResource):
+class SeaIceLonLat(GenvModelGeoResource):
     """
     Coordinates of the file containing sea ice observations.
     It is used to create the ice_content file.
@@ -577,7 +577,10 @@ class ODBRaw(GenvModelResource):
         return 'odbraw'
 
 
-class MatFilter(GenvStaticGeoResource):
+@namebuilding_delete('fmt')
+@namebuilding_insert('radical', lambda s: 'matfil')
+@namebuilding_append('geo', lambda s: [s.scope.area, ])
+class MatFilter(GenvModelGeoResource):
     """
     Class of a filtering matrix. A GaussGeometry object is needed,
     as well as the LonlatGeometry of the scope domain (containing the
@@ -610,28 +613,14 @@ class MatFilter(GenvStaticGeoResource):
     def realkind(self):
         return 'matfilter'
 
-    def footprint_export_scope(self):
-        """Return the ``geometry`` attribute as its id tag."""
-        return self.scope.tag
-
-    def basename_info(self):
-        """Generic information, radical = ``matfil``."""
-        return dict(
-            geo     = [{'truncation': self.geometry.truncation},
-                       {'stretching': self.geometry.stretching},
-                       self.scope.area,
-                       {'filtering': self.scope.filtering}],
-            radical = 'matfil',
-            src     = self.model,
-        )
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'matrix.fil.' + self.scope.area + '.t' + str(self.geometry.truncation) + \
-               '.c' + str(self.geometry.stretching)
+        return ('matrix.fil.' + self.scope.area +
+                '.t{!s}'.format(self.geometry.truncation) +
+                '.c{!s}'.format(self.geometry.stretching))
 
 
-class Stabal(GenvStaticGeoResource):
+class Stabal(GenvModelGeoResource):
     """
     Spectral covariance operators:
         *  bal: cross-variables balances
@@ -666,7 +655,7 @@ class Stabal(GenvStaticGeoResource):
         return 'stabal'
 
 
-class WaveletTable(GenvStaticGeoResource):
+class WaveletTable(GenvModelGeoResource):
     """
     Wavelet covariance operators: auto-correlations of the control variable.
     A GenvKey can be given.
@@ -690,7 +679,7 @@ class WaveletTable(GenvStaticGeoResource):
         return 'wtable'
 
 
-class AmvError(GenvStaticGeoResource):
+class AmvError(GenvModelGeoResource):
     """
     TODO.
     A Genvkey can be given.
@@ -717,7 +706,7 @@ class AmvError(GenvStaticGeoResource):
         return 'amv_error'
 
 
-class AmvBias(GenvStaticGeoResource):
+class AmvBias(GenvModelGeoResource):
     """
     TODO.
     A Genvkey can be given.
@@ -740,7 +729,7 @@ class AmvBias(GenvStaticGeoResource):
         return 'amv_bias'
 
 
-class LFIScripts(NoDateResource):
+class LFIScripts(StaticResource):
     """
     The LFI scripts. A Genvkey can be given.
     """
@@ -798,7 +787,7 @@ class FilteringRequest(GenvModelResource):
         return 'extract=filter_{:s}.json'.format(self.filtername)
 
 
-class GribAPIConfig(NoDateResource):
+class GribAPIConfig(StaticResource):
     """
     Configuration files for the Grib-API (samples or definitions)
     """
@@ -826,7 +815,7 @@ class GribAPIConfig(NoDateResource):
         return 'gribapiconf'
 
 
-class StdPressure(GenvStaticGeoResource):
+class StdPressure(GenvModelGeoResource):
     """
     Standard pressure profile for standard error truncation extrapolation.
     A GenvKey can be given.
@@ -855,7 +844,7 @@ class StdPressure(GenvStaticGeoResource):
         return 'stdpressure'
 
 
-class TruncObj(GenvStaticGeoResource):
+class TruncObj(GenvModelGeoResource):
     """
     Standard error truncation (spectral filtering).
     A GenvKey can be given.

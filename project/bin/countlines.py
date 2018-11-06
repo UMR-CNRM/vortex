@@ -1,11 +1,13 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+"""
 project.bin.coutlines -- count the lines of code in the project
 
 Uses the "cloc.pl" software to compute the number of lines of code in specific
 folders of the vortex project
-'''
+"""
+
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
 import collections
@@ -19,7 +21,7 @@ ClocResultLineTp = collections.namedtuple('ClocResultLine',
 
 
 class ClocResultLine(ClocResultLineTp):
-    '''Just one bit of cloc.pl results'''
+    """Just one bit of cloc.pl results"""
     def __new__(self, ldict):
         return ClocResultLineTp.__new__(self, int(ldict['blank']),
                                         int(ldict['comment']),
@@ -28,7 +30,7 @@ class ClocResultLine(ClocResultLineTp):
 
 
 class ClocResult():
-    '''Handle cloc.pl results in XML format.'''
+    """Handle cloc.pl results in XML format."""
     res_head = '{:20s}:  {:>8s}  {:>8s}  {:>8s}  {:>8s}'.format('Language',
                                                                 'Blank',
                                                                 'Comment',
@@ -53,7 +55,7 @@ class ClocResult():
 
 
 def subdir_analyse(subdir, clocbin, clocdef):
-    '''Launch cloc.pl on a given list of directories.'''
+    """Launch cloc.pl on a given list of directories."""
     cmdl = [clocbin,
             '--quiet',
             '--xml',
@@ -79,5 +81,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     for subdir in args.subdirs:
-        print '{:-^80s}'.format('Subdirectories: ' + subdir)
-        print subdir_analyse(subdir, args.clocpath, args.clocdef)
+        print('{:-^80s}'.format('Subdirectories: ' + subdir))
+        print(subdir_analyse(subdir, args.clocpath, args.clocdef))

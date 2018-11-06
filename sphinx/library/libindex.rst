@@ -16,10 +16,10 @@ List of modules.
    
    cen/index
    common/index
+   ecmwf/index
    gco/index
    iga/index
    intairpol/index
-   mercator/index
    olive/index
    previmar/index
    sandbox/index

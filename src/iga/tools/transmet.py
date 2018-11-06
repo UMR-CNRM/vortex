@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
+import six
+
 import footprints
+
 logger = footprints.loggers.getLogger(__name__)
 
 
@@ -13,9 +19,9 @@ def tramsmet_file(filename, filename_transmet, blocksize=67108864):
     :param int blocksize: the blocksize for I/O operations
     """
 
-    with open(filename_transmet, 'a') as f_header:
-        f_header.write('\n\n')
-        with open(filename, 'rb') as f:
+    with io.open(filename_transmet, 'ab') as f_header:
+        f_header.write(b'\n\n')
+        with io.open(filename, 'rb') as f:
             while True:
                 datablock = f.read(blocksize)
                 if not datablock:
@@ -35,7 +41,7 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
     """
 
     options = ''
-    for k, w in transmet_dict.iteritems():
+    for k, w in six.iteritems(transmet_dict):
         options += '{}={} '.format(k, w)
     options += 'FICHIER_ENTETE=entete'
     scriptdir = sh.default_target.get(scriptdir, default=None)
@@ -59,7 +65,7 @@ def execute_cmd_sh(sh, cmd):
     return sh.spawn(cmd, shell=True, output=True)
 
 
-def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir):
+def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir, header_infile):
     """"create a file with transmet header and returns the filename used for routing.
 
     :param ~vortex.tools.systems.OSExtended sh: The vortex shell that will be used
@@ -67,13 +73,17 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir)
     :param dict transmet_dict: variables used to create transmet header
     :param str filename: initial filename
     :param str scriptdir: script path directory
+    :param bool header_infile: if True, add header in initial file before routing
     :return: 'transmet' filename
     :rtype: str
     """
 
     cmd = ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir)
     filename_ttaaii = execute_cmd_sh(sh, cmd)[0]
-    filename_ttaaii = str(sh.path.join(sh.path.dirname(filename), filename_ttaaii))
-    sh.rename('entete', filename_ttaaii)
-    tramsmet_file(filename, filename_ttaaii)
+    filename_ttaaii = sh.path.join(sh.path.dirname(filename), filename_ttaaii)
+    if header_infile:
+        sh.rename('entete', filename_ttaaii)
+        tramsmet_file(filename, filename_ttaaii)
+    else:
+        sh.cp(filename, filename_ttaaii, intent='in')
     return filename_ttaaii

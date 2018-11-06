@@ -23,28 +23,15 @@ of the very high level interface defined in the :mod:`vortex.toolbox` module is
 strongly advised.
 """
 
-__version__ = '1.2.1'
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+__version__ = '1.4.0'
 __prompt__  = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.2.2'
+__nextversion__ = '1.4.1'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []
-
-# Force stdout to be an unbuffered stream
-import os
-import sys
-try:
-    # With a standard Unix file descriptor
-    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-except (IOError, AttributeError):
-    try:
-        # With an IOStream without file number
-        sys.stdout.flush_interval = 0
-    except AttributeError:
-        sys.stderr.write('Unable to set an unbuffered stdout stream.')
-del os
-del sys
 
 # Set vortex specific priorities for footprints usage
 
@@ -60,7 +47,7 @@ footprints.loggers.defaultrootname = 'vortex'
 
 # Populate a fake proxy module with footprints shortcuts
 
-import proxy
+from . import proxy
 setup = footprints.config.get()
 setup.add_proxy(proxy)
 proxy.cat = footprints.proxy.cat
@@ -68,8 +55,8 @@ proxy.objects = footprints.proxy.objects
 
 # Set a background environment and a root session
 
-import tools
-import sessions
+from . import tools
+from . import sessions
 
 rootenv = tools.env.Environment(active=True)
 
@@ -89,6 +76,7 @@ def vortexfpdefaults():
         systemtarget=cur_session.sh.default_target
     )
 
+
 footprints.setup.callback = vortexfpdefaults
 
 # Shorthands to sessions components
@@ -103,9 +91,11 @@ class VortexForceComplete(Exception):
     """Exception for handling fast exit mecanisms."""
     pass
 
+
 # Load some superstars sub-packages
 
-import toolbox, algo, data
+import bronx.stdtypes.date
+from . import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
 
@@ -116,14 +106,15 @@ def complete():
     for kid in multiprocessing.active_children():
         logger.warning('Terminate active kid %s', str(kid))
         kid.terminate()
-    print 'Vortex', __version__, 'completed', '(', tools.date.at_second().reallynice(), ')'
+    print('Vortex', __version__, 'completed', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
+
 
 import atexit
 atexit.register(complete)
 del atexit, complete
 
-print 'Vortex', __version__, 'loaded', '(', tools.date.at_second().reallynice(), ')'
+print('Vortex', __version__, 'loaded', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
 if __version__ != footprints.__version__:
-    print '   ... with a non-matching footprints version (', footprints.__version__, ')'
+    print('   ... with a non-matching footprints version (', footprints.__version__, ')')
 
 del footprints

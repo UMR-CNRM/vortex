@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 import io
 import re
+import six
 
 from bronx.stdtypes import date
 import footprints
@@ -93,14 +94,14 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     sh.mkdir(genvpath)
     genvconf = sh.path.join(genvpath, cycle + '.genv')
     with io.open(genvconf, mode='w', encoding='utf-8') as fp:
-        fp.write(unicode(genv.as_rawstr(cycle=cycle)))
+        fp.write(six.text_type(genv.as_rawstr(cycle=cycle)))
 
     # Start a log
     if logpath is None:
         logpath = 'freeze_cycle.log'
     log = io.open(logpath, mode='a', encoding='utf-8')
-    log.write(unicode(t.line))
-    log.write(unicode(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
+    log.write(six.text_type(t.line))
+    log.write(six.text_type(t.prompt + ' ' + cycle + ' upgrade ' + date.now().reallynice() + '\n'))
 
     # Remove unwanted definitions
     for prefix in ('PACK', 'SRC'):
@@ -111,7 +112,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     # Build a list of unique resource names
     ggetnames = set()
     monthly = set()
-    for (k, v) in defs.iteritems():
+    for (k, v) in six.iteritems(defs):
         ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
         if ' ' in v:
             vset = set(v.split())
@@ -175,7 +176,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
                 except Exception as error:
                     print(error)
-                    log.write(unicode('Caught Exception: ' + str(error) + '\n'))
+                    log.write(six.text_type('Caught Exception: ' + str(error) + '\n'))
                     if verbose:
                         print('failed &', end=' ')
                     details['failed'].append(name)
@@ -183,7 +184,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                         print('continue')
                     else:
                         print('abort')
-                        log.write(unicode('Aborted on ' + name + '\n'))
+                        log.write(six.text_type('Aborted on ' + name + '\n'))
                         log.close()
                         raise
 
@@ -191,9 +192,9 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
         print(t.line)
 
     for k, v in details.items():
-        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
+        log.write(six.text_type('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
         for item in v:
-            log.write(unicode(' > ' + item + '\n'))
+            log.write(six.text_type(' > ' + item + '\n'))
 
     log.close()
 
@@ -220,7 +221,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
 
         # corresponding files or directories
         contents = set()
-        for (k, names) in genvdict.iteritems():
+        for (k, names) in six.iteritems(genvdict):
             ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
             if ' ' in names:
                 names = names.split()
@@ -228,7 +229,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
                 names = [names]
             for name in names:
                 if ismonthly:
-                    assert isinstance(name, basestring)
+                    assert isinstance(name, six.string_types)
                     contents |= {name + '.m{:02d}'.format(m) for m in range(1, 13)}
                 else:
                     contents.add(name)
@@ -249,8 +250,8 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
     if fake:
         logpath = '/dev/null'
     log = io.open(logpath, mode='a', encoding='utf-8')
-    log.write(unicode(t.line))
-    log.write(unicode(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
+    log.write(six.text_type(t.line))
+    log.write(six.text_type(t.prompt + ' ' + delcycle + ' UNFREEZING ' + date.now().reallynice() + '\n'))
 
     decrease = 0
     details = dict(removed=list(), failed=list())
@@ -296,9 +297,9 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
         print(t.line)
 
     for k, v in details.items():
-        log.write(unicode('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
+        log.write(six.text_type('Number of items ' + k + ' = ' + str(len(v)) + '\n'))
         for item in v:
-            log.write(unicode(' > ' + item + '\n'))
+            log.write(six.text_type(' > ' + item + '\n'))
 
     log.close()
 

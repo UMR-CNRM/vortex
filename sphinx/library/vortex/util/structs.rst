@@ -16,37 +16,12 @@ This package
 Classes
 -------
 
-.. autoclass:: Foo
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Utf8PrettyPrinter
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: PrivateHistory
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: History
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Tracker
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ShellEncoder
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ReadOnlyDict
    :show-inheritance:
    :members:
    :member-order: alphabetical

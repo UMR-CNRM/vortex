@@ -1,21 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
-import footprints
-logger = footprints.loggers.getLogger(__name__)
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
+import footprints
+
 from vortex.data.flow       import GeoFlowResource
-from vortex.syntax.stdattrs import term
+from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stddeco  import namebuilding_insert
 from bronx.stdtypes.date    import Time
 
 from common.tools.igastuff  import archive_suffix
+from vortex.data.geometries import CurvlinearGeometry
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
+@namebuilding_insert('src', lambda s: [s.filling, s.model])
 class Analysis(GeoFlowResource):
     """
     Class for analysis resource. It can be an atmospheric or surface or full
@@ -93,15 +99,6 @@ class Analysis(GeoFlowResource):
                 olivename_map = { k: x + '.sfx' for k, x in olivename_map.items() }
         return olivename_map[self.filling]
 
-    def basename_info(self):
-        """Generic information, radical = ``analysis``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = self.realkind,
-            src     = [self.filling, self.model],
-        )
-
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         if self.model == 'arome':
@@ -164,7 +161,7 @@ class Historic(GeoFlowResource):
     Class for historical state of a model (e.g. from a forecast).
     """
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Historic forecast file',
             attr = dict(
@@ -175,7 +172,8 @@ class Historic(GeoFlowResource):
                     )
                 ),
                 nativefmt = dict(
-                    values = ['fa', 'grib', 'lfi', 'unknown'],
+                    values = ['fa', 'grib', 'lfi', 'netcdf', 'unknown', 'nc'],
+                    remap = dict(nc='netcdf'),
                     default = 'fa',
                 ),
             )
@@ -192,8 +190,16 @@ class Historic(GeoFlowResource):
         midfix = '(histfix:igakey)'
         termfix = '(termfix:modelkey)'
         suffix = '(suffix:modelkey)'
+
         if self.geometry.lam and re.match('testms1|testmp1|testmp2', self.geometry.area):
             suffix = '.r' + archive_suffix(self.model, self.cutoff, self.date)
+
+        if self.model == 'mocage':
+            prefix = 'HM'
+            midfix = self.geometry.area
+            if self.nativefmt == 'netcdf':
+                suffix = '.nc'
+
         return prefix + midfix + termfix + suffix
 
     def olive_basename(self):
@@ -205,15 +211,14 @@ class Historic(GeoFlowResource):
         else:
             return 'ICMSH' + self.model[:4].upper() + '+' + self.term.fmthour
 
-    def basename_info(self):
-        """Generic information, radical = ``historic``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = self.realkind,
-            src     = self.model,
-            term    = self.term.fmthm,
-        )
+    def _geo2basename_info(self, add_stretching=True):
+        """Return an array describing the geometry for the Vortex's name builder."""
+        if isinstance(self.geometry, CurvlinearGeometry) and self.model == 'hycom':
+            # return the old naming convention for surges restart files
+            lgeo = [self.geometry.area, self.geometry.rnice]
+            return lgeo
+        else:
+            return super(Historic, self)._geo2basename_info(add_stretching=add_stretching)
 
 
 class BiasDFI(GeoFlowResource):
@@ -221,7 +226,7 @@ class BiasDFI(GeoFlowResource):
     Class for some kind of DFI bias (please add proper documentation).
     """
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'DFI bias file',
             attr = dict(
@@ -250,13 +255,3 @@ class BiasDFI(GeoFlowResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'BIASDFI{0:s}+{1:04d}'.format(self.model[:4].upper(), self.term.hour)
-
-    def basename_info(self):
-        """Generic information, radical = ``historic``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = 'biasdfi',
-            src     = self.model,
-            term    = self.term.fmthm,
-        )

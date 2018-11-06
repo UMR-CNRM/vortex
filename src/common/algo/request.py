@@ -5,8 +5,9 @@
 A set of AlgoComponents interrogating various databases.
 """
 
-from __future__ import division, print_function, absolute_import
+from __future__ import division, print_function, absolute_import, unicode_literals
 
+import copy
 
 from bronx.stdtypes.date import Time
 import footprints
@@ -15,7 +16,10 @@ from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
 from vortex.util.structs import FootprintCopier
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
+from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
+from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
 from common.tools.bdm import BDMGetError, BDMRequestConfigurationError, BDMError
+from common.tools.mars import MarsGetError, callMarsExtract, findMarsExtractCommand
 from common.data.obs import ObsMapContent
 
 #: No automatic export
@@ -101,6 +105,149 @@ class GetBDAPResource(AlgoComponent):
 
         if not rc_all:
             logger.exception('Problem during the BDAP request.')
+
+        return rc_all
+
+
+class GetBDMPResource(AlgoComponent):
+    """Algo component to get BDMP resources considering a BDMP query file."""
+
+    _footprint = dict(
+        info = 'Algo component to get BDMP files.',
+        attr = dict(
+            kind = dict(
+                values = ['get_bdmp'],
+            ),
+            target_bdmp = dict(
+                default = 'OPER',
+                optional = True,
+                values = ['OPER', 'INTE', 'ARCH'],
+            ),
+            command = dict(
+                default = 'bdmp_lecture',
+                optional =True,
+                values = ['bdmp_lecture', 'bdmp_lecture_pg', 'bdmp_lecture_ora'],
+            ),
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Launch the BDMP request(s).
+        The results of each request are stored in a directory local_directory to avoid
+        files to be overwritten.
+        """
+
+        # Look for the input queries
+        input_queries = self.context.sequence.effective_inputs(
+            role = 'Query',
+            kind = 'bdmp_query',
+        )
+
+        rc_all = True
+
+        for input_query in input_queries:
+
+            # Get information on the query file
+            query_file = input_query.rh.container.abspath
+            logger.info('The %s directive file contains:', query_file)
+            self.system.cat(query_file, output=False)
+
+            # Construct the name of the temporary directory
+            local_directory = '_'.join([query_file, 'extract'])
+
+            # Determine the command to be launched
+            actual_command = BDMPrequest_actual_command(command=self.command,
+                                                        query=query_file,
+                                                        target_bdmp=self.target_bdmp)
+            logger.info(' '.join(['BDMP extract command:', actual_command]))
+
+            # Launch the BDMP request
+            with self.system.cdcontext(local_directory, create=True):
+                rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+
+            if not rc:
+                logger.exception('Problem during the BDMP request of %s.', query_file)
+                raise BDMPGetError
+
+            rc_all = rc_all and rc
+
+        if not rc_all:
+            logger.exception('Problem during the BDMP request.')
+
+        return rc_all
+
+
+class GetBDCPResource(AlgoComponent):
+    """Algo component to get BDCP resources considering a BDCP query file."""
+
+    _footprint = dict(
+        info = 'Algo component to get BDCP files.',
+        attr = dict(
+            kind = dict(
+                values = ['get_bdcp'],
+            ),
+            target_bdcp = dict(
+                default = 'OPER',
+                optional = True,
+                values = ['OPER'],
+            ),
+            command = dict(
+                default = 'extraction_directives',
+                optional =True,
+                values = ['extraction_directives'],
+            ),
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Launch the BDCP request(s).
+        The name of the output and log files are fixed by the AlgoComponent
+        according to the attributes of each request.
+        """
+
+        # Look for the input queries
+        input_queries = self.context.sequence.effective_inputs(
+            role = 'Query',
+            kind = 'bdcp_query',
+        )
+
+        rc_all = True
+
+        for input_query in input_queries:
+
+            # Get information on the query file
+            query_file = input_query.rh.container.abspath
+            logger.info('The %s directive file contains:', query_file)
+            self.system.cat(query_file, output=False)
+
+            # Construct the name of the output and log files
+            local_directory = '_'.join([query_file, 'extract'])
+            output_file = 'extract.out'
+            output_log = 'extract.out.diag'
+
+            # Determine the command to be launched
+            actual_command = BDCPrequest_actual_command(command = self.command,
+                                                        query_file = query_file,
+                                                        output_file = output_file)
+            logger.info(' '.join(['BDMP extract command:', actual_command]))
+
+            # Launch the BDCP request
+            with self.system.cdcontext(local_directory, create=True):
+                rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+                # Cat the log file
+                logger.info('Content of the log file:')
+                self.system.cat(output_log, output=False)
+
+            if not rc:
+                logger.exception('Problem during the BDCP request of %s.', query_file)
+                raise BDCPGetError
+
+            rc_all = rc_all and rc
+
+        if not rc_all:
+            logger.exception('Problem during the BDCP request.')
 
         return rc_all
 
@@ -363,3 +510,76 @@ class GetBDMOulan(BlindRun):
         if len(input_namelists) < 1:
             logger.error('No Oulan namelist found. Stop.')
             raise BDMError('No Oulan namelist found.')
+
+
+class GetMarsResource(AlgoComponent):
+    """AlgoComponent to get Mars resources using a Mars query file"""
+
+    _footprint = dict(
+        info = 'AlgoComponent to get a Mars resource',
+        attr = dict(
+            kind = dict(
+                values = ['get_mars', ]
+            ),
+            date = a_date,
+            substitutions = dict(
+                info = "A dictionary of values to be substituted",
+                type = footprints.stdtypes.FPDict,
+                default = footprints.stdtypes.FPDict(),
+                optional = True
+            ),
+            command = dict(
+                optional = True
+            ),
+            fatal = dict(
+                type = bool,
+                default = True,
+                optional = True
+            )
+        )
+    )
+
+    def execute_single(self, rh, opts):
+        """
+        Launch the Mars request(s).
+        The results of each requests are stored in a directory to avoid
+        files to be overwritten.
+        """
+        # Look for input queries
+        input_queries = self.context.sequence.effective_inputs(
+            role='Query',
+            kind='mars_query',
+        )
+
+        rc_all = True
+
+        for input_query in input_queries:
+            # Launch each input queries in a dedicated file
+            # (to check that the files do not overwrite each other)
+            query_file = input_query.rh.container.abspath
+            local_directory = '_'.join([query_file, self.date.ymdhms])
+            with self.system.cdcontext(local_directory, create=True):
+                # Prepare the query file used
+                query = input_query.rh
+                query_abspath = query.container.abspath
+                query_content = query.contents
+                dictkeyvalue = copy.deepcopy(self.substitutions)
+                if self.date is not None:
+                    dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
+                    dictkeyvalue["YYYYMMDD"] = self.date.ymd
+                    dictkeyvalue["HH"] = self.date.hh
+                query_content.setitems(dictkeyvalue)
+                query.save()
+                logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
+                query.container.cat()
+                # Launch the command
+                actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
+                rc = callMarsExtract(sh=self.system, query_file=query_abspath, fatal=self.fatal,
+                                     command=actual_command)
+                if not rc:
+                    if self.fatal:
+                        logger.error("Problem during the Mars request of %s", query_abspath)
+                        raise MarsGetError
+                    else:
+                        logger.warning("Problem during the Mars request of %s", query_abspath)
+                rc_all = rc_all and rc

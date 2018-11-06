@@ -8,15 +8,17 @@ TODO: Module documentation
 """
 
 import io
+import six
 
 from bronx.stdtypes import date
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue, Latitude, Longitude
 
 from intairpol.basics import AirTool
+
+logger = footprints.loggers.getLogger(__name__)
 
 SIMULATION_LEVELS = dict(
     EXERCICE = 0,
@@ -31,28 +33,28 @@ EMISSION_TYPES = dict(
 )
 
 
-class SimulationLevel(str):
+class SimulationLevel(six.text_type):
     def __new__(cls, value):
-        value = str(value).upper()
+        value = six.text_type(value).upper()
         for k in SIMULATION_LEVELS.keys():
             if k.startswith(value):
                 value = k
                 break
-        for i, l in {str(v): k for k, v in SIMULATION_LEVELS.items()}.items():
+        for i, l in {six.text_type(v): k for k, v in SIMULATION_LEVELS.items()}.items():
             if value == i:
                 value = l
                 break
         if value not in SIMULATION_LEVELS:
             raise ValueError('Not a valid SimulationLevel: ' + value)
-        return str.__new__(cls, value)
+        return six.text_type.__new__(cls, value)
 
     def __int__(self):
         return SIMULATION_LEVELS[self]
 
 
-class EmissionType(str):
+class EmissionType(six.text_type):
     def __new__(cls, value):
-        value = str(value).lower()
+        value = six.text_type(value).lower()
         for k in EMISSION_TYPES.keys():
             if k.startswith(value):
                 value = k
@@ -63,7 +65,7 @@ class EmissionType(str):
                 break
         if value not in EMISSION_TYPES:
             raise ValueError('Not a valid EmissionType: ' + value)
-        return str.__new__(cls, value)
+        return six.text_type.__new__(cls, value)
 
     def french(self):
         return EMISSION_TYPES[self]
@@ -104,7 +106,6 @@ class PerleLauncher(PerleTool):
                 optional = True,
                 alias    = ('op',),
                 values   = ['oper', 'dble', 'test', 'dbl'],
-                remap    = dict(dbl = 'dble'),
                 default  = DelayedEnvValue('PERLE_OPER_VERSION', 'oper'),
             ),
             simulation_level = dict(
@@ -128,6 +129,15 @@ class PerleLauncher(PerleTool):
                 optional = True,
                 access   = 'rwx',
                 default  = DelayedEnvValue('PERLE_TARGET_PATH', '/scratch/work'),
+            ),
+            lpdm_path = dict(
+                optional = True,
+                access   = 'rwx',
+                default  = DelayedEnvValue('PERLE_LPDM_PATH'),
+            ),
+            nolpdm = dict(
+                optional = True,
+                default  = False,
             ),
             storage = dict(
                 optional = True,
@@ -299,10 +309,11 @@ class OldPerleLauncher(PerleLauncher):
             logger.error('Incompatible level values <bottom:%d> <top:%d>',
                          self.emission_bottom, self.emission_top)
             raise ValueError('Incompatible level values ' +
-                             str(self.emission_bottom) + '-' + str(self.emission_top))
+                             six.text_type(self.emission_bottom) + '-' +
+                             six.text_type(self.emission_top))
 
     def dump_void(self, value):
-        return str(value)
+        return six.text_type(value)
 
     def dump_date_begin(self, value):
         return value.compact()
@@ -323,7 +334,7 @@ class OldPerleLauncher(PerleLauncher):
         """Write raw perle configuration file (old style)."""
 
         with io.open(filename, 'w') as fd:
-            fd.write(unicode(''.join([
+            fd.write(six.text_type(''.join([
                 x + '\n' for x in [getattr(self, 'dump_' + p, self.dump_void)(getattr(self, p, ''))
                                    for p in self.config['simulation_params'] ] if len(x) > 0
             ])))
@@ -342,11 +353,11 @@ class OldPerleLauncher(PerleLauncher):
         """Write raw perle configuration file (old style)."""
 
         with io.open(filename, 'w') as fd:
-            fd.write(unicode(''.join([
-                'PERLE_' + a.upper() + '="' + str(getattr(self, a)) + '"\n'
+            fd.write(six.text_type(''.join([
+                'PERLE_' + a.upper() + '="' + six.text_type(getattr(self, a)) + '"\n'
                 for a in self.footprint_attributes if 'local_' not in a
             ])))
-            fd.write(unicode('\n'.join([
+            fd.write(six.text_type('\n'.join([
                 'PERLE_VERSION='     + self.get_family_tag(),
                 'PERLE_XTAG='        + self.xtag,
                 'PERLE_REMOTE_HOST=' + self.sh.hostname,
@@ -354,13 +365,13 @@ class OldPerleLauncher(PerleLauncher):
                 'PERLE_REMOTE_PATH=' + self.sh.pwd(),
                 'PERLE_REMOTE_TMP='  + self.sh.path.abspath(self.local_tmp),
             ])))
-            fd.write(unicode('\n'))
+            fd.write('\n')
 
         logger.info('Job config written <file:%s> <size:%d>', filename, self.sh.size(filename))
 
         return filename
 
-    def submit(self):
+    def submit(self, nosubmit=False):
         """Submit the remote job."""
 
         # some cocooning...
@@ -385,9 +396,14 @@ class OldPerleLauncher(PerleLauncher):
         self.dataput(driver_env)
 
         # launch the remote job
-        print('\n'.join(self.ssh.execute('; '.join((
+        actualcmd = '; '.join((
             'cd ' + self.sh.path.join(self.target_path, self.xtag),
             self.sh.path.join(
                 self.target_root, self.release, self.get_family_tag(),
-                'job', 'replay_submit.sh'),
-        )))))
+                'job', 'replay_submit.sh'
+            )
+        ))
+        if nosubmit:
+            print('Not submitted:', actualcmd)
+        else:
+            print('\n'.join(self.ssh.execute(actualcmd)))

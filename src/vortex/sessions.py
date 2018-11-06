@@ -10,8 +10,7 @@ time. A session also defines the level of the internal logging used in all
 the vortex modules.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
 
@@ -19,12 +18,15 @@ from bronx.datagrip.datastore import DataStore
 from bronx.stdtypes import date
 import footprints
 
-logger = footprints.loggers.getLogger(__name__)
-
 from vortex.tools.env import Environment
 
 from vortex import gloves  # @UnusedImport
 from vortex.layout import contexts
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -308,13 +310,13 @@ class Ticket(footprints.util.GetByTag):
         """Returns a printable description of the current session."""
         card = "\n".join((
             '{0}Name     = {1:s}',
-            '{0}Started  = {2:s}',
-            '{0}Opened   = {3:s}',
-            '{0}Duration = {4:s}',
+            '{0}Started  = {2!s}',
+            '{0}Opened   = {3!s}',
+            '{0}Duration = {4!s}',
             '{0}Loglevel = {5:s}'
         )).format(
             indent,
-            self.tag, str(self.started), str(self.opened), self.duration(), self.loglevel
+            self.tag, self.started, self.opened, self.duration(), self.loglevel
         )
         return card
 

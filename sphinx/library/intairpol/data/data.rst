@@ -19,4 +19,8 @@ Package
 Included Modules
 ----------------
 
+* :mod:`intairpol.data.climfiles`
+* :mod:`intairpol.data.consts`
 * :mod:`intairpol.data.elements`
+* :mod:`intairpol.data.executables`
+* :mod:`intairpol.data.mocage`

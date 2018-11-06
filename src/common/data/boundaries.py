@@ -1,20 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 from bronx.stdtypes import date
 from vortex.tools import env
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stdattrs import term, a_cutoff
+from vortex.syntax.stddeco import namebuilding_insert
+from vortex.syntax.stdattrs import term_deco, a_cutoff
 
 from common.tools.igastuff import archive_suffix
 
+#: No automatic export
+__all__ = []
 
+
+@namebuilding_insert('radical', lambda s: 'cpl')
+@namebuilding_insert('src', lambda s: s._mysrc)
 class _AbstractLAMBoundary(GeoFlowResource):
     """
     Class of a coupling file for a Limited Area Model.
@@ -23,7 +27,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
 
     _abstract = True
     _footprint = [
-        term,
+        term_deco,
         dict(
             info = 'Coupling file for a limited area model',
             attr = dict(
@@ -70,17 +74,11 @@ class _AbstractLAMBoundary(GeoFlowResource):
         if re.match('ifs|ecmwf', source) and '16km' in self.geometry.rnice:
             prefix = 'COUPLIFS'
 
-        return prefix + self.term.fmthour + '.r' + str(suffix)
+        if self.model == 'mocage':
+            valid = (self.date + self.term).ymd
+            return 'SM' + self.geometry.area + '+' + valid
 
-    def basename_info(self):
-        """Generic information, radical = ``cpl``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            src     = self._mysrc,
-            radical = 'cpl',
-            term    = self.term.fmthm,
-        )
+        return prefix + self.term.fmthour + '.r{!s}'.format(suffix)
 
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""

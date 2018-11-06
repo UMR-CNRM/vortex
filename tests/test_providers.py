@@ -1,3 +1,4 @@
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from copy import deepcopy
 import unittest
@@ -25,12 +26,12 @@ class DummyRessource(object):
 
     def basename(self, kind):
         actualbasename = getattr(self, kind + '_basename',
-                                 self.vortex_basename)
+                                 self.generic_basename)
         return actualbasename()
 
     def pathinfo(self, kind):
         actualpathinfo = getattr(self, kind + '_pathinfo',
-                                 self.vortex_pathinfo)
+                                 self.generic_pathinfo)
         return actualpathinfo()
 
     def urlquery(self, kind):
@@ -38,7 +39,11 @@ class DummyRessource(object):
                                  self.vortex_urlquery)
         return actualurlquery()
 
-    def vortex_pathinfo(self):
+    def namebuilding_info(self):
+        return dict(radical=self._bname,
+                    flow=[{'date': self.date}, {'shortcutoff': self.cutoff}])
+
+    def generic_pathinfo(self):
         return dict(
             nativefmt='fa',
             model=self.model,
@@ -46,10 +51,7 @@ class DummyRessource(object):
             cutoff=self.cutoff,
             geometry=self.geometry,)
 
-    def basename_info(self):
-        return dict(radical=self._bname)
-
-    def vortex_basename(self):
+    def generic_basename(self):
         pass
 
     def olive_basename(self):
@@ -138,12 +140,10 @@ class TestProviderVortexStd(unittest.TestCase):
             self.assertEqual(pr.scheme(None), 'vortex')
             self.assertEqual(pr.netloc(None), ns)
             self.assertIs(pr.member, None)
-            self.assertEqual(pr.nice_member(), '')
             # Member
             fpd['member'] = 3
             pr = fp.proxy.provider(** fpd)
             self.assertEqual(pr.member, 3)
-            self.assertEqual(pr.nice_member(), 'mb003')
             # Expected
             fpd['expected'] = True
             pr = fp.proxy.provider(** fpd)

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 import footprints
 
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
-from vortex.syntax.stdattrs import Namespace, DelayedEnvValue
+from vortex.syntax.stdattrs import namespacefp, DelayedEnvValue, Namespace
 from bronx.stdtypes.date import Time
 
 #: No automatic export
@@ -45,39 +47,57 @@ class BdpeProvider(Provider):
         bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
     """
 
-    _footprint = dict(
-        info = 'BDPE provider',
-        attr = dict(
-            namespace = dict(
-                type     = Namespace,
-                optional = True,
-                default  = Namespace('bdpe.archive.fr'),
-                values   = ['bdpe.archive.fr'],
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'BDPE provider',
+            attr = dict(
+                namespace = dict(
+                    default  = Namespace('bdpe.archive.fr'),
+                    values   = ['bdpe.archive.fr'],
+                ),
+                bdpeid = dict(
+                ),
+                preferred_target = dict(
+                    optional = True,
+                    default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
+                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                ),
+                forbidden_target = dict(
+                    optional = True,
+                    default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
+                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                ),
+                allow_archive = dict(
+                    info     = 'If True, sets the env. var. allowing the use of the archive'
+                               ' version of the BDPE service',
+                    optional = True,
+                    type     = bool,
+                    default  = False,
+                ),
+                config = dict(
+                    info     = 'A ready to use configuration file object for this storage place.',
+                    type     = GenericConfigParser,
+                    optional = True,
+                    default  = None,
+                ),
+                inifile = dict(
+                    info     = ('The name of the configuration file that will be used (if ' +
+                                '**config** is not provided.'),
+                    optional = True,
+                    default  = '@bdpe-map-resources.ini',
+                ),
             ),
-            bdpeid = dict(
-                type    = str,
-            ),
-            prefered_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
-            ),
-            forbidden_target = dict(
-                optional = True,
-                default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
-                values   = ['OPER', 'INT', 'SEC', 'DEV'],
-            ),
-            config = dict(
-                optional = True,
-                type     = GenericConfigParser,
-                default  = GenericConfigParser('@bdpe-map-resources.ini')
-            ),
+            fastkeys = set(['bdpeid']),
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('BDPE provider init %s', self.__class__)
         super(BdpeProvider, self).__init__(*args, **kw)
+        self._actual_config = self.config
+        if self._actual_config is None:
+            self._actual_config = GenericConfigParser(inifile=self.inifile)
 
     @property
     def realkind(self):
@@ -97,26 +117,26 @@ class BdpeProvider(Provider):
         return 'BDPE_{}+{!s}'.format(self.bdpeid, myterm)
 
     def pathname(self, resource):
-        """Something like 'PREFEREDnoFORBIDDEN/date/'."""
-        return '{}no{}/{}'.format(self.prefered_target, self.forbidden_target,
-                                  resource.date.vortex())
+        """Something like 'PREFERRED_FORBIDDEN_ARCHIVE/date/'."""
+        return '{}_{}_{}/{}'.format(self.preferred_target, self.forbidden_target,
+                                    self.allow_archive, resource.date.vortex())
 
     def uri(self, resource):
         """Overridden to check the resource attributes against
            the BDPE product description from the .ini file.
         """
         # check that the product is described in the configuration file
-        if not self.config.has_section(self.bdpeid):
+        if not self._actual_config.has_section(self.bdpeid):
             fmt = 'Missing product n°{} in BDPE configuration file\n"{}"'
             raise BdpeConfigurationError(fmt.format(self.bdpeid, self.config.file))
 
         # resource description: rely on the footprint_export (it is also used to
         # JSONise resource).
-        rsrcdict = {k: str(v)
-                    for k, v in resource.footprint_export().iteritems()}
+        rsrcdict = {k: six.text_type(v)
+                    for k, v in six.iteritems(resource.footprint_export())}
 
         # check the BDPE pairs against the resource's
-        for (k, v) in self.config.items(self.bdpeid):
+        for (k, v) in self._actual_config.items(self.bdpeid):
             if k not in rsrcdict:
                 raise BdpeMismatchError('Missing key "{}" in resource'.format(k))
             if rsrcdict[k] != v:

@@ -31,27 +31,86 @@ Actors
 
 .. automodule:: taylorism.schedulers
    :synopsis: Contains classes for Schedulers.
-   
+
+Abstract Scheduler Classes
+--------------------------
+ 
 .. autoclass:: BaseScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: NewLimitedScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+   
+Generic Scheduler Classes
+-------------------------
+   
+.. autoclass:: NewLaxistScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NewMaxThreadsScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NewMaxMemoryScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NewSingleOpenFileScheduler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
+Backward-Compatibility Classes
+------------------------------
+
+.. autoclass:: _AbstractOldSchedulerProxy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: LaxistScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
 .. autoclass:: MaxThreadsScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
 .. autoclass:: MaxMemoryScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
 .. autoclass:: SingleOpenFileScheduler
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+:mod:`taylorism.util` --- Utility classes
+=========================================
+
+
+.. automodule:: taylorism.util
+   :synopsis: Contains utility classes for Bosses and Workers.
+
+.. autoclass:: SharedNumpyArray
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 :mod:`taylorism.examples` --- Examples using the taylorism package
 ==================================================================
@@ -62,8 +121,39 @@ Examples
 .. automodule:: taylorism.examples
    :synopsis: Basic, illustrative examples of use.
 
+.. autofunction:: sleepers_generic_program
+
+.. autofunction:: sleepers_example_laxist
+
+.. autofunction:: sleepers_example_threads
+
+.. autofunction:: sleepers_example_bindedthreads
+
+.. autofunction:: sleepers_example_memory
+
+.. autofunction:: sleepers_example_bindedmemory
+
+.. autofunction:: logarithmer_example
+
+.. autofunction:: summer_example
+
+.. autofunction:: matrixproduct_example
+
+Worker classes used in the examples
+-----------------------------------
+
 .. autoclass:: Sleeper
    :members:
    :private-members: _task
-     
-.. autofunction:: sleepers_example_program
+
+.. autoclass:: Logarithmer
+   :members:
+   :private-members: _task
+   
+.. autoclass:: Summer
+   :members:
+   :private-members: _task
+
+.. autoclass:: MatrixProducter
+   :members:
+   :private-members: _task

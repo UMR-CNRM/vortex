@@ -9,6 +9,8 @@ It is kept for backward compatibility, however :mod:`bronx.stdtypes.date` should
 be used now and on.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import sys
 
 from bronx.stdtypes import date as _b_date

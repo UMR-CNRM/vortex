@@ -6,7 +6,7 @@
 Data dumper... mostly used in objects' docstring with a footprint.
 """
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from xml.dom import minidom
 import re
@@ -20,7 +20,7 @@ __all__ = []
 
 def _DEBUG(msg, obj=None, level=None):
     """Fake method for debug purpose (then should provide a print statement)."""
-    # print msg, str(obj)
+    # print(msg, six.text_type(obj))
     pass
 
 
@@ -70,7 +70,7 @@ class _AbstractDumper(util.GetByTag):
                        self._lazzy_dump)(obj, level + 1, nextline)
 
     def _unknown_obj_overview(self, obj):
-        strobj = str(obj)
+        strobj = six.text_type(obj)
         reprobj = repr(obj)
         if '\n' not in strobj and strobj != reprobj:
             return strobj
@@ -138,7 +138,7 @@ class _AbstractDumper(util.GetByTag):
                 _DEBUG('builtin')
                 self.seen[this_id] = self._dump_builtin(obj, level, nextline)
             else:
-                _DEBUG('class ' + str(obj))
+                _DEBUG('class ' + six.text_type(obj))
                 self.seen[this_id] = self._dump_class(obj, level, nextline)
             return self.seen[this_id]
 
@@ -229,15 +229,15 @@ class XmlDomDumper(JsonableDumper):
             if not isinstance(v, list):
                 if myname in self._named_nodes:
                     xnode = xdoc.createElement(myname)
-                    xnode.setAttribute('name', str(k))
+                    xnode.setAttribute('name', six.text_type(k))
                 else:
-                    if str(k) in self._named_nodes:
+                    if six.text_type(k) in self._named_nodes:
                         xnode = xroot
                     else:
-                        xnode = xdoc.createElement(str(k))
+                        xnode = xdoc.createElement(six.text_type(k))
             else:
                 xnode = xroot
-            self._xdump(xdoc, xnode, v, myname=str(k))
+            self._xdump(xdoc, xnode, v, myname=six.text_type(k))
             if xnode is not xroot:
                 xroot.appendChild(xnode)
 
@@ -247,7 +247,7 @@ class XmlDomDumper(JsonableDumper):
                 xnode = xdoc.createElement('generic_item')
             else:
                 xnode = xdoc.createElement(myname)
-            self._xdump(xdoc, xnode, v, myname=str(v), topelt=True)
+            self._xdump(xdoc, xnode, v, myname=six.text_type(v), topelt=True)
             xroot.appendChild(xnode)
 
     def _xdump(self, xdoc, xroot, obj, myname, topelt=False):
@@ -257,7 +257,7 @@ class XmlDomDumper(JsonableDumper):
             self._xdump_dict(xdoc, xroot, obj, myname)
         else:
             # Generic case
-            xroot.appendChild(xdoc.createTextNode(str(obj)))
+            xroot.appendChild(xdoc.createTextNode(six.text_type(obj)))
 
     def dump(self, obj, root, rootattr=None, level=0, nextline=True):
         """Call this method to dump ``obj`` (or at least try to...).
@@ -374,7 +374,7 @@ class TxtDumper(_AbstractDumper):
 
     def dump_bool(self, obj, level=0, nextline=True):
         _DEBUG('dump_bool', obj)
-        return "%s%s" % (self._indent(level, self.break_bool), str(obj))
+        return "%s%s" % (self._indent(level, self.break_bool), six.text_type(obj))
 
     def dump_tuple(self, obj, level=0, nextline=True):
         _DEBUG('dump_tuple', obj)
@@ -443,7 +443,7 @@ class TxtDumper(_AbstractDumper):
         else:
             items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
                                        # self.dump(k, level + 1),
-                                       str(k),
+                                       six.text_type(k),
                                        self._indent(level + 2, self.break_before_dict_value),
                                        self._recursive_dump(v, level + 1))
                      for k, v in sorted(obj.items())]
@@ -514,9 +514,9 @@ def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
     items = [
         "%s%s = %s%s," % (
             TxtDumper._indent(0, break_before_dict_key),
-            str(k),
+            six.text_type(k),
             TxtDumper._indent(1, break_before_dict_value),
-            str(v)
+            six.text_type(v)
         ) for k, v in sorted(obj.items(), key=lambda x: x[0])
     ]
     return ''.join(items)

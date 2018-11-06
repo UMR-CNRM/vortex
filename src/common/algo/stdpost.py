@@ -1,20 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
+import io
 import json
 import re
+import six
 import time
 
 from bronx.datagrip.namelist  import NamelistBlock
 import footprints
 from footprints.stdtypes import FPTuple
 from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
@@ -25,6 +24,11 @@ from vortex.tools.systems     import ExecutionError
 from vortex.util.structs      import FootprintCopier
 
 from common.tools.grib        import GRIBFilter
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):
@@ -103,7 +107,7 @@ class _FA2GribWorker(VortexWorkerBlindRun):
             nb.ITUNIT = self.timeunit
         nb['CLFSORT(1)'] = thisoutput
         nb['CDNOMF(1)'] = self.fortinput
-        with open(self.fortnam, 'w') as namfd:
+        with io.open(self.fortnam, 'w') as namfd:
             namfd.write(nb.dumps())
 
         # Finally set the actual init file
@@ -212,9 +216,9 @@ def parallel_grib_filter(context, inputs, outputs, intents=(),
     """A simple method that calls the GRIBFilter class in parallel.
 
     :param vortex.layout.contexts.Context context: the current context
-    :param list inputs: the list of input file names
-    :param list outputs: the list of output file names
-    :param list intents: the list of intent (in|inout) for output files (in if omitted)
+    :param list[str] inputs: the list of input file names
+    :param list[str] outputs: the list of output file names
+    :param list[str] intents: the list of intent (in|inout) for output files (in if omitted)
     :param bool cat: whether or not to concatenate the input files (False by default)
     :param tuple filters: a list of filters to apply (as a list of JSON dumps)
     :param int nthreads: the maximum number of tasks used concurently (8 by default)
@@ -225,7 +229,7 @@ def parallel_grib_filter(context, inputs, outputs, intents=(),
         raise AlgoComponentError("inputs and outputs must have the same length")
     if len(intents) != len(outputs):
         intents = FPTuple(['in', ] * len(outputs))
-    boss = Boss(scheduler=MaxThreadsScheduler(max_threads=nthreads))
+    boss = Boss(scheduler=footprints.proxy.scheduler(limit='threads', max_threads=nthreads))
     common_i = dict(kind='gribfilter', filters=filters, concatenate=cat, put_promises=False)
     for ifile, ofile, intent in zip(inputs, outputs, intents):
         logger.info("%s -> %s (intent: %s) added to the GRIBfilter task's list",
@@ -361,7 +365,7 @@ class Fa2Grib(ParaBlindRun):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
@@ -371,7 +375,7 @@ class Fa2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
-class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
+class StandaloneGRIBFilter(TaylorRun, grib.EcGribComponent):
 
     _footprint = dict(
         attr = dict(
@@ -450,7 +454,7 @@ class StandaloneGRIBFilter(TaylorRun, grib.GribApiComponent):
 
         self._default_post_execute(rh, opts)
 
-        for failed_file in [e.section.rh.container.localpath() for e in bm.failed.itervalues()]:
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
                 self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
@@ -543,13 +547,13 @@ class DegradedDiagPEError(AlgoComponentError):
     def __str__(self):
         outstr = "Missing input data for geometry={0.area:s}, term={1!s}:\n".format(self._ginfo['geometry'],
                                                                                     self._ginfo['term'])
-        for k, missing in self._missings.iteritems():
+        for k, missing in self._missings.items():
             for member in missing:
                 outstr += "{:s}: member #{!s}\n".format(k, member)
         return outstr
 
 
-class DiagPE(BlindRun, grib.GribApiComponent):
+class DiagPE(BlindRun, grib.EcGribComponent):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
         attr = dict(
@@ -607,7 +611,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
         # Prevent DrHook to initialise MPI and setup grib_api
         for optpack in ('drhook_not_mpi', ):
             self.export(optpack)
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -642,7 +646,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 self.delayed_exception_add(newexc, traceback=False)
             else:
                 logger.info("Fatal is false consequently no exception is recorder. It would look like this:")
-                print newexc
+                print(newexc)
         members = sorted(members)
 
         # This is hopeless :-(
@@ -792,7 +796,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
                 except IndexError:
                     current_gang[geometry] = None
 
-            while any([g is not None for g in current_gang.itervalues()]):
+            while any([g is not None for g in six.itervalues(current_gang)]):
 
                 for geometry, a_gang in [(g, current_gang[g]) for g in geometries
                                          if (current_gang[g] is not None and
@@ -809,7 +813,7 @@ class DiagPE(BlindRun, grib.GribApiComponent):
 
                 if not (bm.all_done or any(current_gang[g] is not None and
                                            gang.state is not GangSt.ufo
-                                           for gang in current_gang.itervalues())):
+                                           for gang in six.itervalues(current_gang))):
                     # Timeout ?
                     bm.is_timedout(self.timeout, IOError)
                     # Wait a little bit :-)
@@ -852,7 +856,7 @@ class _DiagPICommons(FootprintCopier):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(self.__class__, self).prepare(rh, opts)
-        self.gribapi_setup(rh, opts)
+        self.eccodes_setup(rh, opts, compat=True)
 
         # Check for input files to concatenate
         if self.gribcat:
@@ -1006,13 +1010,13 @@ class _DiagPICommons(FootprintCopier):
                 thispromise.put(incache=True)
 
 
-class DiagPI(BlindRun, grib.GribApiComponent):
+class DiagPI(BlindRun, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     __metaclass__ = _DiagPICommons
 
 
-class DiagPIMPI(Parallel, grib.GribApiComponent):
+class DiagPIMPI(Parallel, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
     __metaclass__ = _DiagPICommons
@@ -1046,7 +1050,7 @@ class Fa2GaussGrib(BlindRun):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Fa2GaussGrib, self).prepare(rh, opts)
-        # Prevent DrHook to initialize MPI and setup grib_api
+        # Prevent DrHook to initialize MPI
         self.export('drhook_not_mpi')
 
     def execute(self, rh, opts):
@@ -1073,7 +1077,7 @@ class Fa2GaussGrib(BlindRun):
 
             nb['LLBAVE'] = self.verbose
             nb['CDNOMF(1)'] = self.fortinput
-            with open('fort.4', 'w') as namfd:
+            with io.open('fort.4', 'w') as namfd:
                 namfd.write(nb.dumps())
 
             self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.4'))
@@ -1139,9 +1143,9 @@ class Reverser(BlindRun):
         param = param[0].rh
         paramct = param.contents
         dictkeyvalue = dict()
-        dictkeyvalue[r'param_iter'] = str(self.param_iter)
-        dictkeyvalue[r'condlim'] = str(self.condlim)
-        dictkeyvalue[r'ano_type'] = str(self.ano_type)
+        dictkeyvalue[r'param_iter'] = six.text_type(self.param_iter)
+        dictkeyvalue[r'condlim'] = six.text_type(self.condlim)
+        dictkeyvalue[r'ano_type'] = six.text_type(self.ano_type)
         paramct.setitems(dictkeyvalue)
         param.save()
         logger.info("Here is the parameter file (after substitution):")

@@ -1,17 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = ['Container']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re, io, os
 import tempfile
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.syntax.stdattrs import a_actualfmt
+
+#: Automatic export
+__all__ = ['Container']
+
+logger = footprints.loggers.getLogger(__name__)
 
 CONTAINER_INCORELIMIT = 1048576 * 8
 CONTAINER_MAXREADSIZE = 1048576 * 200
@@ -226,7 +229,7 @@ class Container(footprints.FootprintBase):
             pos = iod.tell()
             iod.seek(0)
             for xchunk in iod:
-                print xchunk.rstrip('\n')
+                print(xchunk.rstrip('\n'))
             iod.seek(pos)
 
     def is_virtual(self):
@@ -291,7 +294,8 @@ class InCore(Virtual):
                 alias           = ('memlimit', 'spooledlimit', 'maxsize'),
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
-        )
+        ),
+        fastkeys = set(['incore', ])
     )
 
     def __init__(self, *args, **kw):
@@ -413,7 +417,8 @@ class MayFly(Virtual):
                 default         = True,
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
-        )
+        ),
+        fastkeys = set(['mayfly', ])
     )
 
     def __init__(self, *args, **kw):
@@ -430,7 +435,7 @@ class MayFly(Virtual):
     def _str_more(self):
         """Additional information to internal representation."""
 
-        return 'delete={0:s} tmpfile="{1:s}"'.format(str(self.delete), self.actualpath())
+        return 'delete={0!s} tmpfile="{1:s}"'.format(self.delete, self.actualpath())
 
     def iodesc(self, mode=None):
         """Returns an active (opened) temporary file descriptor in binary read mode by default."""
@@ -559,7 +564,8 @@ class SingleFile(_SingleFileStyle):
                 alias       = ('filepath', 'local'),
                 doc_zorder  = 50,
             ),
-        )
+        ),
+        fastkeys = set(['filename', ])
     )
 
 
@@ -582,7 +588,8 @@ class UnnamedSingleFile(_SingleFileStyle):
                 default = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-        )
+        ),
+        fastkeys = set(['shouldfly', ])
     )
 
     def __init__(self, *args, **kw):

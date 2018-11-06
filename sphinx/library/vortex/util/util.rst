@@ -19,13 +19,12 @@ Modules
 
 * :mod:`vortex.util.authorizations`
 * :mod:`vortex.util.config`
-* :mod:`vortex.util.dispatch`
 * :mod:`vortex.util.empty`
 * :mod:`vortex.util.helpers`
 * :mod:`vortex.util.introspection`
 * :mod:`vortex.util.iosponge`
-* :mod:`vortex.util.names`
 * :mod:`vortex.util.patterns`
 * :mod:`vortex.util.roles`
+* :mod:`vortex.util.storefunctions`
 * :mod:`vortex.util.structs`
 * :mod:`vortex.util.worker`

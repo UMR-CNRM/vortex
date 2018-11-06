@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TideOnlyOut
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BufrPoint
    :show-inheritance:
    :members:

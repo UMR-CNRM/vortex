@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 #: No automatic export
 __all__ = []
@@ -29,4 +31,4 @@ def echofunction(options):
     for i, msg in enumerate(msgs):
         outstr += "\nMessage #{:d} is: {:s}\n".format(i, msg)
     # NB: The result have to be a file like object !
-    return StringIO(outstr)
+    return six.StringIO(outstr)

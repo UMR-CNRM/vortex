@@ -1,17 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
+import six
 
+from bronx.syntax.decorators import nicedeco
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
+
+logger = footprints.loggers.getLogger(__name__)
+
+#: No automatic export
+__all__ = []
 
 
 class Addon(footprints.FootprintBase):
@@ -68,6 +73,7 @@ class Addon(footprints.FootprintBase):
         super(Addon, self).__init__(*args, **kw)
         self.sh.extend(self)
         self._context_cache = defaultdict(dict)
+        self._cmd_xperms_cache = set()
         if self.env is None:
             self.env = Environment(active=False, clear=True)
         clsenv = self.__class__.__dict__
@@ -112,8 +118,8 @@ class Addon(footprints.FootprintBase):
         if (ctxtag not in self._context_cache and self.toolkind is not None):
             ltrack = contexts.current().localtracker
             # NB: 'str' is important because local might be in unicode...
-            candidates = [str(self.sh.path.realpath(local))
-                          for local, entry in ltrack.iteritems()
+            candidates = [six.text_type(self.sh.path.realpath(local))
+                          for local, entry in six.iteritems(ltrack)
                           if (entry.latest_rhdict('get').get('resource', dict()).get('kind', '') ==
                               self.toolkind)]
             if candidates:
@@ -142,6 +148,11 @@ class Addon(footprints.FootprintBase):
         # Is there a need for an interpreter ?
         if 'interpreter' in kw:
             cmd.insert(0, kw.pop('interpreter'))
+        else:
+            # The first element of the command line needs to be executable
+            if cmd[0] not in self._cmd_xperms_cache:
+                self._cmd_xperms_cache.add(cmd[0])
+                self.sh.xperm(cmd[0], force=True)
 
         # Overwrite global module env values with specific ones
         with self.sh.env.clone() as localenv:
@@ -264,3 +275,37 @@ class AddonGroup(footprints.FootprintBase):
                                             cycle=self.cycle, verboseload=self.verboseload)
             if self.verboseload:
                 logger.info("%s Addon is: %s", addon, repr(_shadd))
+
+
+def require_external_addon(*addons):
+    """
+    A method decorator usable in addons, that will check if addons listed in
+    **addons** are properly loaded in the parent System object.
+
+    If not, a :class:`RuntimeError` exception will be raised.
+    """
+    @nicedeco
+    def r_addon_decorator(method):
+
+        def decorated(self, *kargs, **kwargs):
+            # Create a cache in self... ugly but efficient !
+            if not hasattr(self, '_require_external_addon_check_cache'):
+                setattr(self, '_require_external_addon_check_cache', set())
+            ko_addons = set()
+            loaded_addons = None
+            for addon in addons:
+                if addon in self._require_external_addon_check_cache:
+                    continue
+                if loaded_addons is None:
+                    loaded_addons = self.sh.loaded_addons()
+                if addon in loaded_addons:
+                    self._require_external_addon_check_cache.add(addon)
+                else:
+                    ko_addons.add(addon)
+            if ko_addons:
+                raise RuntimeError('The following addons are needed to use the {:s} method: {:s}'
+                                   .format(method.__name__, ', '.join(ko_addons)))
+            return method(self, *kargs, **kwargs)
+
+        return decorated
+    return r_addon_decorator

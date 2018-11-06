@@ -1,7 +1,8 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
-Invokes get/put on resource handlers created form the command-line options.
+
+"""
+Invokes get/put/prestage on resource handlers created form the command-line options.
 
 Any option specified on the command line (except -h and -v) will be used as
 attributes by the ```vortex.toolbox.rload``` function in order to create the
@@ -12,9 +13,17 @@ have default values (see the list below).
 
 This scripts only supports two notations for the command line:
 `--attribute=value` or `--atribute value`.
-'''
+"""
 
-from __future__ import print_function
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import locale
+import os
+import re
+import sys
+import traceback
+from argparse import ArgumentParser
+from argparse import RawDescriptionHelpFormatter
 
 argparse_epilog = '''
 Examples:
@@ -41,7 +50,7 @@ vortex.toolbox.rload(local='toto_[geometry:area]_[term]',
                      model='[vapp]',
                      nativefmt='[format]')
 
-One can see that namespace, vapp, vconf, model and nativefmt are automaticaly
+One can see that namespace, vapp, vconf, model and nativefmt are automatically
 taken from the defaults. The user can override the defaults from the
 command-line.
 
@@ -49,21 +58,19 @@ The `rangex` utility function can be specified directly on the command-line.
 For example, --term='rangex(0-6-1)' on the command-line, will result in
 term = [0, 1, 2, 3, 4, 5, 6] in the ``vortex.toolbox.rload``` call.
 
+The `daterangex` utility is also available, e.g. this would generate the
+dates from 2017 Jan. 1st, 18h (included) to 2017 Jan. 3rd, 6h (included)
+by step of 6h:
+  --date=daterangex('2017010118','2017010306','PT6H')
+
 Environment variables:
 
-Some of the defaults can be changed bythe mean of environment varialbes:
-  * --namespace default is control by VORTEX_NAMESPACE
-  * --vapp default is control by VORTEX_VAPP
-  * --vconf default is control by VORTEX_VCONF
+Some of the defaults can be changed by means of environment variables:
+  * --namespace default is controlled by VORTEX_NAMESPACE
+  * --vapp default is controlled by VORTEX_VAPP
+  * --vconf default is controlled by VORTEX_VCONF
 
 '''
-
-import sys
-import os
-import re
-import traceback
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 
 # Automatically set the python path
 vortexbase = re.sub(os.path.sep + 'bin$', '',
@@ -71,8 +78,11 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
+locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
+
 import footprints as fp
 from bronx.system import interrupt
+from bronx.stdtypes import date
 import vortex
 
 # Main script logger
@@ -80,64 +90,86 @@ logger = fp.loggers.getLogger(__name__)
 
 
 class ExtraArgumentError(Exception):
+
     def __init__(self, msg='Incorrect extra arguments. Please check your command line"'):
         super(ExtraArgumentError, self).__init__(msg)
 
 
 def vortex_delayed_init(t):
-    '''Setup footprints'''
-    import common, olive, gco  # @UnusedImport
+    """Setup footprints"""
+    import common, olive, gco
     # Load shell addons
-    import vortex.tools.folder  # @UnusedImport
-    import vortex.tools.grib  # @UnusedImport
-    vortex.proxy.addon(kind='allfolders', shell=t.sh)  # @UndefinedVariable
-    vortex.proxy.addon(kind='grib', shell=t.sh)  # @UndefinedVariable
+    import vortex.tools.folder
+    import vortex.tools.grib
+    # prevent the IDE from considering these unused (footprint declarations)
+    assert any([common, olive, gco, vortex.tools.folder, vortex.tools.grib])
+    vortex.proxy.addon(kind='allfolders', shell=t.sh)
+    vortex.proxy.addon(kind='grib', shell=t.sh)
 
 
-def actual_action(action, t, args):
-    '''Performs the action request by the user (get/put).'''
+def actual_action(action, t, args, fatal=True):
+    """Performs the action request by the user (get/put/prestage)."""
     from vortex import toolbox
-    rhanlers = toolbox.rload(** vars(args))
-    for n, rh in enumerate(rhanlers):
-        t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
-        rh.quickview()
-        if rh.complete:
-            rst = False
-            try:
-                rst = getattr(rh, action)()
-            except (KeyboardInterrupt, interrupt.SignalInterruptError):
-                if action == 'get':
-                    # Get ride of incomplete files
-                    logger.warning("The transfer was interrupted. Cleaning %s.",
-                                   rh.container.localpath())
-                    t.sh.remove(rh.container.localpath(), fmt=args.format)
-                raise
-            finally:
-                if rst:
-                    print("\n:-) Action '{}' on the resource handler went fine".format(action))
-                else:
-                    print("\n:-( Action '{}' on the resource handler ended badly".format(action))
-        else:
-            raise ValueError("The resource handler could not be fully defined.")
+    rhanlers = toolbox.rload(**vars(args))
+    with t.sh.ftppool():
+        for n, rh in enumerate(rhanlers):
+            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
+            rh.quickview()
+            if rh.complete:
+                rst = False
+                try:
+                    rst = getattr(rh, action)()
+                except (KeyboardInterrupt, interrupt.SignalInterruptError):
+                    if action == 'get':
+                        # Get ride of incomplete files
+                        logger.warning("The transfer was interrupted. Cleaning %s.",
+                                       rh.container.localpath())
+                        t.sh.remove(rh.container.localpath(), fmt=args.format)
+                    raise
+                except StandardError as e:
+                    logger.warning("An exception was caught: %s.", str(e))
+                    rst = False
+                    if fatal:
+                        raise
+                finally:
+                    if rst:
+                        print("\n:-) Action '{}' on the resource handler went fine".format(action))
+                    else:
+                        print("\n:-( Action '{}' on the resource handler ended badly".format(action))
+                if not rst:
+                    if fatal:
+                        raise IOError("... stopping everything since fatal is True and rst={!s}".format(rst))
+                    else:
+                        print("... but going on since fatal is False.")
+            else:
+                raise ValueError("The resource handler could not be fully defined.")
+
+        # Finish the action by actually sending the prestaging request
+        if action == 'prestage':
+            ctx = t.context
+            ctx.prestaging_hub.flush()
 
 
 def argvalue_rewrite(value):
-    '''Detect and process special values in arguments.'''
+    """Detect and process special values in arguments."""
     if value.startswith('rangex'):
         value = re.split('\s*,\s*', value[7:-1])
-        return fp.util.rangex(* value)
+        return fp.util.rangex(*value)
+    elif value.startswith('daterangex'):
+        value = re.split('\s*,\s*', value[11:-1])
+        return date.daterangex(*value)
     else:
         return value
 
 
 def process_remaining(margs, rargs):
-    '''Process all the remainging arguments and add them to the margs namespace.
+    """Process all the remainging arguments and add them to the margs namespace.
 
     All the remaining arguments must conform to the following convention:
 
       * --key=value
       * --key value
-    '''
+    """
     re_arg0 = re.compile('--(\w+)(?:=(.*))?$')
     while len(rargs):
         argmatch = re_arg0.match(rargs.pop(0))
@@ -158,7 +190,7 @@ def process_remaining(margs, rargs):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")
@@ -169,6 +201,10 @@ def main():
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         help="set verbosity level [default: %(default)s]")
+    parser.add_argument("-p", "--prestage", dest="prestage", action="store_true",
+                        help="during a get action, prestage data first")
+    parser.add_argument("--no-fatal", dest="fatal", action="store_false",
+                        help="do not fail if the action do not succeed (just print a warning)")
     parser.add_argument("--local", dest="local", action="store", required=True,
                         help="path to the resource on the local filesystem")
     parser.add_argument("--format", dest="format", action="store", default="unknown",
@@ -192,7 +228,7 @@ def main():
                         metavar='any_value...', action='append')
 
     # Process arguments
-    args = process_remaining(* parser.parse_known_args())
+    args = process_remaining(*parser.parse_known_args())
     del args.dummyattribute
 
     # Setup logger verbosity
@@ -209,8 +245,16 @@ def main():
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
 
+    # is it Fatal
+    fatal = args.fatal
+    del args.fatal
+
+    # do some prestaging before get actions
+    prestage = args.prestage
+    del args.prestage
+
     # Process the action (get/true)
-    program_match = re.match('vtx(get|put)(?:\.py)?$', program_name)
+    program_match = re.match('vtx(get|put|prestage)(?:\.py)?$', program_name)
     if program_match is None:
         raise NotImplementedError("Unrecognised script name.")
     else:
@@ -230,7 +274,9 @@ def main():
     try:
         t.sh.signal_intercept_on()
         vortex_delayed_init(t)
-        actual_action(action, t, args)
+        if action == 'get' and prestage:
+            actual_action('prestage', t, args, fatal=fatal)
+        actual_action(action, t, args, fatal=fatal)
         t.sh.signal_intercept_off()
 
     except (KeyboardInterrupt, interrupt.SignalInterruptError) as e:
@@ -243,6 +289,7 @@ def main():
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         sys.stderr.write(indent + "  for help use --help\n")
         return 2
+
 
 if __name__ == "__main__":
     sys.exit(main())

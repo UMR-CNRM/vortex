@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import os
 import six
 import unittest
@@ -38,7 +39,7 @@ Jo/n:           1.36 (100.00%)
     @staticmethod
     def _ingest(fname):
         filename = _find_testfile(fname)
-        with open(filename, 'r') as fh:
+        with io.open(filename, 'r') as fh:
             return (filename, [l.rstrip("\n") for l in fh])
 
     def test_single(self):

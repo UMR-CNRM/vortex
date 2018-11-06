@@ -1,0 +1,58 @@
+default:
+    style: olive
+    sets:
+        # Arome world
+        -   geometry: frangp0025
+            cutoff:
+                - assim
+                - production
+            model: arome
+            cycle: al42_arome-op2.40
+            vapp: arome
+            vconf: 3dvarfr
+            kind: gridpoint
+            origin: hst
+            term: 3
+            namespace:
+                - '[suite].multi.fr'
+                - '[suite].inline.fr'
+
+todo:
+    # FA/Gridpoints
+    -   commons:
+            nativefmt: fa
+            suite: oper
+        tests:
+            -   cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010103'
+                - '2018010106'
+                - '2018010109'
+                - '2018010112'
+                - '2018010115'
+                - '2018010118'
+                - '2018010121'
+            -   cutoff: assim
+                date:
+                - '2018010101'
+                - '2018010111'
+                - '2018010116'
+    # GRIB/Gridpoints
+    -   tests:
+            -   nativefmt: grib
+                cutoff:
+                - assim
+                - production
+                date:
+                - '2018010100'
+                - '2018010103'
+                - '2018010106'
+                - '2018010109'
+                - '2018010112'
+                - '2018010115'
+                - '2018010118'
+                - '2018010121'
+                suite: oper

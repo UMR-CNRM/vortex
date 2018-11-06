@@ -1,16 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from vortex.data.geometries import LonlatGeometry
+from vortex.data.outflow import StaticGeoResource, ModelGeoResource
+from vortex.syntax.stdattrs import month_deco
+from vortex.syntax.stddeco import namebuilding_insert
+from gco.syntax.stdattrs import gvar, GenvDomain
+
 #: No automatic export
 __all__ = []
 
-from vortex.data.geometries import LonlatGeometry
-from vortex.data.outflow import StaticGeoResource
-from vortex.syntax.stdattrs import month
-from gco.syntax.stdattrs import gvar, GenvDomain
 
-
-class GenericClim(StaticGeoResource):
+@namebuilding_insert('radical', lambda s: 'clim')
+class GenericClim(ModelGeoResource):
     """
     Abstract class for a model climatology.
     An HorizontalGeometry object is needed.
@@ -42,27 +46,9 @@ class GenericClim(StaticGeoResource):
         """Returns geometry's truncation."""
         return self.geometry.truncation
 
-    def _monthly_suffix(self, prefix=''):
-        return '.{0:s}{1.month:s}'.format(prefix, self) if hasattr(self, 'month') else ''
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return self._monthly_suffix(prefix='m')
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'Const.Clim' + self._monthly_suffix()
-
-    def basename_info(self):
-        sd = dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = 'clim',
-            src     = self.model,
-        )
-        if hasattr(self, 'month'):
-            sd['suffix'] = {'month': self.month}
-        return sd
+        return 'Const.Clim'
 
 
 class GlobalClim(GenericClim):
@@ -90,7 +76,7 @@ class MonthlyGlobalClim(GlobalClim):
     """
 
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly model climatology for Global Models',
         )
@@ -129,7 +115,7 @@ class MonthlyClimLAM(ClimLAM):
     """
 
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly model climatology for Local Area Models',
         )
@@ -177,7 +163,7 @@ class MonthlyClimBDAP(ClimBDAP):
     """
 
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Monthly Bdap climatology',
         )
@@ -197,16 +183,16 @@ class GTOPO30DerivedDB(StaticGeoResource):
             info = 'Database for GTOPO30-derived parameters.',
             attr = dict(
                 kind = dict(
-                    values   = ['misc_orography'],
+                    values = ['misc_orography'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    values = ['GTOPO30'],
                 ),
                 geometry = dict(
                     values = ['global2m5'],
                 ),
                 gvar = dict(
-                    default  = '[source]_[kind]'
+                    default = '[source]_[kind]'
                 ),
             )
         )
@@ -225,13 +211,13 @@ class UrbanisationDB(StaticGeoResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Database for GTOPO30 urbanisation.',
+            info = 'Database for urbanisation.',
             attr = dict(
                 kind = dict(
                     values   = ['urbanisation'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2m5'],
@@ -256,13 +242,13 @@ class WaterPercentageDB(StaticGeoResource):
     _footprint = [
         gvar,
         dict(
-            info = 'Database for GTOPO30 water percentage.',
+            info = 'Database for water percentage.',
             attr = dict(
                 kind = dict(
                     values   = ['water_percentage'],
                 ),
                 source = dict(
-                    values   = ['GTOPO30'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2m5'],
@@ -294,7 +280,7 @@ class SoilANdVegDB(StaticGeoResource):
                     values   = ['soil_and_veg'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -319,7 +305,7 @@ class MonthlyLAIDB(StaticGeoResource):
     """
     _footprint = [
         gvar,
-        month,
+        month_deco,
         dict(
             info = 'Database for monthly LAI.',
             attr = dict(
@@ -327,7 +313,7 @@ class MonthlyLAIDB(StaticGeoResource):
                     values   = ['LAI'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -343,10 +329,6 @@ class MonthlyLAIDB(StaticGeoResource):
     def realkind(self):
         return 'LAI'
 
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
-
 
 class MonthlyVegDB(StaticGeoResource):
     """
@@ -356,7 +338,7 @@ class MonthlyVegDB(StaticGeoResource):
     """
     _footprint = [
         gvar,
-        month,
+        month_deco,
         dict(
             info = 'Database for monthly vegetation.',
             attr = dict(
@@ -364,7 +346,7 @@ class MonthlyVegDB(StaticGeoResource):
                     values   = ['vegetation'],
                 ),
                 source = dict(
-                    values   = ['GiardBazile2000', 'AVHRR-ESA'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg', 'europeb01'],
@@ -379,10 +361,6 @@ class MonthlyVegDB(StaticGeoResource):
     @property
     def realkind(self):
         return 'vegetation'
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
 
 
 class SoilClimatologyDB(StaticGeoResource):
@@ -401,7 +379,7 @@ class SoilClimatologyDB(StaticGeoResource):
                     values   = ['soil_clim'],
                 ),
                 source = dict(
-                    values   = ['Arp-reanalysis', 'US-Navy'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['globaln108', 'global1dg'],
@@ -433,7 +411,7 @@ class SurfGeopotentialDB(StaticGeoResource):
                     values   = ['surfgeopotential'],
                 ),
                 source = dict(
-                    values   = ['Arp-reanalysis'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global1dg'],
@@ -458,15 +436,11 @@ class MonthlySoilClimatologyDB(SoilClimatologyDB):
     A Genvkey can be given.
     """
     _footprint = [
-        month,
+        month_deco,
         dict(
             info = 'Database for monthly soil climatology parameters.',
         )
     ]
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
 
 
 class MonthlyChemicalDB(StaticGeoResource):
@@ -477,7 +451,7 @@ class MonthlyChemicalDB(StaticGeoResource):
     """
     _footprint = [
         gvar,
-        month,
+        month_deco,
         dict(
             info = 'Database for monthly chemicals.',
             attr = dict(
@@ -485,7 +459,7 @@ class MonthlyChemicalDB(StaticGeoResource):
                     values   = ['ozone', 'aerosols'],
                 ),
                 source = dict(
-                    values   = ['UGAMP', 'Tegen'],
+                    type = str,
                 ),
                 geometry = dict(
                     values = ['global2dg5', 'global5x4'],
@@ -500,10 +474,6 @@ class MonthlyChemicalDB(StaticGeoResource):
     @property
     def realkind(self):
         return self.kind
-
-    def gget_basename(self):
-        """GGET specific naming convention."""
-        return '.m' + str(self.month)
 
 
 class GeometryIllustration(StaticGeoResource):
@@ -522,10 +492,3 @@ class GeometryIllustration(StaticGeoResource):
     @property
     def realkind(self):
         return 'geometry_plot'
-
-    def basename_info(self):
-        return dict(
-            radical = self.realkind,
-            geo = self._geo2basename_info(),
-            fmt = self.nativefmt
-        )

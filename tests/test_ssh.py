@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
 import os
 import stat
 import subprocess
@@ -14,7 +17,6 @@ import vortex
 from vortex.tools.net import Ssh, AssistedSsh
 
 slog = footprints.loggers.getLogger('vortex.tools.systems')
-slog.setLevel(9999)  # No logs at all...
 
 test_host = 'localhost'
 fake_host = 'this-hostname-should-not-exist-in-your-network'
@@ -43,6 +45,9 @@ LOCALSSH_OK = check_localssh()
 class _SshTestBase(unittest.TestCase):
 
     def setUp(self):
+        # Log stuff
+        self.slogL = slog.level
+        slog.setLevel(9999)  # No logs at all...
         # Generate a temporary directory
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
@@ -56,13 +61,13 @@ class _SshTestBase(unittest.TestCase):
         self.ref2 = self.sh.path.join(self.tmpdir, 'refdata2')
         self.ref1_ct = uuid.uuid4().bytes
         self.ref2_ct = uuid.uuid4().bytes
-        with open(self.ref1, 'w') as fh1:
+        with io.open(self.ref1, 'wb') as fh1:
             fh1.write(self.ref1_ct)
-        with open(self.ref2, 'w') as fh2:
+        with io.open(self.ref2, 'wb') as fh2:
             fh2.write(self.ref2_ct)
 
     def _check_against(self, ref, newfile):
-        with open(newfile, 'r') as fhN:
+        with io.open(newfile, 'rb') as fhN:
             newdata = fhN.read()
         self.assertEqual(ref, newdata)
 
@@ -76,6 +81,8 @@ class _SshTestBase(unittest.TestCase):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
         self.sh.signal_intercept_off()
+        # Log stuff
+        slog.setLevel(self.slogL)
 
 
 class TestSsh(_SshTestBase):
@@ -135,10 +142,10 @@ class TestSsh(_SshTestBase):
         self.assertIsCopy1(self.sh.path.join(dest_cp3bis, self.sh.path.basename(self.ref1)))
 
         # Streaming !
-        with open(self.ref2, 'r') as fh2:
-            self.assertTrue(self.ssh.scpput_stream(fh2, dest_cp2, permissions=0400))
+        with io.open(self.ref2, 'rb') as fh2:
+            self.assertTrue(self.ssh.scpput_stream(fh2, dest_cp2, permissions=0o400))
         self.assertIsCopy2(dest_cp2)
-        self.assertEqual(stat.S_IMODE(self.sh.stat(dest_cp2).st_mode), 0400)
+        self.assertEqual(stat.S_IMODE(self.sh.stat(dest_cp2).st_mode), 0o400)
 
         # Nasty characters
         dest_cp5 = self.sh.path.join(self.tmpdir, 'toto+titi')
@@ -158,7 +165,7 @@ class TestSsh(_SshTestBase):
         self.assertIsCopy1(self.sh.path.join(dest_cp3, self.sh.path.basename(self.ref1)))
         # Streaming !
         dest_cp2bis = self.sh.path.join(self.tmpdir, 'titi')
-        with open(dest_cp2bis, 'w') as fh2:
+        with io.open(dest_cp2bis, 'wb') as fh2:
             self.assertTrue(self.ssh.scpget_stream(dest_cp2, fh2))
         self.assertIsCopy1(dest_cp2bis)
         # Nasty characters

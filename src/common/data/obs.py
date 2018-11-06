@@ -1,27 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
+from __future__ import print_function, absolute_import, division, unicode_literals
 
-#: Automatic export of Observations class
-__all__ = [ 'Observations' ]
-
+import six
 import re
 import itertools
 from collections import namedtuple
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
+
+from bronx.stdtypes.date         import Date
+from bronx.stdtypes.dictionaries import ReadOnlyDict
 
 from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
-from vortex.syntax        import stdattrs
-from bronx.stdtypes.date  import Date
-from vortex.util.structs  import ReadOnlyDict
+from vortex.syntax        import stdattrs, stddeco
 
 from gco.syntax.stdattrs  import gvar, GenvKey
 
+#: Automatic export of Observations class
+__all__ = [ 'Observations' ]
 
+logger = footprints.loggers.getLogger(__name__)
+
+
+@stddeco.namebuilding_insert('style', lambda s: 'obs')
+@stddeco.namebuilding_insert('stage', lambda s: s.stage)
+@stddeco.namebuilding_insert('part', lambda s: s.part)
 class Observations(GeoFlowResource):
     """
     Abstract observation resource.
@@ -51,16 +57,8 @@ class Observations(GeoFlowResource):
     def realkind(self):
         return 'observations'
 
-    def basename_info(self):
-        """Generic information for names fabric, with style = ``obs``."""
-        return dict(
-            style     = 'obs',
-            nativefmt = self.nativefmt,
-            stage     = self.stage,
-            part      = self.part,
-        )
 
-
+@stddeco.namebuilding_insert('layout', lambda s: s.layout)
 class ObsODB(Observations):
     """
     TODO.
@@ -109,14 +107,6 @@ class ObsODB(Observations):
             ),
         )
     )
-
-    def basename_info(self):
-        """Generic information for names fabric, with style = ``obs``."""
-        d = super(ObsODB, self).basename_info()
-        d.update(
-            layout = self.layout,
-        )
-        return d
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -228,6 +218,8 @@ class ObsRaw(Observations):
             )
 
 
+@stddeco.namebuilding_insert('radical', lambda s: s.kind)
+@stddeco.namebuilding_insert('src', lambda s: [s.part, ])
 class ObsFlags(FlowResource):
     """Class for observations flags."""
 
@@ -249,14 +241,6 @@ class ObsFlags(FlowResource):
     @property
     def realkind(self):
         return 'obsflags'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            src     = [self.part],
-            fmt     = self.nativefmt,
-        )
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -288,6 +272,7 @@ class VarBCContent(AlmostListContent):
                 self._metadata = ReadOnlyDict(mdata)
 
 
+@stddeco.namebuilding_append('src', lambda s: [s.stage, ])
 class VarBC(FlowResource):
     """
     VarBC file resource. Contains all the coefficients for the VarBC bias correction scheme.
@@ -325,14 +310,6 @@ class VarBC(FlowResource):
     def realkind(self):
         return 'varbc'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            src     = [self.model, self.stage],
-            fmt     = self.nativefmt,
-        )
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
         olivestage_map = {'screening': 'screen', }
@@ -353,6 +330,7 @@ class VarBC(FlowResource):
         return bname
 
 
+@stddeco.namebuilding_insert('src', lambda s: s.scope)
 class BlackList(FlowResource):
     """
     TODO.
@@ -400,14 +378,6 @@ class BlackList(FlowResource):
     def realkind(self):
         return 'blacklist'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``varbc``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = self.scope,
-        )
-
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
@@ -446,12 +416,12 @@ class ObsRefContent(TextContent):
     @classmethod
     def formatted_data(self, item):
         """Return a formatted string."""
-        return '{0:8s} {1:8s} {2:16s} {3:8s} {4:s}'.format(
-            item.data, item.fmt, item.instr,
-            str(item.date), str(item.time)
+        return '{0:8s} {1:8s} {2:16s} {3:s} {4!s}'.format(
+            item.data, item.fmt, item.instr, six.text_type(item.date), item.time
         )
 
 
+@stddeco.namebuilding_append('src', lambda s: [s.part, ])
 class Refdata(FlowResource):
     """
     TODO.
@@ -482,14 +452,6 @@ class Refdata(FlowResource):
     def realkind(self):
         return 'refdata'
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``refdata``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = [self.model, self.part],
-        )
-
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return self.realkind + '.' + self.part
@@ -506,11 +468,16 @@ ObsMapItem = namedtuple('ObsMapItem', ('odb', 'data', 'fmt', 'instr'))
 class ObsMapContent(TextContent):
     """Content class for the *ObsMap* resources.
 
-    The :class:`ObsMap` resource provides its *discard* attribute. This
-    attribute is a :class:`footprints.stdtypes.FPSet` object thats holds *odb:data* pairs
-    that will be used to discard some of the lines of the local resource. The
-    matching is done using regular expressions (however, when *:data* is
-    omitted, ':' is automativaly added at the end of the regular expression).
+    The :class:`ObsMap` resource provides its *discard* and *only* attributes.
+    This attribute is a :class:`footprints.stdtypes.FPSet` object thats holds
+    *odb:data* pairs that will be used to filter/discard some of the lines of
+    the local resource. The matching is done using regular expressions (however
+    when *:data* is omitted, ':' is automatically added at the end of the regular
+    expression).
+
+    The *only* attribute is evaluated first (if *only* is not provided or equals
+    *None*, all ObsMap lines are retained).
+
     Here are some examples:
 
     * ``discard=FPSet(('sev',))`` -> The *sev* ODB database will be discarded
@@ -524,18 +491,25 @@ class ObsMapContent(TextContent):
       would usualy be inserted in the *conv* database.
     * ``discard=FPSet(('conv:t[ea]', ))`` -> Discard the data file starting
       with *te* or *ta* that would usualy be inserted in the *conv* database.
+    * ``only=FPSet(('conv',))`` -> Only *conv* ODB database will be used.
     """
 
     _delayed_slurp = False
 
     def __init__(self, **kw):
         kw.setdefault('discarded', set())
+        kw.setdefault('only', None)
         super(ObsMapContent, self).__init__(**kw)
 
     @property
     def discarded(self):
         """Set of *odb:data* pairs that will be discarded."""
         return self._discarded
+
+    @property
+    def only(self):
+        """Set of *odb:data* pairs that will be kept (*None* means "keep everything")."""
+        return self._only
 
     def append(self, item):
         """Append the specified ``item`` to internal data contents."""
@@ -544,16 +518,25 @@ class ObsMapContent(TextContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         container.rewind()
-        filters = [re.compile(d if ':' in d else d + ':')
-                   for d in self.discarded]
+
+        if self.only is not None:
+            ofilters = [re.compile(d if ':' in d else d + ':')
+                        for d in self.only]
+        else:
+            ofilters = None
+        dfilters = [re.compile(d if ':' in d else d + ':') for d in self.discarded]
+
+        def item_filter(omline):
+            om = ':'.join([omline.odb, omline.data])
+            return ((ofilters is None or
+                     any([f.match(om) for f in ofilters])) and
+                    not any([f.match(om) for f in dfilters]))
+
         self.extend(
-            itertools.ifilter(
-                lambda o: not any([f.match(':'.join([o.odb, o.data]))
-                                   for f in filters]),
-                [ObsMapItem(* x.split())
-                 for x in [ line.strip() for line in container ]
-                 if x and not x.startswith('#')]
-            )
+            itertools.ifilter(item_filter,
+                              [ObsMapItem(* x.split())
+                               for x in [line.strip() for line in container]
+                               if x and not x.startswith('#')])
         )
         self._size = container.totalsize
 
@@ -580,9 +563,9 @@ class ObsMapContent(TextContent):
 
     def datafmt(self, data):
         """Return format associated to specified ``data``."""
-        l = [ x.fmt for x in self if x.data == data ]
+        dfmt = [x.fmt for x in self if x.data == data]
         try:
-            return l[0]
+            return dfmt[0]
         except IndexError:
             logger.warning('Data "%s" not found in ObsMap contents', data)
 
@@ -601,6 +584,8 @@ class ObsMapContent(TextContent):
             return self.datafmt(part)
 
 
+@stddeco.namebuilding_insert('style', lambda s: 'obsmap')
+@stddeco.namebuilding_insert('stage', lambda s: [s.scope, s.stage])
 class ObsMap(FlowResource):
     """Observation mapping.
 
@@ -640,10 +625,15 @@ class ObsMap(FlowResource):
                     remap = dict(surf = 'surface'),
                 ),
                 discard = dict(
-                    info     = "Discard some lines of the mapping (see the class documentaion).",
+                    info     = "Discard some lines of the mapping (see the class documentation).",
                     type     = footprints.FPSet,
                     optional = True,
                     default  = footprints.FPSet(),
+                ),
+                only = dict(
+                    info     = "Only retain some lines of the mapping (see the class documentation).",
+                    type     = footprints.FPSet,
+                    optional = True,
                 )
             )
         )
@@ -655,7 +645,7 @@ class ObsMap(FlowResource):
 
     def contents_args(self):
         """Returns default arguments value to class content constructor."""
-        return dict(discarded=set(self.discard))
+        return dict(discarded=set(self.discard), only=self.only)
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -680,16 +670,8 @@ class ObsMap(FlowResource):
         else:
             return self.gvar
 
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``obsmap``."""
-        return dict(
-            style   = 'obsmap',
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            stage   = [self.scope, self.stage]
-        )
 
-
+@stddeco.namebuilding_insert('src', lambda s: s.satbias)
 class Bcor(FlowResource):
     """Bias correction parameters."""
 
@@ -714,14 +696,6 @@ class Bcor(FlowResource):
     @property
     def realkind(self):
         return 'bcor'
-
-    def basename_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        return dict(
-            radical = self.kind,
-            fmt     = self.nativefmt,
-            src     = self.satbias,
-        )
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""

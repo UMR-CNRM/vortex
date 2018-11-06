@@ -9,8 +9,11 @@ They might be used when some complex calculations are needed to establish the
 tasks configuration.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import collections
 import functools
+import six
 
 from bronx.stdtypes.date import Date, Time, Period, Month
 import footprints
@@ -171,29 +174,29 @@ class CouplingOffsetConfTool(ConfTool):
         # Pre-compute the prepare terms
         self._prepare_terms_map = self._compute_prepare_terms()
         if self.verbose:
-            print '**** Coupling tasks terms map:'
-            print '{:s}  :  {:s}'.format(self._cpl_fmtkey(('HH', 'VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
-                                         'Computed Terms')
+            print('**** Coupling tasks terms map:')
+            print('{:s}  :  {:s}'.format(self._cpl_fmtkey(('HH', 'VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
+                                         'Computed Terms'))
             for k in sorted(self._prepare_terms_map.keys()):
-                print '{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
-                                             ' '.join([str(t.hour) for t in self._prepare_terms_map[k]]))
+                print('{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
+                                             ' '.join([six.text_type(t.hour) for t in self._prepare_terms_map[k]])))
             print
 
         # Pre-compute the default refill_map
         self._refill_terms_map = dict()
         self._refill_terms_map[self.refill_cutoff] = self._compute_refill_terms(self.refill_cutoff)
         if self.verbose:
-            print '**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff)
-            print '{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
-                                         'Active hours')
+            print('**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff))
+            print('{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'MODEL', 'CUTOFF')),
+                                         'Active hours'))
             for k in sorted(self._refill_terms_map[self.refill_cutoff].keys()):
                 vdict = self._refill_terms_map[self.refill_cutoff][k]
-                print '{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
-                                             ' '.join([str(t.hour) for t in sorted(vdict.keys())]))
+                print('{:s}  :  {:s}'.format(self._rtask_fmtkey(k),
+                                             ' '.join([six.text_type(t.hour) for t in sorted(vdict.keys())])))
             print
 
     def _reshape_inputs(self, input_dict, class_default=None, value_reclass=lambda x: x):
-        '''Deal with default values, check dictionaries and convert keys to Time objects.'''
+        """Deal with default values, check dictionaries and convert keys to Time objects."""
         # Convert keys to time objects
         r_dict = dict()
         if input_dict is not None:
@@ -243,7 +246,7 @@ class CouplingOffsetConfTool(ConfTool):
 
     @staticmethod
     def _cpl_key(hh, cutoff, vapp, vconf, model):
-        return (str(hh), vapp, vconf, model, cutoff)
+        return (six.text_type(hh), vapp, vconf, model, cutoff)
 
     @staticmethod
     def _cpl_fmtkey(k):
@@ -304,11 +307,11 @@ class CouplingOffsetConfTool(ConfTool):
         return finaldates
 
     def prepare_terms(self, date, cutoff, vapp, vconf, model=None):
-        '''
+        """
         For a task computing coupling files (at **date** and **cutoff**,
         for a specific **vapp** and **vconf**), lists the terms that should be
         computed.
-        '''
+        """
         _, myhh = self._process_date(date)
         if model is None:
             model = vapp
@@ -319,28 +322,28 @@ class CouplingOffsetConfTool(ConfTool):
             raise CouplingOffsetConfPrepareError(self._cpl_fmtkey(key))
 
     def coupling_offset(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         time delta with the coupling model/file base date.
-        '''
+        """
         _, myhh = self._process_date(date)
         return self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
                                self._cpl_data[cutoff][myhh].dayoff)
 
     def coupling_date(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         base date of the coupling model/file.
-        '''
+        """
         mydate, myhh = self._process_date(date)
         return mydate - self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
                                         self._cpl_data[cutoff][myhh].dayoff)
 
     def coupling_terms(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         list of terms that should be fetched from the coupling model/file.
-        '''
+        """
         _, myhh = self._process_date(date)
         offset = self._hh_offset(myhh, self._cpl_data[cutoff][myhh].base,
                                  self._cpl_data[cutoff][myhh].dayoff)
@@ -350,36 +353,43 @@ class CouplingOffsetConfTool(ConfTool):
         _, myhh = self._process_date(date)
         return getattr(self._cpl_data[cutoff][myhh], stuff)
 
+    def coupling_steps(self, date, cutoff):
+        """
+        For a task needing coupling (at **date** and **cutoff**), return the
+        prescribed steps.
+        """
+        return self._coupling_stuff(date, cutoff, 'steps')
+
     def coupling_cutoff(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         cutoff of the coupling model/file.
-        '''
+        """
         return self._coupling_stuff(date, cutoff, 'cutoff')
 
     def coupling_vapp(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         vapp of the coupling model/file.
-        '''
+        """
         return self._coupling_stuff(date, cutoff, 'vapp')
 
     def coupling_vconf(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         vconf of the coupling model/file.
-        '''
+        """
         return self._coupling_stuff(date, cutoff, 'vconf')
 
     def coupling_model(self, date, cutoff):
-        '''
+        """
         For a task needing coupling (at **date** and **cutoff**), return the
         vconf of the coupling model/file.
-        '''
+        """
         return self._coupling_stuff(date, cutoff, 'model')
 
     def refill_terms(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None):
-        '''The terms that should be computed for a given refill task.'''
+        """The terms that should be computed for a given refill task."""
         refill_cutoff = self.refill_cutoff if refill_cutoff is None else refill_cutoff
         if refill_cutoff not in self._refill_terms_map:
             self._refill_terms_map[refill_cutoff] = self._compute_refill_terms(refill_cutoff)
@@ -391,16 +401,16 @@ class CouplingOffsetConfTool(ConfTool):
         if key not in self._refill_terms_map[refill_cutoff]:
             raise CouplingOffsetConfRefillError(self._rtask_fmtkey(key))
         for off, terms in self._refill_terms_map[refill_cutoff][key][myhh].items():
-            finaldates[str(mydate - off)] = terms
+            finaldates[six.text_type(mydate - off)] = terms
         return {'date': finaldates}
 
     def refill_dates(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None):
-        '''The dates that should be processed in a given refill task.'''
+        """The dates that should be processed in a given refill task."""
         return list(self.refill_terms(date, cutoff, vapp, vconf, model=model,
                                       refill_cutoff=refill_cutoff)['date'].keys())
 
     def refill_months(self, date, cutoff, vapp, vconf, model=None, refill_cutoff=None):
-        '''The months that should be processed in a given refill task.'''
+        """The months that should be processed in a given refill task."""
         mindate = min(self.refill_dates(date, cutoff, vapp, vconf, model=model,
                                         refill_cutoff=refill_cutoff))
         minmonth = Month(mindate)

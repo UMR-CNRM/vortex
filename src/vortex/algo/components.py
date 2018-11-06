@@ -2,25 +2,28 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
 import sys
 import traceback
 import shlex
+import tempfile
 import multiprocessing
 
 from bronx.stdtypes import date
 from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 import vortex
 from vortex.algo  import mpitools
 from vortex.tools.parallelism import ParallelResultParser
 from vortex.syntax.stdattrs import DelayedEnvValue
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 
 class AlgoComponentError(Exception):
@@ -39,10 +42,14 @@ class DelayedAlgoComponentError(AlgoComponentError):
         super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
         self._excs = excs
 
+    def __iter__(self):
+        for exc in self._excs:
+            yield exc
+
     def __str__(self):
         outstr = "One or several errors occur during the run. In order of appearance:\n"
         outstr += "\n".join(['{0:3d}. {1!s} (type: {2!s})'.format(i + 1, exc, type(exc))
-                             for i, exc in enumerate(self._excs)])
+                             for i, exc in enumerate(self)])
         return outstr
 
 
@@ -174,10 +181,10 @@ class AlgoComponent(footprints.FootprintBase):
         logger.error("An exception is delayed")
         if traceback:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            print 'Exception type: ' + str(exc_type)
-            print 'Exception info: ' + str(exc_value)
-            print 'Traceback:'
-            print "\n".join(traceback.format_tb(exc_traceback))
+            print('Exception type: {!s}'.format(exc_type))
+            print('Exception info: {!s}'.format(exc_value))
+            print('Traceback:')
+            print("\n".join(traceback.format_tb(exc_traceback)))
         self._delayed_excs.append(exc)
 
     def algoassert(self, assertion, msg=''):
@@ -225,6 +232,10 @@ class AlgoComponent(footprints.FootprintBase):
         """Return actual io_poll prefixes."""
         return getattr(self, 'io_poll_args', tuple(self.flyargs))
 
+    def flyput_kwargs(self):
+        """Return actual io_poll prefixes."""
+        return getattr(self, 'io_poll_kwargs', dict())
+
     def flyput_check(self):
         """Check default args for io_poll command."""
         actual_args = list()
@@ -244,8 +255,8 @@ class AlgoComponent(footprints.FootprintBase):
         """Return a sleeping time in seconds between io_poll commands."""
         return getattr(self, 'io_poll_sleep', self.env.get('IO_POLL_SLEEP', 20))
 
-    def flyput_job(self, io_poll_method, io_poll_args, event_complete, event_free,
-                   queue_context):
+    def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
+                   event_complete, event_free, queue_context):
         """Poll new data resources."""
         logger.info('Polling with method %s', str(io_poll_method))
         logger.info('Polling with args %s', str(io_poll_args))
@@ -262,7 +273,7 @@ class AlgoComponent(footprints.FootprintBase):
             try:
                 for arg in io_poll_args:
                     logger.info('Polling check arg %s', arg)
-                    rc = io_poll_method(arg)
+                    rc = io_poll_method(arg, **io_poll_kwargs)
                     try:
                         data.extend(rc.result)
                     except AttributeError:
@@ -323,6 +334,9 @@ class AlgoComponent(footprints.FootprintBase):
             logger.error('Could not check default arguments for polling data')
             return nope
 
+        # Additional named attributes
+        io_poll_kwargs = self.flyput_kwargs()
+
         # Define events for a nice termination
         event_stop = multiprocessing.Event()
         event_free = multiprocessing.Event()
@@ -331,7 +345,7 @@ class AlgoComponent(footprints.FootprintBase):
         p_io = multiprocessing.Process(
             name   = self.footprint_clsname(),
             target = self.flyput_job,
-            args   = (io_poll_method, io_poll_args, event_stop, event_free, queue_ctx),
+            args   = (io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
         )
 
         # The co-process is started
@@ -386,12 +400,12 @@ class AlgoComponent(footprints.FootprintBase):
         self.system.signal_intercept_on()
         try:
             self.execute_single(rh, opts)
-        except:
+        except Exception:
             (exc_type, exc_value, exc_traceback) = sys.exc_info()
-            print 'Exception type: ' + str(exc_type)
-            print 'Exception info: ' + str(exc_value)
-            print 'Traceback:'
-            print "\n".join(traceback.format_tb(exc_traceback))
+            print('Exception type: {!s}'.format(exc_type))
+            print('Exception info: {!s}'.format(exc_value))
+            print('Traceback:')
+            print("\n".join(traceback.format_tb(exc_traceback)))
             # Alert the main process of the error
             self._server_event.set()
 
@@ -441,7 +455,7 @@ class AlgoComponent(footprints.FootprintBase):
         """Last chance to say something before execution."""
         pass
 
-    def spawn(self, args, opts):
+    def spawn(self, args, opts, stdin=None):
         """
         Spawn in the current system the command as defined in raw ``args``.
 
@@ -452,9 +466,9 @@ class AlgoComponent(footprints.FootprintBase):
         sh = self.system
 
         if self.env.true('vortex_debug_env'):
-            sh.subtitle('{0:s} : dump environment (os bound: {1:s})'.format(
+            sh.subtitle('{0:s} : dump environment (os bound: {1!s})'.format(
                 self.realkind,
-                str(self.env.osbound())
+                self.env.osbound()
             ))
             self.env.osdump()
 
@@ -468,7 +482,7 @@ class AlgoComponent(footprints.FootprintBase):
         self.spawn_hook()
         self.target.spawn_hook(sh)
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
-        sh.spawn(args, output=False, fatal=opts.get('fatal', True))
+        sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
 
         # On-the-fly coprocessing cleaning
         if p_io:
@@ -482,6 +496,22 @@ class AlgoComponent(footprints.FootprintBase):
         """Split the shell command line of the resource to be run."""
         opts = self.spawn_command_options()
         return shlex.split(rh.resource.command_line(**opts))
+
+    def spawn_stdin_options(self):
+        """Prepare options for the resource's stdin generator."""
+        return dict()
+
+    def spawn_stdin(self, rh):
+        """Generate the stdin File-Like object of the resource to be run."""
+        opts = self.spawn_stdin_options()
+        stdin_text = rh.resource.stdin_text(**opts)
+        if stdin_text is not None:
+            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd())
+            tmpfh.write(stdin_text)
+            tmpfh.seek(0)
+            return tmpfh
+        else:
+            return None
 
     def execute_single(self, rh, opts):
         """Abstract method.
@@ -596,11 +626,11 @@ class AlgoComponent(footprints.FootprintBase):
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
+        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
         for subobj in ( 'kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:s}: {2:s}'.format(tab, subobj, str(obj))
+                print('{0}  {1:s}: {2!s}'.format(tab, subobj, obj))
         print
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
@@ -697,22 +727,22 @@ class TaylorRun(AlgoComponent):
         self._boss = None
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
-        return dict(kind=self.kind, )
+        """Create a common instruction dictionary that will be used by the workers."""
+        return dict(kind=self.kind, taskdebug=self.verbose)
 
     def _default_pre_execute(self, rh, opts):
-        '''Various initialisations. In particular it creates the task scheduler (Boss).'''
+        """Various initialisations. In particular it creates the task scheduler (Boss)."""
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
-                          scheduler=MaxThreadsScheduler(max_threads=self.ntasks))
+                          scheduler=footprints.proxy.scheduler(limit='threads', max_threads=self.ntasks))
         self._boss.make_them_work()
 
     def _add_instructions(self, common_i, individual_i):
-        '''Give a new set of instructions to the Boss.'''
+        """Give a new set of instructions to the Boss."""
         self._boss.set_instructions(common_i, individual_i)
 
     def _default_post_execute(self, rh, opts):
-        '''Summarise the results of the various tasks that were run.'''
+        """Summarise the results of the various tasks that were run."""
         logger.info("All the input files were dealt with: now waiting for the parallel processing to finish")
         self._boss.wait_till_finished()
         logger.info("The parallel processing has finished. here are the results:")
@@ -726,7 +756,7 @@ class TaylorRun(AlgoComponent):
             self._default_rc_action(rh, opts, r, rc)
 
     def _default_rc_action(self, rh, opts, report, rc):
-        '''How should we process the return code ?'''
+        """How should we process the return code ?"""
         if not rc:
             logger.warning("Apparently something went sideways with this task (rc=%s).",
                            str(rc))
@@ -738,7 +768,7 @@ class TaylorRun(AlgoComponent):
         A usual sequence is::
 
             self._default_pre_execute(rh, opts)
-            common_i = _default_common_instructions(rh, opts)
+            common_i = self._default_common_instructions(rh, opts)
             # Update the common instructions
             common_i.update(dict(someattribute='Toto', ))
 
@@ -763,7 +793,7 @@ class Expresso(ExecutableAlgoComponent):
         attr = dict(
             interpreter = dict(
                 info   = 'The interpreter needed to run the script.',
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = ['exec', 'launch']
@@ -783,11 +813,16 @@ class Expresso(ExecutableAlgoComponent):
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
-        args = [self.interpreter, ]
+        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
+        args = [actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
-        logger.debug('Run script %s', args)
-        self.spawn(args, opts)
+        logger.info('Run script %s', args)
+        rh_stdin = self.spawn_stdin(rh)
+        if rh_stdin is not None:
+            logger.info('Script stdin:\n%s', rh_stdin.read())
+            rh_stdin.seek(0)
+        self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaExpresso(TaylorRun):
@@ -822,7 +857,7 @@ class ParaExpresso(TaylorRun):
         return rh is not None
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
         ddict['progname'] = self.interpreter
         ddict['progargs'] = footprints.FPList([self.absexcutable(rh.container.localpath()), ] +
@@ -853,8 +888,13 @@ class BlindRun(xExecutableAlgoComponent):
 
         args = [self.absexcutable(rh.container.localpath())]
         args.extend(self.spawn_command_line(rh))
-        logger.debug('BlindRun executable resource %s', args)
-        self.spawn(args, opts)
+        logger.info('BlindRun executable resource %s', args)
+        rh_stdin = self.spawn_stdin(rh)
+        if rh_stdin is not None:
+            logger.info('BlindRun executable stdin (file: %s, fileno:%d):\n%s',
+                        rh_stdin.name, rh_stdin.fileno(), rh_stdin.read())
+            rh_stdin.seek(0)
+        self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaBlindRun(TaylorRun):
@@ -903,7 +943,7 @@ class ParaBlindRun(TaylorRun):
         return rc
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaBlindRun, self)._default_common_instructions(rh, opts)
         ddict['progname'] = self.absexcutable(rh.container.localpath())
         ddict['progargs'] = footprints.FPList(self.spawn_command_line(rh))
@@ -1060,7 +1100,7 @@ class Parallel(xExecutableAlgoComponent):
 
             # Check mpiopts shape
             u_mpiopts = opts.get('mpiopts', dict())
-            for k, v in u_mpiopts.iteritems():
+            for k, v in u_mpiopts.items():
                 if not isinstance(v, collections.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
@@ -1073,7 +1113,7 @@ class Parallel(xExecutableAlgoComponent):
                                                        nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
                                                        ** mpi_desc))
                 # Reshape mpiopts
-                bins[i].options = {k: v[i] for k, v in u_mpiopts.iteritems()}
+                bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
                 bins[i].master  = self.absexcutable(r.container.localpath())
 
         # Nothing to do: binary descriptions are provided by the user

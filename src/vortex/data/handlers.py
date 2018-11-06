@@ -1,16 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
 import re
+import six
 import sys
 import functools
 
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 
@@ -18,6 +17,11 @@ from vortex.tools  import net
 from vortex.util   import config, structs
 from vortex.layout import contexts, dataflow
 from vortex.data   import containers, resources, providers
+
+#: No automatic export
+__all__ = []
+
+logger = footprints.loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -78,7 +82,7 @@ class Handler(object):
                 pass
 
     def __str__(self):
-        return str(self.__dict__)
+        return six.text_type(self.__dict__)
 
     def _get_resource(self):
         """Getter for ``resource`` property."""
@@ -193,6 +197,10 @@ class Handler(object):
         """Notify that a hook function has been executed."""
         self._observer.notify_upd(self, dict(stage = stage, hook = hookname))
 
+    def _notifyclear(self):
+        """Notify that the hashkey has changed."""
+        self._observer.notify_upd(self, dict(clear=True, ))
+
     def _notifyhash(self, oldhash):
         """Notify that the hashkey has changed."""
         self._observer.notify_upd(self, dict(oldhash = oldhash, ))
@@ -305,12 +313,12 @@ class Handler(object):
     def quickview(self, nb=0, indent=0):
         """Standard glance to objects."""
         tab = '  ' * indent
-        print '{0}{1:02d}. {2:s}'.format(tab, nb, repr(self))
-        print '{0}  Complete  : {1:s}'.format(tab, str(self.complete))
+        print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
+        print('{0}  Complete  : {1!s}'.format(tab, self.complete))
         for subobj in ('container', 'provider', 'resource'):
             obj = getattr(self, subobj, None)
             if obj:
-                print '{0}  {1:10s}: {2:s}'.format(tab, subobj.capitalize(), str(obj))
+                print('{0}  {1:10s}: {2!s}'.format(tab, subobj.capitalize(), obj))
 
     def wide_key_lookup(self, key, exports=False, fatal=True):
         """Return the *key* attribute if it exists in the provider or resource.
@@ -344,7 +352,7 @@ class Handler(object):
     def as_dict(self):
         """Produce a raw json-compatible dictionary."""
         rhd = dict(options=dict())
-        for k, v in self.options.iteritems():
+        for k, v in six.iteritems(self.options):
             try:
                 v = v.export_dict()
             except AttributeError:
@@ -396,10 +404,12 @@ class Handler(object):
                     mycontainer = footprints.proxy.container(shouldfly=True,
                                                              actualfmt=self.container.actualfmt)
                     try:
+                        tmp_options = self.mkopts(extras)
+                        tmp_options['obs_notify'] = False
                         rst = store.get(
                             self.uridata,
                             mycontainer.iotarget(),
-                            self.mkopts(extras)
+                            tmp_options
                         )
                         if rst:
                             if store.delayed:
@@ -441,6 +451,24 @@ class Handler(object):
                 logger.error('Could not find any store to locate %s', self.lasturl)
         else:
             logger.error('Could not locate an incomplete rh %s', self)
+        return rst
+
+    def prestage(self, **extras):
+        """Request the pre-staging of the remote resource."""
+        rst = None
+        if self.resource and self.provider:
+            store = self.store
+            if store:
+                logger.debug('Prestage resource %s at %s from %s', self, self.lasturl, store)
+                rst = store.prestage(
+                    self.uridata,
+                    self.mkopts(extras)
+                )
+                self.history.append(store.fullname(), 'prestage', rst)
+            else:
+                logger.error('Could not find any store to prestage %s', self.lasturl)
+        else:
+            logger.error('Could not prestage an incomplete rh %s', self)
         return rst
 
     def _generic_apply_hooks(self, action, **extras):
@@ -675,6 +703,7 @@ class Handler(object):
             logger.debug('Remove resource container %s', self.container)
             rst = self.container.clear()
             self.history.append(self.container.actualpath(), 'clear', rst)
+            self._notifyclear()
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',
@@ -692,7 +721,7 @@ class Handler(object):
                 pyopts  = py_opts,
                 promise = self.container.localpath(),
             ))
-        t.sh.chmod(pr_getter, 0555)
+        t.sh.chmod(pr_getter, 0o555)
         return pr_getter
 
     @property
@@ -764,5 +793,4 @@ class Handler(object):
 
     def strlast(self):
         """String formatted log of the last action."""
-        return ' '.join([str(x) for x in self.history.last])
-
+        return ' '.join([six.text_type(x) for x in self.history.last])

@@ -7,36 +7,41 @@ This module handles store objects in charge of physically accessing resources.
 Store objects use the :mod:`footprints` mechanism.
 """
 
-#: Export base class
-__all__ = ['Store']
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
 import copy
 import ftplib
 import re
+import six
 
 from bronx.stdtypes import date
 from bronx.system import hash as hashutils
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex import sessions
 from vortex.layout import dataflow
 from vortex.util import config
 from vortex.syntax.stdattrs import hashalgo, hashalgo_avail_list, compressionpipeline
-from vortex.tools import caches
+from vortex.tools import storage
 from vortex.tools import compression
 from vortex.tools import net
 from vortex.tools.systems import ExecutionError
-from vortex.tools.actions import actiond as ad
 from vortex.syntax.stdattrs import Namespace, FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
 
+#: Export base class
+__all__ = ['Store']
+
+logger = footprints.loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
 _CACHE_PUT_INTENT = 'in'
 _CACHE_GET_INTENT_DEFAULT = 'in'
+
+_ARCHIVE_PUT_INTENT = 'in'
+_ARCHIVE_GET_INTENT_DEFAULT = 'in'
 
 
 def observer_board(obsname=None):
@@ -65,7 +70,7 @@ class StoreGlue(object):
 
     def as_dump(self):
         """Return a nicely formated class name for dump in footprint."""
-        return str(self.gluemap)
+        return six.text_type(self.gluemap)
 
     def sections(self):
         """Returns a list of available glue section names. Mostly file archive names."""
@@ -113,8 +118,8 @@ class StoreGlue(object):
         """
         if item not in self._cross:
             self._cross[item] = dict()
-            for section, contents in self.as_dict().iteritems():
-                for option, desc in contents.iteritems():
+            for section, contents in six.iteritems(self.as_dict()):
+                for option, desc in six.iteritems(contents):
                     if item in desc:
                         if desc[item] not in self._cross[item]:
                             self._cross[item][desc[item]] = list()
@@ -230,7 +235,8 @@ class Store(footprints.FootprintBase):
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
-        if self.storetrack:
+        strack = options is None or options.get('obs_notify', True)
+        if self.storetrack and strack:
             infos = dict(action=action, status=rc, remote=remote)
             # Is a localpath provided ?
             if local is not None:
@@ -282,7 +288,7 @@ class Store(footprints.FootprintBase):
             rc = False
         else:
             rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
-            self._observer_notify('check', rc, remote)
+            self._observer_notify('check', rc, remote, options=options)
         return rc
 
     def locate(self, remote, options=None):
@@ -294,9 +300,48 @@ class Store(footprints.FootprintBase):
         else:
             return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
+    def list(self, remote, options=None):
+        """Proxy method to dedicated list method according to scheme."""
+        logger.debug('Store list %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return None
+        else:
+            return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
+
+    def prestage_advertise(self, remote, options=None):
+        """Use the Stores-Activity observer board to advertise the prestaging request.
+
+        Hopefully, something will register to the ober board in order to process
+        the request.
+        """
+        logger.debug('Store prestage through hub %s', remote)
+        infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
+        if infos_cb:
+            infodict = infos_cb(remote, options)
+            infodict.setdefault('issuerkind', self.realkind)
+            infodict.setdefault('scheme', self.scheme)
+            if options and 'priority' in options:
+                infodict['priority'] = options['priority']
+            infodict['action'] = 'prestage_req'
+            self._observer.notify_upd(self, infodict)
+        else:
+            logger.info('Prestaging is not supported for scheme: %s', self.scheme)
+        return True
+
+    def prestage(self, remote, options=None):
+        """Proxy method to dedicated prestage method according to scheme."""
+        logger.debug('Store prestage %s', remote)
+        if options is not None and options.get('incache', False) and not self.use_cache():
+            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+            return True
+        else:
+            return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
+
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
         options = options.copy() if options is not None else dict()
+        options['obs_notify'] = False
         options['fmt'] = 'ascii'
         options['intent'] = _CACHE_GET_INTENT_DEFAULT
         options['auto_tarextract'] = False
@@ -393,7 +438,7 @@ class Store(footprints.FootprintBase):
             rc = True
         else:
             rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
-            self._observer_notify('del', rc, remote)
+            self._observer_notify('del', rc, remote, options=options)
         return rc
 
 
@@ -523,6 +568,30 @@ class MultiStore(footprints.FootprintBase):
             if tmp_rloc:
                 rloc.append(tmp_rloc)
         return ';'.join(rloc)
+
+    def list(self, remote, options=None):
+        """Go through internal opened stores and list the expected resource for each of them."""
+        logger.debug('Multistore list %s', remote)
+        rlist = set()
+        for sto in self.openedstores:
+            logger.debug('Multistore list at %s', sto)
+            tmp_rloc = sto.list(remote.copy(), options)
+            if isinstance(tmp_rloc, (list, tuple, set)):
+                rlist.update(tmp_rloc)
+            elif tmp_rloc is True:
+                return True
+        return sorted(rlist)
+
+    def prestage(self, remote, options=None):
+        """Go through internal opened stores and prestage the resource for each of them."""
+        logger.debug('Multistore prestage %s', remote)
+        if not self.openedstores:
+            return False
+        rc = True
+        for sto in self.openedstores:
+            logger.debug('Multistore prestage at %s', sto)
+            rc = rc and sto.prestage(remote.copy(), options)
+        return rc
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
@@ -750,7 +819,7 @@ class Finder(Store):
     )
 
     def __init__(self, *args, **kw):
-        logger.debug('Abstract store init %s', self.__class__)
+        logger.debug('Finder store init %s', self.__class__)
         super(Finder, self).__init__(*args, **kw)
 
     @property
@@ -769,7 +838,7 @@ class Finder(Store):
             return remote['path']
 
     def _localtarfix(self, local):
-        if (isinstance(local, basestring) and self.system.path.isfile(local) and
+        if (isinstance(local, six.string_types) and self.system.path.isfile(local) and
                 self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
             self.system.smartuntar(local, destdir, output=False)
@@ -879,6 +948,9 @@ class Finder(Store):
     def ftpput(self, local, remote, options):
         """Delegates to ``system`` the file transfer of ``local`` to ``remote``."""
         rpath = self.fullpath(remote)
+        put_opts = dict()
+        put_opts['fmt'] = options.get('fmt')
+        put_opts['sync'] = options.get('enforcesync', False)
         logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
         rc = self.system.smartftput(
             local,
@@ -886,7 +958,7 @@ class Finder(Store):
             # ftp control
             hostname = self.hostname(),
             logname  = remote['username'],
-            fmt      = options.get('fmt'),
+            ** put_opts
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)
 
@@ -908,6 +980,8 @@ class Finder(Store):
 class ArchiveStore(Store):
     """Generic Archive Store."""
 
+    _archives_object_stack = set()
+
     _abstract = True
     _footprint = [
         compressionpipeline,
@@ -915,7 +989,7 @@ class ArchiveStore(Store):
             info = 'Generic archive store',
             attr = dict(
                 scheme = dict(
-                    values   = ['ftp', 'ftserv'],
+                    values   = ['inarchive', ],
                 ),
                 netloc = dict(
                     values   = ['open.archive.fr'],
@@ -926,6 +1000,9 @@ class ArchiveStore(Store):
                 storage = dict(
                     optional = True,
                     default  = None,
+                ),
+                storetube = dict(
+                    optional = True,
                 ),
                 storeroot = dict(
                     optional = True,
@@ -953,109 +1030,107 @@ class ArchiveStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
         super(ArchiveStore, self).__init__(*args, **kw)
+        del self.archive
 
     @property
     def realkind(self):
         return 'archivestore'
 
     def _str_more(self):
-        return 'hostname={:s}'.format(self.hostname())
+        return 'archive={!r}'.format(self.archive)
 
-    def hostname(self):
-        """Returns the current :attr:`storage` or the value from the configuration file."""
-        if self.storage is None:
-            return self.system.env.get('VORTEX_DEFAULT_STORAGE',
-                                       self.system.default_target.get('stores:storage', 'hendrix.meteo.fr'))
-        else:
-            return self.storage
+    @property
+    def underlying_archive_kind(self):
+        return 'std'
 
-    def _ftpformatpath(self, remote):
+    def _get_archive(self):
+        """Create a new Archive object only if needed."""
+        if not self._archive:
+            self._archive = footprints.proxy.archives.default(
+                kind = self.underlying_archive_kind,
+                storage = self.storage if self.storage else 'generic',
+                tube = self.storetube,
+                readonly = self.readonly,
+            )
+            self._archives_object_stack.add(self._archive)
+        return self._archive
+
+    def _set_archive(self, newarchive):
+        """Set a new archive reference."""
+        if isinstance(newarchive, storage.Archive):
+            self._archive = newarchive
+
+    def _del_archive(self):
+        """Invalidate internal archive reference."""
+        self._archive = None
+
+    archive = property(_get_archive, _set_archive, _del_archive)
+
+    def _inarchiveformatpath(self, remote):
         formatted = self.system.path.join(
             remote.get('root', self.storeroot),
             remote['path'].lstrip(self.system.path.sep)
         )
-        if self._actual_cpipeline is not None:
-            formatted += self._actual_cpipeline.suffix
         return formatted
 
-    def ftpcheck(self, remote, options):
-        """Delegates to ``system.ftp`` a distant check."""
-        rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            try:
-                rc = ftp.size(self._ftpformatpath(remote))
-            except (ValueError, TypeError, ftplib.all_errors):
-                pass
-            finally:
-                ftp.close()
-        return rc
+    def inarchivecheck(self, remote, options):
+        return self.archive.check(self._inarchiveformatpath(remote),
+                                  username = remote.get('username', None),
+                                  compressionpipeline = self._actual_cpipeline)
 
-    def ftplocate(self, remote, options):
-        """Delegates to ``system.ftp`` the path evaluation."""
-        rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
-        if ftp:
-            rc = ftp.netpath(self._ftpformatpath(remote))
-            ftp.close()
-        return rc
+    def inarchivelocate(self, remote, options):
+        return self.archive.fullpath(self._inarchiveformatpath(remote),
+                                     username = remote.get('username', None),
+                                     compressionpipeline = self._actual_cpipeline)
 
-    def ftpget(self, remote, local, options):
-        """Delegates to ``system.ftp`` the get action."""
-        rpath = self._ftpformatpath(remote)
-        logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
-        rc = self.system.smartftget(
-            rpath, local,
-            # ftp control
-            hostname  = self.hostname(),
-            logname   = remote['username'],
-            cpipeline = self._actual_cpipeline,
-            fmt       = options.get('fmt'),
+    def inarchivelist(self, remote, options):
+        """Use the archive object to list available files."""
+        return self.archive.list(self._inarchiveformatpath(remote),
+                                 username = remote.get('username', None))
+
+    def inarchiveprestageinfo(self, remote, options):
+        """Returns the prestaging informations"""
+        return self.archive.prestageinfo(self._inarchiveformatpath(remote),
+                                         username = remote.get('username', None),
+                                         compressionpipeline = self._actual_cpipeline)
+
+    def inarchiveget(self, remote, local, options):
+        logger.info('inarchiveget on %s://%s/%s (to: %s)',
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.retrieve(
+            self._inarchiveformatpath(remote), local,
+            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
         )
-        return rc and self._hash_get_check(self.ftpget, remote, local, options)
+        return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
-    def ftpput(self, local, remote, options):
-        """Delegates to ``system.ftp`` the put action."""
-        put_sync = options.get('synchro', not options.get('delayed', not self.storesync))
-        put_opts = dict(
-            hostname  = self.hostname(),
-            logname   = remote['username'],
-            cpipeline = self._actual_cpipeline,
-            fmt       = options.get('fmt'),
+    def inarchiveput(self, local, remote, options):
+        logger.info('inarchiveput to %s://%s/%s (from: %s)',
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.insert(
+            self._inarchiveformatpath(remote), local,
+            intent = _ARCHIVE_PUT_INTENT,
+            fmt = options.get('fmt', 'foo'),
+            info = options.get('rhandler'),
+            logname = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
+            sync = options.get('synchro', not options.get('delayed', not self.storesync)),
+            enforcesync = options.get('enforcesync', False),
         )
-        rpath = self._ftpformatpath(remote)
-        if put_sync:
-            logger.info('ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-            rc = self.system.smartftput(local, rpath, **put_opts)
-        else:
-            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.hostname(), rpath, local)
-            tempo = footprints.proxy.service(kind='hiddencache', asfmt=put_opts['fmt'])
-            put_opts.update(
-                todo        = 'ftput',
-                rhandler    = options.get('rhandler', None),
-                source      = tempo(local),
-                destination = rpath,
-                original    = self.system.path.abspath(local),
-                cpipeline   = ('' if self._actual_cpipeline is None
-                               else self._actual_cpipeline.description_string)
-            )
-            rc = ad.jeeves(**put_opts)
-        return rc and self._hash_put(self.ftpput, local, remote, options)
+        return rc and self._hash_put(self.inarchiveput, local, remote, options)
 
-    def ftpdelete(self, remote, options):
-        """Delegates to ``system`` a distant remove."""
-        rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            if self.ftpcheck(remote, options=options):
-                rpath = self._ftpformatpath(remote)
-                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), rpath)
-                rc = ftp.delete(rpath)
-                ftp.close()
-            else:
-                logger.error('Try to remove a non-existing resource <%s>',
-                             self._ftpformatpath(remote))
-        return rc
+    def inarchivedelete(self, remote, options):
+        logger.info('inarchivedelete on %s://%s/%s',
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote))
+        return self.archive.delete(
+            self._inarchiveformatpath(remote),
+            fmt  = options.get('fmt', 'foo'),
+            info = options.get('rhandler', None),
+            username = remote['username'],
+        )
 
 
 class ConfigurableArchiveStore(object):
@@ -1101,7 +1176,7 @@ class ConfigurableArchiveStore(object):
         # Global configuration file
         logger.info("Reading config file: %s", self._store_global_config)
         maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-        conf['host'] = dict(maincfg.items(self.hostname()))
+        conf['host'] = dict(maincfg.items(self.archive.actual_storage))
 
         # Look for a local configuration file
         localcfg = conf['host'].get('localconf', None)
@@ -1115,7 +1190,7 @@ class ConfigurableArchiveStore(object):
                 conf['locations'][section] = dict(localcfg.items(section))
 
         # Look for remote configurations
-        remotecfgs = sorted([key for key in conf['host'].iterkeys()
+        remotecfgs = sorted([key for key in conf['host'].keys()
                              if key.startswith('remoteconf')])
         for remotecfg in [conf['host'][k] for k in remotecfgs]:
             logger.info("Reading config file: %s", remotecfg)
@@ -1158,7 +1233,7 @@ class ConfigurableArchiveStore(object):
         method
         """
         ds = sessions.current().datastore
-        conf = ds.get(self._datastore_id, dict(storage=self.hostname()),
+        conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
                       default_payload=dict(), readonly=True)
         if not conf:
             # If the configuration is empty, do what it takes...
@@ -1196,7 +1271,7 @@ class VortexArchiveStore(ArchiveStore):
         info = 'VORTEX archive access',
         attr = dict(
             scheme = dict(
-                values   = ['vortex', 'ftp', 'ftserv'],
+                values   = ['vortex'],
             ),
             netloc = dict(
                 values   = ['vortex.archive.fr'],
@@ -1216,6 +1291,15 @@ class VortexArchiveStore(ArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         pass
 
+    def remap_list(self, remote, options):
+        """Reformulates the remote path to compatible vortex namespace."""
+        if len(remote['path'].split('/')) >= 4:
+            return self.remap_read(remote, options)
+        else:
+            logger.critical('The << %s >> path is not listable.', remote['path'])
+            return None
+        return remote
+
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
         if 'root' not in remote:
@@ -1226,17 +1310,30 @@ class VortexArchiveStore(ArchiveStore):
     def vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
         remote = self.remap_read(remote, options)
-        return self.ftpcheck(remote, options)
+        return self.inarchivecheck(remote, options)
 
     def vortexlocate(self, remote, options):
         """Remap and ftplocate sequence."""
         remote = self.remap_read(remote, options)
-        return self.ftplocate(remote, options)
+        return self.inarchivelocate(remote, options)
+
+    def vortexlist(self, remote, options):
+        """Remap and ftplist sequence."""
+        remote = self.remap_list(remote, options)
+        if remote:
+            return self.inarchivelist(remote, options)
+        else:
+            return None
+
+    def vortexprestageinfo(self, remote, options):
+        """Remap and ftpprestageinfo sequence."""
+        remote = self.remap_read(remote, options)
+        return self.inarchiveprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self.remap_read(remote, options)
-        return self.ftpget(remote, local, options)
+        return self.inarchiveget(remote, local, options)
 
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
@@ -1244,12 +1341,12 @@ class VortexArchiveStore(ArchiveStore):
             logger.info("put deactivated for %s", str(local))
             return True
         remote = self.remap_write(remote, options)
-        return self.ftpput(local, remote, options)
+        return self.inarchiveput(local, remote, options)
 
     def vortexdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
         remote = self.remap_write(remote, options)
-        return self.ftpdelete(remote, options)
+        return self.inarchivedelete(remote, options)
 
 
 class VortexStdArchiveStore(VortexArchiveStore):
@@ -1333,11 +1430,13 @@ class VortexOpArchiveStore(VortexArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        vxdate = list(xpath[4])
-        vxdate.insert(4, '/')
-        vxdate.insert(7, '/')
-        vxdate.insert(10, '/')
-        xpath[4] = ''.join(vxdate)
+        if len(xpath) >= 5 and re.match('^\d{8}T\d{2,4}', xpath[4]):
+            # If a date is detected
+            vxdate = list(xpath[4])
+            vxdate.insert(4, '/')
+            vxdate.insert(7, '/')
+            vxdate.insert(10, '/')
+            xpath[4] = ''.join(vxdate)
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
@@ -1433,7 +1532,7 @@ class CacheStore(Store):
 
     def _set_cache(self, newcache):
         """Set a new cache reference."""
-        if isinstance(newcache, caches.Cache):
+        if isinstance(newcache, storage.Cache):
             self._cache = newcache
 
     def _del_cache(self):
@@ -1447,15 +1546,22 @@ class CacheStore(Store):
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
-        try:
-            st = self.system.stat(self.incachelocate(remote, options))
-        except OSError:
-            st = None
+        st = self.cache.check(remote['path'])
+        if options.get('isfile', False) and st:
+            st = self.system.path.isfile(self.incachelocate(remote, options))
         return st
 
     def incachelocate(self, remote, options):
         """Agregates cache to remote subpath."""
         return self.cache.fullpath(remote['path'])
+
+    def incachelist(self, remote, options):
+        """List the content of a remote path."""
+        return self.cache.list(remote['path'])
+
+    def incacheprestageinfo(self, remote, options):
+        """Returns pre-staging informations."""
+        return self.cache.prestageinfo(remote['path'])
 
     def incacheget(self, remote, local, options):
         """Simple copy from current cache cache to ``local``."""
@@ -1537,6 +1643,14 @@ class _VortexCacheBaseStore(CacheStore):
         """Proxy to :meth:`incachelocate`."""
         return self.incachelocate(remote, options)
 
+    def vortexlist(self, remote, options):
+        """Proxy to :meth:`incachelocate`."""
+        return self.incachelist(remote, options)
+
+    def vortexprestageinfo(self, remote, options):
+        """Proxy to :meth:`incacheprestageinfo`."""
+        return self.incacheprestageinfo(remote, options)
+
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""
         return self.incacheget(remote, local, options)
@@ -1615,7 +1729,7 @@ class VortexVsopCacheStore(MultiStore):
     )
 
     def alternates_netloc(self):
-        '''For Non-Op users, Op caches may be accessed in read-only mode.'''
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
         todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):
@@ -1670,6 +1784,7 @@ class PromiseCacheStore(VortexCacheMtStore):
         else:
             options_upd = dict()
         options_upd['fmt'] = 'ascii'  # Promises are always JSON files
+        options_upd['intent'] = 'in'  # Promises are always read-only
         return options_upd
 
     def vortexget(self, remote, local, options):
@@ -1796,7 +1911,15 @@ class PromiseStore(footprints.FootprintBase):
             options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
-        rc = self.promise.get(remote.copy(), local, options)
+        try:
+            rc = self.promise.get(remote.copy(), local, options)
+        except (IOError, OSError) as e:
+            # If something goes wrong, assume that the promise file had been
+            # deleted during the execution of self.promise.get (which can cause
+            # IOError or OSError to be raised).
+            logger.info('An error occured while fetching the promise file: %s', str(e))
+            logger.info('Assuming this is a negative result...')
+            rc = False
         if rc:
             self.delayed = True
         else:

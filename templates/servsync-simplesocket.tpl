@@ -1,6 +1,6 @@
 #!$python
 
-from __future__ import print_function                  
+from __future__ import print_function, absolute_import, unicode_literals, division                  
 import socket, time, sys, os
 
 file = os.path.realpath(__file__)
@@ -26,12 +26,12 @@ while True:
         print("Retry...")
 
 mess = client.recv(255)
-client.send("OK")
+client.send(b'OK')
 client.close()
 
-if mess == "STEP":
-    sys.exit (0)
-elif mess == "STOP":
+if mess == b'STEP':
+    sys.exit(0)
+elif mess == b'STOP':
     os.unlink(file)
     sys.exit(0)
 else:

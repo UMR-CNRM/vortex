@@ -6,18 +6,21 @@ This package handles targets computers objects that could in charge of
 hosting a specific execution. Target objects use the :mod:`footprints` mechanism.
 """
 
-#: No automatic export
-__all__ = []
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
 import re
 import platform
 
 import footprints as fp
-logger = fp.loggers.getLogger(__name__)
 
 from vortex.util.config import GenericConfigParser
 from vortex import sessions
+
+#: No automatic export
+__all__ = []
+
+logger = fp.loggers.getLogger(__name__)
 
 
 class Target(fp.FootprintBase):

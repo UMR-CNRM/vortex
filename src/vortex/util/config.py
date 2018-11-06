@@ -5,9 +5,13 @@
 Configuration management through ini files.
 """
 
-from ConfigParser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
+from __future__ import print_function, absolute_import, division, unicode_literals
+
+import io
+import itertools
 import re
 import six
+from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
@@ -21,11 +25,18 @@ logger = footprints.loggers.getLogger(__name__)
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
+_RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
 
-def load_template(t, tplfile):
+
+def load_template(t, tplfile, encoding=None):
     """
     Load a template according to filename provided, either absolute or relative path.
     The first argument ``t`` should be a valid ticket session.
+
+    :param str encoding: Specify an encoding in order to get a properly decoded
+                         unicode string.
+                         If "script", the encoding is read in the
+                         file if it is present, set to None else.
     """
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
@@ -46,8 +57,27 @@ def load_template(t, tplfile):
                 raise ValueError('Template file not found: <{}>'.format(tplfile))
     try:
         import string
-        with open(tplfile, 'r') as tplfd:
-            tpl = string.Template(tplfd.read())
+        # Treat the case encoding = "script"
+        if encoding == "script":
+            actual_encoding = None
+            # To determine the encoding, open the file with the default encoding
+            # (ignoring decoding errors) and look for the 'coding' comment
+            with io.open(tplfile, 'r', errors='replace') as tpfld_tmp:
+                # Only inspect the fist 5 lines (in theory the fist two line would be enough)
+                for iencoding, line in enumerate(itertools.islice(tpfld_tmp, 5)):
+                    encoding_match = _RE_ENCODING.match(line)
+                    if encoding_match:
+                        actual_encoding = encoding_match.group(1)
+                        break
+        else:
+            actual_encoding = encoding
+        # Read the template and delete the encoding line if present
+        with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
+            if encoding == "script" and actual_encoding is not None:
+                tpl = string.Template("".join([l for (i, l) in enumerate(tpfld)
+                                               if i != iencoding]))
+            else:
+                tpl = string.Template(tpfld.read())
         tpl.srcfile = tplfile
     except Exception as pb:
         logger.error('Could not read template <%s>', str(pb))
@@ -79,12 +109,14 @@ class GenericReadOnlyConfigParser(object):
 
     _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
-    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
+    def __init__(self, inifile=None, parser=None, mkforce=False,
+                 clsparser=SafeConfigParser, encoding=None):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
+        self.defaultencoding = encoding
         if inifile:
-            self.setfile(inifile)
+            self.setfile(inifile, encoding=None)
         else:
             self.file = None
 
@@ -97,7 +129,7 @@ class GenericReadOnlyConfigParser(object):
         """Return a nicely formated class name for dump in footprint."""
         return 'file={!s}'.format(self.file)
 
-    def setfile(self, inifile):
+    def setfile(self, inifile, encoding=None):
         """Read the specified **inifile** as new configuration.
 
         **inifile** may be:
@@ -129,10 +161,12 @@ class GenericReadOnlyConfigParser(object):
         """
         if self.parser is None:
             self.parser = self.clsparser()
+        if encoding is None:
+            encoding = self.defaultencoding
         self.file = None
         filestack = list()
         local = sessions.system()
-        if not isinstance(inifile, basestring):
+        if not isinstance(inifile, six.string_types):
             # Assume it's an IO descriptor
             inifile.seek(0)
             self.parser.readfp(inifile)
@@ -147,7 +181,7 @@ class GenericReadOnlyConfigParser(object):
                     raise ValueError('Configuration file ' + inifile + ' not found')
             else:
                 autofile = autofile.group(1)
-                glove = sessions.getglove()
+                glove = sessions.current().glove
                 sitefile = glove.siteconf + '/' + autofile
                 persofile = glove.configrc + '/' + autofile
                 if local.path.exists(sitefile):
@@ -162,7 +196,9 @@ class GenericReadOnlyConfigParser(object):
                     else:
                         raise ValueError('Configuration file ' + inifile + ' not found')
             self.file = ",".join(filestack)
-            self.parser.read(filestack)
+            for a_file in filestack:
+                with io.open(a_file, 'r', encoding=encoding) as a_fh:
+                    self.parser.readfp(a_fh)
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -184,7 +220,8 @@ class GenericReadOnlyConfigParser(object):
                                               'has_section', 'has_option'):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
 
     def footprint_export(self):
         return self.file
@@ -319,7 +356,8 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
         if attr in ('defaults', ):
             return getattr(self.parser, attr)
         else:
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -347,20 +385,21 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
         documentation for more details.
     """
 
-    def __init__(self, inifile=None, parser=None, mkforce=False, clsparser=SafeConfigParser):
-        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser)
+    def __init__(self, inifile=None, parser=None, mkforce=False,
+                 clsparser=SafeConfigParser, encoding=None):
+        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser, encoding)
         self.updates = list()
 
     def setall(self, kw):
         """Define in all sections the couples of ( key, values ) given as dictionary argument."""
         self.updates.append(kw)
         for section in self.sections():
-            for key, value in kw.iteritems():
-                self.set(section, key, str(value))
+            for key, value in six.iteritems(kw):
+                self.set(section, key, six.text_type(value))
 
     def save(self):
         """Write the current state of the configuration in the inital file."""
-        with open(self.file.split(",").pop(), 'wb') as configfile:
+        with io.open(self.file.split(",").pop(), 'wb') as configfile:
             self.write(configfile)
 
     @property
@@ -375,7 +414,8 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     def __getattr__(self, attr):
         # Give access to all of the parser's methods
         if attr.startswith('__'):
-            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" + str(attr) + "'")
+            raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
+                                 six.text_type(attr) + "'")
         return getattr(self.parser, attr)
 
 
@@ -472,6 +512,16 @@ class AppConfigStringDecoder(StringDecoder):
 
     def _build_rangex(self, value, remap, subs):
         """Build a dictionary from the **value** string."""
+        # Try to read names arguments
+        try:
+            values = self._sparser(value, itemsep=' ', keysep=':')
+            if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
+                    for k in values.keys()]):
+                return rangex(** {k: self._value_expand(v, remap, subs)
+                                  for k, v in values.items()})
+        except StringDecoderSyntaxError:
+            pass
+        # The usual case...
         return rangex([self._value_expand(v, remap, subs)
                        for v in self._sparser(value, itemsep=',')])
 
@@ -611,7 +661,7 @@ class ConfigurationTable(IniConf):
                 try:
                     for k, v in d[item].items():
                         # Can occur in case of a redundant entry in the config file
-                        if isinstance(v, basestring) and v:
+                        if isinstance(v, six.text_type) and v:
                             if re.match('none$', v, re.IGNORECASE):
                                 d[item][k] = None
                             if re.search('[a-z]_[a-z]', v, re.IGNORECASE):
@@ -696,12 +746,12 @@ class TableItem(footprints.FootprintBase):
             for k in self.translator.get('ordered_dump', '').split(','):
                 if not mkshort or self.footprint_getattr(k) is not None:
                     output_stack.append((self.translator.get(k, k.replace('_', ' ').title()),
-                                         str(self.footprint_getattr(k)), k))
+                                         six.text_type(self.footprint_getattr(k)), k))
         else:
             for k in self.footprint_attributes:
                 if ((not mkshort or self.footprint_getattr(k) is not None) and
                         k != 'translator'):
-                    output_stack.append((k, str(self.footprint_getattr(k)), k))
+                    output_stack.append((k, six.text_type(self.footprint_getattr(k)), k))
         return output_stack
 
     def nice_str(self, mkshort=True):
@@ -710,7 +760,7 @@ class TableItem(footprints.FootprintBase):
         output_list = []
         if output_stack:
             max_keylen = max([len(i[0]) for i in output_stack])
-            print_fmt = '{0:' + str(max_keylen) + 's} : {1:s}'
+            print_fmt = '{0:' + six.text_type(max_keylen) + 's} : {1:s}'
             for item in output_stack:
                 output_list.append(print_fmt.format(* item))
         return '\n'.join(output_list)

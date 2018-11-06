@@ -2,7 +2,7 @@
 ==============================================================================================
 
 .. automodule:: gco.tools.diggers
-   :synopsis: Retrieve information on the availability of operational resources
+   :synopsis: Retrieve information on the availability of some resources
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -12,7 +12,17 @@
 Classes
 -------
 
+.. autoclass:: Digger
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: OpDigger
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NamDigger
    :show-inheritance:
    :members:
    :member-order: alphabetical

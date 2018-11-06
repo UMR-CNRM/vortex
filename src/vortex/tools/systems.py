@@ -22,11 +22,17 @@ When working with System objects, preferentialy use high-level methods such as
 
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+from collections import namedtuple
+import contextlib
+import errno
 import filecmp
 import glob
 import hashlib
 import io
 import json
+import locale
 import os
 import pickle
 import platform
@@ -35,24 +41,25 @@ import re
 import resource
 import shutil
 import signal
+import six
 import socket
 import stat
 import subprocess
 import sys
-import StringIO
 import tarfile
 import tempfile
+import threading
 import time
-import yaml
-from datetime import datetime
 
 import footprints
 from bronx.stdtypes import date
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
+from bronx.system.memory import LinuxMemInfo
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp, AssistedSsh, LinuxNetstats
+from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
 from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.util.structs import History
@@ -63,6 +70,11 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
+# Optional, non-standard packages
+yaml_checker = ExternalCodeImportChecker('yaml')
+with yaml_checker as ec_register:
+    import yaml
+
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'none', re.IGNORECASE)
 
@@ -72,6 +84,8 @@ istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
 #: Pre-compiled regex to check a boolean false str value
 isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
 
+#: Global lock to protect temporary locale changes
+LOCALE_LOCK = threading.Lock()
 
 _fmtshcmd_docbonus = """
 
@@ -81,6 +95,16 @@ _fmtshcmd_docbonus = """
         value of the **ftm** attribute), it will be executed instead of the
         present one).
 """
+
+
+# Constant items
+
+#: Definition of a named tuple ftpflavour
+FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'],
+                             verbose=False)
+
+#: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
+FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
 
 
 @nicedeco_plusdoc(_fmtshcmd_docbonus)
@@ -94,7 +118,7 @@ def fmtshcmd(func):
     """
     def formatted_method(self, *args, **kw):
         fmt = kw.pop('fmt', None)
-        fmtcall = getattr(self, str(fmt).lower() + '_' + func.func_name, func)
+        fmtcall = getattr(self, str(fmt).lower() + '_' + func.__name__, func)
         if getattr(fmtcall, 'func_extern', False):
             return fmtcall(*args, **kw)
         else:
@@ -129,24 +153,65 @@ class CdContext(object):
     Context manager for temporarily changing the working directory.
 
     Returns to the initial directory, even when an exception is raised.
-    Has the syntax of system.cd, and can be used through system::
+    Has the syntax of the :meth:`~OSExtended.cd` call, and can be used through an :class:`OSExtended` object::
 
         with sh.cdcontext(newpath, create=True):
             # work in newpath
         # back to the original path
     """
 
-    def __init__(self, sh, newpath, create=False):
+    def __init__(self, sh, newpath, create=False, clean_onexit=False):
         self.sh = sh
         self.create = create
+        self.clean_onexit = clean_onexit
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
-        self.oldpath = self.sh.getcwd()
+        self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
         self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
         self.sh.cd(self.oldpath)
+        if self.clean_onexit:
+            self.sh.rm(self.newpath)
+
+
+def setlocale(category, localename=None):
+    """Older Python2 insist on localename being an str and not unicode.
+
+    This was fixed somewhere between Python 2.7.5 and 2.7.12
+    and should be removed some day.
+    """
+    if localename:
+        return locale.setlocale(category, str(localename))
+    return locale.setlocale(category)
+
+
+@contextlib.contextmanager
+def NullContext():
+    """A context that does nothing, but with a context's semantic."""
+    yield
+
+
+@contextlib.contextmanager
+def LocaleContext(category, localename=None, uselock=False):
+    """Context used to locally change the Locale.
+
+    This is used like the :func:`~locale.setlocale` function::
+
+        with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8'):
+            strtime = date.now().strftime('%X')
+
+    The ``locale`` is changed at the process level ; to avoid conflicting changes
+    in a multithread context, use *with care* the additional ``uselock`` argument.
+    """
+    lock = LOCALE_LOCK if uselock else NullContext()
+    with lock:
+        previous = setlocale(category)
+        try:
+            yield setlocale(category, localename)
+        finally:
+            locale.setlocale(category, previous)
 
 
 class System(footprints.FootprintBase):
@@ -260,10 +325,10 @@ class System(footprints.FootprintBase):
         self.__dict__['_xtrack'] = dict()
         self.__dict__['_history'] = History(tag='shell')
         self.__dict__['_rclast'] = 0
-        self.__dict__['prompt'] = kw.pop('prompt', '')
+        self.__dict__['prompt'] = six.text_type(kw.pop('prompt', ''))
         for flag in ('trace', 'timer'):
             self.__dict__[flag] = kw.pop(flag, False)
-        for flag in ('output',):
+        for flag in ('output', ):
             self.__dict__[flag] = kw.pop(flag, True)
         super(System, self).__init__(*args, **kw)
 
@@ -301,7 +366,7 @@ class System(footprints.FootprintBase):
         """Extend the current external attribute resolution to **obj** (module or object)."""
         if obj is not None:
             if hasattr(obj, 'kind'):
-                for k, v in self._xtrack.iteritems():
+                for k, v in six.iteritems(self._xtrack):
                     if hasattr(v, 'kind'):
                         if hasattr(self, k):
                             delattr(self, k)
@@ -322,7 +387,7 @@ class System(footprints.FootprintBase):
     def external(self, key):
         """Return effective module object reference if any, or *None*."""
         try:
-            z = getattr(self, key)  # @UnusedVariable
+            getattr(self, key)
         except AttributeError:
             pass
         return self._xtrack.get(key, None)
@@ -348,7 +413,8 @@ class System(footprints.FootprintBase):
                 self.stderr(*cmd)
                 return actualattr(*args, **kw)
 
-            osproxy.func_name = key
+            osproxy.func_name = str(key)
+            osproxy.__name__ = str(key)
             osproxy.func_doc = actualattr.__doc__
             osproxy.func_extern = True
             setattr(self, key, osproxy)
@@ -363,33 +429,42 @@ class System(footprints.FootprintBase):
             sys.stderr.write(
                 "* [{0:s}][{1:d}] {2:s}\n".format(
                     justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([str(x) for x in args])
+                    ' '.join([six.text_type(x) for x in args])
                 )
             )
 
+    @contextlib.contextmanager
+    def mute_stderr(self):
+        oldtrace = self.trace
+        self.trace = False
+        try:
+            yield
+        finally:
+            self.trace = oldtrace
+
     def echo(self, args):
         """Joined **args** are echoed."""
-        print '>>>', ' '.join(args)
+        print('>>>', ' '.join(args))
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
 
-        :param list|str testlist: A list of strings that contains the title's text
+        :param list|str textlist: A list of strings that contains the title's text
         :param str tchar: The character used to frame the title text
         :param int autolen: The title width
         """
-        if isinstance(textlist, basestring):
+        if isinstance(textlist, six.string_types):
             textlist = (textlist,)
         if autolen:
             nbc = autolen
         else:
             nbc = max([len(text) for text in textlist])
-        print
-        print tchar * (nbc + 4)
+        print()
+        print(tchar * (nbc + 4))
         for text in textlist:
-            print '{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc)
-        print tchar * (nbc + 4)
-        print ''
+            print('{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc))
+        print(tchar * (nbc + 4))
+        print()
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output.
@@ -402,10 +477,10 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = len(text)
-        print "\n", tchar * (nbc + 4)
+        print("\n", tchar * (nbc + 4))
         if text:
-            print '# {0:{size}s} #'.format(text, size=nbc)
-            print tchar * (nbc + 4)
+            print('# {0:{size}s} #'.format(text, size=nbc))
+            print(tchar * (nbc + 4))
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
         """Formated header output.
@@ -420,17 +495,17 @@ class System(footprints.FootprintBase):
             nbc = len(prompt + text) + 1
         else:
             nbc = 100
-        print "\n", tchar * nbc
+        print("\n", tchar * nbc)
         if text:
             if not prompt:
                 prompt = self.prompt
             if prompt:
-                prompt = str(prompt) + ' '
+                prompt = six.text_type(prompt) + ' '
             else:
                 prompt = ''
-            print prompt + text
+            print(prompt + six.text_type(text))
             if xline:
-                print tchar * nbc
+                print(tchar * nbc)
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
@@ -442,7 +517,7 @@ class System(footprints.FootprintBase):
         else:
             self.subtitle('Python PATH')
             for pypath in sys.path:
-                print pypath
+                print(pypath)
             return True
 
     @property
@@ -485,8 +560,8 @@ class System(footprints.FootprintBase):
             checklist.append((modname, modname in sys.modules))
         if not output:
             for m, s in checklist:
-                print str(s).ljust(8), m
-            print '--'
+                print(str(s).ljust(8), m)
+            print('--')
             return True
         else:
             return checklist
@@ -566,6 +641,9 @@ class OSExtended(System):
               (default: ftput).
             * **ftgetcmd** - The name of the raw FTP command for the "get" action
               (default: ftget).
+            * **ftpflavour** - The default Vortex's FTP client behaviour
+              (default: `FTP_FLAVOUR.CONNECTION_POOLS`). See the :meth:`ftp` method
+              for more details.
         """
         logger.debug('Abstract System init %s', self.__class__)
         self._rmtreemin = kw.pop('rmtreemin', 3)
@@ -574,6 +652,9 @@ class OSExtended(System):
         self.ftraw = kw.pop('ftraw', False)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
+        # FTP stuff again
+        self.ftpflavour = kw.pop('ftpflavour', FTP_FLAVOUR.CONNECTION_POOLS)
+        self._current_ftppool = None
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
@@ -581,7 +662,9 @@ class OSExtended(System):
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
         self.__dict__['_cpusinfo'] = None
+        self.__dict__['_memoryinfo'] = None
         self.__dict__['_netstatsinfo'] = None
+
         # Initialise the signal handler object
         self._signal_intercept_init()
 
@@ -659,7 +742,7 @@ class OSExtended(System):
         """Do its best to nicely shutdown the process started by **p**.
 
         :param subprocess.Popen p: The process to be shutdown
-        :param list ok: The shell return codes considered as successful
+        :param list[int] ok: The shell return codes considered as successful
             (if *None*, only 0 is considered successful)
         :return bool: Returns *True* if the process return code is within the
             **ok** list.
@@ -693,10 +776,10 @@ class OSExtended(System):
               taskset=None, taskset_id=0, taskset_bsize=1):
         """Subprocess call of **args**.
 
-        :param str|list args: The command (+ its command-line arguments) to be
+        :param str|list[str] args: The command (+ its command-line arguments) to be
             executed. When **shell** is *False* it should be a list. When **shell**
             is *True*, it should be a string.
-        :param list ok: The shell return codes considered as successful
+        :param list[int] ok: The shell return codes considered as successful
             (if *None*, only 0 is considered successful)
         :param bool shell: If *True*, the specified command will be executed
             through the system shell. (It is usually considered a security hazard:
@@ -744,6 +827,9 @@ class OSExtended(System):
         :note: When a signal is caught by the Python script, the TERM signal is
             sent to the spawned process and then the signal Exception is re-raised
             (the **fatal** argument has no effect on that).
+        :note: If **output** = True, the results is a Unicode string decoded
+            assuming the **locale.getpreferredencoding(False)**
+            encoding.
         """
         rc = False
         if ok is None:
@@ -752,7 +838,7 @@ class OSExtended(System):
             output = self.output
         if stdin is True:
             stdin = subprocess.PIPE
-        localenv = os.environ.copy()
+        localenv = self._os.environ.copy()
         if taskset is not None:
             taskset_def = taskset.split('_')
             taskset, taskset_cmd, taskset_env = self.cpus_affinity_get(taskset_id,
@@ -762,7 +848,7 @@ class OSExtended(System):
                 localenv.update(taskset_env)
             else:
                 logger.warning("CPU binding is not available on this platform")
-        if isinstance(args, basestring):
+        if isinstance(args, six.string_types):
             if taskset:
                 args = taskset_cmd + ' ' + args
             if self.timer:
@@ -780,15 +866,15 @@ class OSExtended(System):
             else:
                 cmdout, cmderr = None, None
         else:
-            if isinstance(output, basestring):
-                output = open(output, outmode)
+            if isinstance(output, six.string_types):
+                output = io.open(output, outmode)
             cmdout, cmderr = output, output
         p = None
         try:
             p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr,
                                  shell=shell, env=localenv)
             p_out, p_err = p.communicate()
-        except ValueError as perr:
+        except ValueError:
             logger.critical(
                 'Weird arguments to Popen ({!s}, stdout={!s}, stderr={!s}, shell={!s})'.format(
                     args, cmdout, cmderr, shell
@@ -798,7 +884,7 @@ class OSExtended(System):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except OSError as perr:
+        except OSError:
             logger.critical('Could not call %s', str(args))
             if fatal:
                 raise
@@ -823,12 +909,12 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
+            plocale = locale.getpreferredencoding(False)
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
+                    rc = p_out.decode(plocale, 'replace')
                     if outsplit:
-                        rc = p_out.rstrip('\n').split('\n')
-                    else:
-                        rc = p_out
+                        rc = rc.rstrip('\n').split('\n')
                     p.stdout.close()
                 else:
                     rc = not bool(p.returncode)
@@ -837,7 +923,7 @@ class OSExtended(System):
                     logger.warning('Bad return code [%d] for %s', p.returncode, str(args))
                     if isinstance(output, bool) and output:
                         for xerr in p_err:
-                            sys.stderr.write(xerr)
+                            sys.stderr.write(xerr.decode(plocale, 'replace'))
                 if fatal:
                     raise ExecutionError
                 else:
@@ -874,11 +960,15 @@ class OSExtended(System):
         if output is None:
             output = self.output
         self.stderr('pwd')
-        realpwd = self._os.getcwd()
+        try:
+            realpwd = self._os.getcwdu() if six.PY2 else self._os.getcwd()
+        except OSError as e:
+            logger.error('getcwdu failed: %s.', str(e))
+            return None
         if output:
             return realpwd
         else:
-            print realpwd
+            print(realpwd)
             return True
 
     def cd(self, pathtogo, create=False):
@@ -890,12 +980,12 @@ class OSExtended(System):
         self._os.chdir(pathtogo)
         return True
 
-    def cdcontext(self, path, create=False):
+    def cdcontext(self, path, create=False, clean_onexit=False):
         """
         Returns a new :class:`CdContext` context manager initialised with the
         **path** and **create** arguments.
         """
-        return CdContext(self, path, create)
+        return CdContext(self, path, create, clean_onexit)
 
     def ffind(self, *args):
         """Recursive file find. Arguments are starting paths."""
@@ -919,12 +1009,28 @@ class OSExtended(System):
         If **force** is set to *True*, the file's permission will be modified
         so that the file becomes executable.
         """
-        if os.path.exists(filename):
-            is_x = bool(os.stat(filename).st_mode & 1)
+        if self._os.path.exists(filename):
+            is_x = bool(self._os.stat(filename).st_mode & 1)
             if not is_x and force:
-                self.chmod(filename, os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+                self.chmod(filename, self._os.stat(filename).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
                 is_x = True
             return is_x
+        else:
+            return False
+
+    def rperm(self, filename, force=False):
+        """Return whether a **filename** exists and is readable by all or not.
+
+        If **force** is set to *True*, the file's permission will be modified
+        so that the file becomes readable for all.
+        """
+        if self._os.path.exists(filename):
+            mode = self._os.stat(filename).st_mode
+            is_r = all([bool(mode & i) for i in [stat.S_IRUSR, stat.S_IRGRP, stat.S_IROTH]])
+            if not is_r and force:
+                self.chmod(filename, mode | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+                is_r = True
+            return is_r
         else:
             return False
 
@@ -934,8 +1040,8 @@ class OSExtended(System):
         If **force** is set to *True*, the file's permission will be modified
         so that the file becomes writable.
         """
-        if os.path.exists(filename):
-            st = os.stat(filename).st_mode
+        if self._os.path.exists(filename):
+            st = self._os.stat(filename).st_mode
             is_w = bool(st & stat.S_IWUSR)
             if not is_w and force:
                 self.chmod(filename, st | stat.S_IWUSR)
@@ -961,9 +1067,9 @@ class OSExtended(System):
         inodename = self.path.expanduser(inodename)
         self.stderr('readonly', inodename)
         rc = None
-        if os.path.exists(inodename):
-            if os.path.isdir(inodename):
-                rc = self.chmod(inodename, 0555)
+        if self._os.path.exists(inodename):
+            if self._os.path.isdir(inodename):
+                rc = self.chmod(inodename, 0o555)
             else:
                 st = self.stat(inodename).st_mode
                 if st & stat.S_IWUSR or st & stat.S_IWGRP or st & stat.S_IWOTH:
@@ -1008,7 +1114,7 @@ class OSExtended(System):
             except StandardError:
                 rc = False
         else:
-            fh = file(filename, 'a')
+            fh = io.open(filename, 'a')
             fh.close()
         return rc
 
@@ -1019,15 +1125,15 @@ class OSExtended(System):
         :param str objpath: Path to the object to unlink
         """
         objpath = self.path.expanduser(objpath)
-        if os.path.exists(objpath):
+        if self._os.path.exists(objpath):
             self.stderr('remove', objpath)
-            if os.path.isdir(objpath):
+            if self._os.path.isdir(objpath):
                 self.rmtree(objpath)
             else:
                 self.unlink(objpath)
         else:
             self.stderr('clear', objpath)
-        return not os.path.exists(objpath)
+        return not self._os.path.exists(objpath)
 
     @fmtshcmd
     def rm(self, objpath):
@@ -1070,7 +1176,7 @@ class OSExtended(System):
     def ulimit(self):
         """Dump the user limits currently defined."""
         for limit in [r for r in dir(self._rl) if r.startswith('RLIMIT_')]:
-            print ' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit))
+            print(' ', limit.ljust(16), ':', self._rl.getrlimit(getattr(self._rl, limit)))
 
     @property
     def cpus_info(self):
@@ -1094,6 +1200,17 @@ class OSExtended(System):
             list: Starting command prefix, dict: Environment update)
         """
         return (False, list(), dict())
+
+    @property
+    def memory_info(self):
+        """Return an object of a subclass of  :class:`bronx.system.memory.MemInfo`.
+
+        Such objects are designed to get informations on the platform's RAM.
+
+        :note: *None* might be returned on some platforms (if meminfo is not
+            implemented)
+        """
+        return self._memoryinfo
 
     @property
     def netstatsinfo(self):
@@ -1159,7 +1276,7 @@ class OSExtended(System):
         if cmdline is None:
             cmdline = sys.argv[1:]
         opts.update(dict([x.split('=') for x in cmdline]))
-        for k, v in opts.iteritems():
+        for k, v in six.iteritems(opts):
             if v not in (None, True, False):
                 if istrue.match(v):
                     opts[k] = True
@@ -1172,34 +1289,75 @@ class OSExtended(System):
     def is_iofile(self, iocandidate):
         """Check if actual **iocandidate** is a valid filename or io stream."""
         return iocandidate is not None and (
-            (isinstance(iocandidate, basestring) and self.path.exists(iocandidate)) or
-            isinstance(iocandidate, file) or
-            isinstance(iocandidate, io.IOBase) or
-            isinstance(iocandidate, StringIO.StringIO)
+            (isinstance(iocandidate, six.string_types) and self.path.exists(iocandidate)) or
+            isinstance(iocandidate, (file, io.IOBase) if six.PY2 else io.IOBase) or
+            isinstance(iocandidate, six.StringIO)
         )
 
+    @contextlib.contextmanager
+    def ftppool(self):
+        """Create a context manager that initialises the FTP connection pool.
+
+        Within this context manager, if `self.ftpflavour==FTP_FLAVOUR.CONNECTION_POOLS`,
+        the :meth:`ftp` method will use the FTP connection pool initialised by this
+        context manager (see the :class:`~vortex.tools.net.FtpConnectionPool` class)
+        in order to dispense FTP clients.
+
+        When the context manager is exited, the FTP connection pool is destroyed
+        (and all the space FTP clients are closed).
+        """
+        pool_control = self._current_ftppool is None
+        if pool_control:
+            self._current_ftppool = FtpConnectionPool(self)
+        try:
+            yield self._current_ftppool
+        finally:
+            if pool_control:
+                self._current_ftppool.clear()
+                self._current_ftppool = None
+
     def ftp(self, hostname, logname=None, delayed=False):
-        """Return an :class:`~vortex.tools.net.StdFtp` object.
+        """Return an FTP client object.
 
         :param str hostname: the remote host's name for FTP.
         :param str logname: the logname on the remote host.
         :param bool delayed: delay the actual connection attempt as much as possible.
 
-        See the :class:`~vortex.tools.net.StdFtp` class documentation for
-        more information.
+        The returned object is an instance of :class:`~vortex.tools.net.StdFtp`
+        or of one of its subclasses. Consequently, see the :class:`~vortex.tools.net.StdFtp`
+        class documentation to get more information on the client's capabilities.
+
+        The type and behaviour of the returned object depends of the `self.ftpflavour`
+        setting. Possible values are:
+
+            * `FTP_FLAVOUR.STD`: a :class:`~vortex.tools.net.StdFtp` object is returned.
+            * `FTP_FLAVOUR.RETRIES`: a :class:`~vortex.tools.net.AutoRetriesFtp` object
+              is returned (consequently multiple retries will be made if something
+              goes wrong with any FTP command).
+            * `FTP_FLAVOUR.CONNECTION_POOLS`: a :class:`~vortex.tools.net.AutoRetriesFtp`
+              or a :class:`~vortex.tools.net.PooledResetableAutoRetriesFtp` object
+              is returned. If the :meth:`ftp` method is called from within a context
+              manager created by the :meth:`ftppool`, a
+              :class:`~vortex.tools.net.FtpConnectionPool` object is used in order
+              to create and re-use FTP connections; Otherwise a "usual"
+              :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
-        ftpbox = StdFtp(self, hostname)
         if logname is None:
             if self.glove is not None:
                 logname = self.glove.user
             else:
                 raise ValueError("Either a logname or a glove must be set-up")
-        rc = ftpbox.fastlogin(logname, delayed=delayed)
-        if rc:
-            return ftpbox
+        if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
+            return self._current_ftppool.deal(hostname, logname, delayed=delayed)
         else:
-            logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
-            return None
+            ftpclass = AutoRetriesFtp if self.ftpflavour != FTP_FLAVOUR.STD else StdFtp
+            ftpbox = ftpclass(self, hostname)
+            rc = ftpbox.fastlogin(logname, delayed=delayed)
+            if rc:
+                return ftpbox
+            else:
+                logger.warning('Could not login on %s as %s [%s]', hostname, logname, str(rc))
+                return None
 
     @fmtshcmd
     def ftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
@@ -1216,7 +1374,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
-        if isinstance(destination, basestring):  # destination may be Virtual
+        if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
         ftp = self.ftp(hostname, logname)
         if ftp:
@@ -1231,7 +1389,8 @@ class OSExtended(System):
             return False
 
     @fmtshcmd
-    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None,
+              sync=False):  # @UnusedVariable
         """Proceed to a direct ftp put on the specified target (using Vortex's FTP client).
 
         :param source: The source of data (either a path to file or a
@@ -1244,6 +1403,8 @@ class OSExtended(System):
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
+        :param bool sync: If False, allow asynchronous transfers (currently not
+            used: transfers are always synchronous).
         """
         rc = False
         if self.is_iofile(source):
@@ -1280,12 +1441,15 @@ class OSExtended(System):
         else:
             return False
 
-    def ftserv_put(self, source, destination, hostname=None, logname=None, specialshell=None):
+    def ftserv_put(self, source, destination, hostname=None, logname=None,
+                   specialshell=None, sync=False):
         """Asynchronous put of a file using FtServ."""
-        if isinstance(source, basestring) and isinstance(destination, basestring):
+        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
                 extras = list()
+                if not sync:
+                    extras.extend(['-q', ])
                 if hostname:
                     extras.extend(['-h', hostname])
                 if logname:
@@ -1293,8 +1457,7 @@ class OSExtended(System):
                 if specialshell:
                     extras.extend(['-s', specialshell])
                 rc = self.spawn([ftcmd,
-                                 '-o', 'mkdir',  # Automatically create subdirectories
-                                 '-q', ] +  # Asynchronous mode
+                                 '-o', 'mkdir', ] +  # Automatically create subdirectories
                                 extras + [source, destination], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
@@ -1304,7 +1467,7 @@ class OSExtended(System):
 
     def ftserv_get(self, source, destination, hostname=None, logname=None):
         """Get a file using FtServ."""
-        if isinstance(source, basestring) and isinstance(destination, basestring):
+        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             if self.filecocoon(destination):
                 destination = self.path.expanduser(destination)
                 extras = list()
@@ -1321,7 +1484,8 @@ class OSExtended(System):
         return rc
 
     @fmtshcmd
-    def rawftput(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def rawftput(self, source, destination, hostname=None, logname=None,
+                 cpipeline=None, sync=False):
         """Proceed with some external ftput command on the specified target.
 
         :param str source: Path to the source filename
@@ -1330,18 +1494,21 @@ class OSExtended(System):
         :param str logname: the target logname  (default: *None*).
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
+        :param bool sync: If False, allow asynchronous transfers.
         """
         if cpipeline is not None:
             if cpipeline.compress2rawftp(source):
                 return self.ftserv_put(source, destination, hostname, logname,
-                                       specialshell=cpipeline.compress2rawftp(source))
+                                       specialshell=cpipeline.compress2rawftp(source),
+                                       sync=sync)
             else:
-                return self.ftput(source, destination, hostname, logname, cpipeline=cpipeline)
+                return self.ftput(source, destination, hostname, logname,
+                                  cpipeline=cpipeline, sync=sync)
         else:
-            return self.ftserv_put(source, destination, hostname, logname)
+            return self.ftserv_put(source, destination, hostname, logname, sync=sync)
 
     def smartftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, fmt=None):
+                   cpipeline=None, sync=False, fmt=None):
         """Select the best alternative between ``ftput`` and ``rawftput``.
 
         :param source: The source of data (either a path to file or a
@@ -1354,6 +1521,7 @@ class OSExtended(System):
             for the default)
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer.
+        :param bool sync: If False, allow asynchronous transfers.
         :param str fmt: The format of data.
 
         ``rawftput`` will be used if all of the following conditions are met:
@@ -1362,22 +1530,22 @@ class OSExtended(System):
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
-        if self.ftraw and isinstance(source, basestring) and isinstance(destination, basestring):
+        if self.ftraw and isinstance(source, six.string_types) and isinstance(destination, six.string_types):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
-                                 cpipeline=cpipeline, fmt=fmt)
+                                 cpipeline=cpipeline, sync=sync, fmt=fmt)
         else:
             return self.ftput(source, destination, hostname=hostname, logname=logname,
-                              cpipeline=cpipeline, fmt=fmt)
+                              cpipeline=cpipeline, sync=sync, fmt=fmt)
 
     @fmtshcmd
     def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
         """Proceed with some external ftget command on the specified target.
 
-        :param str source: The remote path to get data
-        :param str destination: Path to the filename where to put the data.
-        :param str hostname: The target hostname  (default: *None*).
+        :param str source: the remote path to get data
+        :param str destination: path to the filename where to put the data.
+        :param str hostname: the target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
-        :param CompressionPipeline cpipeline: Unusued (kept for compatibility)
+        :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         return self.ftserv_get(source, destination, hostname, logname)
 
@@ -1405,7 +1573,7 @@ class OSExtended(System):
             * **destination** is a string (as opposed to a File like object)
         """
         if (self.ftraw and cpipeline is None and
-                isinstance(source, basestring) and isinstance(destination, basestring)):
+                isinstance(source, six.string_types) and isinstance(destination, six.string_types)):
             # FtServ is uninteresting when dealing with compression
             return self.rawftget(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, fmt=fmt)
@@ -1423,7 +1591,7 @@ class OSExtended(System):
         :class:`~vortex.tools.net.AssistedSsh`  constructor.
 
         See the :class:`~vortex.tools.net.AssistedSsh` class documentation for
-        more information.
+        more information and examples.
         """
         return AssistedSsh(self, hostname, logname, *args, **kw)
 
@@ -1442,7 +1610,7 @@ class OSExtended(System):
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(source, basestring) and cpipeline is None:
+        if isinstance(source, six.string_types) and cpipeline is None:
             self.stderr('scpput', source, destination, msg)
             return ssh.scpput(source, destination)
         else:
@@ -1468,7 +1636,7 @@ class OSExtended(System):
         """
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
-        if isinstance(destination, basestring) and cpipeline is None:
+        if isinstance(destination, six.string_types) and cpipeline is None:
             self.stderr('scpget', source, destination, msg)
             return ssh.scpget(source, destination)
         else:
@@ -1537,8 +1705,8 @@ class OSExtended(System):
 
     def safe_filesuffix(self):
         """Returns a file suffix that should be unique across the system."""
-        return '.'.join((datetime.now().strftime('_%Y%m%d_%H%M%S_%f'),
-                         self.hostname, 'p{0:06d}'.format(os.getpid()),))
+        return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
+                         self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
@@ -1582,7 +1750,7 @@ class OSExtended(System):
         the operation is atomic.
         """
         self.stderr('hybridcp', source, destination)
-        if isinstance(source, basestring):
+        if isinstance(source, six.string_types):
             if not self.path.exists(source):
                 if not silent:
                     logger.error('Missing source %s', source)
@@ -1595,7 +1763,7 @@ class OSExtended(System):
                 source.seek(0)
             except AttributeError:
                 logger.warning('Could not rewind io source before cp: ' + str(source))
-        if isinstance(destination, basestring):
+        if isinstance(destination, six.string_types):
             if self.filecocoon(destination):
                 # Write to a temp file
                 original_dest = self.path.expanduser(destination)
@@ -1627,6 +1795,100 @@ class OSExtended(System):
         st2 = self.stat(self.path.dirname(self.path.realpath(path2)))
         return st1.st_dev == st2.st_dev and not self.path.islink(path1)
 
+    def _safe_hardlink(self, source, destination, securecopy=True):
+        """Create a (unique) hardlink in a secure way.
+
+        i.e. if the "Too many links" OS error is raised, we try to replace
+        the original file by a copy of itself. If that also fails because of
+        the lack of file permissions, a "simple" rawcp is made.
+
+        :param bool securecopy: while creating the copy of the source file
+                                (because of a "Too many links" OS error), create
+                                a temporary filename and move it afterward to the
+                                *destination*: longer but safer.
+        """
+        try:
+            self._os.link(source, destination)
+        except OSError as e:
+            if e.errno == errno.EMLINK:
+                # Too many links
+                logger.warning('Too many links for the source file (%s).', source)
+                if self.usr_file(source):
+                    if securecopy:
+                        rc = self.rawcp(source, destination)
+                    else:
+                        # Do not bother with a temporary file, create a direct copy
+                        self.copyfile(source, destination)
+                        # Preserve the execution permissions...
+                        if self.xperm(source):
+                            self.xperm(destination, force=True)
+                        rc = bool(self.size(source) == self.size(destination))
+                    if rc:
+                        try:
+                            logger.warning('Replacing the orignal file with a copy...')
+                            self.move(destination, source)
+                        except IOError as ebis:
+                            if ebis.errno == errno.EACCES:
+                                # Permission denied
+                                logger.warning('No permissions to create a copy of the source file (%s)',
+                                               source)
+                                logger.warning('Going on with the copy instead of the link...')
+                            else:
+                                raise
+                        else:
+                            # Ok, a copy was created for the source file
+                            self.link(source, destination)
+                            rc = self.path.samefile(source, destination)
+            else:
+                raise
+        else:
+            rc = self.path.samefile(source, destination)
+        return rc
+
+    def hardlink(self, source, destination, readonly=True, securecopy=True):
+        """Create hardlinks for both single files or directories.
+
+        :param bool readonly: ensure that all of the created links are readonly
+        :param bool securecopy: while creating the copy of the source file
+                        (because of a "Too many links" OS error), create
+                        a temporary filename and move it afterward to the
+                        *destination*: longer but safer.
+        """
+        if self.path.isdir(source):
+            self.stderr('hardlink', source, destination,
+                        '#', 'directory,', 'readonly={!s}'.format(readonly))
+            with self.mute_stderr():
+                # Mimics 'cp -al'
+                names = self._os.listdir(source)
+                self._os.makedirs(destination)
+                rc = True
+                for name in names:
+                    srcname = self._os.path.join(source, name)
+                    dstname = self._os.path.join(destination, name)
+                    if self._os.path.islink(srcname):
+                        linkto = self._os.readlink(srcname)
+                        self._os.symlink(linkto, dstname)
+                    elif self.path.isdir(srcname):
+                        rc = self.hardlink(srcname, dstname,
+                                           readonly=readonly, securecopy=securecopy)
+                    else:
+                        rc = self._safe_hardlink(srcname, dstname, securecopy=securecopy)
+                        if readonly and rc:
+                            self.readonly(dstname)
+                    if not rc:
+                        logger.error('Error while processing %s (rc=%s)', srcname, str(rc))
+                        break
+                if rc:
+                    self._sh.copystat(source, destination)
+                    self.wperm(destination, force=True)
+                return rc
+        else:
+            self.stderr('hardlink', source, destination)
+            rc = self._safe_hardlink(source, destination, securecopy=securecopy)
+            if readonly and rc:
+                self.readonly(destination)
+            return rc
+
     def smartcp(self, source, destination, silent=False):
         """
         Hard link the **source** file to a safe **destination** (if possible).
@@ -1638,7 +1900,7 @@ class OSExtended(System):
         directory some restrictions apply (see :meth:`rawcp`)
         """
         self.stderr('smartcp', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             return self.hybridcp(source, destination)
         source = self.path.expanduser(source)
         if not self.path.exists(source):
@@ -1653,13 +1915,7 @@ class OSExtended(System):
             if self.is_samefs(source, destination):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
-                    rc = self.spawn(['cp', '-al', source, tmp_destination], output=False)
-                    self.stderr('chmod', 0444, tmp_destination)
-                    oldtrace, self.trace = self.trace, False
-                    for linkedfile in self.ffind(tmp_destination):
-                        if not self.path.islink(linkedfile):  # This make no sense to chmod symlinks
-                            self.chmod(linkedfile, 0444)
-                    self.trace = oldtrace
+                    rc = self.hardlink(source, tmp_destination, securecopy=False)
                     if rc:
                         # Warning: Not an atomic portion of code (sorry)
                         do_cleanup = self.path.exists(destination)
@@ -1680,10 +1936,9 @@ class OSExtended(System):
                     return rc
                 else:
                     if self.usr_file(source):
-                        self.link(source, tmp_destination)
-                        self.readonly(tmp_destination)
-                        self.move(tmp_destination, destination)  # Move is atomic for a file
-                        return self.path.samefile(source, destination)
+                        rc = self.hardlink(source, tmp_destination, securecopy=False)
+                        rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                        return rc
                     else:
                         rc = self.rawcp(source, destination)
                         if rc:
@@ -1695,7 +1950,7 @@ class OSExtended(System):
                     if self.path.isdir(destination):
                         for copiedfile in self.ffind(destination):
                             if not self.path.islink(copiedfile):  # This make no sense to chmod symlinks
-                                self.chmod(copiedfile, 0444)
+                                self.chmod(copiedfile, 0o444)
                     else:
                         self.readonly(destination)
                 return rc
@@ -1724,7 +1979,7 @@ class OSExtended(System):
         The fastest option should be used...
         """
         self.stderr('cp', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             return self.hybridcp(source, destination, silent=silent)
         if not self.path.exists(source):
             if not silent:
@@ -1761,7 +2016,7 @@ class OSExtended(System):
         with sufficient depth (or not a subpath at all)
         """
         safe = True
-        if len(thispath.split(os.sep)) < self._rmtreemin + 1:
+        if len(thispath.split(self._os.sep)) < self._rmtreemin + 1:
             logger.warning('Unsafe starting point depth %s (min is %s)', thispath, self._rmtreemin)
             safe = False
         else:
@@ -1769,7 +2024,7 @@ class OSExtended(System):
                 (safedir, d) = safepack
                 rp = self.path.relpath(thispath, safedir)
                 if not rp.startswith('..'):
-                    if len(rp.split(os.sep)) < d:
+                    if len(rp.split(self._os.sep)) < d:
                         logger.warning('Unsafe access to %s relative to %s', thispath, safedir)
                         safe = False
         return safe
@@ -1780,7 +2035,7 @@ class OSExtended(System):
         to :meth:`safepath`).
         """
         ok = True
-        if isinstance(pathlist, basestring):
+        if isinstance(pathlist, six.string_types):
             pathlist = [pathlist]
         for pname in pathlist:
             for entry in filter(lambda x: self.safepath(x, safedirs), self.glob(pname)):
@@ -1820,7 +2075,7 @@ class OSExtended(System):
         llresult = self._globcmd(['ls', '-l'], args, **kw)
         if llresult:
             for lline in [x for x in llresult if not x.startswith('total')]:
-                print lline
+                print(lline)
         else:
             return False
 
@@ -1871,9 +2126,9 @@ class OSExtended(System):
         :param destination: The destination object (file, directory, File-like object, ...)
         """
         self.stderr('mv', source, destination)
-        if not isinstance(source, basestring) or not isinstance(destination, basestring):
+        if not isinstance(source, six.string_types) or not isinstance(destination, six.string_types):
             self.hybridcp(source, destination)
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 return self.remove(source)
         else:
             return self.move(source, destination)
@@ -1890,6 +2145,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
+    # noinspection PyPep8
     def l(self, *args):  # @IgnorePep8
         """
         Proxy to globbing after removing any option. A bit like the
@@ -1941,10 +2197,12 @@ class OSExtended(System):
             zopt.discard('v')
         if autocompress:
             if tarfile.endswith('gz'):
+                # includes the conventional "*.tgz"
                 zopt.add('z')
             else:
                 zopt.discard('z')
             if tarfile.endswith('bz') or tarfile.endswith('bz2'):
+                # includes the conventional "*.tbz"
                 zopt.add('j')
             else:
                 zopt.discard('j')
@@ -1988,7 +2246,7 @@ class OSExtended(System):
         fullsource = self.path.realpath(source)
         self.mkdir(destination)
         loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
-        with self.cdcontext(loctmp):
+        with self.cdcontext(loctmp, clean_onexit=True):
             self.untar(fullsource, **kw)
             unpacked = self.glob('*')
             # If requested, ignore the first level of directory
@@ -2002,16 +2260,15 @@ class OSExtended(System):
                     logger.error('Some previous item exists before untar [%s]', untaritem)
                 else:
                     self.mv(untaritem, '../' + itemtarget)
-        self.rm(loctmp)
         return unpacked
 
     def is_tarname(self, objname):
         """Check if a ``objname`` is a string with ``.tar`` suffix."""
-        return isinstance(objname, basestring) and (objname.endswith('.tar') or
-                                                    objname.endswith('.tar.gz') or
-                                                    objname.endswith('.tgz') or
-                                                    objname.endswith('.tar.bz2') or
-                                                    objname.endswith('.tbz'))
+        return isinstance(objname, six.string_types) and (objname.endswith('.tar') or
+                                                          objname.endswith('.tar.gz') or
+                                                          objname.endswith('.tgz') or
+                                                          objname.endswith('.tar.bz2') or
+                                                          objname.endswith('.tbz'))
 
     def tarname_radix(self, objname):
         """Remove any ``.tar`` specific suffix."""
@@ -2022,41 +2279,13 @@ class OSExtended(System):
             radix = radix[:-4]
         return radix
 
-    def tarfix_in(self, source, destination):
-        """Automatically untar **source** if **source** is a tarfile and **destination** is not."""
-        ok = True
-        if self.is_tarname(source) and not self.is_tarname(destination):
-            logger.info('Untar from get <%s>', source)
-            (destdir, destfile) = self.path.split(self.path.abspath(destination))
-            desttar = self.path.abspath(destination + '.tar')
-            self.remove(desttar)
-            ok = ok and self.move(destination, desttar)
-            loctmp = tempfile.mkdtemp(prefix='untar_', dir=destdir)
-            with self.cdcontext(loctmp):
-                ok = ok and self.untar(desttar, output=False)
-                unpacked = self.glob('*')
-                ok = ok and len(unpacked) == 1  # Only one element allowed in this kind of tarfiles
-                ok = ok and self.move(unpacked[0], self.path.join(destdir, destfile))
-                ok = ok and self.remove(desttar)
-            self.rm(loctmp)
-        return (ok, source, destination)
-
-    def tarfix_out(self, source, destination):
-        """
-        Automatically tar the **source** input if **destination** is a tarfile and
-        **source** is not."""
-        ok = True
-        if not self.is_tarname(source) and self.is_tarname(destination):
-            logger.info('Tar before put <%s>', source)
-            sourcetar = self.path.abspath(source + '.tar')
-            (sourcedir, source_rel) = self.path.split(source)
-            (sourcedir, sourcefile) = self.path.split(sourcetar)
-            with self.cdcontext(sourcedir):
-                ok = ok and self.remove(sourcefile)
-                ok = ok and self.tar(sourcefile, source_rel, output=False)
-            return (ok, sourcetar, destination)
-        else:
-            return (ok, source, destination)
+    def tarname_splitext(self, objname):
+        """Like os.path.splitext, but for tar names (e.g. might return ``.tar.gz``)."""
+        if not self.is_tarname(objname):
+            return (objname, '')
+        radix = self.tarname_radix(objname)
+        ext = objname.replace(radix, '')
+        return (radix, ext)
 
     def blind_dump(self, gateway, obj, destination, **opts):
         """
@@ -2086,6 +2315,7 @@ class OSExtended(System):
         """
         return self.blind_dump(json, obj, destination, **opts)
 
+    @yaml_checker.disabled_if_unavailable
     def yaml_dump(self, obj, destination, **opts):
         """
         Dump a YAML representation of specified **obj** in file **destination**,
@@ -2121,6 +2351,7 @@ class OSExtended(System):
         """
         return self.blind_load(source, gateway=json)
 
+    @yaml_checker.disabled_if_unavailable
     def yaml_load(self, source):
         """
         Load from a YAML representation stored in file **source**,
@@ -2187,7 +2418,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 destination = source + cp.suffix
             else:
                 raise ValueError("If destination is omitted, source must be a filename.")
@@ -2202,7 +2433,7 @@ class OSExtended(System):
         """
         cp = CompressionPipeline(self, pipelinedesc)
         if destination is None:
-            if isinstance(source, basestring):
+            if isinstance(source, six.string_types):
                 if source.endswith(cp.suffix):
                     destination = source[:-len(cp.suffix)]
                 else:
@@ -2210,6 +2441,22 @@ class OSExtended(System):
             else:
                 raise ValueError("If destination is omitted, source must be a filename.")
         return cp.file2uncompress(source, destination)
+
+    def find_mount_point(self, path):
+        """Return the mount point of *path*.
+
+        :param str path: path where to look for a mount point
+        :return: the path to the mount point
+        :rtype: str
+        """
+        if not self._os.path.exists(path):
+            logger.warning('Path does not exist: <%s>', path)
+
+        path = self._os.path.abspath(path)
+        while not self._os.path.ismount(path):
+            path = self._os.path.dirname(path)
+
+        return path
 
 
 class Python27(object):
@@ -2239,6 +2486,11 @@ class Python27(object):
         else:
             logger.error('Bad function path name <%s>' % funcname)
         return thisfunc
+
+
+class Python34(Python27):
+    """Python features starting from version 3.4."""
+    pass
 
 
 class Garbage(OSExtended, Python27):
@@ -2290,6 +2542,7 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
+        self.__dict__['_memoryinfo'] = LinuxMemInfo()
         self.__dict__['_netstatsinfo'] = LinuxNetstats()
 
     @property
@@ -2322,9 +2575,9 @@ class Linux(OSExtended):
         cmdl = list()
         env = dict()
         if method == 'taskset':
-            cmdl += ['taskset', '--cpu-list', ','.join([str(c) for c in cpus])]
+            cmdl += ['taskset', '--cpu-list', ','.join([six.text_type(c) for c in cpus])]
         elif method == 'gomp':
-            env['GOMP_CPU_AFFINITY'] = ' '.join([str(c) for c in cpus])
+            env['GOMP_CPU_AFFINITY'] = ' '.join([six.text_type(c) for c in cpus])
         return (True, cmdl, env)
 
 
@@ -2335,7 +2588,20 @@ class Linux27(Linux, Python27):
         info = 'Linux based system with aging Python version',
         attr = dict(
             python = dict(
-                values = ['2.7.' + str(x) for x in range(3, 50)]
+                values = ['2.7.' + six.text_type(x) for x in range(3, 50)]
+            )
+        )
+    )
+
+
+class Linux34p(Linux, Python34):
+    """Linux system with python version >= 3.4"""
+
+    _footprint = dict(
+        info = 'Linux based system with aging Python version',
+        attr = dict(
+            python = dict(
+                values = ['3.{:d}.{:d}'.format(i, j) for i in range(4, 50) for j in range(1, 100)]
             )
         )
     )

@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: GnuScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Binary
    :show-inheritance:
    :members:
@@ -53,6 +58,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: SurfaceModel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ChemistryModel
    :show-inheritance:
    :members:
    :member-order: alphabetical

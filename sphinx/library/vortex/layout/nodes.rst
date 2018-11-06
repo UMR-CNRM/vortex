@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: LoopFamily
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Task
    :show-inheritance:
    :members:

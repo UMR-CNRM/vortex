@@ -6,6 +6,8 @@ This package defines a class for default contexts used
 by a PoolWorker process of the Jeeves daemon.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import footprints
 logger = footprints.loggers.getLogger(__name__)
 
@@ -15,18 +17,18 @@ class AttrDict(dict):
 
     >>> obj = AttrDict()
     >>> obj.test = 'hi'
-    >>> print obj['test']
+    >>> print(obj['test'])
     hi
 
     >>> obj['test'] = "bye"
-    >>> print obj.test
+    >>> print(obj.test)
     bye
 
-    >>> print len(obj)
+    >>> print(len(obj))
     1
 
     >>> obj.clear()
-    >>> print len(obj)
+    >>> print(len(obj))
     0
 
     >>> obj.a
@@ -109,12 +111,12 @@ class VortexWorker(object):
         if exc_value is not None:
             self.logger.critical('VORTEX exit', error=exc_value)
             import traceback
-            print "\n", '-' * 80
+            print("\n", '-' * 80)
             if exc_value.message:
-                print exc_value.message
-                print '-' * 80, "\n"
-            print "\n".join(traceback.format_tb(exc_traceback))
-            print '-' * 80, "\n"
+                print(exc_value.message)
+                print('-' * 80, "\n")
+            print("\n".join(traceback.format_tb(exc_traceback)))
+            print('-' * 80, "\n")
             self.rc = False
         else:
             self.logger.warning('VORTEX exit')

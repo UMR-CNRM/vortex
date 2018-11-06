@@ -46,6 +46,9 @@ for d in pathdirs :
     if os.path.isdir(d):
         sys.path.insert(0, d)
 
+import locale
+locale.setlocale(locale.LC_ALL, '$defaultencoding')
+
 import footprints
 import vortex
 import vortex.layout.jobs

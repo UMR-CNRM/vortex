@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import unittest
 import logging
 logging.basicConfig(level=logging.ERROR)
@@ -104,6 +106,7 @@ class UtTimeSlots(unittest.TestCase):
                               'BATOR_SLOT_LEN': 0,
                               'BATOR_WINDOW_LEN': 30,
                               'BATOR_WINDOW_SHIFT': -20})
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

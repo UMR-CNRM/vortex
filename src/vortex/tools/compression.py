@@ -7,11 +7,13 @@ Stream/File compression tools.
 The user interface for such tools is the :class:`CompressionPipeline`.
 """
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 from contextlib import contextmanager
 import functools
 import io
 import operator
-
+import six
 
 import footprints
 from vortex.util.iosponge import IoSponge
@@ -104,11 +106,11 @@ class CompressionPipeline(object):
     @contextmanager
     def _openstream(self, local, mode='rb'):
         """If *local* is not an opened file, open it..."""
-        if isinstance(local, basestring):
+        if isinstance(local, six.string_types):
             localfh = io.open(local, mode)
             yield localfh
             localfh.close()
-        elif isinstance(local, (file, io.IOBase)):
+        elif isinstance(local, (file, io.IOBase) if six.PY2 else io.IOBase):
             yield local
         else:
             raise ValueError("Unknown type for {!s}".format(local))

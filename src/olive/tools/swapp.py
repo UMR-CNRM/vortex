@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import io
 import re
+import six
 import socket
 import string
 
@@ -9,6 +13,7 @@ from bronx.datagrip import namelist as fortran
 import footprints
 from vortex import sessions
 from vortex.util import config
+from vortex.data import geometries
 from common.data.namelists import KNOWN_NAMELIST_MACROS
 
 #: No automatic export
@@ -25,7 +30,7 @@ def olive_label(sh, env, target=None):
     label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
 
     if label == 'localpid':
-        label = str(sh.getpid())
+        label = six.text_type(sh.getpid())
 
     if env.MTOOL_STEP:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
@@ -67,7 +72,7 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
     if mysize > STEPFILE_MAX_SIZE:
         tpl = config.load_template(sessions.current(),
                                    '@olive-swapp-file2big.tpl')
-        with open(fullstepfile + '.oversized' + extrasuffix, 'wb') as fd:
+        with io.open(fullstepfile + '.oversized' + extrasuffix, 'w') as fd:
             fd.write(tpl.substitute(
                 filename = fullstepfile + extrasuffix,
                 mysize = '{:.1f}'.format(mysize / 1024. / 1024.),
@@ -110,7 +115,7 @@ def olive_jobout(sh, env, output, localout=None):
         timeout = 10
 
     try:
-        client_socket = socket.create_connection((swapp_host, swapp_port), timeout)
+        client_socket = socket.create_connection((str(swapp_host), str(swapp_port)), timeout)
     except socket.timeout:
         logger.critical('Got timeout after %s seconds.', timeout)
         client_socket = None
@@ -118,7 +123,7 @@ def olive_jobout(sh, env, output, localout=None):
     if client_socket:
         message = "user:{0:s}\nhost:{1:s}\nname:{2:s}\nfile:{3:s}\nlout:{4:s}\nstep:{5:s}\n".format(
             user, localhost, env.SMSNAME, output, localout, mstep
-        )
+        ).encode('ascii', 'replace')
         sh.stderr(['client_socket', 'send', message])
         rc = client_socket.send(message)
         client_socket.close()
@@ -139,7 +144,7 @@ def olive_enforce_oneshot(identifier):
 
 
 def olive_gnam_hook_factory(nickname, nam_delta, env=None):
-    '''Hook functions factory to apply namelist delta on a given ressource.'''
+    """Hook functions factory to apply namelist delta on a given ressource."""
     if env is not None:
         # If an Environment object is given: try to substitute variable
         nam_delta = string.Template(nam_delta).substitute(env)
@@ -154,7 +159,7 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
     def olive_gnam_hook(t, namrh):
         t.sh.subtitle('Applying the following namelist patch {} to namelist {}'.format(nickname,
                                                                                        namrh.container.localpath()))
-        print namdelta_l.dumps()
+        print(namdelta_l.dumps())
         namrh.contents.merge(namdelta_l)
         namrh.save()
 
@@ -162,7 +167,7 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
 
 
 def olive_generic_hook_factory(body):
-    '''User-defined hook functions factory.'''
+    """User-defined hook functions factory."""
     lines = body.split("\n")
     # Remove a possibly blank first line
     if re.match('^\s*$', lines[0]):
@@ -174,7 +179,19 @@ def olive_generic_hook_factory(body):
     bytecode = compile(body, '<string>', 'exec')
 
     def olive_generic_hook(t, rh):
-        jail = dict(t=t, rh=rh, sh=t.sh, env=t.env, )
-        exec bytecode in jail
+        # Create a jail for the environment...
+        localenv = t.env.clone()
+        localenv.verbose(True, t.sh)
+        with localenv:
+            jail = dict(t=t, rh=rh, sh=t.sh, env=localenv, )
+            six.exec_(bytecode, jail)
 
     return olive_generic_hook
+
+
+def olive_new_geometry(tag, kind, **kw):
+    """Add on-the-fly new geometries."""
+    g_constructor = getattr(geometries, kind[0].upper() + kind[1:] + 'Geometry')
+    g = g_constructor(tag=tag, new=True, **kw)
+    print('!!! New geometry to be added to geometries.ini:')
+    print(g.to_inifile())

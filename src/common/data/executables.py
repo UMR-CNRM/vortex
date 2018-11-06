@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-
-#: No automatic export
-__all__ = []
-
+from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
+
+#: No automatic export
+__all__ = []
 
 
 class IFSModel(NWPModel):
@@ -264,6 +263,34 @@ class IceGrb2Ascii(BlackBox):
     ]
 
 
+class IceNCDF2Ascii(BlackBox):
+    """Transform sea ice NetCDF files into obsoul files."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Ice_netcdf executable to convert sea ice NetCDF files into obsoul files',
+            attr = dict(
+                gvar = dict(
+                    default = 'master_ice_netcdf'
+                ),
+                kind = dict(
+                    values = ['ice_netcdf']
+                )
+            )
+        )
+    ]
+
+    def command_line(self, file_in_hn, file_in_hs, param, file_out):
+        """Build the command line to launch the executable."""
+        return '{file_in_hn} {file_in_hs} {param} {file_out}'.format(
+            file_in_hn = file_in_hn,
+            file_in_hs = file_in_hs,
+            param = param,
+            file_out = file_out
+        )
+
+
 class IOAssign(BlackBox):
     """A tool for ODB pools mapping."""
 
@@ -459,6 +486,7 @@ class IOPoll(Script):
             info='IOPoll script',
             attr=dict(
                 kind=dict(
+                    optional = False,
                     values=['iopoll', 'io_poll'],
                     remap=dict(autoremap='first'),
                 ),
@@ -647,6 +675,7 @@ class BDMExecutableBUFR(Script):
                     values  = ['alim.awk', 'alim_olive.awk'],
                 ),
                 kind = dict(
+                    optional = False,
                     values   = ['bdm_bufr_extract', ],
                 ),
                 gvar=dict(
@@ -745,3 +774,33 @@ class ExecReverser(BlackBox):
     @property
     def realkind(self):
         return 'exec_reverser'
+
+
+class Rgrid(BlackBox):
+    """An executable to make a gaussian reduced grid from several parameters."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to make a gaussian reduced grid',
+            attr = dict(
+                kind = dict(
+                    values   = ['rgrid', ],
+                ),
+                gvar=dict(
+                    values=['master_rgrid'],
+                    default='master_rgrid',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'rgrid'
+
+    def command_line(self, **opts):
+        args = []
+        for k, v in opts.items():
+            args.extend(['-' + k, v])
+        return ' '.join(args)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 numpy_looks_fine = True
 try:
     import numpy as np
@@ -14,8 +16,8 @@ from bronx.stdtypes.date import Date, Time
 import footprints
 
 import vortex
-from common.tools.grib import GRIBFilter
 import common.util.usepygram as uepy
+from common.tools.grib import GRIBFilter
 
 clog = footprints.loggers.getLogger('common')
 clog.setLevel('ERROR')
@@ -71,7 +73,7 @@ class _FakeRH(object):
 class _EpyTestBase(unittest.TestCase):
 
     def setUp(self):
-        if not (numpy_looks_fine and uepy.is_epygram_available('1.0.0')):
+        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0')):
             raise self.skipTest('Epygram >= v1.0.0 is not available')
 
         uepy.epygram.epylog.setLevel('ERROR')
@@ -176,6 +178,7 @@ class TestEpygramAdvanced(_EpyTestBase):
                              ['10u_heightAboveGround_level_10',
                               't_isobaricInhPa_level_850',
                               't_isobaricInhPa_level_500'])
+
 
 if __name__ == '__main__':
     unittest.main()

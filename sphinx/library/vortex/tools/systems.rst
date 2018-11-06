@@ -25,6 +25,19 @@ Exceptions
 Classes
 -------
 
+Misc
+****
+
+.. autoclass:: FtpFlavourTuple
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autofunction:: setlocale
+
+.. autofunction:: LocaleContext
+
+
 Generic system objects
 **********************
 
@@ -56,6 +69,11 @@ OS specific system objects: Linux
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Linux34p
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: LinuxDebug
    :show-inheritance:
    :members:
@@ -77,10 +95,14 @@ Some Python's version specific extra features
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Python34
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Utility Classes
 ---------------
-   
+
 .. autoclass:: CdContext
    :show-inheritance:
    :members:

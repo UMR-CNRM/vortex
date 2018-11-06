@@ -1,34 +1,40 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import footprints
+
+from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
+from .contents import DataContent, UnknownContent, FormatAdapter
+
 #: Export Resource and associated Catalog classes.
 __all__ = [ 'Resource' ]
 
-import footprints
 logger = footprints.loggers.getLogger(__name__)
-
-from vortex.syntax.stdattrs import a_nativefmt, notinrepr
-from contents import DataContent, UnknownContent, FormatAdapter
 
 
 class Resource(footprints.FootprintBase):
 
     _abstract  = True
     _collector = ('resource',)
-    _footprint = dict(
-        info = 'Abstract NWP Resource',
-        attr = dict(
-            nativefmt = a_nativefmt,
-            clscontents = dict(
-                info            = "The class instantiated to read the container's content",
-                type            = DataContent,
-                isclass         = True,
-                optional        = True,
-                default         = UnknownContent,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            )
+    _footprint = [
+        nativefmt_deco,
+        dict(
+            info = 'Abstract NWP Resource',
+            attr = dict(
+                clscontents = dict(
+                    info            = "The class instantiated to read the container's content",
+                    type            = DataContent,
+                    isclass         = True,
+                    optional        = True,
+                    default         = UnknownContent,
+                    doc_visibility  = footprints.doc.visibility.ADVANCED,
+                )
+            ),
+            fastkeys = set(['kind', 'nativefmt', ])
         )
-    )
+    ]
 
     def __init__(self, *args, **kw):
         logger.debug('Resource init %s', self.__class__)
@@ -44,42 +50,40 @@ class Resource(footprints.FootprintBase):
         d = self.footprint_as_shallow_dict()
         for xdel in [ x for x in notinrepr if x in d ]:
             del d[xdel]
-        return ' '.join([ '{0:s}=\'{1:s}\''.format(k, str(v)) for k, v in d.items() ])
+        return ' '.join(['{0:s}=\'{1!s}\''.format(k, v) for k, v in d.items()])
 
     @property
     def mailbox(self):
         """A nice cocoon to store miscellaneous information."""
         return self._mailbox
 
-    def vortex_pathinfo(self):
+    def generic_pathinfo(self):
         """
         Returns anonymous dict with suitable informations from vortex point of view.
         Doomed to be overwritten.
         """
-        return dict(
-            nativefmt = self.nativefmt
-        )
+        return dict()
 
     def pathinfo(self, provider):
         """Proxy to the appropriate method prefixed by provider name."""
-        actualpathinfo = getattr(self, provider + '_pathinfo', self.vortex_pathinfo)
+        actualpathinfo = getattr(self, provider + '_pathinfo', self.generic_pathinfo)
         return actualpathinfo()
 
-    def vortex_basename(self):
+    def generic_basename(self):
         """Abstract method."""
         pass
 
     def basename(self, provider):
         """Proxy to the appropriate method prefixed by provider name."""
-        actualbasename = getattr(self, provider + '_basename', self.vortex_basename)
+        actualbasename = getattr(self, provider + '_basename', self.generic_basename)
         return actualbasename()
 
-    def basename_info(self):
+    def namebuilding_info(self):
         """
         Returns anonymous dict with suitable informations from vortex point of view.
         In real world, probably doomed to return an empty dict.
         """
-        return dict()
+        return {'radical': self.realkind}
 
     def vortex_urlquery(self):
         """Query to be binded to the resource's location in vortex space."""
@@ -105,10 +109,6 @@ class Resource(footprints.FootprintBase):
     def uenv_basename(self):
         """Proxy to :meth:`genv_basename`."""
         return self.genv_basename()
-
-    def cendev_basename(self):
-        """Basename for the CEN Soprano provider."""
-        raise NotImplementedError('This resource is not CENdev ready.')
 
     def gget_urlquery(self):
         """Duck typing: return an empty string by default."""
@@ -146,15 +146,25 @@ class Unknown(Resource):
                 info = "Activate the unknown resource.",
                 type = bool
             ),
+            nickname = dict(
+                info = "The string that serves the purpose of Vortex's basename radical",
+                optional = True,
+                default = 'unknown'
+            ),
             clscontents = dict(
                 default = FormatAdapter,
             ),
-        )
+        ),
+        fastkeys = set(['unknown', ]),
     )
 
-    def vortex_basename(self):
+    def namebuilding_info(self):
         """Keep the Unknown resource unknown."""
-        return 'unknown'
+        bdict = super(Unknown, self).namebuilding_info()
+        bdict.update(radical=self.nickname, )
+        if self.nativefmt in ('auto', 'autoconfig', 'foo', 'unknown'):
+            del bdict['fmt']
+        return bdict
 
 
 # Activate the footprint's fasttrack on the resources collector

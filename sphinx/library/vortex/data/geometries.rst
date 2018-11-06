@@ -31,6 +31,17 @@ Module interface
 .. autofunction:: grep
 
 
+Pre-defined horizontal geometry attribute as an abstract footprints
+-------------------------------------------------------------------
+
+.. autodata:: hgeometry
+
+Pre-defined horizontal geometry attribute as an abstract decorative footprints
+------------------------------------------------------------------------------
+
+.. autodata:: hgeometry_deco
+
+
 Concrete geometry classes
 -------------------------
 
@@ -50,11 +61,6 @@ Concrete geometry classes
    :member-order: alphabetical
 
 .. autoclass:: CurvlinearGeometry
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: MassifGeometry
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -91,6 +97,7 @@ Currently unused geometry classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
 
 Utility function
 ----------------
