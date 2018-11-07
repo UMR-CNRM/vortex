@@ -15,6 +15,7 @@ import six
 import footprints
 
 from vortex import toolbox, VortexForceComplete
+from vortex.algo.components import DelayedAlgoComponentError
 from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 from vortex.syntax.stdattrs import Namespace
 
@@ -439,9 +440,17 @@ class Node(footprints.util.GetByTag, NiceLayout):
         """Abstract method: the actual job to do."""
         pass
 
-    def report_execution_error(self):
-        """may be overwritten if a report needs to be sent."""
-        pass
+    def report_execution_error(self, exc):  # @UnusedVariable
+        """may be overwritten if a report needs to be sent.
+
+        :param Exception exc: The exception that triggered the call
+
+        :return: In case of a delayed exception error, determine whether or not
+                 the exception will be masked.
+
+        :note: Do not re-raised the **exc** exception in this method.
+        """
+        return False
 
     def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component.
@@ -486,9 +495,12 @@ class Node(footprints.util.GetByTag, NiceLayout):
             for binary in tbx:
                 try:
                     tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-                except Exception:
-                    self.report_execution_error()
-                    raise
+                except Exception as e:
+                    mask_delayed = self.report_execution_error(e)
+                    if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
+                        logger.warning("The delayed exception is masked.")
+                    else:
+                        raise
 
 
 class Family(Node):

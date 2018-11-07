@@ -19,12 +19,11 @@ class OpTask(Task):
 
     _tag_topcls = False
 
-    def report_execution_error(self):
+    def report_execution_error(self, exc):  # @UnusedVariable
         """Report any execution error."""
         listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         self.sh.header('Send a mail due to an execution error')
         ad.opmail(task=self.tag, id ='execution_error', listing=listing)
-        raise
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""
