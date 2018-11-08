@@ -239,11 +239,12 @@ class _SafranWorker(_S2MWorker):
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
         for date in dates:
-            if date >= Date(2002, 8, 1):
+            if date >= Date(2002, 8, 1) or self.execution == 'reforecast':
                 prefix = 'P'
             else:
                 prefix = 'E'
             p = '{0:s}{1:s}'.format(prefix, date.yymdh)
+            print('DBUG', p)
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
             else:
@@ -251,19 +252,24 @@ class _SafranWorker(_S2MWorker):
                     self.system.remove(p)
                 # We try to find the P file with format Pyymmddhh_tt (yymmddhh + tt = date)
                 # The maximum time is 108h (4 days)
-                if date == dates[-1]:
-                    # Avoid to take the first P file of the next day
-                    # Check for a 6-hour analysis
-                    d = date - Period(hours = 6)
-                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
-                    if self.system.path.exists(oldp):
-                        self.link_in(oldp, p)
-                        actual_dates.append(date)
-                    # If there is no 6-hour analysis we need at least a 24h forecast to have a cumulate rr24
-                    else:
-                        t = 24
+                if self.execution in ['forecast', 'reforecast']:
+                    # We look for the first forecast run before the begining of the target period
+                    t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600)
+                    print('DBUG1', t)
                 else:
-                    t = 0
+                    if date == dates[-1]:
+                        # Avoid to take the first P file of the next day
+                        # Check for a 6-hour analysis
+                        d = date - Period(hours = 6)
+                        oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                        if self.system.path.exists(oldp):
+                            self.link_in(oldp, p)
+                            actual_dates.append(date)
+                        else:
+                            # If there is no 6-hour analysis we need at least a 24h forecast to have a cumulate rr24
+                            t = 24
+                    else:
+                        t = 0
                 while not self.system.path.islink(p) and (t <= 108):
                     d = date - Period(hours = t)
                     oldp = 'P{0:s}_{1!s}'.format(d.yymdh, t)
@@ -271,6 +277,7 @@ class _SafranWorker(_S2MWorker):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
                     t = t + 3  # 3-hours check
+
                 if not self.system.path.islink(p) and fatal:
                     logger.error('The mandatory flow resources %s is missing.', p)
                     raise InputCheckerError("Some of the mandatory resources are missing.")
@@ -279,7 +286,7 @@ class _SafranWorker(_S2MWorker):
             print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             print(actual_dates)
             actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-            #raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
+            # raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
         elif len(actual_dates) > 5 and len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
@@ -763,11 +770,6 @@ class Guess(ParaExpresso):
             kind = dict(
                 values = [ 'guess'],
             ),
-            members = dict(
-                info = "The members that will be processed",
-                type = footprints.FPList,
-                optional = True
-            ),
             interpreter = dict(
                 values = [ 'python']
             )
@@ -792,9 +794,19 @@ class Guess(ParaExpresso):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = [None, ] if self.members is None else ['mb{0:03d}'.format(m) for m in self.members]
+        subdirs = self.get_subdirs(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
+
+    def get_subdirs(self, rh, opts):
+        """Get the subdirectories from the effective inputs"""
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = [am.rh.container.dirname for am in avail_members]
+
+        return list(set(subdirs))
+
+    def role_ref_namebuilder(self):
+        return 'Gridpoint'
 
     def postfix(self, rh, opts):
         pass
