@@ -274,7 +274,7 @@ class SectionsSlice(collections.Sequence):
             return item[k] or item['alternate']
         elif k == 'kind' and k in item.get('rh', dict()).get('resource', dict()):
             return item['rh']['resource'][k]
-        elif k == 'section_kind' and 'kind' in intem:
+        elif k == 'section_kind' and 'kind' in item:
             return item['kind']
         elif k in item:
             return item[k]

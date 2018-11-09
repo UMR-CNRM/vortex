@@ -17,6 +17,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 def update_namelist(t, rh, *completive_rh):
     """Update namelist with resource handler(s) given in **completive_rh**."""
+    touched = False
     for crh in completive_rh:
         if not isinstance(crh, (list, tuple)):
             crh = [crh, ]
@@ -24,4 +25,6 @@ def update_namelist(t, rh, *completive_rh):
             logger.info('Merging: {!r} :\n{:s}'.format(arh.container,
                                                        arh.contents.dumps()))
             rh.contents.merge(arh.contents)
-    rh.save()
+            touched = True
+    if touched:
+        rh.save()
