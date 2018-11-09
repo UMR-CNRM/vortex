@@ -10,6 +10,9 @@ from vortex import sessions
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
+TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
+                               u'fortran', u'gco', u'services', u'drhook_not_mpi'])
+
 
 class TestTargetsResearch(unittest.TestCase):
 
@@ -29,12 +32,13 @@ class TestTargetsResearch(unittest.TestCase):
         self.assertEqual(self.tg.get('fakekey1'),
                          'tourist')
         self.assertSetEqual(set(self.tg.sections()),
-                            set(('stores', 'generic_nodes')))
+                            TARGETS_COMMON_SECTIONS | set(('stores', 'generic_nodes')))
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1')))
         self.assertDictEqual(self.tg.items('stores'),
                              dict(storage='hendrix.meteo.fr',
                                   fakekey1='tourist'))
+        self.assertEqual(self.tg.get('gco:genvcmd'), 'nogenv')
 
     def test_target_nodes(self):
         self.assertListEqual(self.tg.loginnodes,
@@ -60,6 +64,9 @@ class TestTargetsResearch(unittest.TestCase):
 
 class TestTargetsOp(unittest.TestCase):
 
+    _COMMON_TARGETS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools', u'fortran',
+                           u'gco', u'services', u'drhook_not_mpi'])
+
     def setUp(self):
         self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
         self.tg = fp.proxy.target(hostname='unittestlogin001',
@@ -82,7 +89,7 @@ class TestTargetsOp(unittest.TestCase):
         self.assertEqual(self.tg.get('stores:fakekey1'),
                          '1')
         self.assertSetEqual(set(self.tg.sections()),
-                            set(('stores', 'generic_nodes', 'toto')))
+                            TARGETS_COMMON_SECTIONS | set(('stores', 'generic_nodes', 'toto')))
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1', 'fakekey2')))
         self.assertDictEqual(self.tg.items('stores'),

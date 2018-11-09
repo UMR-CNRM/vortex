@@ -62,6 +62,10 @@ class Target(fp.FootprintBase):
                 optional = True,
                 default  = '@target-[hostname].ini',
             ),
+            defaultinifile = dict(
+                optional = True,
+                default  = 'target-commons.ini',
+            ),
             iniauto = dict(
                 type     = bool,
                 optional = True,
@@ -83,7 +87,9 @@ class Target(fp.FootprintBase):
         self._sepcialnodesaliases = None
         self._specialproxies = None
         if self._actualconfig is None:
-            self._actualconfig = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
+            self._actualconfig = GenericConfigParser(inifile=self.inifile,
+                                                     mkforce=self.iniauto,
+                                                     defaultinifile=self.defaultinifile)
 
     @property
     def realkind(self):
