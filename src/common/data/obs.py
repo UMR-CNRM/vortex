@@ -4,8 +4,9 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six
+from six.moves import filter  # @UnresolvedImport
+
 import re
-import itertools
 from collections import namedtuple
 
 import footprints
@@ -537,12 +538,10 @@ class ObsMapContent(TextContent):
                      any([f.match(om) for f in ofilters])) and
                     not any([f.match(om) for f in dfilters]))
 
-        self.extend(
-            itertools.ifilter(item_filter,
-                              [ObsMapItem(* x.split())
-                               for x in [line.strip() for line in container]
-                               if x and not x.startswith('#')])
-        )
+        self.extend(filter(item_filter,
+                           [ObsMapItem(* x.split())
+                            for x in [line.strip() for line in container]
+                            if x and not x.startswith('#')]))
         self._size = container.totalsize
 
     @classmethod

@@ -6,11 +6,12 @@ This modules defines the low level physical layout for data handling.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
+from six.moves import map  # @UnresolvedImport
 
 import collections
 from collections import namedtuple, defaultdict
-from itertools import imap
 import json
 import pprint
 import re
@@ -489,7 +490,7 @@ class Sequence(footprints.observers.Observer):
 
         for cgroup in a_section.coherentgroups:
             if self._coherentgroups_openings[cgroup]:
-                if not all(imap(_s_group_check, self.coherentgroup_iter(cgroup))):
+                if not all(map(_s_group_check, self.coherentgroup_iter(cgroup))):
                     for c_section in self.coherentgroup_iter(cgroup):
                         c_section.coherent_group_close(cgroup)
                     self._coherentgroups_openings[cgroup] = False

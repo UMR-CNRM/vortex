@@ -6,9 +6,10 @@ Crawl into test directories and find available tests.
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
+from six.moves import filter  # @UnresolvedImport
+
 import collections
 import io
-from itertools import ifilter
 import os
 
 import footprints as fp
@@ -36,7 +37,7 @@ class DiscoveredTests(collections.Mapping):
         """Go through the test directories and finfg YAML files."""
         tfiles = set()
         for root, _, filenames in os.walk(TESTSPATH):
-            for filename in ifilter(lambda f: f.endswith('.yaml'), filenames):
+            for filename in filter(lambda f: f.endswith('.yaml'), filenames):
                 tfiles.add(os.path.join(root, filename))
         self._tfiles = sorted(tfiles)
 
