@@ -1234,6 +1234,11 @@ class ArchiveStore(Store):
         )
 
 
+def _default_remoteconfig_dict():
+    """Just an utility method for ConfigurableArchiveStore."""
+    return dict(restrict=None, seen = False)
+
+
 class ConfigurableArchiveStore(object):
     """Generic Archive Store with the ability to read a configuration file.
 
@@ -1253,7 +1258,48 @@ class ConfigurableArchiveStore(object):
         else:
             return None
 
-    def _load_config(self, conf):
+    def _ingest_remote_config(self, r_id, r_confdict, global_confdict):
+        logger.info("Reading config file: %s (id=%s)", r_confdict['uri'], r_id)
+        url = net.uriparse(r_confdict['uri'])
+        tempstore = footprints.proxy.store(
+            scheme=url['scheme'],
+            netloc=url['netloc'],
+            storetrack=False,
+        )
+        retry = False
+        # First, try with a temporary ShouldFly
+        try:
+            tempcontainer = footprints.proxy.container(shouldfly=True)
+            remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
+        except (OSError, IOError):
+            # This may happen if the user has insufficient rights on
+            # the current directory
+            retry = True
+        finally:
+            self.system.remove(tempcontainer.filename)
+        # Is retry needed ? This time a completely virtual file is used.
+        if retry:
+            remotecfg_parser = self._get_remote_config(tempstore, url,
+                                                       footprints.proxy.container(incore=True))
+        # Update the configuration using the parser
+        if remotecfg_parser is not None:
+            for section in remotecfg_parser.sections():
+                logger.debug("New location found: %s", section)
+                # Filtering based on the regex : No collisions allowed !
+                if r_confdict['restrict'] is not None:
+                    if r_confdict['restrict'].search(section):
+                        global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                    else:
+                        logger.error('According to the "restrict" clause, ' +
+                                     'you are not allowed to define the %s location !', section)
+                else:
+                    global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+            r_confdict['seen'] = True
+        else:
+            raise IOError("The remote configuration {:s} couldn't be found."
+                          .format(r_confdict['uri']))
+
+    def _load_config(self, conf, tlocation):
         """Load the store configuration.
 
         1. The global store's configuration file is read (see
@@ -1267,63 +1313,68 @@ class ConfigurableArchiveStore(object):
         The relevant content of the configuration file is stored in the ``conf``
         dictionary.
         """
-        logger.info("Some store configuration data is needed (for %s://%s)",
-                    self.scheme, self.netloc)
-
         # Because _store_global_config and _datastore_id must be overwritten...
         assert self._store_global_config is not None
         assert self._datastore_id is not None
 
-        # Global configuration file
-        logger.info("Reading config file: %s", self._store_global_config)
-        maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-        conf['host'] = dict(maincfg.items(self.archive.actual_storage))
+        if not conf:
+            # This is the first call to this method
+            logger.info("Some store configuration data is needed (for %s://%s)",
+                        self.scheme, self.netloc)
 
-        # Look for a local configuration file
-        localcfg = conf['host'].get('localconf', None)
-        if localcfg is not None:
-            logger.info("Reading config file: %s", localcfg)
-            localcfg = config.GenericConfigParser(inifile=localcfg)
-            conf['locations'] = defaultdict(dict)
-            conf['locations']['generic'] = localcfg.defaults()
-            for section in localcfg.sections():
-                logger.debug("New location found: %s", section)
-                conf['locations'][section] = dict(localcfg.items(section))
+            # Global configuration file
+            logger.info("Reading config file: %s", self._store_global_config)
+            maincfg = config.GenericConfigParser(inifile=self._store_global_config)
+            conf['host'] = dict(maincfg.items(self.archive.actual_storage))
 
-        # Look for remote configurations
-        remotecfgs = sorted([key for key in conf['host'].keys()
-                             if key.startswith('remoteconf')])
-        for remotecfg in [conf['host'][k] for k in remotecfgs]:
-            logger.info("Reading config file: %s", remotecfg)
-            url = net.uriparse(remotecfg)
-            tempstore = footprints.proxy.store(
-                scheme=url['scheme'],
-                netloc=url['netloc'],
-                storetrack=False,
-            )
-            retry = False
-            # First, try with a temporary ShouldFly
-            try:
-                tempcontainer = footprints.proxy.container(shouldfly=True)
-                remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-            except (OSError, IOError):
-                # This may happen if the user has insufficient rights on
-                # the current directory
-                retry = True
-            finally:
-                self.system.remove(tempcontainer.filename)
-            # Is retry needed ? This time a completely virtual file is used.
-            if retry:
-                remotecfg_parser = self._get_remote_config(tempstore, url,
-                                                           footprints.proxy.container(incore=True))
-            # Update the configuration using the parser
-            if remotecfg_parser is not None:
-                for section in remotecfg_parser.sections():
+            # Look for a local configuration file
+            localcfg = conf['host'].get('localconf', None)
+            if localcfg is not None:
+                logger.info("Reading config file: %s", localcfg)
+                localcfg = config.GenericConfigParser(inifile=localcfg)
+                conf['locations'] = defaultdict(dict)
+                conf['locations']['generic'] = localcfg.defaults()
+                for section in localcfg.sections():
                     logger.debug("New location found: %s", section)
-                    conf['locations'][section].update(dict(remotecfg_parser.items(section)))
-            else:
-                raise IOError("The remote configuration {:s} couldn't be found."
-                              .format(remotecfg))
+                    conf['locations'][section] = dict(localcfg.items(section))
+
+            # Look for remote configurations
+            tg_inet = self.system.default_target.inetname
+            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
+            for key in conf['host'].keys():
+                k_match = re.match(r'generic_(remoteconf\w*)_uri$', key)
+                if k_match:
+                    r_id = k_match.group(1)
+                    g_uri_key = key
+                    i_uri_key = '{:s}_{:s}_uri'.format(tg_inet, r_id)
+                    g_restrict_key = 'generic_{:s}_restrict'.format(r_id)
+                    i_restrict_key = '{:s}_{:s}_restrict'.format(tg_inet, r_id)
+                    if i_uri_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['uri'] = conf['host'][i_uri_key]
+                    else:
+                        conf['remoteconfigs'][r_id]['uri'] = conf['host'][g_uri_key]
+                    if i_restrict_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['restrict'] = conf['host'][i_restrict_key]
+                    elif g_restrict_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['restrict'] = conf['host'][g_restrict_key]
+                    # Trying to compile the regex !
+                    if conf['remoteconfigs'][r_id]['restrict'] is not None:
+                        try:
+                            conf['remoteconfigs'][r_id]['restrict'] = re.compile(conf['remoteconfigs'][r_id]['restrict'])
+                        except re.error as e:
+                            logger.error('The regex provided for %s does not compile !: "%s".',
+                                         r_id, str(e))
+                            logger.error('Please fix that quickly... Meanwhile, %s is ignored !', r_id)
+                            del conf['remoteconfigs'][r_id]
+
+            for r_confk, r_conf in conf['remoteconfigs'].items():
+                if r_conf['restrict'] is None:
+                    self._ingest_remote_config(r_confk, r_conf, conf)
+
+        for r_confk, r_conf in conf['remoteconfigs'].items():
+            if ((not r_conf['seen']) and r_conf['restrict'] is not None and
+                    r_conf['restrict'].search(tlocation)):
+                self._ingest_remote_config(r_confk, r_conf, conf)
 
     def _actual_fromconf(self, uuid, item):
         """For a given **uuid**, Find the corresponding value of the **item** key
@@ -1336,10 +1387,8 @@ class ConfigurableArchiveStore(object):
         ds = sessions.current().datastore
         conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
                       default_payload=dict(), readonly=True)
-        if not conf:
-            # If the configuration is empty, do what it takes...
-            self._load_config(conf)
         mylocation = uuid.location
+        self._load_config(conf, mylocation)
         st_root = None
         if mylocation in conf['locations']:
             st_root = conf['locations'][mylocation].get(item, None)
