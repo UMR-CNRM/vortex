@@ -983,13 +983,13 @@ class SurfexComponent(S2MComponent):
                 default = False,
             ),
             confvapp = dict(
-                info = "vapp",
+                info = "vapp for conf file",
                 type = str,
                 optional = True,
                 default = None
             ),
             confvconf = dict(
-                info = "vconf",
+                info = "vconf for conf file",
                 type = str,
                 optional = True,
                 default = None
@@ -999,6 +999,12 @@ class SurfexComponent(S2MComponent):
                 type = int,
                 optional = True,
                 default = 1,
+            ),
+            randomDraw = dict(
+                info = '(for crocO) True :activate a random draw of nmembers. Otherwise, "members" IDs are selected',
+                type = bool,
+                optional = True,
+                default = False,
             ),
         )
     )
@@ -1010,25 +1016,29 @@ class SurfexComponent(S2MComponent):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        subdirs = ['mb{0:04d}'.format(m) for m in self.members]
-        print('stopcount :', self.stopcount)
-
-        if self.stopcount == 1:
-            print('')
-            print('copying the conf file')
-            # print(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
-            # self.system.cp(os.environ['WORKDIR'] + '/' + self.confvapp + '/' + self.confvconf + '/conf/' + self.confvapp + '_' + self.confvconf + '.ini', self.confvapp + '_' + self.confvconf + '.ini')
+        if self.kind == 'croco': # in croco case, slf. members is a (sometimes random) subselection of members but we don't wnt fancy subdirs
+            subdirs = ['mb{0:04d}'.format(m) for m in range(1, len(self.members) + 1)]
+        else:
+            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
 
         if self.subensemble:
-            escroc = ESCROC_subensembles(self.subensemble, self.members)
+            if self.randomDraw:  # only works with E1* ensembles
+                escroc = ESCROC_subensembles(self.subensemble, self.members, randomDraw = self.randomDraw)
+            else:
+                escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
             self._add_instructions(common_i, dict(subdir=subdirs, physical_options=physical_options, snow_parameters=snow_parameters))
             membersId = escroc.members  # Escroc members ids in case of rand selection for ex.
             # counter for stop (assim + pauses) steps in conf file previously copied to currdir
-            conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
-            conffile.write_field('membersId_' + '{0:03d}'.format(self.stopcount), membersId)
-            conffile.close()
+            if self.stopcount == 1:
+                conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
+                conffile.fileobject.write('membersId' + ' = ')
+                for mbid in membersId:
+                    conffile.fileobject.write(str(mbid) + ',')
+                conffile.fileobject.write('\n')
+                # conffile.write_field('membersId_' + '{0:03d}'.format(self.stopcount), membersId)
+                conffile.close()
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
 
