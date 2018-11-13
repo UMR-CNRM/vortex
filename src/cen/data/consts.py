@@ -23,7 +23,7 @@ class List(GenvModelGeoResource):
             attr = dict(
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 'carpost',
-                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata'],
+                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata', 'NORELo', 'NORELm'],
                 ),
                 nativefmt = dict(
                     values  = ['ascii'],
@@ -41,15 +41,15 @@ class List(GenvModelGeoResource):
         return 'safran_namelist'
 
 
-class SSA_param(GenvModelGeoResource):
+class Params(GenvModelGeoResource):
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ["ssa_params"],
+                values = ['ssa_params', 'surfz'],
             ),
             nativefmt = dict(
-                values  = ['netcdf', 'nc'],
+                values  = ['netcdf', 'nc', 'ascii'],
                 default = 'netcdf',
             ),
             gvar = dict(
