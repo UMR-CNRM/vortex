@@ -150,7 +150,7 @@ class SurfaceForcing(SurfaceIO):
                     optional = True
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
                     optional = True
                 ),
             )

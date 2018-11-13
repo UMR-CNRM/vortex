@@ -17,7 +17,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-
+    from snowtools.tools.initTG import generate_clim
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
@@ -68,6 +68,30 @@ class Surfex_PreProcess(AlgoComponent):
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()
+
+
+@echecker.disabled_if_unavailable
+class Generate_Clim_TG(AlgoComponent):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['clim']),
+            engine = dict(
+                optional     = True,
+                default   = 's2m',
+                values = ['s2m']
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+
+        avail_forcing = self.context.sequence.effective_inputs(role="Forcing")
+        listforcing = list(set([self.system.path.basename(am.rh.container.filename) for am in avail_forcing]))
+
+        generate_clim(listforcing)
+
 
 
 class Pgd_Parallel_from_Forcing(Parallel):
