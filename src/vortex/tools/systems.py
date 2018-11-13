@@ -681,6 +681,8 @@ class OSExtended(System):
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
+        # Hardlinks behaviour...
+        self.allow_cross_users_links = True
         # Go for the superclass' constructor
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
@@ -2019,7 +2021,8 @@ class OSExtended(System):
             if self.path.islink(source):
                 # Solve the symbolic link: this may avoid a rawcp
                 source = self.path.realpath(source)
-            if self.is_samefs(source, destination):
+            if (self.is_samefs(source, destination) and
+                    (self.allow_cross_users_links or self.usr_file(source))):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
                     rc = self.hardlink(source, tmp_destination, securecopy=False)
@@ -2042,15 +2045,9 @@ class OSExtended(System):
                         self.remove(tmp_destination)  # Anyway, try to clean-up things
                     return rc
                 else:
-                    if self.usr_file(source):
-                        rc = self.hardlink(source, tmp_destination, securecopy=False)
-                        rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
-                        return rc
-                    else:
-                        rc = self.rawcp(source, destination)
-                        if rc:
-                            self.readonly(destination)
-                        return rc
+                    rc = self.hardlink(source, tmp_destination, securecopy=False)
+                    rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                    return rc
             else:
                 rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possible
                 if rc:

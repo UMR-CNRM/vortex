@@ -185,6 +185,11 @@ class OpJobAssistantTest(JobAssistant):
 
         ad.sms_init(t.env.SLURM_JOBID)
 
+    def _system_setup(self, t, **kw):
+        """Set usual settings for the system shell."""
+        super(OpJobAssistantTest, self)._system_setup( t, **kw)
+        t.sh.allow_cross_users_links = False
+
     def register_cycle(self, cycle):
         """Load and register a GCO cycle contents."""
         t = vortex.ticket()
