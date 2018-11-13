@@ -233,7 +233,7 @@ class _SafranWorker(_S2MWorker):
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
 
-    def get_guess(self, dates, fatal=False):
+    def get_guess(self, dates, fatal=False, dt=3):
         """ Try to guess the corresponding input file"""
         # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
@@ -244,7 +244,6 @@ class _SafranWorker(_S2MWorker):
             else:
                 prefix = 'E'
             p = '{0:s}{1:s}'.format(prefix, date.yymdh)
-            print('DBUG', p)
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
             else:
@@ -252,10 +251,28 @@ class _SafranWorker(_S2MWorker):
                     self.system.remove(p)
                 # We try to find the P file with format Pyymmddhh_tt (yymmddhh + tt = date)
                 # The maximum time is 108h (4 days)
-                if self.execution in ['forecast', 'reforecast']:
+                if self.execution == 'reforecast':
                     # We look for the first forecast run before the begining of the target period
                     t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600)
-                    print('DBUG1', t)
+                elif self.execution == 'forecast':
+                    # In operational task the datebegin is 24h earlier (pseudo-forecast from 6h J-1 to 6h J)
+                    # The forecast perdiod is split into two parts :
+                    #     1) From J-1 6h to J 6h
+                    #        The 'deterministic member' takes the 6h ARPEGE analysis
+                    #        All PEARP members take the forecasts from the 6h J lead time
+                    #     2) From J 6h to J+4 6h
+                    #        The deterministic member takes the forecasts from the 0h J lead time
+                    #        All PEARP members take the forecats froms the 18h J-1 lead time
+                    d = date - Period(hours = 6)
+                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                    if self.system.path.exists(oldp):
+                        self.link_in(oldp, p)
+                        actual_dates.append(date)
+                    else:
+                        if dates[0] == self.datebegin:
+                            t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600)
+                        else:
+                            t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600) - 18
                 else:
                     if date == dates[-1]:
                         # Avoid to take the first P file of the next day
@@ -276,11 +293,13 @@ class _SafranWorker(_S2MWorker):
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
-                    t = t + 3  # 3-hours check
+                    t = t + dt  # 3-hours check
 
-                if not self.system.path.islink(p) and fatal:
-                    logger.error('The mandatory flow resources %s is missing.', p)
-                    raise InputCheckerError("Some of the mandatory resources are missing.")
+                if not self.system.path.islink(p):
+                    logger.warning('The flow resources %s is missing.', p)
+                    if fatal:
+                        logger.warning('The mandatory flow resources %s is missing.', p)
+                        raise InputCheckerError("Some of the mandatory resources are missing.")
 
         if len(actual_dates) < 5:
             print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
@@ -827,7 +846,7 @@ class S2MComponent(ParaBlindRun):
             datebegin = a_date,
             dateend   = a_date,
             execution = dict(
-                values   = ['analysis', 'forecast', 'reforecast'],
+                values   = ['analysis', 'forecast', 'reanalysis', 'reforecast'],
                 optional = True,
             )
         )
