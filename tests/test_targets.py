@@ -75,7 +75,7 @@ class TestTargetsOp(unittest.TestCase):
                                   inifile=self.testconf)
         self._oldsession = sessions.current()
         gl = sessions.getglove(profile='oper', user='mxpt001')
-        ns = sessions.get(tag='targes_test_view',
+        ns = sessions.get(tag='target_test_view',
                           topenv=vortex.rootenv, glove=gl)
         ns.activate()
 

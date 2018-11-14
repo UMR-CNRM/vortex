@@ -627,16 +627,66 @@ class UgetMtCacheStore(_UgetCacheStore):
     """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
     _footprint = dict(
-        info = 'Uget cache access',
+        info = 'Uget MTOOL cache access',
         attr = dict(
             netloc = dict(
-                values  = ['uget.cache.fr'],
+                values  = ['uget.cache-mt.fr'],
             ),
             strategy = dict(
                 default = 'mtool',
             ),
         )
     )
+
+
+class UgetMarketCacheStore(_UgetCacheStore):
+    """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
+
+    _footprint = dict(
+        info = 'Uget Marketplace cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['uget.cache-market.fr'],
+            ),
+            strategy = dict(
+                default = 'marketplace',
+            ),
+        )
+    )
+
+
+class UgetCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'Uget cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['uget'],
+            ),
+            netloc = dict(
+                values  = ['uget.cache.fr', ],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_reads(remote['path'])])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        return ['uget.cache-mt.fr', 'uget.cache-market.fr']
 
 
 class UgetHackCacheStore(_UgetCacheStore):

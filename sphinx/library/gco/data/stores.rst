@@ -48,6 +48,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: UgetMarketCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UgetCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: UgetArchiveStore
    :show-inheritance:
    :members:

@@ -510,7 +510,7 @@ class MultiStore(footprints.FootprintBase):
         sh = kw.pop('system', sessions.system())
         super(MultiStore, self).__init__(*args, **kw)
         self._sh = sh
-        self.openedstores = self.loadstores()
+        self._openedstores = self.loadstores()
         self.delayed = False
 
     @property
@@ -544,6 +544,16 @@ class MultiStore(footprints.FootprintBase):
                 activestores.append(xstore)
         logger.debug('Multistore %s includes active stores %s', self, activestores)
         return activestores
+
+    @property
+    def openedstores(self):
+        return self._openedstores
+
+    def filtered_readable_openedstores(self, remote):  # @UnusedVariable
+        return self._openedstores
+
+    def filtered_writeable_openedstores(self, remote):  # @UnusedVariable
+        return self._openedstores
 
     def alternates_scheme(self):
         """Default method returns actual scheme in a tuple."""
@@ -586,7 +596,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and check for the resource."""
         logger.debug('Multistore check from %s', remote)
         rc = False
-        for sto in self.openedstores:
+        for sto in self.filtered_readable_openedstores(remote):
             rc = sto.check(remote.copy(), options)
             if rc:
                 break
@@ -595,10 +605,11 @@ class MultiStore(footprints.FootprintBase):
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
         logger.debug('Multistore locate %s', remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_readable_openedstores(remote)
+        if not f_ostores:
             return False
         rloc = list()
-        for sto in self.openedstores:
+        for sto in f_ostores:
             logger.debug('Multistore locate at %s', sto)
             tmp_rloc = sto.locate(remote.copy(), options)
             if tmp_rloc:
@@ -609,7 +620,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and list the expected resource for each of them."""
         logger.debug('Multistore list %s', remote)
         rlist = set()
-        for sto in self.openedstores:
+        for sto in self.filtered_readable_openedstores(remote):
             logger.debug('Multistore list at %s', sto)
             tmp_rloc = sto.list(remote.copy(), options)
             if isinstance(tmp_rloc, (list, tuple, set)):
@@ -621,10 +632,11 @@ class MultiStore(footprints.FootprintBase):
     def prestage(self, remote, options=None):
         """Go through internal opened stores and prestage the resource for each of them."""
         logger.debug('Multistore prestage %s', remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_readable_openedstores(remote)
+        if not f_ostores:
             return False
         rc = True
-        for sto in self.openedstores:
+        for sto in f_ostores:
             logger.debug('Multistore prestage at %s', sto)
             rc = rc and sto.prestage(remote.copy(), options)
         return rc
@@ -633,12 +645,15 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
+        f_rd_ostores = self.filtered_readable_openedstores(remote)
+        if self.refillstore:
+            f_wr_ostores = self.filtered_writeable_openedstores(remote)
         get_options = copy.copy(options) if options is not None else dict()
         get_options['silent'] = True
         while refill_in_progress:
-            for num, sto in enumerate(self.openedstores):
+            for num, sto in enumerate(f_rd_ostores):
                 logger.debug('Multistore get at %s', sto)
-                if result_id and num == len(self.openedstores) - 1:
+                if result_id and num == len(f_rd_ostores) - 1:
                     rc = sto.finaliseget(result_id, remote.copy(), local, get_options)
                     result_id = None  # result_ids can not be re-used during refill
                 else:
@@ -648,31 +663,31 @@ class MultiStore(footprints.FootprintBase):
                 # Are we trying a refill ? -> find the previous writeable store
                 restores = []
                 if rc and self.refillstore and num > 0:
-                    restores = [ostore for ostore in self.openedstores[:num]
-                                if ostore.writeable]
+                    restores = [ostore for ostore in f_rd_ostores[:num]
+                                if ostore.writeable and ostore in f_wr_ostores]
                 # Do the refills and check if one of them succeed
                 refill_in_progress = False
                 for restore in restores:
                     # Another refill may have filled the gap...
                     if not restore.check(remote.copy(), options):
-                        logger.info('Refill back in writeable store [%s]', restore)
+                        logger.info('Refill back in writeable store [%s].', restore)
                         try:
                             refill_in_progress = ((restore.put(local, remote.copy(), options) and
                                                    (options.get('intent', _CACHE_GET_INTENT_DEFAULT) !=
                                                     _CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
-                        except ExecutionError as e:
+                        except (ExecutionError, IOError, OSError) as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
                             logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
-                    logger.info("Starting another round because at least one refill succeeded")
+                    logger.info("Starting another round because at least one refill succeeded.")
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
         if not rc:
             self._verbose_log(options, 'warning',
-                              "None of the opened store succeeded... that's too bad !",
-                              slevel='info')
+                              "Multistore get {:s}://{:s}: none of the opened store succeeded."
+                              .format(self.scheme, self.netloc), slevel='info')
         return rc
 
     def get(self, remote, local, options=None):
@@ -682,17 +697,18 @@ class MultiStore(footprints.FootprintBase):
 
     def earlyget(self, remote, local, options=None):
         logger.debug('Multistore earlyget from %s to %s', remote, local)
+        f_ostores = self.filtered_readable_openedstores(remote)
         get_options = copy.copy(options) if options is not None else dict()
-        if len(self.openedstores) > 1:
-            first_checkable = all([s.has_fast_check() for s in self.openedstores[:-1]])
+        if len(f_ostores) > 1:
+            first_checkable = all([s.has_fast_check() for s in f_ostores[:-1]])
             # Early-fetch is only available on the last resort store...
             if first_checkable and all([not s.check(remote.copy(), get_options)
-                                        for s in self.openedstores[:-1]]):
-                return self.openedstores[-1].earlyget(remote.copy(), local, get_options)
+                                        for s in f_ostores[:-1]]):
+                return f_ostores[-1].earlyget(remote.copy(), local, get_options)
             else:
                 return None
-        elif len(self.openedstores) == 1:
-            return self.openedstores[0].earlyget(remote.copy(), local, get_options)
+        elif len(f_ostores) == 1:
+            return f_ostores[0].earlyget(remote.copy(), local, get_options)
         else:
             return None
 
@@ -703,23 +719,25 @@ class MultiStore(footprints.FootprintBase):
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multistore put from %s to %s', local, remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_writeable_openedstores(remote)
+        if not f_ostores:
             logger.warning('Funny attempt to put on an empty multistore...')
             return False
         rc = True
-        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
-            logger.info('Multistore put at %s', sto)
+        for sto in [ostore for ostore in f_ostores if ostore.writeable]:
+            logger.debug('Multistore put at %s', sto)
             rcloc = sto.put(local, remote.copy(), options)
-            logger.info('Multistore out = %s', rcloc)
+            logger.debug('Multistore out = %s', rcloc)
             rc = rc and rcloc
         return rc
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
         logger.debug('Multistore delete from %s', remote)
+        f_ostores = self.filtered_writeable_openedstores(remote)
         rc = False
-        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
-            logger.info('Multistore delete at %s', sto)
+        for sto in [ostore for ostore in f_ostores if ostore.writeable]:
+            logger.debug('Multistore delete at %s', sto)
             rc = sto.delete(remote.copy(), options)
             if not rc:
                 break
@@ -1326,13 +1344,13 @@ class ConfigurableArchiveStore(object):
             logger.info("Reading config file: %s", self._store_global_config)
             maincfg = config.GenericConfigParser(inifile=self._store_global_config)
             conf['host'] = dict(maincfg.items(self.archive.actual_storage))
+            conf['locations'] = defaultdict(dict)
 
             # Look for a local configuration file
             localcfg = conf['host'].get('localconf', None)
             if localcfg is not None:
                 logger.info("Reading config file: %s", localcfg)
                 localcfg = config.GenericConfigParser(inifile=localcfg)
-                conf['locations'] = defaultdict(dict)
                 conf['locations']['generic'] = localcfg.defaults()
                 for section in localcfg.sections():
                     logger.debug("New location found: %s", section)
@@ -1742,6 +1760,9 @@ class CacheStore(Store):
             uniquelevel_ignore = options.get('uniquelevel_ignore', True),
             silent             = options.get('silent', False),
         )
+        if rc or not options.get('silent', False):
+            logger.info('incacheget retrieve rc=%s location=%s', str(rc),
+                        str(self.incachelocate(remote, options)))
         return rc and self._hash_get_check(self.incacheget, remote, local, options)
 
     def incacheput(self, local, remote, options):
@@ -1755,6 +1776,8 @@ class CacheStore(Store):
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
+        logger.info('incacheput insert rc=%s location=%s', str(rc),
+                    str(self.incachelocate(remote, options)))
         return rc and self._hash_put(self.incacheput, local, remote, options)
 
     def incachedelete(self, remote, options):
@@ -1783,7 +1806,7 @@ class _VortexCacheBaseStore(CacheStore):
             ),
             headdir = dict(
                 default = 'vortex',
-                outcast = ['xp'],
+                outcast = ['xp', ],
             ),
             rtouch = dict(
                 default = True,
@@ -1835,8 +1858,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         info = 'VORTEX MTOOL like Cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vortex.cache.fr', 'vortex.cache-mt.fr',
-                           'vortex-free.cache.fr', 'vortex-free.cache-mt.fr',
+                values  = ['vortex.cache-mt.fr', 'vortex-free.cache-mt.fr',
                            'vsop.cache-mt.fr'],
             ),
             strategy = dict(
@@ -1844,6 +1866,89 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
             ),
         )
     )
+
+
+class VortexCacheBuddiesStore(_VortexCacheBaseStore):
+    """Some kind of MTOOL cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX MTOOL like Cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache-buddies.fr', 'vortex-free.cache-buddies.fr', ],
+            ),
+            strategy = dict(
+                default = 'mtoolbuddies',
+            ),
+            headdir = dict(
+                default = 'vortexbuddies',
+            ),
+            rtouch = dict(
+                default = False,
+            ),
+            readonly = dict(
+                values  = [True, ],
+                default = True,
+            )
+        )
+    )
+
+
+class VortexCacheMarketPlaceStore(_VortexCacheBaseStore):
+    """Some kind of centralised cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = "VORTEX's centralised Cache access",
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache-market.fr', 'vortex-free.cache-market.fr', ],
+            ),
+            strategy = dict(
+                default = 'marketplace',
+            ),
+            rtouch = dict(
+                default = False,
+            ),
+        )
+    )
+
+
+class VortexCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'VORTEX cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['vortex'],
+            ),
+            netloc = dict(
+                values  = ['vortex.cache.fr', 'vortex-free.cache.fr', ],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_reads(remote['path'])])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
+        mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
+        ma_netloc = '{base:s}.cache-market.{country:s}'.format(** netloc_m.groupdict())
+        return [mt_netloc, bd_netloc, ma_netloc]
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):

@@ -22,11 +22,11 @@ from vortex.data.flow import FlowResource
 from vortex.data.providers import VortexStd
 from vortex.data.stores import _VortexCacheBaseStore, _CACHE_GET_INTENT_DEFAULT
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
-from vortex.tools.storage import Cache
+from vortex.tools.storage import FixedEntryCache
 
 
 # The test cache Storage Object
-class TestDataCache(Cache):
+class TestDataCache(FixedEntryCache):
     """Cache items for the MTOOL jobs (or any job that acts like it)."""
 
     _footprint = dict(
