@@ -493,6 +493,9 @@ class Cache(Storage):
         return rc, dict(fmt=fmt)
 
 
+DEFAULT_ARCHIVE_TUBES = ['ftp, ']
+
+
 class Archive(Storage):
     """The default class to handle storage to a remote location."""
 
@@ -514,7 +517,7 @@ class Archive(Storage):
             tube = dict(
                 info     = "How to communicate with the archive ?",
                 optional = True,
-                values   = ['ftp', ],
+                values   = DEFAULT_ARCHIVE_TUBES,
             ),
         )
     )
@@ -533,6 +536,7 @@ class Archive(Storage):
         """This archive network name (potentially read form the configuration file)."""
         return ((self.storage if self.storage != 'generic' else None) or
                 self.sh.env.VORTEX_DEFAULT_STORAGE or
+                self.sh.glove.default_fthost or
                 (self._actual_config.get(self.kind, 'storage')
                  if self._actual_config.has_option(self.kind, 'storage') else None) or
                 self.sh.default_target.get('stores:archive_storage', None) or
@@ -543,6 +547,7 @@ class Archive(Storage):
     def actual_tube(self):
         """This archive communication scheme (potentially read form the configuration file)."""
         return (self.tube or
+                self.sh.env.VORTEX_DEFAULT_ARCHIVE_TUBE or
                 (self._actual_config.get(self.kind, 'tube', None)
                  if self._actual_config.has_option(self.kind, 'tube') else None) or
                 self.sh.default_target.get('stores:archive_tube', None) or

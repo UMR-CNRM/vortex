@@ -99,16 +99,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 rc, source, destination = self.tarfix_in(source, destination)
         return rc
 
-    def _folder_credentials(self, hostname=None, logname=None):
-        """Some heuristic to get proper values for these arguments."""
-        if hostname is None:
-            hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-
-        if logname is None:
-            logname = self.sh.env.VORTEX_ARCHIVE_USER
-
-        return (hostname, logname)
-
     def _folder_pack_stream(self, source, stdout=True):
         source_name = self.sh.path.basename(source)
         source_dirname = self.sh.path.dirname(source)
@@ -171,10 +161,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Proceed direct ftp get on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname, logname = self._folder_credentials(hostname, logname)
-        if hostname is None:
-            return False
-
+        hostname = self.sh._fix_fthostname(hostname)
         source, destination = self._folder_preftget(source, destination)
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
@@ -267,9 +254,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname, logname = self._folder_credentials(hostname, logname)
-        if hostname is None:
-            return False
+        hostname = self.sh._fix_fthostname(hostname)
 
         if not destination.endswith('.tgz'):
             destination += '.tgz'
@@ -316,6 +301,7 @@ class FolderShell(addons.FtrawEnableAddon):
             raise IOError("It's not allowed to compress folder like data.")
 
         source, destination = self._folder_preftget(source, destination)
+        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         rc = False
         loccwd = self.sh.getcwd()
@@ -338,7 +324,7 @@ class FolderShell(addons.FtrawEnableAddon):
             destination += '.tgz'
 
         source = self.sh.path.abspath(source)
-
+        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         p = self._folder_pack_stream(source)
         rc = ssh.scpput_stream(p.stdout, destination)

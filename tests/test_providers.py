@@ -112,7 +112,7 @@ class TestProviderRemote(unittest.TestCase):
             pr = fp.proxy.provider(tube=proto, remote='/home/machin/dummy',
                                    hostname='superserver', username='toto',
                                    ** self.fp_defaults)
-            self.assertEqual(pr.netloc(None), 'toto@superserver')
+            self.assertEqual(pr.netloc(None), 'superserver')
             self.assertEqual(pr.uri(self.t_res),
                              '{}://toto@superserver/home/machin/dummy'.format(proto))
 
@@ -163,7 +163,7 @@ class TestProviderVortexStd(unittest.TestCase):
         # username ?
         pr = fp.proxy.provider(username='toto', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),
-                         'vortex://' + self.fp_defaults['namespace'] +
+                         'vortex://toto@' + self.fp_defaults['namespace'] +
                          '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres')
 
 
@@ -220,7 +220,7 @@ class TestProviderOlive(unittest.TestCase):
         # username ?
         pr = fp.proxy.provider(username='toto', vconf='4dvar', ** self.fp_defaults)
         self.assertEqual(pr.uri(self.t_res),
-                         'olive://' + self.fp_defaults['namespace'] +
+                         'olive://toto@' + self.fp_defaults['namespace'] +
                          '/VOID/20000101H00A/dummy/dummyres')
         # member ?
         pr = fp.proxy.provider(member=1, vconf='4dvar', ** self.fp_defaults)
@@ -352,7 +352,7 @@ class TestProviderOpArchive(unittest.TestCase):
             pr = fp.proxy.provider(suite=ns, username='toto',
                                    ** self.fp_defaults)
             self.assertEqual(pr.uri(self.t_res),
-                             'op://{}.archive.fr'.format(self.s_remap.get(ns, ns)) +
+                             'op://toto@{}.archive.fr'.format(self.s_remap.get(ns, ns)) +
                              '/arpege/{}/assim/2000/01/01/r0/dummyres'.format(ns))
             # Member ?
             pr = fp.proxy.provider(suite=ns, member=1, ** self.fp_defaults)

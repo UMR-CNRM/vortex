@@ -1345,6 +1345,25 @@ class OSExtended(System):
                 self._current_ftppool.clear()
                 self._current_ftppool = None
 
+    def _fix_fthostname(self, hostname, fatal=True):
+        """If *hostname* is None, tries to find a default value for it."""
+        if hostname is None:
+            hostname = self.glove.default_fthost
+            if not hostname:
+                if fatal:
+                    raise ValueError('An *hostname* must be provided one way or another')
+        return hostname
+
+    def _fix_ftuser(self, hostname, logname, fatal=True, defaults_to_user=True):
+        """Given *hostname*, if *logname* is None, tries to find a default value for it."""
+        if logname is None:
+            if self.glove is not None:
+                logname = self.glove.getftuser(hostname, defaults_to_user=defaults_to_user)
+            else:
+                if fatal:
+                    raise ValueError("Either a *logname* or a glove must be set-up")
+        return logname
+
     def ftp(self, hostname, logname=None, delayed=False):
         """Return an FTP client object.
 
@@ -1371,11 +1390,7 @@ class OSExtended(System):
               to create and re-use FTP connections; Otherwise a "usual"
               :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
-        if logname is None:
-            if self.glove is not None:
-                logname = self.glove.user
-            else:
-                raise ValueError("Either a logname or a glove must be set-up")
+        logname = self._fix_ftuser(hostname, logname)
         if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
             return self._current_ftppool.deal(hostname, logname, delayed=delayed)
         else:
@@ -1405,6 +1420,7 @@ class OSExtended(System):
         """
         if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
+        hostname = self._fix_fthostname(hostname)
         ftp = self.ftp(hostname, logname)
         if ftp:
             try:
@@ -1439,6 +1455,7 @@ class OSExtended(System):
         """
         rc = False
         if self.is_iofile(source):
+            hostname = self._fix_fthostname(hostname)
             ftp = self.ftp(hostname, logname)
             if ftp:
                 try:
@@ -1484,6 +1501,8 @@ class OSExtended(System):
         if self.ftserv_allowed(source, destination):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
+                hostname = self._fix_fthostname(hostname, fatal=False)
+                logname = self._fix_ftuser(hostname, logname, fatal=False)
                 extras = list()
                 if not sync:
                     extras.extend(['-q', ])
@@ -1506,6 +1525,8 @@ class OSExtended(System):
         """Get a file using FtServ."""
         if self.ftserv_allowed(source, destination):
             if self.filecocoon(destination):
+                hostname = self._fix_fthostname(hostname, fatal=False)
+                logname = self._fix_ftuser(hostname, logname, fatal=False)
                 destination = self.path.expanduser(destination)
                 extras = list()
                 if hostname:
@@ -1530,6 +1551,8 @@ class OSExtended(System):
                 if not self.filecocoon(d):
                     raise IOError('Could not cocoon: {!s}'.format(d))
             extras = list()
+            hostname = self._fix_fthostname(hostname, fatal=False)
+            logname = self._fix_ftuser(hostname, logname, fatal=False)
             if hostname:
                 extras.extend(['-h', hostname])
             if logname:
@@ -1717,6 +1740,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
         """
+        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(source, six.string_types) and cpipeline is None:
@@ -1743,6 +1767,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
+        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(destination, six.string_types) and cpipeline is None:

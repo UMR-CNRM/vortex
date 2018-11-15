@@ -164,12 +164,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
-            if hostname is None:
-                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-            if hostname is None:
-                return False
-            if logname is None:
-                logname = self.sh.env.VORTEX_ARCHIVE_USER
+            hostname = self.sh._fix_fthostname(hostname)
 
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
@@ -219,6 +214,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
+            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)

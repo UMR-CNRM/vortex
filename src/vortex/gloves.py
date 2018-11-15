@@ -62,6 +62,9 @@ class Glove(footprints.FootprintBase):
         self._siteconf   = None
         self._sitedoc    = None
         self._sitesrc    = None
+        self._ftdhost    = None
+        self._ftduser    = None
+        self._ftusers    = dict()
 
     @property
     def realkind(self):
@@ -129,6 +132,56 @@ class Glove(footprints.FootprintBase):
         """Protected paths as a list a tuples (path, depth)."""
         e = Environment(active=False)
         return [ (e.HOME, 2), (e.TMPDIR, 1) ]
+
+    def setftuser(self, user, hostname=None):
+        """Register a default username for *hostname*.
+
+        If *hostname* is omitted the default username is set.
+        """
+        if hostname is None:
+            self._ftduser = user
+        else:
+            if not user:
+                del self._ftusers[hostname]
+            else:
+                self._ftusers[hostname] = user
+
+    def getftuser(self, hostname, defaults_to_user=True):
+        """Get the default username for a given *hostname*."""
+        if self._ftusers.get(hostname, None):
+            return self._ftusers[hostname]
+        else:
+            if self._ftduser:
+                return self._ftduser
+            else:
+                return Environment.current().get('VORTEX_ARCHIVE_USER',
+                                                 self.user if defaults_to_user else None)
+
+    def _get_default_fthost(self):
+        if self._ftdhost:
+            return self._ftdhost
+        else:
+            return Environment.current().get('VORTEX_ARCHIVE_HOST', None)
+
+    def _set_default_fthost(self, value):
+        self._ftdhost = value
+
+    def _del_default_fthost(self):
+        self._ftdhost = None
+
+    default_fthost = property(_get_default_fthost, _set_default_fthost, _del_default_fthost)
+
+    def describeftsettings(self, indent='+ '):
+        """Returns a printable description of default file transfert usernames."""
+        card = "\n".join(
+            ['{0}{3:48s} = {4:s}', ] +
+            ['{0}{1:48s} = {2:s}', ] +
+            (['{0}Host specific FT users:', ] if self._ftusers else []) +
+            ['{0}' + '  {:46s} = {:s}'.format(k, v) for k, v in self._ftusers.items() if v]
+        ).format(indent,
+                 'Default FT User', str(self._ftduser),
+                 'Default FT Host', str(self._ftdhost))
+        return card
 
     def idcard(self, indent='+ '):
         """Returns a printable description of the current glove."""
