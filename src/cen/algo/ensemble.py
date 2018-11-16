@@ -587,18 +587,18 @@ class SytistWorker(_SafranWorker):
 
 class SurfexExecutionError(ExecutionError):
 
-    def __init__(self, thisdir, datebegin, dateend):
-        self.thisdir = thisdir
+    def __init__(self, subdir, datebegin, dateend):
+        self.subdir = subdir
         self.datebegin = datebegin
         self.dateend = dateend
         super(SurfexExecutionError, self).__init__('SURFEX execution failed.')
 
     def __str__(self):
-        return ("Error while running SURFEX in directory " + self.thisdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
+        return ("Error while running SURFEX for member " + self.subdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
 
     def __reduce__(self):
         red = list(super(SurfexExecutionError, self).__reduce__())
-        red[1] = tuple([self.thisdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
+        red[1] = tuple([self.subdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
         return tuple(red)
 
 
@@ -779,9 +779,13 @@ class SurfexWorker(_S2MWorker):
 
             try:
                 self.local_spawn(list_name)
+                # Uncomment these lines to test the behaviour in case of failure of 1 member
+#                 if self.subdir == "mb006":
+#                     rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+
             except ExecutionError:
-                rdict['rc'] = SurfexExecutionError(thisdir, datebegin_this_run, dateend_this_run)
-                return rdict
+                rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+                return rdict  # Note than in the other case return rdict is at the end
 
             # Copy the SURFOUT file for next iteration
             self.system.cp("SURFOUT.nc", "PREP.nc")
