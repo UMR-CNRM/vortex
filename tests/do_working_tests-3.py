@@ -6,8 +6,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import importlib
 import unittest
 
-testmodules = ['tests_bronx.test_datagrip_datastore',
+testmodules = ['test_import',
+               'tests_bronx.test_datagrip_datastore',
                'tests_bronx.test_datagrip_namelist',
+               'tests_bronx.test_net_netrc',
                'tests_bronx.test_stdtypes_date',
                'tests_bronx.test_system_hash',
                'tests_bronx.test_system_interrupt',
@@ -21,6 +23,12 @@ testmodules = ['tests_bronx.test_datagrip_datastore',
                'tests_footprints.test_fp_setup',
                'tests_footprints.test_fp_stdtypes',
                'tests_footprints.test_fp_util',
+               'test_cfgparser',
+               'test_iosponge',
+               'test_sessions_stuff',
+               'test_layoutnodes',
+               'test_syntax',
+               'test_vortexnames',
                ]
 
 
