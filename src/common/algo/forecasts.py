@@ -371,9 +371,10 @@ class FullPosGeo(FullPos):
                     sh.rmall('ncf927', 'dirlst')
             else:
                 # Link the output files to new style names
-                sh.softlink(output_file, self._compute_target_name(r))
+                sh.cp(output_file, self._compute_target_name(r),
+                      fmt=r.container.actualfmt, intent='in')
                 # Link the listing to NODE.all
-                sh.softlink('NODE.001_01', 'NODE.all')
+                sh.cp('NODE.001_01', 'NODE.all', intent='in')
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
