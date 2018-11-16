@@ -1685,6 +1685,13 @@ class CacheStore(Store):
         tg = self.system.default_target
         return tg.inetname if self.storage is None else self.storage
 
+    @property
+    def config_name(self):
+        """Returns the current :attr:`storage`."""
+        tg = self.system.default_target
+        idname = tg.cache_storage_alias() if self.storage is None else self.storage
+        return '@cache-{!s}.ini'.format(idname)
+
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
         return True
@@ -1703,6 +1710,7 @@ class CacheStore(Store):
             self._cache = footprints.proxy.caches.default(
                 kind       = self.underlying_cache_kind,
                 storage    = self.hostname,
+                inifile    = self.config_name,
                 rootdir    = self.rootdir,
                 headdir    = self.headdir,
                 rtouch     = self.rtouch,
