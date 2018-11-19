@@ -187,8 +187,16 @@ class _SafranWorker(_S2MWorker):
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         _OP_files_common = ['OPlisteo', 'OPlysteo', 'OPlistem', 'Oplystem', 'OPlisteml', 'OPlysteml', 'OPclim',
-                            'OPNOmt', 'OPA', 'OPR', 'OPS', 'OPsat', 'OPnoir', 'OPposte']
+                            'OPNOmt', 'OPsat', 'OPnoir', 'OPposte']
         _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSG', 'OPSAP', 'OPSAN']
+        if self.execution == 'reanalysis':
+            # In reanalysis tasks the parralelisation is made over the seasons so the observations are "individal files"
+            _OP_files_individual.extend(['OPA', 'OPR', 'OPS'])
+            # Add 'weather type' normals
+            _OP_files_common.extend(['OPNOot', 'OPNOmt'])
+        else:
+            _OP_files_common.extend(['OPA', 'OPR', 'OPS'])
+
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
                 with io.open(op_file, 'w') as f:
@@ -485,6 +493,10 @@ class SyvaprWorker(_SafranWorker):
             # Reanalysis : if the execution was allright we don't need the log file
 #            if self.execution in ['reanalysis', 'reforecast']:
 #                self.system.remove(list_name)
+            for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
+                if self.system.path.isfile('SAF4D_{0:s}'.format(suffix)):
+                    print('DBUG SAF4D_{0:s} exists'.format(suffix))
+                self.mv_if_exists('SAF4D_{0:s}'.format(suffix), 'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
 
 
 class SyvafiWorker(_SafranWorker):
@@ -502,6 +514,8 @@ class SyvafiWorker(_SafranWorker):
         for j, d in enumerate(dates):
             self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
+        for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
+            self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         self.local_spawn(list_name)
         self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
@@ -559,6 +573,8 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
         self.link_in('SAPLUI5_ARP' + dates[-1].ymdh, 'SAPLUI5_ARP')
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
+        for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
+            self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
         if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
@@ -846,7 +862,7 @@ class S2MComponent(ParaBlindRun):
             datebegin = a_date,
             dateend   = a_date,
             execution = dict(
-                values   = ['analysis', 'forecast', 'reanalysis', 'reforecast'],
+                values   = ['analysis', 'forecast', 'reforecast'],
                 optional = True,
             )
         )
