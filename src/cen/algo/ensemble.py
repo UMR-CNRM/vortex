@@ -11,10 +11,12 @@ from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
-from vortex.algo.components import ParaBlindRun, ParaExpresso
-from vortex.tools.parallelism import VortexWorkerBlindRun
+from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
+from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
+from vortex.tools.systems import ExecutionError
+from vortex.data.geometries  import UnstructuredGeometry
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -49,11 +51,11 @@ class _S2MWorker(VortexWorkerBlindRun):
         if self.subdir is not self.system.path.dirname(rundir):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
-                self._commons(rundir, thisdir, rdict, **kwargs)
+                rdict = self._commons(rundir, thisdir, rdict, **kwargs)
 
         else:
             thisdir = rundir
-            self._commons(rundir, thisdir, rdict, **kwargs)
+            rdict = self._commons(rundir, thisdir, rdict, **kwargs)
 
         return rdict
 
@@ -86,7 +88,6 @@ class _S2MWorker(VortexWorkerBlindRun):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
         for line in self.system.dir():
             print(line)
-
 
 class GuessWorker(_S2MWorker):
 
@@ -600,6 +601,23 @@ class SytistWorker(_SafranWorker):
             d.write('1,1,{0!s}\n'.format(self.posts))
 
 
+class SurfexExecutionError(ExecutionError):
+
+    def __init__(self, subdir, datebegin, dateend):
+        self.subdir = subdir
+        self.datebegin = datebegin
+        self.dateend = dateend
+        super(SurfexExecutionError, self).__init__('SURFEX execution failed.')
+
+    def __str__(self):
+        return ("Error while running SURFEX for member " + self.subdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
+
+    def __reduce__(self):
+        red = list(super(SurfexExecutionError, self).__reduce__())
+        red[1] = tuple([self.subdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
 @echecker.disabled_if_unavailable
 class SurfexWorker(_S2MWorker):
     '''This algo component is designed to run a SURFEX experiment without MPI parallelization.'''
@@ -685,8 +703,9 @@ class SurfexWorker(_S2MWorker):
         for required_link in list_files_link_ifnotprovided:
             self.link_ifnotprovided(self.system.path.join(rundir, required_link), required_link)
 
-        self._surfex_task(rundir, thisdir, rdict)
+        rdict = self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
+        return rdict
 
     def _surfex_task(self, rundir, thisdir, rdict):
         # ESCROC cases: each member will need to have its own namelist
@@ -773,7 +792,16 @@ class SurfexWorker(_S2MWorker):
 
             # Run surfex offline
             list_name = self.system.path.join(thisdir, 'offline.out')
-            self.local_spawn(list_name)
+
+            try:
+                self.local_spawn(list_name)
+                # Uncomment these lines to test the behaviour in case of failure of 1 member
+#                 if self.subdir == "mb006":
+#                     rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+
+            except ExecutionError:
+                rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+                return rdict  # Note than in the other case return rdict is at the end
 
             # Copy the SURFOUT file for next iteration
             self.system.cp("SURFOUT.nc", "PREP.nc")
@@ -791,10 +819,121 @@ class SurfexWorker(_S2MWorker):
             datebegin_this_run = dateend_this_run
             need_other_run = dateend_this_run < self.dateend
 
+            print (dateend_this_run, self.dateend)
+            print ("INFO SAVE FORCING", need_save_forcing, need_other_run, need_other_forcing)
+
             if need_save_forcing and not (need_other_run and not need_other_forcing):
                 save_file_period(".", "FORCING", dateforcbegin, dateforcend)
             # Remove the symbolic link for next iteration (not needed since now we rename the forcing just before
 #             self.system.remove("FORCING.nc")
+
+        return rdict
+
+
+@echecker.disabled_if_unavailable
+class PrepareForcingWorker(TaylorVortexWorker):
+    '''This algo component is designed to run a SURFEX experiment without MPI parallelization.'''
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
+        attr = dict(
+            datebegin = a_date,
+            dateend   = a_date,
+            kind = dict(
+                values = ['prepareforcing'],
+            ),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = False
+            ),
+            geometry_in = dict(
+                info = "Area information in case of an execution on a massif geometry",
+                type = footprints.stdtypes.FPList,
+                optional = True,
+                default = None
+            ),
+            geometry_out = dict(
+                info = "The resource's massif geometry.",
+                type = str,
+            )
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+        rdict = dict(rc=True)
+        rundir = self.system.getcwd()
+        if self.subdir is not self.system.path.dirname(rundir):
+            thisdir = self.system.path.join(rundir, self.subdir)
+            with self.system.cdcontext(self.subdir, create=True):
+                rdict = self._commons(rundir, thisdir, rdict, **kwargs)
+
+        else:
+            thisdir = rundir
+            rdict = self._commons(rundir, thisdir, rdict, **kwargs)
+
+        return rdict
+
+    def _commons(self, rundir, thisdir, rdict, **kwargs):
+
+        self._prepare_forcing_task(rundir, thisdir, rdict)
+        self.postfix()
+
+    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+
+        need_other_run = True
+        need_other_forcing = True
+        need_save_forcing = False
+        datebegin_this_run = self.datebegin
+
+        while need_other_run:
+
+            if need_other_forcing:
+
+                forcingdir = rundir
+
+                if len(self.geometry_in) > 1:
+                    print ("FORCING AGGREGATION")
+                    forcinglist = []
+                    for massif in self.geometry_in:
+                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif, datebegin_this_run, self.dateend)
+                        forcingname = "FORCING_" + massif + ".nc"
+                        self.system.mv("FORCING.nc", forcingname)
+                        forcinglist.append(forcingname)
+
+                    forcinput_tomerge(forcinglist, "FORCING.nc",)
+                    need_save_forcing = True
+                else:
+                    # Get the first file covering part of the whole simulation period
+                    print ("LOOK FOR FORCING")
+                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
+                    print ("FORCING FOUND")
+
+                    if self.geometry_in[0] in ["alp", "pyr", "cor"]:
+                        if "allslopes" in self.geometry_out:
+                            list_slopes = ["0", "20", "40"]
+                        elif "flat" in self.geometry_out:
+                            list_slopes = ["0"]
+
+                        print ("FORCING EXTENSION")
+                        liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
+                        liste_aspect  = infomassifs().get_list_aspect(8, list_slopes)
+                        self.system.mv("FORCING.nc", "FORCING_OLD.nc")
+                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, list_slopes, liste_aspect)
+                        need_save_forcing = True
+
+            dateend_this_run = min(self.dateend, dateforcend)
+
+            # Prepare next iteration if needed
+            datebegin_this_run = dateend_this_run
+            need_other_run = dateend_this_run < self.dateend
+
+            if need_save_forcing and not (need_other_run and not need_other_forcing):
+                save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+
+    def postfix(self):
+        self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
+        for line in self.system.dir():
+            print(line)
 
 
 class Guess(ParaExpresso):
@@ -898,8 +1037,9 @@ class S2MComponent(ParaBlindRun):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
         subdirs = [am.rh.container.dirname for am in avail_members]
-        if not self.execution == 'reanalysis':
-            self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
+# Ca partait d'une bonne idée mais en pratique il y a plein de cas particuliers pour lesquels ça pose problème
+# reanalyse safran, surfex postes, etc
+#         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
         return list(set(subdirs))
 
@@ -983,7 +1123,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc']
+                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1057,3 +1197,70 @@ class SurfexComponent(S2MComponent):
 
     def role_ref_namebuilder(self):
         return 'Forcing'
+
+
+@echecker.disabled_if_unavailable
+class PrepareForcingComponent(TaylorRun):
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel.',
+        attr = dict(
+            kind = dict(
+                values = ['prepareforcing']
+            ),
+            engine = dict(
+                values = ['s2m']),
+            datebegin = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
+            ),
+            dateend = dict(
+                info = "The list of begin dates of the forcing files",
+                type = footprints.stdtypes.FPList,
+            ),
+            geometry_in = dict(
+                info = "Area information in case of an execution on a massif geometry",
+                type = footprints.stdtypes.FPList,
+                default = None
+            ),
+            geometry_out = dict(
+                info = "The resource's massif geometry.",
+                type = str,
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Set some variables according to target definition."""
+        super(PrepareForcingComponent, self).prepare(rh, opts)
+        self.env.DR_HOOK_NOT_MPI = 1
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
+        for attribute in self.footprint_attributes:
+            ddict[attribute] = getattr(self, attribute)
+        return ddict
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+        common_i = self._default_common_instructions(rh, opts)
+        # Note: The number of members and the name of the subdirectories could be
+        # auto-detected using the sequence
+        subdirs = self.get_subdirs(rh, opts)
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=self.datebegin[0], dateend=self.dateend[0]))
+        self._default_post_execute(rh, opts)
+
+    def postfix(self, rh, opts):
+        pass
+
+    def get_subdirs(self, rh, opts):
+        print (type(self.datebegin))
+        print (self.datebegin)
+        return [begin.year for begin in self.datebegin[0]]
+
+    def role_ref_namebuilder(self):
+        return 'Forcing'
+
