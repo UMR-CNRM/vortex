@@ -1169,9 +1169,11 @@ class OSExtended(System):
     def setulimit(self, r_id):
         """Set an unlimited value to the specified resource (**r_id**)."""
         self.stderr('setulimit', r_id)
-        soft, hard = self.getrlimit(r_id)
-        soft = min(hard, max(soft, self._rl.RLIM_INFINITY))
-        return self.setrlimit(r_id, (soft, hard))
+        u_soft, hard = self.getrlimit(r_id)  # @UnusedVariable
+        if hard != self._rl.RLIM_INFINITY:
+            logger.info('Unable to raise the %s soft limit to "unlimited", ' +
+                        'using the hard limit instead (%s).', str(r_id), str(hard))
+        return self.setrlimit(r_id, (hard, hard))
 
     def ulimit(self):
         """Dump the user limits currently defined."""
