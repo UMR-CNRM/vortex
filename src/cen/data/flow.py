@@ -391,7 +391,7 @@ class Snowobs_1date(SnowObs):
             attr = dict(
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values = ['MODIS', 'SENTINEL2', 'TERRAIN', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
+                    values = ['MODIS', 'SENTINEL2', 'TERRAIN', 'SYNTH', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
                     optional = False,
                 ),
                 stage = dict(
