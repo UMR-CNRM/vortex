@@ -192,11 +192,11 @@ class _SafranWorker(_S2MWorker):
         _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSG', 'OPSAP', 'OPSAN']
         if self.execution == 'reanalysis':
             # In reanalysis tasks the parralelisation is made over the seasons so the observations are "individal files"
-            _OP_files_individual.extend(['OPA', 'OPR', 'OPS'])
+            _OP_files_individual.extend(['OPA', 'OPR', 'OPS', 'OPT'])
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
-            _OP_files_common.extend(['OPA', 'OPR', 'OPS'])
+            _OP_files_common.extend(['OPA', 'OPR', 'OPS', 'OPT'])
 
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
