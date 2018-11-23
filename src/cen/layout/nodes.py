@@ -17,6 +17,33 @@ class S2MTaskMixIn(object):
     firstassimruntime = Time(hour=6, minute=0)
     secondassimruntime = Time(hour=9, minute=0)
 
+    def s2moper_filter_execution_error(self, exc):
+        '''Define the behaviour in case of errors'''
+        '''For S2M chain, the errors do not raise exception if the deterministic run or if more than 30 members are available'''
+
+        warning = {}
+        nerrors = len(list(enumerate(exc)))
+        warning["nfail"] = nerrors
+        determinitic_error = False
+
+        for i, e in enumerate(exc):   # @UnusedVariable
+            if hasattr(e, 'deterministic'):
+                if e.deterministic:
+                    determinitic_error = True
+
+                warning["deterministic"] = e.deterministic
+
+        accept_errors = not determinitic_error or nerrors < 5
+
+        warningline = "!" * 40 + "\n"
+        warningmessage = warningline + "ALERT :" + str(nerrors) + " members produced a delayed exception.\n" + warningline + str(exc) + warningline
+
+        if accept_errors:
+            print (warningmessage)
+            return True, warning  # Mask the exception and allows the code to exit normally
+        else:
+            return False, warning   # The delayed exception will be raised to stop execution
+
     def get_period(self):
 
         if self.conf.rundate.hour == self.nightruntime.hour:

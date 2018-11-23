@@ -601,20 +601,22 @@ class SytistWorker(_SafranWorker):
             d.write('1,1,{0!s}\n'.format(self.posts))
 
 
-class SurfexExecutionError(ExecutionError):
+class S2MExecutionError(ExecutionError):
 
-    def __init__(self, subdir, datebegin, dateend):
+    def __init__(self, model, deterministic, subdir, datebegin, dateend):
+        self.model = model
+        self.deterministic = deterministic  # Key used for delayed exception management
         self.subdir = subdir
         self.datebegin = datebegin
         self.dateend = dateend
-        super(SurfexExecutionError, self).__init__('SURFEX execution failed.')
+        super(S2MExecutionError, self).__init__(self.model + ' execution failed.')
 
     def __str__(self):
-        return ("Error while running SURFEX for member " + self.subdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
+        return ("Error while running " + self.model + " for member " + self.subdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
 
     def __reduce__(self):
-        red = list(super(SurfexExecutionError, self).__reduce__())
-        red[1] = tuple([self.subdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
+        red = list(super(S2MExecutionError, self).__reduce__())
+        red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
         return tuple(red)
 
 
@@ -795,12 +797,16 @@ class SurfexWorker(_S2MWorker):
 
             try:
                 self.local_spawn(list_name)
-                # Uncomment these lines to test the behaviour in case of failure of 1 member
-#                 if self.subdir == "mb006":
-#                     rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+#                 Uncomment these lines to test the behaviour in case of failure of 1 member
+                if self.subdir == "mb006":
+                    deterministic = self.subdir == "mb035"
+                    print ("DEBUGINFO")
+                    print (dir(self))
+                    rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
 
             except ExecutionError:
-                rdict['rc'] = SurfexExecutionError(self.subdir, datebegin_this_run, dateend_this_run)
+                deterministic = self.subdir == "mb035"
+                rdict['rc'] = S2MExecutionError("SURFEX", deterministic, self.subdir, datebegin_this_run, dateend_this_run)
                 return rdict  # Note than in the other case return rdict is at the end
 
             # Copy the SURFOUT file for next iteration
