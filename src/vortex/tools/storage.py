@@ -166,6 +166,11 @@ class Storage(footprints.FootprintBase):
         return 'tag={:s}'.format(self.tag)
 
     @property
+    def context(self):
+        """Shortcut to the active context object."""
+        return sessions.get().context
+
+    @property
     def sh(self):
         """Shortcut to the active System object."""
         return sessions.system()
@@ -250,6 +255,33 @@ class Storage(footprints.FootprintBase):
         :note: **local** may be a path to a file or any kind of file like objects.
         """
         return self._actual_retrieve(item, local, **kwargs)
+
+    def earlyretrieve(self, item, local, **kwargs):
+        """Trigger a delayed retrieve of **item** from the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
+        return self._actual_earlyretrieve(item, local, **kwargs)
+
+    def _actual_earlyretrieve(self, item, local, **kwargs):  # @UnusedVariable
+        """No earlyretrieve implemented by default."""
+        return None
+
+    def finaliseretrieve(self, retrieve_id, item, local, **kwargs):
+        """Finalise a delayed retrieve from the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
+        rc, idict = self._actual_finaliseretrieve(retrieve_id, item, local, **kwargs)
+        if rc is not False:
+            infos = self._findout_record_infos(kwargs)
+            infos.update(idict)
+            self.addrecord('RETRIEVE', item, status=rc, **infos)
+        return rc
+
+    def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+        """No delayedretrieve implemented by default."""
+        return False, dict()
 
     @enforce_readonly
     @do_recording('DELETE')
@@ -529,6 +561,22 @@ class Archive(Storage):
             raise AttributeError("The {:s} attribute was not found in this object"
                                  .format(attr))
 
+    def _actual_earlyretrieve(self, item, local, **kwargs):
+        """Proxy to the appropriate tube dependent earlyretrieve method (if available)."""
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'earlyretrieve'), None)
+        if pmethod:
+            return pmethod(item, local, **kwargs)
+        else:
+            return None
+
+    def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):
+        """Proxy to the appropriate tube dependent finaliseretrieve method (if available)."""
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'finaliseretrieve'), None)
+        if pmethod:
+            return pmethod(retrieve_id, item, local, **kwargs)
+        else:
+            return False, dict()
+
     def _ftpfullpath(self, item, **kwargs):
         """Actual _fullpath using ftp."""
         username = kwargs.get('username', None)
@@ -610,6 +658,36 @@ class Archive(Storage):
         )
         return rc, extras
 
+    def _ftpearlyretrieve(self, item, local, **kwargs):
+        """
+        If FtServ/ftraw is used, trigger a delayed action in order to fetch
+        several files at once.
+        """
+        cpipeline = kwargs.get('compressionpipeline', None)
+        if self.sh.rawftget_worthy(item, local, cpipeline):
+            return self.context.delayedactions_hub.register((item, kwargs.get('fmt', 'foo')),
+                                                            kind = 'archive',
+                                                            storage = self.actual_storage,
+                                                            goal = 'get',
+                                                            tube = 'ftp',
+                                                            raw = True,
+                                                            logname = kwargs.get('username', None))
+        else:
+            return None
+
+    def _ftpfinaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+        """
+        Get the resource given the **retrieve_id** identifier returned by the
+        :meth:`_ftpearlyretrieve` method.
+        """
+        extras = dict(fmt=kwargs.get('fmt', 'foo'), )
+        tmplocal = self.context.delayedactions_hub.retrieve(retrieve_id)
+        if tmplocal:
+            rc = self.sh.mv(tmplocal, local, ** extras)
+        else:
+            rc = False
+        return rc, extras
+
     def _ftpinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
         sync_insert = kwargs.get('sync')
@@ -651,9 +729,9 @@ class Archive(Storage):
         """Actual _delete using ftp."""
         rc = None
         username = kwargs.get('username', None)
-        ftp = self.system.ftp(self.actual_storage, username)
+        ftp = self.sh.ftp(self.actual_storage, username)
         if ftp:
-            if self.check(item, kwargs):
+            if self.check(item, **kwargs):
                 logger.info('ftpdelete on ftp://%s/%s', self.actual_storage, item)
                 rc = ftp.delete(item)
                 ftp.close()

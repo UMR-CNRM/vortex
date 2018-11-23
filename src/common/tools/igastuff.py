@@ -169,6 +169,8 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                          'med@anaro': 'surcotes',
                          'atl@fcaro': 'surcotes',
                          'med@fcaro': 'surcotes',
+                         'atl@fcaoc': 'surcotes',
+                         'med@fcaoc': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
                          'oin@fcaro': 'surcotes_oi', },
                }

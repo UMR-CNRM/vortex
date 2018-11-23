@@ -167,11 +167,9 @@ class OpJobAssistantTest(JobAssistant):
         import iga.tools.services
         import iga.tools.actions
 
-        ad.add(vortex.tools.actions.SmsGateway())
-        #ad.add(vortex.tools.actions.EcflowGateway())
+        ad.add(vortex.tools.actions.EcflowGateway())
 
-        print('+ SMS candidates =', ad.candidates('sms'))
-        #print('+ ECFLOW candidates =', ad.candidates('ecflow'))
+        print('+ ECFLOW candidates =', ad.candidates('ecflow'))
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
@@ -181,17 +179,14 @@ class OpJobAssistantTest(JobAssistant):
         ad.report(kind='dayfile', mode='DEBUT')
 
         # ----------------------------------------------------------------------
-        t.sh.header('SMS Settings')
-        ad.sms_info()
-        #ad.ecflow_info()
+        t.sh.header('ECFLOW Settings')
+        ad.ecflow_info()
+        ad.ecflow_off()
 
-        if t.env.SMSPASS is None:
-            ad.sms_off()
-        #if t.envECFLOWPASS is None:
-            #ad.ecflow_off()
+        if t.env['ECF_PASS'] is not  None:
+            ad.ecflow_on()
+            ad.ecflow_init(t.env.SLURM_JOBID)
 
-        ad.sms_init(t.env.SLURM_JOBID)
-        #ad.ecflow_init(t.env.SLURM_JOBID)
 
 
     def register_cycle(self, cycle):
@@ -217,15 +212,13 @@ class OpJobAssistantTest(JobAssistant):
     def complete(self):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
-        ad.sms_complete()
-        #ad.ecflow_compete()
+        ad.ecflow_complete()
         print('Well done Denis !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
-        ad.sms_abort()
-        #ad.ecflow_abort()
+        ad.ecflow_abort()
         print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
 

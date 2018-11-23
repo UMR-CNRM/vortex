@@ -6,13 +6,14 @@ This modules defines the low level physical layout for data handling.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
 from collections import namedtuple, defaultdict
 import json
 import pprint
 import re
-import six
+import traceback
 import weakref
 
 import footprints
@@ -137,51 +138,65 @@ class Section(object):
         updmethod = getattr(self, '_updstage_' + info.get('stage'), self._updignore)
         updmethod(info)
 
+    def _fatal_wrap(self, sectiontype, callback, **kw):
+        """Launch **callback** and process the returncode/exceptions according to **fatal**."""
+        action = {'input': 'get', 'output': 'put'}[sectiontype]
+        rc = False
+        try:
+            rc = callback(**kw)
+        except StandardError as e:
+            logger.error('Something wrong (%s section): %s. %s',
+                         sectiontype, str(e), traceback.format_exc())
+            try:
+                logger.error('Resource %s', self.rh.locate())
+            except StandardError:
+                logger.error('Resource ???')
+        if not rc and self.fatal:
+            try:
+                logger.critical('Fatal error with action %s %s', action, self.rh.locate())
+            except StandardError:
+                logger.critical('Fatal error with action %s on ???', action)
+            raise SectionFatalError('Could not {:s} resource {!s}'.format(action, rc))
+        return rc
+
     def get(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.get`."""
+        if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
+            kw['intent'] = self.intent
+            if self.alternate:
+                kw['alternate'] = self.alternate
+            rc = self._fatal_wrap('input', self.rh.get, **kw)
+        else:
+            rc = False
+            logger.error('Try to get from an output section')
+        return rc
+
+    def finaliseget(self):
+        """Shortcut to resource handler :meth:`~vortex.data.handlers.finaliseget`."""
+        if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
+            rc = self._fatal_wrap('input', self.rh.finaliseget)
+        else:
+            rc = False
+            logger.error('Try to get from an output section')
+        return rc
+
+    def earlyget(self, **kw):
+        """Shortcut to resource handler :meth:`~vortex.data.handlers.earlyget`."""
         rc = False
         if self.kind == ixo.INPUT or self.kind == ixo.EXEC:
             kw['intent'] = self.intent
             if self.alternate:
                 kw['alternate'] = self.alternate
-            try:
-                rc = self.rh.get(**kw)
-            except StandardError as e:
-                logger.error('Something wrong (input section): %s', e)
-                try:
-                    logger.error('Resource %s', self.rh.locate())
-                except StandardError:
-                    logger.error('Resource ???')
-            if not rc and self.fatal:
-                try:
-                    logger.critical('Fatal error with action get %s', self.rh.locate())
-                except StandardError:
-                    logger.critical('Fatal error with action get on ???')
-                raise SectionFatalError('Could not get resource {!s}'.format(rc))
-        else:
-            logger.error('Try to get from an output section')
+            rc = self.rh.earlyget(** kw)
         return rc
 
     def put(self, **kw):
         """Shortcut to resource handler :meth:`~vortex.data.handlers.put`."""
-        rc = False
         if self.kind == ixo.OUTPUT:
             kw['intent'] = self.intent
-            try:
-                rc = self.rh.put(**kw)
-            except Exception as e:
-                logger.error('Something wrong (output section): %s', e)
-                try:
-                    logger.error('Resource %s', self.rh.locate())
-                except StandardError:
-                    logger.error('Resource ???')
-            if not rc and self.fatal:
-                try:
-                    logger.critical('Fatal error with action put %s', self.rh.locate())
-                except StandardError:
-                    logger.critical('Fatal error with action put ???')
-                raise SectionFatalError('Could not put resource {!s}'.format(rc))
+            rc = self._fatal_wrap('output', self.rh.put, **kw)
         else:
+            rc = False
             logger.error('Try to put from an input section.')
         return rc
 

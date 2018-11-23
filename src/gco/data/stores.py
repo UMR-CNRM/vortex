@@ -325,8 +325,19 @@ class GcoStore(MultiStore):
 class _UgetStoreMixin(object):
     """Some very useful methods needed by all Uget stores."""
 
-    def _actual_get(self, remote, local, options):
-        raise NotImplementedError('We really need _actual_get !')
+    def _actual_fancyget(self, remote, local, options):
+        raise NotImplementedError('We really need _actual_fancyget !')
+
+    def _local_auto_untar(self, local, uname):
+        """Automatic untar if needed...
+
+        (the local file needs to end with a tar extension).
+        """
+        if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
+                self.system.is_tarname(local) and self.system.is_tarfile(local)):
+            destdir = self.system.path.dirname(self.system.path.realpath(local))
+            untaropts = self.ugetconfig.key_untar_properties(uname)
+            self.system.smartuntar(local, destdir, output=False, **untaropts)
 
     def _fancy_get(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -339,7 +350,7 @@ class _UgetStoreMixin(object):
             logger.info("The Uget element was already fetched in a previous extract.")
             rc = True
         else:
-            rc = self._actual_get(remote, uname if extract else local, options)
+            rc = self._actual_fancyget(remote, uname if extract else local, options)
 
         if rc:
             if extract:
@@ -356,12 +367,7 @@ class _UgetStoreMixin(object):
                     destdir = self.system.path.realpath(uname)
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
-                # Automatic untar if needed... (the local file needs to end with a tar extension)
-                if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
-                        self.system.is_tarname(local) and self.system.is_tarfile(local)):
-                    destdir = self.system.path.dirname(self.system.path.realpath(local))
-                    untaropts = self.ugetconfig.key_untar_properties(uname)
-                    self.system.smartuntar(local, destdir, output=False, **untaropts)
+                self._local_auto_untar(local, uname)
         else:
             self._verbose_log(options, 'warning',
                               '%s get on %s was not successful (rc=%s)',
@@ -479,13 +485,41 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         """Remap and ftpprestageinfo sequence."""
         return self.inarchiveprestageinfo(self._universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.inarchiveget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self._universal_remap(remote)
         return self._fancy_get(remote, local, options)
+
+    def ugetearlyget(self, remote, local, options):
+        """Remap and inarchiveearlyget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return None  # No early-get when extract=True
+        return self.inarchiveearlyget(remote, local, options)
+
+    def ugetfinaliseget(self, result_id, remote, local, options):
+        """Remap and inarchivefinaliseget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return False  # No early-get when extract=True
+        # Actual finalise
+        rc = self.inarchivefinaliseget(result_id, remote, local, options)
+        # Automatic untar if needed...
+        self._local_auto_untar(local, self.system.path.basename(remote['path']))
+        return rc
 
     def ugetput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
@@ -565,7 +599,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         """Proxy to :meth:`incacheprestageinfo`."""
         return self.incacheprestageinfo(self._universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.incacheget(remote, local, options)
 
     def ugetget(self, remote, local, options):

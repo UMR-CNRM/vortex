@@ -34,6 +34,11 @@ class MasterSurges(OceanographicModel):
                 model = dict(
                     value = ['hycom', ],
                 ),
+                forcage = dict(
+                    values   = ['aro','cep','arp','aoc',],
+                    optional = True,
+                    default  = '',
+                ),
                 rundir = dict(
                     type     = str,
                     outcast  = '',

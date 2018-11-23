@@ -47,7 +47,7 @@ from iga.tools.transmet import get_ttaaii_transmet_sh
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.syntax.stdattrs import a_term, a_domain
 from vortex.tools.actions import actiond as ad
-from vortex.tools.schedulers import SMS
+from vortex.tools.schedulers import SMS, EcFlow
 from vortex.tools.services import Service, FileReportService, TemplatedMailService
 from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
@@ -939,6 +939,45 @@ class SMSOpService(SMS):
             self.abort()
             return False
 
+class EcFlowOpService(EcFlow):
+    """
+    Default EcFlow service with some extra colorful features.
+    """
+
+    _footprint = dict(
+        info = 'EcFlow client service in operational context',
+        priority = dict(
+            level = footprints.priorities.top.OPER
+        )
+    )
+
+    def logdate(self, tz='GMT', varname=None, status='unknown', comment=''):
+        """Set a logging message for the dedicated EcFlowView variable."""
+        if varname is None:
+            logger.error('EcFlow service could log date message with variable [%s]', str(status))
+        else:
+            stamp = date.now().compact()
+            ecf_path = self.env.get('ECF_NAME')
+            self.alter('change', 'variable', varname, stamp, ecf_path)
+            self.label('etat', six.text_type(status) + ': ' + stamp + ' ' + six.text_type(comment))
+
+    def close_init(self, *args):
+        """Set starting date as a EcFlowView variable."""
+        self.logdate(varname='date_execute', status='active')
+
+    def setup_complete(self, *args):
+        """Set completing date as a EcFlowView variable."""
+        rc = args[0] if args else 0
+        if rc:
+            self.logdate(varname='date_end', status='aborted', comment=rc)
+        else:
+            self.logdate(varname='date_end', status='complete', comment=rc)
+        if rc in (0, 98, 99):
+            return True
+        else:
+            self.abort()
+            return False
+
 
 class DMTEventService(Service):
     """
@@ -983,6 +1022,13 @@ class DMTEventService(Service):
                     'SMS_PROG', 'SMSNODE', 'SMSNAME', 'SMSPASS', 'SMSTRYNO', 'SMSTIMEOUT',
                     'DMT_DATE_PIVOT', 'DMT_ECHEANCE', 'DMT_PATH_EXEC', 'DMT_TRAVAIL_ID', 'DMT_SOUS_SYSTEME'
                 )),
+            #expectedvars = dict(
+                #type     = footprints.FPTuple,
+                #optional = True,
+                #default  = footprints.FPTuple((
+                    #'SMS_PROG', 'ECF_NODE', 'ECF_NAME', 'ECF_PASS', 'ECF_TRYNO', 'SMSTIMEOUT',
+                    #'DMT_DATE_PIVOT', 'DMT_ECHEANCE', 'DMT_PATH_EXEC', 'DMT_TRAVAIL_ID', 'DMT_SOUS_SYSTEME'
+                #)),
             ),
         )
     )
@@ -1052,6 +1098,8 @@ class OpMailService(TemplatedMailService):
             sdict.setdefault('VCONF', sdict['OP_VCONF'].lower())
         if 'OP_XPID' in sdict:
             sdict.setdefault('XPID', sdict['OP_XPID'].lower())
+        if 'OP_CUTOFF' in sdict:
+            sdict.setdefault('CUTOFF', sdict['OP_CUTOFF'].upper())
         if sdict.get('OP_HASMEMBER', False) and 'OP_MEMBER' in sdict:
             sdict.setdefault('MEMBER_S1_FR_FR', ' du membre {:d}'.format(int(sdict['OP_MEMBER'])))
         else:

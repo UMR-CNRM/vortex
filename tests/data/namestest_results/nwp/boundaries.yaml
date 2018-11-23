@@ -1,0 +1,110 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling_e927
+      experiment: abcd
+      kind: boundary
+      namespace: olive.multi.fr
+      nativefmt: fa
+      source_app: ifs
+      source_conf: determ
+      term: 24
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        date: 2018010100
+        geometry: antigsp16km
+        model: aladin
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: antilles
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling_e927/ELSCFALAD_antig+0024
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        date: 2018010100
+        geometry: glob22
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling_e927/ELSCFALAD_GLOB22+0024
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: assim
+        date: 2018010100
+        geometry: macc01
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling_e927/ELSCFALAD_MACC01+0024
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: assim
+        date: 2018010100
+        geometry: macc02
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00A/coupling_e927/ELSCFALAD_MACC02+0024
+    - default: &id005 !test_names.core.TestParameters
+        cutoff: production
+        date: 2018010100
+        geometry: antigsp16km
+        model: aladin
+        namespace: vortex.multi.fr
+        vapp: arome
+        vconf: antilles
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling_e927/ELSCFALAD_antig+0024
+    - default: &id006 !test_names.core.TestParameters
+        cutoff: production
+        date: 2018010100
+        geometry: glob22
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling_e927/ELSCFALAD_GLOB22+0024
+    - default: &id007 !test_names.core.TestParameters
+        cutoff: production
+        date: 2018010100
+        geometry: macc01
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling_e927/ELSCFALAD_MACC01+0024
+    - default: &id008 !test_names.core.TestParameters
+        cutoff: production
+        date: 2018010100
+        geometry: macc02
+        model: mocage
+        namespace: vortex.multi.fr
+        vapp: mocage
+        vconf: camsfcst
+      location: olive://olive.multi.fr/abcd/20180101H00P/coupling_e927/ELSCFALAD_MACC02+0024
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling_e927
+      experiment: abcd
+      kind: boundary
+      namespace: vortex.multi.fr
+      nativefmt: fa
+      source_app: ifs
+      source_conf: determ
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/antilles/ABCD/20180101T0000A/coupling_e927/cpl.ifs-determ-prod.antig-16km00+0024:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/coupling_e927/cpl.ifs-determ-prod.glob22-02dg000+0024:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/coupling_e927/cpl.ifs-determ-prod.macc01-00dg100+0024:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000A/coupling_e927/cpl.ifs-determ-prod.macc02-00dg200+0024:00.fa
+    - default: *id005
+      location: vortex://vortex.multi.fr/arome/antilles/ABCD/20180101T0000P/coupling_e927/cpl.ifs-determ-prod.antig-16km00+0024:00.fa
+    - default: *id006
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000P/coupling_e927/cpl.ifs-determ-prod.glob22-02dg000+0024:00.fa
+    - default: *id007
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000P/coupling_e927/cpl.ifs-determ-prod.macc01-00dg100+0024:00.fa
+    - default: *id008
+      location: vortex://vortex.multi.fr/mocage/camsfcst/ABCD/20180101T0000P/coupling_e927/cpl.ifs-determ-prod.macc02-00dg200+0024:00.fa

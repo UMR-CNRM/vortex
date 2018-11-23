@@ -70,6 +70,8 @@ class Handler(object):
         self._stage = ['load']
         self._observer.notify_new(self, dict(stage = 'load'))
         self._localpr_cache = None  # To cache the promise dictionary
+        self._latest_earlyget_id = None
+        self._latest_earlyget_opts = None
         logger.debug('New resource handler %s', self.__dict__)
 
     def __del__(self):
@@ -495,6 +497,36 @@ class Handler(object):
         """Apply the hooks before a put request (or verify that they were done)."""
         self._generic_apply_hooks(action='put', **extras)
 
+    def _postproc_get(self, store, rst, extras):
+        self.container.updfill(rst)
+        # Check metadata if sensible
+        if self._mdcheck and rst and not store.delayed:
+            rst = self.contents.metadata_check(self.resource,
+                                               delta = self._mddelta)
+            if not rst:
+                logger.info("We are now cleaning up the container and data content.")
+                self.reset_contents()
+                self.clear()
+        # For the record...
+        self.history.append(store.fullname(), 'get', rst)
+        if rst:
+            # This is an expected resource
+            if store.delayed:
+                self._updstage('expected')
+                logger.info('Resource <%s> is expected', self.container.iotarget())
+            # This is a "real" resource
+            else:
+                self._updstage('get')
+                if self.hooks:
+                    if not self.delayhooks:
+                        self.apply_get_hooks(**extras)
+                    else:
+                        logger.info("(get-)Hooks were delayed")
+        else:
+            # Always signal failures
+            self._updstage('void')
+        return rst
+
     def _actual_get(self, **extras):
         """Internal method in charge of the getting the resource.
 
@@ -512,33 +544,7 @@ class Handler(object):
                 self.container.iotarget(),
                 st_options,
             )
-            self.container.updfill(rst)
-            # Check metadata if sensible
-            if self._mdcheck and rst and not store.delayed:
-                rst = self.contents.metadata_check(self.resource,
-                                                   delta = self._mddelta)
-                if not rst:
-                    logger.info("We are now cleaning up the container and data content.")
-                    self.reset_contents()
-                    self.clear()
-            # For the record...
-            self.history.append(store.fullname(), 'get', rst)
-            if rst:
-                # This is an expected resource
-                if store.delayed:
-                    self._updstage('expected')
-                    logger.info('Resource <%s> is expected', self.container.iotarget())
-                # This is a "real" resource
-                else:
-                    self._updstage('get')
-                    if self.hooks:
-                        if not self.delayhooks:
-                            self.apply_get_hooks(**extras)
-                        else:
-                            logger.info("(get-)Hooks were delayed")
-            else:
-                # Always signal failures
-                self._updstage('void')
+            rst = self._postproc_get(store, rst, extras)
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -547,18 +553,36 @@ class Handler(object):
 
         return rst
 
-    def get(self, alternate=False, **extras):
-        """Method to retrieve the resource through the provider and feed the current container.
+    def _actual_earlyget(self, **extras):
+        """Internal method in charge of requesting an earlyget on the resource.
 
-        The behaviour of this method depends on the insitu and alternate options:
+        :return: ``None`` if earlyget is unavailable (depending on the store's kind
+            and resource it can be perfetcly fine). ``True`` if the resource was
+            actually fetched (no need to call :meth:`finaliseget`). Some kind of
+            non-null identifier that will ne used to call :meth:`finaliseget`.
+        """
+        store = self.store
+        if store:
+            logger.debug('Early-Get resource %s at %s from %s', self, self.lasturl, store)
+            st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+            # Actual earlyget
+            try:
+                return store.earlyget(
+                    self.uridata,
+                    self.container.iotarget(),
+                    st_options,
+                )
+            except (IOError, OSError, RuntimeError):
+                logger.error("The store's earlyget method did not return : it should never append!")
+                return None
+        else:
+            logger.error('Could not find any store to get %s', self.lasturl)
+            return None
 
-        * When insitu is True, the :class:`~vortex.layout.dataflow.LocalTracker`
-          object associated with the active context is checked to determine
-          whether the resource has already been fetched or not. If not, another
-          try is made (but without using any non-cache store).
-        * When insitu is False, an attempt to get the resource is systematically
-          made except if "alternate" is defined and the local container already
-          exists.
+    def _get_proxy(self, callback, alternate=False, **extras):
+        """
+        Process the **insitu** and **alternate** option and launch the **callback**
+        callable if sensible.
         """
         rst = False
         if self.complete:
@@ -586,7 +610,7 @@ class Handler(object):
                             self._updstage('void', insitu=True)
                 # Bloody hell, the localpath doesn't exist
                 else:
-                    rst = self._actual_get(**extras)  # This might be an expected resource...
+                    rst = callback(**extras)  # This might be an expected resource...
                     if rst:
                         logger.info("The resource was successfully fetched :-)")
                     else:
@@ -598,10 +622,116 @@ class Handler(object):
                 else:
                     if self.container.exists():
                         logger.warning('The resource is already here: That should not happen at this stage !')
-                    rst = self._actual_get(**extras)
+                    rst = callback(**extras)
         else:
             logger.error('Could not get an incomplete rh %s', self)
         return rst
+
+    def get(self, alternate=False, **extras):
+        """Method to retrieve the resource through the provider and feed the current container.
+
+        The behaviour of this method depends on the **insitu** and **alternate** options:
+
+        * When **insitu** is True, the :class:`~vortex.layout.dataflow.LocalTracker`
+          object associated with the active context is checked to determine
+          whether the resource has already been fetched or not. If not, another
+          try is made (but without using any non-cache store).
+        * When **insitu** is False, an attempt to get the resource is systematically
+          made except if **alternate** is defined and the local container already
+          exists.
+        """
+        return self._get_proxy(self._actual_get, alternate=alternate, **extras)
+
+    def earlyget(self, alternate=False, **extras):
+        """The earlyget feature is somehow a declaration of intent.
+
+        It records in the current context that, at some point in the future, we will
+        retrieve the present resource. It can be useful for some kind of stores
+        (and useless to other). For example, when using a store that targets a mass
+        archive system, this information can be used to ask for several files at
+        once which accelerate the overall process and optimise the tape's drivers
+        usage. On the other, for a cache based store, it does not make much sense
+        since the data is readily available on disk.
+
+        Return values can be:
+
+        * ``None`` if earlyget is unavailable (depending on the store's kind
+          and resource it can be perfectly fine).
+        * Some kind of non-null identifier that will be used later on to actually
+          retrieve the resource. It is returned to the user as a diagnostic but is
+          also stored internally within the :class:`Handler` object.
+        * ``True`` if the resource has actually been retrieved through the provider
+          and fed into the current container.
+
+        In any case, the :meth:`finaliseget` method should be called latter on
+        to actually retrieve the resource and feed the container. When ``True``
+        is returned by the :meth:`earlyget` method, the :meth:`finaliseget` call
+        can be made also it is useless.
+
+        Like with the :meth:`get` method, the behaviour of this method depends
+        on the **insitu** and **alternate** options:
+
+        * When **insitu** is True, the :class:`~vortex.layout.dataflow.LocalTracker`
+          object associated with the active context is checked to determine
+          whether the resource has already been fetched or not. If not, another
+          try is made (but without using any non-cache store).
+        * When **insitu** is False, an attempt to get the resource is systematically
+          made except if **alternate** is defined and the local container already
+          exists.
+        """
+        r_opts = extras.copy()
+        self._latest_earlyget_opts = r_opts
+        self._latest_earlyget_id = self._get_proxy(self._actual_earlyget, alternate=alternate, **extras)
+        return self._latest_earlyget_id
+
+    def finaliseget(self):
+        """
+        When the :meth:`earlyget` method had previously been called, the
+        :meth:`finaliseget` can be called to finalise the ``get`` sequence.
+
+        When :meth:`finaliseget`, if the return code is non-zero, the resource
+        has been retrieved and fed into te container.
+
+        :raises HandlerError: if :meth:`earlyget` is not called prior to this
+                              method.
+        """
+        if self._latest_earlyget_id is None and self._latest_earlyget_opts is None:
+            raise HandlerError('earlyget was not called yet. Calling finaliseget is not Allowed !')
+        try:
+            if self._latest_earlyget_id is True:
+                # Nothing to be done...
+                return True
+            elif self._latest_earlyget_id is None:
+                # Delayed get not available... do the usual get !
+                return self._actual_get(** self._latest_earlyget_opts)
+            else:
+                rst = False
+                store = self.store
+                if store:
+                    logger.debug('Finalise-Get resource %s at %s from %s', self, self.lasturl, store)
+                    st_options = self.mkopts(dict(rhandler = self.as_dict()), self._latest_earlyget_opts)
+                    # Actual get
+                    rst = store.finaliseget(
+                        self._latest_earlyget_id,
+                        self.uridata,
+                        self.container.iotarget(),
+                        st_options,
+                    )
+                    if not rst:
+                        # Delayed get failed... attempt the usual get
+                        logger.warning('Delayed get failed ! Reverting to the usual get.')
+                        return self._actual_get(** self._latest_earlyget_opts)
+                    else:
+                        rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
+                else:
+                    logger.error('Could not find any store to get %s', self.lasturl)
+
+                # Reset the promise dictionary cache
+                self._localpr_cache = None  # To cache the promise dictionary
+                return rst
+        finally:
+            self._latest_earlyget_id = None
+            self._latest_earlyget_opts = None
 
     def insitu_quickget(self, alternate=False, **extras):
         """This method attempts a straightforward insitu get.
