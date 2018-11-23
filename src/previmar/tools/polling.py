@@ -33,11 +33,11 @@ class IO_Poll_Marine(addons.Addon):
         )
     )
 
-    def iopoll_marine(self, prefix, model=None):
+    def iopoll_marine(self, prefix, model=None, forcage=None):
         """Do the actual job of polling files prefixed by ``prefix``."""
         logger.info("Execution IOPOLL Marine")
-        if model is not None:
-            cmd = ['--model', model]
+        if model and forcage is not None:
+            cmd = ['--model', model, '--forcage', forcage]
         else:
             cmd = []
         cmd.extend(['--prefix', prefix])

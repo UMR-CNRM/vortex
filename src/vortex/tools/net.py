@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# -*- coding:Utf-8 -*-
 
 """
 Net tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
+import encodings
 
 import abc
 import collections
@@ -1564,10 +1566,10 @@ class LinuxNetstats(AbstractNetstats):
     @staticmethod
     def _ip_from_hex(hexip, family=socket.AF_INET):
         if family == socket.AF_INET:
-            packed = struct.pack("<I", int(hexip, 16))
+            packed = struct.pack("<I".encode('utf8'), int(hexip, 16))
         elif family == socket.AF_INET6:
-            packed = struct.unpack(">IIII", hexip.decode('hex'))
-            packed = struct.pack("@IIII", * packed)
+            packed = struct.unpack(">IIII".encode('utf8'), hexip.decode('hex'))
+            packed = struct.pack("@IIII".encode('utf8'), * packed)
         else:
             raise ValueError("Unknown address family.")
         return socket.inet_ntop(family, packed)
@@ -1586,7 +1588,7 @@ class LinuxNetstats(AbstractNetstats):
                             self._ip_from_hex(l[0], family), int(l[1], 16),
                             self._ip_from_hex(l[2], family), int(l[3], 16),
                             int(l[4], 16)) for l in tmpports[family]]
-                    for family in (socket.AF_INET, socket.AF_INET6)]
+                     for family in (socket.AF_INET, socket.AF_INET6)]
         return functools.reduce(operator.add, tmpports)
 
     def tcp_netstats(self):
