@@ -1103,7 +1103,7 @@ class SodaWorker(Parallel):
     def prepare(self, rh, opts):
         super(SodaWorker, self).prepare(rh, opts)
 
-        self.mbdirs = ['../mb{0:04d}'.format(m) for m in self.members]
+        self.mbdirs = ['../mb{0:04d}'.format(m + 1) for m in range(len(self.members))]
 
         os.chdir('workSODA')
 
