@@ -845,11 +845,11 @@ class SurfexWorker(_S2MWorker):
             try:
                 self.local_spawn(list_name)
 #                 Uncomment these lines to test the behaviour in case of failure of 1 member
-                if self.subdir == "mb006":
-                    deterministic = self.subdir == "mb035"
-                    print ("DEBUGINFO")
-                    print (dir(self))
-                    rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
+#                 if self.subdir == "mb006":
+#                     deterministic = self.subdir == "mb035"
+#                     print ("DEBUGINFO")
+#                     print (dir(self))
+#                     rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
 
             except ExecutionError:
                 deterministic = self.subdir == "mb035"
