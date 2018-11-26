@@ -16,7 +16,6 @@ from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
 from vortex.tools.systems import ExecutionError
-from vortex.data.geometries  import UnstructuredGeometry
 
 logger = footprints.loggers.getLogger(__name__)
 
@@ -41,6 +40,11 @@ class _S2MWorker(VortexWorkerBlindRun):
             subdir = dict(
                 info = 'work in this particular subdirectory',
                 optional = True
+            ),
+            deterministic = dict(
+                type     = bool,
+                default  = False,
+                optional = False,
             ),
         )
     )
@@ -89,6 +93,7 @@ class _S2MWorker(VortexWorkerBlindRun):
         for line in self.system.dir():
             print(line)
 
+
 class GuessWorker(_S2MWorker):
 
     _footprint = dict(
@@ -111,8 +116,13 @@ class GuessWorker(_S2MWorker):
         if ebauche and not self.system.path.exists(ebauche):
             self.system.symlink(self.system.path.join(rundir, ebauche), ebauche)
         list_name = self.system.path.join(thisdir, self.kind + '.out')
-        self.local_spawn(list_name)
-        self.postfix()
+        try:
+            self.local_spawn(list_name)
+            self.postfix()
+        except ExecutionError:
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+        finally:
+            return rdict  # Note than in the other case return rdict is at the end
 
     def find_ebauche(self, opts=None):
         """Find ebauche namelist in actual context inputs."""
@@ -214,9 +224,11 @@ class _SafranWorker(_S2MWorker):
         for day, dates in self.days.items():
             nech = len(dates) if len(dates) == 9 else 5
             self.sapdat(dates[-1], nech)
-            self._safran_task(rundir, thisdir, day, dates, rdict)
+            rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
         self.postfix()
+
+        return rdict
 
     def _safran_task(self, rundir, thisdir, rdict):
         """The piece of code specific to a Safran submodule does here."""
@@ -366,6 +378,8 @@ class InterCEPWorker(_SafranWorker):
 
         self.postfix()
 
+        return rdict
+
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
         self.system.remove('sapdat')
@@ -395,10 +409,15 @@ class SafraneWorker(_SafranWorker):
             with io.open('sapfich', 'w') as f:
                 f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
             list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
-            self.local_spawn(list_name)
-            # Reanalysis : if the execution was allright we don't need the log file
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
+            try:
+                self.local_spawn(list_name)
+                # Reanalysis : if the execution was allright we don't need the log file
+#                if self.execution in ['reanalysis', 'reforecast']:
+#                    self.system.remove(list_name)
+            except ExecutionError:
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+                return rdict  # Note than in the other case return rdict is at the end
+        return rdict
 
 
 class SypluieWorker(_SafranWorker):
@@ -418,10 +437,15 @@ class SypluieWorker(_SafranWorker):
         with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-        self.local_spawn(list_name)
-        # Reanalysis : if the execution was allright we don't need the log file
-#        if self.execution in ['reanalysis', 'reforecast']:
-#            self.system.remove(list_name)
+        try:
+            self.local_spawn(list_name)
+            # Reanalysis : if the execution was allright we don't need the log file
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
+        except ExecutionError:
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+        finally:
+            return rdict  # Note than in the other case return rdict is at the end
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -454,10 +478,15 @@ class SyrpluieWorker(_SafranWorker):
         with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-        self.local_spawn(list_name)
-        # Reanalysis : if the execution was allright we don't need the log file
-#        if self.execution in ['reanalysis', 'reforecast']:
-#            self.system.remove(list_name)
+        try:
+            self.local_spawn(list_name)
+            # Reanalysis : if the execution was allright we don't need the log file
+    #        if self.execution in ['reanalysis', 'reforecast']:
+    #            self.system.remove(list_name)
+        except ExecutionError:
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+        finally:
+            return rdict  # Note than in the other case return rdict is at the end
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -490,14 +519,17 @@ class SyvaprWorker(_SafranWorker):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-            self.local_spawn(list_name)
-            # Reanalysis : if the execution was allright we don't need the log file
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
-            for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
-                if self.system.path.isfile('SAF4D_{0:s}'.format(suffix)):
-                    print('DBUG SAF4D_{0:s} exists'.format(suffix))
-                self.mv_if_exists('SAF4D_{0:s}'.format(suffix), 'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
+            try:
+                self.local_spawn(list_name)
+                # Reanalysis : if the execution was allright we don't need the log file
+#                if self.execution in ['reanalysis', 'reforecast']:
+#                    self.system.remove(list_name)
+                for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
+                    self.mv_if_exists('SAF4D_{0:s}'.format(suffix), 'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
+            except ExecutionError:
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            finally:
+                return rdict  # Note than in the other case return rdict is at the end
 
 
 class SyvafiWorker(_SafranWorker):
@@ -518,10 +550,16 @@ class SyvafiWorker(_SafranWorker):
         for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
             self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-        self.local_spawn(list_name)
-        self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
-#        if self.execution in ['reanalysis', 'reforecast']:
-#            self.system.remove(list_name)
+        try:
+            self.local_spawn(list_name)
+            self.local_spawn(list_name)
+            self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
+#            if self.execution in ['reanalysis', 'reforecast']:
+#                self.system.remove(list_name)
+        except ExecutionError:
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+        finally:
+            return rdict  # Note than in the other case return rdict is at the end
 
 
 class SyrmrrWorker(_SafranWorker):
@@ -539,12 +577,17 @@ class SyrmrrWorker(_SafranWorker):
         if self.check_mandatory_resources(rdict, ['SAPLUI5' + dates[-1].ymdh]):
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'fort.12')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-            self.local_spawn(list_name)
-            self.mv_if_exists('fort.13', 'SAPLUI5' + dates[-1].ymdh)
-            self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + dates[-1].ymdh)
-            self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + dates[-1].ymdh)
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
+            try:
+                self.local_spawn(list_name)
+                self.mv_if_exists('fort.13', 'SAPLUI5' + dates[-1].ymdh)
+                self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + dates[-1].ymdh)
+                self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + dates[-1].ymdh)
+#                if self.execution in ['reanalysis', 'reforecast']:
+#                    self.system.remove(list_name)
+            except ExecutionError:
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            finally:
+                return rdict  # Note than in the other case return rdict is at the end
 
 
 class SytistWorker(_SafranWorker):
@@ -563,12 +606,14 @@ class SytistWorker(_SafranWorker):
         for day, dates in self.days.items():
             nech = len(dates) if len(dates) == 9 else 5
             self.sapdat(dates[-1], nech)
-            self._safran_task(rundir, thisdir, day, dates, rdict)
+            rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
         self.mv_if_exists('FORCING_massif.nc', 'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
         self.mv_if_exists('FORCING_postes.nc', 'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         self.postfix()
+
+        return rdict
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
@@ -580,10 +625,12 @@ class SytistWorker(_SafranWorker):
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-            self.local_spawn(list_name)
-
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
+            try:
+                self.local_spawn(list_name)
+            except ExecutionError:
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            finally:
+                return rdict  # Note than in the other case return rdict is at the end
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -666,7 +713,7 @@ class SurfexWorker(_S2MWorker):
                 type = bool,
                 optional = True,
                 default = False,
-            )
+            ),
         )
     )
 
@@ -806,7 +853,7 @@ class SurfexWorker(_S2MWorker):
 
             except ExecutionError:
                 deterministic = self.subdir == "mb035"
-                rdict['rc'] = S2MExecutionError("SURFEX", deterministic, self.subdir, datebegin_this_run, dateend_this_run)
+                rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
                 return rdict  # Note than in the other case return rdict is at the end
 
             # Copy the SURFOUT file for next iteration
@@ -974,16 +1021,32 @@ class Guess(ParaExpresso):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
+        cpl_model = self.get_origin(rh, opts)
         subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._add_instructions(common_i, dict(subdir=subdirs, deterministic=cpl_model))
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
-        subdirs = [am.rh.container.dirname for am in avail_members]
+        subdirs = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
 
-        return list(set(subdirs))
+        return subdirs
+
+    def get_origin(self, rh, opts):
+        """Get the subdirectories from the effective inputs"""
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        cpl_model = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+                cpl_model.append(am.rh.provider.vconf == '4dvarfr')
+
+        return cpl_model
 
     def role_ref_namebuilder(self):
         return 'Gridpoint'
@@ -1032,8 +1095,9 @@ class S2MComponent(ParaBlindRun):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
+        cpl_model = self.get_origin(rh, opts)
         subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._add_instructions(common_i, dict(subdir=subdirs, deterministic=cpl_model))
         self._default_post_execute(rh, opts)
 
     def postfix(self, rh, opts):
@@ -1042,12 +1106,27 @@ class S2MComponent(ParaBlindRun):
     def get_subdirs(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
-        subdirs = [am.rh.container.dirname for am in avail_members]
+        subdirs = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
 # Ca partait d'une bonne idée mais en pratique il y a plein de cas particuliers pour lesquels ça pose problème
 # reanalyse safran, surfex postes, etc
 #         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
-        return list(set(subdirs))
+        return subdirs
+
+    def get_origin(self, rh, opts):
+        """Get the subdirectories from the effective inputs"""
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        cpl_model = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+                cpl_model.append(am.rh.provider.vconf == '4dvarfr')
+
+        return cpl_model
 
     def role_ref_namebuilder(self):
         return 'Ebauche'
@@ -1115,10 +1194,10 @@ class S2MReanalysis(S2MComponent):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-
+        deterministic = [True] * len(subdirs)
         subdirs.sort()
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end))
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
         self._default_post_execute(rh, opts)
 
 
@@ -1269,4 +1348,3 @@ class PrepareForcingComponent(TaylorRun):
 
     def role_ref_namebuilder(self):
         return 'Forcing'
-
