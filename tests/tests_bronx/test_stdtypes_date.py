@@ -604,6 +604,333 @@ class utTime(TestCase):
                                                                   dict())),
                          "20:00")
 
+    def assertTimeListEqual(self, val, exp):
+        self.assertTrue(all([isinstance(v, date.Time) for v in val]))
+        self.assertListEqual(val, [date.Time(e) for e in exp])
+
+    def test_timetimerangex_basics(self):
+        rv = date.timerangex(2)
+        self.assertTimeListEqual(rv, [2])
+
+        rv = date.timerangex(None)
+        self.assertTimeListEqual(rv, [])
+
+        rv = date.timerangex(2, 5)
+        self.assertTimeListEqual(rv, [2, 3, 4, 5])
+
+        rv = date.timerangex(7, 4, -1)
+        self.assertTimeListEqual(rv, [4, 5, 6, 7])
+
+        rv = date.timerangex(-9, -7, shift=2)
+        self.assertTimeListEqual(rv, [-7, -6, -5])
+
+        rv = date.timerangex(0, 12, 3, 1)
+        self.assertTimeListEqual(rv, [1, 4, 7, 10, 13])
+
+    def test_timetimerangex_basics_times(self):
+        rv = date.timerangex('2:15')
+        self.assertTimeListEqual(rv, ['2:15'])
+
+        rv = date.timerangex('2:15,3:45')
+        self.assertTimeListEqual(rv, ['2:15', '3:45'])
+
+        rv = date.timerangex('10:00', '3:10', '-:15')
+        self.assertTimeListEqual(rv, ['3:15', '3:30', '3:45', '4:00', '4:15', '4:30', '4:45', '5:00', '5:15', '5:30', '5:45', '6:00', '6:15', '6:30', '6:45', '7:00', '7:15', '7:30', '7:45', '8:00', '8:15', '8:30', '8:45', '9:00', '9:15', '9:30', '9:45', '10:00'])
+
+        rv = date.timerangex('-9:00', '-7:00', shift=2)
+        self.assertTimeListEqual(rv, [-7, -6, -5])
+
+        rv = date.timerangex('-9:10', '-7:00', shift=2)
+        self.assertTimeListEqual(rv, [date.Time(-7, -10), date.Time(-6, -10), date.Time(-5, -10)])
+
+        rv = date.timerangex('-1:10', '2:10')
+        self.assertTimeListEqual(rv, [date.Time(-1, -10), date.Time(0, -10), date.Time(0, 50), date.Time(1, 50)])
+
+    def test_timetimerangex_minus(self):
+        rv = date.timerangex('0-30-6,36-72-12')
+        self.assertTimeListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+
+        rv = date.timerangex(['0-30-6', '36-72-12'])
+        self.assertTimeListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+
+        rv = date.timerangex('0-30-6,36', 48, 12)
+        self.assertTimeListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
+
+        rv = date.timerangex(('0-30-6', 36), 48, 12)
+        self.assertTimeListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
+
+        rv = date.timerangex('-30--6-6,36')
+        self.assertTimeListEqual(rv, [-30, -24, -18, -12, -6, 36])
+
+        rv = date.timerangex('0-12', step=3, shift=1)
+        self.assertTimeListEqual(rv, [1, 4, 7, 10, 13])
+
+    def test_timetimerangex_minus_times(self):
+        rv = date.timerangex('0-3-:15,3:30-6-:30')
+        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
+
+        rv = date.timerangex('0-3-:30,0:15', 6, '00:45')
+        self.assertTimeListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
+
+        rv = date.timerangex('0:30-12', step='1:00', shift=1)
+        self.assertTimeListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
+
+        rv = date.timerangex('00:30--1--:30')
+        self.assertTimeListEqual(rv, [date.Time(-1, 0), date.Time(0, -30), date.Time(0, 0), date.Time(0, 30)])
+
+    def test_timetimerangex_comma(self):
+        rv = date.timerangex('0,4', 12, 3, 0)
+        self.assertTimeListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
+
+        rv = date.timerangex((0, 4), 12, 3, 0)
+        self.assertTimeListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
+
+    def test_timetimerangex_fmt(self):
+        rv = date.timerangex('2-5', fmt='{0.hour:03d}')
+        self.assertListEqual(rv, ['002', '003', '004', '005'])
+
+    def test_timetimerangex_fmt_times(self):
+        rv = date.timerangex('2-3-:30', fmt='{0!s:10s}')
+        self.assertListEqual(rv, ['02:00     ', '02:30     ', '03:00     '])
+
+    def test_timetimerangex_prefix(self):
+        rv = date.timerangex(1, 7, 3, prefix='hello-')
+        self.assertListEqual(rv, ['hello-01:00', 'hello-04:00', 'hello-07:00', ])
+
+        rv = date.timerangex(1, 7, 3, prefix='hello-', shift=2, fmt='{0.hour:02d}')
+        self.assertListEqual(rv, ['hello-03', 'hello-06', 'hello-09'])
+
+        rv = date.timerangex(1, 7, 3, prefix='value no.', fmt='{1:d} is {0.hour:d}')
+        self.assertListEqual(rv, ['value no.1 is 1', 'value no.2 is 4', 'value no.3 is 7'])
+
+    def test_timetimerangex_prefix_times(self):
+        rv = date.timerangex('10:00', '8:10', '-:15', prefix='toto-')
+        self.assertListEqual(rv, ['toto-08:15', 'toto-08:30', 'toto-08:45', 'toto-09:00', 'toto-09:15', 'toto-09:30', 'toto-09:45', 'toto-10:00'])
+
+        rv = date.timerangex('10:00', '9:10', '-:15', prefix='toto-', shift='0:01')
+        self.assertListEqual(rv, ['toto-09:16', 'toto-09:31', 'toto-09:46', 'toto-10:01'])
+
+        rv = date.timerangex('10:00', '9:10', '-:15', prefix='value no.', fmt='{1:d} is {0!s}')
+        self.assertListEqual(rv, ['value no.1 is 09:15', 'value no.2 is 09:30', 'value no.3 is 09:45', 'value no.4 is 10:00'])
+
+
+# A pure internal usage
+
+class utTimeInt(TestCase):
+
+    def test_time_basics(self):
+
+        with self.assertRaises(ValueError):
+            date.TimeInt("Toto")
+
+        t = date.TimeInt(0)
+        self.assertEqual(str(t), '0')
+        self.assertEqual(t.str_time, '0000:00')
+
+        t = date.TimeInt(128)
+        self.assertEqual(str(t), '128')
+        self.assertEqual(t.str_time, '0128:00')
+
+        t = date.TimeInt('16:30')
+        self.assertEqual(str(t), '0016:30')
+
+        t = date.TimeInt('0007:45')
+        self.assertEqual(str(t), '0007:45')
+
+        a = date.TimeInt(48)
+        b = date.TimeInt(':2880')
+        self.assertEqual(a, b)
+
+        self.assertEqual(a.realtype, 'int')
+        self.assertEqual(b.realtype, 'int')
+
+    def test_time_compute(self):
+        for (lhs, rhs) in [(lambda x: date.TimeInt(x), lambda x: date.TimeInt(x)),
+                           (lambda x: date.TimeInt(x), lambda x: x),
+                           (lambda x: x, lambda x: date.TimeInt(x))]:
+            t = lhs('07:45')
+            t = t + rhs('1:22')
+            self.assertEqual(str(t), '0009:07')
+            t = lhs('09:07')
+            t = t - rhs('9:05')
+            self.assertEqual(str(t), '0000:02')
+            t = lhs('00:02')
+            t = t - rhs('0:04')
+            self.assertEqual(str(t), '-0000:02')
+            t = lhs('-00:02')
+            t = t + rhs('0:04')
+            self.assertEqual(str(t), '0000:02')
+            t = lhs('00:02')
+            t = t + rhs('1:04')
+            self.assertEqual(str(t), '0001:06')
+            t = lhs('07:45')
+            t = t * rhs(2)
+            self.assertEqual(str(t), '0015:30')
+            t = lhs('07:45')
+            t = t * rhs(-1)
+            self.assertEqual(str(t), '-0007:45')
+            t = lhs('01:30')
+            t = t * rhs('0:20')
+            self.assertEqual(str(t), '0000:30')
+
+    def test_time_compare(self):
+        t = date.TimeInt(6)
+        self.assertFalse(t is None)
+        self.assertFalse(t == 'Toto')
+        self.assertTrue(t == 6)
+        self.assertTrue(t >= 6)
+        self.assertTrue(t <= 6)
+        self.assertTrue(hash(t) == hash(date.TimeInt('6:00')))
+        self.assertFalse(t > 6)
+        self.assertFalse(t < 6)
+        self.assertTrue(t == '06')
+        self.assertTrue(t == '6:00')
+        t = date.TimeInt('6:30')
+        self.assertFalse(t == 6)
+        self.assertFalse(hash(t) == hash(date.TimeInt('6:00')))
+        self.assertTrue(t > 6)
+        self.assertFalse(t < 6)
+        self.assertFalse(t < '6:30')
+        self.assertTrue(t < '6:31')
+        self.assertTrue(t <= '6:31')
+        self.assertTrue(t > '6:29')
+        self.assertTrue(t >= '6:29')
+        t = date.TimeInt('-6:30')
+        self.assertFalse(t == -6)
+        self.assertFalse(hash(t) == hash(date.TimeInt('6:00')))
+        self.assertFalse(t > -6)
+        self.assertTrue(t < -6)
+        self.assertFalse(t < '-6:30')
+        self.assertFalse(t < '-6:31')
+        self.assertTrue(t < '-6:29')
+        self.assertTrue(t < '6:30')
+
+    def test_rangex_basics(self):
+        rv = date.timeintrangex(2)
+        self.assertListEqual(rv, [2])
+
+        rv = date.timeintrangex(None)
+        self.assertListEqual(rv, [])
+
+        rv = date.timeintrangex(2, 5)
+        self.assertListEqual(rv, [2, 3, 4, 5])
+
+        rv = date.timeintrangex(7, 4, -1)
+        self.assertListEqual(rv, [4, 5, 6, 7])
+
+        rv = date.timeintrangex(-9, -7, shift=2)
+        self.assertListEqual(rv, [-7, -6, -5])
+
+        rv = date.timeintrangex(0, 12, 3, 1)
+        self.assertListEqual(rv, [1, 4, 7, 10, 13])
+
+    def test_rangex_basics_times(self):
+        rv = date.timeintrangex('2:15')
+        self.assertListEqual(rv, ['0002:15'])
+
+        rv = date.timeintrangex('2:15,3:45')
+        self.assertListEqual(rv, ['0002:15', '0003:45'])
+
+        rv = date.timeintrangex('10:00', '3:10', '-:15')
+        self.assertListEqual(rv, ['0003:15', '0003:30', '0003:45', '0004:00', '0004:15', '0004:30', '0004:45', '0005:00', '0005:15', '0005:30', '0005:45', '0006:00', '0006:15', '0006:30', '0006:45', '0007:00', '0007:15', '0007:30', '0007:45', '0008:00', '0008:15', '0008:30', '0008:45', '0009:00', '0009:15', '0009:30', '0009:45', '0010:00'])
+
+        rv = date.timeintrangex('-9:00', '-7:00', shift=2)
+        self.assertListEqual(rv, [-7, -6, -5])
+
+        rv = date.timeintrangex('-9:10', '-7:00', shift=2)
+        self.assertListEqual(rv, ['-0005:10', '-0006:10', '-0007:10'])
+
+        rv = date.timeintrangex('-1:10', '2:10')
+        self.assertListEqual(rv, ['-0000:10', '-0001:10', '0000:50', '0001:50'])
+
+    def test_rangex_minus(self):
+        rv = date.timeintrangex('0-30-6,36-72-12')
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+
+        rv = date.timeintrangex(['0-30-6', '36-72-12'])
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48, 60, 72])
+
+        rv = date.timeintrangex('0-30-6,36', 48, 12)
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
+
+        rv = date.timeintrangex(('0-30-6', 36), 48, 12)
+        self.assertListEqual(rv, [0, 6, 12, 18, 24, 30, 36, 48])
+
+        rv = date.timeintrangex('-30--6-6,36')
+        self.assertListEqual(rv, [-30, -24, -18, -12, -6, 36])
+
+        rv = date.timeintrangex('0-12', step=3, shift=1)
+        self.assertListEqual(rv, [1, 4, 7, 10, 13])
+
+    def test_rangex_minus_times(self):
+        rv = date.timeintrangex('0-3-:15,3:30-6-:30')
+        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0000:45', '0001:00', '0001:15', '0001:30', '0001:45', '0002:00', '0002:15', '0002:30', '0002:45', '0003:00', '0003:30', '0004:00', '0004:30', '0005:00', '0005:30', '0006:00'])
+
+        rv = date.timeintrangex('0-3-:30,0:15', 6, '00:45')
+        self.assertListEqual(rv, ['0000:00', '0000:15', '0000:30', '0001:00', '0001:30', '0001:45', '0002:00', '0002:30', '0003:00', '0003:15', '0004:00', '0004:45', '0005:30'])
+
+        rv = date.timeintrangex('0:30-12', step='1:00', shift=1)
+        self.assertListEqual(rv, ['0001:30', '0002:30', '0003:30', '0004:30', '0005:30', '0006:30', '0007:30', '0008:30', '0009:30', '0010:30', '0011:30', '0012:30'])
+
+        rv = date.timeintrangex('00:30--1--:30')
+        self.assertListEqual(rv, ['-0000:30', '-0001:00', '0000:00', '0000:30'])
+
+    def test_rangex_comma(self):
+        rv = date.timeintrangex('0,4', 12, 3, 0)
+        self.assertListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
+
+        rv = date.timeintrangex((0, 4), 12, 3, 0)
+        self.assertListEqual(rv, [0, 3, 4, 6, 7, 9, 10, 12])
+
+    def test_rangex_fmt(self):
+        rv = date.timeintrangex('2-5', fmt='%03d')
+        self.assertListEqual(rv, ['002', '003', '004', '005'])
+
+        rv = date.timeintrangex('2-5', fmt='{0:03d}')
+        self.assertListEqual(rv, ['002', '003', '004', '005'])
+
+        rv = date.timeintrangex('2-5', fmt='{2:s}({0:02d})')
+        self.assertListEqual(rv, ['int(02)', 'int(03)', 'int(04)', 'int(05)'])
+
+    def test_rangex_fmt_times(self):
+        rv = date.timeintrangex('2-3-:30', fmt='%10s')
+        self.assertListEqual(rv, ['0002:00   ', '0002:30   ', '0003:00   '])
+
+    def test_rangex_prefix(self):
+        rv = date.timeintrangex('foo_0', 5, 2)
+        self.assertListEqual(rv, ['foo_0', 'foo_2', 'foo_4', ])
+
+        rv = date.timeintrangex('foo_0-5-2', fmt='%02d')
+        self.assertListEqual(rv, ['foo_00', 'foo_02', 'foo_04', ])
+
+        rv = date.timeintrangex(1, 7, 3, prefix='hello-')
+        self.assertListEqual(rv, ['hello-1', 'hello-4', 'hello-7', ])
+
+        rv = date.timeintrangex(1, 7, 3, prefix='hello-', shift=2, fmt='%02d')
+        self.assertListEqual(rv, ['hello-03', 'hello-06', 'hello-09'])
+
+        rv = date.timeintrangex(1, 7, 3, prefix='value no.', fmt='{1:d} is {0:d}')
+        self.assertListEqual(rv, ['value no.1 is 1', 'value no.2 is 4', 'value no.3 is 7'])
+
+    def test_rangex_prefix_times(self):
+        rv = date.timeintrangex('foo_0:15', 2, ':15')
+        self.assertListEqual(rv, ['foo_0000:15', 'foo_0000:30', 'foo_0000:45', 'foo_0001:00', 'foo_0001:15', 'foo_0001:30', 'foo_0001:45', 'foo_0002:00'])
+
+        rv = date.timeintrangex('foo_0', -2, ':15')
+        self.assertListEqual(rv, [])
+
+        rv = date.timeintrangex('foo_0', -1, '-:15')
+        self.assertListEqual(rv, ['foo_-0000:15', 'foo_-0000:30', 'foo_-0000:45', 'foo_-0001:00', 'foo_0000:00'])
+
+        rv = date.timeintrangex('10:00', '8:10', '-:15', prefix='toto-')
+        self.assertListEqual(rv, ['toto-0008:15', 'toto-0008:30', 'toto-0008:45', 'toto-0009:00', 'toto-0009:15', 'toto-0009:30', 'toto-0009:45', 'toto-0010:00'])
+
+        rv = date.timeintrangex('10:00', '9:10', '-:15', prefix='toto-', shift='0:01')
+        self.assertListEqual(rv, ['toto-0009:16', 'toto-0009:31', 'toto-0009:46', 'toto-0010:01'])
+
+        rv = date.timeintrangex('10:00', '9:10', '-:15', prefix='value no.', fmt='{1:d} is {0:s}')
+        self.assertListEqual(rv, ['value no.1 is 0009:15', 'value no.2 is 0009:30', 'value no.3 is 0009:45', 'value no.4 is 0010:00'])
+
 
 # noinspection PyUnusedLocal
 class utMonth(TestCase):

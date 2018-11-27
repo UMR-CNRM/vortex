@@ -12,8 +12,6 @@
 Interface
 ---------
 
-.. autofunction:: rangex
-
 .. autofunction:: inplace
 
 .. autofunction:: expand
@@ -54,11 +52,6 @@ Base Classes
    :member-order: alphabetical
 
 .. autoclass:: UpperCaseDict
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: TimeInt
    :show-inheritance:
    :members:
    :member-order: alphabetical
