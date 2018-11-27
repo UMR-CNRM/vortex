@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from unittest import TestCase, main
 
-from footprints import loggers
+from bronx.fancies import loggers
 
 
 class utLogger(TestCase):
@@ -22,7 +22,6 @@ class utLogger(TestCase):
         self.assertEqual(len(stack), 1)
         for r in stack:
             lg.handle(r)
-
 
 
 if __name__ == '__main__':

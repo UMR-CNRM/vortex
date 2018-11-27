@@ -8,9 +8,12 @@ for any :mod:`vortex` experiment.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 import collections
 import re
-import six
+
+from bronx.patterns import getbytag
 
 import footprints
 
@@ -143,7 +146,7 @@ class ConfigSet(collections.MutableMapping):
         return newobj
 
 
-class Node(footprints.util.GetByTag, NiceLayout):
+class Node(getbytag.GetByTag, NiceLayout):
     """Base class type for any element in the logical layout.
 
     :param str tag: The node's tag (must be unique !)
@@ -686,7 +689,7 @@ class Task(Node):
             self.complete()
 
 
-class Driver(footprints.util.GetByTag, NiceLayout):
+class Driver(getbytag.GetByTag, NiceLayout):
     """Iterable object for a simple scheduling of :class:`Application` objects."""
 
     _tag_default = 'pilot'

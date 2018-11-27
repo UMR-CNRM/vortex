@@ -8,15 +8,19 @@ i.e. some set of key/value pairs that attributes (possibly optional) could cover
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
+
 import os
 import re
 import copy
 import types
 import weakref
 import collections
-import six
 
-from . import access, collectors, config, doc, dump, loggers, observers
+from bronx.fancies import dump, loggers
+from bronx.patterns import observer
+
+from . import access, collectors, config, doc
 from . import priorities, proxies, reporting, util
 from .stdtypes import *
 
@@ -808,7 +812,7 @@ class FootprintBaseMeta(type):
                                            report_style=setup.report_style)
             thiscollector.add(realcls, abstract=abstract)
             if not abstract and thiscollector.register:
-                observers.get(tag=realcls.fullname()).register(thiscollector)
+                observer.get(tag=realcls.fullname()).register(thiscollector)
                 logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
 
         # Docstring building
@@ -853,7 +857,7 @@ class FootprintBase(object):
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_attr_input, u_attr_seen = self._footprint.resolve(self._attributes,  # @UnusedVariable
                                                                                   fatal=True)
-        self._observer = observers.get(tag=self.__class__.fullname())
+        self._observer = observer.get(tag=self.__class__.fullname())
         self.footprint_riseup()
 
     @classmethod
@@ -914,15 +918,9 @@ class FootprintBase(object):
         return d
 
     def __setstate__(self, state):
-        self._observer = observers.get(tag=self.__class__.fullname())
+        self._observer = observer.get(tag=self.__class__.fullname())
         self.__dict__.update(state)
         self.footprint_riseup()
-
-    def __del__(self):
-        try:
-            self._observer.notify_del(self, dict())
-        except (TypeError, AttributeError):
-            logger.warning('Too late for notify_del')
 
     def footprint_getattr(self, attr, auth=None):  # @UnusedVariable
         """Return actual attribute value in internal storage. Protected method."""

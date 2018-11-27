@@ -16,11 +16,6 @@ This package
 Classes
 -------
 
-.. autoclass:: History
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ShellEncoder
    :show-inheritance:
    :members:

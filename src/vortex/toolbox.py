@@ -14,11 +14,12 @@ from contextlib import contextmanager
 import re
 import six
 
+from bronx.stdtypes.history import History
+
 import footprints
 
 from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
-from vortex.util.structs import History
 
 #: Automatic export of superstar interface.
 __all__ = [ 'rload', 'rget', 'rput' ]

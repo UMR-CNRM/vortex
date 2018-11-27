@@ -6,8 +6,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from unittest import TestCase, main
 
-from footprints import dump
-from footprints.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
+from bronx.fancies import dump
+from bronx.fancies.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
     OneLineTxtDumper
 
 

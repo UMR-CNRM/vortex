@@ -12,6 +12,7 @@ to be processed: e.g. mail, routing, alarm.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import bronx.stdtypes.catalog
 import footprints
 
 from vortex.util.authorizations import is_authorized_user
@@ -290,7 +291,7 @@ class SpooledActions(object):
         return rc
 
 
-class Dispatcher(footprints.util.Catalog):
+class Dispatcher(bronx.stdtypes.catalog.Catalog):
     """
     Central office for dispatching actions.
     """

@@ -15,6 +15,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import logging
 
 from bronx.datagrip.datastore import DataStore
+from bronx.patterns import getbytag
 from bronx.stdtypes import date
 import footprints
 
@@ -92,7 +93,7 @@ def exit():
     return ok
 
 
-class Ticket(footprints.util.GetByTag):
+class Ticket(getbytag.GetByTag):
     """
     Default session ticket class, defined by tag.
     """

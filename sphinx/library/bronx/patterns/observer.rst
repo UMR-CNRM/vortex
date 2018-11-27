@@ -1,12 +1,12 @@
-:mod:`footprints.observers` --- Observers Set
-=============================================
+:mod:`bronx.patterns.observer` --- Implementation of the Observer design pattern
+================================================================================
 
-.. automodule:: footprints.observers
-   :synopsis: Observer/Observed handling
+.. automodule:: bronx.patterns.observer
+   :synopsis: A personal implementation of the Observer design pattern
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.4
+.. versionadded:: 1.5.0
 
 Interface functions
 -------------------

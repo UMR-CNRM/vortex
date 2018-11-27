@@ -18,6 +18,8 @@ import re
 import traceback
 import weakref
 
+from bronx.patterns import observer
+
 import footprints
 from footprints.util import mktuple
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -284,7 +286,7 @@ class Section(object):
         return outdict
 
 
-class Sequence(footprints.observers.Observer):
+class Sequence(observer.Observer):
     """
     Logical sequence of sections such as inputs or outputs sections.
     Instances are iterable and callable.
@@ -300,10 +302,10 @@ class Sequence(footprints.observers.Observer):
         self._sections_hash = defaultdict(weakref.WeakSet)
         self._coherentgroups = defaultdict(weakref.WeakSet)
         self._coherentgroups_openings = defaultdict(lambda: True)
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
 
     def __del__(self):
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
 
     def __iter__(self):
         for s in self.sections:

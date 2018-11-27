@@ -7,11 +7,14 @@ Footprint's docstring generator
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import collections
-import re
 import six
 
-from . import dump, priorities
+import collections
+import re
+
+from bronx.fancies import dump
+
+from . import priorities
 
 __all__ = ['visibility', ]
 

@@ -10,7 +10,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import footprints
-from bronx.stdtypes.history  import PrivateHistory
+from bronx.stdtypes.history import PrivateHistory
+from bronx.patterns import getbytag, observer
 from bronx.stdtypes.tracking import Tracker
 
 from vortex.tools.env import Environment
@@ -63,7 +64,7 @@ def switch(tag=None):
     return current().switch(tag=tag)
 
 
-class ContextObserverRecorder(footprints.observers.Observer):
+class ContextObserverRecorder(observer.Observer):
     """Record events related to a given Context.
 
     In order to start recording, this object should be associated with a
@@ -98,15 +99,15 @@ class ContextObserverRecorder(footprints.observers.Observer):
         self._tracker_recorder = dataflow.LocalTracker()
         self._stages_recorder = list()
         self._prestaging_recorder = list()
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
-        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_STORES_OBSBOARD).register(self)
 
     def unregister(self):
         """Stop recording."""
         if self._binded_context is not None:
             self._binded_context = None
-            footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
-            footprints.observers.get(tag=_STORES_OBSBOARD).unregister(self)
+            observer.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+            observer.get(tag=_STORES_OBSBOARD).unregister(self)
 
     def updobsitem(self, item, info):
         if (self._binded_context is not None) and self._binded_context.active:
@@ -165,7 +166,7 @@ class DiffHistory(PrivateHistory):
         self._count = other.count
 
 
-class Context(footprints.util.GetByTag, footprints.observers.Observer):
+class Context(getbytag.GetByTag, observer.Observer):
     """Physical layout of a session or task, etc."""
 
     _tag_default = 'ctx'
@@ -218,8 +219,8 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                                                            dict(path=self.path),
                                                            DiffHistory())
 
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
-        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_STORES_OBSBOARD).register(self)
 
     @property
     def active(self):

@@ -38,11 +38,11 @@ from datetime import datetime
 import ftplib
 import re
 
+from bronx.stdtypes.history import History
 from bronx.syntax.decorators import nicedeco
 import footprints
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
-from vortex.util.structs import History
 from vortex.tools.actions import actiond as ad
 
 #: No automatic export

@@ -17,6 +17,7 @@ import pprint
 
 import yaml
 
+import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
 import vortex.syntax.stdattrs
@@ -226,7 +227,7 @@ class TestDriver(object):
             me.check_against(ref)
 
 
-class TestsStack(fp.util.Catalog):
+class TestsStack(bronx.stdtypes.catalog.Catalog):
     """Contains a subset of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):

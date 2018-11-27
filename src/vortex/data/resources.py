@@ -3,6 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.stdtypes.dictionaries import LowerCaseDict
+
 import footprints
 
 from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
@@ -39,7 +41,7 @@ class Resource(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Resource init %s', self.__class__)
         super(Resource, self).__init__(*args, **kw)
-        self._mailbox = footprints.util.LowerCaseDict()
+        self._mailbox = LowerCaseDict()
 
     @property
     def realkind(self):

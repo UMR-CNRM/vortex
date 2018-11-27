@@ -10,7 +10,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import six
 import weakref
 
-from . import loggers
+from bronx.fancies import loggers
 
 #: No automatic export
 __all__ = []

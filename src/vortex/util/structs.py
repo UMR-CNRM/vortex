@@ -10,17 +10,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import json
 
 import footprints
-from bronx.stdtypes.history import PrivateHistory
 
 #: No automatic export
 __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
-
-
-class History(PrivateHistory, footprints.util.GetByTag):
-    """Shared Multi-purpose history like object."""
-    pass
 
 
 class ShellEncoder(json.JSONEncoder):

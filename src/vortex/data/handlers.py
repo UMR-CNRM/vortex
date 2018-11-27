@@ -9,12 +9,15 @@ import six
 import sys
 import functools
 
+from bronx.patterns import observer
+from bronx.stdtypes.history import History
+
 import footprints
 
 from vortex import sessions
 
 from vortex.tools  import net
-from vortex.util   import config, structs
+from vortex.util   import config
 from vortex.layout import contexts, dataflow
 from vortex.data   import containers, resources, providers
 
@@ -35,7 +38,7 @@ def observer_board(obsname=None):
     """Proxy to :func:`footprints.observers.get`."""
     if obsname is None:
         obsname = OBSERVER_TAG
-    return footprints.observers.get(tag=obsname)
+    return observer.get(tag=obsname)
 
 
 class IdCardAttrDumper(footprints.dump.TxtDumper):
@@ -111,7 +114,7 @@ class Handler(object):
                                if x.startswith('hook_')}
         self._delayhooks    = self._options.pop('delayhooks', False)
 
-        self._history = structs.History(tag='data-handler')
+        self._history = History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
         self._observer.notify_new(self, dict(stage = 'load'))
@@ -119,15 +122,6 @@ class Handler(object):
         self._latest_earlyget_id = None
         self._latest_earlyget_opts = None
         logger.debug('New resource handler %s', self.__dict__)
-
-    def __del__(self):
-        try:
-            self._observer.notify_del(self, dict())
-        except TypeError:
-            try:
-                logger.debug('Too late to notify del of %s', self)
-            except AttributeError:
-                pass
 
     def __str__(self):
         return six.text_type(self.__dict__)

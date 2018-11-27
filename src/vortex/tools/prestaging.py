@@ -9,10 +9,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 
+from bronx.fancies.dump import lightdump
+from bronx.patterns import getbytag
+from bronx.stdtypes.catalog import Catalog
+
 import footprints
 from footprints import proxy as fpx
-from footprints.dump import lightdump
-from footprints.util import Catalog, GetByTag
 
 from vortex.tools.systems import OSExtended
 
@@ -167,7 +169,7 @@ class PrivatePrestagingHub(object):
             self._prestagingtools.discard(ptool)
 
 
-class PrestagingHub(PrivatePrestagingHub, GetByTag):
+class PrestagingHub(PrivatePrestagingHub, getbytag.GetByTag):
     """
     A subclass of :class:`PrivatePrestagingHub` that using :class:`GetByTag`
     to remain persistent in memory.

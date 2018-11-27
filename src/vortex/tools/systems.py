@@ -53,6 +53,7 @@ import time
 
 import footprints
 from bronx.stdtypes import date
+from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
@@ -62,7 +63,6 @@ from vortex.tools.env import Environment
 from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
 from bronx.syntax.decorators import nicedeco_plusdoc
-from vortex.util.structs import History
 from vortex.syntax.stdattrs import DelayedInit
 
 #: No automatic export

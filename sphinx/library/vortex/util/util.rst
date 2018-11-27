@@ -23,7 +23,6 @@ Modules
 * :mod:`vortex.util.helpers`
 * :mod:`vortex.util.introspection`
 * :mod:`vortex.util.iosponge`
-* :mod:`vortex.util.patterns`
 * :mod:`vortex.util.roles`
 * :mod:`vortex.util.storefunctions`
 * :mod:`vortex.util.structs`
