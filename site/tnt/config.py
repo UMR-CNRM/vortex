@@ -12,9 +12,9 @@ import six
 import string
 import sys
 
-import footprints
+from bronx.fancies import loggers
 
-tntlog = footprints.loggers.getLogger('tntlog')
+tntlog = loggers.getLogger('tntlog')
 
 # Detect TNT's configuration files directory
 TPL_DIRECTORY = os.path.join(os.path.dirname(os.path.realpath(__file__)),

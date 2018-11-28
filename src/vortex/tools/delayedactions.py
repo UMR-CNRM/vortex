@@ -63,6 +63,7 @@ import os
 import tempfile
 import time
 
+from bronx.fancies import loggers
 from bronx.fancies.dump import lightdump
 from bronx.stdtypes.history import PrivateHistory
 from bronx.patterns import getbytag, observer
@@ -75,7 +76,7 @@ from vortex.tools.systems import OSExtended, ExecutionError
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple DelayedActionStatusTuple
 DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple', ['void', 'failed', 'done'], verbose=False)

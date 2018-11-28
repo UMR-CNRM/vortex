@@ -8,16 +8,17 @@ sections
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+from six.moves import queue
+
 from collections import defaultdict, namedtuple, OrderedDict
 from itertools import islice, compress
 import multiprocessing
-import six
-from six.moves import queue
 import sys
 import time
 import traceback
 
-from footprints import loggers
+from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.stdtypes import date
 

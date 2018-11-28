@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 import footprints
 
 import vortex
@@ -15,7 +16,7 @@ from gco.syntax.stdattrs import GgetId, UgetId
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _DATASTORE_KIND = 'uenv_registered_cycle'
 

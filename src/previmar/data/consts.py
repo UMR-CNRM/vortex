@@ -5,14 +5,15 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
-import footprints
+from bronx.fancies import loggers
+
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelResource
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class GenvUsageModelResource(GenvModelResource):

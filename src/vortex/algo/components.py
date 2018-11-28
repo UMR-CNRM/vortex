@@ -11,6 +11,7 @@ import shlex
 import tempfile
 import multiprocessing
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from taylorism import Boss
 import footprints
@@ -23,7 +24,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class AlgoComponentError(Exception):

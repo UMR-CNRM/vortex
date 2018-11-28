@@ -24,9 +24,10 @@ import yaml
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def _construct_yaml_str(self, node):

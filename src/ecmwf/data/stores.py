@@ -7,11 +7,12 @@ Definitions of the Archive stores at ECMWF.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-
+from bronx.fancies import loggers
 import footprints
+
 from vortex.data.stores import Finder
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class FinderECMWF(Finder):

@@ -10,13 +10,13 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 from unittest import TestCase, SkipTest
 
-import footprints as fp
+from bronx.fancies import loggers
 
 from . import discover
 
 
-logger = fp.loggers.getLogger(__name__)
-clogger = fp.loggers.getLogger('.'.join(__name__.split('.')[:-1]))
+logger = loggers.getLogger(__name__)
+clogger = loggers.getLogger('.'.join(__name__.split('.')[:-1]))
 
 try:
     import yaml

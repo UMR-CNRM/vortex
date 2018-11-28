@@ -11,8 +11,9 @@ import six
 import time
 
 from bronx.datagrip.namelist  import NamelistBlock
-import footprints
+from bronx.fancies import loggers
 from footprints.stdtypes import FPTuple
+import footprints
 from taylorism import Boss
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
@@ -28,7 +29,7 @@ from common.tools.grib        import GRIBFilter
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class _FA2GribWorker(VortexWorkerBlindRun):

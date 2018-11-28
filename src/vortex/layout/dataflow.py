@@ -18,18 +18,17 @@ import re
 import traceback
 import weakref
 
+from bronx.fancies import loggers
 from bronx.patterns import observer
-
-import footprints
-from footprints.util import mktuple
 from bronx.syntax.pretty import EncodedPrettyPrinter
+from footprints.util import mktuple
 
 from vortex.util.roles import setrole
 
 #: No automatic export.
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 

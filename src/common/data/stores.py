@@ -6,18 +6,19 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
+from bronx.stdtypes import date
 import footprints
 
 from vortex.data.stores import Store
 from vortex.syntax.stdattrs import compressionpipeline
-from bronx.stdtypes import date
 
 from common.tools.agt import agt_actual_command
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class BdpeStore(Store):

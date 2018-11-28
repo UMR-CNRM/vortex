@@ -5,8 +5,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
 
 from common.algo.ifsroot import IFSParallel
 from vortex.algo.components import AlgoComponentError, BlindRun
@@ -17,7 +17,7 @@ from .forecasts import FullPos
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Coupling(FullPos):

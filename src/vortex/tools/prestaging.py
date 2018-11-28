@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 
+from bronx.fancies import loggers
 from bronx.fancies.dump import lightdump
 from bronx.patterns import getbytag
 from bronx.stdtypes.catalog import Catalog
@@ -21,7 +22,7 @@ from vortex.tools.systems import OSExtended
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple PrestagingPriorityTuple
 PrestagingPriorityTuple = namedtuple('PrestagingPriorityTuple', ['urgent', 'normal', 'low'], verbose=False)

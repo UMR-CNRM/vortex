@@ -7,8 +7,8 @@ import io
 import re
 import six
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
-import footprints
 
 from vortex.layout.dataflow import intent
 from . import folder
@@ -16,7 +16,7 @@ from . import folder
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class OdbDriver(object):

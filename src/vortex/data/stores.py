@@ -15,6 +15,7 @@ import ftplib
 import re
 import six
 
+from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.stdtypes import date
 from bronx.system import hash as hashutils
@@ -34,7 +35,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: Export base class
 __all__ = ['Store']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 

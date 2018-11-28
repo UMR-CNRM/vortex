@@ -14,6 +14,7 @@ from contextlib import contextmanager
 import re
 import six
 
+from bronx.fancies import loggers
 from bronx.stdtypes.history import History
 
 import footprints
@@ -24,7 +25,7 @@ from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 #: Automatic export of superstar interface.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults

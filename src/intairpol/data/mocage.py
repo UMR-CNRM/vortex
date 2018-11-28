@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource, GeoFlowResource
@@ -13,7 +13,7 @@ from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, name
 #: Automatic export of  class
 __all__ = [ ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_delete('src')

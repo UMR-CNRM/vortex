@@ -9,6 +9,7 @@ import six
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes.tracking import Tracker
 
 from . import addons
@@ -16,7 +17,7 @@ from . import addons
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):

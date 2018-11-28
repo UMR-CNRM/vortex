@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.fancies import loggers
 from bronx.stdtypes.dictionaries import LowerCaseDict
 
 import footprints
@@ -13,7 +14,7 @@ from .contents import DataContent, UnknownContent, FormatAdapter
 #: Export Resource and associated Catalog classes.
 __all__ = [ 'Resource' ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Resource(footprints.FootprintBase):

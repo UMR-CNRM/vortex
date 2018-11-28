@@ -52,6 +52,7 @@ import threading
 import time
 
 import footprints
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
@@ -68,7 +69,7 @@ from vortex.syntax.stdattrs import DelayedInit
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 # Optional, non-standard packages
 yaml_checker = ExternalCodeImportChecker('yaml')

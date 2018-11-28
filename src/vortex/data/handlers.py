@@ -9,6 +9,8 @@ import six
 import sys
 import functools
 
+import bronx.fancies.dump
+from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.stdtypes.history import History
 
@@ -24,7 +26,7 @@ from vortex.data   import containers, resources, providers
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -41,7 +43,7 @@ def observer_board(obsname=None):
     return observer.get(tag=obsname)
 
 
-class IdCardAttrDumper(footprints.dump.TxtDumper):
+class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
     """Dump a text representation of almost any footprint object..."""
 
     indent_size = 2
@@ -81,7 +83,7 @@ class IdCardAttrDumper(footprints.dump.TxtDumper):
             if hasattr(obj, 'tag'):
                 return "{:s} obj: tag={:s}".format(type(obj).__name__, obj.tag)
             else:
-                parent_dump = super(footprints.dump.TxtDumper, self).dump_default(obj, level,
+                parent_dump = super(bronx.fancies.dump.TxtDumper, self).dump_default(obj, level,
                                                                                   nextline and
                                                                                   self.break_default)
                 return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)

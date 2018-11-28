@@ -60,6 +60,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 import re
 
+from bronx.fancies import loggers
 import bronx.patterns.getbytag
 
 import footprints
@@ -70,7 +71,7 @@ from vortex.util.config import GenericConfigParser
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # Module Interface

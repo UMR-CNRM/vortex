@@ -13,15 +13,14 @@ import six
 import collections
 import re
 
+from bronx.fancies import loggers
 from bronx.patterns import getbytag
-
-import footprints
 
 from vortex import toolbox, VortexForceComplete
 from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 from vortex.syntax.stdattrs import Namespace
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']

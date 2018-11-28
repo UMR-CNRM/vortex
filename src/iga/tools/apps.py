@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
@@ -11,7 +11,7 @@ from vortex.tools.actions import actiond as ad
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class OpTask(Task):

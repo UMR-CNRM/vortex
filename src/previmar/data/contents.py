@@ -5,11 +5,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.contents import AlmostListContent
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class SurgeTemplate(AlmostListContent):

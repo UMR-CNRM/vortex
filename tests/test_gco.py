@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 
+from bronx.fancies import loggers
 import footprints as fp
 
 import vortex
@@ -101,10 +102,10 @@ class TestUgetUenv(unittest.TestCase):
 
     def setUp(self):
         # Get ride of loggers
-        glog = fp.loggers.getLogger('gco')
+        glog = loggers.getLogger('gco')
         self._glog_level = glog.level
         glog.setLevel('CRITICAL')
-        vlog = fp.loggers.getLogger('vortex')
+        vlog = loggers.getLogger('vortex')
         self._vlog_level = vlog.level
         vlog.setLevel('CRITICAL')
         # Temp directory
@@ -125,9 +126,9 @@ class TestUgetUenv(unittest.TestCase):
         self.sh.remove(self.tmpdir)
         uenv.clearall()
         # restore loggers
-        glog = fp.loggers.getLogger('gco')
+        glog = loggers.getLogger('gco')
         glog.setLevel(self._glog_level)
-        vlog = fp.loggers.getLogger('vortex')
+        vlog = loggers.getLogger('vortex')
         vlog.setLevel(self._vlog_level)
 
     def test_basics(self):

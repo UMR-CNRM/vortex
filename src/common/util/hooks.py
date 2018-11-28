@@ -7,12 +7,12 @@ Some useful hooks.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import footprints
+from bronx.fancies import loggers
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def update_namelist(t, rh, *completive_rh):

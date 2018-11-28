@@ -7,8 +7,11 @@ Net tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.urllib import parse as urlparse
+
 import abc
 import collections
+from collections import namedtuple
 import ftplib
 import functools
 import io
@@ -20,18 +23,16 @@ import socket
 import stat
 import struct
 import time
-from six.moves.urllib import parse as urlparse
 from datetime import datetime
 
-import footprints
+from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 from bronx.net.netrc import netrc
-from collections import namedtuple
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def uriparse(uristring):

@@ -12,10 +12,11 @@ import footprints
 import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue
 
+from bronx.fancies import loggers
 from bronx.fancies.multicfg import upfirst
 from bronx.stdtypes.date import now
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Recognition of package name
 ALTNAMES = ('intairpol', 'airpol', 'airtools')

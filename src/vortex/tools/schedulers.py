@@ -10,13 +10,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import functools
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from .services import Service
 
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Scheduler(Service):

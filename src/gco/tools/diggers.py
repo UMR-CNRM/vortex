@@ -13,13 +13,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex import toolbox
 from bronx.stdtypes import date
 from bronx.fancies.colors import termcolors as tmc
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Digger(footprints.FootprintBase):

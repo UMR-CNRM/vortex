@@ -12,11 +12,12 @@ import sys
 # Otherwise os.getcwd may fail with nose
 os.chdir(os.environ['HOME'])
 
+from bronx.fancies import loggers
 import footprints as fp
 import vortex
 
-vlog = fp.loggers.getLogger('vortex')
-clog = fp.loggers.getLogger('common')
+vlog = loggers.getLogger('vortex')
+clog = loggers.getLogger('common')
 
 non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
                     'PIL': ['bronx.datagrip.pyexttiff', ],

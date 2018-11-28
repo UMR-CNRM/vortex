@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.providers import Provider
 from vortex.util.config import GenericConfigParser
@@ -15,7 +15,7 @@ from bronx.stdtypes.date import Time
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class BdpeError(Exception):

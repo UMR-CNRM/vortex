@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from collections import defaultdict
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time, Month
 import footprints
 
@@ -18,7 +19,7 @@ from vortex.layout.dataflow import intent
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Forecast(IFSParallel):

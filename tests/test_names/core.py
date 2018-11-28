@@ -17,6 +17,7 @@ import pprint
 
 import yaml
 
+from bronx.fancies import loggers
 import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
@@ -33,7 +34,7 @@ import previmar  # @UnusedImport
 from .utils import YamlOrderedDict
 
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------

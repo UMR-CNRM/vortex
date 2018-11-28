@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 
-import footprints
+from bronx.fancies import loggers
 
 import vortex
 from vortex.tools.env import Environment
@@ -13,7 +13,7 @@ from vortex.tools.env import Environment
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _DATASTORE_KIND = 'genv_registered_cycle'
 

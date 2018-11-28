@@ -17,6 +17,7 @@ import six
 from email import encoders
 from string import Template
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -28,7 +29,7 @@ from vortex.util.config import GenericConfigParser, load_template
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 # See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']

@@ -10,11 +10,12 @@ data are sent using FTP or SSH, a tar file is created on the fly.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 import io
 import tempfile
 
-import six
-
+from bronx.fancies import loggers
 import footprints
 from vortex.util.iosponge import IoSponge
 from . import addons
@@ -22,7 +23,7 @@ from . import addons
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _folder_exposed_methods = set(['cp', 'mv',
                                'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',

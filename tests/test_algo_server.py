@@ -8,6 +8,7 @@ import tempfile
 
 import footprints as fp
 
+from bronx.fancies import loggers
 from bronx.system import interrupt
 
 import unittest
@@ -16,8 +17,8 @@ import vortex
 from vortex import toolbox as tb
 from vortex.algo import components, serversynctools
 
-logger = fp.loggers.getLogger(__name__)
-lopi = fp.loggers.getLogger('bronx.system.interrupt')
+logger = loggers.getLogger(__name__)
+lopi = loggers.getLogger('bronx.system.interrupt')
 
 
 class ServerSyncToolQuick(serversynctools.ServerSyncSimpleSocket):

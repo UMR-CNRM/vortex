@@ -8,6 +8,7 @@ import six
 import socket
 import sys
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex import sessions
@@ -16,7 +17,7 @@ from vortex.util import config
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ServerSyncTool(footprints.FootprintBase):

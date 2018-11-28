@@ -11,9 +11,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 import itertools
 
-import footprints
+from bronx.fancies import loggers
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ECMWFInterface(object):

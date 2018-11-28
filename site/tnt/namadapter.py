@@ -12,9 +12,9 @@ import collections
 import re
 import six
 
-import footprints
+from bronx.fancies import loggers
 
-tntlog = footprints.loggers.getLogger('tntlog')
+tntlog = loggers.getLogger('tntlog')
 
 # Macros List from vortex's common.data.namelists
 #: TNT's predefined list of macros

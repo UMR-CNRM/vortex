@@ -14,6 +14,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import logging
 
+from bronx.fancies import loggers
 from bronx.datagrip.datastore import DataStore
 from bronx.patterns import getbytag
 from bronx.stdtypes import date
@@ -27,7 +28,7 @@ from vortex.layout import contexts
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -291,11 +292,11 @@ class Ticket(getbytag.GetByTag):
         Explicitly sets the logging level to the ``level`` value.
         Shortcuts such as :method::`debug' or :method:`error` should be used.
         """
-        thislevel = footprints.loggers.getActualLevel(level)
+        thislevel = loggers.getActualLevel(level)
         if thislevel is None:
             logger.error('Try to set an unknown log level <%s>', level)
         else:
-            for logname in footprints.loggers.roots:
+            for logname in loggers.roots:
                 r_logger = logging.getLogger(logname)
                 r_logger.setLevel(thislevel)
 

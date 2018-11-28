@@ -7,16 +7,18 @@ This modules defines helpers to build job's scripts.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 import ast
 import collections
 import functools
 import importlib
 import re
-import six
 import string
 import sys
 import traceback
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints
 from footprints import proxy as fpx
@@ -31,7 +33,7 @@ from bronx.syntax.decorators import nicedeco
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 _RE_VORTEXDATE = re.compile(r'_(?P<date>\d{8})T(?P<hh>\d{2})(?P<mm>\d{2})(?P<cutoff>[AP])',

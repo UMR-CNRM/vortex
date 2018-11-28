@@ -12,6 +12,7 @@ import time
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import utcnow
 from bronx.stdtypes.dictionaries import Foo
 from bronx.system.memory import convert_bytes_in_unit
@@ -31,7 +32,7 @@ from taylorism import Boss
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Raw2OdbExecutionError(ExecutionError):
