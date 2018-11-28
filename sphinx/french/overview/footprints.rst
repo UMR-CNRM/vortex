@@ -1241,36 +1241,14 @@ Mécanismes de filtre, d'élimination d'éléments du collecteur, gestion des in
 Autres fonctionnalités
 ======================
 
-En interne le package footprint s'appuie sur quelques utilitaires ou implémente quelques *patterns* qu'il est
-tout à fait possible d'utiliser en dehors des classes de type :class:`footprints.FootprintBase`.
-Il s'agit notamment du système de loggers, des observers, d'une classe-fabrique par *tag* et enfin,
-de mécanisme d'expansion de modèle descriptif.
+En interne le package footprint s'appuie sur quelques utilitaires ou implémente
+quelques *patterns* qu'il est tout à fait possible d'utiliser en dehors des
+classes de type :class:`footprints.FootprintBase`.
 
-Observers
----------
+Il s'agit notamment du système de loggers, des observers, d'une classe-fabrique
+par *tag* : ceux-ci sont hébergés dans le package :mod:`bronx`.
 
-Le module :mod:`footprints.observers` implémente le *pattern* dit Observer.
-Il en est fait un usage systématique pour le suivi de toutes les classes collectées.
-Une indirection est créée via un ou plusieurs :class:`~footprints.observers.ObserverBoard`.
-
-.. todo:: doc à compléter...
-
-Classes par *tag*
------------------
-
-Un *pattern* usuel est qu'une classe puisse être à elle-même sa propre fabrique en quelque sorte.
-Autrement dit que l'on demande au mécanisme d'instanciation de la classe de fournir tel ou tel objet
-en fonction de certains critères. Une variante incroyable puissante et pratique consiste à récupérer
-un objet en fonction d'un *tag*, étiquette quelconque dont l'utilisateur fournit le champ des valeurs
-possibles.
-
-La classe :class:`~footprints.util.GetByTag` implémente ce mécanisme avec beaucoup de degrés de liberté
-(que nous n'avons pas le temps de détailler ici). Qu'il suffise de dire que c'est de cette classe
-que dérivent par exemple les :class:`~footprints.collectors.Collector`, les :class:`~footprints.observers.ObserverBoard`,
-le ou les :class:`~footprints.setup.FootprintSetup`, le ou les :class:`~footprints.proxies.FootprintProxy` et
-les :class:`~footprints.loggers.FootprintLog` pour ne s'en tenir qu'au package footprints.
-Mais il se trouve qu'il en est fait aussi un usage relativement important dans VORTEX, et dans la construction
-des tâches opérationnelles par exemple.
+Enfin, un mécanisme d'expansion de modèle descriptif est utilisé (voir ci-dessous).
 
 Mécanismes d'expansion
 ----------------------
@@ -1280,7 +1258,7 @@ d'une liste de clés/valeurs, il est plus que raisonnable d'imaginer que l'on so
 quelques mécanismes d'expansion de ladite liste en fonction de certaines des valeurs proposées.
 
 C'est la fonction :func:`footprints.util.expand` qui se charge de ce très utile boulot, en collaboration
-éventuelle avec :func:`footprints.util.rangex`.
+éventuelle avec :func:`bronx.stdtypes.date.timeintrangex`.
 
 La première expansion à laquelle on puisse penser est naturellement celle des types de base python itérables
 que sont les :func:`list`, :func:`tuple`, :func:`set`, et dans une certaine mesure :func:`dict`

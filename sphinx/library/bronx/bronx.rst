@@ -17,6 +17,7 @@ Sub-packages
 * :mod:`bronx.fancies`
 * :mod:`bronx.graphics`
 * :mod:`bronx.meteo`
+* :mod:`bronx.patterns`
 * :mod:`bronx.stdtypes`
 * :mod:`bronx.syntax`
 * :mod:`bronx.system`
