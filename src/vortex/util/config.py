@@ -99,6 +99,9 @@ class GenericReadOnlyConfigParser(object):
         one in ``~/.vortexrc``
     :param type clsparser: The class that will be used to create a parser object
         (if needed)
+    :param str encoding: The configuration file encoding
+    :param str defaultinifile: The name of a default ini file (read before,
+         and possibly overwritten by **inifile**)
 
     :note: Some of the parser's methods are directly accessible because ``__getattr__``
         is implemented. For this ReadOnly class, only methods ``defaults``,
@@ -110,11 +113,12 @@ class GenericReadOnlyConfigParser(object):
     _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None):
+                 clsparser=SafeConfigParser, encoding=None, defaultinifile=None):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
         self.defaultencoding = encoding
+        self.defaultinifile = defaultinifile
         if inifile:
             self.setfile(inifile, encoding=None)
         else:
@@ -166,11 +170,21 @@ class GenericReadOnlyConfigParser(object):
         self.file = None
         filestack = list()
         local = sessions.system()
+        glove = sessions.current().glove
         if not isinstance(inifile, six.string_types):
+            if self.defaultinifile:
+                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                if local.path.exists(sitedefaultinifile):
+                    with io.open(sitedefaultinifile, 'r', encoding=encoding) as a_fh:
+                        self.parser.readfp(a_fh)
+                else:
+                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             # Assume it's an IO descriptor
             inifile.seek(0)
             self.parser.readfp(inifile)
             self.file = repr(inifile)
+            if self.defaultinifile:
+                self.file = sitedefaultinifile + "," + self.file
         else:
             # Let's continue as usual
             autofile = self._RE_AUTO_SETFILE.match(inifile)
@@ -181,7 +195,6 @@ class GenericReadOnlyConfigParser(object):
                     raise ValueError('Configuration file ' + inifile + ' not found')
             else:
                 autofile = autofile.group(1)
-                glove = sessions.current().glove
                 sitefile = glove.siteconf + '/' + autofile
                 persofile = glove.configrc + '/' + autofile
                 if local.path.exists(sitefile):
@@ -195,6 +208,13 @@ class GenericReadOnlyConfigParser(object):
                         local.touch(persofile)
                     else:
                         raise ValueError('Configuration file ' + inifile + ' not found')
+            if self.defaultinifile:
+                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                if local.path.exists(sitedefaultinifile):
+                    # Insert at the beginning (i.e. smallest priority)
+                    filestack.insert(0, local.path.abspath(sitedefaultinifile))
+                else:
+                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             self.file = ",".join(filestack)
             for a_file in filestack:
                 with io.open(a_file, 'r', encoding=encoding) as a_fh:
@@ -379,6 +399,9 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
         one in ``~/.vortexrc``
     :param type clsparser: The class that will be used to create a parser object
         (if needed)
+    :param str encoding: The configuration file encoding
+    :param str defaultinifile: The name of a default ini file (read before,
+         and possibly overwritten by **inifile**)
 
     :note: All of the parser's methods are directly accessible because ``__getattr__``
         is implemented. The user will refer to the Python's ConfigParser module
@@ -386,8 +409,9 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     """
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None):
-        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser, encoding)
+                 clsparser=SafeConfigParser, encoding=None, defaultinifile=None):
+        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser,
+                                                  encoding, defaultinifile)
         self.updates = list()
 
     def setall(self, kw):

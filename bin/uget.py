@@ -100,7 +100,8 @@ class UGetShell(cmd.Cmd):
                              r'))?\s*$')
     _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
-    _valid_set = re.compile(r'(?P<what>storage|location)\s+(?P<value>\S+)$')
+    _valid_set = re.compile(r'(?:(?P<what1>storage|location)\s+(?P<value>\S+)|' +
+                                '(?P<what2>ftuser)\s+(?P<user>\S+)\s+for\s+(?P<target>\S+))$')
     _valid_bootstraphack = re.compile(r'(?P<bootlocation>\w+)')
 
     _config_file = sh.path.join(gl.configrc, 'uget-client-defaults.ini')
@@ -149,6 +150,24 @@ class UGetShell(cmd.Cmd):
         """Set a variable in the configuration file."""
         value = 'None' if value is None else value  # None string are converted to None objects
         return self._config.set('cli', key, value)
+    
+    def _locationconfig_set(self, location, key, value):
+        """Set a variable in the configuration file."""
+        if value not in (None, 'None', 'none'):
+            if not self._config.has_section('location_' + location):
+                self._config.add_section('location_' + location)
+            return self._config.set('location_' + location, key, value)
+        else:
+            if self._config.has_section('location_' + location):
+                self._config.remove_option('location_' + location, key)
+            return True
+
+    def _locationconfig_get(self, location, key):
+        """Set a variable in the configuration file."""
+        if self._config.has_section('location_' + location):
+            if self._config.has_option('location_' + location, key):
+                return self._config.get('location_' + location, key)
+        return None
 
     def _update_stores(self, **kwargs):
         """Re-create the archive stores (using the **kwargs** options)."""
@@ -205,7 +224,14 @@ class UGetShell(cmd.Cmd):
         """Build up an URI given the store object and the path."""
         if isinstance(path, (tuple, list)):
             path = '/'.join(path)
-        return uriparse('{:s}://{:s}/{:s}'.format(store.scheme, store.netloc, path))
+        # Detect the location and tries to find a corresponding username
+        username = ''
+        m_path = re.search('@(\w+)$', path)
+        if m_path:
+            ftuser = self._locationconfig_get(m_path.group(1), 'ftuser')
+            if ftuser:
+                username = ftuser + '@'
+        return uriparse('{:s}://{:s}{:s}/{:s}'.format(store.scheme, username, store.netloc, path))
 
     def _instore_check(self, store, ugetid, what='data'):
         """Look for a given *ugetid* in *store*.
@@ -414,18 +440,35 @@ class UGetShell(cmd.Cmd):
         print('Default location: {!s}'.format(self._cliconfig_get('location')))
         print('Hack store      : {:s}'.format(self._storehack))
         print('Archive store   : {:s}'.format(self._storearch))
+        ftuser_associations = [s for s in self._config.sections()
+                               if s.startswith('location_') and self._config.has_option(s, 'ftuser')]
+        if ftuser_associations:
+            print('FT association  :')
+            locations = [s[9:] for s in ftuser_associations]
+            usernames = [self._config.get(s, 'ftuser') for s in ftuser_associations]
+            print_tablelike('  location < {:s} > associated with logname < {:s} >', locations, usernames)
         print()
 
     def complete_set(self, text, line, begidx, endidx):
         """Auto-completion for the *set* command."""
-        return self._complete_basics(text, line, begidx, endidx,
-                                     guesses=('storage', 'location'))
+        sline = line.split()
+        # First keyword
+        first_choices = ['storage', 'location', 'ftuser']
+        if len(sline) == 1 or (len(sline) == 2 and sline[1] not in first_choices):
+            completions = first_choices
+        # Second keyword
+        elif sline[1] == 'ftuser' and (len(sline) == 3 or
+                                       (len(sline) == 4 and sline[3] not in ('for', ))):
+            completions = ('for', )
+        else:
+            completions = ()
+        return [f for f in completions if not text or f.startswith(text)]
 
     def do_set(self, line):
         """
         Edit the settings of the uget.py command-line interface.
 
-        Syntax: set (storage|location) somevalue
+        First syntax: set (storage|location) somevalue
 
         * somevalue may be 'None'
         * 'set storage' refers to the hostname where the Uget archive is located
@@ -434,16 +477,27 @@ class UGetShell(cmd.Cmd):
           an UgetID looks like 'element_name@location'. If @location is omitted,
           the default one is used).
 
+        Second syntax: set ftuser username for a_location
+        
+        * 'set ftuser' tells uget.py to use 'username' when connectind to the
+          uget's archive store when working with location 'a_location'
+        * If 'username' is 'None', any existing association for 'a_location' is
+          deleted
+        * By default, for a given location, if no username is associated, the current
+          username (taken from the environment variable $LOGNAME) is used.
+
         Note: The uget.py settings are persistent from one session to another
         (they are stored on disk in a configuration file).
         """
         mline = self._valid_syntax(self._valid_set, line)
         if mline:
-            if mline['what'] == 'storage':
+            if mline['what1'] == 'storage':
                 self._cliconfig_set('storage', mline['value'])
                 self._update_stores(storage=self._cliconfig_get('storage'))
-            elif mline['what'] == 'location':
+            elif mline['what1'] == 'location':
                 self._cliconfig_set('location', mline['value'])
+            elif mline['what2'] == 'ftuser':
+                self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
             with open(self._config_file, 'w') as fpconf:
                 self._config.write(fpconf)
 

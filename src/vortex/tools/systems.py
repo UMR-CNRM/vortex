@@ -433,6 +433,11 @@ class System(footprints.FootprintBase):
                 )
             )
 
+    def flush_stdall(self):
+        """Flush stdout and stderr."""
+        sys.stdout.flush()
+        sys.stderr.flush
+
     @contextlib.contextmanager
     def mute_stderr(self):
         oldtrace = self.trace
@@ -465,6 +470,7 @@ class System(footprints.FootprintBase):
             print('{0:s} {1:^{size}s} {0:s}'.format(tchar, text.upper(), size=nbc))
         print(tchar * (nbc + 4))
         print()
+        self.flush_stdall()
 
     def subtitle(self, text='', tchar='-', autolen=96):
         """Formated subtitle output.
@@ -477,10 +483,12 @@ class System(footprints.FootprintBase):
             nbc = autolen
         else:
             nbc = len(text)
-        print("\n", tchar * (nbc + 4))
+        print()
+        print(tchar * (nbc + 4))
         if text:
             print('# {0:{size}s} #'.format(text, size=nbc))
             print(tchar * (nbc + 4))
+        self.flush_stdall()
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
         """Formated header output.
@@ -495,7 +503,8 @@ class System(footprints.FootprintBase):
             nbc = len(prompt + text) + 1
         else:
             nbc = 100
-        print("\n", tchar * nbc)
+        print()
+        print(tchar * nbc)
         if text:
             if not prompt:
                 prompt = self.prompt
@@ -506,6 +515,20 @@ class System(footprints.FootprintBase):
             print(prompt + six.text_type(text))
             if xline:
                 print(tchar * nbc)
+        self.flush_stdall()
+
+    def highlight(self, text='', hchar='----', bchar='#', bline=False):
+        """Highlight some text.
+
+        :param str text: The text to be highlighted
+        :param str hchar: The characters used to frame the text
+        :param bool bline: Adds a blank line
+        """
+        print()
+        print('{0:s} {1:s}  {2:s}  {1:s} {0:s}'.format(bchar, hchar, text))
+        if bline:
+            print()
+        self.flush_stdall()
 
     def pythonpath(self, output=None):
         """Return or print actual ``sys.path``."""
@@ -658,6 +681,8 @@ class OSExtended(System):
         # Some internal variables used by particular methods
         self._ftspool_cache = None
         self._frozen_target = None
+        # Hardlinks behaviour...
+        self.allow_cross_users_links = True
         # Go for the superclass' constructor
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
@@ -689,6 +714,10 @@ class OSExtended(System):
     def default_target(self):
         """Return the latest frozen target."""
         return DelayedInit(self._frozen_target, self.target)
+
+    def fmtspecific_mtd(self, method, fmt):
+        """Check if a format specific implementation is available for a given format."""
+        return hasattr(self, '{:s}_{:s}'.format(fmt, method))
 
     def popen(self, args, stdin=None, stdout=None, stderr=None, shell=False,
               output=False, bufsize=0):  # @UnusedVariable
@@ -1189,7 +1218,7 @@ class OSExtended(System):
         """
         return self._cpusinfo
 
-    def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):
+    def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):  # @UnusedVariable
         """Get the necessary command/environment to set the CPUs affinity.
 
         :param int taskid: the task number
@@ -1316,6 +1345,25 @@ class OSExtended(System):
                 self._current_ftppool.clear()
                 self._current_ftppool = None
 
+    def _fix_fthostname(self, hostname, fatal=True):
+        """If *hostname* is None, tries to find a default value for it."""
+        if hostname is None:
+            hostname = self.glove.default_fthost
+            if not hostname:
+                if fatal:
+                    raise ValueError('An *hostname* must be provided one way or another')
+        return hostname
+
+    def _fix_ftuser(self, hostname, logname, fatal=True, defaults_to_user=True):
+        """Given *hostname*, if *logname* is None, tries to find a default value for it."""
+        if logname is None:
+            if self.glove is not None:
+                logname = self.glove.getftuser(hostname, defaults_to_user=defaults_to_user)
+            else:
+                if fatal:
+                    raise ValueError("Either a *logname* or a glove must be set-up")
+        return logname
+
     def ftp(self, hostname, logname=None, delayed=False):
         """Return an FTP client object.
 
@@ -1342,11 +1390,7 @@ class OSExtended(System):
               to create and re-use FTP connections; Otherwise a "usual"
               :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
-        if logname is None:
-            if self.glove is not None:
-                logname = self.glove.user
-            else:
-                raise ValueError("Either a logname or a glove must be set-up")
+        logname = self._fix_ftuser(hostname, logname)
         if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
             return self._current_ftppool.deal(hostname, logname, delayed=delayed)
         else:
@@ -1376,14 +1420,17 @@ class OSExtended(System):
         """
         if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
+        hostname = self._fix_fthostname(hostname)
         ftp = self.ftp(hostname, logname)
         if ftp:
-            if cpipeline is None:
-                rc = ftp.get(source, destination)
-            else:
-                with cpipeline.stream2uncompress(destination) as cdestination:
-                    rc = ftp.get(source, cdestination)
-            ftp.close()
+            try:
+                if cpipeline is None:
+                    rc = ftp.get(source, destination)
+                else:
+                    with cpipeline.stream2uncompress(destination) as cdestination:
+                        rc = ftp.get(source, cdestination)
+            finally:
+                ftp.close()
             return rc
         else:
             return False
@@ -1408,15 +1455,18 @@ class OSExtended(System):
         """
         rc = False
         if self.is_iofile(source):
+            hostname = self._fix_fthostname(hostname)
             ftp = self.ftp(hostname, logname)
             if ftp:
-                if cpipeline is None:
-                    rc = ftp.put(source, destination)
-                else:
-                    with cpipeline.compress2stream(source, iosponge=True) as csource:
-                        # csource is an IoSponge consequently the size attribute exists
-                        rc = ftp.put(csource, destination, size=csource.size)
-                ftp.close()
+                try:
+                    if cpipeline is None:
+                        rc = ftp.put(source, destination)
+                    else:
+                        with cpipeline.compress2stream(source, iosponge=True) as csource:
+                            # csource is an IoSponge consequently the size attribute exists
+                            rc = ftp.put(csource, destination, size=csource.size)
+                finally:
+                    ftp.close()
         else:
             raise IOError('No such file or directory: {!r}'.format(source))
         return rc
@@ -1441,12 +1491,18 @@ class OSExtended(System):
         else:
             return False
 
+    def ftserv_allowed(self, source, destination):
+        """Given **source** and **destination**, is FtServ usable ?"""
+        return isinstance(source, six.string_types) and isinstance(destination, six.string_types)
+
     def ftserv_put(self, source, destination, hostname=None, logname=None,
                    specialshell=None, sync=False):
         """Asynchronous put of a file using FtServ."""
-        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
+        if self.ftserv_allowed(source, destination):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
+                hostname = self._fix_fthostname(hostname, fatal=False)
+                logname = self._fix_ftuser(hostname, logname, fatal=False)
                 extras = list()
                 if not sync:
                     extras.extend(['-q', ])
@@ -1467,8 +1523,10 @@ class OSExtended(System):
 
     def ftserv_get(self, source, destination, hostname=None, logname=None):
         """Get a file using FtServ."""
-        if isinstance(source, six.string_types) and isinstance(destination, six.string_types):
+        if self.ftserv_allowed(source, destination):
             if self.filecocoon(destination):
+                hostname = self._fix_fthostname(hostname, fatal=False)
+                logname = self._fix_ftuser(hostname, logname, fatal=False)
                 destination = self.path.expanduser(destination)
                 extras = list()
                 if hostname:
@@ -1478,10 +1536,39 @@ class OSExtended(System):
                 ftcmd = self.ftgetcmd or 'ftget'
                 rc = self.spawn([ftcmd, ] + extras + [source, destination], output=False)
             else:
-                raise IOError('No such file or directory: {!s}'.format(source))
+                raise IOError('Could not cocoon: {!s}'.format(destination))
         else:
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
+
+    def ftserv_batchget(self, source, destination, hostname=None, logname=None):
+        """Get a list of files using FtServ.
+
+        :note: **source** and **destination** are list or tuple.
+        """
+        if all([self.ftserv_allowed(s, d) for s, d in zip(source, destination)]):
+            for d in destination:
+                if not self.filecocoon(d):
+                    raise IOError('Could not cocoon: {!s}'.format(d))
+            extras = list()
+            hostname = self._fix_fthostname(hostname, fatal=False)
+            logname = self._fix_ftuser(hostname, logname, fatal=False)
+            if hostname:
+                extras.extend(['-h', hostname])
+            if logname:
+                extras.extend(['-u', logname])
+            ftcmd = self.ftgetcmd or 'ftget'
+            with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0]))) as tmpio:
+                tmpio.writelines(['{:s} {:s}\n'.format(s, d) for s, d in zip(source, destination)])
+                tmpio.seek(0)
+                rc = self.spawn([ftcmd, ] + extras, output=False, stdin=tmpio)
+        else:
+            raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
+        return rc
+
+    def rawftput_worthy(self, source, destination):
+        """Is it allowed to use FtServ given **source** and **destination**."""
+        return self.ftraw and self.ftserv_allowed(source, destination)
 
     @fmtshcmd
     def rawftput(self, source, destination, hostname=None, logname=None,
@@ -1530,15 +1617,19 @@ class OSExtended(System):
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
-        if self.ftraw and isinstance(source, six.string_types) and isinstance(destination, six.string_types):
+        if self.rawftput_worthy(source, destination):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, sync=sync, fmt=fmt)
         else:
             return self.ftput(source, destination, hostname=hostname, logname=logname,
                               cpipeline=cpipeline, sync=sync, fmt=fmt)
 
+    def rawftget_worthy(self, source, destination, cpipeline=None):
+        """Is it allowed to use FtServ given **source** and **destination**."""
+        return self.ftraw and cpipeline is None and self.ftserv_allowed(source, destination)
+
     @fmtshcmd
-    def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):  # @UnusedVariable
         """Proceed with some external ftget command on the specified target.
 
         :param str source: the remote path to get data
@@ -1548,6 +1639,18 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
         return self.ftserv_get(source, destination, hostname, logname)
+
+    @fmtshcmd
+    def batchrawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):  # @UnusedVariable
+        """Proceed with some external ftget command on the specified target.
+
+        :param source: A list of remote paths to get data
+        :param destination: A list of paths to the filename where to put the data.
+        :param str hostname: the target hostname  (default: *None*).
+        :param str logname: the target logname  (default: *None*).
+        :param CompressionPipeline cpipeline: unused (kept for compatibility)
+        """
+        return self.ftserv_batchget(source, destination, hostname, logname)
 
     def smartftget(self, source, destination, hostname=None, logname=None,
                    cpipeline=None, fmt=None):
@@ -1572,14 +1675,43 @@ class OSExtended(System):
             * **source** is a string (as opposed to a File like object)
             * **destination** is a string (as opposed to a File like object)
         """
-        if (self.ftraw and cpipeline is None and
-                isinstance(source, six.string_types) and isinstance(destination, six.string_types)):
+        if self.rawftget_worthy(source, destination, cpipeline):
             # FtServ is uninteresting when dealing with compression
             return self.rawftget(source, destination, hostname=hostname, logname=logname,
                                  cpipeline=cpipeline, fmt=fmt)
         else:
             return self.ftget(source, destination, hostname=hostname, logname=logname,
                               cpipeline=cpipeline, fmt=fmt)
+
+    def smartbatchftget(self, source, destination, hostname=None, logname=None,
+                        cpipeline=None, fmt=None):
+        """
+        Select the best alternative between ``ftget`` and ``batchrawftget``
+        when retrieving several files.
+
+        :param source: A list of remote paths to get data
+        :param destination: A list of destinations for the data (either a path to
+            file or a File-like object)
+        :type destination: str or File-like object
+        :param str hostname: The target hostname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
+            for the default)
+        :param CompressionPipeline cpipeline: If not *None*, the object used to
+            uncompress the data during the file transfer.
+        :param str fmt: The format of data.
+        """
+        if all([self.rawftget_worthy(s, d, cpipeline) for s, d in zip(source, destination)]):
+            # FtServ is uninteresting when dealing with compression
+            return self.batchrawftget(source, destination, hostname=hostname, logname=logname,
+                                      cpipeline=cpipeline, fmt=fmt)
+        else:
+            rc = True
+            with self.ftppool():
+                for s, d in zip(source, destination):
+                    rc = rc and self.ftget(s, d, hostname=hostname, logname=logname,
+                                           cpipeline=cpipeline, fmt=fmt)
+            return rc
 
     def ssh(self, hostname, logname=None, *args, **kw):
         """Return an :class:`~vortex.tools.net.AssistedSsh` object.
@@ -1608,6 +1740,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
         """
+        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(source, six.string_types) and cpipeline is None:
@@ -1634,6 +1767,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
+        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(destination, six.string_types) and cpipeline is None:
@@ -1912,7 +2046,8 @@ class OSExtended(System):
             if self.path.islink(source):
                 # Solve the symbolic link: this may avoid a rawcp
                 source = self.path.realpath(source)
-            if self.is_samefs(source, destination):
+            if (self.is_samefs(source, destination) and
+                    (self.allow_cross_users_links or self.usr_file(source))):
                 tmp_destination = destination + self.safe_filesuffix()
                 if self.path.isdir(source):
                     rc = self.hardlink(source, tmp_destination, securecopy=False)
@@ -1935,15 +2070,9 @@ class OSExtended(System):
                         self.remove(tmp_destination)  # Anyway, try to clean-up things
                     return rc
                 else:
-                    if self.usr_file(source):
-                        rc = self.hardlink(source, tmp_destination, securecopy=False)
-                        rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
-                        return rc
-                    else:
-                        rc = self.rawcp(source, destination)
-                        if rc:
-                            self.readonly(destination)
-                        return rc
+                    rc = self.hardlink(source, tmp_destination, securecopy=False)
+                    rc = rc and self.move(tmp_destination, destination)  # Move is atomic for a file
+                    return rc
             else:
                 rc = self.rawcp(source, destination)  # Rawcp is atomic as much as possible
                 if rc:

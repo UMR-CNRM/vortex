@@ -1,0 +1,42 @@
+default:
+    style: olive
+    sets:
+        # Arome-OM world
+        -   date: 2018010100
+            geometry: antigsp16km
+            cutoff:
+                - assim
+                - production
+            model: aladin
+            namespace: vortex.multi.fr
+            vapp: arome
+            vconf: antilles
+        # MACC world
+        -   date: 2018010100
+            geometry:
+                - macc02
+                - macc01
+                - glob22
+            cutoff:
+                - assim
+                - production
+            model: mocage
+            namespace: vortex.multi.fr
+            vapp: mocage
+            vconf: camsfcst
+
+todo:
+    # Boundary
+    -   commons:
+            kind: boundary
+            nativefmt: fa
+            block: coupling_e927
+            experiment: abcd
+            source_app: ifs
+            source_conf: determ
+            term: 0
+            namespace:
+                - olive.multi.fr
+                - vortex.multi.fr
+        tests:
+            - term: 24

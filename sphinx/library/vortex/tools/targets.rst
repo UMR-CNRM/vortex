@@ -26,3 +26,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Utility functions
+-----------------
+
+.. autofunction:: default_fqdn
+   

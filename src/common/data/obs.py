@@ -4,8 +4,9 @@
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six
+from six.moves import filter  # @UnresolvedImport
+
 import re
-import itertools
 from collections import namedtuple
 
 import footprints
@@ -120,17 +121,22 @@ class ObsODB(Observations):
         ecma_map = dict(void='ecmascr.tar',
                         screening='odb_screen.tar',
                         matchup='odb_cpl.tar', complete='odb_cpl.tar')
-        ecma_prefix = dict(matchup='BASE/', complete='BASE/')
+        ecma_prefix = {('matchup', 'arpege'): 'BASE/',
+                       ('complete', 'arpege'): 'BASE/',
+                       ('matchup', 'arome'): 'BASE/',
+                       ('complete', 'arome'): 'BASE/',
+                       ('screening', 'arome'): './'}
         if self.stage in ecma_map and self.layout == 'ecma':
             if re_fullmix.match(self.part):
                 return (ecma_map[self.stage], 'extract=all&format=unknown')
             elif self.part == 'virtual':
                 return (ecma_map[self.stage],
-                        'extract={:s}ECMA&format=unknown'.format(ecma_prefix.get(self.stage, '')))
+                        'extract={:s}ECMA&format=unknown'
+                        .format(ecma_prefix.get((self.stage, self.model), '')))
             else:
                 return (ecma_map[self.stage],
-                        'extract={:s}ECMA.{:s}&format=unknown'.format(ecma_prefix.get(self.stage, ''),
-                                                                      self.part))
+                        'extract={:s}ECMA.{:s}&format=unknown'
+                        .format(ecma_prefix.get((self.stage, self.model), ''), self.part))
         elif self.stage == 'screening' and self.layout == 'ccma':
             return ('odb_ccma_screen.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'traj':
@@ -139,7 +145,7 @@ class ObsODB(Observations):
             return ('odb_cpl.tar', '')
         elif re_fullmix.match(self.part) and self.stage == 'minim':
             return ('odb_min.tar', '')
-        elif self.part == 'ground' and self.stage == 'canari':
+        elif self.part in ('ground', 'surf') and self.stage in ('canari', 'surfan'):
             return ('odb_canari.tar', '')
         else:
             logger.error(
@@ -532,12 +538,10 @@ class ObsMapContent(TextContent):
                      any([f.match(om) for f in ofilters])) and
                     not any([f.match(om) for f in dfilters]))
 
-        self.extend(
-            itertools.ifilter(item_filter,
-                              [ObsMapItem(* x.split())
-                               for x in [line.strip() for line in container]
-                               if x and not x.startswith('#')])
-        )
+        self.extend(filter(item_filter,
+                           [ObsMapItem(* x.split())
+                            for x in [line.strip() for line in container]
+                            if x and not x.startswith('#')]))
         self._size = container.totalsize
 
     @classmethod

@@ -34,7 +34,22 @@ Bull Targets
 CNRM Targets
 ------------
 
+.. autoclass:: UmrCnrmTarget
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Aneto
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CnrmLinuxWorkstation
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CnrmLinuxServer
    :show-inheritance:
    :members:
    :member-order: alphabetical

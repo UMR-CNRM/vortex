@@ -805,6 +805,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
     def test_resolve_only(self):
+        # Only -> exact match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 rdate = datetime.date(2013, 11, 2)
@@ -857,6 +858,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
+        # Only -> 'after' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 after_rdate = datetime.date(2013, 11, 2)
@@ -877,6 +879,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
+        # Only -> 'before' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 before_rdate = datetime.date(2013, 11, 2)
@@ -897,6 +900,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
+        # Only -> 'after' and 'before' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 after_rdate = datetime.date(2013, 11, 2),
@@ -924,6 +928,46 @@ class utFootprint(TestCase):
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
+
+        # Only -> 'regex' match
+        fp = Footprint(self.fpbis, dict(
+            only = dict(
+                stuff1 = [footprints.FPRegex(r'toto\d\.txt'),
+                          footprints.FPRegex(r'machine?\.txt')]
+            )
+        ))
+
+        for tstuff in ('four', 'toto11.txt'):
+            rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=tstuff))
+            self.assertDictEqual(rd, dict(stuff1=tstuff, stuff2='foo'))
+            rv = fp.checkonly(rd)
+            self.assertFalse(rv)
+
+        for tstuff in ('toto1.txt', 'toto5.txt', 'machine.txt', 'machin.txt'):
+            rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=tstuff))
+            self.assertDictEqual(rd, dict(stuff1=tstuff, stuff2='foo'))
+            rv = fp.checkonly(rd)
+            self.assertTrue(rv)
+
+        fp = Footprint(self.fpbis, dict(
+            only = dict(
+                rstuff1 = footprints.FPRegex(r'toto\d\.txt')
+            )
+        ))
+
+        footprints.setup.defaults.update(rstuff1='toto1.txt')
+
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
+        self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
+        rv = fp.checkonly(rd)
+        self.assertTrue(rv)
+
+        footprints.setup.defaults.update(rstuff1='toto11.txt')
+
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
+        self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
+        rv = fp.checkonly(rd)
+        self.assertFalse(rv)
 
     def test_decorative(self):
         self.assertListEqual(self.fpter.decorators, [easy_decorator, ])

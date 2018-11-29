@@ -18,6 +18,7 @@ Package
 * :mod:`vortex.tools.compression`
 * :mod:`vortex.tools.date`
 * :mod:`vortex.tools.ddhpack`
+* :mod:`vortex.tools.delayedactions`
 * :mod:`vortex.tools.env`
 * :mod:`vortex.tools.folder`
 * :mod:`vortex.tools.grib`

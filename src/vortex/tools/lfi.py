@@ -266,17 +266,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         if self.is_xlfi(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
+            hostname = self.sh._fix_fthostname(hostname)
+
             st = LFI_Status()
-            if hostname is None:
-                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-            if hostname is None:
-                st.rc = 1
-                st.result = ['No archive host provided']
-                return st
-
-            if logname is None:
-                logname = self.sh.env.VORTEX_ARCHIVE_USER
-
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
                 packed_size = self._packed_size(source)
@@ -378,6 +370,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         else:
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
+            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)
