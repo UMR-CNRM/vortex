@@ -129,6 +129,7 @@ else:
 
 # Load vortex & co.
 import bronx
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints as fp
 import vortex
@@ -156,7 +157,7 @@ if do_rawftp:
     sh.ftraw = True  # Activate FtServ if sensible
 
 # Main script logger
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def load_configfile(filepath):
@@ -475,12 +476,12 @@ if __name__ == '__main__':
     # Verbosity setup
     if args.verbose is None:
         logger.setLevel('INFO')
-        fp.loggers.getLogger('bronx').setLevel('WARNING')
-        fp.logger.setLevel('WARNING')
+        loggers.getLogger('bronx').setLevel('WARNING')
+        logger.setLevel('WARNING')
         vortex.logger.setLevel('ERROR')
     if args.verbose >= 1:
-        fp.loggers.getLogger('bronx').setLevel('INFO')
-        fp.logger.setLevel('INFO')
+        loggers.getLogger('bronx').setLevel('INFO')
+        logger.setLevel('INFO')
         vortex.logger.setLevel('INFO')
     if args.verbose >= 2:
         logger.setLevel('DEBUG')
