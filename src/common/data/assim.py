@@ -4,8 +4,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
-import footprints
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
@@ -16,7 +16,7 @@ from gco.syntax.stdattrs    import gvar
 #: Automatic export off
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))

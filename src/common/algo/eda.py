@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from operator import attrgetter
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Month, Time
 import footprints
 
@@ -15,7 +16,7 @@ from common.algo.ifsroot import IFSParallel
 #: Automatic export off
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class IFSEdaAbstractAlgo(IFSParallel):

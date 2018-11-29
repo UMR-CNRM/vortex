@@ -26,6 +26,9 @@ This module contains the services specifically needed by the operational suite.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+from six import StringIO
+
 import io
 import locale
 import logging
@@ -34,10 +37,9 @@ import re
 import socket
 from logging.handlers import SysLogHandler
 
-import six
-from six import StringIO
-
+from bronx.fancies import loggers
 import footprints
+
 import vortex
 from bronx.stdtypes import date
 from bronx.stdtypes.date import Time
@@ -55,7 +57,7 @@ from vortex.util.config import GenericReadOnlyConfigParser
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 # default Formatter for alarm logfile output
 DEFAULT_ALARMLOG_FORMATTER = logging.Formatter(

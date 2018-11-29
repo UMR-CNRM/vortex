@@ -8,15 +8,16 @@ import re
 import tempfile
 import unittest
 
+from bronx.fancies import loggers
 import footprints
 
 import vortex
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
-tlog = footprints.loggers.getLogger('taylorism')
-vlog = footprints.loggers.getLogger('vortex')
-testlogger = footprints.loggers.getLogger(__name__)
+tlog = loggers.getLogger('taylorism')
+vlog = loggers.getLogger('vortex')
+testlogger = loggers.getLogger(__name__)
 
 
 class MyTaylorRunAlgo(TaylorRun):

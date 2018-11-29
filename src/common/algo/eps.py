@@ -9,6 +9,7 @@ import io
 import re
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.util.structs import ShellEncoder
@@ -20,7 +21,7 @@ from .ifsroot import IFSParallel
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Svect(IFSParallel):

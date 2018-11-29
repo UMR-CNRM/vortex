@@ -34,3 +34,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SpecialDict
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LowerCaseDict
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: UpperCaseDict
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

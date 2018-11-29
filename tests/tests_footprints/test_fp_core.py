@@ -3,6 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+from six import StringIO
+
 from unittest import TestCase, main
 
 from contextlib import contextmanager
@@ -10,10 +13,10 @@ import copy
 import datetime
 import logging
 import re
-import six
-from six import StringIO
 import sys
 import types
+
+from bronx.fancies import loggers
 
 import footprints
 from footprints import Footprint, DecorativeFootprint, FootprintBase
@@ -1384,12 +1387,12 @@ class utFootprintBase(TestCase):
 class utCollector(TestCase):
 
     def setUp(self):
-        fplogger = footprints.loggers.getLogger('footprints')
+        fplogger = loggers.getLogger('footprints')
         self._oldlevel = fplogger.level
         fplogger.setLevel('CRITICAL')
 
     def tearDown(self):
-        fplogger = footprints.loggers.getLogger('footprints')
+        fplogger = loggers.getLogger('footprints')
         fplogger.setLevel(self._oldlevel)
 
     def test_collector_basic(self):

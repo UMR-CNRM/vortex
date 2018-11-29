@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import os.path
 
+from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
@@ -15,7 +16,7 @@ from vortex.tools import net, names
 #: No automatic export
 __all__ = ['Provider']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Provider(footprints.FootprintBase):

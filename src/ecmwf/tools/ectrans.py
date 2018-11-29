@@ -5,7 +5,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
 import footprints
+
 from vortex.tools import addons
 from vortex.tools.systems import fmtshcmd
 from .interfaces import ECtrans
@@ -14,7 +16,7 @@ from vortex.util.config import GenericConfigParser
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):

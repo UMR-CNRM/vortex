@@ -35,15 +35,17 @@ __all__ = []
 
 # Set vortex specific priorities for footprints usage
 
+from bronx.fancies import loggers as bloggers
+
 import footprints
 footprints.priorities.set_before('debug', 'olive', 'oper')
 
 # Set a root logging mechanism for vortex
 
 #: Shortcut to Vortex's root logger
-logger = footprints.loggers.getLogger('vortex')
+logger = bloggers.getLogger('vortex')
 
-footprints.loggers.defaultrootname = 'vortex'
+bloggers.defaultrootname = 'vortex'
 
 # Populate a fake proxy module with footprints shortcuts
 

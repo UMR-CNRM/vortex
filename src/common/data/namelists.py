@@ -7,7 +7,7 @@ import io
 import re
 import six
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex import sessions
 from vortex.tools import env
@@ -23,7 +23,7 @@ from gco.syntax.stdattrs import gvar
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',

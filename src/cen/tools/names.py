@@ -10,14 +10,14 @@ abstract class interface.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.tools.names import AbstractActualVortexNameBuilder, AbstractVortexNameBuilderProxy
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class AbstractActualCenNameBuilder(AbstractActualVortexNameBuilder):

@@ -8,14 +8,14 @@ import copy
 import hashlib
 import re
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 rextract = re.compile('^extract=(.*)$')
 oparchivemap = IniStoreGlue('@oparchive-glue.ini')

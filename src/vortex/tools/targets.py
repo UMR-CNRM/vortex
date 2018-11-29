@@ -13,6 +13,7 @@ import re
 import platform
 import socket
 
+from bronx.fancies import loggers
 import footprints as fp
 
 from vortex.util.config import GenericConfigParser
@@ -21,7 +22,7 @@ from vortex import sessions
 #: No automatic export
 __all__ = []
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def default_fqdn():

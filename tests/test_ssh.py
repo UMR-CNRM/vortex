@@ -11,12 +11,12 @@ import tempfile
 import unittest
 import uuid
 
-import footprints
+from bronx.fancies import loggers
 
 import vortex
 from vortex.tools.net import Ssh, AssistedSsh
 
-slog = footprints.loggers.getLogger('vortex.tools.systems')
+slog = loggers.getLogger('vortex.tools.systems')
 
 test_host = 'localhost'
 fake_host = 'this-hostname-should-not-exist-in-your-network'

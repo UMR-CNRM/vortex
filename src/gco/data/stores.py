@@ -11,7 +11,8 @@ import hashlib
 import re
 import six
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
 from vortex.util.config import GenericConfigParser
@@ -20,7 +21,7 @@ from gco.syntax.stdattrs import UgetId
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 GGET_DEFAULT_CONFIGFILE = '@gget-key-specific-conf.ini'
 

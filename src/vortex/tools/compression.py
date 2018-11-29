@@ -16,13 +16,14 @@ import operator
 import six
 
 import footprints
+from bronx.fancies import loggers
 from vortex.util.iosponge import IoSponge
 
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class CompressionPipeline(object):

@@ -9,8 +9,9 @@ from six.moves import filter  # @UnresolvedImport
 import re
 from collections import namedtuple
 
-import footprints
 
+import footprints
+from bronx.fancies               import loggers
 from bronx.stdtypes.date         import Date
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 
@@ -23,7 +24,7 @@ from gco.syntax.stdattrs  import gvar, GenvKey
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @stddeco.namebuilding_insert('style', lambda s: 'obs')

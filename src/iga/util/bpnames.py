@@ -7,17 +7,17 @@ Functions and tools to handle resources names or other kind of names.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
 import six
+import re
 import sys
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time, Date
-import footprints
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)

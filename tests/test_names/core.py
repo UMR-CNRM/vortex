@@ -17,6 +17,8 @@ import pprint
 
 import yaml
 
+from bronx.fancies import loggers
+import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
 import vortex.syntax.stdattrs
@@ -32,7 +34,7 @@ import previmar  # @UnusedImport
 from .utils import YamlOrderedDict
 
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -226,7 +228,7 @@ class TestDriver(object):
             me.check_against(ref)
 
 
-class TestsStack(fp.util.Catalog):
+class TestsStack(bronx.stdtypes.catalog.Catalog):
     """Contains a subset of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):

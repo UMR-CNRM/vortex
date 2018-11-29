@@ -10,13 +10,16 @@ a default Mail Service is provided.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from six.moves.configparser import NoOptionError, NoSectionError
+
 import hashlib
 import io
 import six
 from email import encoders
 from string import Template
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
 import footprints
 
@@ -26,7 +29,7 @@ from vortex.util.config import GenericConfigParser, load_template
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 # See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']
@@ -697,7 +700,7 @@ class TemplatedMailService(MailService):
 
     def substitution_dictionary(self, add_ons=None):
         """Dictionary used for template substitutions: env + add_ons."""
-        dico = footprints.util.UpperCaseDict(self.env)
+        dico = UpperCaseDict(self.env)
         if add_ons is not None:
             dico.update(add_ons)
         return dico

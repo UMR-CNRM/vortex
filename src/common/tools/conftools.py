@@ -11,20 +11,20 @@ tasks configuration.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 import collections
 import functools
-import six
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period, Month
-import footprints
 from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
-
+import footprints
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ConfTool(footprints.FootprintBase):

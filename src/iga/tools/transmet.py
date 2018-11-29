@@ -3,12 +3,12 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
 import six
+import io
 
-import footprints
+from bronx.fancies import loggers
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def tramsmet_file(filename, filename_transmet, blocksize=67108864):

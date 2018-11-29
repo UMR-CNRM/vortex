@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider
@@ -12,7 +12,7 @@ from vortex.syntax.stdattrs import namespacefp
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
 

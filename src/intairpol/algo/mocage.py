@@ -3,21 +3,22 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
+import six
 import io
 import re
-import six
 
+from bronx.datagrip.namelist import NamelistBlock
+from bronx.fancies import loggers
+from bronx.stdtypes import date
 import footprints
 
 from vortex.algo.components import Parallel, BlindRun, Expresso
 from vortex.syntax.stdattrs import a_date, model
-from bronx.stdtypes import date
-from bronx.datagrip.namelist import NamelistBlock
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class CorrOmegaSurf(Parallel):

@@ -1,8 +1,8 @@
-:mod:`bronx.fancies` --- Fancy tools
-====================================
+:mod:`bronx.fancies` --- Fancy tools to help with user interactions, runtime configuration and logging
+======================================================================================================
 
 .. automodule:: bronx.fancies
-   :synopsis: Fancy tools
+   :synopsis: Fancy tools to help with user interactions, runtime configuration and logging
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors
@@ -18,6 +18,8 @@ Sub-modules
 * :mod:`bronx.fancies.colors`
 * :mod:`bronx.fancies.dispatch`
 * :mod:`bronx.fancies.display`
+* :mod:`bronx.fancies.dump`
+* :mod:`bronx.fancies.loggers`
 * :mod:`bronx.fancies.multicfg`
 * :mod:`bronx.fancies.wrapcmd`
 

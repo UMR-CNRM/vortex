@@ -7,8 +7,9 @@ import doctest
 import unittest
 
 from bronx.datagrip import namelist
-from bronx.fancies import display
-from bronx.stdtypes import date, tracking
+from bronx.fancies import display, loggers
+from bronx.patterns import getbytag, observer
+from bronx.stdtypes import date, history, tracking
 
 
 class utDocTests(unittest.TestCase):
@@ -21,7 +22,11 @@ class utDocTests(unittest.TestCase):
     def test_doctests(self):
         self.assert_doctests(namelist)
         self.assert_doctests(display)
+        self.assert_doctests(loggers)
+        self.assert_doctests(getbytag)
+        self.assert_doctests(observer)
         self.assert_doctests(date)
+        self.assert_doctests(history)
         self.assert_doctests(tracking)
 
 

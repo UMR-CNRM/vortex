@@ -7,7 +7,9 @@ from collections import defaultdict
 import gc
 from unittest import TestCase, main
 
-from footprints import observers, FootprintBase
+from bronx.patterns import observer
+
+from footprints import FootprintBase
 
 
 class FootprintTestObserversOne(FootprintBase):
@@ -26,7 +28,7 @@ class FootprintTestObserversTwo(FootprintTestObserversOne):
     )
 
 
-class SlurpObserver(observers.Observer):
+class SlurpObserver(observer.Observer):
 
     def __init__(self):
         self.once_observed = set()
@@ -67,13 +69,13 @@ class Foo(object):
 class utObservers(TestCase):
 
     def test_observers_exists(self):
-        rv = list(observers.keys())
+        rv = list(observer.keys())
         for o in [__name__ + '.FootprintTestObserversOne',
                   __name__ + '.FootprintTestObserversTwo', ]:
             self.assertIn(o, rv,)
 
     def test_observers_bases(self):
-        sec_obs = observers.SecludedObserverBoard()
+        sec_obs = observer.SecludedObserverBoard()
         self.assertEqual(len(sec_obs.observers()), 0)
         slurper = SlurpObserver()
         slurper2 = SlurpObserver()

@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re, io, os
 import tempfile
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex import sessions
@@ -14,7 +15,7 @@ from vortex.syntax.stdattrs import a_actualfmt
 #: Automatic export
 __all__ = ['Container']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 CONTAINER_INCORELIMIT = 1048576 * 8
 CONTAINER_MAXREADSIZE = 1048576 * 200

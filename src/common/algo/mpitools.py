@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.algo import mpitools
@@ -13,7 +14,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class MpiAuto(mpitools.MpiTool):

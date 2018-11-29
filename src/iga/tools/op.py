@@ -8,10 +8,10 @@ import re
 import six
 from tempfile import mkdtemp
 
+from bronx.fancies import loggers
 import bronx.stdtypes.date
-import vortex  # @UnusedImport
-import footprints
 
+import vortex  # @UnusedImport
 from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
@@ -20,7 +20,7 @@ from vortex.layout.jobs import JobAssistant
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):

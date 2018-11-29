@@ -7,12 +7,13 @@ A collection of utility functions used in the context of Ensemble forecasts.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
 import json
 from random import seed, sample
 import re
-import six
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex import sessions
 from vortex.data.stores import FunctionStoreCallbackError
 from vortex.util import helpers
@@ -20,7 +21,7 @@ from vortex.util import helpers
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def drawingfunction(options):

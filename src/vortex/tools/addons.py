@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import six
 
+from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
@@ -13,7 +14,7 @@ from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []

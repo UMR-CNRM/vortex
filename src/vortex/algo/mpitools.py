@@ -77,6 +77,7 @@ import collections
 import shlex
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.tools import env
@@ -84,7 +85,7 @@ from vortex.tools import env
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class MpiException(Exception):

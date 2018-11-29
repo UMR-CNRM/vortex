@@ -22,7 +22,7 @@ class Foo(object):
 class utFootprintSetup(TestCase):
 
     def test_footprint_setup(self):
-        setup = FootprintSetup(new=True)
+        setup = FootprintSetup(tag='utest_fakesetup1', new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIsInstance(setup.nullreport, reporting.NullReport)
         self.assertIsInstance(setup.report, int)
@@ -80,7 +80,7 @@ class utFootprintSetup(TestCase):
         self.assertTrue(hasattr(foo, 'garbages'))
 
     def test_footprint_callback(self):
-        setup = FootprintSetup(new=True)
+        setup = FootprintSetup(tag='utest_fakesetup2', new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIs(setup.callback, None)
 

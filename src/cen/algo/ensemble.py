@@ -7,6 +7,7 @@ from collections import defaultdict
 import io
 import six
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
@@ -16,7 +17,7 @@ from vortex.tools.parallelism import VortexWorkerBlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.util.helpers import InputCheckerError
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:

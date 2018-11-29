@@ -18,16 +18,17 @@ import re
 import traceback
 import weakref
 
-import footprints
-from footprints.util import mktuple
+from bronx.fancies import loggers
+from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
+from footprints.util import mktuple
 
 from vortex.util.roles import setrole
 
 #: No automatic export.
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 
@@ -284,7 +285,7 @@ class Section(object):
         return outdict
 
 
-class Sequence(footprints.observers.Observer):
+class Sequence(observer.Observer):
     """
     Logical sequence of sections such as inputs or outputs sections.
     Instances are iterable and callable.
@@ -300,10 +301,10 @@ class Sequence(footprints.observers.Observer):
         self._sections_hash = defaultdict(weakref.WeakSet)
         self._coherentgroups = defaultdict(weakref.WeakSet)
         self._coherentgroups_openings = defaultdict(lambda: True)
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
 
     def __del__(self):
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
 
     def __iter__(self):
         for s in self.sections:

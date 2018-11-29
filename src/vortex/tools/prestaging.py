@@ -9,17 +9,20 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple
 
+from bronx.fancies import loggers
+from bronx.fancies.dump import lightdump
+from bronx.patterns import getbytag
+from bronx.stdtypes.catalog import Catalog
+
 import footprints
 from footprints import proxy as fpx
-from footprints.dump import lightdump
-from footprints.util import Catalog, GetByTag
 
 from vortex.tools.systems import OSExtended
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple PrestagingPriorityTuple
 PrestagingPriorityTuple = namedtuple('PrestagingPriorityTuple', ['urgent', 'normal', 'low'], verbose=False)
@@ -167,7 +170,7 @@ class PrivatePrestagingHub(object):
             self._prestagingtools.discard(ptool)
 
 
-class PrestagingHub(PrivatePrestagingHub, GetByTag):
+class PrestagingHub(PrivatePrestagingHub, getbytag.GetByTag):
     """
     A subclass of :class:`PrivatePrestagingHub` that using :class:`GetByTag`
     to remain persistent in memory.

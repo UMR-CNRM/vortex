@@ -3,14 +3,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
 from vortex.algo.components import Parallel, AlgoComponent
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:

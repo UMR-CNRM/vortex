@@ -10,6 +10,7 @@ in EPyGrAM package.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
@@ -18,7 +19,7 @@ from footprints import proxy as fpx
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 epygram_checker = ExternalCodeImportChecker('epygram')
 with epygram_checker as ec_register:

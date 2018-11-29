@@ -15,14 +15,14 @@ import six
 import sys
 import traceback
 
-import footprints
 from vortex.util.structs    import ShellEncoder
+from bronx.fancies import loggers
 from bronx.stdtypes.history import PrivateHistory
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Pre-compiled evaluation mostly used by :class:`Environment` method (true).
 vartrue = re.compile(r'^\s*(?:[1-9]\d*|ok|on|true|yes|y)\s*$', flags=re.IGNORECASE)

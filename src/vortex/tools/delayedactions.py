@@ -63,20 +63,20 @@ import os
 import tempfile
 import time
 
+from bronx.fancies import loggers
+from bronx.fancies.dump import lightdump
 from bronx.stdtypes.history import PrivateHistory
+from bronx.patterns import getbytag, observer
 
 import footprints
 from footprints import proxy as fpx
-from footprints.dump import lightdump
-from footprints.observers import SecludedObserverBoard, Observer
-from footprints.util import GetByTag
 
 from vortex.tools.systems import OSExtended, ExecutionError
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple DelayedActionStatusTuple
 DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple', ['void', 'failed', 'done'], verbose=False)
@@ -107,9 +107,6 @@ class DelayedAction(object):
         self._status = d_action_status.void
         self._result = None
         self._obsboard.notify_new(self, dict())
-
-    def __del__(self):
-        self._obsboard.notify_del(self, dict())
 
     @property
     def id(self):
@@ -166,7 +163,7 @@ class DelayedAction(object):
         return 'id={0._id}: {0.statustext:6s} result={0.result!s}'.format(self)
 
 
-class AbstractDelayedActionsHandler(footprints.FootprintBase, Observer):
+class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer):
     """Abstract class that handles a bunch of similar delayed actions."""
 
     _abstract = True
@@ -180,7 +177,7 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, Observer):
             ),
             observerboard = dict(
                 info = 'The observer board where delayed actions updates are published.',
-                type = SecludedObserverBoard,
+                type = observer.SecludedObserverBoard,
             ),
             stagedir = dict(
                 info = "The temporary directory (if need be)"
@@ -493,7 +490,7 @@ class PrivateDelayedActionsHub(object):
         self._contextrundir = contextrundir
         self._stagedir = None
         self._delayedactionshandlers = set()
-        self._obsboard = SecludedObserverBoard()
+        self._obsboard = observer.SecludedObserverBoard()
         self._resultsmap = dict()
 
     @property
@@ -593,7 +590,7 @@ class PrivateDelayedActionsHub(object):
         for a_handler in self._delayedactionshandlers:
             a_handler.destroy()
         self._delayedactionshandlers = set()
-        self._obsboard = SecludedObserverBoard()
+        self._obsboard = observer.SecludedObserverBoard()
         self._resultsmap = dict()
         self._stagedir = None
 
@@ -608,7 +605,7 @@ class PrivateDelayedActionsHub(object):
                              for ahandler in self._delayedactionshandlers]))
 
 
-class DelayedActionsHub(PrivateDelayedActionsHub, GetByTag):
+class DelayedActionsHub(PrivateDelayedActionsHub, getbytag.GetByTag):
     """
     A subclass of :class:`PrivateDelayedActionsHub` that uses
     :class:`footprints.util.GetByTag` to remain persistent in memory.

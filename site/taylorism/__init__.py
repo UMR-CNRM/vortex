@@ -83,13 +83,14 @@ from multiprocessing.queues import Empty
 
 import footprints
 from footprints import FootprintBase, FPList, proxy as fpx
+from bronx.fancies import loggers
 from bronx.system import interrupt, cpus  # because subprocesses must be killable properly
 
 from .schedulers import BaseScheduler
 from .schedulers import MaxThreadsScheduler, binding_setup  # For compatibility
 
 interrupt.logger.setLevel('WARNING')
-taylorism_log = footprints.loggers.getLogger(__name__)
+taylorism_log = loggers.getLogger(__name__)
 
 # : timeout when polling for a Queue/Pipe communication
 communications_timeout = 0.01

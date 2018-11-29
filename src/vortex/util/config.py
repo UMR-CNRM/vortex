@@ -7,12 +7,14 @@ Configuration management through ini files.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import io
-import itertools
-import re
 import six
 from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 
+import io
+import itertools
+import re
+
+from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
 from footprints.util import rangex
@@ -21,7 +23,7 @@ from vortex import sessions
 
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 

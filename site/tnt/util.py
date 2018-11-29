@@ -9,13 +9,12 @@ import io
 import os
 import shutil
 
-import footprints
-
+from bronx.fancies import loggers
 from bronx.fancies.colors import termcolors
 from tnt.namadapter import BronxNamelistAdapter, NO_SORTING, FIRST_ORDER_SORTING, SECOND_ORDER_SORTING
 
-tntlog = footprints.loggers.getLogger('tntlog')
-tntstacklog = footprints.loggers.getLogger('tntstacklog')
+tntlog = loggers.getLogger('tntlog')
+tntstacklog = loggers.getLogger('tntstacklog')
 
 
 def set_verbose(verbose, filename):

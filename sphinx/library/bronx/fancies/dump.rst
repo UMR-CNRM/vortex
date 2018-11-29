@@ -1,12 +1,12 @@
-:mod:`footprints.dump` --- Dumper for python structures and objects
-===================================================================
+:mod:`bronx.fancies.dump` --- Dumper for python structures and objects
+======================================================================
 
-.. automodule:: footprints.dump
+.. automodule:: bronx.fancies.dump
    :synopsis: Dumper for python structures and objects
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.4
+.. versionadded:: 1.5.0
 
 Interface
 ---------
@@ -17,34 +17,40 @@ Interface
 
 .. autofunction:: lightdump
 
-.. autofunction:: is_an_instance
-
-.. autofunction:: is_class
-
-Dumper class
-------------
+Abstract Dumper class
+---------------------
 
 .. autoclass:: _AbstractDumper
    :show-inheritance:
-   :members:
+   :members: reset, dump, cleandump
    :member-order: alphabetical
+
+Actual Dumper class
+-------------------
 
 .. autoclass:: JsonableDumper
    :show-inheritance:
-   :members:
+   :members: reset, dump, cleandump
    :member-order: alphabetical
 
 .. autoclass:: XmlDomDumper
    :show-inheritance:
-   :members:
+   :members: reset, dump, cleandump
    :member-order: alphabetical
 
 .. autoclass:: TxtDumper
    :show-inheritance:
-   :members:
+   :members: reset, dump, cleandump
    :member-order: alphabetical
 
 .. autoclass:: OneLineTxtDumper
    :show-inheritance:
-   :members:
+   :members: reset, dump, cleandump
    :member-order: alphabetical
+
+Utility functions
+-----------------
+
+.. autofunction:: is_an_instance
+
+.. autofunction:: is_class

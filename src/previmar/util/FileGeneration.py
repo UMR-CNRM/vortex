@@ -5,13 +5,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
-import footprints
-
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
 
 #: No automatic export
 __all__ = []
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def EchoData(options):

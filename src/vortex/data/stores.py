@@ -15,6 +15,8 @@ import ftplib
 import re
 import six
 
+from bronx.fancies import loggers
+from bronx.patterns import observer
 from bronx.stdtypes import date
 from bronx.system import hash as hashutils
 import footprints
@@ -33,7 +35,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: Export base class
 __all__ = ['Store']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
@@ -48,7 +50,7 @@ def observer_board(obsname=None):
     """Proxy to :func:`footprints.observers.get`."""
     if obsname is None:
         obsname = OBSERVER_TAG
-    return footprints.observers.get(tag=obsname)
+    return observer.get(tag=obsname)
 
 
 class StoreGlue(object):
@@ -216,10 +218,6 @@ class Store(footprints.FootprintBase):
         self._observer.notify_new(self, dict())
         self._cpipeline = False
         self.delayed = False
-
-    def __del__(self):
-        self._observer.notify_del(self, dict())
-        super(Store, self).__del__()
 
     @property
     def realkind(self):

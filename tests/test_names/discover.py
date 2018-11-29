@@ -12,11 +12,11 @@ import collections
 import io
 import os
 
-import footprints as fp
+from bronx.fancies import loggers
 
 from .utils import mkdir_p
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 DATAPATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))

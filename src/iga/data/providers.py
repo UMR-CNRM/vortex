@@ -4,12 +4,13 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
-import footprints
+
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Date
 
 from vortex.data.providers  import Provider
 from vortex.util.config     import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite, member, namespacefp
-from bronx.stdtypes.date import Time, Date
 from gco.data.providers import GEnv
 
 from common.tools.igastuff import IgakeyFactoryInline
@@ -19,7 +20,7 @@ import iga.util.bpnames as bp
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: TODO move in config file
 ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'aromeaefr',

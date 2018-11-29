@@ -3,12 +3,13 @@
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
 import io
 import re
-import six
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
+
 from gco.tools import genv
 from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 
@@ -16,7 +17,7 @@ from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def bestdate(day=None, hh=None):

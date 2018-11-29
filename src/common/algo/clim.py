@@ -11,6 +11,7 @@ import copy
 import io
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.algo.components import BlindRun, AlgoComponent, Parallel
@@ -21,7 +22,7 @@ from bronx.datagrip import namelist
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class BuildPGD(BlindRun):

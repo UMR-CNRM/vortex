@@ -13,7 +13,7 @@ import math
 import re
 import time
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.algo.components import AlgoComponentError
 from vortex.layout.monitor    import BasicInputMonitor
@@ -23,7 +23,7 @@ from .ifsroot import IFSParallel
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class FullPosServer(IFSParallel):

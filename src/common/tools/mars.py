@@ -3,7 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex.util.config import GenericConfigParser
 
 """
@@ -13,7 +14,7 @@ Utility classes and function to work with the Mars database.
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class MarsError(Exception):

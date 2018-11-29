@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
 from common.algo.odbtools import OdbProcess
@@ -11,7 +11,7 @@ from common.algo.odbtools import OdbProcess
 #: Automatic export of Monitoring class
 __all__ = [ ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class OdbMonitoring(OdbProcess):
