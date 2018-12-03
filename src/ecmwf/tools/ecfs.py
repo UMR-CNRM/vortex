@@ -17,7 +17,7 @@ logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
-    """Extend current shell with the LFI interface defined by optional arguments."""
+    """Extend current shell with the ECfs interface defined by optional arguments."""
     kw['shell'] = sh
     return footprints.proxy.addon(**kw)
 
@@ -85,6 +85,7 @@ class ECfsTools(addons.Addon):
                   list_options=list_options)
         return rc, dict()
 
+    @fmtshcmd
     def ecfscp(self, source, target, options=None):
         """Copy the source file to the target using Ecfs.
 

@@ -233,7 +233,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     grib_scpput = _std_scpput
 
     @addons.require_external_addon('ecfs')
-    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+    def grib_ecfsput(self, source, target, cpipeline=None, options=None):
         """ Put a grib resource using ECfs.
 
         :param source: source file

@@ -386,8 +386,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     @addons.require_external_addon('ecfs')
     def _std_ecfsput(self, source, target, cpipeline=None, options=None):
-        """TODO: define xlfi_pack in the parent class
-
+        """
         :param source: source file
         :param target: target file
         :param cpipeline: compression pipeline to be used, if provided
@@ -400,8 +399,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
-                rc = rc and self.xlfi_pack(source=source,
-                                           destination=psource)
+                st = self._std_copy(source=source,
+                                    destination=psource,
+                                    pack=True)
+                rc = rc and st.rc
                 dict_args = dict()
                 if rc:
                     rc, dict_args = self.sh.ecfsput(source=psource,
@@ -420,8 +421,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     @addons.require_external_addon('ectrans')
     def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """TODO: define xlfi_pack in the parent class
-
+        """
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
@@ -435,8 +435,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
-                rc = rc and self.xlfi_pack(source=source,
-                                           destination=psource)
+                st = self._std_copy(source=source,
+                                    destination=psource,
+                                    pack=True)
+                rc = rc and st.rc
                 dict_args = dict()
                 if rc:
                     rc, dict_args = self.sh.raw_ectransput(source=psource,
