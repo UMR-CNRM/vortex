@@ -195,11 +195,6 @@ class ForcingOutData(InitialCondition):
                 values  = ['preatm', 'tauewd', 'taunwd',
                            'windx', 'windy', 'mslprs',
                            'wndnwd', 'wndewd'],
-                #remap = {
-                    #'windx': 'wndewd',
-                    #'windy': 'wndnwd',
-                    #'preatm': 'mslprs',
-                },
             ),
         )
     )

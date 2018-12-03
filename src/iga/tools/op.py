@@ -16,8 +16,6 @@ from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
-from bronx.stdtypes.date import Time, Date
-
 
 #: No automatic export
 __all__ = []
@@ -105,7 +103,7 @@ class OpJobAssistantTest(JobAssistant):
 
         t.sh.header('Setting up the MPI Environment')
 
-        mpi, rkw = swissknife.slurm_parameters(t, **kw)
+        mpi, u_rkw = swissknife.slurm_parameters(t, **kw)  # @UnusedVariable
         t.env.OP_MPIOPTS = mpi
 
         t.sh.header('Setting up the rundate')
@@ -122,7 +120,7 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
                 if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
-                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H') 
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
@@ -164,8 +162,8 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
         t.sh.subtitle('Setting up OP Actions')
-        import iga.tools.services
-        import iga.tools.actions
+        import iga.tools.services  # @UnusedImport
+        import iga.tools.actions  # @UnusedImport
 
         ad.add(vortex.tools.actions.EcflowGateway())
 
@@ -183,11 +181,9 @@ class OpJobAssistantTest(JobAssistant):
         ad.ecflow_info()
         ad.ecflow_off()
 
-        if t.env['ECF_PASS'] is not  None:
+        if t.env['ECF_PASS'] is not None:
             ad.ecflow_on()
             ad.ecflow_init(t.env.SLURM_JOBID)
-
-
 
     def register_cycle(self, cycle):
         """Load and register a GCO cycle contents."""

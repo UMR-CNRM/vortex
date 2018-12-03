@@ -939,6 +939,7 @@ class SMSOpService(SMS):
             self.abort()
             return False
 
+
 class EcFlowOpService(EcFlow):
     """
     Default EcFlow service with some extra colorful features.
@@ -1022,13 +1023,6 @@ class DMTEventService(Service):
                     'SMS_PROG', 'SMSNODE', 'SMSNAME', 'SMSPASS', 'SMSTRYNO', 'SMSTIMEOUT',
                     'DMT_DATE_PIVOT', 'DMT_ECHEANCE', 'DMT_PATH_EXEC', 'DMT_TRAVAIL_ID', 'DMT_SOUS_SYSTEME'
                 )),
-            #expectedvars = dict(
-                #type     = footprints.FPTuple,
-                #optional = True,
-                #default  = footprints.FPTuple((
-                    #'SMS_PROG', 'ECF_NODE', 'ECF_NAME', 'ECF_PASS', 'ECF_TRYNO', 'SMSTIMEOUT',
-                    #'DMT_DATE_PIVOT', 'DMT_ECHEANCE', 'DMT_PATH_EXEC', 'DMT_TRAVAIL_ID', 'DMT_SOUS_SYSTEME'
-                #)),
             ),
         )
     )

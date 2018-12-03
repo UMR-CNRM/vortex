@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Interface to SMS commands.
@@ -310,7 +310,7 @@ class EcFlow(EcmwfLikeScheduler):
                 rc = False
             else:
                 sshobj = self.sh.ssh('network', virtualnode=True,
-                                    maxtries=sshretries, triesdelay=sshretrydelay)
+                                     maxtries=sshretries, triesdelay=sshretrydelay)
                 self._tunnel = sshobj.tunnel(echost, int(ecport),maxwait=sshwait)
                 if not self._tunnel:
                     rc = False

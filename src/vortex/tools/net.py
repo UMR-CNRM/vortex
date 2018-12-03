@@ -1,13 +1,11 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Net tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-import encodings
 
 import abc
 import collections
@@ -1588,7 +1586,7 @@ class LinuxNetstats(AbstractNetstats):
                             self._ip_from_hex(l[0], family), int(l[1], 16),
                             self._ip_from_hex(l[2], family), int(l[3], 16),
                             int(l[4], 16)) for l in tmpports[family]]
-                     for family in (socket.AF_INET, socket.AF_INET6)]
+                    for family in (socket.AF_INET, socket.AF_INET6)]
         return functools.reduce(operator.add, tmpports)
 
     def tcp_netstats(self):

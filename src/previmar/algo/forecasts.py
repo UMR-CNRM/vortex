@@ -14,6 +14,7 @@ __all__ = []
 
 logger = footprints.loggers.getLogger(__name__)
 
+
 class WithoutCouplingForecasts(Parallel):
 
     _footprint = dict(

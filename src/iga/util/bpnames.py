@@ -39,11 +39,11 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
             cutoff, reseau, vconf
         )
     logger.info("Attributes : cutoff:%s, reseau:%s, vconf:%s, suffix_r:%s, reseau_suff:%s",
-            cutoff, reseau, vconf, suffix_r, reseau_suff)
+                cutoff, reseau, vconf, suffix_r, reseau_suff)
     if suffix_r:
-        _suffix_r='r'
+        _suffix_r = 'r'
     else:
-        _suffix_r=''
+        _suffix_r = ''
     return '{}{}'.format(_suffix_r, reseau_suff)
 
 
@@ -68,7 +68,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
                 (suffix_r0, 'rTR', 'rSX', 'rNF', 'rPM', 'rQZ', 'rDH', 'rVU')
             )
         )
-        
+
     elif vconf in _arpcourt_vconf:
         map_suffix = {(cutoff, 0): 'rCM'}
     else:
@@ -172,14 +172,14 @@ def global_pnames(provider, resource):
         if resource.model == 'surfex' and provider.vapp == 'arpege':
             info['fmt'] = 'autres'
         if provider.vapp == 'mocage' and provider.vconf == 'camsfcst':
-            
+
             info['model'] = 'macc'
             info['igakey'] = 'france'
 
     for mnd in ('suite', 'igakey', 'fmt'):
         if mnd not in info:
             info[mnd] = getattr(provider, mnd, None)
-            
+
     # patch: if model is not in info we must provide it through the
     # provider's attributes: model or vapp
     if 'model' not in info:
@@ -237,7 +237,7 @@ def rawfields_bnames(resource, provider):
 def obsfire_bnames(resource, provider):
     """docstring for obsfirepack_bnames"""
     return 'GFASfires_' + resource.date.ymd + '.tar.gz'
-    
+
 
 def geofields_bnames(resource, provider):
     """docstring for geofields_bnames"""
@@ -309,9 +309,9 @@ def historic_bnames(resource, provider):
             else:
                 suffix = '.{0:03d}'.format(resource.term.hour)
         return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
-    
-    if provider.vconf == 'camsfcst':    
-        return 'HM' + resource.geometry.area + '+' + resource.term  
+
+    if provider.vconf == 'camsfcst':
+        return 'HM' + resource.geometry.area + '+' + resource.term
 
     if provider.vconf == 'pearp':
         return 'ICMSHPREV' + '+' + resource.term.fmthour + '.' + suffix
@@ -419,7 +419,7 @@ def gridpoint_bnames(resource, provider):
                     + Date(resource.date.ymdh + '/-PT12H').ymdh
             else:
                 pass
-        else :
+        else:
             model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                          vapp=provider.vapp, vconf=provider.vconf)
             localname = 'PF' + model_info + resource.geometry.area + '+' \
@@ -486,7 +486,7 @@ def boundary_bnames(resource, provider):
         nw_term = "{0:03d}".format(term.hour)
         localname = 'ELSCFAROMALBC' + nw_term + '.' + suffix
     elif resource.model == 'mocage':
-        localname = 'RUN1_SM' +  resource.geometry.area + '+' \
+        localname = 'RUN1_SM' + resource.geometry.area + '+' \
                     + resource.date.ymd
 
     else:
@@ -583,8 +583,7 @@ def global_bnames(resource, provider):
 def global_snames(resource, provider):
     """global names for soprano provider"""
     bname = None
-    vapp = getattr(provider, 'vapp', None)
-    vconf = getattr(provider, 'vconf',None)
+    vconf = getattr(provider, 'vconf', None)
     suff = _reseau_suffix(resource.cutoff, resource.date.hh, vconf)
     if resource.realkind == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':
@@ -597,13 +596,12 @@ def global_snames(resource, provider):
             # For MACC forecast (camsfcst)
             if resource.cutoff == 'production':
                 bname = 'MET' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
-            # For MACC assim 
+            # For MACC assim
             else:
-                bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'   
+                bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
 
     if resource.realkind == 'chemical_bc':
-       if resource.model == 'mocage':
-            
+        if resource.model == 'mocage':
             if resource.cutoff == 'production':
                 bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
             else:
