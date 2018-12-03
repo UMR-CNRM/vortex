@@ -18,8 +18,11 @@ class S2MTaskMixIn(object):
     secondassimruntime = Time(hour=9, minute=0)
 
     def s2moper_filter_execution_error(self, exc):
-        '''Define the behaviour in case of errors'''
-        '''For S2M chain, the errors do not raise exception if the deterministic run or if more than 30 members are available'''
+        """Define the behaviour in case of errors.
+
+        For S2M chain, the errors do not raise exception if the deterministic
+        run or if more than 30 members are available.
+        """
 
         warning = {}
         nerrors = len(list(enumerate(exc)))
@@ -36,7 +39,9 @@ class S2MTaskMixIn(object):
         accept_errors = not determinitic_error or nerrors < 5
 
         warningline = "!" * 40 + "\n"
-        warningmessage = warningline + "ALERT :" + str(nerrors) + " members produced a delayed exception.\n" + warningline + str(exc) + warningline
+        warningmessage = (warningline + "ALERT :" + str(nerrors) +
+                          " members produced a delayed exception.\n" +
+                          warningline + str(exc) + warningline)
 
         if accept_errors:
             print (warningmessage)

@@ -19,6 +19,7 @@ with echecker:
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.tools.initTG import generate_clim
 
+
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
 
@@ -91,7 +92,6 @@ class Generate_Clim_TG(AlgoComponent):
         listforcing = list(set([self.system.path.basename(am.rh.container.filename) for am in avail_forcing]))
 
         generate_clim(listforcing)
-
 
 
 class Pgd_Parallel_from_Forcing(Parallel):

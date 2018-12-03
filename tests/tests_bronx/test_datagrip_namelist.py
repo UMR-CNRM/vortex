@@ -175,7 +175,7 @@ class UtFortranNamelist(TestCase):
         self._encode_tester(True, ".TRUE.")
         self._encode_tester(False, ".FALSE.")
 
-#     @skipUnless(namelist.npchecker.is_available(), 'NumPy is not available.')
+    @skipUnless(namelist.npchecker.is_available(), 'NumPy is not available.')
     def test_encode_np(self):
         import numpy as np
         self._encode_tester(np.int8(20), '20')

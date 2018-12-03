@@ -12,6 +12,11 @@
 Classes
 -------
 
+.. autoclass:: Generate_Clim_TG
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Surfex_PreProcess
    :show-inheritance:
    :members:

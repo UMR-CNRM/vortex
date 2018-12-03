@@ -12,6 +12,15 @@
 Classes
 -------
 
+Exceptions
+**********
+
+.. autoclass:: S2MExecutionError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
 Taylorism workers
 *****************
 
@@ -21,6 +30,11 @@ Taylorism workers
    :member-order: alphabetical
 
 .. autoclass:: GuessWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: InterCEPWorker
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -70,6 +84,12 @@ Taylorism workers
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PrepareForcingWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
 AlgoComponents
 **************
 
@@ -83,7 +103,17 @@ AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: S2MReanalysis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SurfexComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PrepareForcingComponent
    :show-inheritance:
    :members:
    :member-order: alphabetical
