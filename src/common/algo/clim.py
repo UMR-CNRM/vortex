@@ -198,7 +198,7 @@ class SetFilteredOrogInPGD(AlgoComponent):
 
     def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
-        from common.util.usepygram import epy_env_prepare
+        from common.util.usepygram import epygram_checker, epy_env_prepare
         from bronx.meteo.constants import g0
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
@@ -217,8 +217,11 @@ class SetFilteredOrogInPGD(AlgoComponent):
             g.operation('/', g0)
             g.fid['FA'] = 'SFX.ZS'
             # write as orography
-            epypgd.readfield(g.fid['FA'], getdata=False)  # blank read, just to update fieldscompression
-            # FIXME: with epygram > 1.3.5, call epypgd.fieldencoding(update_fieldcsompression=True) instead
+            if epygram_checker.is_available(version='1.3.6'):
+                epypgd.fieldencoding(g.fid['FA'], update_fieldscompression=True)
+            else:
+                # blank read, just to update fieldscompression
+                epypgd.readfield(g.fid['FA'], getdata=False)
             epypgd.writefield(g, compression=epypgd.fieldscompression.get(g.fid['FA'], None))
             epypgd.close()
 

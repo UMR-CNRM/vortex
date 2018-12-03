@@ -329,7 +329,7 @@ def add_poles_to_GLOB_file(filename):
     rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
                                     validity=epygram.base.FieldValidity(
                                         date_time=date.today(),
-                                        term=date.Period(0,0,0)),
+                                        term=date.Period(0, 0, 0)),
                                     processtype=rin.processtype,
                                     cdiden=rin.cdiden)
     assert rin.geometry.gimme_corners_ll()['ul'][1] < 90., \

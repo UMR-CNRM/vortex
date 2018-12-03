@@ -48,3 +48,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AddPolesToGLOB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
