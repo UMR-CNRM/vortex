@@ -233,15 +233,17 @@ class CouplingOffsetConfTool(ConfTool):
                     r_dict[c] = cv
 
         # Is there a generic default ?
+        defined_topdefault = self._DFLT_KEY in r_dict
         top_default = r_dict.pop(self._DFLT_KEY, class_default)
 
         # Check consitency and replace missing values with defaults
         for c in self.target_hhs:
             myv = r_dict.setdefault(c, dict())
             # Is there a cutoff specific default ?
+            defined_cutdefault = defined_topdefault or self._DFLT_KEY in myv
             last_default = myv.pop(self._DFLT_KEY, top_default)
             my_c_hhs = set(myv.keys())
-            if last_default is not None:
+            if defined_cutdefault or (class_default is not None):
                 missinghh = self.target_hhs[c] - my_c_hhs
                 for h in missinghh:
                     myv[h] = last_default

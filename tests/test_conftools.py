@@ -264,6 +264,53 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
                          {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('2-5-1')]}})
 
 
+class Coupling3DVSparseConfToolTest(unittest.TestCase):
+    """Same tests but using the 'default' feature + XPID."""
+
+    _HHLIST = {'assim': range(0, 24),
+               'production': '12'}  # Compute only the 12h forecast
+
+    _BASE = {'assim': {'00': '18', '01': '00', '02': '00', '03': '00', '04': '00',
+                       '05': '00', '06': '00', '07': '06', '08': '06', '09': '06',
+                       '10': '06', '11': '06', '12': '06', '13': '12', '14': '12',
+                       '15': '12', '16': '12', '17': '12', '18': '12', '19': '18',
+                       '20': '18', '21': '18', '22': '18', '23': '18'},
+             'production': {'00': '00', '03': '00', '06': '06', '09': '06',
+                            '12': '12', '15': '12', '18': '18', '21': '18'}}
+
+    _VAPP = {'default': 'arpege'}
+
+    _VCONF = {'default': '4dvarfr'}
+
+    _XPID = {'default': 'ABCD'}
+
+    _CUTOFF = {'default': 'production', }
+
+    _STEPS = {'default': None,
+              'assim': {'00': '1-12-1'}}
+
+    def setUp(self):
+        unittest.TestCase.setUp(self)
+        self.wtool = footprints.proxy.conftool(kind='couplingoffset',
+                                               cplhhlist=self._HHLIST,
+                                               cplhhbase=self._BASE, cplvapp=self._VAPP,
+                                               cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
+                                               cplsteps=self._STEPS, cplxpid=self._XPID,
+                                               verbose=False, compute_on_refill = False)
+
+    def test_weird_coupling_prepare(self):
+        with self.assertRaises(CouplingOffsetConfPrepareError):
+            self.wtool.prepare_terms('2017010100', 'production', 'arpege', '4dvarfr', 'ABCD')
+        self.assertListEqual(self.wtool.prepare_terms('2017010118', 'production', 'arpege', '4dvarfr', xpid='ABCD'),
+                             list([Time(h) for h in [Time(h) for h in rangex('7-18-1')]]))
+
+    def test_weird_coupling_use(self):
+        self.assertListEqual(self.wtool.coupling_terms('2017010112', 'production'), [])
+        self.assertListEqual(self.wtool.coupling_terms('2017010100', 'assim'),
+                             list([Time(h) for h in rangex('7-18-1')]))
+        self.assertListEqual(self.wtool.coupling_terms('2017010106', 'assim'), [])
+
+
 class CouplingAggConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
@@ -315,6 +362,9 @@ class CouplingAggConfToolTest(unittest.TestCase):
                              '15': '1-12-1', '21': '1-12-1', '18': '1-36-1',
                              '09': '1-12-1', '06': '1-36-1'}}
 
+    _STEPS_A2 = {'assim': {'default': None, },
+                 'production': {'00': '1-42-1', 'default': None}}
+
     def setUp(self):
         unittest.TestCase.setUp(self)
         self.wtoolN = footprints.proxy.conftool(kind='couplingoffset',
@@ -333,7 +383,7 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._AL2_BASE, cplvapp=self._VAPP,
                                                  cplvconf=self._AL1_VCONF, cplcutoff=self._CUTOFF,
-                                                 cplsteps=self._STEPS, cplxpid=self._XPID,
+                                                 cplsteps=self._STEPS_A2, cplxpid=self._XPID,
                                                  verbose=False, compute_on_refill = False)
         self.wtoolKO = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
