@@ -711,7 +711,10 @@ class Archive(Storage):
         extras = dict(fmt=kwargs.get('fmt', 'foo'), )
         tmplocal = self.context.delayedactions_hub.retrieve(retrieve_id)
         if tmplocal:
-            rc = self.sh.mv(tmplocal, local, ** extras)
+            if self.sh.filecocoon(local):
+                rc = self.sh.mv(tmplocal, local, ** extras)
+            else:
+                raise IOError('Could not cocoon: {!s}'.format(local))
         else:
             rc = False
         return rc, extras
