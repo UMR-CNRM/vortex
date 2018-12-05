@@ -385,17 +385,22 @@ def histsurf_bnames(resource, provider):
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
     reseau = resource.date.hour
-    if reseau in range(0, 24, 3):
-        map_suffix = dict(
-            zip(
-                range(0, 24, 3),
-                map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+    if resource.cutoff == 'production':
+        if reseau in range(0, 24, 3):
+            map_suffix = dict(
+                zip(
+                    range(0, 24, 3),
+                    map('r'.__add__, ('CM', 'TR', 'SX', 'NF', 'PM', 'QZ', 'DH', 'VU'))
+                )
             )
-        )
-        suffix = map_suffix[reseau]
-        bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
-    else:
-        bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.r' + '{:02d}'.format(reseau)
+            suffix = map_suffix[reseau]
+            if resource.model == 'arpege' and reseau == '00':
+                suffix = 'rAM'
+            bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
+
+    elif resource.cutoff == 'assim':
+            bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+
     return bname
 
 
