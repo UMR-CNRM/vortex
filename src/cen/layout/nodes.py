@@ -125,8 +125,10 @@ class S2MTaskMixIn(object):
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
-    def get_list_geometry(self):
-        source_safran, block_safran = self.get_source_safran()
+    def get_list_geometry(self, meteo="safran"):
+
+        source_safran, block_safran = self.get_source_safran(meteo=meteo)
+
         list_suffix = ['_allslopes', '_flat']
         if source_safran == "safran":
             if self.conf.geometry.area == "postes":
@@ -138,18 +140,21 @@ class S2MTaskMixIn(object):
         else:
             return [self.conf.geometry.area]
 
-    def get_source_safran(self):
+    def get_source_safran(self, meteo="safran"):
 
-        if not hasattr(self.conf, "previ"):
-            self.conf.previ = False
+        if meteo == "safran":
+            if not hasattr(self.conf, "previ"):
+                self.conf.previ = False
 
-        if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
-            return "s2m", "meteo"
-        else:
-            if self.conf.geometry.area == 'postes':
-                return "safran", "postes"
+            if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
+                return "s2m", "meteo"
             else:
-                return "safran", "massifs"
+                if self.conf.geometry.area == 'postes':
+                    return "safran", "postes"
+                else:
+                    return "safran", "massifs"
+        else:
+            return meteo, "meteo"
 
     def get_list_seasons(self, datebegin, dateend):
 
