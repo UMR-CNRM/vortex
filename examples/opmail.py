@@ -80,7 +80,7 @@ def test_opmail():
     elif e.USER == 'meunierlf':
         me = 'louis-francois.meunier@meteo.fr'
         if e.HOST == 'lxgmap45':
-            smtpserver = 'smtp.meteo.fr'
+            smtpserver = 'smtp.cnrm.meteo.fr'
             toolbox.defaults(smtpserver=smtpserver)
 
     try:
