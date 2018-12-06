@@ -50,6 +50,7 @@ import calendar
 import datetime
 import functools
 import inspect
+import locale
 import operator
 import re
 
@@ -1040,7 +1041,13 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.hour in (0, 6, 12, 18)
 
     def strftime(self, *kargs, **kwargs):
-        return six.text_type(super(Date, self).strftime(*kargs, **kwargs))
+        rstr = super(Date, self).strftime(*kargs, **kwargs)
+        if six.PY2:
+            renc = (locale.getlocale(locale.LC_TIME)[1] or
+                    locale.getlocale()[1] or 'utf-8')
+            return rstr.decode(encoding=renc)
+        else:
+            return rstr
 
     @property
     def julian(self):

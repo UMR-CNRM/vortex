@@ -1594,10 +1594,10 @@ class LinuxNetstats(AbstractNetstats):
     @staticmethod
     def _ip_from_hex(hexip, family=socket.AF_INET):
         if family == socket.AF_INET:
-            packed = struct.pack("<I", int(hexip, 16))
+            packed = struct.pack("<I".encode('utf8'), int(hexip, 16))
         elif family == socket.AF_INET6:
-            packed = struct.unpack(">IIII", hexip.decode('hex'))
-            packed = struct.pack("@IIII", * packed)
+            packed = struct.unpack(">IIII".encode('utf8'), hexip.decode('hex'))
+            packed = struct.pack("@IIII".encode('utf8'), * packed)
         else:
             raise ValueError("Unknown address family.")
         return socket.inet_ntop(family, packed)

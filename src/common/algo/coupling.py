@@ -345,8 +345,8 @@ class Prep(BlindRun):
                     thispromise.put(incache=True)
 
             # Some cleaning
-            sh.rmall('*.des', fmt = r.container.actualfmt)
-            sh.rmall('PREP1.*', fmt = r.container.actualfmt)
+            sh.rmall('*.des')
+            sh.rmall('PREP1.*')
 
 
 class C901(IFSParallel):

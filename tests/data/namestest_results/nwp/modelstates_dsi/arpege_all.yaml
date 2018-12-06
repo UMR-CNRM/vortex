@@ -1246,7 +1246,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rCM
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_00.00
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1263,7 +1263,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rCM
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_00.43
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1280,7 +1280,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rCM
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_00.00
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1297,7 +1297,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rCM
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_00.43
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r0/RUN5/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1450,7 +1450,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rSX
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_06.00
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1467,7 +1467,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rSX
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_06.43
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1484,7 +1484,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rSX
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_06.00
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1501,7 +1501,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rSX
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_06.43
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r6/RUN5/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1654,7 +1654,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rPM
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_12.00
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1671,7 +1671,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rPM
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_12.43
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1688,7 +1688,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rPM
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_12.00
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1705,7 +1705,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rPM
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_12.43
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r12/RUN5/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1858,7 +1858,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0000.sfx.rDH
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_18.00
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1875,7 +1875,7 @@
       vconf: 4dvarfr
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/france/oper/data/autres/ICMSHARPE+0043.sfx.rDH
+      location: file://oper.inline.fr/arpege/france/oper/data/autres/PREP.fa_18.43
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/icmsharpe+0043.sfx
   - !test_names.core.SingleTest
@@ -1892,7 +1892,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0000.sfx.rDH
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_18.00
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0000.sfx
   - !test_names.core.SingleTest
@@ -1909,7 +1909,7 @@
       vconf: aearp
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/ICMSHARPE+0043.sfx.rDH
+      location: file://oper.inline.fr/arpege/aearp/oper/data/autres/RUN5/PREP.fa_18.43
     - default: *id002
       location: op://oper.multi.fr/aearp/oper/assim/2018/01/01/r18/RUN5/icmsharpe+0043.sfx
   - !test_names.core.SingleTest

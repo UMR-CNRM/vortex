@@ -53,7 +53,7 @@ def EchoData(options):
             fin_res   = int(term_hh)
 
         Initial   = Initial_w
-        if forcage in {'ARP', 'ARO', 'CEP'}:
+        if forcage in {'ARP', 'ARO', 'CEP', 'AOC'}:
             red_maree = 'NON'
             Initial   = Initial_w
         elif forcage in 'RED':

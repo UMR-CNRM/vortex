@@ -91,7 +91,7 @@
       nativefmt: ascii
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.mslprs.full-hycom.ang-00dg000.ascii
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.preatm.full-hycom.ang-00dg000.ascii
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -166,7 +166,7 @@
       nativefmt: ascii
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.wndewd.full-hycom.ang-00dg000.ascii
+      location: vortex://vortex.multi.fr/hycom/ang@fcaro/ABCD/20180101T0000A/forecast/forcingout.windx.full-hycom.ang-00dg000.ascii
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
