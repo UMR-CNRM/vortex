@@ -79,6 +79,7 @@ class S2MReanalysisProvider(Provider):
         """
         info = self.pathinfo(resource)
         info['level_one'] = self.vconf.split('@')[0]
+        info['level_two'] = ''
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason()
         if resource.realkind == 'observations':
