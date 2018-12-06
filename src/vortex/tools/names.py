@@ -363,7 +363,7 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         return name1
 
     def _join_basename_bit(self, d, entry, prefix='.', sep='-', packcb=None):
-        if d[entry]:
+        if d[entry] is not None:
             if packcb is None:
                 return prefix + sep.join(self._pack_std_items(d[entry]))
             else:

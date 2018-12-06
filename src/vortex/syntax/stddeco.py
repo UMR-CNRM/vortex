@@ -64,14 +64,15 @@ def namebuilding_append(targetkey, valuecb, none_discard=False):
                     value = [value, ]
                 if none_discard:
                     value = [v for v in value if v is not None]
-                if targetkey in vinfo:
-                    some_stuff = vinfo[targetkey]
-                    if not isinstance(some_stuff, list):
-                        some_stuff = [some_stuff, ]
-                    some_stuff.extend(value)
-                else:
-                    some_stuff = value
-                vinfo[targetkey] = some_stuff
+                if not none_discard or value:
+                    if targetkey in vinfo:
+                        some_stuff = vinfo[targetkey]
+                        if not isinstance(some_stuff, list):
+                            some_stuff = [some_stuff, ]
+                        some_stuff.extend(value)
+                    else:
+                        some_stuff = value
+                    vinfo[targetkey] = some_stuff
                 return vinfo
 
             namebuilding_info.__doc__ = original_namebuilding_info.__doc__
