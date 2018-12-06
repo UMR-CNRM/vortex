@@ -4,7 +4,7 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
@@ -17,6 +17,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.initTG import generate_clim
 
 
 @echecker.disabled_if_unavailable
@@ -68,6 +69,29 @@ class Surfex_PreProcess(AlgoComponent):
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()
+
+
+@echecker.disabled_if_unavailable
+class Generate_Clim_TG(AlgoComponent):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['clim']),
+            engine = dict(
+                optional     = True,
+                default   = 's2m',
+                values = ['s2m']
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+
+        avail_forcing = self.context.sequence.effective_inputs(role="Forcing")
+        listforcing = list(set([self.system.path.basename(am.rh.container.filename) for am in avail_forcing]))
+
+        generate_clim(listforcing)
 
 
 class Pgd_Parallel_from_Forcing(Parallel):
@@ -129,12 +153,19 @@ class Surfex_Parallel(Parallel):
                 optional = True,
                 default = -999
             ),
+            daily = dict(
+                info = "If True, split simulations in daily runs",
+                type = bool,
+                optional = True,
+                default = False,
+            ),
         )
     )
 
     def execute(self, rh, opts):
 
         need_other_run = True
+        need_other_forcing = True
         datebegin_this_run = self.datebegin
 
         while need_other_run:
@@ -142,9 +173,16 @@ class Surfex_Parallel(Parallel):
             # Modification of the PREP file
             self.modify_prep(datebegin_this_run)
 
-            # Get the first file covering part of the whole simulation period
-            dateforcbegin, dateforcend = get_file_period("FORCING", ".", datebegin_this_run, self.dateend)
-            dateend_this_run = min(self.dateend, dateforcend)
+            if need_other_forcing:
+                # Get the first file covering part of the whole simulation period
+                dateforcbegin, dateforcend = get_file_period("FORCING", ".", datebegin_this_run, self.dateend)
+
+            if self.daily:
+                dateend_this_run = min(tomorrow(base=datebegin_this_run), min(self.dateend, dateforcend))
+                need_other_forcing = dateend_this_run == dateforcend
+                self.modify_namelist(datebegin_this_run, dateend_this_run)
+            else:
+                dateend_this_run = min(self.dateend, dateforcend)
 
             # Run surfex offline
             super(Surfex_Parallel, self).execute(rh, opts)
@@ -156,12 +194,33 @@ class Surfex_Parallel(Parallel):
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
 
-            # Remove the symbolic link for next iteration
-            self.system.remove("FORCING.nc")
+            if need_other_forcing:
+                # Remove the symbolic link for next iteration
+                self.system.remove("FORCING.nc")
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
             need_other_run = dateforcend < self.dateend
+
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind='namelist')]
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+
+        return namcandidates
+
+    def modify_namelist(self, datebegin, dateend):
+
+        # Modification of the namelist
+        for namelist in self.find_namelists():
+            # Update the contents of the namelist (date and location)
+            # Location taken in the FORCING file.
+            newcontent = update_surfex_namelist_object(namelist.contents, datebegin, dateend = dateend, updateloc=False)
+            newnam = footprints.proxy.container(filename=namelist.container.basename)
+            newcontent.rewrite(newnam)
+            newnam.close()
 
     def modify_prep(self, datebegin_this_run):
         ''' The PREP file needs to be modified if the init date differs from the starting date

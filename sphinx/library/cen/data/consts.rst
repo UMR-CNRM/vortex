@@ -19,12 +19,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SSA_param
+.. autoclass:: climTG
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: climTG
+.. autoclass:: Params
    :show-inheritance:
    :members:
    :member-order: alphabetical

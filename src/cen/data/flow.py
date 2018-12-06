@@ -35,6 +35,7 @@ class SafranObsDateError(ValueError):
 
 @namebuilding_insert('src', lambda s: [s.source_app, s.source_conf])
 @namebuilding_insert('term', lambda s: s.cumul.fmthour)
+@namebuilding_delete('geo')
 class SafranGuess(GeoFlowResource):
     """Class for the guess file (P ou E file) that is used by SAFRAN."""
 
@@ -77,11 +78,8 @@ class SafranGuess(GeoFlowResource):
     def realkind(self):
         return 'guess'
 
-    def cendev_basename(self):
-        # guess files could be named PYYMMDDHH_hh where YYMMDDHH is the creation date and hh the echeance
-        # origin_date = self.date.replace(hour=0)
-        # return 'P' + origin_date.yymdh + '_{0:02d}'.format(self.term.hour + 6)
-        # guess files are named PYYMMDDHH
+    def reanalysis_basename(self):
+        # guess files are named PYYMMDDHH in cen re-analysis database
         if self.source_app == 'arpege':
             if self.date.hour in [0, 6, 12, 18]:
                 return 'P' + self.date.yymdh
@@ -110,10 +108,10 @@ class SurfaceIO(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                begindate = dict(
+                datebegin = dict(
                     info = "First date of the forcing file",
                 ),
-                enddate = dict(
+                dateend = dict(
                     info = "Last date of the forcing file",
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
@@ -131,8 +129,8 @@ class SurfaceIO(GeoFlowResource):
         return self.kind
 
 
-@namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 @namebuilding_append('src', lambda self: self.source_conf, none_discard=True)
+@namebuilding_append('src', lambda self: self.source_app, none_discard=True)
 class SurfaceForcing(SurfaceIO):
     """Class for all kind of meteorological forcing files."""
     _footprint = [
@@ -143,14 +141,14 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran', 'obs', 's2m'],
+                    values = ['safran', 'obs', 's2m', 'adamont'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],
                     optional = True
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome'],
+                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
                     optional = True
                 ),
             )
@@ -159,7 +157,7 @@ class SurfaceForcing(SurfaceIO):
 
     @property
     def realkind(self):
-        return 'forcing'
+        return 'FORCING'
 
 
 class Pro(SurfaceIO):
@@ -180,7 +178,7 @@ class Pro(SurfaceIO):
 
     @property
     def realkind(self):
-        return "pro"
+        return "PRO"
 
 
 @namebuilding_delete('src')
@@ -234,7 +232,7 @@ class Prep(InitialCondition):
         return 'PREP'
 
 
-@namebuilding_insert('cen_period', lambda self: [self.begindate.y, self.enddate.y])
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class SnowObs(GeoFlowResource):
 
     _footprint = [
@@ -259,10 +257,10 @@ class SnowObs(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                begindate = dict(
+                datebegin = dict(
                     info = "First date of the forcing file",
                 ),
-                enddate = dict(
+                dateend = dict(
                     info = "Last date of the forcing file",
                 ),
                 # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
