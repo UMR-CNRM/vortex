@@ -1113,7 +1113,7 @@ class OpMailService(TemplatedMailService):
         """String prepended to the message body."""
         now = date.now()
         with LocaleContext(locale.LC_TIME, 'fr_FR.UTF-8', uselock=True):
-            stamp1 = now.strftime('%d/%m/%Y')
+            stamp1 = now.strftime('%A %d %B %Y')
             stamp2 = now.strftime('%X')
         return 'Mail envoyé le {} à {} locales.\n--\n\n'.format(stamp1, stamp2)
 
