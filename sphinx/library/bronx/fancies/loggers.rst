@@ -26,6 +26,11 @@ Main Interface functions
 
 .. autofunction:: setGlobalLevel
 
+.. autofunction:: contextboundGlobalLevel
+
+.. autofunction:: fdecoGlobalLevel
+
+.. autofunction:: unittestGlobalLevel
 
 Other Interface functions
 -------------------------
