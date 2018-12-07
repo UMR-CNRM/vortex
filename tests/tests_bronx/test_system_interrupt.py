@@ -18,9 +18,8 @@ class TestInterrupt(unittest.TestCase):
 
     def _catch_usr12(self, sleep_again=False):
 
-        interrupt.logger.setLevel('CRITICAL')
-
-        with interrupt.SignalInterruptHandler(signals=(signal.SIGUSR1, signal.SIGUSR2)):
+        with interrupt.SignalInterruptHandler(signals=(signal.SIGUSR1, signal.SIGUSR2),
+                                              emitlogs=False):
             try:
                 time.sleep(30)
             except interrupt.SignalInterruptError:

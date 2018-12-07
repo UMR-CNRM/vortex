@@ -55,7 +55,10 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import six
 
+import contextlib
 import logging
+
+from bronx.syntax.decorators import nicedeco
 
 #: No automatic export
 __all__ = []
@@ -111,6 +114,83 @@ def setGlobalLevel(level):
     return thislevel
 
 
+@contextlib.contextmanager
+def contextboundGlobalLevel(level):
+    """
+    Within this context manager, explicitly sets the logging level to the
+    ``level`` value for all roots items.
+
+    When the context exists, logging levels are restored to their previous values.
+    """
+    thislevel = getActualLevel(level)
+    if thislevel is None:
+        print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
+        yield
+    else:
+        known_roots = [logging.getLogger(l) for l in roots]
+        known_levels = [l.level for l in known_roots]
+        for a_logger in known_roots:
+            a_logger.setLevel(thislevel)
+        try:
+            yield
+        finally:
+            for a_logger, level in zip(known_roots, known_levels):
+                a_logger.setLevel(level)
+
+
+def fdecoGlobalLevel(level):
+    """Function decorator that set loglevels to ``level``.
+
+    When the function exits, loglevels are restored to their previous values.
+    """
+    @nicedeco
+    def deco_f(f):
+        def wrapped_f(*kargs, **kwargs):
+            with contextboundGlobalLevel(level):
+                return f(*kargs, **kwargs)
+        return wrapped_f
+    return deco_f
+
+
+def unittestGlobalLevel(level):
+    """
+    Function decorator that set loglevels to ``level`` during unit tests
+    execution.
+    """
+    def deco_cls(cls):
+        orig_setUp = getattr(cls, 'setUp', None)
+        orig_tearDown = getattr(cls, 'tearDown', None)
+
+        thislevel = getActualLevel(level)
+        if thislevel is None:
+            print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
+
+        else:
+            def setUp(self):
+                self._log_known_roots = [logging.getLogger(l) for l in roots]
+                self._log_known_levels = [l.level for l in self._log_known_roots]
+                for a_logger in self._log_known_roots:
+                    a_logger.setLevel(thislevel)
+                if orig_setUp is not None:
+                    orig_setUp(self)
+            if orig_setUp:
+                setUp.__doc__ = orig_setUp.__doc__
+
+            def tearDown(self):
+                for a_logger, a_level in zip(self._log_known_roots, self._log_known_levels):
+                    a_logger.setLevel(a_level)
+                if orig_tearDown is not None:
+                    orig_tearDown(self)
+            if orig_tearDown:
+                tearDown.__doc__ = orig_tearDown.__doc__
+
+            setattr(cls, 'setUp', setUp)
+            setattr(cls, 'tearDown', tearDown)
+
+        return cls
+    return deco_cls
+
+
 # OTHER UTILITY METHODS
 
 def setRootLogger(logger, level=logging.INFO):
@@ -138,11 +218,8 @@ def getActualLevel(level):
     number associated with it.
     """
     lnames = logging._levelNames if six.PY2 else logging._nameToLevel
-    if type(level) is int:
-        if level not in lnames:
-            level = None
-    else:
-        level = lnames.get(level.upper())
+    if type(level) is not int:
+        level = lnames.get(level.upper(), None)
     return level
 
 
@@ -199,6 +276,10 @@ class SlurpHandler(logging.Handler):
             raise
         except Exception:
             self.handleError(record)
+
+
+# Initialise the bronx logger (for future uses)
+getLogger('bronx')
 
 
 if __name__ == '__main__':

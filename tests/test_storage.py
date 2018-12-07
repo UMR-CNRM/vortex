@@ -129,6 +129,7 @@ class TestCacheStorage(unittest.TestCase):
         self.t = vortex.sessions.get(tag='storage_test_view',
                                      topenv=vortex.rootenv, glove=gl)
         self.t.activate()
+        self.t.critical()  # Decrease verbosity a lot !
         self.sh = self.t.system()
         self.sh.target(hostname='unittest', inetname='unittest',
                        sysname='Local')  # Trick the vortex's system !

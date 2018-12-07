@@ -206,7 +206,7 @@ class GcoCentralStore(Store):
                         logger.info("%s was already fetched in a previous extract.", destdir)
                     else:
                         untaropts = self.ggetconfig.key_untar_properties(gname)
-                        rc = len(sh.smartuntar(gname, destdir, output=False, **untaropts)) > 0
+                        rc = len(sh.smartuntar(gname, destdir, **untaropts)) > 0
                     gname = destdir
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = rc and sh.cp(gname + '/' + extract[0], local, fmt=fmt)
@@ -219,7 +219,7 @@ class GcoCentralStore(Store):
                 if not sh.path.isdir(local) and sh.is_tarname(local) and sh.is_tarfile(local):
                     destdir = sh.path.dirname(sh.path.realpath(local))
                     untaropts = self.ggetconfig.key_untar_properties(gname)
-                    sh.smartuntar(local, destdir, output=False, **untaropts)
+                    sh.smartuntar(local, destdir, **untaropts)
         else:
             logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
             rc = False
@@ -339,7 +339,7 @@ class _UgetStoreMixin(object):
                 self.system.is_tarname(local) and self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
             untaropts = self.ugetconfig.key_untar_properties(uname)
-            self.system.smartuntar(local, destdir, output=False, **untaropts)
+            self.system.smartuntar(local, destdir, **untaropts)
 
     def _fancy_get(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -363,7 +363,7 @@ class _UgetStoreMixin(object):
                         logger.info("%s was already unpacked during a previous extract.", destdir)
                     else:
                         untaropts = self.ugetconfig.key_untar_properties(uname)
-                        rc = len(self.system.smartuntar(uname, destdir, output=False, **untaropts)) > 0
+                        rc = len(self.system.smartuntar(uname, destdir, **untaropts)) > 0
                 # Otherwise, assume that the file to extract is in a directory
                 else:
                     destdir = self.system.path.realpath(uname)

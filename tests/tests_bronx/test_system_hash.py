@@ -11,7 +11,6 @@ import tempfile
 import unittest
 
 from bronx.system.hash import HashAdapter
-from bronx.system.interrupt import SignalInterruptHandler
 
 DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
@@ -23,9 +22,6 @@ class TestHashAdapter(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp(suffix='test_utils_hash')
         self.oldpwd = os.getcwd()
         os.chdir(self.tmpdir)
-
-        self.sigh = SignalInterruptHandler()
-        self.sigh.activate()
 
         self.bin_path = os.path.join(DATADIR, 'random_data.bin')
         self.md5_path = os.path.join(DATADIR, 'random_data.bin.md5')
@@ -40,7 +36,6 @@ class TestHashAdapter(unittest.TestCase):
     def tearDown(self):
         os.chdir(self.oldpwd)
         shutil.rmtree(self.tmpdir)
-        self.sigh.deactivate()
 
     def _read_md5line(self, i_fh):
         return i_fh.readline().split(' ')[0]

@@ -14,9 +14,10 @@ from bronx.fancies import loggers
 
 from . import discover
 
-
 logger = loggers.getLogger(__name__)
-clogger = loggers.getLogger('.'.join(__name__.split('.')[:-1]))
+
+tloglevel = 'critical'
+
 
 try:
     import yaml
@@ -53,12 +54,8 @@ class TestNames(TestCase):
 
     def _names_driverrun(self, f):
         """Generic test method."""
-        oldlevel = clogger.level
-        clogger.setLevel('ERROR')
-        try:
+        with loggers.contextboundGlobalLevel('error'):
             td = discover.all_tests[f]
             td.load_references()
-            td.compute_results()
-            td.check_results()
-        finally:
-            clogger.setLevel(oldlevel)
+        td.compute_results(loglevel=tloglevel)
+        td.check_results()

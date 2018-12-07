@@ -472,7 +472,7 @@ class Cache(Storage):
                         self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
                     destdir = self.sh.path.dirname(self.sh.path.realpath(local))
                     logger.info('Automatic Tar extract to: %s', destdir)
-                    rc = rc and self.sh.smartuntar(local, destdir, output=False,
+                    rc = rc and self.sh.smartuntar(local, destdir,
                                                    uniquelevel_ignore=uniquelevel_ignore)
         else:
             getattr(logger, 'info' if silent else 'warning')('No readable source for < %s >', item)

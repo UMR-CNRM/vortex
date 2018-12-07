@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import unittest
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Month
 import footprints
 from footprints.util import rangex
@@ -12,7 +13,10 @@ from footprints.util import rangex
 from common.tools.conftools import CouplingOffsetConfPrepareError, \
     CouplingOffsetConfRefillError, CouplingOffsetConfError
 
+tloglevel = 'critical'
 
+
+@loggers.unittestGlobalLevel(tloglevel)
 class Coupling3DVConfToolTest(unittest.TestCase):
     """Test data from Arome 3D-var France 1hr cycle + with some changes to make it more insane !"""
 
@@ -158,6 +162,7 @@ class Coupling3DVbisConfToolTest(Coupling3DVConfToolTest):
                              '09': '1-12-1', '06': '1-36-1'}}
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class Coupling3DVliteConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
@@ -264,6 +269,7 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
                          {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('2-5-1')]}})
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class Coupling3DVSparseConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
@@ -311,6 +317,7 @@ class Coupling3DVSparseConfToolTest(unittest.TestCase):
         self.assertListEqual(self.wtool.coupling_terms('2017010106', 'assim'), [])
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class CouplingAggConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
@@ -486,6 +493,7 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                    str(Date(2016, 12, 31, 18, 0)): [Time(h) for h in (8, 9, 10, 11)]}})
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class CouplingBugConfToolTest(unittest.TestCase):
     """Check that inconsistencies are detected."""
 
@@ -516,6 +524,7 @@ class CouplingBugConfToolTest(unittest.TestCase):
                                                    cplsteps=self._STEPS, verbose=False)
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class CouplingLargeOffsetConfToolTest(unittest.TestCase):
     """Test with very long offsets (up to 36hrs)."""
 

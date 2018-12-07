@@ -124,7 +124,6 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         t = sessions.current()
         if t.sh.path.exists(self.medium):
             t.sh.remove(self.medium)
-        super(ServerSyncSimpleSocket, self).__del__()
 
     def _command(self, mess):
         """ Send a command (a string) to the server; wait for a response """

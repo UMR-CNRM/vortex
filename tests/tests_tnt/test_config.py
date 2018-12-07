@@ -3,6 +3,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 import unittest
 
+from bronx.fancies import loggers
+
 from tnt.config import TntDirective, TntStackDirective
 from tnt.config import TntDirectiveUnkownError, TntDirectiveValueError, TntStackDirectiveError
 
@@ -54,9 +56,10 @@ class TestTntConfig(unittest.TestCase):
             TntStackDirective(tpl_path, [dict(action='truc'), ])
         with self.assertRaises(TntStackDirectiveError):
             TntStackDirective(tpl_path, [dict(namelist='machin'), ])
-        with self.assertRaises(TntStackDirectiveError):
-            # Namelist is missing
-            TntStackDirective(tpl_path, [dict(action='tnt', directive='truc'), ])
+        with loggers.contextboundGlobalLevel('critical'):
+            with self.assertRaises(TntStackDirectiveError):
+                # Namelist is missing
+                TntStackDirective(tpl_path, [dict(action='tnt', directive='truc'), ])
         with self.assertRaises(TntStackDirectiveError):
             TntStackDirective(tpl_path, [dict(action='tnt', namelist=1, directive='truc'), ])
         with self.assertRaises(TntStackDirectiveError):
@@ -69,10 +72,12 @@ class TestTntConfig(unittest.TestCase):
                                  directives=dict(truc=dict()))
         self.assertDictEqual(tdir.todolist[0],
                              dict(action='tnt', namelist=['coucou', ], directive=['truc', ]))
-        with self.assertRaises(TntStackDirectiveError):
-            # multiple target...
-            TntStackDirective(tpl_path,
-                              [dict(action='create', target=['blop', 'toto', ], external='namelist_prep_template'), ])
+        with loggers.contextboundGlobalLevel('critical'):
+            with self.assertRaises(TntStackDirectiveError):
+                # multiple target...
+                TntStackDirective(tpl_path,
+                                  [dict(action='create', target=['blop', 'toto', ],
+                                        external='namelist_prep_template'), ])
         with self.assertRaises(TntStackDirectiveError):
             # namelist_prep_template2 do not exists
             TntStackDirective(tpl_path,

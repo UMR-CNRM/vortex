@@ -30,7 +30,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 sys.path.insert(0, os.path.join(vortexbase, 'project'))
 sys.path.insert(0, os.path.join(vortexbase, 'tests'))
 
-import footprints as fp
+from bronx.fancies import loggers
 
 from test_names import discover
 
@@ -103,7 +103,7 @@ def main():
     args = parser.parse_args()
 
     if args.verbose:
-        fp.loggers.getLogger('test_names').setLevel('DEBUG')
+        loggers.getLogger('test_names').setLevel('DEBUG')
 
     for action in args.actions:
         globals()['{:s}{:s}'.format(ACTION_FUNCTION_ID, action)](args.only)

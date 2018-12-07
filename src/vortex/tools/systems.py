@@ -2380,7 +2380,10 @@ class OSExtended(System):
         self.mkdir(destination)
         loctmp = tempfile.mkdtemp(prefix='untar_', dir=destination)
         with self.cdcontext(loctmp, clean_onexit=True):
-            self.untar(fullsource, **kw)
+            output_setting = kw.pop('output', True)
+            output_txt = self.untar(fullsource, output=output_setting, **kw)
+            if output_setting and output_txt:
+                logger.info('Untar command output:\n%s', '\n'.join(output_txt))
             unpacked = self.glob('*')
             # If requested, ignore the first level of directory
             if (uniquelevel_ignore and len(unpacked) == 1 and

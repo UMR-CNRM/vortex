@@ -6,6 +6,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import json
 from unittest import TestCase, main
 
+from bronx.fancies import loggers
+
 from vortex.data import contents
 from vortex.data.containers import CONTAINER_INCORELIMIT, InCore
 
@@ -43,7 +45,8 @@ class UtDataContent(_BaseDataContentTest):
         self.assertEqual(ct.datafmt, None)
         self.assertEqual(ct.upper(), self.data[0].upper())
         self.assertEqual(len(ct.metadata), 0)
-        self.assertTrue(ct.metadata_check(object()))
+        with loggers.contextboundGlobalLevel('critical'):
+            self.assertTrue(ct.metadata_check(object()))
         self.assertEqual(ct.size, len(self.data[0]))
         self.assertEqual(ct.export_dict(), ('vortex.data.contents', 'DataContent') )
         self.assertEqual(ct.is_diffable(), False)
@@ -160,9 +163,10 @@ class UtAlmostListContent(_BaseDataContentTest):
         self.assertEqual(ct.data, ALMOST_LIST_E + ALMOST_LIST_E1)
         # Should fail
         ct3 = contents.AlmostListContent()
-        ct3.slurp(self.insample[2])
-        with self.assertRaises(contents.DataContentError):
-            ct.merge(ct3, unique=True)
+        with loggers.contextboundGlobalLevel('critical'):
+            ct3.slurp(self.insample[2])
+            with self.assertRaises(contents.DataContentError):
+                ct.merge(ct3, unique=True)
 
 
 TEXT_E = [['1', 'blop', '3.5'], ['5', 'toto', '10.5']]

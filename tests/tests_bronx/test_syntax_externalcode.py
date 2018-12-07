@@ -6,6 +6,7 @@ import six
 
 import unittest
 
+from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker, ExternalCodeUnavailableError
 
 
@@ -30,6 +31,7 @@ class TestExternalCodeImport(unittest.TestCase):
                 return True
         self.assertTrue(test_cls1().toto())
 
+    @loggers.fdecoGlobalLevel('error')
     def test_externalcode_bascis_fails(self):
         # If the import works fine
         ec_checker = ExternalCodeImportChecker('a_very_unlikely_package_name')

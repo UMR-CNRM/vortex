@@ -3,8 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import logging
-logging.basicConfig(level=logging.ERROR)
+import sys
 import time
 numpy_looks_fine = True
 try:
@@ -17,8 +16,23 @@ from unittest import TestCase, main, skipIf
 import footprints
 import taylorism
 from taylorism import examples, schedulers
+from bronx.fancies import loggers
 from bronx.system import interrupt  # because subprocesses must be killable properly
 from bronx.system import cpus as cpus_tool
+
+tloglevel = 'critical'
+
+
+def stderr2out_deco(f):
+    def wrapped_f(*kargs, **kwargs):
+        oldstderr = sys.stderr
+        sys.stderr = sys.stdout
+        try:
+            return f(*kargs, **kwargs)
+        finally:
+            sys.stderr = oldstderr
+    wrapped_f.__name__ = f.__name__
+    return wrapped_f
 
 
 class _TestError(Exception):
@@ -72,8 +86,10 @@ class Failer(examples.Sleeper):
         return ("Failed.", self.binding())
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class UtTaylorism(TestCase):
 
+    @stderr2out_deco
     def test_worker_met_an_exception(self):
         """
         Run a Succeeder and a Failer, checks that the Failer exception is
@@ -85,10 +101,11 @@ class UtTaylorism(TestCase):
             individual_instructions = dict(sleeping_time=[0.001, 0.01], succeed=[False, True]),
             scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
-        with interrupt.SignalInterruptHandler():
+        with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(_TestError):
                 boss.wait_till_finished()
 
+    @stderr2out_deco
     def test_boss_crashes(self):
         """
         Run a Succeeder and a Failer, checks that an error in the Boss
@@ -100,7 +117,7 @@ class UtTaylorism(TestCase):
             individual_instructions = dict(sleeping_time=[60, 60], succeed=[True, True]),
             scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
-        with interrupt.SignalInterruptHandler():
+        with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(interrupt.SignalInterruptError):
                 time.sleep(0.01)
                 boss._process.terminate()
@@ -122,6 +139,7 @@ class UtTaylorism(TestCase):
             report = boss.get_report()
             self.assertEqual(len(report['workers_report']), 4, "4 instructions have been sent, which is not the size of report.")
 
+    @stderr2out_deco
     def test_toomany_instr_after_crash(self):
         """
         Checks that overloading the instructions queue after end of
@@ -133,7 +151,7 @@ class UtTaylorism(TestCase):
             scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
         time.sleep(0.1)
-        with interrupt.SignalInterruptHandler():
+        with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(_TestError):
                 boss.set_instructions(
                     dict(),
@@ -155,6 +173,7 @@ class UtTaylorism(TestCase):
         self.assertEqual(len(report['workers_report']), 3, "3 instructions have been sent, which is not the size of report.")
         self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]), set([0, 1]))
 
+    @stderr2out_deco
     def test_redundant_workers_name(self):
         """
         Checks that a clear error is raised if several workers wear the same

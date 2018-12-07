@@ -509,6 +509,11 @@ class AlgoComponent(footprints.FootprintBase):
                 raise AlgoComponentError('The server process ended badly.')
         return rc
 
+    def spawn_pre_dirlisting(self):
+        """Print a directory listing just before run."""
+        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
+        self.system.dir(output=False, fatal=False)
+
     def spawn_hook(self):
         """Last chance to say something before execution."""
         pass
@@ -533,12 +538,11 @@ class AlgoComponent(footprints.FootprintBase):
         # On-the-fly coprocessing initialisation
         p_io, e_complete, e_free, q_ctx = self.flyput_begin()
 
-        sh.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         sh.remove('core')
         sh.softlink('/dev/null', 'core')
-        sh.dir(output=False, fatal=False)
         self.spawn_hook()
         self.target.spawn_hook(sh)
+        self.spawn_pre_dirlisting()
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
         sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
 
@@ -612,10 +616,13 @@ class AlgoComponent(footprints.FootprintBase):
         if self.server_run:
             self.server_end()
 
-    def postfix(self, rh, opts):
-        """Some basic informations."""
+    def postfix_post_dirlisting(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
+
+    def postfix(self, rh, opts):
+        """Some basic informations."""
+        self.postfix_post_dirlisting()
 
     def dumplog(self, opts):
         """Dump to local file the internal log of the current algo component."""

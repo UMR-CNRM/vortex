@@ -89,7 +89,6 @@ from bronx.system import interrupt, cpus  # because subprocesses must be killabl
 from .schedulers import BaseScheduler
 from .schedulers import MaxThreadsScheduler, binding_setup  # For compatibility
 
-interrupt.logger.setLevel('WARNING')
 taylorism_log = loggers.getLogger(__name__)
 
 # : timeout when polling for a Queue/Pipe communication
@@ -158,7 +157,7 @@ def batch_main(common_instructions=dict(),
                          maxlenreport=maxlenreport,
                          sharedmemory_common_instructions=sharedmemory_common_instructions)
 
-    with interrupt.SignalInterruptHandler():
+    with interrupt.SignalInterruptHandler(emitlogs=False):
         try:
             boss.wait_till_finished()
             report = boss.get_report()
@@ -283,7 +282,7 @@ class Worker(FootprintBase):
         From within this method down, everything is done in the subprocess
         world !
         """
-        with interrupt.SignalInterruptHandler():
+        with interrupt.SignalInterruptHandler(emitlogs=False):
             to_be_sent_back = dict(name=self.name, report=None)
             try:
                 for callback in self.scheduler_hooks:
@@ -587,7 +586,7 @@ class Boss(object):
         From within this method down, everything is done in the subprocess
         world !
         """
-        with interrupt.SignalInterruptHandler():
+        with interrupt.SignalInterruptHandler(emitlogs=False):
             try:
                 (workers_report, pending_instructions) = self._listen()
                 if len(pending_instructions) == 0:

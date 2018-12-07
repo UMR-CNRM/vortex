@@ -9,6 +9,8 @@ import os
 import shutil
 import tempfile
 
+from bronx.fancies import loggers
+
 from footprints import util, FPList, FPDict
 
 
@@ -179,11 +181,12 @@ class utExpand(TestCase):
             item = [recursive_item(stuff, depth + 1, stuff), ] * len(item)
             return item
 
-        with self.assertRaises(MemoryError):
-            util.expand(dict(arg='hop',
-                             item=recursive_item((1, 2, ), 1, (1, ))
-                             )
-                        )
+        with loggers.contextboundGlobalLevel('critical'):
+            with self.assertRaises(MemoryError):
+                util.expand(dict(arg='hop',
+                                 item=recursive_item((1, 2, ), 1, (1, ))
+                                 )
+                            )
 
     def test_expand_strings(self):
         rv = util.expand(dict(arg='hop', item='a,b,c'))

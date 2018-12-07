@@ -18,7 +18,9 @@ vortexbase = re.sub(os.path.sep + 'bin$', '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
+from bronx.fancies import loggers
 import footprints
+
 import vortex  # @UnusedImport
 # For the addons to be recognised
 import vortex.tools.folder  # @UnusedImport
@@ -168,9 +170,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     thenamespaces = args.namespaces if len(args.namespaces) else NAMESPACES_MAP[args.format]
-    for namespace in thenamespaces:
-        print('Importing: {}'.format(namespace))
-        importlib.import_module(namespace)
+    with loggers.contextboundGlobalLevel('error'):
+        for namespace in thenamespaces:
+            print('Importing: {}'.format(namespace))
+            importlib.import_module(namespace)
 
     exporter = vars()['{}_exporter'.format(args.format)]
     exporter(args.collectors, args.abstract, args.filebase)

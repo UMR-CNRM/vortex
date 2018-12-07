@@ -10,6 +10,7 @@ import sys
 sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 from tests_contents.test_generic import _BaseDataContentTest
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from vortex.data.containers import DataSizeTooBig, InCore
 from common.data import obs
@@ -131,7 +132,8 @@ class UtObsMapContent(_BaseDataContentTest):
         self.assertEqual(ct.fmtset(), set(['OBSOUL', 'BUFR']))
         self.assertEqual(ct.instrset(), set(['conv', 'airep', 'acar', 'amsua']))
         self.assertEqual(ct.getfmt(dict(part='airep'), dict()), 'BUFR')
-        self.assertEqual(ct.getfmt(dict(part='toto'), dict()), None)
+        with loggers.contextboundGlobalLevel('critical'):
+            self.assertEqual(ct.getfmt(dict(part='toto'), dict()), None)
         # Discard
         ct = obs.ObsMapContent(discarded=set(['conv', ]))
         ct.slurp(self.insample[0])

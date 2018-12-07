@@ -23,6 +23,8 @@ from footprints import Footprint, DecorativeFootprint, FootprintBase
 from footprints import doc, priorities, reporting, collectors
 from footprints.config import FootprintSetup
 
+tloglevel = 'critical'
+
 
 # Classes to be used in module scope
 
@@ -542,15 +544,16 @@ class utFootprint(TestCase):
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
 
-        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
-        self.assertFalse(rv)
-        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
+        with loggers.contextboundGlobalLevel(9999):  # This is extremely quiet...
+            guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
+            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+            self.assertFalse(rv)
+            self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
 
-        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
-        self.assertFalse(rv)
-        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
+            guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
+            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+            self.assertFalse(rv)
+            self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
 
     def test_footprint_replacementfmt(self):
         fp = self.fpbis
@@ -630,9 +633,10 @@ class utFootprint(TestCase):
         with self.assertRaises(footprints.FootprintFatalError):
             u_rv, u_attr_input, u_attr_seen = fp.resolve(dict())
 
-        with self.assertRaises(footprints.FootprintMaxIter):
-            cycling = dict(stuff1='[stuff2]', stuff2='[stuff1]')
-            fp.resolve(cycling, fatal=False)
+        with loggers.contextboundGlobalLevel(tloglevel):
+            with self.assertRaises(footprints.FootprintMaxIter):
+                cycling = dict(stuff1='[stuff2]', stuff2='[stuff1]')
+                fp.resolve(cycling, fatal=False)
 
         rv, u_attr_input, u_attr_seen = fp.resolve(dict(), fatal=False)
         self.assertTrue(rv)
@@ -1384,16 +1388,8 @@ class utFootprintBase(TestCase):
         })
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class utCollector(TestCase):
-
-    def setUp(self):
-        fplogger = loggers.getLogger('footprints')
-        self._oldlevel = fplogger.level
-        fplogger.setLevel('CRITICAL')
-
-    def tearDown(self):
-        fplogger = loggers.getLogger('footprints')
-        fplogger.setLevel(self._oldlevel)
 
     def test_collector_basic(self):
         self._internal_test_collector_basic()

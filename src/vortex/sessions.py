@@ -264,7 +264,8 @@ class Ticket(getbytag.GetByTag):
         for kid in self.subcontexts:
             logger.debug('Exit from context %s', kid)
             ok = ok and kid.exit()
-        self.close()
+        if self.opened:
+            self.close()
         return ok
 
     def warning(self):
@@ -347,4 +348,5 @@ class Ticket(getbytag.GetByTag):
             return None
 
     def __del__(self):
-        self.close()
+        if self.opened:
+            self.close()

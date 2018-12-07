@@ -14,13 +14,16 @@ import unittest
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
+from bronx.system import interrupt
 
 import vortex
-import common.util.usepygram as uepy
-from common.tools.grib import GRIBFilter
+import common  # @UnusedImport
 
-clog = loggers.getLogger('common')
-clog.setLevel('ERROR')
+tloglevel = 'critical'
+
+with loggers.contextboundGlobalLevel(tloglevel):
+    import common.util.usepygram as uepy
+    from common.tools.grib import GRIBFilter
 
 u10_filter = '''
 {
@@ -87,6 +90,7 @@ class _EpyTestBase(unittest.TestCase):
         return self.sh.path.join(self.datapath, demofile)
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramContents(_EpyTestBase):
 
     def test_contents(self):
@@ -112,6 +116,7 @@ class TestEpygramContents(_EpyTestBase):
                               ct.metadata)
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramAdvanced(_EpyTestBase):
 
     def setUp(self):
@@ -121,12 +126,13 @@ class TestEpygramAdvanced(_EpyTestBase):
         self.tmpdir = tempfile.mkdtemp(suffix='test_epygram')
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
-        self.sh.signal_intercept_on()
+        self.shandler = interrupt.SignalInterruptHandler(emitlogs=False)
+        self.shandler.activate()
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
-        self.sh.signal_intercept_off()
+        self.shandler.deactivate()
 
     def test_epygram_hooks(self):
         self.sh.cp(self.demofile('historic.verylight.fa'),

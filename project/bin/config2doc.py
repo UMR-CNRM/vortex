@@ -20,7 +20,9 @@ vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
+from bronx.fancies import loggers
 import footprints as fp
+
 import vortex
 from vortex.data import geometries
 from vortex.util.config import GenericConfigParser
@@ -45,7 +47,7 @@ The ReST code is contained directly in the configuration files:
 '''
 
 # Main script logger
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def default_section_cb(parser, section, comment, ckeys):

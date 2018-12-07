@@ -16,6 +16,8 @@ from gco.syntax.stdattrs import UgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
+tloglevel = 'error'
+
 
 class FooResource(object):
 
@@ -37,6 +39,7 @@ class FooResource(object):
             raise ValueError
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestGcoGenv(unittest.TestCase):
 
     def setUp(self):
@@ -98,16 +101,10 @@ class TestGcoGenv(unittest.TestCase):
         self.assertEqual(provider.urlquery(resource), 'extract=toto')
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestUgetUenv(unittest.TestCase):
 
     def setUp(self):
-        # Get ride of loggers
-        glog = loggers.getLogger('gco')
-        self._glog_level = glog.level
-        glog.setLevel('CRITICAL')
-        vlog = loggers.getLogger('vortex')
-        self._vlog_level = vlog.level
-        vlog.setLevel('CRITICAL')
         # Temp directory
         self.sh = vortex.sessions.current().system()
         self.tmpdir = tempfile.mkdtemp(suffix='test_uget_uenv')
@@ -119,17 +116,12 @@ class TestUgetUenv(unittest.TestCase):
         self.sh.env.MTOOLDIR = self.tmpdir
         # Untar the Uget sample data
         datapath = self.sh.path.join(self.sh.glove.siteroot, 'tests', 'data', 'uget_uenv_fake.tar.bz2')
-        self.sh.untar(datapath)
+        self.sh.untar(datapath, verbose=False)
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
         uenv.clearall()
-        # restore loggers
-        glog = loggers.getLogger('gco')
-        glog.setLevel(self._glog_level)
-        vlog = loggers.getLogger('vortex')
-        vlog.setLevel(self._vlog_level)
 
     def test_basics(self):
         uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')

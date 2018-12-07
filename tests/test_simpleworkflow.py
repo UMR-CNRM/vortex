@@ -14,7 +14,6 @@ When debugging, fix other tests first and only then look at this one !
 import tempfile
 from unittest import TestCase, main
 
-
 import vortex
 from vortex import sessions, toolbox
 from vortex.data.contents import TextContent
@@ -262,7 +261,7 @@ class UtSimpleWorkflow(TestCase):
                                        topenv=vortex.rootenv,
                                        glove=self.rootsession.glove)
         self.cursession.activate()
-        # self.cursession.error()   # Decrease loglevel
+        self.cursession.critical()   # Decrease loglevel a lot !
         self.cursession.rundir = self.tmpdir
         self.cursession.context.cocoon()
         self.cursession.glove.vapp = 'arpege'
@@ -340,7 +339,7 @@ class UtSimpleWorkflow(TestCase):
             for rh in rhs:
                 self.assertIntegrity(rh, finalstatement='Toto was here...\n')
             print(self.sh.ll())
-            rhsO = toolbox.output(now=True, verbose=True, batch=batch,
+            rhsO = toolbox.output(now=True, verbose=False, batch=batch,
                                   hook_toto=(toto_hook, 'Toto wrote here...\n'),
                                   **descO)
             for rh in rhsO:
@@ -418,19 +417,20 @@ class UtSimpleWorkflow(TestCase):
 
     def test_coherentget(self):
         desc = self.default_fp_stuff
-        rh0a = toolbox.input(now=True, verbose=True, coherentgroup='toto,titi,tata',
+        vswitch = False
+        rh0a = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi,tata',
                              kind='utest1', local = 'utest1_get0a', **desc)
-        rh0b = toolbox.input(now=True, verbose=True, coherentgroup='toto,titi',
+        rh0b = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi',
                              kind='utest1', local = 'utest1_get0b', **desc)
-        rh1 = toolbox.input(now=True, verbose=True, coherentgroup='toto',
+        rh1 = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto',
                             kind='utest1', local = 'utest1_get1', **desc)
-        rh2 = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='toto',
+        rh2 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='toto',
                             kind='utest1,utest9,utest2', local = '[kind]_get2', **desc)
-        rh3 = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='toto',
+        rh3 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='toto',
                             kind='utest1', local = 'utest1_get3', **desc)
-        rh3b = toolbox.input(now=True, verbose=True, fatal=False, coherentgroup='titi',
+        rh3b = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='titi',
                              kind='utest9', local = 'utest9_get3b', **desc)
-        rh4 = toolbox.input(now=True, verbose=True,
+        rh4 = toolbox.input(now=True, verbose=vswitch,
                             kind='utest1', local = 'utest1_get4', **desc)
         self.assertEqual(len(rh0a), 1)
         self.assertEqual(len(rh0b), 1)

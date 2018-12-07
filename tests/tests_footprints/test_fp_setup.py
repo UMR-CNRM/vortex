@@ -7,6 +7,8 @@ from six import StringIO
 import sys
 from unittest import TestCase, main
 
+from bronx.fancies import loggers
+
 from footprints import reporting
 
 from footprints.config import FootprintSetup
@@ -46,7 +48,8 @@ class utFootprintSetup(TestCase):
         self.assertIs(setup, setup2)
         setup2 = setup(whatever=1)
         self.assertIs(setup, setup2)
-        setup2 = setup(tag='toto')
+        with loggers.contextboundGlobalLevel('error'):
+            setup2 = setup(tag='toto')
         self.assertIsNot(setup, setup2)
         sys.stdout = orig_out
 
