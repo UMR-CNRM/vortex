@@ -240,7 +240,6 @@ def main():
         (loglevel_main, loglevel_fp) = ('DEBUG', 'INFO')
     else:
         (loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG')
-    interrupt.logger.setLevel(loglevel_main)
     vortex.logger.setLevel(loglevel_main)
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
@@ -274,13 +273,13 @@ def main():
     for key, value in vars(args).iteritems():
         logger.debug('  + {} = {!s}'.format(key, value))
 
+    
     try:
-        t.sh.signal_intercept_on()
-        vortex_delayed_init(t)
-        if action == 'get' and prestage:
-            actual_action('prestage', t, args, fatal=fatal)
-        actual_action(action, t, args, fatal=fatal)
-        t.sh.signal_intercept_off()
+        with interrupt.SignalInterruptHandler(emitlogs=False):
+            vortex_delayed_init(t)
+            if action == 'get' and prestage:
+                actual_action('prestage', t, args, fatal=fatal)
+            actual_action(action, t, args, fatal=fatal)
 
     except (KeyboardInterrupt, interrupt.SignalInterruptError) as e:
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
