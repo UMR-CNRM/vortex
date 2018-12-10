@@ -10,6 +10,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import logging
 import signal
 
+from bronx.fancies import loggers
+
+logger = loggers.getLogger(__name__)
+
 
 class SignalInterruptError(Exception):
     """Exception raised when a system signal is caught."""
@@ -72,9 +76,6 @@ class SignalInterruptHandler(object):
         self._original_handlers = {}
         self._active = False
         self._emitlogs = emitlogs
-        if emitlogs:
-            from bronx.fancies import loggers
-            self._logger = loggers.getLogger(__name__)
 
     def __enter__(self):
         self.activate()
@@ -96,7 +97,7 @@ class SignalInterruptHandler(object):
     def _logstuff(self, level, message, *kargs):
         """Emit a log emssage if need be."""
         if self._emitlogs:
-            self._logger.log(level, message, *kargs)
+            logger.log(level, message, *kargs)
 
     def activate(self):
         """Activate the signal handlers."""
