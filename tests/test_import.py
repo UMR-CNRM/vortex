@@ -18,7 +18,7 @@ import footprints as fp
 import vortex
 import common  # @UnusedImport
 
-non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg', 'bronx.fancies.dispatch' ],
                     'PIL': ['bronx.datagrip.pyexttiff', ],
                     'numpy': ['bronx.datagrip.pyexttiff', ], }
 
