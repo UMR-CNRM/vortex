@@ -84,8 +84,8 @@ class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
                 return "{:s} obj: tag={:s}".format(type(obj).__name__, obj.tag)
             else:
                 parent_dump = super(bronx.fancies.dump.TxtDumper, self).dump_default(obj, level,
-                                                                                  nextline and
-                                                                                  self.break_default)
+                                                                                     nextline and
+                                                                                     self.break_default)
                 return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)
 
 
@@ -766,31 +766,38 @@ class Handler(object):
                 e_opts['insitu'] = False
                 return self._get_proxy(self._actual_get, ** e_opts)
             else:
-                rst = False
-                store = self.store
-                if store:
-                    logger.debug('Finalise-Get resource %s at %s from %s', self, self.lasturl, store)
-                    st_options = self.mkopts(dict(rhandler = self.as_dict()), self._latest_earlyget_opts)
-                    # Actual get
-                    rst = store.finaliseget(
-                        self._latest_earlyget_id,
-                        self.uridata,
-                        self.container.iotarget(),
-                        st_options,
-                    )
-                    if not rst:
-                        # Delayed get failed... attempt the usual get
-                        logger.warning('Delayed get failed ! Reverting to the usual get.')
-                        e_opts = self._latest_earlyget_opts.copy()
-                        e_opts['insitu'] = False
-                        return self._get_proxy(self._actual_get, ** e_opts)
-                    else:
-                        rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
+                alternate = self._latest_earlyget_opts.get('alternate', False)
+                if alternate and self.container.exists():
+                    # The container may have been filled be another finaliseget
+                    logger.info('Alternate <%s> exists', alternate)
+                    rst = True
                 else:
-                    logger.error('Could not find any store to get %s', self.lasturl)
+                    rst = False
+                    store = self.store
+                    if store:
+                        logger.debug('Finalise-Get resource %s at %s from %s', self, self.lasturl, store)
+                        st_options = self.mkopts(dict(rhandler = self.as_dict()), self._latest_earlyget_opts)
+                        # Actual get
+                        rst = store.finaliseget(
+                            self._latest_earlyget_id,
+                            self.uridata,
+                            self.container.iotarget(),
+                            st_options,
+                        )
+                        if not rst:
+                            # Delayed get failed... attempt the usual get
+                            logger.warning('Delayed get failed ! Reverting to the usual get.')
+                            e_opts = self._latest_earlyget_opts.copy()
+                            e_opts['insitu'] = False
+                            return self._get_proxy(self._actual_get, ** e_opts)
+                        else:
+                            rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
+                    else:
+                        logger.error('Could not find any store to get %s', self.lasturl)
 
-                # Reset the promise dictionary cache
-                self._localpr_cache = None  # To cache the promise dictionary
+                    # Reset the promise dictionary cache
+                    self._localpr_cache = None  # To cache the promise dictionary
+
                 return rst
         finally:
             self._latest_earlyget_id = None
