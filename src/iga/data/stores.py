@@ -87,7 +87,7 @@ class IgaFinder(Finder):
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
-            return self.system.join(self.rootdir, remote['path'])
+            return self.system.path.join(self.rootdir, remote['path'])
 
     def fileget(self, remote, local, options):
         #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""

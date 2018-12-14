@@ -9,12 +9,6 @@
 .. versionadded:: 1.2.2
 
 
-Functions
----------
-
-.. autofunction:: upfirst
-
-
 Classes
 -------
 
