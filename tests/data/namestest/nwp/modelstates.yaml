@@ -68,6 +68,9 @@ todo:
             - member:
                 - null
                 - 2
+              scenario:
+                - null
+                - RCP6.0
     # Historic
     -   commons:
             kind: historic
@@ -87,6 +90,7 @@ todo:
                 - surfex
                 - mesonh
             - term: 0
+              scenario: RCP6.0
     # DFI Bias
     -   commons:
             kind: biasdfi

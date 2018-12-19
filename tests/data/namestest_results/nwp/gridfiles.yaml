@@ -233,6 +233,24 @@
       kind: gridpoint
       nativefmt: fa
       origin: hst
+      scenario: RCP2.6
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/sRCP2.6/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/sRCP2.6/forecast/grid.arpege-forecast.glob05+0003:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/sRCP2.6/forecast/grid.arome-forecast.frangp0025+0003:00.fa
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/sRCP2.6/forecast/grid.arpege-forecast.glob05+0003:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      nativefmt: fa
+      origin: hst
       term: 3
     results: !test_names.core.TestResults
     - default: *id001
@@ -370,6 +388,24 @@
       location: olive://olive.multi.fr/abcd/20180101H00P/forecast/GRIDHSTFRANGP0025+0003
     - default: *id004
       location: olive://olive.multi.fr/abcd/20180101H00P/forecast/GRIDHSTGLOB05+0003
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: gridpoint
+      nativefmt: grib
+      origin: hst
+      scenario: RCP2.6
+      term: 3
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/sRCP2.6/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/sRCP2.6/forecast/grid.arpege-forecast.glob05+0003:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/sRCP2.6/forecast/grid.arome-forecast.frangp0025+0003:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/sRCP2.6/forecast/grid.arpege-forecast.glob05+0003:00.grib
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast

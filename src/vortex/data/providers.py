@@ -9,7 +9,7 @@ from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
-from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, member, block
+from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, scenario, member, block
 from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.tools import net, names
 
@@ -245,6 +245,7 @@ class Vortex(Provider):
     _footprint = [
         block,
         member,
+        scenario,
         namespacefp,
         xpid,
         dict(
@@ -330,6 +331,7 @@ class Vortex(Provider):
             experiment=self.experiment,
             block=self.block,
             member=self.member,
+            scenario=self.scenario,
         )
         return self.namebuilder.pack_pathname(rinfo)
 

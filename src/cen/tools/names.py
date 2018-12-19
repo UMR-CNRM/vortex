@@ -92,6 +92,7 @@ class CenDateNameBuilder(AbstractActualCenNameBuilder):
     def _pack_pathname_std(self, d):
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_flowdate(pathbits, d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
@@ -123,6 +124,7 @@ class CenFlatNameBuilder(AbstractActualCenNameBuilder):
 
     def _pack_pathname_std(self, d):
         pathbits = self._pack_pathname_init(d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits

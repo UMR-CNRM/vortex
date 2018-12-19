@@ -133,9 +133,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: null
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/massif/forcing_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/sRCP6.0/massif/forcing_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -146,9 +147,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -159,9 +161,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: flat@cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -172,9 +175,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: null
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/massif/forcing_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000X/sRCP6.0/massif/forcing_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -185,9 +189,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -198,9 +203,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: flat@cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -559,9 +565,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: null
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/forcing_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/sRCP6.0/massif/forcing_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -572,9 +579,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -585,9 +593,10 @@
       kind: MeteorologicalForcing
       model: obs
       namebuild: flat@cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -598,9 +607,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: null
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/forcing_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/sRCP6.0/massif/forcing_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -611,9 +621,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/20180101T0000P/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -624,9 +635,10 @@
       kind: MeteorologicalForcing
       model: safran
       namebuild: flat@cen
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vsop.multi.fr/s2m/alp/OPER/massif/FORCING_2018120100_2018120200.nc
+      location: vortex://vsop.multi.fr/s2m/alp/OPER/sRCP6.0/massif/FORCING_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1065,6 +1077,20 @@
       experiment: OPER@vernaym
       kind: SnowpackSimulation
       model: surfex
+      namebuild: null
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/sRCP6.0/massif/pro_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: null
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
       namebuild: cen
       nativefmt: null
     results: !test_names.core.TestResults
@@ -1107,6 +1133,20 @@
       experiment: OPER@vernaym
       kind: SnowpackSimulation
       model: surfex
+      namebuild: cen
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/sRCP6.0/massif/PRO_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: null
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
       namebuild: flat@cen
       nativefmt: null
     results: !test_names.core.TestResults
@@ -1140,6 +1180,20 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/PRO_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: null
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
+      namebuild: flat@cen
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/sRCP6.0/massif/PRO_2018120100_2018120200.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1230,6 +1284,20 @@
       experiment: OPER@vernaym
       kind: SnowpackSimulation
       model: surfex
+      namebuild: null
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/sRCP6.0/massif/pro_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: production
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
       namebuild: cen
       nativefmt: null
     results: !test_names.core.TestResults
@@ -1272,6 +1340,20 @@
       experiment: OPER@vernaym
       kind: SnowpackSimulation
       model: surfex
+      namebuild: cen
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/sRCP6.0/massif/PRO_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: production
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
       namebuild: flat@cen
       nativefmt: null
     results: !test_names.core.TestResults
@@ -1305,6 +1387,20 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/PRO_2018120100_2018120200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: massif
+      cutoff: production
+      datebegin: '201812010000'
+      dateend: '201812020000'
+      experiment: OPER@vernaym
+      kind: SnowpackSimulation
+      model: surfex
+      namebuild: flat@cen
+      scenario: RCP6.0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/sRCP6.0/massif/PRO_2018120100_2018120200.nc
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1539,9 +1635,10 @@
       model: surfex
       namebuild: null
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/massif/prep_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000X/sRCP6.0/massif/prep_2018010100.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1599,9 +1696,10 @@
       model: surfex
       namebuild: cen
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/massif/PREP_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000/sRCP6.0/massif/PREP_2018010100.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1659,9 +1757,10 @@
       model: surfex
       namebuild: flat@cen
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/PREP_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/sRCP6.0/massif/PREP_2018010100.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1896,9 +1995,10 @@
       model: surfex
       namebuild: null
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/prep_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/sRCP6.0/massif/prep_2018010100.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -1956,9 +2056,10 @@
       model: surfex
       namebuild: cen
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/massif/PREP_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/20180101T0000P/sRCP6.0/massif/PREP_2018010100.nc
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -2016,9 +2117,10 @@
       model: surfex
       namebuild: flat@cen
       origin: toto
+      scenario: RCP6.0
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/massif/PREP_2018010100.nc
+      location: vortex://vortex-free.multi.fr/s2m/alp/OPER@vernaym/sRCP6.0/massif/PREP_2018010100.nc
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif

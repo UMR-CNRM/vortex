@@ -193,6 +193,11 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         if 'member' in d and d['member'] is not None:
             pathbits.append(self._pack_std_item_member(d['member']))
 
+    def _pack_pathname_append_scenario(self, pathbits, d):
+        """Pack the provider's scenario identifier (optional)."""
+        if 'scenario' in d and d['scenario'] is not None:
+            pathbits.append(self._pack_std_item_scenario(d['scenario']))
+
     def _pack_pathname_append_block(self, pathbits, d):
         """Pack the provider's block name."""
         if 'block' in d:
@@ -264,6 +269,9 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     def _pack_std_item_member(self, value):
         return 'mb{:03d}'.format(value)
+
+    def _pack_std_item_scenario(self, value):
+        return 's{:s}'.format(value)
 
     def _pack_std_items(self, items):
         """
@@ -458,6 +466,7 @@ class VortexDateNameBuilder(AbstractActualVortexNameBuilder):
         """
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_flowdate(pathbits, d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
@@ -497,6 +506,7 @@ class VortexPeriodNameBuilder(AbstractActualVortexNameBuilder):
         """
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_flowperiod(pathbits, d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
@@ -535,6 +545,7 @@ class VortexFlatNameBuilder(AbstractActualVortexNameBuilder):
         according to the so-called standard style.
         """
         pathbits = self._pack_pathname_init(d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
