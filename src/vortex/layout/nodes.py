@@ -15,6 +15,7 @@ import re
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
+from bronx.syntax.iterators import izip_pcn
 
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
@@ -609,32 +610,59 @@ class LoopFamily(Family):
     :param str loopsuffix: The suffix that will be added to the child's tag.
                            By default '+loopvariable{!s}' (where {!s} will be
                            replaced by the loop control variable's value).
+    :param bool loopneedprev: Ensure that the previous value is available
+    :param bool loopneednext: Ensure that the next value is available
     """
 
     def __init__(self, **kw):
         logger.debug('Family init %s', repr(self))
         super(LoopFamily, self).__init__(**kw)
+        # On what should we iterate ?
         self._loopconf = kw.pop('loopconf', None)
         if not self._loopconf:
             raise ValueError('The "loopconf" named argument must be given')
-        self._loopvariable = kw.pop('_loopvariable', self._loopconf.rstrip('s'))
-        self._loopsuffix = kw.pop('loopsuffix', '+' + self._loopvariable + '{!s}')
+        else:
+            self._loopconf = self._loopconf.split(',')
+        # Find the loop's variable names
+        self._loopvariable = kw.pop('_loopvariable', None)
+        if self._loopvariable is None:
+            self._loopvariable = [s.rstrip('s') for s in self._loopconf]
+        else:
+            self._loopvariable = self._loopvariable.split(',')
+            if len(self._loopvariable) != len(self._loopconf):
+                raise ValueError('Inconsistent size between loopconf and loopvariable')
+        # Find the loop suffixes
+        self._loopsuffix = kw.pop('loopsuffix', None)
+        if self._loopsuffix is None:
+            self._loopsuffix = '+' + self._loopvariable[0] + '{0!s}'
+        # Prev/Next
+        self._loopneedprev = kw.pop('loopneedprev', False)
+        self._loopneednext = kw.pop('loopneednext', False)
+        # Initialisation stuff
         self._actual_content = None
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         baseargs = super(LoopFamily, self)._args_loopclone(tagsuffix, extras)
-        baseargs['loopconf'] = self._loopconf
-        baseargs['loopvariable'] = self._loopvariable
+        baseargs['loopconf'] = ','.join(self._loopconf)
+        baseargs['loopvariable'] = ','.join(self._loopvariable)
         baseargs['loopsuffix'] = self._loopsuffix
+        baseargs['loopneedprev'] = self._loopneedprev
+        baseargs['loopneednext'] = self._loopneednext
         return baseargs
 
     @property
     def contents(self):
         if self._actual_content is None:
             self._actual_content = list()
-            for var in self.conf.get(self._loopconf):
-                extras = {self._loopvariable: var}
-                suffix = self._loopsuffix.format(var)
+            for pvars, cvars, nvars in izip_pcn(* [self.conf.get(lc) for lc in self._loopconf]):
+                if self._loopneedprev and all([v is None for v in pvars]):
+                    continue
+                if self._loopneednext and all([v is None for v in nvars]):
+                    continue
+                extras = {v: x for v, x in zip(self._loopvariable, cvars)}
+                extras.update({v + '_prev': x for v, x in zip(self._loopvariable, pvars)})
+                extras.update({v + '_next': x for v, x in zip(self._loopvariable, nvars)})
+                suffix = self._loopsuffix.format(* cvars)
                 for node in self._contents:
                     self._actual_content.append(node.loopclone(suffix, extras))
         return self._actual_content
