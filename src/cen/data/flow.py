@@ -334,7 +334,9 @@ class SafranObsRaw(ObsRaw):
     def cendev_basename(self):
         prefix = self.cendev_map.get(self.part, self.part[0].upper())
         allowed = rangex(self.cendev_hours.get(self.part, self.cendev_hours['default']))
-        if self.date.hour in allowed:
+        if self.part == 'nebulosity':
+            return '{0:s}{1:s}.tgz'.format(prefix, self.date.yymd)
+        elif self.date.hour in allowed:
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)
