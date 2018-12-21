@@ -140,7 +140,7 @@ class SurfaceForcing(SurfaceIO):
                     values = ['MeteorologicalForcing'],
                 ),
                 model = dict(
-                    values = ['safran', 'obs', 's2m'],
+                    values = ['safran', 'obs', 's2m', 'adamont'],
                 ),
                 source_app = dict(
                     values = ['arpege', 'arome', 'ifs', ],

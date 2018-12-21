@@ -44,7 +44,7 @@ class _S2MWorker(VortexWorkerBlindRun):
             deterministic = dict(
                 type     = bool,
                 default  = False,
-                optional = False,
+                optional = True,
             ),
         )
     )
