@@ -104,6 +104,11 @@ class GuessWorker(_S2MWorker):
             interpreter = dict(
                 values = [ 'python' ]
             ),
+            reforecast = dict(
+                type     = bool,
+                default  = False,
+                optional = True,
+            ),
         )
     )
 
@@ -999,7 +1004,12 @@ class Guess(ParaExpresso):
             ),
             interpreter = dict(
                 values = [ 'python']
-            )
+            ),
+            reforecast = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -1012,6 +1022,7 @@ class Guess(ParaExpresso):
         '''Create a common instruction dictionary that will be used by the workers.'''
         ddict = super(Guess, self)._default_common_instructions(rh, opts)
         ddict['interpreter'] = self.interpreter
+        ddict['reforecast'] = self.reforecast
         return ddict
 
     def execute(self, rh, opts):
@@ -1070,7 +1081,7 @@ class S2MComponent(ParaBlindRun):
             datebegin = a_date,
             dateend   = a_date,
             execution = dict(
-                values   = ['analysis', 'forecast', 'reforecast'],
+                values   = ['analysis', 'forecast'],
                 optional = True,
             )
         )
@@ -1199,6 +1210,54 @@ class S2MReanalysis(S2MComponent):
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
         self._default_post_execute(rh, opts)
+
+
+class S2MReforecast(S2MComponent):
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel.',
+        attr = dict(
+            execution = dict(
+                values   = ['reforecast'],
+                optional = False,
+            ),
+        ),
+    )
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
+
+        for attribute in self.footprint_attributes:
+            if attribute not in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+        common_i = self._default_common_instructions(rh, opts)
+        # Note: The number of members and the name of the subdirectories could be
+        # auto-detected using the sequence
+        subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
+        deterministic = [True] * len(subdirs)
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
+        self._default_post_execute(rh, opts)
+
+    def get_individual_instructions(self, rh, opts):
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        list_dates_begin = list()
+        list_dates_end = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+                list_dates_begin.append(am.rh.resource.date + Period(hours=12))
+                list_dates_end.append(am.rh.resource.date + Period(hours=108))
+
+        return subdirs, list_dates_begin, list_dates_end
 
 
 @echecker.disabled_if_unavailable
