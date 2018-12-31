@@ -246,6 +246,9 @@ class SectionsSlice(collections.Sequence):
             i = int(i[len(self._INDEX_PREFIX):])
         return self._data[i]
 
+    def __eq__(self, other):
+        return self.to_list() == other.to_list()
+
     def __len__(self):
         return len(self._data)
 
@@ -324,6 +327,11 @@ class SectionsSlice(collections.Sequence):
         """Returns an index list of all the element contained if the present object."""
         return [self._INDEX_PREFIX + '{:d}'.format(i) for i in range(len(self))]
 
+    def __deepcopy__(self, memo):
+        newslice = self.__class__(self._data)
+        memo[id(self)] = newslice
+        return newslice
+
     def __getattr__(self, attr):
         """Provides an easy access to content's data with footprint's mechanisms.*
 
@@ -340,6 +348,8 @@ class SectionsSlice(collections.Sequence):
         be generated using the :meth:`indexes` property), the corresponding element
         will be searched using :meth:`_sloppy_lookup`.
         """.format(idx_attr=self._INDEX_ATTR)
+        if attr.startswith('__'):
+            raise AttributeError(attr)
         if len(self) == 1:
             try:
                 return self._sloppy_lookup(self[0], attr)
@@ -372,17 +382,19 @@ class SectionsJsonListContent(DataContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
-        container.rewind()
-        self._data = SectionsSlice(t.sh.json_load(container.iotarget()))
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._data = SectionsSlice(t.sh.json_load(container.iotarget()))
         self._size = len(self._data)
 
     def rewrite(self, container):
         """Write the data in the specified container."""
         t = sessions.current()
         container.close()
-        mode = container.set_wmode(container.mode)
-        iod = container.iodesc(mode)
-        t.sh.json_dump(self.data.to_list(), iod, indent=4)
+        with container.preferred_decoding(byte=False):
+            with container.preferred_write():
+                iod = container.iodesc()
+                t.sh.json_dump(self.data.to_list(), iod, indent=4)
         container.updfill(True)
 
 

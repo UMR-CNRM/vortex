@@ -150,7 +150,7 @@ class FolderShell(addons.FtrawEnableAddon):
                         self.sh.mv(item, self.sh.path.join(destination, item))
             else:
                 logger.error('Nothing to unpack')
-        except StandardError as trouble:
+        except Exception as trouble:
             logger.critical('Unable to proceed folder post-ftget step')
             raise trouble
         finally:

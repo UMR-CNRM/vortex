@@ -7,6 +7,7 @@ Net tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 from six.moves.urllib import parse as urlparse
 
 import abc
@@ -18,7 +19,6 @@ import io
 import operator
 import re
 import random
-import six
 import socket
 import stat
 import struct
@@ -1157,7 +1157,7 @@ class Ssh(object):
         # transfer to a tmp, rename and set permissions in one go
         remote_cmd = 'cat > {0}.tmp && mv {0}.tmp {0}'.format(self.quote(destination))
         if permissions:
-            remote_cmd += ' && chmod -v {} {}'.format(oct(permissions), self.quote(destination))
+            remote_cmd += ' && chmod -v {:o} {}'.format(permissions, self.quote(destination))
 
         cmd = ([self._sshcmd, ] +
                self._sshopts + sshopts.split() +
@@ -1379,6 +1379,7 @@ class _AssistedSshMeta(type):
         return super(_AssistedSshMeta, cls).__new__(cls, n, b, d)
 
 
+@six.add_metaclass(_AssistedSshMeta)
 class AssistedSsh(Ssh):
     """Remote command execution via ssh.
 
@@ -1445,8 +1446,6 @@ class AssistedSsh(Ssh):
     # No retries on scpput_stream since it's not guaranteed that the stream is seekable.
     _auto_retries = ['check_ok', 'execute', 'cocoon', 'remove',
                      'scpput', 'scpget', 'tunnel']
-
-    __metaclass__ = _AssistedSshMeta
 
     def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None,
                  maxtries=1, triesdelay=1, virtualnode=False, permut=True,
@@ -1524,7 +1523,7 @@ class AssistedSsh(Ssh):
                 cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
                 try:
                     self.sh.spawn(cmd, output=False, silent=True)
-                except StandardError:
+                except Exception:
                     pass
                 else:
                     self._chosen_target = guess
@@ -1537,10 +1536,9 @@ TcpConnectionStatus = namedtuple('TcpConnectionStatus', _ConnectionStatusAttrs)
 UdpConnectionStatus = namedtuple('UdpConnectionStatus', _ConnectionStatusAttrs)
 
 
+@six.add_metaclass(abc.ABCMeta)
 class AbstractNetstats(object):
     """AbstractNetstats classes provide all kind of informations on network connections."""
-
-    __metaclass__ = abc.ABCMeta
 
     @abc.abstractproperty
     def unprivileged_ports(self):

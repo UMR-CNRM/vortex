@@ -12,6 +12,7 @@ from six.moves import map  # @UnresolvedImport
 
 import collections
 from collections import namedtuple, defaultdict
+import io
 import json
 import pprint
 import re
@@ -172,7 +173,7 @@ class Section(object):
         """A locate call that can not fail..."""
         try:
             loc = self.rh.locate(**kw)
-        except StandardError:
+        except Exception:
             loc = '???'
         return loc
 
@@ -182,7 +183,7 @@ class Section(object):
         rc = False
         try:
             rc = callback(**kw)
-        except StandardError as e:
+        except Exception as e:
             logger.error('Something wrong (%s section): %s. %s',
                          sectiontype, str(e), traceback.format_exc())
             logger.error('Resource %s', self._stronglocate())
@@ -994,7 +995,7 @@ class LocalTracker(defaultdict):
         :param filename: Path to the JSON file.
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
-        with file(filename, 'w') as fpout:
+        with io.open(filename, 'w', encoding='utf-8') as fpout:
             json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
@@ -1002,7 +1003,7 @@ class LocalTracker(defaultdict):
 
         :param filename: Path to the JSON file.
         """
-        with file(filename, 'r') as fpin:
+        with io.open(filename, 'r', encoding='utf-8') as fpin:
             indict = json.load(fpin)
         # Start from scratch
         self.clear()

@@ -96,13 +96,14 @@ class NamelistContent(AlmostDictContent):
 
     def slurp(self, container):
         """Get data from the ``container`` namelist."""
-        container.rewind()
         if not self._parser:
-            self._parser = NamelistParser(macros=self._declaredmacros)
-        try:
-            namset = self._parser.parse(container.read())
-        except (ValueError, IOError) as e:
-            raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
+                self._parser = NamelistParser(macros=self._declaredmacros)
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            try:
+                namset = self._parser.parse(container.read())
+            except (ValueError, IOError) as e:
+                raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset
         for macro, value in self._macros.items():
             self._data.setmacro(macro, value)
@@ -118,7 +119,8 @@ class NamelistContent(AlmostDictContent):
 
         """
         container.close()
-        container.write(self.dumps(sorting=sorting))
+        with container.preferred_decoding(byte=False):
+            container.write(self.dumps(sorting=sorting))
         container.close()
 
 
@@ -214,7 +216,6 @@ class NamelistDelta(Namelist):
         attr = dict(
             kind = dict(
                 values   = ['namdelta', 'deltanam', ]
-                
             ),
             source = dict(
                 default     = 'deltanam.[binary]',

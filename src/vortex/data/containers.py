@@ -2,8 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
-import re, io, os
+import contextlib
+import io
+import os
+import re
 import tempfile
 
 from bronx.fancies import loggers
@@ -44,13 +48,19 @@ class Container(footprints.FootprintBase):
             mode = dict(
                 info            = "The file mode used to open the container.",
                 optional        = True,
-                default         = 'rb',
-                values          = ['a', 'ab', 'a+b', 'ab+', 'r', 'rb', 'rb+', 'r+b', 'w', 'wb', 'w+b', 'wb+'],
+                values          = ['a', 'a+', 'ab', 'a+b', 'ab+', 'r', 'r+', 'rb', 'rb+', 'r+b', 'w', 'w+', 'wb', 'w+b', 'wb+'],
                 remap           = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'},
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
-            )
+            ),
+            encoding = dict(
+                info            = "When openned in text mode, the encoding that will be used.",
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+            ),
         )
     )
+
+    _DEFAULTMODE = 'rb'
 
     @property
     def realkind(self):
@@ -60,8 +70,14 @@ class Container(footprints.FootprintBase):
         """Preset to None or False hidden attributes ``iod``, ``iomode`` and ``filled``."""
         logger.debug('Container %s init', self.__class__)
         super(Container, self).__init__(*args, **kw)
-        self._iod    = None
+        self._iod = None
         self._iomode = None
+        self._ioencoding = None
+        self._acmode = None
+        self._acencoding = None
+        self._pref_byte = None
+        self._pref_encoding = None
+        self._pref_write = None
         self._filled = False
 
     def __getattr__(self, key):
@@ -80,8 +96,21 @@ class Container(footprints.FootprintBase):
         """Abstract method to be overwritten."""
         raise NotImplementedError
 
-    def iodesc(self, mode=None):
+    def iodesc(self, mode=None, encoding=None):
         """Returns the file object descriptor."""
+        mode1, encoding1 = self._get_mode(mode, encoding)
+        if not (self._iod and not self._iod.closed and
+                mode1 == self._acmode and encoding1 == self._acencoding):
+            if self._iod and not self._iod.closed:
+                self.close()
+                mode1, encoding1 = self._get_mode(mode, encoding)
+            self._iod = self._new_iodesc(mode1, encoding1)
+            self._acmode = mode1
+            self._acencoding = encoding1
+        return self._iod
+
+    def _new_iodesc(self, mode, encoding):
+        """Returns a new file object descriptor."""
         raise NotImplementedError
 
     def iotarget(self):
@@ -111,16 +140,13 @@ class Container(footprints.FootprintBase):
     def totalsize(self):
         """Returns the complete size of the container."""
         iod = self.iodesc()
-        if iod:
-            pos = iod.tell()
-            iod.seek(0, 2)
-            ts = iod.tell()
-            iod.seek(pos)
-            return ts
-        else:
-            return None
+        pos = iod.tell()
+        iod.seek(0, 2)
+        ts = iod.tell()
+        iod.seek(pos)
+        return ts
 
-    def rewind(self, mode=None):
+    def rewind(self):
         """Performs the rewind of the current io descriptor of the container."""
         self.seek(0)
 
@@ -128,31 +154,29 @@ class Container(footprints.FootprintBase):
         """Go to the end of the container."""
         self.seek(0, 2)
 
-    def dataread(self):
+    def read(self, n=-1, mode=None, encoding=None):
+        """Read in one jump all the data as long as the data is not too big."""
+        iod = self.iodesc(mode, encoding)
+        if self.totalsize < self.maxreadsize or (0 < n < self.maxreadsize):
+            return iod.read(n)
+        else:
+            raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
+
+    def dataread(self, mode=None, encoding=None):
         """
         Reads the next data line or unit of the container.
         Returns a tuple with this line and a boolean
         to tell whether the end of container is reached.
         """
-        iod = self.iodesc()
-        line = iod.readline()
-        return ( line, bool(iod.tell() == self.totalsize) )
+        with self.preferred_decoding(byte=False):
+            iod = self.iodesc(mode, encoding)
+            line = iod.readline()
+            return (line, bool(iod.tell() == self.totalsize))
 
-    def read(self, n=-1):
-        """Read in one jump all the data as long as the data is not too big."""
-        iod = self.iodesc()
-        if iod:
-            if self.totalsize < self.maxreadsize or (0 < n < self.maxreadsize):
-                return iod.read(n)
-            else:
-                raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
-        else:
-            return None
-
-    def head(self, nlines):
+    def head(self, nlines, mode=None, encoding=None):
         """Read in one *nlines* of the data as long as the data is not too big."""
-        iod = self.iodesc()
-        if iod:
+        with self.preferred_decoding(byte=False):
+            iod = self.iodesc(mode, encoding)
             self.rewind()
             nread = 0
             lines = list()
@@ -164,26 +188,23 @@ class Container(footprints.FootprintBase):
                     raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
                 nread += 1
             return lines
-        else:
-            return None
 
-    def readlines(self):
+    def readlines(self, mode=None, encoding=None):
         """Read in one jump all the data as a sequence of lines as long as the data is not too big."""
-        iod = self.iodesc()
-        if iod:
+        with self.preferred_decoding(byte=False):
+            iod = self.iodesc(mode, encoding)
             if self.totalsize < self.maxreadsize:
                 self.rewind()
                 return iod.readlines()
             else:
                 raise DataSizeTooBig('Input is more than {0:d} bytes.'.format(self.maxreadsize))
-        else:
-            return None
 
     def __iter__(self):
-        iod = self.iodesc()
-        iod.seek(0)
-        for x in iod:
-            yield x
+        with self.preferred_decoding(byte=False):
+            iod = self.iodesc()
+            iod.seek(0)
+            for x in iod:
+                yield x
 
     def close(self):
         """Close the logical io descriptor."""
@@ -191,47 +212,130 @@ class Container(footprints.FootprintBase):
             self._iod.close()
             self._iod = None
             self._iomode = None
+            self._ioencoding = None
+            self._acmode = None
+            self._acencoding = None
+
+    @property
+    def defaultmode(self):
+        return self._iomode or self.mode
+
+    @property
+    def defaultencoding(self):
+        return self._ioencoding or self.encoding
 
     @property
     def actualmode(self):
-        return self._iomode or self.mode
+        return self._acmode or self._get_mode(None, None)[0]
 
-    def set_amode(self, actualmode):
+    @property
+    def actualencoding(self):
+        return self._acencoding or self._get_mode(None, None)[1]
+
+    @staticmethod
+    def _set_amode(actualmode):
         """Upgrade the ``actualmode`` to a append-compatible mode."""
         am = re.sub('[rw]', 'a', actualmode)
         am = am.replace('+', '')
         return am + '+'
 
-    def set_wmode(self, actualmode):
+    @staticmethod
+    def _set_wmode(actualmode):
         """Upgrade the ``actualmode`` to a write-compatible mode."""
         wm = re.sub('r', 'w', actualmode)
         wm = wm.replace('+', '')
         return wm + '+'
 
-    def write(self, data, mode=None):
+    @staticmethod
+    def _set_bmode(actualmode):
+        """Upgrade the ``actualmode`` to byte mode."""
+        if 'b' not in actualmode:
+            wm = re.sub(r'([arw])', r'\1b', actualmode)
+            return wm
+        else:
+            return actualmode
+
+    @staticmethod
+    def _set_tmode(actualmode):
+        """Upgrade the ``actualmode`` to a text-mode."""
+        wm = actualmode.replace('b', '')
+        return wm
+
+    @contextlib.contextmanager
+    def preferred_decoding(self, byte=True, encoding=None):
+        assert byte in [True, False]
+        prev_byte = self._pref_byte
+        self._pref_byte = byte
+        if encoding is not None:
+            prev_enc = self._pref_encoding
+            self._pref_encoding = encoding
+        yield
+        self._pref_byte = prev_byte
+        if encoding is not None:
+            self._pref_encoding = prev_enc
+
+    @contextlib.contextmanager
+    def preferred_write(self, append=False):
+        assert append in [True, False]
+        prev_write = self._pref_write
+        self._pref_write = append
+        yield
+        self._pref_write = prev_write
+
+    def _get_mode(self, mode, encoding):
+        # Find out a mode
+        if mode:
+            tmode = mode
+            self._iomode = mode
+        else:
+            tmode = self.defaultmode
+            if tmode is None:
+                tmode = self._acmode or self._DEFAULTMODE
+                if self._pref_write is True:
+                    tmode = self._set_amode(tmode)
+                elif self._pref_write is False:
+                    tmode = self._set_wmode(tmode)
+                if self._pref_byte is True:
+                    tmode = self._set_bmode(tmode)
+                elif self._pref_byte is False:
+                    tmode = self._set_tmode(tmode)
+        # Find out the encoding
+        if encoding:
+            tencoding = encoding
+            self._ioencoding = encoding
+        else:
+            tencoding = self.defaultencoding
+            if tencoding is None:
+                tencoding = self._acencoding
+                if self._pref_encoding is not None:
+                    tencoding = self._pref_encoding
+        return tmode, tencoding
+
+    def write(self, data, mode=None, encoding=None):
         """Write the data content in container."""
-        if mode is None:
-            mode = self.set_wmode(self.mode)
-        iod = self.iodesc(mode)
-        iod.write(data)
-        self._filled = True
+        with self.preferred_write():
+            iod = self.iodesc(mode, encoding)
+            iod.write(data)
+            self._filled = True
 
-    def append(self, data):
+    def append(self, data, mode=None, encoding=None):
         """Write the data content at the end of the container."""
-        iod = self.iodesc(self.set_amode(self.mode))
-        self.endoc()
-        iod.write(data)
-        self._filled = True
+        with self.preferred_write(append=True):
+            iod = self.iodesc(mode, encoding)
+            self.endoc()
+            iod.write(data)
+            self._filled = True
 
-    def cat(self):
+    def cat(self, mode=None, encoding=None):
         """Perform a trivial cat of the container."""
-        if self._filled:
-            iod = self.iodesc()
-            pos = iod.tell()
-            iod.seek(0)
-            for xchunk in iod:
-                print(xchunk.rstrip('\n'))
-            iod.seek(pos)
+        if self.filled:
+            with self.preferred_decoding(byte=False):
+                iod = self.iodesc(mode, encoding)
+                pos = iod.tell()
+                iod.seek(0)
+                for xchunk in iod:
+                    print(xchunk.rstrip('\n'))
+                iod.seek(pos)
 
     def is_virtual(self):
         """Check if the current container has some physical reality or not."""
@@ -247,9 +351,6 @@ class Virtual(Container):
     _footprint = dict(
         info = 'Abstract Virtual Container',
         attr = dict(
-            mode = dict(
-                default = 'wb+'
-            ),
             prefix = dict(
                 info            = "Prefix used if a temporary file needs to be written.",
                 optional        = True,
@@ -258,6 +359,8 @@ class Virtual(Container):
             )
         )
     )
+
+    _DEFAULTMODE = 'wb+'
 
     def is_virtual(self):
         """
@@ -273,6 +376,17 @@ class Virtual(Container):
     def iotarget(self):
         """Virtual container's io target is an io descriptor."""
         return self.iodesc()
+
+    def _py2to3_checks(self, encoding):
+        """Disable features that are unavailable in Python2.7."""
+        if six.PY2:
+            if encoding is not None:
+                logger.warning("With Python2.7, encoding is not suported in the %s container" +
+                               "... hopping for the best !", self.__class__.__name__)
+            extras = dict()
+        else:
+            extras = {'encoding': encoding}
+        return extras
 
 
 class InCore(Virtual):
@@ -301,7 +415,8 @@ class InCore(Virtual):
 
     def __init__(self, *args, **kw):
         logger.debug('InCore container init %s', self.__class__)
-        super(InCore, self).__init__(*args, incore=True, **kw)
+        kw.setdefault('incore', True)
+        super(InCore, self).__init__(*args, **kw)
         self._tempo = False
 
     def actualpath(self):
@@ -319,34 +434,26 @@ class InCore(Virtual):
         """Additional information to print representation."""
         return 'incorelimit={0:d} tmpfile="{1:s}"'.format(self.incorelimit, self.actualpath())
 
-    def iodesc(self, mode=None):
+    def _new_iodesc(self, mode, encoding):
         """Returns an active (opened) spooled file descriptor in binary read mode by default."""
-        if mode is None:
-            mode = self.actualmode
-        if not self._iod or self._iod.closed or mode != self.actualmode:
-            self.close()
-            self._iomode = mode
-            if self._tempo:
-                self._iod = tempfile.NamedTemporaryFile(
-                    mode    = self._iomode,
-                    prefix  = self.prefix,
-                    dir     = os.getcwd(),
-                    delete  = True
-                )
-            else:
-                self._iod = tempfile.SpooledTemporaryFile(
-                    mode     = self._iomode,
-                    prefix   = self.prefix,
-                    dir      = os.getcwd(),
-                    max_size = self.incorelimit
-                )
-
-        return self._iod
-
-    @property
-    def rolled(self):
-        iod = self.iodesc()
-        return iod._rolled
+        self.close()
+        if self._tempo:
+            iod = tempfile.NamedTemporaryFile(
+                mode    = mode,
+                prefix  = self.prefix,
+                dir     = os.getcwd(),
+                delete  = True,
+                ** self._py2to3_checks(encoding)
+            )
+        else:
+            iod = tempfile.SpooledTemporaryFile(
+                mode     = mode,
+                prefix   = self.prefix,
+                dir      = os.getcwd(),
+                max_size = self.incorelimit,
+                ** self._py2to3_checks(encoding)
+            )
+        return iod
 
     @property
     def temporized(self):
@@ -359,10 +466,11 @@ class InCore(Virtual):
             self.rewind()
             self._tempo = True
             self._iod = tempfile.NamedTemporaryFile(
-                mode    = self._iomode,
+                mode    = self._acmode,
                 prefix  = self.prefix,
                 dir     = os.getcwd(),
-                delete  = True
+                delete  = True,
+                ** self._py2to3_checks(self._acencoding)
             )
             for data in iomem:
                 self._iod.write(data)
@@ -371,15 +479,16 @@ class InCore(Virtual):
 
     def unroll(self):
         """Replace rolled data to memory (when possible)."""
-        if ( self.temporized or self.rolled ) and self.totalsize < self.incorelimit:
+        if self.temporized and self.totalsize < self.incorelimit:
             iotmp = self.iodesc()
             self.rewind()
             self._tempo = False
             self._iod = tempfile.SpooledTemporaryFile(
-                mode     = self._iomode,
+                mode     = self._acmode,
                 prefix   = self.prefix,
                 dir      = os.getcwd(),
-                max_size = self.incorelimit
+                max_size = self.incorelimit,
+                ** self._py2to3_checks(self._acencoding)
             )
             for data in iotmp:
                 self._iod.write(data)
@@ -424,7 +533,8 @@ class MayFly(Virtual):
 
     def __init__(self, *args, **kw):
         logger.debug('MayFly container init %s', self.__class__)
-        super(MayFly, self).__init__(*args, mayfly=True, **kw)
+        kw.setdefault('mayfly', True)
+        super(MayFly, self).__init__(*args, **kw)
 
     def actualpath(self):
         """Returns path information, if any, of the spooled object."""
@@ -438,20 +548,16 @@ class MayFly(Virtual):
 
         return 'delete={0!s} tmpfile="{1:s}"'.format(self.delete, self.actualpath())
 
-    def iodesc(self, mode=None):
+    def _new_iodesc(self, mode, encoding):
         """Returns an active (opened) temporary file descriptor in binary read mode by default."""
-        if mode is None:
-            mode = self.actualmode
-        if not self._iod or self._iod.closed or mode != self.actualmode:
-            self.close()
-            self._iomode = mode
-            self._iod = tempfile.NamedTemporaryFile(
-                mode    = self._iomode,
-                prefix  = self.prefix,
-                dir     = os.getcwd(),
-                delete  = self.delete
-            )
-        return self._iod
+        self.close()
+        return tempfile.NamedTemporaryFile(
+            mode    = mode,
+            prefix  = self.prefix,
+            dir     = os.getcwd(),
+            delete  = self.delete,
+            ** self._py2to3_checks(encoding)
+        )
 
     def localpath(self):
         """
@@ -525,16 +631,11 @@ class _SingleFileStyle(Container):
         """Returns the actual name of the file object."""
         return self.actualpath()
 
-    def iodesc(self, mode=None):
+    def _new_iodesc(self, mode, encoding):
         """Returns an active (opened) file descriptor in binary read mode by default."""
-        if mode is None:
-            mode = self.actualmode
-        if not self._iod or self._iod.closed or mode != self.actualmode:
-            self.close()
-            currentpath = self._actualpath if self.cwdtied else os.path.realpath(self.filename)
-            self._iomode = mode
-            self._iod = io.open(currentpath, self._iomode)
-        return self._iod
+        self.close()
+        currentpath = self._actualpath if self.cwdtied else os.path.realpath(self.filename)
+        return io.open(currentpath, mode, encoding=encoding)
 
     def iotarget(self):
         """File container's io target is a plain pathname."""
@@ -599,6 +700,7 @@ class UnnamedSingleFile(_SingleFileStyle):
         os.close(fh)  # mkstemp opens the file but we do not really care...
         self._auto_filename = os.path.basename(fpath)
         logger.debug('The localfile will be: %s', self.filename)
+        kw.setdefault('shouldfly', True)
         super(UnnamedSingleFile, self).__init__(*args, **kw)
 
     @property

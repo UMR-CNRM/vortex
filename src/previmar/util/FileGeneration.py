@@ -103,7 +103,7 @@ def EchoData(options):
         outstr += write_wind_txt
 
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))
 
 
 def RulesGribFunction(options):
@@ -119,4 +119,4 @@ def RulesGribFunction(options):
     outstr += "}"
 
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))

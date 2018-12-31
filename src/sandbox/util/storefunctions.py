@@ -31,4 +31,4 @@ def echofunction(options):
     for i, msg in enumerate(msgs):
         outstr += "\nMessage #{:d} is: {:s}\n".format(i, msg)
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))

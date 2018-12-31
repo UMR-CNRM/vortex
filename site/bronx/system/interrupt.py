@@ -15,7 +15,7 @@ from bronx.fancies import loggers
 logger = loggers.getLogger(__name__)
 
 
-class SignalInterruptError(Exception):
+class SignalInterruptError(BaseException):
     """Exception raised when a system signal is caught."""
     pass
 

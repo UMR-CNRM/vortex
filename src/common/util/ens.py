@@ -73,7 +73,7 @@ def drawingfunction(options):
                    population = population)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.StringIO(json.dumps(outdict, indent=4))
+    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def _checkingfunction_dict(options):
@@ -135,7 +135,7 @@ def checkingfunction(options):
                    population = avail_list)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.StringIO(json.dumps(outdict, indent=4))
+    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def safedrawingfunction(options):

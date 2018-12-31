@@ -820,7 +820,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         try:
             iniparser = GenericConfigParser(inifile)
             thisconf  = iniparser.as_dict(merged=False)
-        except StandardError:
+        except Exception:
             logger.critical('Could not read config %s', inifile)
             raise
         return thisconf

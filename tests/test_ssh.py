@@ -20,7 +20,8 @@ from vortex.tools.net import Ssh, AssistedSsh
 test_host = 'localhost'
 fake_host = 'this-hostname-should-not-exist-in-your-network'
 
-DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
+DATAPATHTEST = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                            'data')
 
 tloglevel = 9999  # Extremely quiet...
 

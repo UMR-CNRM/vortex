@@ -8,11 +8,12 @@ Configuration management through ini files.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six
-from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
+from six.moves.configparser import SafeConfigParser, ConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
 
 import io
 import itertools
 import re
+import sys
 
 from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
@@ -25,9 +26,18 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
+_PARSERPY32 = sys.version_info[0:2] >= (3, 2)
+if _PARSERPY32:
+    _PARSERCLASS = ConfigParser
+else:
+    _PARSERCLASS = SafeConfigParser
+
+
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
 _RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
+
+_DEFAULT_CONFIG_PARSER = ConfigParser if six.PY3 else SafeConfigParser
 
 
 def load_template(t, tplfile, encoding=None):
@@ -90,12 +100,12 @@ def load_template(t, tplfile, encoding=None):
 class GenericReadOnlyConfigParser(object):
     """A Basic ReadOnly configuration file parser.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
         (see the :meth:`setfile` method for more details)
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -115,7 +125,7 @@ class GenericReadOnlyConfigParser(object):
     _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None, defaultinifile=None):
+                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
@@ -178,12 +188,18 @@ class GenericReadOnlyConfigParser(object):
                 sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
                 if local.path.exists(sitedefaultinifile):
                     with io.open(sitedefaultinifile, 'r', encoding=encoding) as a_fh:
-                        self.parser.readfp(a_fh)
+                        if _PARSERPY32:
+                            self.parser.read_file(a_fh)
+                        else:
+                            self.parser.readfp(a_fh)
                 else:
                     raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             # Assume it's an IO descriptor
             inifile.seek(0)
-            self.parser.readfp(inifile)
+            if _PARSERPY32:
+                self.parser.read_file(inifile)
+            else:
+                self.parser.readfp(inifile)
             self.file = repr(inifile)
             if self.defaultinifile:
                 self.file = sitedefaultinifile + "," + self.file
@@ -220,7 +236,10 @@ class GenericReadOnlyConfigParser(object):
             self.file = ",".join(filestack)
             for a_file in filestack:
                 with io.open(a_file, 'r', encoding=encoding) as a_fh:
-                    self.parser.readfp(a_fh)
+                    if _PARSERPY32:
+                        self.parser.read_file(a_fh)
+                    else:
+                        self.parser.readfp(a_fh)
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
@@ -256,11 +275,11 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
     several other sections. The basic interpolation (with the usual ``%(varname)s``
     syntax) is available.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -391,11 +410,11 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 class GenericConfigParser(GenericReadOnlyConfigParser):
     """A Basic Read/Write configuration file parser.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -411,7 +430,7 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     """
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None, defaultinifile=None):
+                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
         super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser,
                                                   encoding, defaultinifile)
         self.updates = list()
@@ -468,7 +487,7 @@ class DelayedConfigParser(GenericConfigParser):
     def __getattribute__(self, attr):
         try:
             logger.debug('Getattr %s < %s >', attr, self)
-            if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + ['setall', 'save']):
+            if attr in filter(lambda x: not x.startswith('_'), dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
                 object.__getattribute__(self, 'refresh')()
         except StandardError:
             logger.critical('Trouble getattr %s < %s >', attr, self)
@@ -479,7 +498,7 @@ class JacketConfigParser(GenericConfigParser):
     """Configuration parser for Jacket files.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -496,7 +515,7 @@ class JacketConfigParser(GenericConfigParser):
         Return for the specified ``option`` in the ``section`` a sequence of values
         build on the basis of a comma separated list.
         """
-        s = SafeConfigParser.get(self, section, option)
+        s = _DEFAULT_CONFIG_PARSER.get(self, section, option)
         tmplist = s.replace(' ', '').split(',')
         if len(tmplist) > 1:
             return tmplist

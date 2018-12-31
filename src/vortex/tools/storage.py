@@ -639,7 +639,9 @@ class Archive(Storage):
         if ftp:
             try:
                 rc = ftp.size(item)
-            except (ValueError, TypeError, ftplib.all_errors):
+            except (ValueError, TypeError):
+                pass
+            except ftplib.all_errors:
                 pass
             finally:
                 ftp.close()
@@ -661,7 +663,9 @@ class Archive(Storage):
                     # Is it a file ?
                     if ftp.size(item) is not None:
                         rc = True
-                except (ValueError, TypeError, ftplib.all_errors):
+                except (ValueError, TypeError):
+                    pass
+                except ftplib.all_errors:
                     pass
             else:
                 # Content of the directory...

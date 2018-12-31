@@ -243,7 +243,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         if eff_terms:
             for actualterm in eff_terms:
                 wastebasket = list()
-                self.system.title('Loop on term {0:s}'.format(actualterm))
+                self.system.title('Loop on term {0!s}'.format(actualterm))
                 self.system.subtitle('Solving the input files nightmare...')
                 # Ensemble Mean ?
                 mean_number = 2 if self.model == 'arome' else 0

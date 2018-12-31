@@ -145,9 +145,6 @@ class Environment(object):
     def __str__(self):
         return '{0:s} | including {1:d} variables>'.format(repr(self).rstrip('>'), len(self))
 
-    def __getstate__(self):
-        return self.__dict__
-
     @classmethod
     def current(cls):
         """Return the current active environment object."""

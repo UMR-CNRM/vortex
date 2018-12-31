@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
 import io
 import json
 import re
-import six
 import time
 
 from bronx.datagrip.namelist  import NamelistBlock
@@ -1011,16 +1011,14 @@ class _DiagPICommons(FootprintCopier):
                 thispromise.put(incache=True)
 
 
+@six.add_metaclass(_DiagPICommons)
 class DiagPI(BlindRun, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
 
-    __metaclass__ = _DiagPICommons
 
-
+@six.add_metaclass(_DiagPICommons)
 class DiagPIMPI(Parallel, grib.EcGribComponent):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
-
-    __metaclass__ = _DiagPICommons
 
 
 class Fa2GaussGrib(BlindRun):

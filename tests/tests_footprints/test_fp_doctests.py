@@ -3,16 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import unittest
 import doctest
+import unittest
 
-from vortex import sessions
-
-from vortex.data import geometries
-from vortex.tools import delayedactions
+from footprints import util
 
 
-class utDocTests(unittest.TestCase):
+class utFpDocTests(unittest.TestCase):
 
     def assert_doctests(self, module, **kwargs):
         rc = doctest.testmod(module, **kwargs)
@@ -20,15 +17,7 @@ class utDocTests(unittest.TestCase):
                          'Doctests errors {!s} for {!r}'.format(rc, module))
 
     def test_doctests(self):
-        self.assert_doctests(geometries)
-        try:
-            self.assert_doctests(delayedactions)
-        finally:
-            # Clean the mess
-            t = sessions.current()
-            a_hub = t.context.delayedactions_hub
-            t.sh.rmtree(a_hub.stagedir)
-            a_hub.clear()
+        self.assert_doctests(util)
 
 
 if __name__ == '__main__':

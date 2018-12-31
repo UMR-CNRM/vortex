@@ -81,7 +81,7 @@ class GentleTalk(object):
         except ValueError:
             try:
                 value = self.levels.index(value.upper())
-            except StandardError:
+            except Exception:
                 value = -1
         if 0 <= value <= len(self.levels):
             self._loglevel = value
@@ -731,7 +731,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     pnum, prc, pvalue = asyncr.get(timeout=timeout)
                 except multiprocessing.TimeoutError:
                     self.error('Timeout for task', pnum=pnum)
-                except StandardError as trouble:
+                except Exception as trouble:
                     self.critical('Trouble in pool', pnum=pnum, error=trouble)
                 else:
                     self.info('Return', pnum=pnum, rc=prc, result=pvalue)
@@ -744,7 +744,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.ppool.close()
                 self.ppool.terminate()
                 self.ppool.join()
-            except StandardError as trouble:
+            except Exception as trouble:
                 self.critical('Multiprocessing stop', error=trouble)
 
         else:
@@ -772,7 +772,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             with io.open(jsonfile, 'rb') as fd:
                 obj = json.load(fd)
             obj = pools.Request(**obj)
-        except StandardError:
+        except Exception:
             self.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
             self.migrate(pool, item, target='error')
         return obj
@@ -807,7 +807,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     self.info('Return', pnum=pnum, result=pvalue)
                 else:
                     self.error('Return', pnum=pnum, error=pvalue)
-            except StandardError as trouble:
+            except Exception as trouble:
                 self.critical('Callback', error=trouble, result=result)
             finally:
                 if pnum is not None and pnum in self.async:
@@ -817,7 +817,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     if prc:
                         try:
                             pooltarget = pvalue.get('rpool', None)
-                        except StandardError:
+                        except Exception:
                             pass
                     else:
                         pooltarget = 'retry'
@@ -848,7 +848,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     callback=self.async_callback
                 )
             )
-        except StandardError as trouble:
+        except Exception as trouble:
             self.critical('Dispatch', error=trouble, action=ask.todo)
         else:
             rc = True
@@ -909,7 +909,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     else:
                         try:
                             rc = apply(thisfunc, (ask,), ask.opts)
-                        except StandardError as trouble:
+                        except Exception as trouble:
                             self.error('Trouble', action=ask.todo, error=trouble)
                             rc = False
             else:

@@ -3,8 +3,10 @@
 # pylint: disable=unused-argument
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
+import locale
 import sys
 import traceback
 import shlex
@@ -321,7 +323,7 @@ class AlgoComponent(footprints.FootprintBase):
                         bingo.put(incache=True)
                     else:
                         logger.warning('Polled data not promised <%s>', thisdata)
-            except StandardError as trouble:
+            except Exception as trouble:
                 logger.error('Polling trouble: %s', str(trouble))
                 redo = False
             finally:
@@ -568,8 +570,12 @@ class AlgoComponent(footprints.FootprintBase):
         opts = self.spawn_stdin_options()
         stdin_text = rh.resource.stdin_text(**opts)
         if stdin_text is not None:
-            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd())
-            tmpfh.write(stdin_text)
+            plocale = locale.getdefaultlocale()[1]
+            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='wb')
+            if isinstance(stdin_text, six.text_type):
+                tmpfh.write(stdin_text.encode(plocale))
+            else:
+                tmpfh.write(stdin_text)
             tmpfh.seek(0)
             return tmpfh
         else:
@@ -889,7 +895,8 @@ class Expresso(ExecutableAlgoComponent):
         logger.info('Run script %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            logger.info('Script stdin:\n%s', rh_stdin.read())
+            plocale = locale.getdefaultlocale()[1]
+            logger.info('Script stdin:\n%s', rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
         self.spawn(args, opts, stdin=rh_stdin)
 
@@ -960,8 +967,9 @@ class BlindRun(xExecutableAlgoComponent):
         logger.info('BlindRun executable resource %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            logger.info('BlindRun executable stdin (file: %s, fileno:%d):\n%s',
-                        rh_stdin.name, rh_stdin.fileno(), rh_stdin.read())
+            plocale = locale.getdefaultlocale()[1]
+            logger.info('BlindRun executable stdin (fileno:%d):\n%s',
+                        rh_stdin.fileno(), rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
         self.spawn(args, opts, stdin=rh_stdin)
 

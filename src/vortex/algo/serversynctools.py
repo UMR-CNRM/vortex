@@ -4,7 +4,6 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
-import six
 import socket
 import sys
 
@@ -111,7 +110,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Create the script that will be called by the server
         t = sessions.current()
         tpl = config.load_template(t, self.tplname)
-        with io.open(self.medium, 'wb') as fd:
+        with io.open(self.medium, 'wt') as fd:
             fd.write(tpl.substitute(
                 python  = sys.executable,
                 address = self._socket.getsockname(),
@@ -119,6 +118,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         t.sh.chmod(self.medium, 0o555)
 
     def __del__(self):
+        self._socket.close()
         if self._socket_conn is not None:
             logger.warning("The socket is still up... that's odd.")
         t = sessions.current()
@@ -130,13 +130,13 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         if self._socket_conn is not None:
             logger.info('Sending "%s" to the server.', mess)
             # NB: For send/recv, the settimeout also applies...
-            self._socket_conn.send(six.binary_type(mess))
-            repl = str(self._socket_conn.recv(255))
+            self._socket_conn.send(mess.encode(encoding='utf-8'))
+            repl = self._socket_conn.recv(255).decode(encoding='utf-8')
             logger.info('Server replied "%s".', repl)
-            if repl != 'OK':
-                raise ValueError(mess + ' failed')
             self._socket_conn.close()
             self._socket_conn = None
+            if repl != 'OK':
+                raise ValueError(mess + ' failed')
             return True
         else:
             # This should not happen ! If we are sitting here, it's most likely

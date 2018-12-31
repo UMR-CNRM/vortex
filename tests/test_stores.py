@@ -106,10 +106,10 @@ class TestVortexArchiveStore(unittest.TestCase):
             st = fp.proxy.store(scheme=puri['scheme'], netloc=puri['netloc'],
                                 storage='unittesttarget.fake.com')
             puri2 = st.remap_read(puri, dict())
-            self.assertEqual(uriunparse(puri2.values()[:6]), remap['rread'])
+            self.assertEqual(uriunparse(list(puri2.values())[:6]), remap['rread'])
             self.assertEqual(puri2.get('root', ''), remap['rread_root'])
             puri2 = st.remap_write(puri, dict())
-            self.assertEqual(uriunparse(puri2.values()[:6]), remap['rwrite'])
+            self.assertEqual(uriunparse(list(puri2.values())[:6]), remap['rwrite'])
             self.assertEqual(puri2.get('root', ''), remap['rwrite_root'])
 
     def test_remaps1(self):

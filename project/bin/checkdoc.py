@@ -135,7 +135,7 @@ def generate_console_report(report, light=False):
             print(hint)
             print()
     else:
-        for k, v in sorted(report.iteritems()):
+        for k, v in sorted(report.items()):
             print('=' * 80)
             print('REPORT /', k, '/', _KEY_TRANSLATION.get(k, k), '(', len(v), ')')
             for reportrst in v:
@@ -161,7 +161,7 @@ def generate_rst_report(rstoutput, report):
 
 def check_module(rstnames, rstloc, modulename, module, report):
     intro = Sherlock()
-    for objname, objptr1 in intro.getlocalmembers(module).iteritems():
+    for objname, objptr1 in intro.getlocalmembers(module).items():
         objtype = 'class' if inspect.isclass(objptr1) else 'function'
         if ((objtype, objname) not in rstnames) and (not objname.startswith('_')):
             report['miss'].append((rstloc + ': ' + objname,
@@ -173,7 +173,7 @@ def check_module(rstnames, rstloc, modulename, module, report):
             report['quid'].append(modulename + ': ' + objname)
         # Dig into classes methods
         if inspect.isclass(objptr1):
-            for objmeth, objptr2 in intro.getlocalmembers(objptr1, module).iteritems():
+            for objmeth, objptr2 in intro.getlocalmembers(objptr1, module).items():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
                     if (not ((re.match('__.*__$', objmeth)) or

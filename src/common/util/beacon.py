@@ -38,4 +38,4 @@ def beaconfunction(options):
         rst['error'] = 'No resource handler here'
     outstr = json.dumps(rst)
     # Return the string, which has to be converted to a file like object
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))

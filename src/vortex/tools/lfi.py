@@ -92,6 +92,10 @@ class LFI_Status(object):
                 print(l)
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self.rc in self.ok)
 
 

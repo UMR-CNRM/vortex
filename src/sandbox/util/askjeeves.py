@@ -25,7 +25,7 @@ def test_foo(pnum, ask, config, logger, **kw):
             logger.error('Bad duration from', data=ask.data)
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)
-    except StandardError as trouble:
+    except Exception as trouble:
         rc, value = False, str(trouble)
     return pnum, rc, value
 
@@ -93,7 +93,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
         duration = 1
         try:
             duration = float(data.duration)
-        except StandardError:
+        except Exception:
             logger.error('Bad duration type', duration=data.duration)
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)

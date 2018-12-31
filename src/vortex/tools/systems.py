@@ -803,7 +803,7 @@ class OSExtended(System):
             return False
 
     def spawn(self, args, ok=None, shell=False, stdin=None, output=None,
-              outmode='a', outsplit=True, silent=False, fatal=True,
+              outmode='a+b', outsplit=True, silent=False, fatal=True,
               taskset=None, taskset_id=0, taskset_bsize=1):
         """Subprocess call of **args**.
 
@@ -921,7 +921,7 @@ class OSExtended(System):
                 raise
             else:
                 logger.warning('Carry on because fatal is off')
-        except StandardError as perr:
+        except Exception as perr:
             logger.critical('System returns %s', str(perr))
             if fatal:
                 raise RuntimeError('System {!s} spawned {!s} got [{!s}]: {!s}'
@@ -940,7 +940,7 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
-            plocale = locale.getpreferredencoding(False)
+            plocale = locale.getdefaultlocale()[1]
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
                     rc = p_out.decode(plocale, 'replace')
@@ -953,10 +953,9 @@ class OSExtended(System):
                 if not silent:
                     logger.warning('Bad return code [%d] for %s', p.returncode, str(args))
                     if isinstance(output, bool) and output:
-                        for xerr in p_err:
-                            sys.stderr.write(xerr.decode(plocale, 'replace'))
+                        sys.stderr.write(p_err.decode(plocale, 'replace'))
                 if fatal:
-                    raise ExecutionError
+                    raise ExecutionError()
                 else:
                     logger.warning('Carry on because fatal is off')
         finally:
@@ -1142,7 +1141,7 @@ class OSExtended(System):
             # Note: "filename" might as well be a directory...
             try:
                 os.utime(filename, None)
-            except StandardError:
+            except Exception:
                 rc = False
         else:
             fh = io.open(filename, 'a')
@@ -1324,7 +1323,7 @@ class OSExtended(System):
         return iocandidate is not None and (
             (isinstance(iocandidate, six.string_types) and self.path.exists(iocandidate)) or
             isinstance(iocandidate, (file, io.IOBase) if six.PY2 else io.IOBase) or
-            isinstance(iocandidate, six.StringIO)
+            isinstance(iocandidate, six.BytesIO) or isinstance(iocandidate, six.StringIO)
         )
 
     @contextlib.contextmanager
@@ -1562,8 +1561,11 @@ class OSExtended(System):
             if logname:
                 extras.extend(['-u', logname])
             ftcmd = self.ftgetcmd or 'ftget'
-            with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0]))) as tmpio:
-                tmpio.writelines(['{:s} {:s}\n'.format(s, d) for s, d in zip(source, destination)])
+            plocale = locale.getdefaultlocale()[1]
+            with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0])),
+                                        mode='wb') as tmpio:
+                tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)
+                                  for s, d in zip(source, destination)])
                 tmpio.seek(0)
                 rc = self.spawn([ftcmd, ] + extras, output=False, stdin=tmpio)
         else:
@@ -1799,7 +1801,7 @@ class OSExtended(System):
         self.stderr('size', filepath)
         try:
             return self.stat(filepath).st_size
-        except StandardError:
+        except Exception:
             return -1
 
     def treesize(self, objpath):
@@ -2245,7 +2247,7 @@ class OSExtended(System):
         self.stderr('move', source, destination)
         try:
             self._sh.move(source, destination)
-        except StandardError:
+        except Exception:
             logger.critical('Could not move <%s> to <%s>', source, destination)
             raise
         else:
@@ -2423,7 +2425,7 @@ class OSExtended(System):
         ext = objname.replace(radix, '')
         return (radix, ext)
 
-    def blind_dump(self, gateway, obj, destination, **opts):
+    def blind_dump(self, gateway, obj, destination, bytesdump=False, **opts):
         """
         Use **gateway** for a blind dump of the **obj** in file **destination**,
         (either a file descriptor or a filename).
@@ -2433,7 +2435,8 @@ class OSExtended(System):
             rc = gateway.dump(obj, destination, **opts)
         else:
             if self.filecocoon(destination):
-                with io.open(self.path.expanduser(destination), 'wb') as fd:
+                with io.open(self.path.expanduser(destination),
+                             'w' + ('b' if (bytesdump or six.PY2) else '')) as fd:
                     rc = gateway.dump(obj, fd, **opts)
         return rc
 
@@ -2442,7 +2445,7 @@ class OSExtended(System):
         Dump a pickled representation of specified **obj** in file **destination**,
         (either a file descriptor or a filename).
         """
-        return self.blind_dump(pickle, obj, destination, **opts)
+        return self.blind_dump(pickle, obj, destination, bytesdump=True, **opts)
 
     def json_dump(self, obj, destination, **opts):
         """
@@ -2459,7 +2462,7 @@ class OSExtended(System):
         """
         return self.blind_dump(yaml, obj, destination, **opts)
 
-    def blind_load(self, source, gateway=None):
+    def blind_load(self, source, gateway=None, bytesload=False):
         """
         Use **gateway** for a blind load the representation stored in file **source**,
         (either a file descriptor or a filename).
@@ -2467,9 +2470,10 @@ class OSExtended(System):
         if hasattr(source, 'read'):
             obj = gateway.load(source)
         else:
-            with io.open(self.path.expanduser(source), 'rb') as fd:
-                if gateway is None:
-                    gateway = sys.modules.get(source.split('.')[-1].lower(), yaml)
+            if gateway is None:
+                gateway = sys.modules.get(source.split('.')[-1].lower(), yaml)
+            with io.open(self.path.expanduser(source),
+                         'r' + ('b' if bytesload else '')) as fd:
                 obj = gateway.load(fd)
         return obj
 
@@ -2478,7 +2482,7 @@ class OSExtended(System):
         Load from a pickled representation stored in file **source**,
         (either a file descriptor or a filename).
         """
-        return self.blind_load(source, gateway=pickle)
+        return self.blind_load(source, gateway=pickle, bytesload=True)
 
     def json_load(self, source):
         """

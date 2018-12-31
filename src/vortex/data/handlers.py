@@ -111,9 +111,9 @@ class Handler(object):
         self._mdcheck       = self._options.pop('metadatacheck', False)
         self._mddelta       = self._options.pop('metadatadelta', dict())
         self._ghost         = self._options.pop('ghost', False)
-        self._hooks         = {x[5:]: self._options.pop(x)
-                               for x in self._options.keys()
-                               if x.startswith('hook_')}
+        hook_names          = [x for x in self._options.keys()
+                               if x.startswith('hook_')]
+        self._hooks         = {x[5:]: self._options.pop(x) for x in hook_names}
         self._delayhooks    = self._options.pop('delayhooks', False)
 
         self._history = History(tag='data-handler')
@@ -312,7 +312,7 @@ class Handler(object):
         if self.provider and self.resource:
             try:
                 self._lasturl = self.provider.uri(self.resource)
-            except StandardError as e:
+            except Exception as e:
                 if fatal:
                     raise
                 else:
@@ -584,7 +584,7 @@ class Handler(object):
                     self.container.iotarget(),
                     st_options,
                 )
-            except StandardError:
+            except Exception:
                 rst = False
                 raise
             finally:
@@ -634,6 +634,7 @@ class Handler(object):
                 cur_tracker = self._cur_context.localtracker
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
+                print('GUIK0', self.container.exists(), cur_tracker.is_tracked_input(iotarget))
                 if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
                     # Am I consistent with the ResourceHandler recorded in the tracker ?
                     if cur_tracker[iotarget].match_rh('get', self):

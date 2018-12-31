@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import json
 import logging
 import os
 
@@ -147,15 +148,12 @@ class UtEnv(TestCase):
         e['toto'] = list(range(1, 4))
         self.assertEqual(os.environ['TOTO'], '[1, 2, 3]')
         e['toto'] = dict(toto = 2, fun = 'coucou')
-        self.assertEqual(os.environ['TOTO'], '{"fun": "coucou", "toto": 2}')
+        self.assertEqual(json.loads(os.environ['TOTO']),
+                         dict(toto = 2, fun = 'coucou'))
         e['toto'] = self.res
         self.assertEqual(
-            os.environ['TOTO'],
-            '{"cutoff": "production", "kind": "analysis", "nativefmt": "fa", "geometry": "global798", '
-            '"filling": "full", "filtering": null, "date": "201304231500", '
-            '"clscontents": ["vortex.data.contents", "FormatAdapter"], '
-            '"model": "arpege"}'
-        )
+            json.loads(os.environ['TOTO']),
+            json.loads(json.dumps(self.res.footprint_export())))
         e.active(False)
 
     def test_delta(self):

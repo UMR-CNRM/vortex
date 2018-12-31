@@ -1434,9 +1434,11 @@ class Time(_GetattrCalculatorMixin):
         """The number of minutes"""
         return self._minute
 
-    def __deepcopy__(self, memo):  # @UnusedVariable
+    def __deepcopy__(self, memo):
         """Clone of the current :class:`Time` object."""
-        return Time(self.hour, self.minute)
+        newinstance = Time(self.hour, self.minute)
+        memo[id(self)] = newinstance
+        return newinstance
 
     def __repr__(self):
         """Standard hour-minute representation."""

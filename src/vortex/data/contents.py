@@ -38,9 +38,19 @@ class DataContent(object):
         for k, v in six.iteritems(kw):
             self.__dict__['_' + k] = v
 
+    def __setstate__(self, state):
+        """
+        Needed for Python3 otherwise, __getattr__ is called while building
+        the new object.
+        """
+        self.__dict__.update(state)
+
     def __getattr__(self, attr):
         """Forward get attribute request to internal data object."""
-        return getattr(self.data, attr)
+        if attr not in ('__getstate__', '__deepcopy__'):
+            return getattr(self.data, attr)
+        else:
+            raise AttributeError(attr)
 
     def __enter__(self):
         """Enter a :keyword:`with` context."""
@@ -212,9 +222,10 @@ class IndexedTable(AlmostDictContent):
 
     def slurp(self, container):
         """Get data from the ``container``."""
-        container.rewind()
-        self.extend([ x.split() for x in container.readlines() if not x.startswith('#') ])
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self.extend([x.split() for x in container.readlines() if not x.startswith('#')])
+            self._size = container.totalsize
 
 
 class JsonDictContent(AlmostDictContent):
@@ -225,17 +236,20 @@ class JsonDictContent(AlmostDictContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
-        container.rewind()
-        self._data = t.sh.json_load(container.iotarget())
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._data = t.sh.json_load(container.iotarget())
+            self._size = container.totalsize
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         t = sessions.current()
         container.close()
-        mode = container.set_wmode(container.mode)
-        iod = container.iodesc(mode)
-        t.sh.json_dump(self.data, iod, indent=4)
+        # In Python 2, json.dumps returns 'str', not unicode...
+        with container.preferred_decoding(byte=False if six.PY3 else True):
+            with container.preferred_write():
+                iod = container.iodesc()
+                t.sh.json_dump(self.data, iod, indent=4)
         container.updfill(True)
 
 
@@ -314,8 +328,9 @@ class AlmostListContent(DataContent):
         self._do_delayed_slurp = None
 
     def _actual_slurp(self, container):
-        self._data.extend(container.readlines())
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            self._data.extend(container.readlines())
+            self._size = container.totalsize
         self._do_delayed_slurp = None
 
     def slurp(self, container):
@@ -328,8 +343,9 @@ class AlmostListContent(DataContent):
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         container.close()
-        for xline in self:
-            container.write(xline)
+        with container.preferred_decoding(byte=False):
+            for xline in self:
+                container.write(xline)
 
     def sort(self, **sort_opts):
         """Sort the current object."""
@@ -371,8 +387,9 @@ class TextContent(AlmostListContent):
         return '\n'.join([six.text_type(x) for x in catlist])
 
     def _actual_slurp(self, container):
-        self._data.extend([ x.split() for x in container if not x.startswith('#') ])
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            self._data.extend([x.split() for x in container if not x.startswith('#')])
+            self._size = container.totalsize
         self._do_delayed_slurp = None
 
     def formatted_data(self, item):
@@ -385,8 +402,9 @@ class TextContent(AlmostListContent):
     def rewrite(self, container):
         """Write the text contents in the specified container."""
         container.close()
-        for item in self:
-            container.write(self.formatted_data(item) + '\n')
+        with container.preferred_decoding(byte=False):
+            for item in self:
+                container.write(self.formatted_data(item) + '\n')
 
 
 class DataRaw(AlmostListContent):
@@ -401,13 +419,14 @@ class DataRaw(AlmostListContent):
         super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
 
     def _actual_slurp(self, container):
-        container.rewind()
-        end = False
-        while not end:
-            data, end = container.dataread()
-            self._data.append(data)
-            if self._window and len(self._data) >= self._window:
-                end = True
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            end = False
+            while not end:
+                data, end = container.dataread()
+                self._data.append(data)
+                if self._window and len(self._data) >= self._window:
+                    end = True
         self._do_delayed_slurp = None
 
 
@@ -419,9 +438,10 @@ class DataTemplate(DataContent):
 
     def slurp(self, container):
         """Actually read a container."""
-        super(DataTemplate, self).slurp(container)
-        container.rewind()
-        self._data = container.read()
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._data = container.read()
+            super(DataTemplate, self).slurp(container)
 
     def setitems(self, keyvaluedict):
         """
@@ -436,7 +456,8 @@ class DataTemplate(DataContent):
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         container.close()
-        container.write(self.data)
+        with container.preferred_decoding(byte=False):
+            container.write(self.data)
 
 
 class FormatAdapter(DataContent):

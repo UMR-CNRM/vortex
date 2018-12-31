@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 from contextlib import contextmanager
 import os
-import six
 import sys
 import unittest
 
@@ -60,6 +60,12 @@ def capture(command, *args, **kwargs):
 
 class TestArpIfsIntegration(unittest.TestCase):
 
+    def assertRegex(self, *kargs, **kwargs):
+        if six.PY3:
+            return super(TestArpIfsIntegration, self).assertRegex(*kargs, **kwargs)
+        else:
+            return super(TestArpIfsIntegration, self).assertRaisesRegexp(*kargs, **kwargs)
+
     def test_addons_diff(self):
         addon = listings.ArpIfsListingsTool(kind='arpifs_listings',
                                             sh=vortex.ticket().system())
@@ -67,16 +73,16 @@ class TestArpIfsIntegration(unittest.TestCase):
         rc = addon.arpifslist_diff(_find_testfile('listing_screen_li1'),
                                    _find_testfile('listing_screen_li1'))
         self.assertTrue(rc)
-        self.assertRegexpMatches(str(rc), r"rc=1")
-        self.assertRegexpMatches(str(rc.result), r"NormsOk=1 JoTablesOk=1")
+        self.assertRegex(str(rc), r"rc=1")
+        self.assertRegex(str(rc.result), r"NormsOk=1 JoTablesOk=1")
         with capture(rc.result.differences) as output:
             self.assertEqual(output, _NODIFFS)
         # Listings are different
         rc = addon.arpifslist_diff(_find_testfile('listing_screen_li1'),
                                    _find_testfile('listing_screen_li2'))
         self.assertFalse(rc)
-        self.assertRegexpMatches(str(rc), r"rc=0")
-        self.assertRegexpMatches(str(rc.result), r"NormsOk=0 JoTablesOk=0")
+        self.assertRegex(str(rc), r"rc=0")
+        self.assertRegex(str(rc.result), r"NormsOk=0 JoTablesOk=0")
         with capture(rc.result.differences) as output:
             self.assertEqual(output, _BIGDIFFS)
 

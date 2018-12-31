@@ -691,7 +691,7 @@ def diff(*args, **kw):
                 try:
                     logger.error('Cannot get the reference resource: %s',
                                  rhandler.locate())
-                except StandardError:
+                except Exception:
                     logger.error('Cannot get the reference resource: ???')
                 if fatal:
                     raise ValueError('Cannot get the reference resource')
@@ -726,11 +726,11 @@ def diff(*args, **kw):
             if not rc:
                 try:
                     logger.warning('Some diff occurred with %s', rhandler.locate())
-                except StandardError:
+                except Exception:
                     logger.warning('Some diff occurred with ???')
                 try:
                     rc.result.differences()
-                except StandardError:
+                except Exception:
                     pass
                 if fatal:
                     logger.critical('Difference in resource comparison is fatal')

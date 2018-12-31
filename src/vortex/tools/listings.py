@@ -91,6 +91,10 @@ class ArpIfsListingDiff_Status(object):
         return self._result
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self._norms_ok and self._jos_ok)
 
 
