@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import os
+import platform
 import stat
 import subprocess
 import tempfile
@@ -172,6 +173,24 @@ class TestSsh(_SshTestBase):
         self.assertTrue(self.ssh.scpget(self.ref1, dest_cp4))
         self.assertTrue(self.ssh.scpget(dest_cp4, dest_cp4 + '.bis'))
         self.assertIsCopy1(dest_cp4 + '.bis')
+
+    @unittest.skipUnless(platform.system() == 'Linux', 'Linux system check')
+    def test_tunnel(self):
+        # Obviously, port #22 is already in use !
+        self.assertFalse(self.ssh.tunnel(test_host, 22, 22, maxwait=1., checkdelay=0.1))
+        # Doing a tunnel to myself... pretty useless but it's a test
+        tunnel = self.ssh.tunnel(test_host, 22, checkdelay=0.1)
+        self.assertTrue(tunnel.opened)
+        self.assertEqual(tunnel.finaldestination, test_host)
+        self.assertEqual(tunnel.finalport, 22)
+        with tunnel:
+            # Create a new SSH instance that goes through the tunnel
+            sshbis = self._SSH_CLASS(self.sh, test_host, logname=self.user,
+                                     sshopts='-p {:d}'.format(tunnel.entranceport),
+                                     **self._SSH_EXTRA_ARGS)
+            self.assertTrue(sshbis.check_ok())
+            self.assertFalse(sshbis.execute('false'))
+        self.assertFalse(tunnel.opened)
 
 
 # The AssistedSsh class should be compatible with the Ssh one...
