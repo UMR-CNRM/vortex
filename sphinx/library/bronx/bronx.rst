@@ -13,6 +13,7 @@
 Sub-packages
 ------------
 
+* :mod:`bronx.compat`
 * :mod:`bronx.datagrip`
 * :mod:`bronx.fancies`
 * :mod:`bronx.graphics`

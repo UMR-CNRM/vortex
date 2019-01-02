@@ -4,8 +4,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import numpy as np
-import random
 
+from bronx.compat import random
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
@@ -375,7 +375,8 @@ class Escroc_Optim_Ensemble(TaylorRun):
         else:
             # Initialization
             # We want that all sites are tested with the same subensembles, this is why we fix the argument of random.seed()
-            random.seed(0)
+            rgen = random.Random()
+            rgen.seed(0)
             local_members = []
 
             for iteration in range(0, niter):
@@ -385,7 +386,7 @@ class Escroc_Optim_Ensemble(TaylorRun):
                 print(type(candidates))
                 # Randomly select nmembers members
                 for m in range(0, nmembers):
-                    member = random.choice(candidates)
+                    member = rgen.choice(candidates)
                     listTest.append(member)
                     candidates.remove(member)
                 local_members.append(listTest)

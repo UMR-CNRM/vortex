@@ -9,9 +9,9 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import six
 import json
-from random import seed, sample
 import re
 
+from bronx.compat import random
 from bronx.fancies import loggers
 
 from vortex import sessions
@@ -49,7 +49,8 @@ def drawingfunction(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         date = rhdict['resource']['date']
-        seed(int(date[:-2]))
+        rgen = random.Random()
+        rgen.seed(int(date[:-2]))
         nbsample = rhdict['resource'].get('nbsample', 0)
         if not nbsample:
             raise FunctionStoreCallbackError('The resource must hold a non-null nbsample attribute')
@@ -58,8 +59,8 @@ def drawingfunction(options):
             raise FunctionStoreCallbackError('The resource must hold a non-empty population attribute')
         nbset = len(population)
 
-        tirage = (sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
-                  sample(population, nbsample % nbset))
+        tirage = (rgen.sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
+                  rgen.sample(population, nbsample % nbset))
         logger.info('List of random elements: %s', ', '.join([six.text_type(x) for x in tirage]))
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
