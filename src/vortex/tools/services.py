@@ -147,6 +147,10 @@ class MailService(Service):
                 optional = True,
                 default  = 'localhost',
             ),
+            smtpport = dict(
+                type = int,
+                optional = True,
+            ),
             altmailx = dict(
                 optional = True,
                 default  = '/usr/sbin/sendmail',
@@ -271,7 +275,10 @@ class MailService(Service):
             self.sh.remove(tmpmsgfile)
         else:
             import smtplib
-            smtp = smtplib.SMTP(self.smtpserver)
+            extras = dict()
+            if self.smtpport:
+                extras['port'] = self.smtpport
+            smtp = smtplib.SMTP(self.smtpserver, ** extras)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
@@ -721,7 +728,7 @@ class TemplatedMailService(MailService):
                 result = tpl.substitute(tpldict)
             except KeyError as exc:
                 logger.error('Undefined key <%s> in template substitution level %d',
-                             exc.message, level + 1)
+                             str(exc), level + 1)
                 result = tpl.safe_substitute(tpldict)
             except ValueError as exc:
                 logger.error('Illegal syntax in template: %s', exc.message)

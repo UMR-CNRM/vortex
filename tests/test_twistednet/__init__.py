@@ -14,3 +14,13 @@ def has_ftpservers():
         return False
     else:
         return True
+
+
+def has_mailservers():
+    try:
+        import twisted.internet
+        import twisted.mail
+    except ImportError:
+        return False
+    else:
+        return True

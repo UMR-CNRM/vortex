@@ -11,6 +11,7 @@ import itertools
 import multiprocessing as mproc
 import os
 import signal
+import sys
 import time
 
 from bronx.fancies import loggers
@@ -20,6 +21,10 @@ from twisted.cred.portal import Portal
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import reactor
 
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+
+from test_twistednet.utils import wait_for_port
 
 logger = loggers.getLogger(__name__)
 
@@ -124,12 +129,16 @@ class TestFTPServer(object):
         reactor.run()
         return True
 
+    def check_port(self):
+        wait_for_port(self.port)
+
     @contextlib.contextmanager
     def __call__(self):
         p = mproc.Process(target=self._server_task)
         p.start()
-        time.sleep(0.5)
         try:
+            self.check_port()
+            logger.info('The test FTP server is ready on port: %d', self.port)
             yield
         finally:
             p.terminate()
