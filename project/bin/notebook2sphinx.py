@@ -5,15 +5,16 @@ Automatically convert notebooks to a set of RST files.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
-
-import shutil
+import six
 
 argparse_epilog = '''
 '''
 
 import collections
+import io
 import logging
 import os
+import shutil
 import sys
 import re
 import tarfile
@@ -86,7 +87,7 @@ class DefaultExporter(object):
 
     def _add_automatic_ref(self, rst, myname):
         """Add an automatic reference in the export."""
-        return '.. _nbook-{:s}:\n\n{:s}'.format(myname, rst.encode('utf-8'))
+        return '.. _nbook-{:s}:\n\n{:s}'.format(myname, rst)
 
     def _add_download(self, rst, a_file):
         """Add a download link in the export."""
@@ -121,12 +122,12 @@ class DefaultExporter(object):
         rst_dir = os.path.dirname(rst_out)
         if not os.path.exists(rst_dir):
             os.makedirs(rst_dir)
-        with open(rst_out, 'w') as rstfh:
+        with io.open(rst_out, 'w', encoding='utf-8') as rstfh:
             rstfh.write(rst)
         # Also write potential image files
-        for additional, rawdata in resources['outputs'].iteritems():
+        for additional, rawdata in six.iteritems(resources['outputs']):
             add_out = os.path.join(rst_dir, additional)
-            with open(add_out, 'w') as addfh:
+            with io.open(add_out, 'wb') as addfh:
                 addfh.write(rawdata)
             logger.debug('Additional file writen: %s', add_out)
         logger.info("written: %s (additions: %s)",
@@ -172,10 +173,10 @@ def _tar_notebooks(tarname, files):
     tarmode_extra = ':' + tarext[1:] if tarext in ('.bz2', '.gz') else ''
     if tarmode_extra:
         logger.debug("Enabling compression on the tar file (%s)", tarmode_extra[1:])
-    with open(tarname, 'w') as tarfh:
+    with io.open(tarname, 'wb') as tarfh:
         tfile = tarfile.open(fileobj=tarfh, mode='w' + tarmode_extra)
         for a_file in files:
-            logger.debug("Adding %s to the %s Tar file.", tarname, a_file)
+            logger.info("Adding %s to the %s Tar file.", a_file, tarname)
             tfile.add(a_file)
         tfile.close()
 
@@ -194,13 +195,13 @@ def _index_auto_generate(outputdir, files):
         if lastdirname != '':
             toindex[radix_m1].append(os.path.join(lastdirname, 'index.rst'))
     toindex = {k: sorted(set(v)) for k, v in toindex.items()}
-    toindex_keys = toindex.keys()
+    toindex_keys = list(toindex.keys())
     toindex_keys.sort(key=lambda f: f.upper())
     for radix in toindex_keys:
         toc = ('.. toctree::\n   :titlesonly:\n\n' +
                '\n'.join(['   ' + n for n in toindex[radix]]) + '\n\n')
         if os.path.exists(os.path.join(radix, _INDEX_SKEL)):
-            with open(os.path.join(radix, _INDEX_SKEL), 'r') as rstfh:
+            with io.open(os.path.join(radix, _INDEX_SKEL), 'r', encoding='utf-8') as rstfh:
                 full = rstfh.read()
         else:
             if radix == '':
@@ -208,7 +209,7 @@ def _index_auto_generate(outputdir, files):
             else:
                 full = _INDEX_SUB_HEAD.format(sub=radix, ti='#' * len(radix))
         full += toc
-        with open(os.path.join(outputdir, radix, 'index.rst'), 'w') as rstfh:
+        with io.open(os.path.join(outputdir, radix, 'index.rst'), 'w', encoding='utf-8') as rstfh:
             rstfh.write(full)
 
 

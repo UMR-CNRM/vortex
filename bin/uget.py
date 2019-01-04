@@ -6,16 +6,16 @@ Utility that manages the Uget Hack and Archive Stores.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
+import six
 
 import cmd
-import ConfigParser
+from six.moves import configparser
 import io
 import itertools
 import locale
 import logging
 import os
 import re
-import six
 import stat
 import sys
 from tempfile import mkdtemp
@@ -101,7 +101,7 @@ class UGetShell(cmd.Cmd):
     _valid_hack = re.compile(r'(?P<gco>g)?(?P<what>data|env)\s+' + _valid_partial_baseid + r'\s+' +
                              r'into\s+' + _valid_partial_ugetid + '$')
     _valid_set = re.compile(r'(?:(?P<what1>storage|location)\s+(?P<value>\S+)|' +
-                                '(?P<what2>ftuser)\s+(?P<user>\S+)\s+for\s+(?P<target>\S+))$')
+                            r'(?P<what2>ftuser)\s+(?P<user>\S+)\s+for\s+(?P<target>\S+))$')
     _valid_bootstraphack = re.compile(r'(?P<bootlocation>\w+)')
 
     _config_file = sh.path.join(gl.configrc, 'uget-client-defaults.ini')
@@ -118,10 +118,13 @@ class UGetShell(cmd.Cmd):
 
     def __init__(self, *kargs, **kwargs):
         cmd.Cmd.__init__(self, *kargs, **kwargs)
-        self._config = ConfigParser.SafeConfigParser()
+        if six.PY2:
+            self._config = configparser.SafeConfigParser()
+        else:
+            self._config = configparser.ConfigParser()
         # Read the configuration
         if sh.path.exists(self._config_file):
-            with open(self._config_file) as fhconf:
+            with io.open(self._config_file, 'r') as fhconf:
                 self._config.readfp(fhconf)
         else:
             # Or create a void one...
@@ -150,7 +153,7 @@ class UGetShell(cmd.Cmd):
         """Set a variable in the configuration file."""
         value = 'None' if value is None else value  # None string are converted to None objects
         return self._config.set('cli', key, value)
-    
+
     def _locationconfig_set(self, location, key, value):
         """Set a variable in the configuration file."""
         if value not in (None, 'None', 'none'):
@@ -217,8 +220,11 @@ class UGetShell(cmd.Cmd):
     @property
     def _storelist(self):
         """Iterate over the hack and archive stores."""
-        return itertools.izip(('Hack', 'Archive'),
-                              (self._storehack, self._storearch))
+        if six.PY2:
+            return itertools.izip(('Hack', 'Archive'),
+                                  (self._storehack, self._storearch))
+        else:
+            return zip(('Hack', 'Archive'), (self._storehack, self._storearch))
 
     def _uri(self, store, path):
         """Build up an URI given the store object and the path."""
@@ -308,12 +314,13 @@ class UGetShell(cmd.Cmd):
             # Look for comment line that contains informations about the parent env
             if mline['parent']:
                 # Fetch the target uenv file
-                uenvfile = six.StringIO()
+                uenvfile = six.BytesIO()
                 uri = self._uri(self._storeweak, ('env', mline['shortuget']))
                 # Should always work since self._uenv_contents was called before...
                 self._storeweak.get(uri, uenvfile)
                 uenvfile.seek(0)
-                for l in uenvfile.readlines():
+                for l in [l.decode(encoding='utf-8', errors='ignore')
+                          for l in uenvfile.readlines()]:
                     cmatch = self._hack_commentline_re.match(l.rstrip('\n'))
                     if cmatch:
                         ref_cb = self._genv_contents if cmatch.group('gco') else self._uenv_contents
@@ -438,8 +445,8 @@ class UGetShell(cmd.Cmd):
         omitted, the default one is used).
         """
         print('Default location: {!s}'.format(self._cliconfig_get('location')))
-        print('Hack store      : {:s}'.format(self._storehack))
-        print('Archive store   : {:s}'.format(self._storearch))
+        print('Hack store      : {!s}'.format(self._storehack))
+        print('Archive store   : {!s}'.format(self._storearch))
         ftuser_associations = [s for s in self._config.sections()
                                if s.startswith('location_') and self._config.has_option(s, 'ftuser')]
         if ftuser_associations:
@@ -478,7 +485,7 @@ class UGetShell(cmd.Cmd):
           the default one is used).
 
         Second syntax: set ftuser username for a_location
-        
+
         * 'set ftuser' tells uget.py to use 'username' when connectind to the
           uget's archive store when working with location 'a_location'
         * If 'username' is 'None', any existing association for 'a_location' is
@@ -498,7 +505,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('location', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with open(self._config_file, 'w') as fpconf:
+            with io.open(self._config_file, 'w') as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):
@@ -726,7 +733,7 @@ class UGetShell(cmd.Cmd):
         if mline:
             # name of the temporary file
             if mline['what'] == 'env':
-                tofile = six.StringIO()
+                tofile = six.BytesIO()
             else:
                 tofile = mline['id'] + sh.safe_filesuffix()
             # retrieve the resource"
@@ -742,7 +749,7 @@ class UGetShell(cmd.Cmd):
                     print()
                     tofile.seek(0)
                     for l in tofile:
-                        print(l.rstrip('\n'))
+                        print(l.decode(encoding='utf-8', errors='ignore').rstrip('\n'))
                     print()
                 else:
                     sh.mv(tofile, mline['id'])
@@ -897,7 +904,7 @@ class UGetShell(cmd.Cmd):
                         if not mygenv:
                             self._error("Could not get genv < {:s} >".format(source_element))
                             return False
-                        with open(tfile, 'w') as tfilefh:
+                        with io.open(tfile, 'w') as tfilefh:
                             tfilefh.writelines(['{:s}={:s}\n'.format(k, v)
                                                 for k, v in sorted(mygenv.items()) if k not in ('cycle', )])
                     # The source is a gget data
@@ -939,10 +946,11 @@ class UGetShell(cmd.Cmd):
                         return False
                 if mline['what'] == 'env':
                     # Add a comment line at the beginning of the new environment file
-                    finalenv = six.StringIO()
+                    finalenv = six.BytesIO()
                     finalenv.write(self._hack_commentline_fmt
-                                   .format('genv' if mline['gco'] else 'uenv', mline['baseshort']))
-                    with io.open(tfile, 'r') as fhini:
+                                   .format('genv' if mline['gco'] else 'uenv', mline['baseshort'])
+                                   .encode(encoding='utf-8'))
+                    with io.open(tfile, 'rb') as fhini:
                         finalenv.write(fhini.read())
                     finalenv.seek(0)
                     tfile = finalenv

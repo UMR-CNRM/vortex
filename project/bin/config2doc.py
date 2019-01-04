@@ -170,7 +170,7 @@ def geometry_rst(outfile, verbose=0):
     geofile = sh.path.join(t.glove.siteconf, 'geometries.ini')
     logger.info('Processing the following geometry file: {}'.format(geofile))
     # The geometries are reload: it discards changes made in a personal config file
-    geometries.load(inifile=geofile, refresh=True, verbose=verbose > 0)
+    geometries.load(inifile=geofile, refresh=True, verbose=(verbose or 0) > 0)
     logger.debug('The default geometry file was reloaded')
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(geofile, section_cb=geometry_easydump)

@@ -145,7 +145,7 @@ def makejob(job):
 
     t.sh.header(' '.join(('Vortex', vortex.__version__, 'job builder')))
 
-    for k, v in opts.iteritems():
+    for k, v in opts.items():
         print(_INFO_PRINT_FMT.format(k, v))
 
     if not opts['name']:
@@ -159,7 +159,7 @@ def makejob(job):
 
     t.sh.header('Template configuration')
 
-    for k, v in sorted(tplconf.iteritems()):
+    for k, v in sorted(tplconf.items()):
         print(_INFO_PRINT_FMT.format(k, v))
 
     def _wrap_launch(jobfile):
