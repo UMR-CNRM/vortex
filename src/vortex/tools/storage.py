@@ -494,7 +494,7 @@ class Cache(Storage):
         return rc, dict(fmt=fmt)
 
 
-DEFAULT_ARCHIVE_TUBES = ['ftp, ']
+DEFAULT_ARCHIVE_TUBES = ['ftp', ]
 
 
 class Archive(Storage):
@@ -599,13 +599,29 @@ class Archive(Storage):
         else:
             return False, dict()
 
+    @property
+    def _ftp_hostinfos(self):
+        """Return the FTP hostname end port number."""
+        s_storage = self.actual_storage.split(':', 1)
+        hostname = s_storage[0]
+        port = None
+        if len(s_storage) > 1:
+            try:
+                port = int(s_storage[1])
+            except ValueError:
+                logger.error('Invalid port number < %s >. Ignoring it', s_storage[1])
+        return hostname, port
+
+    def _ftp_client(self, logname=None, delayed=False):
+        """Return a FTP client object."""
+        hostname, port = self._ftp_hostinfos
+        return self.sh.ftp(hostname, logname=logname, delayed=delayed, port=port)
+
     def _ftpfullpath(self, item, **kwargs):
         """Actual _fullpath using ftp."""
         username = kwargs.get('username', None)
         rc = None
-        ftp = self.sh.ftp(hostname=self.actual_storage,
-                          logname=username,
-                          delayed = True)
+        ftp = self._ftp_client(logname=username, delayed=True)
         if ftp:
             try:
                 rc = ftp.netpath(item)
@@ -617,9 +633,7 @@ class Archive(Storage):
         """Actual _prestageinfo using ftp."""
         username = kwargs.get('username', None)
         if username is None:
-            ftp = self.sh.ftp(hostname=self.actual_storage,
-                              logname=username,
-                              delayed = True)
+            ftp = self._ftp_client(logname=username, delayed=True)
             if ftp:
                 try:
                     username = ftp.logname
@@ -632,10 +646,8 @@ class Archive(Storage):
 
     def _ftpcheck(self, item, **kwargs):
         """Actual _check using ftp."""
-        username = kwargs.get('username', None)
         rc = None
-        ftp = self.sh.ftp(hostname=self.actual_storage,
-                          logname=username)
+        ftp = self._ftp_client(logname=kwargs.get('username', None))
         if ftp:
             try:
                 rc = ftp.size(item)
@@ -649,9 +661,7 @@ class Archive(Storage):
 
     def _ftplist(self, item, **kwargs):
         """Actual _list using ftp."""
-        ftp = self.sh.ftp(self.actual_storage,
-                          kwargs.get('username', None),
-                          delayed=True)
+        ftp = self._ftp_client(logname=kwargs.get('username', None))
         if ftp:
             try:
                 # Is this a directory ?
@@ -670,7 +680,7 @@ class Archive(Storage):
             else:
                 # Content of the directory...
                 if rc:
-                    rc = ftp.nlst()
+                    rc = ftp.nlst('.')
             finally:
                 ftp.close()
         return rc, dict()
@@ -680,11 +690,14 @@ class Archive(Storage):
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.actual_storage, item, local)
         extras = dict(fmt=kwargs.get('fmt', 'foo'),
                       cpipeline=kwargs.get('compressionpipeline', None))
+        hostname, port = self._ftp_hostinfos
+        if port is not None:
+            extras['port'] = port
         rc = self.sh.smartftget(
             item,
             local,
             # Ftp control
-            hostname = self.actual_storage,
+            hostname = hostname,
             logname = kwargs.get('username', None),
             ** extras
         )
@@ -725,16 +738,19 @@ class Archive(Storage):
 
     def _ftpinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
-        sync_insert = kwargs.get('sync')
+        sync_insert = kwargs.get('sync', True)
+        hostname, port = self._ftp_hostinfos
         if sync_insert:
             logger.info('ftpput to ftp://%s/%s (from: %s)', self.actual_storage, item, local)
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
                           cpipeline=kwargs.get('compressionpipeline', None))
+            if port is not None:
+                extras['port'] = port
             rc = self.sh.smartftput(
                 local,
                 item,
                 # Ftp control
-                hostname = self.actual_storage,
+                hostname = hostname,
                 logname = kwargs.get('username', None),
                 sync = kwargs.get('enforcesync', False),
                 ** extras
@@ -748,8 +764,10 @@ class Archive(Storage):
                 compressionpipeline = compressionpipeline.description_string
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
                           cpipeline=compressionpipeline)
+            if port is not None:
+                extras['port'] = port
             rc = ad.jeeves(
-                hostname = self.actual_storage,
+                hostname = hostname,
                 logname = kwargs.get('username', None),
                 todo = 'ftput',
                 rhandler = kwargs.get('info', None),
@@ -763,8 +781,7 @@ class Archive(Storage):
     def _ftpdelete(self, item, **kwargs):
         """Actual _delete using ftp."""
         rc = None
-        username = kwargs.get('username', None)
-        ftp = self.sh.ftp(self.actual_storage, username)
+        ftp = self._ftp_client(logname=kwargs.get('username', None))
         if ftp:
             if self.check(item, **kwargs):
                 logger.info('ftpdelete on ftp://%s/%s', self.actual_storage, item)

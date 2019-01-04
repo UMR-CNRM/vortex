@@ -28,6 +28,7 @@ from collections import namedtuple
 import contextlib
 import errno
 import filecmp
+import functools
 import glob
 import hashlib
 import io
@@ -61,7 +62,8 @@ from bronx.system.memory import LinuxMemInfo
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
-from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, AssistedSsh, LinuxNetstats
+from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool, DEFAULT_FTP_PORT
+from vortex.tools.net import AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
 from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.syntax.stdattrs import DelayedInit
@@ -216,6 +218,57 @@ def LocaleContext(category, localename=None, uselock=False):
             locale.setlocale(category, previous)
 
 
+@functools.total_ordering
+class PythonSimplifiedVersion(object):
+    """
+    Type that holds a simplified representation of the Python's version
+
+    It provides basic comparison operators to determine if a given version is
+    more recent or not compared to another one.
+
+    It can be used in a footprint specification.
+    """
+
+    _VERSION_RE = re.compile(r'(\d+)\.(\d+)\.(\d+)')
+
+    def __init__(self, versionstr):
+        v_match = self._VERSION_RE.match(versionstr)
+        if v_match:
+            self._version = tuple([int(d) for d in v_match.groups()])
+        else:
+            raise ValueError('Malformed version string: {}'.format(versionstr))
+
+    @property
+    def version(self):
+        return self._version
+
+    def __hash__(self):
+        return hash(self.version)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            try:
+                other = self.__class__(other)
+            except (ValueError, TypeError):
+                return False
+        return self.version == other.version
+
+    def __gt__(self, other):
+        if not isinstance(other, self.__class__):
+            other = self.__class__(other)
+        return self.version > other.version
+
+    def __str__(self):
+        return '.'.join([six.text_type(d) for d in self.version])
+
+    def __repr__(self):
+        return '<{} | {!s}>'.format(object.__repr__(self).lstrip('<').rstrip('>'), self)
+
+    def export_dict(self):
+        """The pure dict/json output is the raw integer"""
+        return six.text_type(self)
+
+
 class System(footprints.FootprintBase):
     """Abstract root class for any :class:`System` subclasses.
 
@@ -259,9 +312,9 @@ class System(footprints.FootprintBase):
             ),
             python = dict(
                 info = "The Python's version (e.g 2.7.5)",
+                type = PythonSimplifiedVersion,
                 optional = True,
-                default  = re.sub(r'^(\d+\.\d+\.\d+).*$', r'\1',
-                                  platform.python_version())
+                default  = platform.python_version(),
             ),
             glove = dict(
                 info = "The session's Glove object",
@@ -1327,7 +1380,7 @@ class OSExtended(System):
         )
 
     @contextlib.contextmanager
-    def ftppool(self):
+    def ftppool(self, nrcfile=None):
         """Create a context manager that initialises the FTP connection pool.
 
         Within this context manager, if `self.ftpflavour==FTP_FLAVOUR.CONNECTION_POOLS`,
@@ -1340,7 +1393,7 @@ class OSExtended(System):
         """
         pool_control = self._current_ftppool is None
         if pool_control:
-            self._current_ftppool = FtpConnectionPool(self)
+            self._current_ftppool = FtpConnectionPool(self, nrcfile=nrcfile)
         try:
             yield self._current_ftppool
         finally:
@@ -1367,12 +1420,13 @@ class OSExtended(System):
                     raise ValueError("Either a *logname* or a glove must be set-up")
         return logname
 
-    def ftp(self, hostname, logname=None, delayed=False):
+    def ftp(self, hostname, logname=None, delayed=False, port=DEFAULT_FTP_PORT):
         """Return an FTP client object.
 
         :param str hostname: the remote host's name for FTP.
         :param str logname: the logname on the remote host.
         :param bool delayed: delay the actual connection attempt as much as possible.
+        :param int port: the port number on the remote host.
 
         The returned object is an instance of :class:`~vortex.tools.net.StdFtp`
         or of one of its subclasses. Consequently, see the :class:`~vortex.tools.net.StdFtp`
@@ -1394,11 +1448,13 @@ class OSExtended(System):
               :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
         logname = self._fix_ftuser(hostname, logname)
+        if port is None:
+            port = DEFAULT_FTP_PORT
         if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
-            return self._current_ftppool.deal(hostname, logname, delayed=delayed)
+            return self._current_ftppool.deal(hostname, logname, port=port, delayed=delayed)
         else:
             ftpclass = AutoRetriesFtp if self.ftpflavour != FTP_FLAVOUR.STD else StdFtp
-            ftpbox = ftpclass(self, hostname)
+            ftpbox = ftpclass(self, hostname, port=port)
             rc = ftpbox.fastlogin(logname, delayed=delayed)
             if rc:
                 return ftpbox
@@ -1407,7 +1463,8 @@ class OSExtended(System):
                 return None
 
     @fmtshcmd
-    def ftget(self, source, destination, hostname=None, logname=None, cpipeline=None):
+    def ftget(self, source, destination, hostname=None, logname=None, port=DEFAULT_FTP_PORT,
+              cpipeline=None):
         """Proceed to a direct ftp get on the specified target (using Vortex's FTP client).
 
         :param str source: the remote path to get data
@@ -1418,13 +1475,14 @@ class OSExtended(System):
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
         :param str logname: the target logname (default: *None*, see the
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
         if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
         hostname = self._fix_fthostname(hostname)
-        ftp = self.ftp(hostname, logname)
+        ftp = self.ftp(hostname, logname, port=port)
         if ftp:
             try:
                 if cpipeline is None:
@@ -1439,8 +1497,8 @@ class OSExtended(System):
             return False
 
     @fmtshcmd
-    def ftput(self, source, destination, hostname=None, logname=None, cpipeline=None,
-              sync=False):  # @UnusedVariable
+    def ftput(self, source, destination, hostname=None, logname=None, port=DEFAULT_FTP_PORT,
+              cpipeline=None, sync=False):  # @UnusedVariable
         """Proceed to a direct ftp put on the specified target (using Vortex's FTP client).
 
         :param source: The source of data (either a path to file or a
@@ -1451,6 +1509,7 @@ class OSExtended(System):
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
         :param str logname: the target logname (default: *None*, see the
             :class:`~vortex.tools.net.StdFtp` class to get the effective default)
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
         :param bool sync: If False, allow asynchronous transfers (currently not
@@ -1459,7 +1518,7 @@ class OSExtended(System):
         rc = False
         if self.is_iofile(source):
             hostname = self._fix_fthostname(hostname)
-            ftp = self.ftp(hostname, logname)
+            ftp = self.ftp(hostname, logname, port=port)
             if ftp:
                 try:
                     if cpipeline is None:
@@ -1498,7 +1557,7 @@ class OSExtended(System):
         """Given **source** and **destination**, is FtServ usable ?"""
         return isinstance(source, six.string_types) and isinstance(destination, six.string_types)
 
-    def ftserv_put(self, source, destination, hostname=None, logname=None,
+    def ftserv_put(self, source, destination, hostname=None, logname=None, port=None,
                    specialshell=None, sync=False):
         """Asynchronous put of a file using FtServ."""
         if self.ftserv_allowed(source, destination):
@@ -1510,6 +1569,8 @@ class OSExtended(System):
                 if not sync:
                     extras.extend(['-q', ])
                 if hostname:
+                    if port is not None:
+                        hostname += ':{:s}'.format(port)
                     extras.extend(['-h', hostname])
                 if logname:
                     extras.extend(['-u', logname])
@@ -1524,7 +1585,7 @@ class OSExtended(System):
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
-    def ftserv_get(self, source, destination, hostname=None, logname=None):
+    def ftserv_get(self, source, destination, hostname=None, logname=None, port=None):
         """Get a file using FtServ."""
         if self.ftserv_allowed(source, destination):
             if self.filecocoon(destination):
@@ -1533,6 +1594,8 @@ class OSExtended(System):
                 destination = self.path.expanduser(destination)
                 extras = list()
                 if hostname:
+                    if port is not None:
+                        hostname += ':{:s}'.format(port)
                     extras.extend(['-h', hostname])
                 if logname:
                     extras.extend(['-u', logname])
@@ -1544,7 +1607,7 @@ class OSExtended(System):
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
 
-    def ftserv_batchget(self, source, destination, hostname=None, logname=None):
+    def ftserv_batchget(self, source, destination, hostname=None, logname=None, port=None):
         """Get a list of files using FtServ.
 
         :note: **source** and **destination** are list or tuple.
@@ -1557,6 +1620,8 @@ class OSExtended(System):
             hostname = self._fix_fthostname(hostname, fatal=False)
             logname = self._fix_ftuser(hostname, logname, fatal=False)
             if hostname:
+                if port is not None:
+                    hostname += ':{:s}'.format(port)
                 extras.extend(['-h', hostname])
             if logname:
                 extras.extend(['-u', logname])
@@ -1577,7 +1642,7 @@ class OSExtended(System):
         return self.ftraw and self.ftserv_allowed(source, destination)
 
     @fmtshcmd
-    def rawftput(self, source, destination, hostname=None, logname=None,
+    def rawftput(self, source, destination, hostname=None, logname=None, port=None,
                  cpipeline=None, sync=False):
         """Proceed with some external ftput command on the specified target.
 
@@ -1585,22 +1650,27 @@ class OSExtended(System):
         :param str destination: The path where to upload the data.
         :param str hostname: The target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
         :param bool sync: If False, allow asynchronous transfers.
         """
         if cpipeline is not None:
             if cpipeline.compress2rawftp(source):
-                return self.ftserv_put(source, destination, hostname, logname,
+                return self.ftserv_put(source, destination, hostname,
+                                       logname=logname, port=port,
                                        specialshell=cpipeline.compress2rawftp(source),
                                        sync=sync)
             else:
-                return self.ftput(source, destination, hostname, logname,
-                                  cpipeline=cpipeline, sync=sync)
+                if port is None:
+                    port = DEFAULT_FTP_PORT
+                return self.ftput(source, destination, hostname, logname=logname,
+                                  port=port, cpipeline=cpipeline, sync=sync)
         else:
-            return self.ftserv_put(source, destination, hostname, logname, sync=sync)
+            return self.ftserv_put(source, destination, hostname, logname,
+                                   port=port, sync=sync)
 
-    def smartftput(self, source, destination, hostname=None, logname=None,
+    def smartftput(self, source, destination, hostname=None, logname=None, port=None,
                    cpipeline=None, sync=False, fmt=None):
         """Select the best alternative between ``ftput`` and ``rawftput``.
 
@@ -1612,6 +1682,7 @@ class OSExtended(System):
             for the default)
         :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
             for the default)
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer.
         :param bool sync: If False, allow asynchronous transfers.
@@ -1625,40 +1696,46 @@ class OSExtended(System):
         """
         if self.rawftput_worthy(source, destination):
             return self.rawftput(source, destination, hostname=hostname, logname=logname,
-                                 cpipeline=cpipeline, sync=sync, fmt=fmt)
+                                 port=port, cpipeline=cpipeline, sync=sync, fmt=fmt)
         else:
+            if port is None:
+                port = DEFAULT_FTP_PORT
             return self.ftput(source, destination, hostname=hostname, logname=logname,
-                              cpipeline=cpipeline, sync=sync, fmt=fmt)
+                              port=port, cpipeline=cpipeline, sync=sync, fmt=fmt)
 
     def rawftget_worthy(self, source, destination, cpipeline=None):
         """Is it allowed to use FtServ given **source** and **destination**."""
         return self.ftraw and cpipeline is None and self.ftserv_allowed(source, destination)
 
     @fmtshcmd
-    def rawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):  # @UnusedVariable
+    def rawftget(self, source, destination, hostname=None, logname=None, port=None,
+                 cpipeline=None):  # @UnusedVariable
         """Proceed with some external ftget command on the specified target.
 
         :param str source: the remote path to get data
         :param str destination: path to the filename where to put the data.
         :param str hostname: the target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
-        return self.ftserv_get(source, destination, hostname, logname)
+        return self.ftserv_get(source, destination, hostname, logname, port=port)
 
     @fmtshcmd
-    def batchrawftget(self, source, destination, hostname=None, logname=None, cpipeline=None):  # @UnusedVariable
+    def batchrawftget(self, source, destination, hostname=None, logname=None,
+                      port=None, cpipeline=None):  # @UnusedVariable
         """Proceed with some external ftget command on the specified target.
 
         :param source: A list of remote paths to get data
         :param destination: A list of paths to the filename where to put the data.
         :param str hostname: the target hostname  (default: *None*).
         :param str logname: the target logname  (default: *None*).
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
-        return self.ftserv_batchget(source, destination, hostname, logname)
+        return self.ftserv_batchget(source, destination, hostname, logname, port=port)
 
-    def smartftget(self, source, destination, hostname=None, logname=None,
+    def smartftget(self, source, destination, hostname=None, logname=None, port=None,
                    cpipeline=None, fmt=None):
         """Select the best alternative between ``ftget`` and ``rawftget``.
 
@@ -1670,6 +1747,7 @@ class OSExtended(System):
             for the default)
         :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
             for the default)
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer.
         :param str fmt: The format of data.
@@ -1684,13 +1762,15 @@ class OSExtended(System):
         if self.rawftget_worthy(source, destination, cpipeline):
             # FtServ is uninteresting when dealing with compression
             return self.rawftget(source, destination, hostname=hostname, logname=logname,
-                                 cpipeline=cpipeline, fmt=fmt)
+                                 port=port, cpipeline=cpipeline, fmt=fmt)
         else:
+            if port is None:
+                port = DEFAULT_FTP_PORT
             return self.ftget(source, destination, hostname=hostname, logname=logname,
-                              cpipeline=cpipeline, fmt=fmt)
+                              port=port, cpipeline=cpipeline, fmt=fmt)
 
     def smartbatchftget(self, source, destination, hostname=None, logname=None,
-                        cpipeline=None, fmt=None):
+                        port=None, cpipeline=None, fmt=None):
         """
         Select the best alternative between ``ftget`` and ``batchrawftget``
         when retrieving several files.
@@ -1703,6 +1783,7 @@ class OSExtended(System):
             for the default)
         :param str logname: the target logname (see :class:`~vortex.tools.net.StdFtp`
             for the default)
+        :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer.
         :param str fmt: The format of data.
@@ -1710,13 +1791,15 @@ class OSExtended(System):
         if all([self.rawftget_worthy(s, d, cpipeline) for s, d in zip(source, destination)]):
             # FtServ is uninteresting when dealing with compression
             return self.batchrawftget(source, destination, hostname=hostname, logname=logname,
-                                      cpipeline=cpipeline, fmt=fmt)
+                                      port=None, cpipeline=cpipeline, fmt=fmt)
         else:
             rc = True
+            if port is None:
+                port = DEFAULT_FTP_PORT
             with self.ftppool():
                 for s, d in zip(source, destination):
                     rc = rc and self.ftget(s, d, hostname=hostname, logname=logname,
-                                           cpipeline=cpipeline, fmt=fmt)
+                                           port=port, cpipeline=cpipeline, fmt=fmt)
             return rc
 
     def ssh(self, hostname, logname=None, *args, **kw):
@@ -2599,6 +2682,13 @@ class OSExtended(System):
         return path
 
 
+_python27_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python27 Mixin',
+                                    only = dict(
+                                        after_python = PythonSimplifiedVersion('2.7.0'),
+                                        before_python = PythonSimplifiedVersion('3.4.0')
+                                    ))
+
+
 class Python27(object):
     """Python features starting from version 2.7."""
 
@@ -2628,18 +2718,25 @@ class Python27(object):
         return thisfunc
 
 
+_python34_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python34 Mixin',
+                                    only = dict(
+                                        after_python = PythonSimplifiedVersion('3.4.0')
+                                    ))
+
+
 class Python34(Python27):
     """Python features starting from version 3.4."""
     pass
 
 
-class Garbage(OSExtended, Python27):
+class Garbage(OSExtended):
     """
     Default system class for weird systems.
 
     Hopefully an extended system will be loaded later on...
     """
 
+    _abstract = True
     _footprint = dict(
         info = 'Garbage base system',
         attr = dict(
@@ -2656,6 +2753,24 @@ class Garbage(OSExtended, Python27):
         """Gateway to parent method after debug logging."""
         logger.debug('Garbage system init %s', self.__class__)
         super(Garbage, self).__init__(*args, **kw)
+
+
+class Garbage27(Garbage, Python27):
+    """Default system class for weird systems with python version >= 2.7 < 3.4"""
+
+    _footprint = [
+        _python27_fp,
+        dict(info = 'Garbage base system with an aging Python version')
+    ]
+
+
+class Garbage34p(Garbage, Python34):
+    """Default system class for weird systems with python version >= 3.4"""
+
+    _footprint = [
+        _python34_fp,
+        dict(info = 'Garbage base system withh a blazing Python version')
+    ]
 
 
 class Linux(OSExtended):
@@ -2722,32 +2837,24 @@ class Linux(OSExtended):
 
 
 class Linux27(Linux, Python27):
-    """Linux system with python version >= 2.7"""
+    """Linux system with python version >= 2.7 and < 3.4"""
 
-    _footprint = dict(
-        info = 'Linux based system with aging Python version',
-        attr = dict(
-            python = dict(
-                values = ['2.7.' + six.text_type(x) for x in range(3, 50)]
-            )
-        )
-    )
+    _footprint = [
+        _python27_fp,
+        dict(info = 'Linux based system with an aging Python version')
+    ]
 
 
 class Linux34p(Linux, Python34):
     """Linux system with python version >= 3.4"""
 
-    _footprint = dict(
-        info = 'Linux based system with aging Python version',
-        attr = dict(
-            python = dict(
-                values = ['3.{:d}.{:d}'.format(i, j) for i in range(4, 50) for j in range(1, 100)]
-            )
-        )
-    )
+    _footprint = [
+        _python34_fp,
+        dict(info = 'Linux based system with a blazing Python version')
+    ]
 
 
-class LinuxDebug(Linux27):
+class LinuxDebug(Linux34p):
     """Special system class for crude debugging on Linux based systems."""
 
     _footprint = dict(
@@ -2773,11 +2880,12 @@ class LinuxDebug(Linux27):
         return 'linuxdebug'
 
 
-class Macosx(OSExtended, Python27):
+class Macosx(OSExtended):
     """Mac under MacOSX."""
 
+    _abstract = True
     _footprint = dict(
-        info = 'Apple Mac computer under Macosx with aging Python version',
+        info = 'Apple Mac computer under Macosx',
         attr = dict(
             sysname = dict(
                 values = ['Darwin']
@@ -2807,3 +2915,21 @@ class Macosx(OSExtended, Python27):
     def default_syslog(self):
         """Address to use in logging.handler.SysLogHandler()."""
         return '/var/run/syslog'
+
+
+class Macosx27(Macosx, Python27):
+    """Mac under MacOSX with python version >= 2.7 and < 3.4"""
+
+    _footprint = [
+        _python27_fp,
+        dict(info = 'Apple Mac computer under Macosx with an aging Python version')
+    ]
+
+
+class Macosx34p(Macosx, Python34):
+    """Mac under MacOSX with python version >= 3.4"""
+
+    _footprint = [
+        _python34_fp,
+        dict(info = 'Apple Mac computer under Macosx with a blazing Python version')
+    ]

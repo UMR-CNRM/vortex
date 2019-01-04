@@ -13,6 +13,7 @@ from bronx.fancies import loggers
 import footprints
 
 from . import addons
+from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: No automatic export
 __all__ = []
@@ -161,14 +162,13 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return True
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, sync=False):
+                   port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
             hostname = self.sh._fix_fthostname(hostname)
-
-            ftp = self.sh.ftp(hostname, logname)
+            ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
                 packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
@@ -180,10 +180,11 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return rc
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline, sync=sync)
+                                 logname=logname, port=port,
+                                 cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None, sync=False):
+                      port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -197,16 +198,20 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     request_fh.writelines('\n'.join(newsources))
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,
-                                        hostname=hostname, logname=logname,
+                                        hostname=hostname, logname=logname, port=port,
                                         specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(request)
                 return rc
             else:
+                if port is None:
+                    port = DEFAULT_FTP_PORT
                 return self._std_ftput(source, destination,
-                                       hostname=hostname, logname=logname, sync=sync)
+                                       hostname=hostname, logname=logname,
+                                       port=port, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline, sync=sync)
+                                    logname=logname, port=port,
+                                    cpipeline=cpipeline, sync=sync)
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput

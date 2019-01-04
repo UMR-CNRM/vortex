@@ -37,7 +37,6 @@ Misc
 
 .. autofunction:: LocaleContext
 
-
 Generic system objects
 **********************
 
@@ -51,13 +50,23 @@ Generic system objects
    :members:
    :member-order: alphabetical
 
-OS specific system objects: Linux
-*********************************
-
 .. autoclass:: Garbage
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Garbage27
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Garbage34p
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+OS specific system objects: Linux
+*********************************
 
 .. autoclass:: Linux
    :show-inheritance:
@@ -87,6 +96,16 @@ OS specific system objects: Darwin (MacOS)
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Macosx27
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Macosx34p
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Some Python's version specific extra features
 *********************************************
 
@@ -104,6 +123,11 @@ Utility Classes
 ---------------
 
 .. autoclass:: CdContext
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PythonSimplifiedVersion
    :show-inheritance:
    :members:
    :member-order: alphabetical

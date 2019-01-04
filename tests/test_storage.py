@@ -4,11 +4,15 @@
 Created on 13 nov. 2018
 
 @author: meunierlf
+
+:note: Tests for the Archive Storage are located in test_twistednet since an FTP
+       server is required for the test.
 '''
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
 import os
+import tarfile
 import tempfile
 import unittest
 
@@ -124,6 +128,16 @@ class TestCacheStorage(unittest.TestCase):
         with io.open(self.tfile, 'w') as fht:
             fht.write('toto')
 
+    def _write_testtar_and_dir(self):
+        self.tdir = 'testdir'
+        self.ttar = 'testtar.tgz'
+        self.sh.mkdir(self.tdir)
+        for tf in ('testfile1', 'testfile2', 'testfile3'):
+            with io.open(self.sh.path.join(self.tdir, tf), 'w') as fht:
+                fht.write('toto')
+        with tarfile.open(name=self.ttar, mode='w:gz') as tfobj:
+            tfobj.add(self.tdir)
+
     def setUp(self):
         # Generate a temporary directory
         self._oldsession = vortex.sessions.current()
@@ -142,6 +156,7 @@ class TestCacheStorage(unittest.TestCase):
         self.sh.env['MTOOLDIR'] = self.sh.path.join(self.tmpdir, 'mtool')
         self._write_configfiles()
         self._write_testfiles()
+        self._write_testtar_and_dir()
         # Storage commons...
         self.commons = dict(storage=self.sh.default_target.inetname,
                             inifile='./cache-[storage].ini')
@@ -151,9 +166,21 @@ class TestCacheStorage(unittest.TestCase):
             res = fht.read()
         self.assertEqual(res, 'toto')
 
+    def assertIsTestDir(self, path):
+        for tf in ('testfile1', 'testfile2', 'testfile3'):
+            self.assertIsTestFile(self.sh.path.join(path, tf))
+
+    def assertIsTestTar(self, path):
+        tfiles = ('testfile1', 'testfile2', 'testfile3')
+        tfiles = [self.sh.path.join(self.tdir, tf) for tf in tfiles]
+        with tarfile.open(name=path, mode='r:gz') as tfobj:
+            self.assertEqual(set([ti.name for ti in tfobj.getmembers()]),
+                             set([self.tdir, ] + tfiles))
+            self.assertTrue(all([tfobj.getmember(tf).size == 4 for tf in tfiles]))
+
     def tearDown(self):
         self.sh.cd(self.oldpwd)
-        self.sh.remove(self.tmpdir)
+        self.sh.rmtree(self.tmpdir)
         self._oldsession.activate()
 
     def test_mtool_and_buddies(self):
@@ -166,7 +193,12 @@ class TestCacheStorage(unittest.TestCase):
             self.assertTrue(storage.allow_writes(remap['item']))
             self.assertTrue(storage.allow_reads(remap['item']))
         item = self._REMAPS[0]['item']
+        itemD = item + 'D'
+        itemT = item + 'T'
         loc = self._REMAPS[0]['mtoolpath'].format(mtoolroot)
+        locD = loc + 'D'
+        locT = loc + 'T'
+        # Usual file
         self.assertFalse(storage.check(item))
         self.assertIsNone(storage.list('arome/'))
         self.assertTrue(storage.insert(item, self.tfile))
@@ -175,6 +207,24 @@ class TestCacheStorage(unittest.TestCase):
         self.assertTrue(storage.retrieve(item, 'rtestfile1'))
         self.assertIsTestFile('rtestfile1')
         self.assertTrue(storage.check(item))
+        # Directory
+        self.assertTrue(storage.insert(itemD, self.tdir))
+        self.assertIsTestDir(locD)
+        self.assertTrue(storage.retrieve(itemD, 'rtestdir1'))
+        self.assertIsTestDir('rtestdir1')
+        self.assertTrue(storage.retrieve(itemD, 'rtestdir2/toto.tgz', dirextract=True))
+        self.assertIsTestDir('rtestdir2')
+        self.assertTrue(self.sh.path.exists('rtestdir2/toto.tgz'))
+        # Tar
+        self.assertTrue(storage.insert(itemT, self.ttar))
+        self.assertIsTestTar(locT)
+        self.assertTrue(storage.retrieve(itemT, 'rtesttar1'))
+        self.assertIsTestTar('rtesttar1')
+        self.assertTrue(storage.retrieve(itemT, 'rtesttar2/toto.tgz', tarextract=True))
+        self.assertIsTestDir('rtesttar2')
+        self.assertTrue(storage.retrieve(itemT, 'rtesttar3/toto.tgz',
+                                         tarextract=True, uniquelevel_ignore=False))
+        self.assertIsTestDir(self.sh.path.join('rtesttar3', self.tdir))
         # Buddies
         storage_b = fp.proxy.cache(kind='mtoolbuddies', **self.commons)
         self.assertTrue(storage_b.readonly)

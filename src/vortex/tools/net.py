@@ -35,6 +35,8 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
+DEFAULT_FTP_PORT = ftplib.FTP_PORT
+
 
 def uriparse(uristring):
     """Parse the specified ``uristring`` as a dictionary including keys:
@@ -122,7 +124,7 @@ class ExtendedFtplib(object):
     It wraps the standard ftplib object to add or overwrite methods.
     """
 
-    def __init__(self, system, ftpobj, hostname='', port=ftplib.FTP_PORT):
+    def __init__(self, system, ftpobj, hostname='', port=DEFAULT_FTP_PORT):
         """
         :param ~vortex.tools.systems.OSExtended system: The system object to work with
         :param ftplib.FTP ftpobj: The FTP object to work with / to extend
@@ -441,7 +443,7 @@ class StdFtp(object):
 
     _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'stderr', )
 
-    def __init__(self, system, hostname, port=ftplib.FTP_PORT, nrcfile=None):
+    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None):
         """
         :param ~vortex.tools.systems.OSExtended system: The system object to work with
         :param str hostname: The remote host's network name
@@ -608,7 +610,7 @@ class AutoRetriesFtp(StdFtp):
     the retry-on-failure capability.
     """
 
-    def __init__(self, system, hostname, port=ftplib.FTP_PORT, nrcfile=None,
+    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None,
                  retrycount_default=6, retrycount_connect=8, retrycount_login=3,
                  retrydelay_default=15, retrydelay_connect=15, retrydelay_login=10):
         """
@@ -897,7 +899,7 @@ class FtpConnectionPool(object):
                     out += '  - {id[1]:s}@{id[0]:s}: {cl!r}\n'.format(id=ident, cl=client)
         return out
 
-    def deal(self, hostname, logname, port=ftplib.FTP_PORT, delayed=True):
+    def deal(self, hostname, logname, port=DEFAULT_FTP_PORT, delayed=True):
         """Retrieve an FTP client for the *hostname*/*logname* pair."""
         p_logname, _ = netrc_lookup(logname, hostname, nrcfile=self._nrcfile)
         if self._reusable[(hostname, port, p_logname)]:

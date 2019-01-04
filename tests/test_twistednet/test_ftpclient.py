@@ -9,8 +9,6 @@ import six
 
 import ftplib
 import io
-import os
-import shutil
 import tempfile
 import unittest
 
@@ -21,7 +19,6 @@ from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool
 from . import has_ftpservers
 from .utils import get_ftp_port_number
 
-sh = vortex.sh()
 tloglevel = 9999
 
 
@@ -43,13 +40,14 @@ class FakeFp(object):
 class TestStdFtp(unittest.TestCase):
 
     def setUp(self):
+        self.sh = vortex.sh()
         self.tdir = tempfile.mkdtemp(prefix='ftp_testdir_')
-        self.udir = os.path.join(self.tdir, 'testlogin')
+        self.udir = self.sh.path.join(self.tdir, 'testlogin')
         self.user = 'testlogin'
         self.password = 'aqmp'
-        os.mkdir(self.udir)
-        self._oldpwd = os.getcwd()
-        os.chdir(self.udir)
+        self.sh.mkdir(self.udir)
+        self._oldpwd = self.sh.getcwd()
+        self.sh.chdir(self.udir)
         self.port = get_ftp_port_number()
         self.configure_ftpserver()
 
@@ -60,15 +58,15 @@ class TestStdFtp(unittest.TestCase):
                                     self.user, self.password)
 
     def tearDown(self):
-        os.chdir(self._oldpwd)
-        shutil.rmtree(self.tdir)
+        self.sh.chdir(self._oldpwd)
+        self.sh.rmtree(self.tdir)
 
     def new_ftp_client(self):
-        return StdFtp(sh, 'localhost', self.port)
+        return StdFtp(self.sh, 'localhost', self.port)
 
     def assertRemote(self, path, content):
-        where = os.path.join(self.udir, path)
-        self.assertTrue(os.path.exists(where))
+        where = self.sh.path.join(self.udir, path)
+        self.assertTrue(self.sh.path.exists(where))
         with io.open(where, 'rb') as fhr:
             self.assertEqual(fhr.read(), content)
 
@@ -115,7 +113,7 @@ class TestStdFtp(unittest.TestCase):
                 self.assertTrue(ftpc.put(testdata, 'dirbis/coucou3'))
                 self.assertRemote('dir1/dirbis/coucou3', b'Coucou')
                 self.assertTrue(ftpc.rm('coucou2'))
-                self.assertFalse(os.path.exists(os.path.join(self.udir, 'dir1/coucou2')))
+                self.assertFalse(self.sh.path.exists(self.sh.path.join(self.udir, 'dir1/coucou2')))
                 self.assertEqual(ftpc.size('coucou1'), 5)
                 self.assertIsInstance(ftpc.mtime('coucou1'), int)
                 self.assertTrue(ftpc.get('dirbis/coucou3', 'rawget'))
@@ -143,7 +141,7 @@ class TestAutoRetriesFtp(TestStdFtp):
                                     )
 
     def new_ftp_client(self):
-        return AutoRetriesFtp(sh, 'localhost', port=self.port,
+        return AutoRetriesFtp(self.sh, 'localhost', port=self.port,
                               retrycount_default=2, retrycount_connect=2, retrycount_login=3,
                               retrydelay_default=0.1, retrydelay_connect=0.1, retrydelay_login=0.1)
 
@@ -168,13 +166,13 @@ class TestPooledFtp(TestStdFtp):
         with io.open(self._fnrc, 'w') as fhnrc:
             fhnrc.write('machine localhost login {:s} password {:s}'
                         .format(self.user, self.password))
-        sh.chmod(self._fnrc, 0o600)
-        self._ftppool = FtpConnectionPool(sh, self._fnrc)
+        self.sh.chmod(self._fnrc, 0o600)
+        self._ftppool = FtpConnectionPool(self.sh, self._fnrc)
 
     def tearDown(self):
         self._ftppool.clear()
         del self._ftppool
-        sh.rm(self._fnrc)
+        self.sh.rm(self._fnrc)
         super(TestPooledFtp, self).tearDown()
 
     def new_ftp_client(self, delayed=True):

@@ -120,7 +120,7 @@ class TestUgetUenv(unittest.TestCase):
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
-        self.sh.remove(self.tmpdir)
+        self.sh.rmtree(self.tmpdir)
         uenv.clearall()
 
     def test_basics(self):
