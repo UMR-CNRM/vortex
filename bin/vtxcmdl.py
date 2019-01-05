@@ -110,10 +110,10 @@ def vortex_delayed_init(t):
 def actual_action(action, t, args, fatal=True):
     """Performs the action request by the user (get/put/prestage)."""
     from vortex import toolbox
-    rhanlers = toolbox.rload(**vars(args))
+    rhandlers = toolbox.rload(**vars(args))
     with t.sh.ftppool():
-        for n, rh in enumerate(rhanlers):
-            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
+        for n, rh in enumerate(rhandlers):
+            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhandlers)))
             rh.quickview()
             if rh.complete:
                 rst = False
@@ -121,7 +121,7 @@ def actual_action(action, t, args, fatal=True):
                     rst = getattr(rh, action)()
                 except (KeyboardInterrupt, interrupt.SignalInterruptError):
                     if action == 'get':
-                        # Get ride of incomplete files
+                        # Get rid of incomplete files
                         logger.warning("The transfer was interrupted. Cleaning %s.",
                                        rh.container.localpath())
                         t.sh.remove(rh.container.localpath(), fmt=args.format)
@@ -163,7 +163,7 @@ def argvalue_rewrite(value):
 
 
 def process_remaining(margs, rargs):
-    """Process all the remainging arguments and add them to the margs namespace.
+    """Process all the remaining arguments and add them to the margs namespace.
 
     All the remaining arguments must conform to the following convention:
 
