@@ -15,12 +15,13 @@ from unittest import TestCase, main, skipIf
 
 import footprints
 import taylorism
-from taylorism import examples, schedulers
+from taylorism import examples, schedulers, taylorism_log
 from bronx.fancies import loggers
 from bronx.system import interrupt  # because subprocesses must be killable properly
 from bronx.system import cpus as cpus_tool
 
-tloglevel = 'critical'
+tloglevel = 'CRITICAL'
+tloglevel_taylorism = 'CRITICAL'
 
 
 def stderr2out_deco(f):
@@ -95,7 +96,7 @@ class UtTaylorism(TestCase):
         Run a Succeeder and a Failer, checks that the Failer exception is
         catched.
         """
-
+        taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions     = dict(),
             individual_instructions = dict(sleeping_time=[0.001, 0.01], succeed=[False, True]),
@@ -111,7 +112,7 @@ class UtTaylorism(TestCase):
         Run a Succeeder and a Failer, checks that an error in the Boss
         subprocess is catched.
         """
-
+        taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions     = dict(),
             individual_instructions = dict(sleeping_time=[60, 60], succeed=[True, True]),
@@ -126,6 +127,7 @@ class UtTaylorism(TestCase):
     def test_servermode(self):
         """Run as server mode, checks appending instructions."""
         # Test both new and legacy schedulers
+        taylorism_log.setLevel(tloglevel_taylorism)
         for scheduler in (footprints.proxy.scheduler(limit='threads', max_threads=2),
                           schedulers.MaxThreadsScheduler(max_threads=2)):
             boss = taylorism.run_as_server(
@@ -145,6 +147,7 @@ class UtTaylorism(TestCase):
         Checks that overloading the instructions queue after end of
         subprocess does not lead to deadlock.
         """
+        taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions     = dict(),
             individual_instructions = dict(sleeping_time=[0.001, 60], succeed=[False, True]),
@@ -160,6 +163,7 @@ class UtTaylorism(TestCase):
 
     def test_binding(self):
         """Checks that the binding works."""
+        taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions     = dict(wakeup_sentence='yo', succeed=True),
             individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
@@ -179,6 +183,7 @@ class UtTaylorism(TestCase):
         Checks that a clear error is raised if several workers wear the same
         name.
         """
+        taylorism_log.setLevel(tloglevel_taylorism)
         with self.assertRaises(ValueError):
             boss = taylorism.run_as_server(
                 common_instructions     = dict(),
@@ -189,6 +194,7 @@ class UtTaylorism(TestCase):
 
     def test_expansion_workers_name(self):
         """Checks that expansion in workers name works fine."""
+        taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions     = dict(name='jean-pierre_[sleeping_time]'),
             individual_instructions = dict(sleeping_time = [0.001, 0.01]),
@@ -201,6 +207,7 @@ class UtTaylorism(TestCase):
     @skipIf(not numpy_looks_fine, "NumPy is unavailable.")
     def test_sharedmemory_array(self):
         """Checks that sharedmemory mechanism works fine."""
+        taylorism_log.setLevel(tloglevel_taylorism)
         vals = [813, 42, 8]
         s = taylorism.util.SharedNumpyArray(np.ones((1,), dtype=int) * vals[0])
         boss = taylorism.run_as_server(
