@@ -264,9 +264,25 @@ class Worker(FootprintBase):
 
     def work(self):
         """Send the Worker to his job."""
-        self._process.start()
-        taylorism_log.debug('Worker process started: pid=%s. name=%s',
-                            self._process.pid, self.name)
+        if not self._terminating:
+            try:
+                self._process.start()
+            finally:
+                if os.getpid() != self._parent_pid:
+                    # LFM
+                    # This should really not happened :-( but, because of a flaw
+                    # in Python2.7's multiprocessing.forking.Popen.__init__, in
+                    # the child process (hence the previous if-test), if
+                    # an exception is raised and un-handled in the target method
+                    # os._exit is not called immediately when the target method
+                    # exists... It looks better in Python3.5's multiprocessing.popen_fork
+                    # since a try/finally clause is there to handle that
+                    os._exit(1)
+            taylorism_log.debug('Worker process started: pid=%s. name=%s',
+                                self._process.pid, self.name)
+        else:
+            taylorism_log.debug('Worker process cannot be started while terminating. name=%s.',
+                                self.name)
 
     def bye(self):
         """
@@ -274,9 +290,13 @@ class Worker(FootprintBase):
         THIS METHOD SHOULD NEVER BE CALLED BY THE OBJECT HIMSELF !
         (WOULD CAUSE A DEADLOCK if called from inside the worker's subprocess)
         """
-        self._process.join()
-        taylorism_log.debug('Worker process joined: pid=%s. name=%s',
-                            self._process.pid, self.name)
+        if self._process.pid:
+            self._process.join()
+            taylorism_log.debug('Worker process joined: pid=%s. name=%s',
+                                self._process.pid, self.name)
+        else:
+            taylorism_log.debug('Worker process not yet started. Nothing to do. name=%s.',
+                                self.name)
 
     def stop_working(self):
         """Make the worker stop working.
@@ -285,18 +305,23 @@ class Worker(FootprintBase):
         abruptly when this method is called for the first time...
         """
         if not self._terminating:
-            self._process.terminate()
-            self._terminating = True
-            taylorism_log.debug('Worker process terminated (#1): pid=%s. name=%s',
-                                self._process.pid, self.name)
-        else:
-            self._process.join(0.1)
-            taylorism_log.debug('Worker process joined: pid=%s. name=%s',
-                                self._process.pid, self.name)
-            if self._process.is_alive():
+            if self._process.pid:
                 self._process.terminate()
-                taylorism_log.debug('Worker process terminated (#2): pid=%s. name=%s',
+                taylorism_log.debug('Worker process terminated (#1): pid=%s. name=%s',
                                     self._process.pid, self.name)
+            else:
+                taylorism_log.debug('Worker process not yet started. Nothing to do. name=%s.',
+                                    self.name)
+            self._terminating = True
+        else:
+            if self._process.pid:
+                self._process.join(0.1)
+                taylorism_log.debug('Worker process joined: pid=%s. name=%s',
+                                    self._process.pid, self.name)
+                if self._process.is_alive():
+                    self._process.terminate()
+                    taylorism_log.debug('Worker process terminated (#2): pid=%s. name=%s',
+                                        self._process.pid, self.name)
 
     def _work_and_communicate(self):
         """
@@ -314,7 +339,7 @@ class Worker(FootprintBase):
                     callback(self)
                 self._work_and_communicate_prehook()
                 to_be_sent_back.update(report=self._task())
-            except (Exception, KeyboardInterrupt, interrupt.SignalInterruptError) as e:
+            except Exception as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type,
                                                 exc_value,
@@ -659,6 +684,34 @@ class Boss(object):
                               'traceback': 'Traceback missing'}
                     self._send_report(report, splitmode=True)
 
+    def _stop_them_working(self, workers):
+        # Issue the terminate signal (SIGTERM)
+        for wname in list(workers.keys()):
+            workers[wname].stop_working()
+        # Empty the message queue (but do not process messages) because some
+        # of the workers may have completed there work in the meantime...
+        empty = False
+        while not empty:
+            try:
+                self.workers_messenger.get(timeout=communications_timeout)
+            except Empty:
+                empty = True
+        # Try to join everybody
+        for wname in list(workers.keys()):
+            workers.pop(wname).stop_working()
+
+    def _hire_worker(self, workers, instructions):
+        w = fpx.worker(**instructions)
+        if w is None:
+            raise AttributeError("no adequate Worker was found with these instructions: " +
+                                 str(instructions))
+        w.messenger = self.workers_messenger
+        if w.name not in workers.keys():
+            workers[w.name] = w
+        else:
+            raise ValueError('several workers wear the same name: ' + w.name)
+        return w
+
     def _listen(self):
         """
         Actual listening method, i.e. running subprocess at interface between
@@ -673,34 +726,6 @@ class Boss(object):
         workers = {}
         pending_instructions = []
         report = []
-
-        def stop_them_working():
-            # Issue the terminate signal (SIGTERM)
-            for wname in list(workers.keys()):
-                workers[wname].stop_working()
-            # Empty the message queue (but do not process messages) because some
-            # of the workers may have completed there work in the meantime...
-            empty = False
-            while not empty:
-                try:
-                    self.workers_messenger.get(timeout=communications_timeout)
-                except Empty:
-                    empty = True
-            # Try to join everybody
-            for wname in list(workers.keys()):
-                workers.pop(wname).stop_working()
-
-        def hire_worker(instructions):
-            w = fpx.worker(**instructions)
-            if w is None:
-                raise AttributeError("no adequate Worker was found with these instructions: " +
-                                     str(instructions))
-            w.messenger = self.workers_messenger
-            if w.name not in workers.keys():
-                workers[w.name] = w
-            else:
-                raise ValueError('several workers wear the same name: ' + w.name)
-            return w
 
         halt = False
         end = False
@@ -737,7 +762,7 @@ class Boss(object):
                                              self.control_signals['STOP_RIGHTNOW']):
                                 stop = True
                                 if control == self.control_signals['STOP_RIGHTNOW']:
-                                    stop_them_working()
+                                    self._stop_them_working(workers)
 
                     else:
                         # received new instructions
@@ -767,7 +792,10 @@ class Boss(object):
                              for a in sorted(workers[reported['name']].footprint_as_dict().items())
                              if a]
                         sys.stderr.writelines(w)
-                        stop_them_working()
+                        if isinstance(reported['report'], Exception):
+                            # The  KeyboardInterrupt/interrupt.SignalInterruptError case
+                            # is handled latter on in the overall try/except
+                            self._stop_them_working(workers)
                         raise reported['report']
                     else:
                         # worker has finished
@@ -788,9 +816,9 @@ class Boss(object):
                         instructions_and_shared_memory = instructions.copy()
                         instructions_and_shared_memory.update(self._sharedmemory_common_instructions)
                         try:
-                            w = hire_worker(instructions_and_shared_memory)
+                            w = self._hire_worker(workers, instructions_and_shared_memory)
                         except (AttributeError, ValueError):
-                            stop_them_working()
+                            self._stop_them_working(workers)
                             raise
                         w.work()
                         if self.verbose:
@@ -807,7 +835,7 @@ class Boss(object):
                 if stop:
                     break
         except (interrupt.SignalInterruptError, KeyboardInterrupt):
-            stop_them_working()
+            self._stop_them_working(workers)
             raise
 
         return (report, pending_instructions)

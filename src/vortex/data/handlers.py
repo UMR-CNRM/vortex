@@ -634,7 +634,6 @@ class Handler(object):
                 cur_tracker = self._cur_context.localtracker
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
-                print('GUIK0', self.container.exists(), cur_tracker.is_tracked_input(iotarget))
                 if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
                     # Am I consistent with the ResourceHandler recorded in the tracker ?
                     if cur_tracker[iotarget].match_rh('get', self):
