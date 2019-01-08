@@ -576,14 +576,21 @@ class EcAccessEcmwfExportService(ExportService):
         :param tmplocation: The temporary location of thee tar file (as returned
                             by :meth:`upload`)
         """
+        batchsys = self._internals.get('batchsystem', 'default')
+        batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
+        with io.open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+            stpl = fhtpl.read()
         tplname = 'autoexport_{}_sync.tpl'.format(self._TEMPLATE_ID)
         with io.open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
-            stpl = ScriptTemplate(fhtpl.read())
+            stpl += fhtpl.read()
+
+        stpl = ScriptTemplate(stpl)
 
         ldlibrary_p_add = list(self._internals.get('ldlibrary_p', []))
         py27_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python27', []))
         py3_ldlibrary_p_add = ldlibrary_p_add + list(self._internals.get('ldlibrary_p_python3', []))
-        substuff = dict(stagedir=self._internals['stagingdir'],
+        substuff = dict(jobname='vtxsync',
+                        stagedir=self._internals['stagingdir'],
                         headdir=headdir,
                         local=local,
                         tmplocation=tmplocation,
@@ -595,7 +602,7 @@ class EcAccessEcmwfExportService(ExportService):
         with tempfile.NamedTemporaryFile(mode='wt') as fhout:
             fhout.write(stpl.safe_substitute(substuff))
             fhout.flush()
-            thecmd = ['ecaccess-job-submit', '-queueName', self._internals['hostname'], fhout.name]
+            thecmd = ['ecaccess-job-submit', '-eo', '-onFailure', '-queueName', self._internals['hostname'], fhout.name]
             self._local_run(thecmd)
         logger.info("  Synchronisation script launched on %s based on template: %s",
                     self.name, tplname)
@@ -607,11 +614,17 @@ class EcAccessEcmwfExportService(ExportService):
 
     def _raw_linkexport(self, source, headdir, dest):
         """Create a link from one vortex version to another."""
+        batchsys = self._internals.get('batchsystem', 'default')
+        batchtplname = 'autoexport_{}_head_{}.tpl'.format(self._TEMPLATE_ID, batchsys)
+        with io.open(os.path.join(_TEMPLATE_DIR, batchtplname), 'rt', encoding='utf-8') as fhtpl:
+            stpl = fhtpl.read()
         tplname = 'autoexport_{}_link.tpl'.format(self._TEMPLATE_ID)
         with io.open(os.path.join(_TEMPLATE_DIR, tplname), 'rt', encoding='utf-8') as fhtpl:
-            stpl = ScriptTemplate(fhtpl.read())
+            stpl += fhtpl.read()
 
-        substuff = {'headdir': headdir, 'from': source, 'to': dest, }
+        stpl = ScriptTemplate(stpl)
+
+        substuff = {'jobname': 'vtxlink', 'headdir': headdir, 'from': source, 'to': dest, }
         with tempfile.NamedTemporaryFile(mode='wt') as fhout:
             fhout.write(stpl.safe_substitute(substuff))
             fhout.flush()

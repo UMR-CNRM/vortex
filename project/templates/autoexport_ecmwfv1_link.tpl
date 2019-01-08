@@ -1,12 +1,3 @@
-#!/bin/bash
-#PBS -N vtxlink
-#PBS -S /bin/bash
-#PBS -q ns
-#PBS -l walltime=00:02:00
-#PBS -l EC_memory_per_task=128mb
-#PBS -j oe
-#PBS -m a
-
 echo "Hostname: $(hostname)"
 echo
 

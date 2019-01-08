@@ -1,12 +1,3 @@
-#!/bin/bash
-#PBS -N vtxsync
-#PBS -S /bin/bash
-#PBS -q ns
-#PBS -l walltime=00:02:00
-#PBS -l EC_memory_per_task=128mb
-#PBS -j oe
-#PBS -m a
-
 echo "Hostname: $(hostname)"
 echo
 
@@ -43,16 +34,25 @@ cleanup()
         echo "Removing $PREVTB"
         rm -rf $PREVTB
     fi
-    echo "Removing $TGZSOURCEHOST:$TGZSOURCEFILE (ssh)"
-    ssh $TGZSOURCEHOST "rm -f $TGZSOURCEFILE"
+    if [ -n "$TGZSOURCEHOST" ] ; then
+        echo "Removing $TGZSOURCEHOST:$TGZSOURCEFILE (ssh)"
+        ssh $TGZSOURCEHOST "rm -f $TGZSOURCEFILE"
+    else
+        echo "Removing $TGZSOURCEFILE"
+        rm -f $TGZSOURCEFILE
+    fi
 }
 trap 'cleanup' 0
 
 cd $TMPWKDIR
 
 # Get the input tar file
-echo "Getting Vortex from $TGZSOURCEHOST:$TGZSOURCEFILE (scp)"
-scp $TGZSOURCEHOST:$TGZSOURCEFILE $TGZLOCALNAME
+if [ -n "$TGZSOURCEHOST" ] ; then
+    echo "Getting Vortex from $TGZSOURCEHOST:$TGZSOURCEFILE (scp)"
+    scp $TGZSOURCEHOST:$TGZSOURCEFILE $TGZLOCALNAME
+else
+    ln -s $TGZSOURCEFILE $TGZLOCALNAME
+fi
 
 # Unpack
 echo "Untar..."
