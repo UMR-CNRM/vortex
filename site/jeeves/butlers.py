@@ -47,7 +47,7 @@ class GentleTalk(object):
     OKBLUE   = '\033[94m'
     OKGREEN  = '\033[92m'
 
-    def __init__(self, datefmt='%Y/%d/%m-%H:%M:%S', loglevel=1, taskno=0):
+    def __init__(self, datefmt='%Y/%m/%d-%H:%M:%S', loglevel=1, taskno=0):
         self._datefmt  = datefmt
         self._taskno   = int(taskno)
         self.loglevel  = loglevel
