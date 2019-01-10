@@ -127,7 +127,7 @@ class ConfigSet(collections.MutableMapping):
         return len(self._internal)
 
     def clear(self):
-        self._internal = dict()
+        self._internal.clear()
 
     def __contains__(self, key):
         return self._remap_key(key) in self._internal
@@ -140,6 +140,12 @@ class ConfigSet(collections.MutableMapping):
 
     def __setattr__(self, attr, value):
         self[attr] = value
+
+    def __delattr__(self, key):
+        if key in self:
+            del self[key]
+        else:
+            raise AttributeError('No such parameter <' + key + '>')
 
     def copy(self):
         newobj = self.__class__()
@@ -168,6 +174,8 @@ class Node(getbytag.GetByTag, NiceLayout):
         self.options    = dict()
         self.play       = kw.pop('play', False)
         self._ticket    = kw.pop('ticket', None)
+        if self._ticket is None:
+            raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
         self._cycle_cb  = kw.pop('register_cycle_prefix', None)
@@ -436,7 +444,7 @@ class Node(getbytag.GetByTag, NiceLayout):
             pass
 
     def complete(self, aborted=False):
-        """Some cleaning and completetion status."""
+        """Some cleaning and completion status."""
         self._aborted = aborted
 
     def run(self, nbpass=0):
@@ -767,7 +775,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
 
     _tag_default = 'pilot'
 
-    def __init__(self, ticket=None, nodes=(),
+    def __init__(self, ticket, nodes=(),
                  rundate=None, iniconf=None, jobname=None, options=None):
         """Setup default args value and read config file job."""
         self._ticket = t = ticket
@@ -797,7 +805,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
                         tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),
                         ticket  = self.ticket,
                         nodes   = x,
-                        ** self._options
+                        ** dict(self._options)
                     )
                 )
 

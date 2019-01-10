@@ -18,7 +18,7 @@ import sys
 from bronx.fancies import loggers
 from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
-from footprints.util import rangex
+from bronx.stdtypes import date as bdate
 
 from vortex import sessions
 
@@ -545,9 +545,12 @@ class AppConfigStringDecoder(StringDecoder):
 
     """
 
-    BUILDERS = StringDecoder.BUILDERS + ['rangex', 'iniconf', 'conftool']
+    BUILDERS = StringDecoder.BUILDERS + ['geometry', 'date', 'time',
+                                         'rangex', 'daterangex',
+                                         'iniconf', 'conftool']
 
     def remap_geometry(self, value):
+        """Convert all values to Geometry objects."""
         from vortex.data import geometries
         try:
             value = geometries.get(tag=value)
@@ -555,20 +558,57 @@ class AppConfigStringDecoder(StringDecoder):
             pass
         return value
 
-    def _build_rangex(self, value, remap, subs):
-        """Build a dictionary from the **value** string."""
+    def remap_date(self, value):
+        """Convert all values to bronx' Date objects."""
+        try:
+            value = bdate.Date(value)
+        except (ValueError, TypeError):
+            pass
+        return value
+
+    def remap_time(self, value):
+        """Convert all values to bronx' Time objects."""
+        try:
+            value = bdate.Time(value)
+        except (ValueError, TypeError):
+            pass
+        return value
+
+    def _build_geometry(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        from vortex.data import geometries
+        return geometries.get(tag=val)
+
+    def _build_date(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        return bdate.Date(val)
+
+    def _build_time(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        return bdate.Time(val)
+
+    def _build_generic_rangex(self, cb, value, remap, subs):
+        """Build a rangex or daterangex from the **value** string."""
         # Try to read names arguments
         try:
             values = self._sparser(value, itemsep=' ', keysep=':')
             if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
                     for k in values.keys()]):
-                return rangex(** {k: self._value_expand(v, remap, subs)
-                                  for k, v in values.items()})
+                return cb(** {k: self._value_expand(v, remap, subs)
+                              for k, v in values.items()})
         except StringDecoderSyntaxError:
             pass
         # The usual case...
-        return rangex([self._value_expand(v, remap, subs)
-                       for v in self._sparser(value, itemsep=',')])
+        return cb([self._value_expand(v, remap, subs)
+                   for v in self._sparser(value, itemsep=',')])
+
+    def _build_rangex(self, value, remap, subs):
+        """Build a rangex from the **value** string."""
+        return self._build_generic_rangex(bdate.timeintrangex, value, remap, subs)
+
+    def _build_daterangex(self, value, remap, subs):
+        """Build a daterangex from the **value** string."""
+        return self._build_generic_rangex(bdate.daterangex, value, remap, subs)
 
     def _build_fpgeneric(self, value, remap, subs, collector):
         fp = {k: self._value_expand(v, remap, subs)

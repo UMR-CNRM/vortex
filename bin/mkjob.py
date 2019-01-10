@@ -152,10 +152,10 @@ def makejob(job):
         vortex.logger.error('A job name sould be provided.')
         exit(1)
 
-    opts['wrap']     = False
-    opts['mkopts']   = ' '.join(sys.argv[1:])
-
-    corejob, tplconf = mkjob(t, **opts)
+    corejob, tplconf = mkjob(t, auto_options_filter=('extra_wrapper',
+                                                     'extra_wrapper_keep'
+                                                     'scriptencoding'),
+                             **opts)
 
     t.sh.header('Template configuration')
 
