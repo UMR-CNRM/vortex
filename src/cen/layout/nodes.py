@@ -35,14 +35,23 @@ class S2MTaskMixIn(object):
 
         accept_errors = not determinitic_error or nerrors < 5
 
-        warningline = "!" * 40 + "\n"
-        warningmessage = warningline + "ALERT :" + str(nerrors) + " members produced a delayed exception.\n" + warningline + str(exc) + warningline
+        if accept_errors :
+            print (self.warningmessage(nerrors, exc))
+        return accept_errors, warning
 
-        if accept_errors:
-            print (warningmessage)
-            return True, warning  # Mask the exception and allows the code to exit normally
-        else:
-            return False, warning   # The delayed exception will be raised to stop execution
+    def reforecast_filter_execution_error(self, exc):
+        warning = {}
+        nerrors = len(list(enumerate(exc)))
+        warning["nfail"] = nerrors
+        accept_errors = nerrors < 5
+        if accept_errors :
+            print (self.warningmessage(nerrors, exc))
+        return accept_errors, warning
+
+    def warningmessage(self, nerrors, exc):
+        warningline = "!" * 40 + "\n"
+        return warningline + "ALERT :" + str(nerrors) + " members produced a delayed exception.\n" + warningline + str(exc) + warningline
+
 
     def get_period(self):
 

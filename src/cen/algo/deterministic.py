@@ -200,7 +200,7 @@ class Surfex_Parallel(Parallel):
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
-            need_other_run = dateforcend < self.dateend
+            need_other_run = dateend_this_run < self.dateend
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
