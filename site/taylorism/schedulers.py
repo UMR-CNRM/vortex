@@ -35,14 +35,15 @@ Dependencies
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import footprints
 from footprints import FootprintBase
+from bronx.fancies import loggers
 from bronx.system import cpus, memory
 
 import os
 import multiprocessing
-import footprints
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 MAX_NUMBER_PROCESSES = 512
 

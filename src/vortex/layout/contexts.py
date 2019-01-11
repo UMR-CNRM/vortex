@@ -10,17 +10,20 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import footprints
-from bronx.stdtypes.history  import PrivateHistory
+from bronx.fancies import loggers
+from bronx.stdtypes.history import PrivateHistory
+from bronx.patterns import getbytag, observer
 from bronx.stdtypes.tracking import Tracker
 
 from vortex.tools.env import Environment
 import vortex.tools.prestaging
+from vortex.tools.delayedactions import PrivateDelayedActionsHub
 from . import dataflow
 
 #: No automatic export.
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 _STORES_OBSBOARD = 'Stores-Activity'
@@ -62,7 +65,7 @@ def switch(tag=None):
     return current().switch(tag=tag)
 
 
-class ContextObserverRecorder(footprints.observers.Observer):
+class ContextObserverRecorder(observer.Observer):
     """Record events related to a given Context.
 
     In order to start recording, this object should be associated with a
@@ -97,15 +100,15 @@ class ContextObserverRecorder(footprints.observers.Observer):
         self._tracker_recorder = dataflow.LocalTracker()
         self._stages_recorder = list()
         self._prestaging_recorder = list()
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
-        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_STORES_OBSBOARD).register(self)
 
     def unregister(self):
         """Stop recording."""
         if self._binded_context is not None:
             self._binded_context = None
-            footprints.observers.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
-            footprints.observers.get(tag=_STORES_OBSBOARD).unregister(self)
+            observer.get(tag=_RHANDLERS_OBSBOARD).unregister(self)
+            observer.get(tag=_STORES_OBSBOARD).unregister(self)
 
     def updobsitem(self, item, info):
         if (self._binded_context is not None) and self._binded_context.active:
@@ -131,7 +134,7 @@ class ContextObserverRecorder(footprints.observers.Observer):
                 rh_stack = set()
                 for section in context.sequence.fastsearch(pr_item):
                     if section.rh.as_dict() == pr_item:
-                        section.updstage(info)
+                        context.sequence.section_updstage(section, info)
                         rh_stack.add(section.rh)
                 for rh in rh_stack:
                     rh.external_stage_update(info.get('stage'))
@@ -164,7 +167,7 @@ class DiffHistory(PrivateHistory):
         self._count = other.count
 
 
-class Context(footprints.util.GetByTag, footprints.observers.Observer):
+class Context(getbytag.GetByTag, observer.Observer):
     """Physical layout of a session or task, etc."""
 
     _tag_default = 'ctx'
@@ -189,6 +192,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
         self._wkdir    = None
         self._record   = False
         self._prestaging_hub = None  # Will be initialised on demand
+        self._delayedactions_hub = None  # Will be initialised on demand
 
         if sequence:
             self._sequence = sequence
@@ -216,8 +220,8 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                                                            dict(path=self.path),
                                                            DiffHistory())
 
-        footprints.observers.get(tag=_RHANDLERS_OBSBOARD).register(self)
-        footprints.observers.get(tag=_STORES_OBSBOARD).register(self)
+        observer.get(tag=_RHANDLERS_OBSBOARD).register(self)
+        observer.get(tag=_STORES_OBSBOARD).register(self)
 
     @property
     def active(self):
@@ -250,7 +254,7 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
                     # Update the sequence
                     for section in self._sequence.fastsearch(item):
                         if section.rh is item:
-                            section.updstage(info)
+                            self._sequence.section_updstage(section, info)
                 if ('stage' in info) or ('clear' in info):
                     # Update the local tracker
                     self._localtracker.update_rh(item, info)
@@ -355,11 +359,25 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
 
     @property
     def prestaging_hub(self):
-        """Return the prestaging hub associated with this context."""
+        """Return the prestaging hub associated with this context.
+
+        see :class:`vortex.tools.prestaging` for more details.
+        """
         if self._prestaging_hub is None:
             self._prestaging_hub = vortex.tools.prestaging.get_hub(tag='contextbound_{:s}'.format(self.tag),
                                                                    sh=self.system)
         return self._prestaging_hub
+
+    @property
+    def delayedactions_hub(self):
+        """Return the delayed actions hub associated with this context.
+
+        see :class:`vortex.tools.delayedactions` for more details.
+        """
+        if self._delayedactions_hub is None:
+            self._delayedactions_hub = PrivateDelayedActionsHub(sh=self.system,
+                                                                contextrundir=self.rundir)
+        return self._delayedactions_hub
 
     @property
     def system(self):
@@ -486,3 +504,8 @@ class Context(footprints.util.GetByTag, footprints.observers.Observer):
             self.clear()
         except TypeError:
             logger.error('Could not clear local context <%s>', self.tag)
+        # Nullify some variable to help during garbage collection
+        self._prestaging_hub = None
+        if self._delayedactions_hub:
+            self._delayedactions_hub.clear()
+            self._delayedactions_hub = None

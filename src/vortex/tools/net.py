@@ -7,8 +7,11 @@ Net tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.urllib import parse as urlparse
+
 import abc
 import collections
+from collections import namedtuple
 import ftplib
 import functools
 import io
@@ -20,18 +23,16 @@ import socket
 import stat
 import struct
 import time
-from six.moves.urllib import parse as urlparse
 from datetime import datetime
 
-import footprints
+from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 from bronx.net.netrc import netrc
-from collections import namedtuple
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def uriparse(uristring):
@@ -202,9 +203,10 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
-        rc = self._ftplib.close()
-        self._closed = True
-        self._deleted = datetime.now()
+        if not self.closed:
+            rc = self._ftplib.close()
+            self._closed = True
+            self._deleted = datetime.now()
         return rc
 
     def login(self, *args):
@@ -419,7 +421,7 @@ class StdFtp(object):
     :class:`ExtendedFtplib` and :class:`ftplib.FTP` class).
     """
 
-    _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'close', 'stderr', )
+    _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'stderr', )
 
     def __init__(self, system, hostname):
         """
@@ -443,6 +445,8 @@ class StdFtp(object):
             self._internal_ftp = ExtendedFtplib(self._system,
                                                 ftplib.FTP(self._hostname))
         return self._internal_ftp
+
+    _loginlike_extended_ftp = _extended_ftp
 
     @property
     def system(self):
@@ -472,9 +476,9 @@ class StdFtp(object):
         return '{:s}@{:s}:{:s}'.format(self.logname if self.logname is not None else 'unknown',
                                        self.host, remote)
 
-    def _delayedlogin(self):
+    def delayedlogin(self):
         """Login to the FTP server (if it was not already done)."""
-        if self._extended_ftp.closed:
+        if self._loginlike_extended_ftp.closed:
             if self.logname is None or self.cached_pwd is None:
                 logger.warning('FTP logname/password must be set first. Use the fastlogin method.')
                 raise RuntimeError('logname/password were not provided')
@@ -492,6 +496,13 @@ class StdFtp(object):
                 return actual_logname, actual_pwd
             else:
                 return None, None
+
+    def close(self):
+        """Terminates the FTP session."""
+        rc = True
+        if self._internal_ftp is not None:
+            rc = self._internal_ftp.close()
+        return rc
 
     def fastlogin(self, logname, password=None, delayed=True):
         """
@@ -527,7 +538,7 @@ class StdFtp(object):
             def osproxy(*args, **kw):
                 # For most of the native commands, we want autologin to be performed
                 if key not in self._NO_AUTOLOGIN:
-                    self._delayedlogin()
+                    self.delayedlogin()
                 # This is important because wrapper functions are cached (see __getattr__)
                 actualattr = getattr(self._extended_ftp, key)
                 return actualattr(*args, **kw)
@@ -600,18 +611,29 @@ class AutoRetriesFtp(StdFtp):
         """Reset the proxied :class:`ExtendedFtpLib` object."""
         self._internal_ftp = None
 
-    @property
-    def _extended_ftp(self):
+    def _get_extended_ftp(self, retrycount, retrydelay, exceptions_extras):
         """Delay the call to 'connect' as much as possible."""
         if self._internal_ftp is None:
             wftplib = self._retry_wrapped_callable(ftplib.FTP,
-                                                   retrycount=self.retrycount_connect,
-                                                   retrydelay=self.retrydelay_connect,
-                                                   exceptions_extras=[socket.timeout, ])
+                                                   retrycount=retrycount,
+                                                   retrydelay=retrydelay,
+                                                   exceptions_extras=exceptions_extras)
             ftplibobj = wftplib(host=self._hostname)
             logger.debug('ftplib.FTP object in use: %s', repr(ftplibobj))
             self._internal_ftp = ExtendedFtplib(self._system, ftplibobj)
         return self._internal_ftp
+
+    @property
+    def _extended_ftp(self):
+        """Delay the call to 'connect' as much as possible."""
+        return self._get_extended_ftp(self.retrycount_connect, self.retrydelay_connect,
+                                      [socket.timeout, ])
+
+    @property
+    def _loginlike_extended_ftp(self):
+        """Delay the call to 'connect' as much as possible."""
+        return self._get_extended_ftp(self.retrycount_login, self.retrydelay_login,
+                                      [ftplib.error_perm, socket.error, ])
 
     def _actual_login(self, *args):
         """Actually log in + save logname/password + correct the cwd if needed."""
@@ -725,7 +747,7 @@ class AutoRetriesFtp(StdFtp):
 
     def close(self):
         """Quit the current ftp session abruptly."""
-        rc = self._extended_ftp_lookup('close')()
+        rc = super(AutoRetriesFtp, self).close()
         self._initialise()
         return rc
 
@@ -776,14 +798,19 @@ class PooledResetableAutoRetriesFtp(ResetableAutoRetriesFtp):
 
     def forceclose(self):
         """Really quit the ftp session."""
-        return super(PooledResetableAutoRetriesFtp, self).close()
+        if self._internal_ftp is not None:
+            return super(PooledResetableAutoRetriesFtp, self).close()
+        else:
+            return True
 
     def close(self):
         """
         The ftp session is not really closed... instead, the current object is
         given back to the FTP connection pool that will be able to reuse it.
         """
-        self._pool.relinquishing(self)
+        # If no underlying library is available, do not bother...
+        if self._internal_ftp is not None:
+            self._pool.relinquishing(self)
         return True
 
 
@@ -842,6 +869,9 @@ class FtpConnectionPool(object):
             ftpc = self._reusable[(hostname, p_logname)].pop()
             ftpc.reset()
             logger.debug('Re-using a client: %s', repr(ftpc))
+            if not delayed:
+                # If requested, ensure that we are logged in
+                ftpc.delayedlogin()
             self._reused += 1
             return ftpc
         else:
@@ -1256,7 +1286,7 @@ class ActiveSshTunnel(object):
 
     @property
     def opened(self):
-        """Is the tunnel oppened ?"""
+        """Is the tunnel opened ?"""
         return self.activeprocess.poll() is None
 
     def __enter__(self):
@@ -1564,10 +1594,10 @@ class LinuxNetstats(AbstractNetstats):
     @staticmethod
     def _ip_from_hex(hexip, family=socket.AF_INET):
         if family == socket.AF_INET:
-            packed = struct.pack("<I", int(hexip, 16))
+            packed = struct.pack("<I".encode('utf8'), int(hexip, 16))
         elif family == socket.AF_INET6:
-            packed = struct.unpack(">IIII", hexip.decode('hex'))
-            packed = struct.pack("@IIII", * packed)
+            packed = struct.unpack(">IIII".encode('utf8'), hexip.decode('hex'))
+            packed = struct.pack("@IIII".encode('utf8'), * packed)
         else:
             raise ValueError("Unknown address family.")
         return socket.inet_ntop(family, packed)

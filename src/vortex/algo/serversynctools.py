@@ -8,6 +8,7 @@ import six
 import socket
 import sys
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex import sessions
@@ -16,7 +17,7 @@ from vortex.util import config
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ServerSyncTool(footprints.FootprintBase):
@@ -34,6 +35,11 @@ class ServerSyncTool(footprints.FootprintBase):
             ),
             medium = dict(
                 optional    = True,
+            ),
+            raiseonexit = dict(
+                type        = bool,
+                optional    = True,
+                default     = True
             ),
             checkinterval = dict(
                 type        = int,
@@ -114,11 +120,10 @@ class ServerSyncSimpleSocket(ServerSyncTool):
 
     def __del__(self):
         if self._socket_conn is not None:
-            self.trigger_stop()
+            logger.warning("The socket is still up... that's odd.")
         t = sessions.current()
         if t.sh.path.exists(self.medium):
             t.sh.remove(self.medium)
-        super(ServerSyncSimpleSocket, self).__del__()
 
     def _command(self, mess):
         """ Send a command (a string) to the server; wait for a response """
@@ -147,8 +152,12 @@ class ServerSyncSimpleSocket(ServerSyncTool):
                 logger.debug('Socket accept timed-out: checking for the server...')
                 self._socket_conn = None
         if self._socket_conn is None:
-            raise IOError('Apparently the server died.')
-        logger.info('The server is now waiting')
+            if self.raiseonexit:
+                raise IOError('Apparently the server died.')
+            else:
+                logger.info('The server stopped.')
+        else:
+            logger.info('The server is now waiting')
 
     def trigger_run(self):
         # Tell the server that everything is ready

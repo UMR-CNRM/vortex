@@ -7,9 +7,11 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 TODO: Module documentation
 """
 
-import io
 import six
+import io
 
+import bronx.fancies.dump
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints
 
@@ -19,7 +21,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 from intairpol.basics import AirTool
 
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ZSVDriver(AirTool):
@@ -514,7 +516,7 @@ class ZSVQualityStats(ZSVDriver):
     def complete(self):
         super(ZSVQualityStats, self).complete()
         if self.verbose:
-            print(footprints.dump.fulldump(self.record))
+            print(bronx.fancies.dump.fulldump(self.record))
         if self.update:
             self.record_dump()
         if self.stats_keys():

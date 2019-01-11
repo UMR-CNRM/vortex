@@ -7,12 +7,13 @@ A collection of utility functions used in the context of Ensemble forecasts.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
 import json
 from random import seed, sample
 import re
-import six
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex import sessions
 from vortex.data.stores import FunctionStoreCallbackError
 from vortex.util import helpers
@@ -20,7 +21,7 @@ from vortex.util import helpers
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def drawingfunction(options):
@@ -83,10 +84,10 @@ def _checkingfunction_dict(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         # If no nbsample is provided, easy to achieve...
-        nbsample = rhdict['resource'].get('nbsample', 0)
+        nbsample = rhdict['resource'].get('nbsample', None)
         # ...and if no explicit minimum of resources, nbsample is the minimum
-        nbmin = int(options.get('min', [nbsample]).pop())
-        if nbsample < nbmin:
+        nbmin = int(options.get('min', [(0 if nbsample is None else nbsample), ]).pop())
+        if nbsample is not None and nbsample < nbmin:
             logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:

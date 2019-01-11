@@ -9,8 +9,10 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import copy
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 import footprints
+
 from vortex.algo.components import AlgoComponent, Expresso, BlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
@@ -25,7 +27,7 @@ from common.data.obs import ObsMapContent
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class GetBDAPResource(AlgoComponent):

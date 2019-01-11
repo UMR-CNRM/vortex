@@ -13,6 +13,7 @@ import time
 from glob import glob
 from datetime import datetime, timedelta
 
+from bronx.patterns import getbytag
 import footprints
 
 
@@ -209,7 +210,7 @@ class Request(object):
             print(' *', attr, '=', getattr(self, attr))
 
 
-class Deposit(footprints.util.GetByTag):
+class Deposit(getbytag.GetByTag):
     """Something simple to handle a directory used by Jeeves to process requests.
 
     - ``cleaning``   : is cleaning active for this pool

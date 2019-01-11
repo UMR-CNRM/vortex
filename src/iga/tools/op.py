@@ -8,10 +8,10 @@ import re
 import six
 from tempfile import mkdtemp
 
+from bronx.fancies import loggers
 import bronx.stdtypes.date
-import vortex  # @UnusedImport
-import footprints
 
+import vortex  # @UnusedImport
 from vortex.tools.actions import actiond as ad
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
@@ -20,7 +20,7 @@ from vortex.layout.jobs import JobAssistant
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
@@ -103,7 +103,7 @@ class OpJobAssistantTest(JobAssistant):
 
         t.sh.header('Setting up the MPI Environment')
 
-        mpi, rkw = swissknife.slurm_parameters(t, **kw)
+        mpi, u_rkw = swissknife.slurm_parameters(t, **kw)  # @UnusedVariable
         t.env.OP_MPIOPTS = mpi
 
         t.sh.header('Setting up the rundate')
@@ -120,7 +120,7 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
                 if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
-                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H') 
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
@@ -162,12 +162,12 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
         t.sh.subtitle('Setting up OP Actions')
-        import iga.tools.services
-        import iga.tools.actions
+        import iga.tools.services  # @UnusedImport
+        import iga.tools.actions  # @UnusedImport
 
-        ad.add(vortex.tools.actions.SmsGateway())
+        ad.add(vortex.tools.actions.EcflowGateway())
 
-        print('+ SMS candidates =', ad.candidates('sms'))
+        print('+ ECFLOW candidates =', ad.candidates('ecflow'))
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
@@ -177,13 +177,18 @@ class OpJobAssistantTest(JobAssistant):
         ad.report(kind='dayfile', mode='DEBUT')
 
         # ----------------------------------------------------------------------
-        t.sh.header('SMS Settings')
-        ad.sms_info()
+        t.sh.header('ECFLOW Settings')
+        ad.ecflow_info()
+        ad.ecflow_off()
 
-        if t.env.SMSPASS is None:
-            ad.sms_off()
+        if t.env['ECF_PASS'] is not None:
+            ad.ecflow_on()
+            ad.ecflow_init(t.env.SLURM_JOBID)
 
-        ad.sms_init(t.env.SLURM_JOBID)
+    def _system_setup(self, t, **kw):
+        """Set usual settings for the system shell."""
+        super(OpJobAssistantTest, self)._system_setup( t, **kw)
+        t.sh.allow_cross_users_links = False
 
     def register_cycle(self, cycle):
         """Load and register a GCO cycle contents."""
@@ -208,13 +213,13 @@ class OpJobAssistantTest(JobAssistant):
     def complete(self):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
-        ad.sms_complete()
+        ad.ecflow_complete()
         print('Well done Denis !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
         """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
-        ad.sms_abort()
+        ad.ecflow_abort()
         print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
 

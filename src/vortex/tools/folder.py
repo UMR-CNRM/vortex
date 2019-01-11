@@ -10,11 +10,12 @@ data are sent using FTP or SSH, a tar file is created on the fly.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 import io
 import tempfile
 
-import six
-
+from bronx.fancies import loggers
 import footprints
 from vortex.util.iosponge import IoSponge
 from . import addons
@@ -22,10 +23,10 @@ from . import addons
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _folder_exposed_methods = set(['cp', 'mv',
-                               'ftget', 'rawftget', 'ftput', 'rawftput',
+                               'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
                                'scpget', 'scpput',
                                'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
 
@@ -99,16 +100,6 @@ class FolderShell(addons.FtrawEnableAddon):
                 rc, source, destination = self.tarfix_in(source, destination)
         return rc
 
-    def _folder_credentials(self, hostname=None, logname=None):
-        """Some heuristic to get proper values for these arguments."""
-        if hostname is None:
-            hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-
-        if logname is None:
-            logname = self.sh.env.VORTEX_ARCHIVE_USER
-
-        return (hostname, logname)
-
     def _folder_pack_stream(self, source, stdout=True):
         source_name = self.sh.path.basename(source)
         source_dirname = self.sh.path.dirname(source)
@@ -139,8 +130,8 @@ class FolderShell(addons.FtrawEnableAddon):
         """Prepare source and destination"""
         if not (source.endswith('.tgz') or source.endswith('.tar.gz') or source.endswith('.tar')):
             source += '.tgz'
+        destination = self.sh.path.abspath(self.sh.path.expanduser(destination))
         self.sh.rm(destination)
-        destination = self.sh.path.abspath(destination)
         return source, destination
 
     def _folder_postftget(self, destination, loccwd, loctmp):
@@ -171,10 +162,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Proceed direct ftp get on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname, logname = self._folder_credentials(hostname, logname)
-        if hostname is None:
-            return False
-
+        hostname = self.sh._fix_fthostname(hostname)
         source, destination = self._folder_preftget(source, destination)
         ftp = self.sh.ftp(hostname, logname)
         if ftp:
@@ -191,7 +179,7 @@ class FolderShell(addons.FtrawEnableAddon):
                     try:
                         rc = ftp.get(source, self.tmpname + extname)
                         # Auto compress=False -> let tar deal automatically with the compression
-                        self.sh.untar(self.tmpname + extname, autocompress=False)
+                        rc = rc and self.sh.untar(self.tmpname + extname, autocompress=False)
                     finally:
                         self.sh.rm(self.tmpname + extname)
             finally:
@@ -206,7 +194,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if self.sh.ftraw and self.rawftshell is not None:
+        if self.sh.ftraw:
             source, destination = self._folder_preftget(source, destination)
             loccwd = self.sh.getcwd()
             loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
@@ -225,14 +213,49 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return self._folder_ftget(source, destination, hostname, logname)
 
+    def _folder_batchrawftget(self, source, destination, hostname=None, logname=None,
+                              cpipeline=None):
+        """Use ftserv to fetch several folder-like resources"""
+        if cpipeline is not None:
+            raise IOError("It's not allowed to compress folder like data.")
+        if self.sh.ftraw:
+            loccwd = self.sh.getcwd()
+            actualsources = list()
+            actualdestinations = list()
+            tmpdestinations = list()
+            for s, d in zip(source, destination):
+                actual_s, actual_d = self._folder_preftget(s, d)
+                actualsources.append(actual_s)
+                actualdestinations.append(actual_d)
+                d_dirname = self.sh.path.dirname(actual_d)
+                self.sh.mkdir(d_dirname)
+                d_tmpdir = tempfile.mkdtemp(prefix='folder_', dir=d_dirname)
+                d_extname = self.sh.path.splitext(actual_s)[1]
+                tmpdestinations.append(self.sh.path.join(d_tmpdir, self.tmpname + d_extname))
+
+            rc = self.sh.ftserv_batchget(actualsources, tmpdestinations, hostname, logname)
+            if rc:
+                for d, t in zip(actualdestinations, tmpdestinations):
+                    loctmp = self.sh.path.dirname(t)
+                    self.sh.cd(loctmp)
+                    try:
+                        try:
+                            rc = rc and self.sh.untar(self.sh.path.basename(t), autocompress=False)
+                        finally:
+                            self.sh.rm(t)
+                    finally:
+                        self._folder_postftget(d, loccwd, loctmp)
+
+            return rc
+        else:
+            raise RuntimeError('You are not supposed to land here !')
+
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
                       cpipeline=None, sync=False):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname, logname = self._folder_credentials(hostname, logname)
-        if hostname is None:
-            return False
+        hostname = self.sh._fix_fthostname(hostname)
 
         if not destination.endswith('.tgz'):
             destination += '.tgz'
@@ -279,6 +302,7 @@ class FolderShell(addons.FtrawEnableAddon):
             raise IOError("It's not allowed to compress folder like data.")
 
         source, destination = self._folder_preftget(source, destination)
+        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         rc = False
         loccwd = self.sh.getcwd()
@@ -301,7 +325,7 @@ class FolderShell(addons.FtrawEnableAddon):
             destination += '.tgz'
 
         source = self.sh.path.abspath(source)
-
+        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         p = self._folder_pack_stream(source)
         rc = ssh.scpput_stream(p.stdout, destination)

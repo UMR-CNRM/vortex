@@ -3,11 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-import re
 import six
 from six.moves.urllib import parse as urlparse
 
+import io
+import re
+
+from bronx.fancies import loggers
 import footprints
 
 from . import addons
@@ -15,7 +17,7 @@ from . import addons
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
@@ -164,12 +166,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
-            if hostname is None:
-                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-            if hostname is None:
-                return False
-            if logname is None:
-                logname = self.sh.env.VORTEX_ARCHIVE_USER
+            hostname = self.sh._fix_fthostname(hostname)
 
             ftp = self.sh.ftp(hostname, logname)
             if ftp:
@@ -219,6 +216,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
+            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)
@@ -235,7 +233,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     grib_scpput = _std_scpput
 
     @addons.require_external_addon('ecfs')
-    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+    def grib_ecfsput(self, source, target, cpipeline=None, options=None):
         """ Put a grib resource using ECfs.
 
         :param source: source file

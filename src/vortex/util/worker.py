@@ -8,8 +8,9 @@ by a PoolWorker process of the Jeeves daemon.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
-logger = footprints.loggers.getLogger(__name__)
+from bronx.fancies import loggers
+
+logger = loggers.getLogger(__name__)
 
 
 class AttrDict(dict):
@@ -77,7 +78,7 @@ class VortexWorker(object):
 
     def reset_loggers(self, logger):
         import footprints as fp
-        fp.loggers.setLogMethods(logger, methods=self.logmap)
+        loggers.setLogMethods(logger, methods=self.logmap)
         if self.verbose:
             fp.collectors.logger.debug(self.logmsg)
             fp.collectors.logger.info(self.logmsg)

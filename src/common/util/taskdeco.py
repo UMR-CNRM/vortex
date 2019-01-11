@@ -7,13 +7,14 @@ A collection of Tasks decorators (to add usual inputs/outputs to existing classe
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex import toolbox
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def process_needs_lfi_stuff(*kargs, **kwargs):

@@ -3,6 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+from six import StringIO
+
 from unittest import TestCase, main
 
 from contextlib import contextmanager
@@ -10,15 +13,17 @@ import copy
 import datetime
 import logging
 import re
-import six
-from six import StringIO
 import sys
 import types
+
+from bronx.fancies import loggers
 
 import footprints
 from footprints import Footprint, DecorativeFootprint, FootprintBase
 from footprints import doc, priorities, reporting, collectors
 from footprints.config import FootprintSetup
+
+tloglevel = 'critical'
 
 
 # Classes to be used in module scope
@@ -539,15 +544,16 @@ class utFootprint(TestCase):
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
 
-        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
-        self.assertFalse(rv)
-        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
+        with loggers.contextboundGlobalLevel(9999):  # This is extremely quiet...
+            guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise]', somefoo=thisfoo))
+            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+            self.assertFalse(rv)
+            self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise]', stuff2='foo'))
 
-        guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
-        rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
-        self.assertFalse(rv)
-        self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
+            guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justraise:upper]', somefoo=thisfoo))
+            rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
+            self.assertFalse(rv)
+            self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justraise:upper]', stuff2='foo'))
 
     def test_footprint_replacementfmt(self):
         fp = self.fpbis
@@ -627,9 +633,10 @@ class utFootprint(TestCase):
         with self.assertRaises(footprints.FootprintFatalError):
             u_rv, u_attr_input, u_attr_seen = fp.resolve(dict())
 
-        with self.assertRaises(footprints.FootprintMaxIter):
-            cycling = dict(stuff1='[stuff2]', stuff2='[stuff1]')
-            fp.resolve(cycling, fatal=False)
+        with loggers.contextboundGlobalLevel(tloglevel):
+            with self.assertRaises(footprints.FootprintMaxIter):
+                cycling = dict(stuff1='[stuff2]', stuff2='[stuff1]')
+                fp.resolve(cycling, fatal=False)
 
         rv, u_attr_input, u_attr_seen = fp.resolve(dict(), fatal=False)
         self.assertTrue(rv)
@@ -805,6 +812,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
     def test_resolve_only(self):
+        # Only -> exact match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 rdate = datetime.date(2013, 11, 2)
@@ -857,6 +865,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
+        # Only -> 'after' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 after_rdate = datetime.date(2013, 11, 2)
@@ -877,6 +886,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
 
+        # Only -> 'before' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 before_rdate = datetime.date(2013, 11, 2)
@@ -897,6 +907,7 @@ class utFootprint(TestCase):
         rv = fp.checkonly(rd)
         self.assertFalse(rv)
 
+        # Only -> 'after' and 'before' match
         fp = Footprint(self.fpbis, dict(
             only = dict(
                 after_rdate = datetime.date(2013, 11, 2),
@@ -924,6 +935,46 @@ class utFootprint(TestCase):
         self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
         rv = fp.checkonly(rd)
         self.assertTrue(rv)
+
+        # Only -> 'regex' match
+        fp = Footprint(self.fpbis, dict(
+            only = dict(
+                stuff1 = [footprints.FPRegex(r'toto\d\.txt'),
+                          footprints.FPRegex(r'machine?\.txt')]
+            )
+        ))
+
+        for tstuff in ('four', 'toto11.txt'):
+            rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=tstuff))
+            self.assertDictEqual(rd, dict(stuff1=tstuff, stuff2='foo'))
+            rv = fp.checkonly(rd)
+            self.assertFalse(rv)
+
+        for tstuff in ('toto1.txt', 'toto5.txt', 'machine.txt', 'machin.txt'):
+            rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1=tstuff))
+            self.assertDictEqual(rd, dict(stuff1=tstuff, stuff2='foo'))
+            rv = fp.checkonly(rd)
+            self.assertTrue(rv)
+
+        fp = Footprint(self.fpbis, dict(
+            only = dict(
+                rstuff1 = footprints.FPRegex(r'toto\d\.txt')
+            )
+        ))
+
+        footprints.setup.defaults.update(rstuff1='toto1.txt')
+
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
+        self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
+        rv = fp.checkonly(rd)
+        self.assertTrue(rv)
+
+        footprints.setup.defaults.update(rstuff1='toto11.txt')
+
+        rd, u_attr_input, u_attr_seen = fp.resolve(dict(stuff1='four'))
+        self.assertDictEqual(rd, dict(stuff1='four', stuff2='foo'))
+        rv = fp.checkonly(rd)
+        self.assertFalse(rv)
 
     def test_decorative(self):
         self.assertListEqual(self.fpter.decorators, [easy_decorator, ])
@@ -1337,16 +1388,8 @@ class utFootprintBase(TestCase):
         })
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class utCollector(TestCase):
-
-    def setUp(self):
-        fplogger = footprints.loggers.getLogger('footprints')
-        self._oldlevel = fplogger.level
-        fplogger.setLevel('CRITICAL')
-
-    def tearDown(self):
-        fplogger = footprints.loggers.getLogger('footprints')
-        fplogger.setLevel(self._oldlevel)
 
     def test_collector_basic(self):
         self._internal_test_collector_basic()

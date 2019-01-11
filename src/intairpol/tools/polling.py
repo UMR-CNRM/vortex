@@ -3,14 +3,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.tools import addons
 
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class IO_Poll_Mocage(addons.Addon):

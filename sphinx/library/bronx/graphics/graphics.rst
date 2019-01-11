@@ -2,7 +2,7 @@
 =========================================
 
 .. automodule:: bronx.graphics
-   :synopsis: Graphical tools
+   :synopsis: Graphical tools (mostly related to matplotlib)
 
 .. moduleauthor:: The Vortex Team & many contributors
 .. sectionauthor:: The Vortex Team & many contributors

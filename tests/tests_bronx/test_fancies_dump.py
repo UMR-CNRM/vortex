@@ -6,8 +6,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from unittest import TestCase, main
 
-from footprints import dump
-from footprints.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
+from bronx.fancies import dump
+from bronx.fancies.dump import TxtDumper, JsonableDumper, XmlDomDumper,\
     OneLineTxtDumper
 
 
@@ -144,11 +144,6 @@ class utDump(TestCase):
         self.assertFalse(dump.is_an_instance(FooBis))
         self.assertTrue(dump.is_class(Foo))
         self.assertTrue(dump.is_class(FooBis))
-        # Indentation
-        self.assertEqual(TxtDumper._indent(nextline=False), '')
-        self.assertEqual(TxtDumper._indent(nextline=False, level=2), '')
-        self.assertEqual(TxtDumper._indent(), '\n      ')
-        self.assertEqual(TxtDumper._indent(level=1), '\n          ')
         # Lightdump
         self.assertEqual(dump.lightdump(dict(toto=Foo(), a=1)), expected_ldump)
 
@@ -196,6 +191,12 @@ class utDump(TestCase):
     def assertTxtDumper(self, obj, expected):
         td = TxtDumper()
         # print(td.cleandump(obj))
+        # Indentation
+        self.assertEqual(td._indent(nextline=False), '')
+        self.assertEqual(td._indent(nextline=False, level=2), '')
+        self.assertEqual(td._indent(), '\n      ')
+        self.assertEqual(td._indent(level=1), '\n          ')
+        # Other
         self.assertEqual(td.cleandump(obj),
                          td.indent_first * td.indent_space +
                          expected.format(me=__name__))

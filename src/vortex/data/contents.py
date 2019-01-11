@@ -3,10 +3,12 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import collections
 import six
+
+import collections
 from string import Template
 
+from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 
@@ -15,7 +17,7 @@ from vortex import sessions
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class DataContentError(ValueError):

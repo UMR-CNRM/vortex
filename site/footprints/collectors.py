@@ -9,12 +9,17 @@ The footprints proxy could make some part of the interface visible as well.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
+
 from weakref import WeakSet
 import collections
 import logging
-import six
 
-from . import config, dump, loggers, observers, priorities, reporting, util
+from bronx.fancies import dump, loggers
+from bronx.stdtypes.catalog import Catalog
+from bronx.patterns import observer, getbytag
+
+from . import config, priorities, reporting
 
 #: No automatic export
 __all__ = []
@@ -46,7 +51,7 @@ def items():
 
 # Base class
 
-class Collector(util.GetByTag, util.Catalog, observers.Observer):
+class Collector(getbytag.GetByTag, Catalog, observer.Observer):
     """
     A class collector is devoted to the gathering of class references that inherit
     from a given class (here a class with a footprint), according to some other optional criteria.
@@ -60,8 +65,8 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
 
     def __init__(self, **kw):
         logger.debug('Footprints collector init %s', str(self))
-        self.instances = util.Catalog(weak=True)
-        self.abstract_classes = util.Catalog(weak=True)
+        self.instances = Catalog(weak=True)
+        self.abstract_classes = Catalog(weak=True)
         self.register = True
         self.report = config.ONERROR_REPORTING
         self.lreport_len = config.DFLT_MAXLEN_LIGHT_REPORTING
@@ -69,8 +74,8 @@ class Collector(util.GetByTag, util.Catalog, observers.Observer):
         self.report_tag = None
         self.report_style = config.RAW_REPORTINGSTYLE
         self.non_ambiguous_loglevel = logging.INFO
-        util.GetByTag.__init__(self)
-        util.Catalog.__init__(self, **kw)
+        getbytag.GetByTag.__init__(self)
+        Catalog.__init__(self, **kw)
         if self.report_tag is None:
             self.report_tag = 'footprint-' + self.tag
         r_maxlen = None if self.report == config.FULL_REPORTING else self.lreport_len

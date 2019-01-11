@@ -34,6 +34,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: NamelistDelta
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: NamelistUtil
    :show-inheritance:
    :members:

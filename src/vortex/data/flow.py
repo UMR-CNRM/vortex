@@ -51,6 +51,12 @@ class UnknownFlow(FlowResource):
 
     _extension_remap = {k: None for k in ('auto', 'autoconfig', 'foo', 'unknown')}
 
+    def olive_basename(self):
+        target = self.nickname
+        if self.term is not None:
+            target += '+' + self.term.fmth
+        return target
+
 
 class GeoFlowResource(FlowResource):
     """Class which is a :class:`FlowResource` bound to a geometry."""

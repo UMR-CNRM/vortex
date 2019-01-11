@@ -33,21 +33,23 @@ unchanged.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from collections import defaultdict
 from datetime import datetime
 import ftplib
 import re
 
+from bronx.fancies import loggers
+from bronx.stdtypes.history import History
 from bronx.syntax.decorators import nicedeco
 import footprints
 from vortex import sessions
 from vortex.util.config import GenericConfigParser
-from vortex.util.structs import History
 from vortex.tools.actions import actiond as ad
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # Decorators: for internal use in the Storage class
@@ -166,6 +168,15 @@ class Storage(footprints.FootprintBase):
         return 'tag={:s}'.format(self.tag)
 
     @property
+    def context(self):
+        """Shortcut to the active context object."""
+        return sessions.get().context
+
+    @property
+    def session(self):
+        return sessions.current()
+
+    @property
     def sh(self):
         """Shortcut to the active System object."""
         return sessions.system()
@@ -210,6 +221,26 @@ class Storage(footprints.FootprintBase):
     def _findout_record_infos(self, kwargs):
         return dict(info=kwargs.get("info", None))
 
+    def allow_reads(self, item):  # @UnusedVariable
+        """
+        This method can be used to determine whether or not the present object
+        supports reads for **item**.
+
+        :note: This is different from **check** since, **item**'s existence is
+               not checked. It just tells if reads to **item** are supported...
+        """
+        return True
+
+    def allow_writes(self, item):  # @UnusedVariable
+        """
+        This method can be used to determine whether or not the present object
+        supports writes for **item**.
+
+        :note: This is different from **check** since, **item**'s existence is
+               not checked. It just tells if writes to **item** are supported...
+        """
+        return True
+
     def fullpath(self, item, **kwargs):
         """Return the path/URI to the **item**'s storage location."""
         # Currently no recording is performed for the check action
@@ -251,6 +282,33 @@ class Storage(footprints.FootprintBase):
         """
         return self._actual_retrieve(item, local, **kwargs)
 
+    def earlyretrieve(self, item, local, **kwargs):
+        """Trigger a delayed retrieve of **item** from the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
+        return self._actual_earlyretrieve(item, local, **kwargs)
+
+    def _actual_earlyretrieve(self, item, local, **kwargs):  # @UnusedVariable
+        """No earlyretrieve implemented by default."""
+        return None
+
+    def finaliseretrieve(self, retrieve_id, item, local, **kwargs):
+        """Finalise a delayed retrieve from the current storage place.
+
+        :note: **local** may be a path to a file or any kind of file like objects.
+        """
+        rc, idict = self._actual_finaliseretrieve(retrieve_id, item, local, **kwargs)
+        if rc is not False:
+            infos = self._findout_record_infos(kwargs)
+            infos.update(idict)
+            self.addrecord('RETRIEVE', item, status=rc, **infos)
+        return rc
+
+    def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+        """No delayedretrieve implemented by default."""
+        return False, dict()
+
     @enforce_readonly
     @do_recording('DELETE')
     def delete(self, item, **kwargs):
@@ -272,11 +330,6 @@ class Cache(Storage):
             inifile = dict(
                 optional = True,
                 default  = '@cache-[storage].ini',
-            ),
-            rootdir = dict(
-                info     = "The cache's location (usually on a filesystem).",
-                optional = True,
-                default  = '/tmp',
             ),
             headdir = dict(
                 info     = "The cache's subdirectory (within **rootdir**).",
@@ -317,26 +370,19 @@ class Cache(Storage):
         return self.actual('headdir')
 
     @property
-    def entry(self):
-        """Tries to figure out what could be the actual entry point for storage space."""
-        return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
-
-    @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}'.format(self.realkind, self.entry)
+        return '{:s}_{:s}_{:s}'.format(self.realkind, self.kind, self.actual_headdir)
 
     def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
-        return self.sh.path.join(self.entry, subpath.lstrip('/'))
+        raise NotImplementedError()
 
     def catalog(self):
         """List all files present in this cache.
 
         :note: It might be quite slow...
         """
-        entry = self.sh.path.expanduser(self.entry)
-        files = self.sh.ffind(entry)
-        return [f[len(entry):] for f in files]
+        raise NotImplementedError()
 
     def _recursive_touch(self, rc, item):
         """Make recursive touches on parent directories.
@@ -350,19 +396,6 @@ class Cache(Storage):
                 for index in range(len(items), self.rtouchskip, -1):
                     self.sh.touch(self._formatted_path(self.sh.path.join(*items[:index])))
 
-    def flush(self, dumpfile=None):
-        """Flush actual history to the specified ``dumpfile`` if record is on."""
-        if dumpfile is None:
-            logfile = '.'.join((
-                'HISTORY',
-                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
-                'P{0:06d}'.format(self.sh.getpid()),
-                self.sh.getlogname()
-            ))
-            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
-        if self.actual_record:
-            self.sh.pickle_dump(self.history, dumpfile)
-
     def _actual_fullpath(self, item, **kwargs):
         """Return the path/URI to the **item**'s storage location."""
         return self._formatted_path(item, **kwargs), dict()
@@ -375,6 +408,8 @@ class Cache(Storage):
     def _actual_check(self, item, **kwargs):
         """Check/Stat an **item** from the current storage place."""
         path = self._formatted_path(item, **kwargs)
+        if path is None:
+            return None, dict()
         try:
             st = self.sh.stat(path)
         except OSError:
@@ -383,10 +418,10 @@ class Cache(Storage):
 
     def _actual_list(self, item, **kwargs):
         """List all data resources available in the **item** directory."""
-        path = self._actual_fullpath(item, **kwargs)
-        if self.system.path.exists(path):
-            if self.system.path.isdir(path):
-                return self.system.listdir(path), dict()
+        path = self.fullpath(item, **kwargs)
+        if path is not None and self.sh.path.exists(path):
+            if self.sh.path.isdir(path):
+                return self.sh.listdir(path), dict()
             else:
                 return True, dict()
         else:
@@ -398,7 +433,12 @@ class Cache(Storage):
         intent = kwargs.get("intent", "in")
         fmt = kwargs.get("fmt", "foo")
         # Insert the element
-        rc = self.sh.cp(local, self._formatted_path(item), intent=intent, fmt=fmt)
+        tpath = self._formatted_path(item)
+        if tpath is not None:
+            rc = self.sh.cp(local, tpath, intent=intent, fmt=fmt)
+        else:
+            logger.warning('No target location for < %s >', item)
+            rc = False
         self._recursive_touch(rc, item)
         return rc, dict(intent=intent, fmt=fmt)
 
@@ -412,27 +452,31 @@ class Cache(Storage):
         tarextract = kwargs.get("tarextract", False)
         uniquelevel_ignore = kwargs.get("uniquelevel_ignore", True)
         source = self._formatted_path(item)
-        # If auto_dirextract, copy recursively each file contained in source
-        if dirextract and self.sh.path.isdir(source) and self.sh.is_tarname(local):
-            rc = True
-            destdir = self.sh.path.dirname(self.sh.path.realpath(local))
-            logger.info('Automatic directory extract to: %s', destdir)
-            for subpath in self.sh.glob(source + '/*'):
-                rc = rc and self.sh.cp(subpath,
-                                       self.sh.path.join(destdir, self.sh.path.basename(subpath)),
-                                       intent=intent, fmt=fmt)
-                # For the insitu feature to work...
-                rc = rc and self.sh.touch(local)
-        # The usual case: just copy source
-        else:
-            rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent)
-            # If auto_tarextract, a potential tar file is extracted
-            if (rc and tarextract and not self.sh.path.isdir(local) and
-                    self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
+        if source is not None:
+            # If auto_dirextract, copy recursively each file contained in source
+            if dirextract and self.sh.path.isdir(source) and self.sh.is_tarname(local):
+                rc = True
                 destdir = self.sh.path.dirname(self.sh.path.realpath(local))
-                logger.info('Automatic Tar extract to: %s', destdir)
-                rc = rc and self.sh.smartuntar(local, destdir, output=False,
-                                               uniquelevel_ignore=uniquelevel_ignore)
+                logger.info('Automatic directory extract to: %s', destdir)
+                for subpath in self.sh.glob(source + '/*'):
+                    rc = rc and self.sh.cp(subpath,
+                                           self.sh.path.join(destdir, self.sh.path.basename(subpath)),
+                                           intent=intent, fmt=fmt)
+                    # For the insitu feature to work...
+                    rc = rc and self.sh.touch(local)
+            # The usual case: just copy source
+            else:
+                rc = self.sh.cp(source, local, intent=intent, fmt=fmt, silent=silent)
+                # If auto_tarextract, a potential tar file is extracted
+                if (rc and tarextract and not self.sh.path.isdir(local) and
+                        self.sh.is_tarname(local) and self.sh.is_tarfile(local)):
+                    destdir = self.sh.path.dirname(self.sh.path.realpath(local))
+                    logger.info('Automatic Tar extract to: %s', destdir)
+                    rc = rc and self.sh.smartuntar(local, destdir,
+                                                   uniquelevel_ignore=uniquelevel_ignore)
+        else:
+            getattr(logger, 'info' if silent else 'warning')('No readable source for < %s >', item)
+            rc = False
         self._recursive_touch(rc, item)
         return rc, dict(intent=intent, fmt=fmt)
 
@@ -441,8 +485,16 @@ class Cache(Storage):
         # Get the relevant options
         fmt = kwargs.get("fmt", "foo")
         # Delete the element
-        rc = self.sh.remove(self._formatted_path(item), fmt=fmt)
+        tpath = self._formatted_path(item)
+        if tpath is not None:
+            rc = self.sh.remove(tpath, fmt=fmt)
+        else:
+            logger.warning('No target location for < %s >', item)
+            rc = False
         return rc, dict(fmt=fmt)
+
+
+DEFAULT_ARCHIVE_TUBES = ['ftp, ']
 
 
 class Archive(Storage):
@@ -466,7 +518,7 @@ class Archive(Storage):
             tube = dict(
                 info     = "How to communicate with the archive ?",
                 optional = True,
-                values   = ['ftp', ],
+                values   = DEFAULT_ARCHIVE_TUBES,
             ),
         )
     )
@@ -485,6 +537,7 @@ class Archive(Storage):
         """This archive network name (potentially read form the configuration file)."""
         return ((self.storage if self.storage != 'generic' else None) or
                 self.sh.env.VORTEX_DEFAULT_STORAGE or
+                self.sh.glove.default_fthost or
                 (self._actual_config.get(self.kind, 'storage')
                  if self._actual_config.has_option(self.kind, 'storage') else None) or
                 self.sh.default_target.get('stores:archive_storage', None) or
@@ -495,6 +548,7 @@ class Archive(Storage):
     def actual_tube(self):
         """This archive communication scheme (potentially read form the configuration file)."""
         return (self.tube or
+                self.sh.env.VORTEX_DEFAULT_ARCHIVE_TUBE or
                 (self._actual_config.get(self.kind, 'tube', None)
                  if self._actual_config.has_option(self.kind, 'tube') else None) or
                 self.sh.default_target.get('stores:archive_tube', None) or
@@ -529,6 +583,22 @@ class Archive(Storage):
             raise AttributeError("The {:s} attribute was not found in this object"
                                  .format(attr))
 
+    def _actual_earlyretrieve(self, item, local, **kwargs):
+        """Proxy to the appropriate tube dependent earlyretrieve method (if available)."""
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'earlyretrieve'), None)
+        if pmethod:
+            return pmethod(item, local, **kwargs)
+        else:
+            return None
+
+    def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):
+        """Proxy to the appropriate tube dependent finaliseretrieve method (if available)."""
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'finaliseretrieve'), None)
+        if pmethod:
+            return pmethod(retrieve_id, item, local, **kwargs)
+        else:
+            return False, dict()
+
     def _ftpfullpath(self, item, **kwargs):
         """Actual _fullpath using ftp."""
         username = kwargs.get('username', None)
@@ -537,8 +607,10 @@ class Archive(Storage):
                           logname=username,
                           delayed = True)
         if ftp:
-            rc = ftp.netpath(item)
-            ftp.close()
+            try:
+                rc = ftp.netpath(item)
+            finally:
+                ftp.close()
         return rc, dict()
 
     def _ftpprestageinfo(self, item, **kwargs):
@@ -548,7 +620,11 @@ class Archive(Storage):
             ftp = self.sh.ftp(hostname=self.actual_storage,
                               logname=username,
                               delayed = True)
-            username = ftp.logname
+            if ftp:
+                try:
+                    username = ftp.logname
+                finally:
+                    ftp.close
         baseinfo = dict(storage=self.actual_storage,
                         logname=username,
                         location=item, )
@@ -610,6 +686,39 @@ class Archive(Storage):
         )
         return rc, extras
 
+    def _ftpearlyretrieve(self, item, local, **kwargs):
+        """
+        If FtServ/ftraw is used, trigger a delayed action in order to fetch
+        several files at once.
+        """
+        cpipeline = kwargs.get('compressionpipeline', None)
+        if self.sh.rawftget_worthy(item, local, cpipeline):
+            return self.context.delayedactions_hub.register((item, kwargs.get('fmt', 'foo')),
+                                                            kind = 'archive',
+                                                            storage = self.actual_storage,
+                                                            goal = 'get',
+                                                            tube = 'ftp',
+                                                            raw = True,
+                                                            logname = kwargs.get('username', None))
+        else:
+            return None
+
+    def _ftpfinaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+        """
+        Get the resource given the **retrieve_id** identifier returned by the
+        :meth:`_ftpearlyretrieve` method.
+        """
+        extras = dict(fmt=kwargs.get('fmt', 'foo'), )
+        tmplocal = self.context.delayedactions_hub.retrieve(retrieve_id)
+        if tmplocal:
+            if self.sh.filecocoon(local):
+                rc = self.sh.mv(tmplocal, local, ** extras)
+            else:
+                raise IOError('Could not cocoon: {!s}'.format(local))
+        else:
+            rc = False
+        return rc, extras
+
     def _ftpinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
         sync_insert = kwargs.get('sync')
@@ -651,9 +760,9 @@ class Archive(Storage):
         """Actual _delete using ftp."""
         rc = None
         username = kwargs.get('username', None)
-        ftp = self.system.ftp(self.actual_storage, username)
+        ftp = self.sh.ftp(self.actual_storage, username)
         if ftp:
-            if self.check(item, kwargs):
+            if self.check(item, **kwargs):
                 logger.info('ftpdelete on ftp://%s/%s', self.actual_storage, item)
                 rc = ftp.delete(item)
                 ftp.close()
@@ -665,7 +774,269 @@ class Archive(Storage):
 # Concrete cache implementations
 # ------------------------------
 
-class MtoolCache(Cache):
+
+class FixedEntryCache(Cache):
+
+    _abstract  = True
+    _footprint = dict(
+        info = 'Default cache description (with a fixed entry point)',
+        attr = dict(
+            rootdir = dict(
+                info     = "The cache's location (usually on a filesystem).",
+                optional = True,
+                default  = '/tmp',
+            ),
+        )
+    )
+
+    @property
+    def entry(self):
+        """Tries to figure out what could be the actual entry point for storage space."""
+        return self.sh.path.join(self.actual_rootdir, self.kind, self.actual_headdir)
+
+    @property
+    def tag(self):
+        """The identifier of this cache place."""
+        return '{:s}_{:s}'.format(self.realkind, self.entry)
+
+    def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
+        return self.sh.path.join(self.entry, subpath.lstrip('/'))
+
+    def catalog(self):
+        """List all files present in this cache.
+
+        :note: It might be quite slow...
+        """
+        entry = self.sh.path.expanduser(self.entry)
+        files = self.sh.ffind(entry)
+        return [f[len(entry):] for f in files]
+
+    def flush(self, dumpfile=None):
+        """Flush actual history to the specified ``dumpfile`` if record is on."""
+        if dumpfile is None:
+            logfile = '.'.join((
+                'HISTORY',
+                datetime.now().strftime('%Y%m%d%H%M%S.%f'),
+                'P{0:06d}'.format(self.sh.getpid()),
+                self.sh.getlogname()
+            ))
+            dumpfile = self.sh.path.join(self.entry, '.history', logfile)
+        if self.actual_record:
+            self.sh.pickle_dump(self.history, dumpfile)
+
+
+@nicedeco
+def marketplace_check_write_permission(method):
+    """Look in the owners list before ny write action."""
+    def wrapped_method(self, item, *kargs, **kwargs):
+        if self.session.glove.user not in self._owners_lookup(item):
+            logger.error("You are not listed in the owners list: no write permissions for you !")
+            return False, dict()
+        else:
+            return method(self, item, *kargs, **kwargs)
+    return wrapped_method
+
+
+class MarketPlaceCache(Cache):
+    """Default cache description (with a, per item, configurable entry point)
+
+    This cache storage needs configuration data to work properly.
+
+    * In the '@cache-[storage].ini' configuration file, a [kind-headdir] section
+      is needed::
+
+        [marketplace-vortex]  # Given that kind=marketplace and headdir=vortex
+        siteconf=@marketplace-lxgmap45.ini
+        externalconf_test1_path=/somewhere/on/disk.ini
+        externalconf_test1_restrict=a_regex
+
+      This tells that a global configuration is available in '@marketplace-lxgmap45.ini'
+      and that additional configuration data can be read on disk in '/somewhere/on/disk.ini'.
+      Note that several 'externalconf' clauses can be specified. The scope of an
+      'externalconf' clause named NAME can be restricted using
+      ``externalconf_NAME_restrict``: if specified, the ``externalconf_NAME_path``
+      configuration file will only be used for cache's items matching the
+      ``externalconf_NAME_restrict`` regular expression.
+
+    * Each of the configuration files listed in '@cache-[storage].ini' (both ``siteconf``
+      and ``externalconf``) consists of sections describing cache root directories
+      for one or several cache's items::
+
+        [the_rule_id]  # An informative name that does not really matters
+        rootdir=/a/directory/somewhere/on/storage
+        regex=a_regex
+        owners=meunierlf
+
+      ``rootdir`` and ``regex`` are mandatory, they describe the cache root
+      directory for cache's items matching ``regex``. ``owners`` (coma separated
+      list), gives the list of users allowed to write into this cache. If
+      ``owners`` is omitted, no one is allowed to write into this cache.
+
+    """
+
+    _footprint = dict(
+        info = 'A fully configurable cache place.',
+        attr = dict(
+            kind = dict(
+                values   = ['marketplace', ],
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'vortex',
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kw):
+        super(MarketPlaceCache, self).__init__(*args, **kw)
+        self._internal_conf = dict()
+        self._internal_lookup = dict()
+        self._init_config()
+
+    def _process_location_config(self, global_confdict, r_confdict, stuff, section):
+        """Process one entry of a configuration file."""
+        stuff['restrict'] = r_confdict.get("restrict", None)
+        if ('regex' in stuff and 'rootdir' in stuff):
+            try:
+                stuff['regex'] = re.compile(stuff['regex'])
+            except re.error as e:
+                logger.warning('The regex provided for %s does not compile !: "%s".',
+                               section, str(e))
+                logger.warning('Please fix that... Meanwhile, %s is ignored !', section)
+            else:
+                global_confdict['locations'].append(stuff)
+        else:
+            logger.warning('"regex" and "rootdir" must be defined in section %s',
+                           section)
+
+    def _init_config(self):
+        """Read all of the initial configuration."""
+        maincfg = self._actual_config
+        conf = dict()
+        conf['register'] = dict()
+        conf['locations'] = list()
+        conf['externalconfigs'] = defaultdict(lambda: dict(restrict=None,
+                                                           seen = False))
+        # If no configuration section is available... that's fine just do nothing
+        main_sname = '{0.kind:s}-{0.actual_headdir:s}'.format(self)
+        if maincfg.has_section(main_sname):
+            conf['register'] = dict(maincfg.items(main_sname))
+            localcfg = conf['register'].get('siteconf', None)
+            # Look for a local configuration file
+            if localcfg is not None:
+                logger.debug("Reading config file: %s", localcfg)
+                localcfg = GenericConfigParser(inifile=localcfg)
+                for section in localcfg.sections():
+                    logger.debug("New location found: %s", section)
+                    self._process_location_config(conf, dict(),
+                                                  dict(localcfg.items(section)),
+                                                  section)
+            # Look for any external configurations
+            for key in conf['register'].keys():
+                k_match = re.match(r'(externalconf\w*)_path$', key)
+                if k_match:
+                    r_id = k_match.group(1)
+                    i_path_key = '{:s}_path'.format(r_id)
+                    i_restrict_key = '{:s}_restrict'.format(r_id)
+                    conf['externalconfigs'][r_id]['path'] = conf['register'][i_path_key]
+                    if i_restrict_key in conf['register'].keys():
+                        tmp_restrict = conf['register'][i_restrict_key]
+                        try:
+                            tmp_restrict = re.compile(tmp_restrict)
+                        except re.error as e:
+                            logger.warning('The regex provided for %s does not compile !: "%s".',
+                                           r_id, str(e))
+                            logger.warning('Please fix that... Meanwhile, %s is ignored !', r_id)
+                        else:
+                            conf['externalconfigs'][r_id]['restrict'] = tmp_restrict
+
+            for r_confk, r_conf in conf['externalconfigs'].items():
+                if r_conf['restrict'] is None:
+                    self._ingest_external_config(r_confk, r_conf, conf)
+
+        self._internal_conf = conf
+
+    def _ingest_external_config(self, r_id, r_confdict, global_confdict):
+        """Read and process an external configuration file."""
+        logger.info("Reading config file: %s (id=%s)", r_confdict['path'], r_id)
+        if self.sh.path.isfile(r_confdict['path']):
+            cfg_parser = GenericConfigParser(inifile=r_confdict['path'])
+            # Update the configuration using the parser
+            for section in cfg_parser.sections():
+                logger.debug("New location found: %s", section)
+                stuff = dict(cfg_parser.items(section))
+                self._process_location_config(global_confdict, r_confdict, stuff, section)
+                r_confdict['seen'] = True
+        else:
+            logger.warning("The remote configuration < %s > couldn't be found.",
+                           r_confdict['path'])
+
+    def _conf_lookup(self, what, item):
+        """Try to find configuration data related to **item**."""
+        if item not in self._internal_lookup:
+            conf = self._internal_conf
+            # Check for matching external configs
+            for r_confk, r_conf in conf['externalconfigs'].items():
+                if ((not r_conf['seen']) and r_conf['restrict'] is not None and
+                        r_conf['restrict'].match(item)):
+                    self._ingest_external_config(r_confk, r_conf, conf)
+            # And go !
+            found = [ldesc for ldesc in conf['locations']
+                     if ((ldesc['restrict'] is None or ldesc['restrict'].match(item)) and
+                         ldesc['regex'].match(item))]
+            if found:
+                if len(found) > 1:
+                    logger.warning('Multiple matches for < %s >...', item)
+                self._internal_lookup[item] = found[0]
+            else:
+                self._internal_lookup[item] = dict()
+        return self._internal_lookup[item].get(what, None)
+
+    def _rootdir_lookup(self, item):
+        """Try to find an appropriate rootdir for **item**."""
+        return self._conf_lookup('rootdir', item)
+
+    def _owners_lookup(self, item):
+        """Try to find an appropriate owners list for **item**."""
+        owners = self._conf_lookup('owners', item)
+        if owners is None:
+            return list()
+        else:
+            return owners.split(',')
+
+    def allow_reads(self, item):
+        """
+        This method can be used to determine whether or not the present object
+        supports reads for **item**.
+        """
+        return self._rootdir_lookup(item) is not None
+
+    def allow_writes(self, item):
+        """
+        This method can be used to determine whether or not the present object
+        supports writes for **item**.
+        """
+        return (self._rootdir_lookup(item) is not None and
+                self.session.glove.user in self._owners_lookup(item))
+
+    def _formatted_path(self, subpath, **kwargs):  # @UnusedVariable
+        """Resolve the cache rootdir if possible."""
+        rootdir = self._rootdir_lookup(subpath)
+        if rootdir is None:
+            return rootdir
+        else:
+            return self.sh.path.join(rootdir, self.actual_headdir, subpath.lstrip('/'))
+
+    @marketplace_check_write_permission
+    def _actual_insert(self, item, local, **kwargs):
+        return super(MarketPlaceCache, self)._actual_insert(item, local, **kwargs)
+
+    @marketplace_check_write_permission
+    def _actual_delete(self, item, **kwargs):
+        return super(MarketPlaceCache, self)._actual_delete(item, **kwargs)
+
+
+class MtoolCache(FixedEntryCache):
     """Cache items for the MTOOL jobs (or any job that acts like it)."""
 
     _footprint = dict(
@@ -710,6 +1081,34 @@ class MtoolCache(Cache):
         return self.sh.path.join(cache, self.actual_headdir)
 
 
+class MtoolBuddiesCache(MtoolCache):
+    """Read-only MTOOL like caches."""
+
+    _footprint = dict(
+        info = 'A place to store file to be sent with ftserv',
+        attr = dict(
+            kind = dict(
+                values   = ['mtoolbuddies', ],
+            ),
+            headdir = dict(
+                optional = True,
+                default  = 'vortexbuddies',
+            ),
+            readonly = dict(
+                values  = [True, ],
+                default = True,
+            )
+        )
+    )
+
+    def allow_reads(self, item):  # @UnusedVariable
+        """
+        This method can be used to determine whether or not the present object
+        supports reads for **item**.
+        """
+        return self.sh.path.isdir(self.entry)
+
+
 class FtStashCache(MtoolCache):
     """A place to store file to be sent with ftserv."""
 
@@ -727,7 +1126,7 @@ class FtStashCache(MtoolCache):
     )
 
 
-class Op2ResearchCache(Cache):
+class Op2ResearchCache(FixedEntryCache):
     """Cache of the operational suite (read-only)."""
 
     _footprint = dict(
@@ -745,6 +1144,7 @@ class Op2ResearchCache(Cache):
                 default  = 'vortex',
             ),
             readonly = dict(
+                values  = [True, ],
                 default = True,
             )
         )
@@ -765,7 +1165,7 @@ class Op2ResearchCache(Cache):
         return self.sh.path.join(cache, self.actual_headdir)
 
 
-class HackerCache(Cache):
+class HackerCache(FixedEntryCache):
     """A dirty cache where users can hack things."""
 
     _footprint = dict(

@@ -8,9 +8,9 @@ import logging
 import six
 import sys
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints
-from footprints import loggers
 import taylorism
 import vortex
 from vortex.tools.systems import ExecutionError

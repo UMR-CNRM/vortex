@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 import unittest
 
+from bronx.fancies import loggers
 from bronx.system.cpus import CpusToolUnavailableError, LinuxCpusInfo
 
 DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
@@ -49,8 +50,9 @@ class TestLinuxCpusInfo(unittest.TestCase):
                              list([0, 4, 1, 5, 2, 6, 3, 7, 8, 12, 9, 13, 10, 14, 11, 15]))
         self.assertListEqual(list(cinfo.socketpacked_cpulist(bsize=2)),
                              list([0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15]))
-        self.assertListEqual(list(cinfo.socketpacked_cpulist(bsize=3)),
-                             list([0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]))
+        with loggers.contextboundGlobalLevel('error'):
+            self.assertListEqual(list(cinfo.socketpacked_cpulist(bsize=3)),
+                                 list([0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14]))
         self.assertListEqual(list(cinfo.socketpacked_cpulist(bsize=4)),
                              list([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
         self.assertListEqual(list(cinfo.socketpacked_cpulist(bsize=5)),

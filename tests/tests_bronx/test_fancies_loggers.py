@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from unittest import TestCase, main
 
-from footprints import loggers
+from bronx.fancies import loggers
 
 
 class utLogger(TestCase):
@@ -16,13 +16,17 @@ class utLogger(TestCase):
         stack = list()
         sl = loggers.SlurpHandler(stack)
         lg.addHandler(sl)
-        lg.info("Will this be replayed ???")
-        lg.removeHandler(sl)
-        lg.info("This should not be replayed")
-        self.assertEqual(len(stack), 1)
-        for r in stack:
-            lg.handle(r)
-
+        try:
+            clevel = loggers.console.level
+            loggers.console.setLevel('WARNING')
+            lg.info("Will this be replayed ???")
+            lg.removeHandler(sl)
+            lg.info("This should not be replayed")
+            self.assertEqual(len(stack), 1)
+            for r in stack:
+                lg.handle(r)
+        finally:
+            loggers.console.setLevel(clevel)
 
 
 if __name__ == '__main__':

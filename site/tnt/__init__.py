@@ -22,4 +22,4 @@ from . import config
 from . import namadapter
 from . import util
 
-__version__ = '1.1.1'
+__version__ = '1.1.2'

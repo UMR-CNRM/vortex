@@ -4,7 +4,7 @@
 """
 This module contains the definition of all the Geometry objects widely in
 Vortex's resources description. Geometry objects rely on the
-:class:`footprints.util.GetByTag` class.
+:class:`bronx.patterns.getbytag.GetByTag` class.
 
 When this module is first imported, pre-defined geometries are automatically
 created using:
@@ -57,8 +57,11 @@ class documentation for more details.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
 import six
+import re
+
+from bronx.fancies import loggers
+import bronx.patterns.getbytag
 
 import footprints
 
@@ -68,7 +71,7 @@ from vortex.util.config import GenericConfigParser
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # Module Interface
@@ -112,7 +115,7 @@ def grep(**kw):
 
 # Abstract geometry classes
 
-class Geometry(footprints.util.GetByTag):
+class Geometry(bronx.patterns.getbytag.GetByTag):
     """Abstract geometry."""
 
     _tag_implicit_new = False

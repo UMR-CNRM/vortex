@@ -37,3 +37,9 @@ Basic types
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FPRegex
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

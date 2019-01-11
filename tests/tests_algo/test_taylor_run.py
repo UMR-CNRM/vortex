@@ -5,18 +5,32 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import re
+import sys
 import tempfile
 import unittest
 
+from bronx.fancies import loggers
 import footprints
 
 import vortex
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
-tlog = footprints.loggers.getLogger('taylorism')
-vlog = footprints.loggers.getLogger('vortex')
-testlogger = footprints.loggers.getLogger(__name__)
+tlog = loggers.getLogger('taylorism')
+vlog = loggers.getLogger('vortex')
+testlogger = loggers.getLogger(__name__)
+
+
+def stderr2out_deco(f):
+    def wrapped_f(*kargs, **kwargs):
+        oldstderr = sys.stderr
+        sys.stderr = sys.stdout
+        try:
+            return f(*kargs, **kwargs)
+        finally:
+            sys.stderr = oldstderr
+    wrapped_f.__name__ = f.__name__
+    return wrapped_f
 
 
 class MyTaylorRunAlgo(TaylorRun):
@@ -64,6 +78,9 @@ class MyTaylorRunAlgo(TaylorRun):
                                                   name=['{:s}_process{:06d}'.format(self.prefix, i), ]))
 
         self._default_post_execute(rh, opts)
+
+    def postfix_post_dirlisting(self):
+        pass
 
 
 class MyTaylorRunAlgoWorker(TaylorVortexWorker):
@@ -144,6 +161,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
         algo.run()
         self.assertOutputs('basic1', 8)
 
+    @stderr2out_deco
     def test_failing_taylorun(self):
         algo = footprints.proxy.component(kind='unittest_taylor_run_1',
                                           prefix='failing1', loopcount=8, failer=2)

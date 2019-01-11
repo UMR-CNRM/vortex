@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from collections import defaultdict
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time, Month
 import footprints
 
@@ -18,7 +19,7 @@ from vortex.layout.dataflow import intent
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Forecast(IFSParallel):
@@ -297,6 +298,12 @@ class FullPosGeo(FullPos):
         )
     )
 
+    _RUNSTORE = 'RUNOUT'
+
+    def _compute_target_name(self, r):
+        return ('PF' + re.sub('^(?:ICMSH)(.*?)(?:INIT)(.*)$', r'\1\2',
+                              r.container.localpath()).format(self.xpname))
+
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
 
@@ -343,22 +350,32 @@ class FullPosGeo(FullPos):
             # Standard execution
             super(FullPosGeo, self).execute(rh, opts)
 
+            # Find the output filename
+            output_file = [x for x in sh.glob('PF{0:s}*+*'.format(self.xpname))]
+            if len(output_file) != 1:
+                raise AlgoComponentError("No or multiple output files found.")
+            output_file = output_file[0]
+
             # prepares the next execution
             if isMany:
                 # Set a local storage place
-                runstore = 'RUNOUT'
-                sh.mkdir(runstore)
+                sh.mkdir(self._RUNSTORE)
                 # Freeze the current output
-                for posfile in [x for x in sh.glob('PF{0:s}*+*'.format(self.xpname))]:
-                    sh.move(posfile, sh.path.join(runstore, 'pfout_{:d}'.format(num)), fmt = r.container.actualfmt)
-
+                sh.move(output_file, sh.path.join(self._RUNSTORE, 'pfout_{:d}'.format(num)),
+                        fmt = r.container.actualfmt)
                 sh.remove(infile, fmt=r.container.actualfmt)
-
+                # Cleaning/Log management
                 if not self.server_run:
                     # The only one listing
                     sh.cat('NODE.001_01', output='NODE.all')
                     # Some cleaning
                     sh.rmall('ncf927', 'dirlst')
+            else:
+                # Link the output files to new style names
+                sh.cp(output_file, self._compute_target_name(r),
+                      fmt=r.container.actualfmt, intent='in')
+                # Link the listing to NODE.all
+                sh.cp('NODE.001_01', 'NODE.all', intent='in')
 
     def postfix(self, rh, opts):
         """Post processing cleaning."""
@@ -371,9 +388,8 @@ class FullPosGeo(FullPos):
         )]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
-                sh.move('RUNOUT/pfout_{:d}'.format(num),
-                        'PF' + re.sub('^(?:ICMSH)(.*?)(?:INIT)(.*)$', r'\1\2', r.container.localpath()).format(self.xpname),
-                        fmt=r.container.actualfmt)
+                sh.move('{:s}/pfout_{:d}'.format(self._RUNSTORE, num),
+                        self._compute_target_name(r), fmt=r.container.actualfmt)
 
         super(FullPosGeo, self).postfix(rh, opts)
 

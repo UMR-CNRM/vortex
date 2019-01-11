@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.outflow import StaticResource
 from vortex.data.flow    import GeoFlowResource
@@ -18,7 +18,7 @@ Ctpini files
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class CtpiniDirectiveFile(GeoFlowResource):

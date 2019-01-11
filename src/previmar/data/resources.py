@@ -3,8 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period
-import footprints
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
@@ -14,7 +14,7 @@ from common.data.modelstates import InitialCondition
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('radical', lambda s: s.fields)
@@ -195,11 +195,6 @@ class ForcingOutData(InitialCondition):
                 values  = ['preatm', 'tauewd', 'taunwd',
                            'windx', 'windy', 'mslprs',
                            'wndnwd', 'wndewd'],
-                remap = {
-                    'windx': 'wndewd',
-                    'windy': 'wndnwd',
-                    'preatm': 'mslprs',
-                },
             ),
         )
     )

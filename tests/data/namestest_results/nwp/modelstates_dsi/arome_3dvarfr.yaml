@@ -1146,7 +1146,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rCM
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_00.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1161,7 +1161,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rCM
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_00.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1326,7 +1326,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rTR
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_03.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1341,7 +1341,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rTR
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_03.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r3/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1416,7 +1416,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rSX
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_06.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1431,7 +1431,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rSX
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_06.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r6/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1506,7 +1506,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rNF
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_09.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1521,7 +1521,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rNF
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_09.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r9/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1686,7 +1686,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rPM
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_12.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1701,7 +1701,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rPM
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_12.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r12/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1776,7 +1776,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rQZ
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_15.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1791,7 +1791,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rQZ
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_15.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r15/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -1956,7 +1956,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rDH
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_18.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -1971,7 +1971,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rDH
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_18.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r18/ICMSHSURF+0043
   - !test_names.core.SingleTest
@@ -2046,7 +2046,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0000.sfx.rVU
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_21.00
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHSURF+0000
   - !test_names.core.SingleTest
@@ -2061,7 +2061,7 @@
       term: 43
     results: !test_names.core.TestResults
     - default: *id001
-      location: file://oper.inline.fr/arome/france/oper/data/fic_day/ICMSHAROM+0043.sfx.rVU
+      location: file://oper.inline.fr/arome/france/oper/data/fic_day/PREP.fa_21.43
     - default: *id002
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r21/ICMSHSURF+0043
   - !test_names.core.SingleTest

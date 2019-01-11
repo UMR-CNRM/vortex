@@ -22,6 +22,8 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 from argparse import ArgumentParser
 
+from bronx.fancies import loggers
+
 import vortex
 from vortex.util.introspection import Sherlock
 
@@ -209,7 +211,6 @@ def main():
     args.discard = args.discard.split(',')
 
     sh = vortex.sh()
-    sh.header('Checking vortex ' + vortex.__version__ + ' library documentation')
 
     intro = Sherlock()
 
@@ -226,7 +227,8 @@ def main():
         if any([modulename.startswith(d) for d in args.discard]):
             continue
         if not loaded:
-            sh.import_module(modulename)
+            with loggers.contextboundGlobalLevel('error'):
+                sh.import_module(modulename)
 
         module = sys.modules[modulename]
         rst = intro.rstfile(module)

@@ -17,6 +17,8 @@ import pprint
 
 import yaml
 
+from bronx.fancies import loggers
+import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
 import vortex.syntax.stdattrs
@@ -30,9 +32,11 @@ import cen  # @UnusedImport
 import previmar  # @UnusedImport
 
 from .utils import YamlOrderedDict
+from test_algo_server import tloglevel
+from bronx.fancies.loggers import contextboundGlobalLevel
 
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -158,44 +162,45 @@ class TestDriver(object):
         del default['vconf']
         return getattr(self, '_format_default_{:s}'.format(self._defaults_style))(default)
 
-    def compute_results(self):
+    def compute_results(self, loglevel='info'):
         """Launch all the tests (compute the associated locations)."""
         original_stag = vortex.sessions.get().tag
         try:
-            gl = vortex.sessions.getglove(user='tourist')
-            t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
-            logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
-            t.env.MTOOLDIR = '/'
-            # Deal with genvs
-            for genv in self._genvs:
-                try:
-                    with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
-                        genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
-                except IOError:
-                    logger.error("Genv cycle << %s >> not found.", genv)
-                    raise
-                gco.tools.genv.autofill(cycle=genv, gcout=genvstuff)
-                logger.debug("Genv cycle << %s >> registered", genv)
-            # Run things for each default
-            for default in self._defaults:
-                original_vapp = t.glove.vapp
-                original_vconf = t.glove.vconf
-                original_defaults = fp.setup.defaults.copy()  # @UndefinedVariable
-                try:
-                    rawdefault = default.raw.copy()
-                    if 'vapp' in rawdefault:
-                        t.glove.vapp = rawdefault['vapp']
-                    if 'vconf' in rawdefault:
-                        t.glove.vconf = rawdefault['vconf']
-                    fp.setup.defaults = self._format_default(rawdefault)
-                    logger.debug("Glove's vapp/vconf: %s/%s", t.glove.vapp, t.glove.vconf)
-                    logger.debug("Footprints defaults: %s", str(fp.setup.defaults))
-                    for tstack in self._todo:
-                        tstack.compute_results(default)
-                finally:
-                    t.glove.vapp = original_vapp
-                    t.glove.vconf = original_vconf
-                    fp.setup.defaults = original_defaults
+            with contextboundGlobalLevel(loglevel):
+                gl = vortex.sessions.getglove(user='tourist')
+                t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
+                logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
+                t.env.MTOOLDIR = '/'
+                # Deal with genvs
+                for genv in self._genvs:
+                    try:
+                        with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
+                            genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
+                    except IOError:
+                        logger.error("Genv cycle << %s >> not found.", genv)
+                        raise
+                    gco.tools.genv.autofill(cycle=genv, gcout=genvstuff)
+                    logger.debug("Genv cycle << %s >> registered", genv)
+                # Run things for each default
+                for default in self._defaults:
+                    original_vapp = t.glove.vapp
+                    original_vconf = t.glove.vconf
+                    original_defaults = fp.setup.defaults.copy()  # @UndefinedVariable
+                    try:
+                        rawdefault = default.raw.copy()
+                        if 'vapp' in rawdefault:
+                            t.glove.vapp = rawdefault['vapp']
+                        if 'vconf' in rawdefault:
+                            t.glove.vconf = rawdefault['vconf']
+                        fp.setup.defaults = self._format_default(rawdefault)
+                        logger.debug("Glove's vapp/vconf: %s/%s", t.glove.vapp, t.glove.vconf)
+                        logger.debug("Footprints defaults: %s", str(fp.setup.defaults))
+                        for tstack in self._todo:
+                            tstack.compute_results(default)
+                    finally:
+                        t.glove.vapp = original_vapp
+                        t.glove.vconf = original_vconf
+                        fp.setup.defaults = original_defaults
         finally:
             vortex.sessions.switch(original_stag)
 
@@ -226,7 +231,7 @@ class TestDriver(object):
             me.check_against(ref)
 
 
-class TestsStack(fp.util.Catalog):
+class TestsStack(bronx.stdtypes.catalog.Catalog):
     """Contains a subset of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):

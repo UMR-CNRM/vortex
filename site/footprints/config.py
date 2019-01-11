@@ -7,7 +7,11 @@ Footprint dynamic configuration.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-from . import loggers, reporting, util
+from bronx.fancies import loggers
+from bronx.stdtypes import dictionaries
+from bronx.patterns import getbytag
+
+from . import reporting
 
 #: No automatic export
 __all__ = []
@@ -65,7 +69,7 @@ DFLT_MAXLEN_LIGHT_REPORTING = 100
 
 # Base class
 
-class FootprintSetup(util.GetByTag):
+class FootprintSetup(getbytag.GetByTag):
     """Defines some defaults and external tools."""
 
     def __init__(self, docstrings=1, extended=True, fastmode=False,
@@ -91,7 +95,7 @@ class FootprintSetup(util.GetByTag):
         else:
             self.proxies = set(proxies)
 
-        self._defaults  = util.LowerCaseDict()
+        self._defaults  = dictionaries.LowerCaseDict()
         if defaults is not None:
             self._defaults.update(defaults)
             logger.warning('New FootprintSetup')
@@ -138,7 +142,7 @@ class FootprintSetup(util.GetByTag):
 
     def _set_defaults(self, *args, **kw):
         """Property setter for current defaults environment of the footprint resolution."""
-        self._defaults = util.LowerCaseDict()
+        self._defaults = dictionaries.LowerCaseDict()
         self._defaults.update(*args, **kw)
 
     defaults = property(_get_defaults, _set_defaults)

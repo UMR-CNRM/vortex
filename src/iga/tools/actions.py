@@ -7,10 +7,12 @@ Actions specific to operational needs.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import collections
 import six
+import collections
 
+from bronx.fancies import loggers
 import footprints
+
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
 from vortex.tools.actions import Action, actiond
@@ -20,7 +22,7 @@ from vortex.util.config import GenericConfigParser
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class SendAlarm(Action):

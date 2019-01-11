@@ -3,16 +3,108 @@
 # pylint: disable=unused-argument
 
 """
-Data dumper... mostly used in objects' docstring with a footprint.
+Data dumper... The (challenging) idea is to be able to dump any object to many
+different formats.
+
+It is mostly used in objects' docstring within the footprints package.
+
+:note: Dumper objects are managed using :mod:`bronx.patterns.getbytag`;
+       consequently, they are associated with a ``tag`` and can be re-used.
+
+Example::
+
+    >>> class Foo(object):
+    ...     a = 1
+    ...
+    ...     def __str__(self):
+    ...         return str(self.a)
+
+    >>> somelist = [dict(akey=Foo(),bkey=['item1', 'item2'],
+    ...                  ckey=dict(other=1, sutff=2)), 'a_string',
+    ...             ['another', 'list', tuple([1, 2, 3])]]
+
+    # A Txt Dumper object can be created directly
+    >>> tdumper = TxtDumper()
+    >>> print(tdumper.tag)
+    default
+
+    # Or using get(). Since getbytag is used, the same objet is dumped
+    >>> tdumper_bis = get()
+    >>> tdumper_bis is tdumper
+    True
+
+    >>> print(tdumper.cleandump(somelist)) # doctest: +ELLIPSIS
+          [dict(
+                  akey = ...Foo::1, 
+                  bkey = ['item1', 'item2'], 
+                  ckey = dict(
+                      other = 1, 
+                      sutff = 2,
+                  ),
+              ), 'a_string', ['another', 'list', (1, 2, 3)]]
+
+    # The Jsonable Dumper will produce something that can safely be dumped to
+    # a JSON File
+    >>> jdumper = JsonableDumper(tag='testdumper')
+    >>> jdumper.cleandump(somelist) # doctest: +ELLIPSIS
+    [{'akey': ...'...Foo::1', 'bkey': [...'item1', ...'item2'], 'ckey': {'sutff': 2, 'other': 1}}, ...'a_string', [...'another', ...'list', [1, 2, 3]]]
+
+    # The XML Dumper returns a xml.dom's Document object
+    >>> xdumper = XmlDomDumper()
+    >>> xd = xdumper.cleandump(somelist, 'testxml')
+    >>> xd # doctest: +ELLIPSIS
+    <xml.dom.minidom.Document instance at 0x...>
+    >>> print(xd.toprettyxml(indent='  ', encoding='utf-8')) # doctest: +ELLIPSIS
+    <?xml version="1.0" encoding="utf-8"?>
+    <testxml>
+      <generic_item>
+        <akey>
+          <generic_object>
+            <overview>1</overview>
+            <type>...Foo</type>
+          </generic_object>
+        </akey>
+        <bkey>item1</bkey>
+        <bkey>item2</bkey>
+        <ckey>
+          <other>1</other>
+          <sutff>2</sutff>
+        </ckey>
+      </generic_item>
+      <generic_item>a_string</generic_item>
+      <generic_item>
+        <generic_item>another</generic_item>
+        <generic_item>list</generic_item>
+        <generic_item>
+          <generic_item>1</generic_item>
+          <generic_item>2</generic_item>
+          <generic_item>3</generic_item>
+        </generic_item>
+      </generic_item>
+    </testxml>
+    <BLANKLINE>
+
+    # Interface functions can be used to obtain quickly a text dump
+    >>> print(fulldump(somelist)) # doctest: +ELLIPSIS
+          [dict(
+                  akey = ...Foo::1, 
+                  bkey = ['item1', 'item2'], 
+                  ckey = dict(
+                      other = 1, 
+                      sutff = 2,
+                  ),
+              ), 'a_string', ['another', 'list', (1, 2, 3)]]
+
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-from xml.dom import minidom
-import re
 import six
 
-from . import util
+import re
+from xml.dom import minidom
+
+from bronx.patterns import getbytag
 
 #: No automatic export
 __all__ = []
@@ -53,13 +145,17 @@ def get(**kw):
     return TxtDumper(**kw)
 
 
-class _AbstractDumper(util.GetByTag):
+class _AbstractDumper(getbytag.GetByTag):
     """Could dump almost anything."""
 
     def __init__(self):
+        """
+        No arguments.
+        """
         self.reset()
 
     def reset(self):
+        """Clear the Dumper's object cache."""
         self.seen = dict()
 
     def _dump_internal_dict(self, obj, level=0, nextline=True):
@@ -167,7 +263,7 @@ class _AbstractDumper(util.GetByTag):
 class JsonableDumper(_AbstractDumper):
     """Return a dump consisting of a pure mix of dictionaries and lists.
 
-    The resulting dump can be serialised using the standard pickle module.
+    The resulting dump can be serialised using the standard pickle or json module.
     """
 
     def dump_dict(self, obj, level=0, nextline=True):
@@ -186,15 +282,16 @@ class JsonableDumper(_AbstractDumper):
 
 
 class XmlDomDumper(JsonableDumper):
-    """Return a dump as an XML DOM object (instance of :class:`xml.minidom.Document`).
-
-    :param tuple named_nodes: List of XML nodes that support a `name` attribute.
-        For such nodes, a dictionary will be converted as follows :
-        ``attr=dict(toto="BlaBla",titi="BlaBla")`` becomes
-        ``<attr name="toto">BlaBla</attr><attr name="titi">BlaBla</attr>``
-    """
+    """Return a dump as an XML DOM object (instance of :class:`xml.minidom.Document`)."""
 
     def __init__(self, named_nodes=()):
+        """
+        :param tuple named_nodes: List of XML nodes that support a `name` attribute.
+            For such nodes, a dictionary will be converted as follows :
+            ``attr=dict(toto="BlaBla",titi="BlaBla")`` becomes
+            ``<attr name="toto">BlaBla</attr><attr name="titi">BlaBla</attr>``
+
+        """
         super(XmlDomDumper, self).__init__()
         self._named_nodes = named_nodes
 
@@ -322,11 +419,10 @@ class TxtDumper(_AbstractDumper):
     break_before_dict_end = True
     break_after_dict_end = False
 
-    @classmethod
-    def _indent(cls, level=0, nextline=True):
+    def _indent(self, level=0, nextline=True):
         if nextline:
-            return "\n" + cls.indent_space * (cls.indent_first +
-                                              cls.indent_size * level)
+            return "\n" + self.indent_space * (self.indent_first +
+                                               self.indent_size * level)
         else:
             return ""
 
@@ -442,7 +538,6 @@ class TxtDumper(_AbstractDumper):
             )
         else:
             items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
-                                       # self.dump(k, level + 1),
                                        six.text_type(k),
                                        self._indent(level + 2, self.break_before_dict_value),
                                        self._recursive_dump(v, level + 1))
@@ -511,12 +606,18 @@ def lightdump(obj, break_before_dict_key=True, break_before_dict_value=False):
     :param obj: The object that will be dumped
     """
     _DEBUG('dump_dict', obj)
+    d = TxtDumper()
     items = [
         "%s%s = %s%s," % (
-            TxtDumper._indent(0, break_before_dict_key),
+            d._indent(0, break_before_dict_key),
             six.text_type(k),
-            TxtDumper._indent(1, break_before_dict_value),
+            d._indent(1, break_before_dict_value),
             six.text_type(v)
         ) for k, v in sorted(obj.items(), key=lambda x: x[0])
     ]
     return ''.join(items)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

@@ -11,17 +11,19 @@ import copy
 import io
 import six
 
+from bronx.fancies import loggers
 import footprints
 
-from vortex.algo.components import BlindRun, AlgoComponent, Parallel
+from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
+from vortex.tools.parallelism import TaylorVortexWorker
 from common.algo.ifsroot import IFSParallel
 from bronx.datagrip import namelist
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class BuildPGD(BlindRun):
@@ -197,7 +199,7 @@ class SetFilteredOrogInPGD(AlgoComponent):
 
     def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
-        from common.util.usepygram import epy_env_prepare
+        from common.util.usepygram import epygram_checker, epy_env_prepare
         from bronx.meteo.constants import g0
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
@@ -216,6 +218,11 @@ class SetFilteredOrogInPGD(AlgoComponent):
             g.operation('/', g0)
             g.fid['FA'] = 'SFX.ZS'
             # write as orography
+            if epygram_checker.is_available(version='1.3.6'):
+                epypgd.fieldencoding(g.fid['FA'], update_fieldscompression=True)
+            else:
+                # blank read, just to update fieldscompression
+                epypgd.readfield(g.fid['FA'], getdata=False)
             epypgd.writefield(g, compression=epypgd.fieldscompression.get(g.fid['FA'], None))
             epypgd.close()
 
@@ -267,6 +274,12 @@ class MakeLAMDomain(AlgoComponent):
                 type = bool,
                 default = False
             ),
+            i_width_in_pgd = dict(
+                info = "Add I-width size in BuildPGD namelist.",
+                optional = True,
+                type = bool,
+                default = False
+            ),
             # plot
             illustration = dict(
                 info = "Create the domain illustration image.",
@@ -294,7 +307,11 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
-        ev = '1.3.2' if self.e_zone_in_pgd else '1.2.14'
+        ev = '1.2.14'
+        if self.e_zone_in_pgd:
+            ev = '1.3.2'
+        if self.i_width_in_pgd:
+            ev = '1.3.3'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
@@ -304,7 +321,8 @@ class MakeLAMDomain(AlgoComponent):
         if self.mode == 'center_dims':
             params = ['center_lon', 'center_lat', 'Xpoints_CI', 'Ypoints_CI',
                       'resolution']
-            params_extended = params + ['tilting', 'Iwidth', 'force_projection', 'maximize_CI_in_E']
+            params_extended = params + ['tilting', 'Iwidth', 'force_projection',
+                                        'maximize_CI_in_E', 'reference_lat']
         elif self.mode == 'lonlat_included':
             params = ['lonmin', 'lonmax', 'latmin', 'latmax',
                       'resolution']
@@ -338,7 +356,9 @@ class MakeLAMDomain(AlgoComponent):
                                     **self.plot_params)
         dm_extra_params = dict()
         if self.e_zone_in_pgd:
-            dm_extra_params = dict(Ezone_in_pgd=self.e_zone_in_pgd)
+            dm_extra_params['Ezone_in_pgd'] = self.e_zone_in_pgd
+        if self.i_width_in_pgd:
+            dm_extra_params['Iwidth_in_pgd'] = self.i_width_in_pgd
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,
                                                  orography_subtruncation=self.orography_truncation,
@@ -675,3 +695,51 @@ class MakeBDAPDomain(AlgoComponent):
                             '.'.join([self.geometry.tag,
                                       'namel_c923_orography',
                                       'geoblocks']))
+
+
+class AddPolesToGLOB(TaylorRun):
+    """
+    Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.
+    """
+
+    _footprint = dict(
+        info = "Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.",
+        attr = dict(
+            kind = dict(
+                values   = ['add_poles'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(AddPolesToGLOB, self).__init__(*args, **kwargs)
+        from common.util.usepygram import epygram_checker
+        ev = '1.3.4'
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
+                        " is needed here")
+
+    def execute(self, rh, opts):  # @UnusedVariable
+        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        clims = self.context.sequence.effective_inputs(role=('Clim',))
+        self._add_instructions(common_i, dict(filename=[s.rh.container.localpath()
+                                                        for s in clims]))
+        self._default_post_execute(rh, opts)
+
+
+class _AddPolesWorker(TaylorVortexWorker):
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['add_poles']
+            ),
+            filename = dict(
+                info='The file to be processed.'),
+        )
+    )
+
+    def vortex_task(self, **_):
+        from common.util.usepygram import add_poles_to_GLOB_file, epy_env_prepare
+        with epy_env_prepare(self.ticket):
+            add_poles_to_GLOB_file(self.filename)

@@ -771,11 +771,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.conv&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.conv&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.conv&format=unknown
   - !test_names.core.SingleTest
@@ -828,11 +828,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.iasi&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.iasi&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.iasi&format=unknown
   - !test_names.core.SingleTest
@@ -942,11 +942,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA.surf&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA.surf&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA.surf&format=unknown
   - !test_names.core.SingleTest
@@ -999,11 +999,11 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_screen.tar?extract=./ECMA&format=unknown
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
     - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_screen.tar?extract=./ECMA&format=unknown
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_screen.tar?extract=ECMA&format=unknown
   - !test_names.core.SingleTest
@@ -1026,6 +1026,44 @@
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/ecmascr.tar?extract=ECMA&format=unknown
 - - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: canari
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: ground
+      stage: cans
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: canari
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: surf
+      stage: cans
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
+  - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
@@ -1491,25 +1529,6 @@
       kind: observations
       layout: ccma
       namespace: '[suite].multi.fr'
-      part: ground
-      stage: cans
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
-    - default: *id003
-      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
-    - default: *id004
-      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      block: observations
-      format: odb
-      kind: observations
-      layout: ccma
-      namespace: '[suite].multi.fr'
       part: mix
       stage: minim
       suite: oper
@@ -1560,6 +1579,44 @@
       location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_traj.tar
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_traj.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: ground
+      stage: cans
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: surfan
+      format: odb
+      kind: observations
+      layout: ccma
+      namespace: '[suite].multi.fr'
+      part: surf
+      stage: cans
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/odb_canari.tar
+    - default: *id003
+      location: op://oper.multi.fr/arome/oper/production/2018/01/01/r0/odb_canari.tar
+    - default: *id004
+      location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/odb_canari.tar
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations

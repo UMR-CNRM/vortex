@@ -10,6 +10,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import random
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 import footprints as fp
 
@@ -17,7 +18,7 @@ from vortex.data.handlers import Handler
 from vortex.layout.dataflow import Section
 from vortex import sessions
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class InputCheckerError(Exception):

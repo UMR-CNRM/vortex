@@ -14,16 +14,18 @@ from contextlib import contextmanager
 import re
 import six
 
+from bronx.fancies import loggers
+from bronx.stdtypes.history import History
+
 import footprints
 
 from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
-from vortex.util.structs import History
 
 #: Automatic export of superstar interface.
 __all__ = [ 'rload', 'rget', 'rput' ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Shortcut to footprint env defaults
 defaults = footprints.setup.defaults
@@ -52,6 +54,8 @@ active_metadatacheck    = True
 #: If *True*, archive stores will not be used at all (only cache stores will
 #: be used)
 active_incache          = False
+#: Use the earlyget feature during :func:`input` calls
+active_batchinputs      = True
 
 #: History recording
 history = History(tag='rload')
@@ -243,9 +247,17 @@ def add_section(section, args, kw):
     talkative = kw.pop('verbose', active_verbose)
     complete  = kw.pop('complete', False)
     insitu    = kw.get('insitu', False)
+    batch     = kw.pop('batch', False)
+    lastfatal = kw.pop('lastfatal', None)
 
     if complete:
         kw['fatal'] = False
+
+    if batch:
+        if section not in ('input', 'excutable'):
+            logger.info("batch=True is not implemented for section=%s. overwriting to batch=Fase.",
+                        section)
+            batch = False
 
     # Second, retrieve arguments that could be used by the now command
     cmdopts = dict(
@@ -302,7 +314,13 @@ def add_section(section, args, kw):
         doitmethod = sectionmap[section]
 
         # Create a section for each resource handler
-        newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl]
+        if rl and lastfatal is not None:
+            newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl[:-1]]
+            tmpopts = opts.copy()
+            tmpopts['fatal'] = lastfatal
+            newsections.append(push(rh=rl[-1], **tmpopts)[0])
+        else:
+            newsections = [push(rh=rhandler, **opts)[0] for rhandler in rl]
 
         # If insitu and now, try a quiet get...
         do_quick_insitu = section in ('input', 'executable') and insitu and now
@@ -324,34 +342,65 @@ def add_section(section, args, kw):
             if now:
                 with t.sh.ftppool():
                     # Create a section for each resource handler, and perform action on demand
+                    batchflags = [None, ] * len(newsections)
+                    if batch:
+                        if talkative:
+                            t.sh.subtitle('Early-{:s} for all resources.'.format(doitmethod))
+                        for ir, newsection in enumerate(newsections):
+                            rhandler = newsection.rh
+                            batchflags[ir] = getattr(newsection, 'early' + doitmethod)(**cmdopts)
+                        if talkative:
+                            if any(batchflags):
+                                for ir, newsection in enumerate(newsections):
+                                    if talkative and batchflags[ir]:
+                                        logger.info('Resource no %02d/%02d: Early-%s registered with id: %s.',
+                                                    ir + 1, len(rl), doitmethod, str(batchflags[ir]))
+                                    else:
+                                        logger.debug('Resource no %02d/%02d: Early-%s registered with id: %s.',
+                                                     ir + 1, len(rl), doitmethod, str(batchflags[ir]))
+                            else:
+                                logger.info('Early-%s was unavailable for all of the resources.',
+                                            doitmethod)
+                        # trigger finalise for all of the DelayedActions
+                        tofinalise = [r_id for r_id in batchflags if r_id and r_id is not True]
+                        if tofinalise:
+                            if talkative:
+                                t.sh.subtitle('Finalising all of the delayed actions...')
+                            t.context.delayedactions_hub.finalise(* tofinalise)
+                    secok = list()
                     for ir, newsection in enumerate(newsections):
                         rhandler = newsection.rh
+                        # If quick get was ok for this resource don't call get again...
                         if talkative:
                             t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
                                                                                len(rl)))
                             rhandler.quickview(nb=ir + 1, indent=0)
-                            t.sh.header('Action ' + doitmethod)
-                            logger.info('%s %s ...', doitmethod.upper(),
-                                        rhandler.location(fatal=False))
-                        # If quick get was ok for this resource don't  call get again...
+                            if batchflags[ir] is not True or (do_quick_insitu and quickget[ir]):
+                                t.sh.highlight('Action {:s} on {:s}'.format(doitmethod.upper(),
+                                                                            rhandler.location(fatal=False)))
                         ok = do_quick_insitu and quickget[ir]
-                        ok = ok or getattr(newsection, doitmethod)(**cmdopts)
+                        if batchflags[ir]:
+                            actual_doitmethod = 'finalise' + doitmethod
+                            ok = ok or getattr(newsection, actual_doitmethod)()
+                        else:
+                            actual_doitmethod = doitmethod
+                            ok = ok or getattr(newsection, actual_doitmethod)(**cmdopts)
                         if talkative:
-                            t.sh.header('Result from ' + doitmethod)
-                            logger.info('%s returns [%s]', doitmethod.upper(), ok)
+                            t.sh.highlight('Result from {:s}: [{!s}]'.format(actual_doitmethod, ok))
                         if talkative and not ok:
                             logger.error('Could not %s resource %s',
                                          doitmethod, rhandler.container.localpath())
-                            print(t.line)
                         if not ok:
                             if complete:
                                 logger.warning('Force complete for %s',
                                                rhandler.location(fatal=False))
                                 raise VortexForceComplete('Force task complete on resource error')
                         else:
-                            rlok.append(rhandler)
+                            secok.append(newsection)
                         if t.sh.trace:
                             print
+                    rlok.extend([newsection.rh for newsection in secok
+                                 if newsection.any_coherentgroup_opened])
             else:
                 rlok.extend([newsection.rh for newsection in newsections])
 
@@ -371,6 +420,7 @@ def input(*args, **kw):  # @ReservedAssignment
         with the newly created class:`~vortex.layout.dataflow.Section` objects).
     """
     kw.setdefault('insitu', active_insitu)
+    kw.setdefault('batch', active_batchinputs)
     return add_section('input', args, kw)
 
 
@@ -564,6 +614,7 @@ def diff(*args, **kw):
     fatal     = kw.pop('fatal', True)
     loglevel  = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', active_verbose)
+    batch     = kw.pop('batch', active_batchinputs)
 
     # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
@@ -587,8 +638,37 @@ def diff(*args, **kw):
         # Do not track the reference files
         kwclean['storetrack'] = False
 
-        # Let the magic of footprints resolution operate...
-        for ir, rhandler in enumerate(rload(*args, **kwclean)):
+        rhandlers = rload(*args, **kwclean)
+        sections = list()
+        earlyget_id = list()
+        source_container = list()
+        lazzy_container = list()
+
+        if batch:
+            # Early get
+            print(t.line)
+            for ir, rhandler in enumerate(rhandlers):
+                source_container.append(rhandler.container)
+                # Create a new container to hold the reference file
+                lazzy_container.append(footprints.proxy.container(shouldfly=True,
+                                                                  actualfmt=rhandler.container.actualfmt))
+                # Swapp the original container with the lazzy one
+                rhandler.container = lazzy_container[-1]
+                # Create a new section
+                sec = Section(rh=rhandler, kind=ixo.INPUT, intent=intent.IN, fatal=False)
+                sections.append(sec)
+                # Early-get
+                if rhandler.complete:
+                    earlyget_id.append(sec.earlyget())
+                else:
+                    earlyget_id.append(None)
+            # Finalising
+            if any([r_id and r_id is not True for r_id in earlyget_id]):
+                t.sh.highlight('Finalising Early-gets')
+                t.context.delayedactions_hub.finalise(* [r_id for r_id in earlyget_id
+                                                         if r_id and r_id is not True])
+
+        for ir, rhandler in enumerate(rhandlers):
             if talkative:
                 print(t.line)
                 rhandler.quickview(nb=ir + 1, indent=0)
@@ -597,56 +677,57 @@ def diff(*args, **kw):
                 logger.error('Incomplete Resource Handler for diff [%s]', rhandler)
                 if fatal:
                     raise ValueError('Incomplete Resource Handler for diff')
-
-            source_container = rhandler.container
-            # Get the local file content (if sensible)
-            if rhandler.resource.clscontents.is_diffable():
-                source_contents = rhandler.resource.contents_handler(datafmt=source_container.actualfmt)
-                source_contents.slurp(source_container)
-
-            # Create a new container to hold the reference file
-            lazzycontainer = footprints.proxy.container(shouldfly=True,
-                                                        actualfmt=source_container.actualfmt)
-            # Swapp the original container with the lazzy one
-            rhandler.container = lazzycontainer
+                else:
+                    rlok.append(False)
+                    continue
 
             # Get the reference file through a Section so that intent + fatal
             # is properly dealt with... The section is discarded afterwards.
-            rc = Section(rh=rhandler, kind=ixo.INPUT, intent=intent.IN, fatal=False).get()
+            if batch:
+                rc = sections[ir].finaliseget()
+            else:
+                rc = sections[ir].get()
             if not rc:
-                logger.error('Cannot get the reference resource: %s',
-                             rhandler.locate())
+                try:
+                    logger.error('Cannot get the reference resource: %s',
+                                 rhandler.locate())
+                except StandardError:
+                    logger.error('Cannot get the reference resource: ???')
                 if fatal:
                     raise ValueError('Cannot get the reference resource')
             else:
                 logger.info('The reference file is stored under: %s',
                             rhandler.container.localpath())
-            # Get the reference's content (if sensible)
-            if rhandler.resource.clscontents.is_diffable():
-                ref_contents = rhandler.contents
 
             # What are the differences ?
             if rc:
                 # priority is given to the diff implemented in the DataContent
                 if rhandler.resource.clscontents.is_diffable():
+                    source_contents = rhandler.resource.contents_handler(
+                        datafmt=source_container[ir].actualfmt)
+                    source_contents.slurp(source_container[ir])
+                    ref_contents = rhandler.contents
                     rc = source_contents.diff(ref_contents)
                 else:
-                    rc = t.sh.diff(source_container.localpath(),
+                    rc = t.sh.diff(source_container[ir].localpath(),
                                    rhandler.container.localpath(),
                                    fmt=rhandler.container.actualfmt)
 
             # Delete the reference file
-            lazzycontainer.clear()
+            lazzy_container[ir].clear()
 
             # Now proceed with the result
             logger.info('Diff return %s', str(rc))
-            t.context.diff_history.append_record(rc, source_container, rhandler)
+            t.context.diff_history.append_record(rc, source_container[ir], rhandler)
             try:
                 logger.info('Diff result %s', str(rc.result))
             except AttributeError:
                 pass
             if not rc:
-                logger.warning('Some diff occurred with %s', rhandler.locate())
+                try:
+                    logger.warning('Some diff occurred with %s', rhandler.locate())
+                except StandardError:
+                    logger.warning('Some diff occurred with ???')
                 try:
                     rc.result.differences()
                 except StandardError:

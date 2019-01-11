@@ -7,11 +7,12 @@ Definitions of the Archive stores at ECMWF.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-
+from bronx.fancies import loggers
 import footprints
+
 from vortex.data.stores import Finder
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class FinderECMWF(Finder):
@@ -41,24 +42,26 @@ class FinderECMWF(Finder):
         # Initializations
         rpath = self.ectransfullpath(remote)
         logger.info('ectransget on %s (to: %s)', rpath, local)
-        ectrans_remote = self.sh.ectrans_remote_init(remote=options.get("remote", None),
-                                                     storage=self.hostname())
-        ectrans_gateway = self.sh.ectrans_gateway_init(gateway=options.get("gateway", None))
+        ectrans_remote = self.system.ectrans_remote_init(remote=options.get("remote", None),
+                                                         storage=self.hostname())
+        ectrans_gateway = self.system.ectrans_gateway_init(gateway=options.get("gateway", None))
         rc, dict_args = self.system.ectransget(source=rpath,  # @UnusedVariable
                                                target=local,
                                                fmt=options.get("fmt", "foo"),
                                                cpipeline=options.get("compressionpipeline", None),
                                                gateway=ectrans_gateway,
                                                remote=ectrans_remote)
+        if rc:
+            self._localtarfix(local)
         return rc
 
     def ectransput(self, local, remote, options):
         # Initializations
         rpath = self.ectransfullpath(remote)
         logger.info('ectransput on %s (from: %s)', rpath, local)
-        ectrans_remote = self.sh.ectrans_remote_init(remote=options.get("remote", None),
-                                                     storage=self.hostname())
-        ectrans_gateway = self.sh.ectrans_gateway_init(gateway=options.get("gateway", None))
+        ectrans_remote = self.system.ectrans_remote_init(remote=options.get("remote", None),
+                                                         storage=self.hostname())
+        ectrans_gateway = self.system.ectrans_gateway_init(gateway=options.get("gateway", None))
         rc, dict_args = self.system.ectransput(source=local,  # @UnusedVariable
                                                target=rpath,
                                                fmt=options.get("fmt", "foo"),
@@ -89,8 +92,11 @@ class FinderECMWF(Finder):
         cpipeline = options.get("compressionpipeline")
         rc, dict_args = self.system.ecfsget(source=rpath,  # @UnusedVariable
                                             target=local,
+                                            fmt=options.get("fmt", "foo"),
                                             cpipeline=cpipeline,
                                             options=list_options)
+        if rc:
+            self._localtarfix(local)
         return rc
 
     def ecfsput(self, local, remote, options):
@@ -99,6 +105,7 @@ class FinderECMWF(Finder):
         cpipeline = options.get("compressionpipeline")
         rc, dict_args = self.system.ecfsput(source=local,  # @UnusedVariable
                                             target=rpath,
+                                            fmt=options.get("fmt", "foo"),
                                             cpipeline=cpipeline,
                                             options=list_options)
         return rc

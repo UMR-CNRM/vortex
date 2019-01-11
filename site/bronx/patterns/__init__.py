@@ -1,20 +1,19 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
 This package defines some useful Design Patterns.
+
 Implementations may be not the most efficient or
-thread-safe proof ones, but still, for the time being,
-it is enough to satisfy our small needs.
+thread-safe proof ones.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+import bronx.fancies.loggers
 
-__all__ = [ 'Borg', 'Singleton' ]
+__all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = bronx.fancies.loggers.getLogger(__name__)
 
 
 class Borg(object):

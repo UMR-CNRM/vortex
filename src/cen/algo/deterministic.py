@@ -3,14 +3,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
 from vortex.algo.components import Parallel, AlgoComponent
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
@@ -18,6 +18,7 @@ with echecker:
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.tools.initTG import generate_clim
+
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
@@ -91,7 +92,6 @@ class Generate_Clim_TG(AlgoComponent):
         listforcing = list(set([self.system.path.basename(am.rh.container.filename) for am in avail_forcing]))
 
         generate_clim(listforcing)
-
 
 
 class Pgd_Parallel_from_Forcing(Parallel):

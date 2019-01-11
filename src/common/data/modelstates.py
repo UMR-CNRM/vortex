@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.flow       import GeoFlowResource
 from vortex.syntax.stdattrs import term_deco
@@ -18,7 +18,7 @@ from vortex.data.geometries import CurvlinearGeometry
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('src', lambda s: [s.filling, s.model])
@@ -48,7 +48,7 @@ class Analysis(GeoFlowResource):
                 info     = "The content/coverage of the analysis.",
                 optional = True,
                 default  = 'full',
-                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full'],
+                values   = ['surface', 'surf', 'atmospheric', 'atm', 'full', 'soil'],
                 remap    = dict(
                     surface     = 'surf',
                     atmospheric = 'atm',

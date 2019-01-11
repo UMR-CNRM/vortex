@@ -11,17 +11,18 @@ import tempfile
 import unittest
 import uuid
 
-import footprints
+from bronx.fancies import loggers
+from bronx.system import interrupt
 
 import vortex
 from vortex.tools.net import Ssh, AssistedSsh
-
-slog = footprints.loggers.getLogger('vortex.tools.systems')
 
 test_host = 'localhost'
 fake_host = 'this-hostname-should-not-exist-in-your-network'
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
+
+tloglevel = 9999  # Extremely quiet...
 
 
 def check_localssh():
@@ -42,12 +43,10 @@ LOCALSSH_OK = check_localssh()
 
 @unittest.skipUnless(LOCALSSH_OK,
                      'It is not possible to connect to {} using SSH.'.format(test_host))
+@loggers.unittestGlobalLevel(tloglevel)
 class _SshTestBase(unittest.TestCase):
 
     def setUp(self):
-        # Log stuff
-        self.slogL = slog.level
-        slog.setLevel(9999)  # No logs at all...
         # Generate a temporary directory
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
@@ -55,7 +54,8 @@ class _SshTestBase(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp(suffix='_test_ssh')
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
-        self.sh.signal_intercept_on()
+        self.shandler = interrupt.SignalInterruptHandler(emitlogs=False)
+        self.shandler.activate()
         # and temporary files
         self.ref1 = self.sh.path.join(self.tmpdir, 'refdata1')
         self.ref2 = self.sh.path.join(self.tmpdir, 'refdata2')
@@ -80,9 +80,7 @@ class _SshTestBase(unittest.TestCase):
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
-        self.sh.signal_intercept_off()
-        # Log stuff
-        slog.setLevel(self.slogL)
+        self.shandler.deactivate()
 
 
 class TestSsh(_SshTestBase):

@@ -12,13 +12,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class VortexNameBuilderError(ValueError):
@@ -363,7 +364,7 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         return name1
 
     def _join_basename_bit(self, d, entry, prefix='.', sep='-', packcb=None):
-        if d[entry]:
+        if d[entry] is not None:
             if packcb is None:
                 return prefix + sep.join(self._pack_std_items(d[entry]))
             else:

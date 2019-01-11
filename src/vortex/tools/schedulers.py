@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Interface to SMS commands.
@@ -10,13 +10,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import functools
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from .services import Service
 
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Scheduler(Service):
@@ -270,7 +271,7 @@ class EcFlow(EcmwfLikeScheduler):
         )
     )
 
-    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg')
+    _KNOWN_CMD = ('abort', 'complete', 'event', 'init', 'label', 'meter', 'msg', 'alter')
 
     def __init__(self, *args, **kw):
         logger.debug('EcFlow scheduler client init %s', self)
@@ -297,6 +298,11 @@ class EcFlow(EcmwfLikeScheduler):
         """When running on an node without network access create an SSH tunnel."""
         rc = super(EcFlow, self).wrap_in()
         if not self.sh.default_target.isnetworknode:
+            # wait and retries from config
+            thistarget = self.sh.default_target
+            sshwait = thistarget.get('ecflow:sshproxy_wait', 6)
+            sshretries = thistarget.get('ecflow:sshproxy_retries', 2)
+            sshretrydelay = thistarget.get('ecflow:sshproxy_retrydelay', 1)
             # Build up an SSH tunnel to convey the EcFlow command
             ecconf = self.conf(dict())
             echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)
@@ -304,8 +310,9 @@ class EcFlow(EcmwfLikeScheduler):
             if not (echost and ecport):
                 rc = False
             else:
-                sshobj = self.sh.ssh('network', virtualnode=True)
-                self._tunnel = sshobj.tunnel(echost, int(ecport))
+                sshobj = self.sh.ssh('network', virtualnode=True,
+                                     maxtries=sshretries, triesdelay=sshretrydelay)
+                self._tunnel = sshobj.tunnel(echost, int(ecport),maxwait=sshwait)
                 if not self._tunnel:
                     rc = False
                 else:

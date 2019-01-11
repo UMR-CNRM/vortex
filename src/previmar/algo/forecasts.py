@@ -5,14 +5,47 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.algo.components import Parallel
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
+
+
+class WithoutCouplingForecasts(Parallel):
+
+    _footprint = dict(
+        attr = dict(
+            flyargs = dict(
+                default = ('ASUR', 'PSUR',),
+            ),
+            flypoll = dict(
+                values = ['iopoll_marine'],
+                optional = True,
+            ),
+            io_poll_med = dict(
+                values = ['med_io_poll'],
+            ),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Add some defaults env values for mpitool itself."""
+        super(Parallel, self).prepare(rh, opts)
+        if opts.get('mpitool', True):
+            self.export('mpitool')
+
+        if self.promises:
+            self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage)
+            self.flyput = True
+        else:
+            self.flyput = False
+
+    def execute(self, rh, opts):
+        super(WithoutCouplingForecasts, self).execute(rh, opts)
 
 
 class SurgesCouplingForecasts(Parallel):
@@ -106,7 +139,7 @@ class SurgesCouplingForecasts(Parallel):
 
         # Promises should be nicely managed by a co-process
         if self.promises:
-            self.io_poll_kwargs = dict(model=rh.resource.model)
+            self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage)
             self.flyput = True
         else:
             self.flyput = False

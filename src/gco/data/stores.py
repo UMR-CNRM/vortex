@@ -11,7 +11,8 @@ import hashlib
 import re
 import six
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
 from vortex.util.config import GenericConfigParser
@@ -20,7 +21,7 @@ from gco.syntax.stdattrs import UgetId
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 GGET_DEFAULT_CONFIGFILE = '@gget-key-specific-conf.ini'
 
@@ -205,7 +206,7 @@ class GcoCentralStore(Store):
                         logger.info("%s was already fetched in a previous extract.", destdir)
                     else:
                         untaropts = self.ggetconfig.key_untar_properties(gname)
-                        rc = len(sh.smartuntar(gname, destdir, output=False, **untaropts)) > 0
+                        rc = len(sh.smartuntar(gname, destdir, **untaropts)) > 0
                     gname = destdir
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = rc and sh.cp(gname + '/' + extract[0], local, fmt=fmt)
@@ -218,9 +219,10 @@ class GcoCentralStore(Store):
                 if not sh.path.isdir(local) and sh.is_tarname(local) and sh.is_tarfile(local):
                     destdir = sh.path.dirname(sh.path.realpath(local))
                     untaropts = self.ggetconfig.key_untar_properties(gname)
-                    sh.smartuntar(local, destdir, output=False, **untaropts)
+                    sh.smartuntar(local, destdir, **untaropts)
         else:
-            logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
+            logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
+            rc = False
         return rc
 
     def ggetdelete(self, remote, options):
@@ -325,8 +327,19 @@ class GcoStore(MultiStore):
 class _UgetStoreMixin(object):
     """Some very useful methods needed by all Uget stores."""
 
-    def _actual_get(self, remote, local, options):
-        raise NotImplementedError('We really need _actual_get !')
+    def _actual_fancyget(self, remote, local, options):
+        raise NotImplementedError('We really need _actual_fancyget !')
+
+    def _local_auto_untar(self, local, uname):
+        """Automatic untar if needed...
+
+        (the local file needs to end with a tar extension).
+        """
+        if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
+                self.system.is_tarname(local) and self.system.is_tarfile(local)):
+            destdir = self.system.path.dirname(self.system.path.realpath(local))
+            untaropts = self.ugetconfig.key_untar_properties(uname)
+            self.system.smartuntar(local, destdir, **untaropts)
 
     def _fancy_get(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -339,7 +352,7 @@ class _UgetStoreMixin(object):
             logger.info("The Uget element was already fetched in a previous extract.")
             rc = True
         else:
-            rc = self._actual_get(remote, uname if extract else local, options)
+            rc = self._actual_fancyget(remote, uname if extract else local, options)
 
         if rc:
             if extract:
@@ -350,18 +363,13 @@ class _UgetStoreMixin(object):
                         logger.info("%s was already unpacked during a previous extract.", destdir)
                     else:
                         untaropts = self.ugetconfig.key_untar_properties(uname)
-                        rc = len(self.system.smartuntar(uname, destdir, output=False, **untaropts)) > 0
+                        rc = len(self.system.smartuntar(uname, destdir, **untaropts)) > 0
                 # Otherwise, assume that the file to extract is in a directory
                 else:
                     destdir = self.system.path.realpath(uname)
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
-                # Automatic untar if needed... (the local file needs to end with a tar extension)
-                if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
-                        self.system.is_tarname(local) and self.system.is_tarfile(local)):
-                    destdir = self.system.path.dirname(self.system.path.realpath(local))
-                    untaropts = self.ugetconfig.key_untar_properties(uname)
-                    self.system.smartuntar(local, destdir, output=False, **untaropts)
+                self._local_auto_untar(local, uname)
         else:
             self._verbose_log(options, 'warning',
                               '%s get on %s was not successful (rc=%s)',
@@ -479,13 +487,41 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         """Remap and ftpprestageinfo sequence."""
         return self.inarchiveprestageinfo(self._universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.inarchiveget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self._universal_remap(remote)
         return self._fancy_get(remote, local, options)
+
+    def ugetearlyget(self, remote, local, options):
+        """Remap and inarchiveearlyget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return None  # No early-get when extract=True
+        return self.inarchiveearlyget(remote, local, options)
+
+    def ugetfinaliseget(self, result_id, remote, local, options):
+        """Remap and inarchivefinaliseget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return False  # No early-get when extract=True
+        # Actual finalise
+        rc = self.inarchivefinaliseget(result_id, remote, local, options)
+        # Automatic untar if needed...
+        self._local_auto_untar(local, self.system.path.basename(remote['path']))
+        return rc
 
     def ugetput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
@@ -565,7 +601,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         """Proxy to :meth:`incacheprestageinfo`."""
         return self.incacheprestageinfo(self._universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.incacheget(remote, local, options)
 
     def ugetget(self, remote, local, options):
@@ -592,16 +628,66 @@ class UgetMtCacheStore(_UgetCacheStore):
     """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
     _footprint = dict(
-        info = 'Uget cache access',
+        info = 'Uget MTOOL cache access',
         attr = dict(
             netloc = dict(
-                values  = ['uget.cache.fr'],
+                values  = ['uget.cache-mt.fr'],
             ),
             strategy = dict(
                 default = 'mtool',
             ),
         )
     )
+
+
+class UgetMarketCacheStore(_UgetCacheStore):
+    """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
+
+    _footprint = dict(
+        info = 'Uget Marketplace cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['uget.cache-market.fr'],
+            ),
+            strategy = dict(
+                default = 'marketplace',
+            ),
+        )
+    )
+
+
+class UgetCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'Uget cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['uget'],
+            ),
+            netloc = dict(
+                values  = ['uget.cache.fr', ],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_reads(remote['path'])])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        return ['uget.cache-mt.fr', 'uget.cache-market.fr']
 
 
 class UgetHackCacheStore(_UgetCacheStore):

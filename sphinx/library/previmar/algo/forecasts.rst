@@ -16,6 +16,11 @@ Package
 Classes
 -------
 
+.. autoclass:: WithoutCouplingForecasts
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SurgesCouplingForecasts
    :show-inheritance:
    :members:

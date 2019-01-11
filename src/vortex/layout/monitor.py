@@ -8,16 +8,18 @@ sections
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+from six.moves import queue
+
 from collections import defaultdict, namedtuple, OrderedDict
 from itertools import islice, compress
 import multiprocessing
-import six
-from six.moves import queue
 import sys
 import time
 import traceback
 
-from footprints import loggers, observers
+from bronx.fancies import loggers
+from bronx.patterns import observer
 from bronx.stdtypes import date
 
 from vortex.tools.parallelism import ParallelSilencer, ParallelResultParser
@@ -60,12 +62,8 @@ class _StateFull(object):
     def __init__(self):
         """Initialise the state attribute and setup the observer."""
         self._state = self._mystates.ufo
-        self._obsboard = observers.SecludedObserverBoard()
+        self._obsboard = observer.SecludedObserverBoard()
         self._obsboard.notify_new(self, dict(state=self._state))
-
-    def __del__(self):
-        self._obsboard.notify_del(self, dict(state=self._state))
-        del self._obsboard
 
     @property
     def observerboard(self):
@@ -507,7 +505,7 @@ class BasicInputMonitor(_StateFullMembersList):
         return rc
 
 
-class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
+class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
     """
     A Gang is a collection of :class:`InputMonitorEntry` objects or a collection
     of :class:`_Gang` objects.
@@ -556,7 +554,7 @@ class _Gang(observers.Observer, _StateFull, _StateFullMembersList):
 
     def updobsitem(self, item, info):
         """React to an observee notification."""
-        observers.Observer.updobsitem(self, item, info)
+        observer.Observer.updobsitem(self, item, info)
         # Move the item around
         self._members[info['previous_state']].remove(item)
         self._members[info['state']].add(item)

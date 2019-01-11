@@ -171,11 +171,11 @@ def _tar_notebooks(tarname, files):
     tarext = os.path.splitext(tarname)[1]
     tarmode_extra = ':' + tarext[1:] if tarext in ('.bz2', '.gz') else ''
     if tarmode_extra:
-        logger.info("Enabling compression on the tar file (%s)", tarmode_extra[1:])
+        logger.debug("Enabling compression on the tar file (%s)", tarmode_extra[1:])
     with open(tarname, 'w') as tarfh:
         tfile = tarfile.open(fileobj=tarfh, mode='w' + tarmode_extra)
         for a_file in files:
-            logger.debug("Adding %s to the Tar file.", a_file)
+            logger.debug("Adding %s to the %s Tar file.", tarname, a_file)
             tfile.add(a_file)
         tfile.close()
 
@@ -193,6 +193,7 @@ def _index_auto_generate(outputdir, files):
         radix_m1, lastdirname = os.path.split(radix)
         if lastdirname != '':
             toindex[radix_m1].append(os.path.join(lastdirname, 'index.rst'))
+    toindex = {k: sorted(set(v)) for k, v in toindex.items()}
     toindex_keys = toindex.keys()
     toindex_keys.sort(key=lambda f: f.upper())
     for radix in toindex_keys:
@@ -246,11 +247,11 @@ def main():
     if not os.path.isdir(abs_outputdir):
         logger.info("%s does not exists: we are creating it.", abs_outputdir)
         os.makedirs(abs_outputdir)
-    logger.info("Outputdir is: %s", abs_outputdir)
+    logger.debug("Outputdir is: %s", abs_outputdir)
 
     # Jump to the input directory
     sourcedir = os.path.expanduser(args.source_directory)
-    logger.info("Inputdir is: %s", sourcedir)
+    logger.debug("Inputdir is: %s", sourcedir)
     os.chdir(sourcedir)
 
     # Find out the notebooks list

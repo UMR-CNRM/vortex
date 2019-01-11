@@ -8,13 +8,15 @@ StandardReport is derived from :class:`xml.dom.minidom.Document`.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
+
 import collections
 from datetime import datetime
 import re
-import six
 import weakref
 
-from . import dump, util
+from bronx.fancies import dump
+from bronx.patterns import getbytag
 
 #: No automatic export
 __all__ = []
@@ -209,7 +211,7 @@ class FootprintLogClass(FootprintLogEntry):
         print()
 
 
-class FootprintLog(util.GetByTag):
+class FootprintLog(getbytag.GetByTag):
     """Collect log informations to produce footprints reports."""
 
     def __init__(self, log_maxlen=None, weak=True):

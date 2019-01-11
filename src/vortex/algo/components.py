@@ -11,6 +11,7 @@ import shlex
 import tempfile
 import multiprocessing
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from taylorism import Boss
 import footprints
@@ -23,7 +24,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class AlgoComponentError(Exception):
@@ -63,6 +64,10 @@ class ParallelInconsistencyAlgoComponentError(Exception):
 class AlgoComponent(footprints.FootprintBase):
     """Component in charge of any kind of processing."""
 
+    _SERVERSYNC_RAISEONEXIT = True
+    _SERVERSYNC_RUNONSTARTUP = True
+    _SERVERSYNC_STOPONEXIT = True
+
     _abstract  = True
     _collector = ('component',)
     _footprint = dict(
@@ -74,6 +79,7 @@ class AlgoComponent(footprints.FootprintBase):
             ),
             flyput = dict(
                 info            = 'Activate a background job in charge off on the fly processing.',
+                type            = bool,
                 optional        = True,
                 default         = False,
                 access          = 'rwx',
@@ -96,6 +102,14 @@ class AlgoComponent(footprints.FootprintBase):
                 doc_visibility  = footprints.doc.visibility.GURU,
                 doc_zorder      = -99,
             ),
+            flymapping = dict(
+                info            = 'Allow renaming of output files during on the fly processing.',
+                optional        = True,
+                default         = False,
+                access          = 'rwx',
+                doc_visibility  = footprints.doc.visibility.GURU,
+                doc_zorder      = -99,
+            ),
             timeout = dict(
                 info            = 'Default timeout (in sec.) used  when waiting for an expected resource.',
                 type            = int,
@@ -109,6 +123,7 @@ class AlgoComponent(footprints.FootprintBase):
                 optional        = True,
                 values          = [False],
                 default         = False,
+                access          = 'rwx',
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             serversync_method = dict(
@@ -120,7 +135,7 @@ class AlgoComponent(footprints.FootprintBase):
                 info            = 'The medium that is used to synchronise with the server.',
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
-            )
+            ),
         )
     )
 
@@ -239,21 +254,29 @@ class AlgoComponent(footprints.FootprintBase):
     def flyput_check(self):
         """Check default args for io_poll command."""
         actual_args = list()
-        for arg in self.flyput_args():
-            logger.info('Check arg <%s>', arg)
-            if any([ x.rh.container.basename.startswith(arg) for x in self.promises ]):
-                logger.info(
-                    'Match some promise %s',
-                    str([ x.rh.container.basename for x in self.promises if x.rh.container.basename.startswith(arg) ])
-                )
-                actual_args.append(arg)
-            else:
-                logger.info('Do not match any promise %s', str([ x.rh.container.basename for x in self.promises ]))
-        return actual_args
+        if self.flymapping:
+            # No checks when mapping is activated
+            return self.flyput_args()
+        else:
+            for arg in self.flyput_args():
+                logger.info('Check arg <%s>', arg)
+                if any([ x.rh.container.basename.startswith(arg) for x in self.promises ]):
+                    logger.info(
+                        'Match some promise %s',
+                        str([ x.rh.container.basename for x in self.promises if x.rh.container.basename.startswith(arg) ])
+                    )
+                    actual_args.append(arg)
+                else:
+                    logger.info('Do not match any promise %s', str([ x.rh.container.basename for x in self.promises ]))
+            return actual_args
 
     def flyput_sleep(self):
         """Return a sleeping time in seconds between io_poll commands."""
         return getattr(self, 'io_poll_sleep', self.env.get('IO_POLL_SLEEP', 20))
+
+    def flyput_outputmapping(self, item):
+        """Map output to another filename."""
+        return item
 
     def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
                    event_complete, event_free, queue_context):
@@ -281,10 +304,20 @@ class AlgoComponent(footprints.FootprintBase):
                 data = [ x for x in data if x ]
                 logger.info('Polling retrieved data %s', str(data))
                 for thisdata in data:
-                    candidates = [ x for x in self.promises if x.rh.container.basename == thisdata ]
+                    if self.flymapping:
+                        mappeddata = self.flyput_outputmapping(thisdata)
+                        if not mappeddata:
+                            raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
+                    else:
+                        mappeddata = thisdata
+                    candidates = [ x for x in self.promises if x.rh.container.basename == mappeddata ]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()
+                        if thisdata != mappeddata:
+                            logger.info('Linking <%s> to <%s> (fmt=%s) before put',
+                                        thisdata, mappeddata, bingo.rh.container.actualfmt)
+                            self.system.cp(thisdata, mappeddata, intent='in', fmt=bingo.rh.container.actualfmt)
                         bingo.put(incache=True)
                     else:
                         logger.warning('Polled data not promised <%s>', thisdata)
@@ -353,6 +386,30 @@ class AlgoComponent(footprints.FootprintBase):
 
         return (p_io, event_stop, event_free, queue_ctx)
 
+    def manual_flypolling(self):
+        # Find out a polling method
+        io_poll_method = self.flyput_method()
+        if not io_poll_method:
+            raise AlgoComponentError('Unable to find an io_poll_method')
+        # Find out some polling prefixes
+        io_poll_args = self.flyput_args()
+        if not io_poll_args:
+            raise AlgoComponentError('Unable to find an io_poll_args')
+        # Additional named attributes
+        io_poll_kwargs = self.flyput_kwargs()
+        # Starting polling each of the prefixes
+        data = list()
+        for arg in io_poll_args:
+            logger.info('Polling check arg %s', arg)
+            rc = io_poll_method(arg, **io_poll_kwargs)
+            try:
+                data.extend(rc.result)
+            except AttributeError:
+                data.extend(rc)
+            data = [ x for x in data if x ]
+            logger.info('Polling retrieved data %s', str(data))
+        return data
+
     def flyput_end(self, p_io, e_complete, e_free, queue_ctx):
         """Wait for the co-process in charge of promises."""
         e_complete.set()
@@ -420,14 +477,13 @@ class AlgoComponent(footprints.FootprintBase):
         A first attempt is made to terminate it nicely. If it doesn't work,
         a SIGTERM is sent.
         """
-        rc = False
-        # This test should always suceed...
+        # This test should always succeed...
         if (self._server_synctool is not None and
                 self._server_process is not None):
             # Is the process still running ?
             if self._server_process.is_alive():
                 # Try to stop it nicely
-                if self._server_synctool.trigger_stop():
+                if self._SERVERSYNC_STOPONEXIT and self._server_synctool.trigger_stop():
                     t0 = date.now()
                     self._server_process.join(30)
                     waiting = date.now() - t0
@@ -435,10 +491,12 @@ class AlgoComponent(footprints.FootprintBase):
                                 waiting.total_seconds())
                 rc = not self._server_event.is_set()
                 # Be less nice if needed...
-                if self._server_process.is_alive():
+                if (not self._SERVERSYNC_STOPONEXIT) or self._server_process.is_alive():
                     logger.warning('Force termination of the server process')
                     self._server_process.terminate()
                     self.system.sleep(1)  # Allow some time for the process to terminate
+                    if not self._SERVERSYNC_STOPONEXIT:
+                        rc = False
             else:
                 rc = not self._server_event.is_set()
             logger.info('Server still alive ? %s', str(self._server_process.is_alive()))
@@ -450,6 +508,11 @@ class AlgoComponent(footprints.FootprintBase):
             if not rc:
                 raise AlgoComponentError('The server process ended badly.')
         return rc
+
+    def spawn_pre_dirlisting(self):
+        """Print a directory listing just before run."""
+        self.system.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
+        self.system.dir(output=False, fatal=False)
 
     def spawn_hook(self):
         """Last chance to say something before execution."""
@@ -475,12 +538,11 @@ class AlgoComponent(footprints.FootprintBase):
         # On-the-fly coprocessing initialisation
         p_io, e_complete, e_free, q_ctx = self.flyput_begin()
 
-        sh.subtitle('{0:s} : directory listing (pre-execution)'.format(self.realkind))
         sh.remove('core')
         sh.softlink('/dev/null', 'core')
-        sh.dir(output=False, fatal=False)
         self.spawn_hook()
         self.target.spawn_hook(sh)
+        self.spawn_pre_dirlisting()
         sh.subtitle('{0:s} : start execution'.format(self.realkind))
         sh.spawn(args, output=False, stdin=stdin, fatal=opts.get('fatal', True))
 
@@ -531,13 +593,17 @@ class AlgoComponent(footprints.FootprintBase):
                 self._server_synctool = footprints.proxy.serversynctool(
                     method = self.serversync_method,
                     medium = self.serversync_medium,
+                    raiseonexit = self._SERVERSYNC_RAISEONEXIT,
                 )
                 self._server_synctool.set_servercheck_callback(self.server_alive)
                 self.server_begin(rh, opts)
                 # Wait for the first request
                 self._server_synctool.trigger_wait()
-            # Acknowledge that we are ready and wait for the next request
-            self._server_synctool.trigger_run()
+                if self._SERVERSYNC_RUNONSTARTUP:
+                    self._server_synctool.trigger_run()
+            else:
+                # Acknowledge that we are ready and wait for the next request
+                self._server_synctool.trigger_run()
         else:
             self.execute_single(rh, opts)
 
@@ -550,10 +616,13 @@ class AlgoComponent(footprints.FootprintBase):
         if self.server_run:
             self.server_end()
 
-    def postfix(self, rh, opts):
-        """Some basic informations."""
+    def postfix_post_dirlisting(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.realkind))
         self.system.dir(output=False, fatal=False)
+
+    def postfix(self, rh, opts):
+        """Some basic informations."""
+        self.postfix_post_dirlisting()
 
     def dumplog(self, opts):
         """Dump to local file the internal log of the current algo component."""
