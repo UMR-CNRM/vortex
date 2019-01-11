@@ -400,8 +400,7 @@ class _GetBDMCommons(FootprintCopier):
         super(self.__class__, self).postfix(rh, opts)
 
 
-@six.add_metaclass(_GetBDMCommons)
-class GetBDMBufr(Expresso):
+class GetBDMBufr(six.with_metaclass(_GetBDMCommons, Expresso)):
     """Algo component to get BDM resources considering a BDM query file."""
 
     _footprint = dict(
@@ -465,8 +464,7 @@ class GetBDMBufr(Expresso):
             raise BDMRequestConfigurationError('No query file found for the BDM extraction')
 
 
-@six.add_metaclass(_GetBDMCommons)
-class GetBDMOulan(BlindRun):
+class GetBDMOulan(six.with_metaclass(_GetBDMCommons, BlindRun)):
     """Algo component to get BDM files using Oulan."""
 
     _footprint = dict(

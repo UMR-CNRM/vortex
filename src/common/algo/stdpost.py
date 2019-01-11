@@ -1011,14 +1011,14 @@ class _DiagPICommons(FootprintCopier):
                 thispromise.put(incache=True)
 
 
-@six.add_metaclass(_DiagPICommons)
-class DiagPI(BlindRun, grib.EcGribComponent):
+class DiagPI(six.with_metaclass(_DiagPICommons, BlindRun, grib.EcGribComponent)):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
+    pass
 
 
-@six.add_metaclass(_DiagPICommons)
-class DiagPIMPI(Parallel, grib.EcGribComponent):
+class DiagPIMPI(six.with_metaclass(_DiagPICommons, Parallel, grib.EcGribComponent)):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
+    pass
 
 
 class Fa2GaussGrib(BlindRun):

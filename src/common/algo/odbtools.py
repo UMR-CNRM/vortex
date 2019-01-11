@@ -166,8 +166,7 @@ class _OdbProcessCommons(FootprintCopier):
         )
 
 
-@six.add_metaclass(_OdbProcessCommons)
-class OdbProcess(Parallel, odb.OdbComponent):
+class OdbProcess(six.with_metaclass(_OdbProcessCommons, Parallel, odb.OdbComponent)):
     """Base class for any blindrun ODB algo component."""
 
     _abstract = True
@@ -179,8 +178,7 @@ class OdbProcess(Parallel, odb.OdbComponent):
         self._odbobj_setup()
 
 
-@six.add_metaclass(_OdbProcessCommons)
-class TaylorOdbProcess(ParaBlindRun, odb.OdbComponent):
+class TaylorOdbProcess(six.with_metaclass(_OdbProcessCommons, ParaBlindRun, odb.OdbComponent)):
     """Base class for any taylorism based ODB algo component."""
 
     _abstract = True
