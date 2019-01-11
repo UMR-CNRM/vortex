@@ -88,7 +88,7 @@ class SafranGuess(GeoFlowResource):
             else:
                 raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
         elif self.conf.source_app == 'cep':
-            return 'cep_' + self.data.nivologyseason()
+            return 'cep_' + self.data.nivologyseason
 
 
 @namebuilding_delete('src')
