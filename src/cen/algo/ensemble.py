@@ -756,6 +756,8 @@ class SurfexWorker(_S2MWorker):
             self.link_in(self.system.path.join(rundir, required_link), required_link)
         for required_link in list_files_link_ifnotprovided:
             self.link_ifnotprovided(self.system.path.join(rundir, required_link), required_link)
+            # For reforecast:
+            self.link_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_link), required_link)
 
         rdict = self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
@@ -1303,6 +1305,13 @@ class SurfexComponent(S2MComponent):
                 type = bool,
                 optional = True,
                 default = False,
+            ),
+            multidates = dict(
+                info = "If True, several dates allowed",
+                type = bool,
+                optional = True,
+                default = False,
+                values = [False]
             )
         )
     )
@@ -1415,20 +1424,11 @@ class SurfexComponentMultiDates(SurfexComponent):
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
-            datebegin = dict(
-                info = "The list of begin dates of the forcing files",
-                type = footprints.stdtypes.FPList,
-            ),
-            dateend = dict(
-                info = "The list of begin dates of the forcing files",
-                type = footprints.stdtypes.FPList,
-            ),
-            dateinit = dict(
-                info = "The list of begin dates of the forcing files",
-                type = footprints.stdtypes.FPList,
-                optional = True,
-                default = '[datebegin]',
-            ),
+            multidates = dict(
+                info = "If True, several dates allowed",
+                type = bool,
+                values = [True]
+            )
         )
     )
 
@@ -1456,21 +1456,22 @@ class SurfexComponentMultiDates(SurfexComponent):
 
         subdirs = self.get_subdirs(rh, opts)
         listdatebegin, listdateend = self.get_dates(subdirs)
+        listdateinit = listdatebegin[:]
 
-        print ("DEBUGGING")
-        print (len(subdirs))
-        print (len(listdatebegin))
-        print (len(listdateend))
-        print (common_i)
-        print ("END DEBUGGING")
+#         print ("DEBUGGING")
+#         print (len(subdirs))
+#         print (len(listdatebegin))
+#         print (len(listdateend))
+#         print (common_i)
+#         print ("END DEBUGGING")
 
         if self.subensemble:
             escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
-            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdatebegin, dateend=listdateend, physical_options=physical_options, snow_parameters=snow_parameters))
+            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend, physical_options=physical_options, snow_parameters=snow_parameters))
         else:
-            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdatebegin, dateend=listdateend))
+            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend))
         self._default_post_execute(rh, opts)
 
     def _default_common_instructions(self, rh, opts):
