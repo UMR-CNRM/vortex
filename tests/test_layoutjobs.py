@@ -124,7 +124,7 @@ class TestMkjobDetect(unittest.TestCase):
                  'package': 'tasks',
                  'pwd': fullp,
                  'pyopts': '-u',
-                 'python': '/usr/bin/python',
+                 'python': self.sh.which('python'),
                  'refill': False,
                  'rootapp': '$home/vortex',
                  'rundate': "'2018010100'",
