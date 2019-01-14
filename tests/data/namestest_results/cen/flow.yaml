@@ -2950,7 +2950,7 @@
       storage: guppy.meteo.fr
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://guppy.meteo.fr/home/mrns/vernaym/data/alp/neb/n1718_al/N18010106
+      location: ftp://guppy.meteo.fr/home/mrns/vernaym/data/alp/neb/n1718_al/N180101.tgz
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -3014,7 +3014,7 @@
       storage: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://hendrix.meteo.fr/home/vernaym/s2m/alp/neb/n1718_al/N18010106
+      location: ftp://hendrix.meteo.fr/home/vernaym/s2m/alp/neb/n1718_al/N180101.tgz
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -3120,7 +3120,7 @@
       storage: guppy.meteo.fr
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://guppy.meteo.fr/home/mrns/vernaym/data/alp/neb/n1718_al/N18010106
+      location: ftp://guppy.meteo.fr/home/mrns/vernaym/data/alp/neb/n1718_al/N180101.tgz
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
@@ -3184,7 +3184,7 @@
       storage: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://hendrix.meteo.fr/home/vernaym/s2m/alp/neb/n1718_al/N18010106
+      location: ftp://hendrix.meteo.fr/home/vernaym/s2m/alp/neb/n1718_al/N180101.tgz
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: massif
