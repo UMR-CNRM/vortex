@@ -149,7 +149,7 @@ class LegacyXPid(XPid):
 class FreeXPid(XPid):
     """Basestring wrapper for experiment ids (User defined)."""
 
-    _re_valid = re.compile(r'^\w+@\w+$')
+    _re_valid = re.compile(r'^\S+@\w+$')
 
     def __new__(cls, value):
         if not cls._re_valid.match(value):
@@ -536,6 +536,14 @@ a_member = dict(
 )
 
 member = footprints.Footprint(info = 'Abstract member', attr = dict(member = a_member))
+
+#: Usual definition of the ``scenario`` attribute
+a_scenario = dict(
+    info     = "The scenario identifier of the climate simulation (optional, especially in an NWP context).",
+    optional = True,
+)
+
+scenario = footprints.Footprint(info = 'Abstract scenario', attr = dict(scenario = a_scenario))
 
 #: Usual definition of the ``number`` attribute (e.g. a perturbation number)
 a_number = dict(

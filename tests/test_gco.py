@@ -44,7 +44,7 @@ class TestGcoGenv(unittest.TestCase):
 
     def setUp(self):
         self._ini_genvcmd = genv.genvcmd
-        genv.genvcmd = 'fake_genv.py'
+        genv.genvcmd = 'fake_genv.sh'
         self._ini_genvpath = genv.genvpath
         genv.genvpath = DATAPATHTEST
 
@@ -61,20 +61,20 @@ class TestGcoGenv(unittest.TestCase):
             gdata = fh.read().rstrip('\n').split('\n')
         genv.autofill('cy42_peace-op2.01', gdata)
         # Check keys
-        self.assertItemsEqual(genv.cycles(),
-                              ('cy42_op2.06', 'cy42_peace-op2.01'))
+        self.assertEqual(sorted(genv.cycles()),
+                         sorted(['cy42_op2.06', 'cy42_peace-op2.01']))
         # Clear
         genv.clearall()
-        self.assertItemsEqual(genv.cycles(), ())
+        self.assertEqual(genv.cycles(), [])
         # Start again...
         genv.autofill('cy42_op2.06')
         genv.autofill('blop', gdata)
-        self.assertItemsEqual(genv.cycles(),
-                              ('cy42_op2.06', 'cy42_peace-op2.01'))
+        self.assertEqual(sorted(genv.cycles()),
+                         sorted(['cy42_op2.06', 'cy42_peace-op2.01']))
         # Access it ?
         realstuff = [line for line in gdata if not line.startswith('CYCLE_NAME=')]
-        self.assertItemsEqual(genv.nicedump(cycle='cy42_peace-op2.01'),
-                              realstuff)
+        self.assertEqual(genv.nicedump(cycle='cy42_peace-op2.01'),
+                         realstuff)
         cy = genv.contents(cycle='cy42_op2.06')
         self.assertEqual(cy.TOOLS_LFI, "tools.lfi.05.tgz")
         # cy should be a copy of the real thing...
@@ -120,15 +120,15 @@ class TestUgetUenv(unittest.TestCase):
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
-        self.sh.remove(self.tmpdir)
+        self.sh.rmtree(self.tmpdir)
         uenv.clearall()
 
     def test_basics(self):
         uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')
-        self.assertItemsEqual(uenv.cycles(),
-                              ('uget:cy42_op2.06@huguette', ))
+        self.assertEqual(uenv.cycles(),
+                         ['uget:cy42_op2.06@huguette', ])
         uenv.clearall()
-        self.assertItemsEqual(uenv.cycles(), ())
+        self.assertEqual(uenv.cycles(), [])
         # One should always provide scheme and netloc is the cycle is not yet registered
         with self.assertRaises(uenv.UenvError):
             uenv.contents('uget:cy42_op2.06@huguette')

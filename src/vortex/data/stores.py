@@ -363,13 +363,13 @@ class Store(footprints.FootprintBase):
             try:
                 # First, try to fetch the sum in a real file
                 # (in order to potentially use ftserv...)
-                tempcontainer = footprints.proxy.container(shouldfly=True)
+                tempcontainer = footprints.proxy.container(shouldfly=True, mode='rb')
                 try:
                     rc = callback(remote, tempcontainer.iotarget(), options)
                 except (OSError, IOError, ExecutionError):
                     # This may happen if the user has insufficient rights on
                     # the current directory
-                    tempcontainer = footprints.proxy.container(incore=True)
+                    tempcontainer = footprints.proxy.container(incore=True, mode='w+b')
                     rc = callback(remote, tempcontainer.iotarget(), options)
             except (OSError, IOError, ExecutionError):
                 logger.warning('Something went very wrong when fetching the hash file ! (assuming rc=False)')
@@ -871,7 +871,15 @@ class FunctionStore(Store):
         if fres is not None:
             if 'intent' in options and options['intent'] == dataflow.intent.IN:
                 logger.info('Ignore intent <in> for function input.')
-            # NB: fres should be a file like object (StringIO will do the trick)
+            # Handle StringIO objects, by changing them to ByteIOs...
+            if isinstance(fres, six.StringIO):
+                s_fres = fres
+                s_fres.seek(0)
+                fres = six.BytesIO()
+                for l in s_fres:
+                    fres.write(l.encode(encoding='utf-8'))
+                fres.seek(0)
+            # NB: fres should be a file like object (BytesIO will do the trick)
             return self.system.cp(fres, local)
         else:
             return False
@@ -1002,7 +1010,9 @@ class Finder(Store):
         if ftp:
             try:
                 rc = ftp.size(self.fullpath(remote))
-            except (ValueError, TypeError, ftplib.all_errors):
+            except (ValueError, TypeError):
+                pass
+            except ftplib.all_errors:
                 pass
             finally:
                 ftp.close()

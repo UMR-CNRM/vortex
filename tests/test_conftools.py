@@ -166,7 +166,7 @@ class Coupling3DVbisConfToolTest(Coupling3DVConfToolTest):
 class Coupling3DVliteConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
-    _HHLIST = {'assim': range(0, 24),
+    _HHLIST = {'assim': list(range(0, 24)),
                'production': '12'}  # Compute only the 12h forecast
 
     _BASE = {'assim': {'00': '18', '01': '00', '02': '00', '03': '00', '04': '00',
@@ -273,7 +273,7 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
 class Coupling3DVSparseConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
-    _HHLIST = {'assim': range(0, 24),
+    _HHLIST = {'assim': list(range(0, 24)),
                'production': '12'}  # Compute only the 12h forecast
 
     _BASE = {'assim': {'00': '18', '01': '00', '02': '00', '03': '00', '04': '00',
@@ -321,7 +321,7 @@ class Coupling3DVSparseConfToolTest(unittest.TestCase):
 class CouplingAggConfToolTest(unittest.TestCase):
     """Same tests but using the 'default' feature + XPID."""
 
-    _HHLIST = {'assim': range(0, 24),
+    _HHLIST = {'assim': list(range(0, 24)),
                'production': (0, 12)}  # Compute only the 12h forecast
 
     _BASE = {'assim': {'00': '18', '01': '00', '02': '00', '03': '00', '04': '00',
@@ -597,10 +597,10 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
                                    str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
                                    str(Date(2016, 12, 30, 12, 0)): [Time(h) for h in rangex('30-42-1')],
                                    }})
-        self.assertListEqual(self.wtool.refill_dates('2016123112', 'production', 'arpege', '4dvarfr'),
-                             ['2016-12-30T12:00:00Z', '2016-12-31T12:00:00Z', '2016-12-31T00:00:00Z'])
-        self.assertListEqual(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr'),
-                             [Month(12, year=2016), Month(1, year=2017)])
+        self.assertListEqual(sorted(self.wtool.refill_dates('2016123112', 'production', 'arpege', '4dvarfr')),
+                             sorted(['2016-12-30T12:00:00Z', '2016-12-31T12:00:00Z', '2016-12-31T00:00:00Z']))
+        self.assertListEqual(sorted(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr')),
+                             sorted([Month(12, year=2016), Month(1, year=2017)]))
 
 
 if __name__ == "__main__":

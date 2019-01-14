@@ -170,7 +170,7 @@ class Footprint(object):
             if isinstance(a, dict) and bool(a):
                 logger.debug('Init Footprint updated with dict %s', a)
                 adict = util.list2dict(a, ('attr', 'only'))
-            if isinstance(a, Footprint) and bool(a.attr):
+            if isinstance(a, Footprint) and (bool(a.attr) or bool(a.only)):
                 logger.debug('Init Footprint updated with object %s', a)
                 adict = a.as_dict()
             if adict is not None:

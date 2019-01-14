@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import copy
 import json
 from unittest import TestCase, main
 
@@ -30,10 +31,10 @@ class _BaseDataContentTest(TestCase):
         for d in self.data:
             self.insample.append(InCore(actualfmt='foo',
                                         maxreadsize=self._container_limit))
-            incorefh = self.insample[-1].iodesc()
-            incorefh.write(d)
-            if self._temporize:
-                self.insample[-1].temporize()
+            with self.insample[-1].preferred_decoding(byte=False):
+                self.insample[-1].write(d)
+                if self._temporize:
+                    self.insample[-1].temporize()
 
 
 class UtDataContent(_BaseDataContentTest):
@@ -50,6 +51,10 @@ class UtDataContent(_BaseDataContentTest):
         self.assertEqual(ct.size, len(self.data[0]))
         self.assertEqual(ct.export_dict(), ('vortex.data.contents', 'DataContent') )
         self.assertEqual(ct.is_diffable(), False)
+        # Deepcopy
+        ctbis = copy.deepcopy(ct)
+        self.assertIsNot(ctbis, ct)
+        self.assertEqual(ctbis.data, ct.data)
 
 
 INDEXED_E = {'machin': ['bidule'], 'toto': ['1', '2', '3']}

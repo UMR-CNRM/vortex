@@ -6,6 +6,7 @@ A set of AlgoComponents interrogating various databases.
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
+import six
 
 import copy
 
@@ -399,10 +400,8 @@ class _GetBDMCommons(FootprintCopier):
         super(self.__class__, self).postfix(rh, opts)
 
 
-class GetBDMBufr(Expresso):
+class GetBDMBufr(six.with_metaclass(_GetBDMCommons, Expresso)):
     """Algo component to get BDM resources considering a BDM query file."""
-
-    __metaclass__ = _GetBDMCommons
 
     _footprint = dict(
         info = 'Algo component to get BDM BUFR.',
@@ -465,10 +464,8 @@ class GetBDMBufr(Expresso):
             raise BDMRequestConfigurationError('No query file found for the BDM extraction')
 
 
-class GetBDMOulan(BlindRun):
+class GetBDMOulan(six.with_metaclass(_GetBDMCommons, BlindRun)):
     """Algo component to get BDM files using Oulan."""
-
-    __metaclass__ = _GetBDMCommons
 
     _footprint = dict(
         info = "Algo component to get BDM files using Oulan.",

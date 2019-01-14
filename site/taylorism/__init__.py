@@ -161,7 +161,7 @@ def batch_main(common_instructions=dict(),
         try:
             boss.wait_till_finished()
             report = boss.get_report()
-        except (Exception, KeyboardInterrupt):
+        except (Exception, KeyboardInterrupt, interrupt.SignalInterruptError):
             boss.stop_them_working()
             boss.wait_till_finished()
             raise
@@ -224,17 +224,21 @@ class Worker(FootprintBase):
         super(Worker, self).__init__(*args, **kwargs)
         if self.name is None:
             self.name = str(uuid.uuid4())
+            taylorism_log.debug("Worker's name auto-assigned: %s", self.name)
         self._parent_pid = os.getpid()
         self._process = mpc.Process(target=self._work_and_communicate)
+        self._terminating = False
         self._messenger = None
 
     def __del__(self):
         if (hasattr(self, '_process') and self._process.pid and
                 # A subprocess should never call join on itself...
                 self._parent_pid == os.getpid()):
-            self._process.join(1)
+            self._process.join(0.1)
             if self._process.is_alive():
                 self._process.terminate()
+                taylorism_log.debug('Worker process terminate issued (in __del__): pid=%s. name=%s',
+                                    self._process.pid, self.name)
 
     def _get_messenger(self):
         """Return actual messenger for communication with the boss."""
@@ -260,7 +264,25 @@ class Worker(FootprintBase):
 
     def work(self):
         """Send the Worker to his job."""
-        self._process.start()
+        if not self._terminating:
+            try:
+                self._process.start()
+            finally:
+                if os.getpid() != self._parent_pid:
+                    # LFM
+                    # This should really not happened :-( but, because of a flaw
+                    # in Python2.7's multiprocessing.forking.Popen.__init__, in
+                    # the child process (hence the previous if-test), if
+                    # an exception is raised and un-handled in the target method
+                    # os._exit is not called immediately when the target method
+                    # exists... It looks better in Python3.5's multiprocessing.popen_fork
+                    # since a try/finally clause is there to handle that
+                    os._exit(1)
+            taylorism_log.debug('Worker process started: pid=%s. name=%s',
+                                self._process.pid, self.name)
+        else:
+            taylorism_log.debug('Worker process cannot be started while terminating. name=%s.',
+                                self.name)
 
     def bye(self):
         """
@@ -268,11 +290,38 @@ class Worker(FootprintBase):
         THIS METHOD SHOULD NEVER BE CALLED BY THE OBJECT HIMSELF !
         (WOULD CAUSE A DEADLOCK if called from inside the worker's subprocess)
         """
-        self._process.join()
+        if self._process.pid:
+            self._process.join()
+            taylorism_log.debug('Worker process joined: pid=%s. name=%s',
+                                self._process.pid, self.name)
+        else:
+            taylorism_log.debug('Worker process not yet started. Nothing to do. name=%s.',
+                                self.name)
 
     def stop_working(self):
-        """Make the worker stop working."""
-        self._process.terminate()
+        """Make the worker stop working.
+
+        Since the worker process sets up a Signal handler, it should not stop
+        abruptly when this method is called for the first time...
+        """
+        if not self._terminating:
+            if self._process.pid:
+                self._process.terminate()
+                taylorism_log.debug('Worker process terminated (#1): pid=%s. name=%s',
+                                    self._process.pid, self.name)
+            else:
+                taylorism_log.debug('Worker process not yet started. Nothing to do. name=%s.',
+                                    self.name)
+            self._terminating = True
+        else:
+            if self._process.pid:
+                self._process.join(0.1)
+                taylorism_log.debug('Worker process joined: pid=%s. name=%s',
+                                    self._process.pid, self.name)
+                if self._process.is_alive():
+                    self._process.terminate()
+                    taylorism_log.debug('Worker process terminated (#2): pid=%s. name=%s',
+                                        self._process.pid, self.name)
 
     def _work_and_communicate(self):
         """
@@ -283,6 +332,7 @@ class Worker(FootprintBase):
         world !
         """
         with interrupt.SignalInterruptHandler(emitlogs=False):
+            fast_exit = False
             to_be_sent_back = dict(name=self.name, report=None)
             try:
                 for callback in self.scheduler_hooks:
@@ -295,16 +345,20 @@ class Worker(FootprintBase):
                                                 exc_value,
                                                 exc_traceback)
                 to_be_sent_back.update(report=e, traceback=tb)
+            except (KeyboardInterrupt, interrupt.SignalInterruptError):
+                fast_exit = True
             finally:
-                try:
-                    self.messenger.put(to_be_sent_back)
-                except (ValueError, PickleError) as e:
-                    # ValueError = to_be_sent_back too big.
-                    # PickleError = to_be_sent_back unpickelable.
-                    sys.stderr.write("The to_be_sent_back variable was:\n")
-                    sys.stderr.write(str(to_be_sent_back))
-                    to_be_sent_back.update(report=e, traceback='Traceback missing')
-                    self.messenger.put(to_be_sent_back)
+                if not fast_exit:
+                    try:
+                        self.messenger.put(to_be_sent_back)
+                    except (ValueError, PickleError) as e:
+                        # ValueError = to_be_sent_back too big.
+                        # PickleError = to_be_sent_back unpickelable.
+                        sys.stderr.write("The to_be_sent_back variable was:\n")
+                        sys.stderr.write(str(to_be_sent_back))
+                        to_be_sent_back.update(report=e, traceback='Traceback missing')
+                        self.messenger.put(to_be_sent_back)
+                self.messenger.close()
 
     def _work_and_communicate_prehook(self):
         """
@@ -387,16 +441,23 @@ class Boss(object):
         self._parent_pid = os.getpid()
         self._process = mpc.Process(target=self._listen_and_communicate)
         self._process.start()
+        taylorism_log.debug('Boss process started: pid=%s. name=%s',
+                            self._process.pid, str(self.name))
 
         self._finalreport = None
 
     def __del__(self):
         if (hasattr(self, '_process') and self._process.pid and
                 # A subprocess should never call join on itself...
-                self._parent_pid == os.getpid()):
-            self._process.join(1)
+                self._parent_pid == os.getpid() and
+                self._process.is_alive()):
+            self._process.join(0.1)
+            taylorism_log.debug('Boss process joined (in __del__): pid=%s. name=%s',
+                                self._process.pid, str(self.name))
             if self._process.is_alive():
                 self._process.terminate()
+                taylorism_log.debug('Boss process terminated (in __del__): pid=%s. name=%s',
+                                    self._process.pid, str(self.name))
         self.control_messenger_in.close()
         self.control_messenger_out.close()
         self.workers_messenger.close()
@@ -500,7 +561,11 @@ class Boss(object):
                 received = self._recv_report(splitmode=True)
                 if final:
                     self._finalreport = received
-                if isinstance(received['workers_report'], Exception):
+                    self._process.join()
+                    taylorism_log.debug('Boss process joined: pid=%s. name=%s',
+                                        self._process.pid, str(self.name))
+                if isinstance(received['workers_report'],
+                              (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)):
                     taylorism_log.error("Error was caught in subprocesses with traceback:")
                     sys.stderr.writelines(received['traceback'])
                     raise received['workers_report']
@@ -534,8 +599,9 @@ class Boss(object):
     def wait_till_finished(self):
         """Block the calling tree until all instructions have been executed."""
         self.end()
+        taylorism_log.debug('Boss process waiting for pending work: pid=%s. name=%s',
+                            self._process.pid, str(self.name))
         self._internal_get_report(final=True)
-        self._process.join()
 
 # boss subprocess internal methods
 ##################################
@@ -552,7 +618,8 @@ class Boss(object):
             rkeys.pop(rkeys.index('status'))
             for k in rkeys:
                 self.control_messenger_in.send((k, report[k]))
-            if not isinstance(report['workers_report'], Exception):
+            if not isinstance(report['workers_report'],
+                              (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)):
                 for wr in report['workers_report']:
                     self.control_messenger_in.send(wr)
             else:
@@ -575,7 +642,7 @@ class Boss(object):
                         break
                 elif isinstance(r, dict):
                     report['workers_report'].append(r)
-                elif isinstance(r, Exception):
+                elif isinstance(r, (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)):
                     report['workers_report'] = r
         return report
 
@@ -596,7 +663,7 @@ class Boss(object):
                     report = {'workers_report': workers_report,
                               'status': 'pending',
                               'pending': pending_instructions}
-            except (Exception, KeyboardInterrupt) as e:
+            except (Exception, KeyboardInterrupt, interrupt.SignalInterruptError) as e:
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 tb = traceback.format_exception(exc_type,
                                                 exc_value,
@@ -617,6 +684,34 @@ class Boss(object):
                               'traceback': 'Traceback missing'}
                     self._send_report(report, splitmode=True)
 
+    def _stop_them_working(self, workers):
+        # Issue the terminate signal (SIGTERM)
+        for wname in list(workers.keys()):
+            workers[wname].stop_working()
+        # Empty the message queue (but do not process messages) because some
+        # of the workers may have completed there work in the meantime...
+        empty = False
+        while not empty:
+            try:
+                self.workers_messenger.get(timeout=communications_timeout)
+            except Empty:
+                empty = True
+        # Try to join everybody
+        for wname in list(workers.keys()):
+            workers.pop(wname).stop_working()
+
+    def _hire_worker(self, workers, instructions):
+        w = fpx.worker(**instructions)
+        if w is None:
+            raise AttributeError("no adequate Worker was found with these instructions: " +
+                                 str(instructions))
+        w.messenger = self.workers_messenger
+        if w.name not in workers.keys():
+            workers[w.name] = w
+        else:
+            raise ValueError('several workers wear the same name: ' + w.name)
+        return w
+
     def _listen(self):
         """
         Actual listening method, i.e. running subprocess at interface between
@@ -631,22 +726,6 @@ class Boss(object):
         workers = {}
         pending_instructions = []
         report = []
-
-        def stop_them_working():
-            for wname in list(workers.keys()):
-                workers.pop(wname).stop_working()
-
-        def hire_worker(instructions):
-            w = fpx.worker(**instructions)
-            if w is None:
-                raise AttributeError("no adequate Worker was found with these instructions: " +
-                                     str(instructions))
-            w.messenger = self.workers_messenger
-            if w.name not in workers.keys():
-                workers[w.name] = w
-            else:
-                raise ValueError('several workers wear the same name: ' + w.name)
-            return w
 
         halt = False
         end = False
@@ -683,7 +762,7 @@ class Boss(object):
                                              self.control_signals['STOP_RIGHTNOW']):
                                 stop = True
                                 if control == self.control_signals['STOP_RIGHTNOW']:
-                                    stop_them_working()
+                                    self._stop_them_working(workers)
 
                     else:
                         # received new instructions
@@ -702,7 +781,7 @@ class Boss(object):
                 else:
                     # got a new message from workers !
                     report.append(reported)
-                    if isinstance(reported['report'], Exception):
+                    if isinstance(reported['report'], (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)):
                         # worker got an exception
                         taylorism_log.error("error encountered with worker " +
                                             reported['name'] +
@@ -713,7 +792,10 @@ class Boss(object):
                              for a in sorted(workers[reported['name']].footprint_as_dict().items())
                              if a]
                         sys.stderr.writelines(w)
-                        stop_them_working()
+                        if isinstance(reported['report'], Exception):
+                            # The  KeyboardInterrupt/interrupt.SignalInterruptError case
+                            # is handled latter on in the overall try/except
+                            self._stop_them_working(workers)
                         raise reported['report']
                     else:
                         # worker has finished
@@ -734,9 +816,9 @@ class Boss(object):
                         instructions_and_shared_memory = instructions.copy()
                         instructions_and_shared_memory.update(self._sharedmemory_common_instructions)
                         try:
-                            w = hire_worker(instructions_and_shared_memory)
+                            w = self._hire_worker(workers, instructions_and_shared_memory)
                         except (AttributeError, ValueError):
-                            stop_them_working()
+                            self._stop_them_working(workers)
                             raise
                         w.work()
                         if self.verbose:
@@ -753,7 +835,7 @@ class Boss(object):
                 if stop:
                     break
         except (interrupt.SignalInterruptError, KeyboardInterrupt):
-            stop_them_working()
+            self._stop_them_working(workers)
             raise
 
         return (report, pending_instructions)

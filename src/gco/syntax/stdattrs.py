@@ -118,7 +118,7 @@ class ArpIfsSimplifiedCycle(object):
                 ('_op{:d}'.format(self._op - 1) if self._op else ''))
 
     def __repr__(self):
-        return '{} | {!s}'.format(self.__class__, self)
+        return '<{} | {!s}>'.format(object.__repr__(self).lstrip('<').rstrip('>'), self)
 
     def export_dict(self):
         """The pure dict/json output is the raw integer"""

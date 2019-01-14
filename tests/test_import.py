@@ -63,7 +63,7 @@ class utImport(TestCase):
 
     def test_pyVersion(self):
         sh = vortex.sh()
-        self.assertTrue(sh.python > '2.7')
+        self.assertTrue(sh.python > '2.7.0')
 
     def _test_ignore_modules(self):
         exclude = set()

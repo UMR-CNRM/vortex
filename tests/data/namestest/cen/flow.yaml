@@ -50,6 +50,7 @@ todo:
               -   flat@cen
         tests:
             -   experiment: OPER
+                scenario: RCP6.0
             -   nativefmt:
                     - nc
                     - netcdf
@@ -81,6 +82,7 @@ todo:
               -   flat@cen
         tests:
             -   experiment: OPER
+            -   scenario: RCP6.0
             -   nativefmt:
                     - nc
                     - netcdf
@@ -106,6 +108,7 @@ todo:
                     - ascii
                     - null
             -   origin: toto
+                scenario: RCP6.0
             -   datevalidity: '2018120200'
             -   filling: surf
             -   filtering: dfi

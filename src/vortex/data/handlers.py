@@ -111,9 +111,9 @@ class Handler(object):
         self._mdcheck       = self._options.pop('metadatacheck', False)
         self._mddelta       = self._options.pop('metadatadelta', dict())
         self._ghost         = self._options.pop('ghost', False)
-        self._hooks         = {x[5:]: self._options.pop(x)
-                               for x in self._options.keys()
-                               if x.startswith('hook_')}
+        hook_names          = [x for x in self._options.keys()
+                               if x.startswith('hook_')]
+        self._hooks         = {x[5:]: self._options.pop(x) for x in hook_names}
         self._delayhooks    = self._options.pop('delayhooks', False)
 
         self._history = History(tag='data-handler')
@@ -312,7 +312,7 @@ class Handler(object):
         if self.provider and self.resource:
             try:
                 self._lasturl = self.provider.uri(self.resource)
-            except StandardError as e:
+            except Exception as e:
                 if fatal:
                     raise
                 else:
@@ -584,7 +584,7 @@ class Handler(object):
                     self.container.iotarget(),
                     st_options,
                 )
-            except StandardError:
+            except Exception:
                 rst = False
                 raise
             finally:

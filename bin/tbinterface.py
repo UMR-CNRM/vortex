@@ -5,6 +5,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import argparse
 import importlib
+import io
 import json
 import os
 import re
@@ -68,7 +69,7 @@ def swapp_exporter(collectors, abstract, filebase):
                                                         ' '.join(sorted(attrx)),
                                                         ' '.join(sorted(attro))))
     print('Output file:', filebase + '.tbi')
-    with open(filebase + '.tbi', 'w') as fd:
+    with io.open(filebase + '.tbi', 'w', encoding='utf-8') as fd:
         fd.write('\n'.join(outstack))
 
 
@@ -93,8 +94,12 @@ def json_exporter(collectors, abstract, filebase):
             _add_entry(export_dict, c, abstract=False)
         outfile = '{}_{}.json'.format(filebase, collector.tag)
         print('Output file:', outfile)
-        with open(outfile, 'w') as fd:
-            json.dump(export_dict, fd, indent=2, encoding='utf-8')
+        if six.PY2:
+            with io.open(outfile, 'wb') as fd:
+                json.dump(export_dict, fd, indent=2, encoding='utf-8')
+        else:
+            with io.open(outfile, 'w', encoding='utf-8') as fd:
+                json.dump(export_dict, fd, indent=2)
 
 
 def xml_exporter(collectors, abstract, filebase):
@@ -138,13 +143,13 @@ def xml_exporter(collectors, abstract, filebase):
         # Merge the DOM
         outfile = '{}_{}.xml'.format(filebase, collector.tag)
         print('Output file:', outfile)
-        with open(outfile, 'w') as fd:
+        with io.open(outfile, 'wb') as fd:
             fd.write(xdoc.toprettyxml(indent='  ', encoding='utf-8'))
 
     xdoc_col_list.appendChild(col_export)
     outfile1 = '{}.xml'.format(filebase)
     print('Output file:', outfile1)
-    with open(outfile1, 'w') as fd:
+    with io.open(outfile1, 'wb') as fd:
         fd.write(xdoc_col_list.toprettyxml(indent='  ', encoding='utf-8'))
 
 

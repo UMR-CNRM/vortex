@@ -434,6 +434,19 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
             'Request needs to be a two element tuple or list (location, format)'
         return super(RawFtpDelayedGetHandler, self).register(request)
 
+    @property
+    def _ftp_hostinfos(self):
+        """Return the FTP hostname end port number."""
+        s_storage = self.storage.split(':', 1)
+        hostname = s_storage[0]
+        port = None
+        if len(s_storage) > 1:
+            try:
+                port = int(s_storage[1])
+            except ValueError:
+                logger.error('Invalid port number < %s >. Ignoring it', s_storage[1])
+        return hostname, port
+
     def finalise(self, *r_ids):  # @UnusedVariable
         """Given a **r_ids** list of delayed action IDs, wait upon actions completion."""
         todo = defaultdict(list)
@@ -455,8 +468,9 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
                     destinations.append(self._resultsmap[k].result)
                 try:
                     logger.info('Running the ftserv command for format=%s.', str(a_fmt))
+                    hostname, port = self._ftp_hostinfos
                     rc = self.system.batchrawftget(sources, destinations,
-                                                   hostname=self.storage, logname=self.logname,
+                                                   hostname=hostname, logname=self.logname, port=port,
                                                    ** extras)
                 except (OSError, IOError, ExecutionError):
                     rc = False

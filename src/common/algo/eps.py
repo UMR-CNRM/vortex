@@ -168,8 +168,7 @@ class CombiSV(CombiPert):
                     '\n'.join(['- {0:8s}: {1.available:3d} ({1.expected:3d} expected).'.format(z, n)
                                for z, n in nbVect.items()]))
         # Writing the singular vectors per areas in a json file
-        with io.open(self.info_fname, 'wb') as fhinfo:
-            self.system.json_dump(nbVect, fhinfo)
+        self.system.json_dump(nbVect, self.info_fname)
 
         # Tweak the namelists
         namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')

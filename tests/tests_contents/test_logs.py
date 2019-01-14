@@ -3,17 +3,20 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import copy
 from unittest import main
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+
 from tests_contents.test_generic import _BaseDataContentTest
 
 from common.data import logs
 
 
-JSON_T = b"""[
+JSON_T = """[
     {
         "kind": 1,
         "stages": [
@@ -165,6 +168,9 @@ class UtRhListContent(_BaseDataContentTest):
         ct.slurp(self.insample[0])
         self.assertEqual(ct.size, 3)
         self.assertIsInstance(ct.data, logs.SectionsSlice)
+        ctbis = copy.deepcopy(ct)
+        self.assertIsNot(ctbis, ct)
+        self.assertEqual(ctbis.data, ct.data)
 
     def test_filters(self):
         ct = logs.SectionsJsonListContent()

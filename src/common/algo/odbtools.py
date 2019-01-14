@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division, unicode_literals
+import six
 
 from collections import defaultdict
 import copy
 import io
 import re
-import six
 import time
 
 import footprints
@@ -166,10 +166,9 @@ class _OdbProcessCommons(FootprintCopier):
         )
 
 
-class OdbProcess(Parallel, odb.OdbComponent):
+class OdbProcess(six.with_metaclass(_OdbProcessCommons, Parallel, odb.OdbComponent)):
     """Base class for any blindrun ODB algo component."""
 
-    __metaclass__ = _OdbProcessCommons
     _abstract = True
 
     def prepare(self, rh, opts):
@@ -179,10 +178,9 @@ class OdbProcess(Parallel, odb.OdbComponent):
         self._odbobj_setup()
 
 
-class TaylorOdbProcess(ParaBlindRun, odb.OdbComponent):
+class TaylorOdbProcess(six.with_metaclass(_OdbProcessCommons, ParaBlindRun, odb.OdbComponent)):
     """Base class for any taylorism based ODB algo component."""
 
-    __metaclass__ = _OdbProcessCommons
     _abstract = True
 
     def prepare(self, rh, opts):

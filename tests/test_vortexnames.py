@@ -188,6 +188,16 @@ class TestDateNameBuilder(unittest.TestCase):
                                                flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
                                                block='forecast', member=99999)),
                          'arpege/4dvarfr/ABCD/20180101T0000A/mb99999/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD', scenario='RCP2.6',
+                                               flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                               block='forecast', member=99999)),
+                         'arpege/4dvarfr/ABCD/20180101T0000A/sRCP2.6/mb99999/forecast')
+        self.assertEqual(vb.pack_pathname(dict(vapp='arpege', vconf='4dvarfr',
+                                               experiment='ABCD', scenario='RCP2.6',
+                                               flow=[{'date': FakeDate()}, {'shortcutoff': 'assim'}],
+                                               block='forecast')),
+                         'arpege/4dvarfr/ABCD/20180101T0000A/sRCP2.6/forecast')
 
 
 class TestProxyNameBuilder(unittest.TestCase):

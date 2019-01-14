@@ -70,6 +70,9 @@ class FPRegex(object):
         memo[id(self)] = new
         return new
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def footprint_export(self):
         return (self._re.pattern, self._re.flags)
 

@@ -244,24 +244,24 @@ class HendrixPrestagingTool(PrestagingTool):
                                      'stagereq',
                                      uuid.uuid4().hex[:16],
                                      'MIG'])
-        request_data = six.StringIO()
-        request_data.write('\n'.join(request))
+        request_data = six.BytesIO()
+        request_data.write(('\n'.join(request)).encode(encoding='utf_8'))
         request_data.seek(0)
         try:
             ftp = self.system.ftp(self.storage, logname=self.logname)
-        except (ftplib.all_errors, socket.error) as e:
+        except ftplib.all_errors as e:
             logger.error('Prestaging to %s: unable to connect: %s', self.storage, str(e))
             ftp = None
         if ftp:
             try:
                 rc = ftp.cd(self.stagedir)
-            except (IOError, ftplib.all_errors) as e:
+            except ftplib.all_errors as e:
                 logger.error('Prestaging to %s: error with "cd": %s', self.storage, str(e))
                 rc = False
             if rc:
                 try:
                     ftp.put(request_data, request_filename)
-                except (IOError, ftplib.all_errors) as e:
+                except ftplib.all_errors as e:
                     logger.error('Prestaging to %s: error with "put": %s', self.storage, str(e))
                     rc = False
             ftp.close()

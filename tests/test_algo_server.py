@@ -120,7 +120,9 @@ class TestExpressoServer(unittest.TestCase):
                                   serversync_method='simple_socket',
                                   serversync_medium=self.syncscript,
                                   **kwargs)
-        algo.run(rhScript)
+        with self.sh.env.clone() as lenv:
+            del lenv['PYTHONPATH']
+            algo.run(rhScript)
 
     def test_server_fine(self):
         """When everything works as expected."""

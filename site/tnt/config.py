@@ -163,6 +163,9 @@ class TntDirective(object):
                 raise TntDirectiveUnkownError(k)
             self._internals[k] = getattr(self, '_process_{:s}'.format(k))(v)
 
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
     def __getattr__(self, item):
         if item not in self._ALLOWED_DIRECTIVES:
             raise TntDirectiveUnkownError(item)

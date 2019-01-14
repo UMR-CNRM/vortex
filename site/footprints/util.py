@@ -34,14 +34,18 @@ def dictmerge(d1, d2):
 
         >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
         >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
-        >>> dictmerge(a, b)
-        {u'name': u'clim model', u'attr': {u'model': {u'values': (u'arpege', u'arome')}, u'truncation': {u'type': u'int', u'optional': u'False'}}}
+        >>> (dictmerge(a, b) ==
+        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}})
+        True
 
-        >>> dictmerge({'a':'1'},{'b':'2'})
-        {u'a': u'1', u'b': u'2'}
+        >>> (dictmerge({'a':'1'}, {'b':'2'}) ==
+        ...  {'a': '1', 'b': '2'})
+        True
 
-        >>> dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}})
-        {u'a': u'1', u'i': {u'b': u'2', u'f': {u'g': u'5'}}, u'c': {u'h': u'6', u'e': u'7', u'd': u'3'}}
+        >>> (dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}}) ==
+        ...  {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}})
+        True
+
     """
 
     for key, value in six.iteritems(d2):
@@ -89,16 +93,19 @@ def inplace(desc, key, value, globs=None):
 
     Examples::
 
-        >>> inplace({'test':'alpha'}, 'ajout', 'beta')
-        {u'test': u'alpha', u'ajout': u'beta'}
+        >>> (inplace({'test':'alpha'}, 'ajout', 'beta') ==
+        ...  {'test': 'alpha', 'ajout': 'beta'})
+        True
 
-        >>> inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta')
-        {u'test': u'alpha', u'ajout': u'beta', u'recurs': {u'a': 1, u'b': 2}}
+        >>> (inplace({'test':'alpha', 'recurs':{'a':1, 'b':2}}, 'ajout', 'beta') ==
+        ...  {'test': 'alpha', 'ajout': 'beta', 'recurs': {'a': 1, 'b': 2}})
+        True
+
     """
     newd = copy.deepcopy(desc)
     newd[key] = value
     if globs:
-        for k in [ x for x in newd.keys() if (x != key and isinstance(newd[x], six.string_types) ) ]:
+        for k in [x for x in newd.keys() if (x != key and isinstance(newd[x], six.string_types))]:
             for g in globs.keys():
                 newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
     return newd
@@ -198,24 +205,29 @@ def expand(desc):
 
     List expansion::
 
-        >>> expand( {'test': 'alpha'} )
-        [{u'test': u'alpha'}]
+        >>> expand({'test': 'alpha'}) == [{'test': 'alpha'}]
+        True
 
-        >>> expand( { 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ] } )
-        [{u'test': u'alpha', u'niv2': u'a'}, {u'test': u'alpha', u'niv2': u'b'}, {u'test': u'alpha', u'niv2': u'c'}]
+        >>> (expand({ 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ]}) ==
+        ...  [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}])
+        True
 
-        >>> expand({'test': 'alpha', 'niv2': 'x,y,z'})
-        [{u'test': u'alpha', u'niv2': u'x'}, {u'test': u'alpha', u'niv2': u'y'}, {u'test': u'alpha', u'niv2': u'z'}]
+        >>> (expand({'test': 'alpha', 'niv2': 'x,y,z'}) ==
+        ...  [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}])
+        True
 
-        >>> expand({'test': 'alpha', 'niv2': 'range(1,3)'})
-        [{u'test': u'alpha', u'niv2': 1}, {u'test': u'alpha', u'niv2': 2}, {u'test': u'alpha', u'niv2': 3}]
-        >>> expand({'test': 'alpha', 'niv2': 'range(0,6,3)'})
-        [{u'test': u'alpha', u'niv2': 0}, {u'test': u'alpha', u'niv2': 3}, {u'test': u'alpha', u'niv2': 6}]
+        >>> (expand({'test': 'alpha', 'niv2': 'range(1,3)'}) ==
+        ...  [{'test': 'alpha', 'niv2': 1}, {'test': 'alpha', 'niv2': 2}, {'test': 'alpha', 'niv2': 3}])
+        True
+        >>> (expand({'test': 'alpha', 'niv2': 'range(0,6,3)'}) ==
+        ...  [{'test': u'alpha', 'niv2': 0}, {'test': 'alpha', 'niv2': 3}, {'test': 'alpha', 'niv2': 6}])
+        True
 
     List expansion + dictionary matching::
 
-        >>> expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}})
-        [{u'test': u'alpha', u'niv3': u'niv2 is x', u'niv2': u'x'}, {u'test': u'alpha', u'niv3': u'niv2 is y', u'niv2': u'y'}]
+        >>> (expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}}) ==
+        ...  [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x'}, {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y'}])
+        True
 
     Globbing::
 
@@ -233,7 +245,7 @@ def expand(desc):
     other keys in the dictionary.
     """
 
-    ld = deque([ desc, ])
+    ld = deque([desc, ])
     todo = True
     nbpass = 0
 
@@ -252,21 +264,21 @@ def expand(desc):
                     continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
                     logger.debug(' > List expansion %s', v)
-                    newld.extend([ inplace(d, k, x) for x in v ])
+                    newld.extend([inplace(d, k, x) for x in v])
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
                     logger.debug(' > Range expansion %s', v)
-                    lv = [ int(x) for x in re.split(r'[\(\),]+', v) if re.match(r'\d+$', x) ]
+                    lv = [int(x) for x in re.split(r'[\(\),]+', v) if re.match(r'\d+$', x)]
                     if len(lv) < 2:
                         lv.append(lv[0])
                     lv[1] += 1
-                    newld.extend([ inplace(d, k, x) for x in range(*lv) ])
+                    newld.extend([inplace(d, k, x) for x in range(*lv)])
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
-                    newld.extend([ inplace(d, k, x) for x in v.split(',') ])
+                    newld.extend([inplace(d, k, x) for x in v.split(',')])
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.search(r'{glob:\w+:', v):
@@ -284,7 +296,7 @@ def expand(desc):
                     somechanges = True
                     break
                 if isinstance(v, dict):
-                    for dk in [ x for x in v.keys() if x in d ]:
+                    for dk in [x for x in v.keys() if x in d]:
                         dv = d[dk]
                         if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
                             newld.append(inplace(d, k, v[dk][six.text_type(dv)]))

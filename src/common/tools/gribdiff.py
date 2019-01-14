@@ -30,6 +30,10 @@ class _GRIBDIFF_Plus_St(object):
         return self._result
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return self.rc
 
 

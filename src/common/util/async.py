@@ -70,7 +70,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
                     putrc = sh.ftput(data.source, data.destination, hostname=data.hostname,
                                      logname=data.logname, cpipeline=cpipeline,
                                      fmt=data.fmt)
-            except StandardError as e:
+            except Exception as e:
                 logger.warning('FTPut failed', attempt=trynum, error=e)
                 putrc = False
             if putrc:
@@ -93,7 +93,7 @@ def system_cp(pnum, ask, config, logger, **opts):
         logger.info('cp', source=data.source, destination=data.destination)
         try:
             rc = sh.cp(data.source, data.destination, fmt=data.fmt)
-        except StandardError as e:
+        except Exception as e:
             logger.warning('cp failed', error=e)
             rc = False
         if rc:
@@ -127,7 +127,7 @@ def system_scp(pnum, ask, config, logger, **opts):
         try:
             putrc = sh.scpput(data.source, data.destination, hostname=data.hostname,
                               logname=data.logname, fmt=data.fmt)
-        except StandardError as e:
+        except Exception as e:
             logger.warning('scp failed', error=e)
             putrc = False
         if putrc:

@@ -416,8 +416,9 @@ class ObsRefContent(TextContent):
         self.data.append(ObsRefItem(*item))
 
     def _actual_slurp(self, container):
-        self._data.extend([ ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#') ])
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            self._data.extend([ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#')])
+            self._size = container.totalsize
         self._do_delayed_slurp = None
 
     @classmethod
@@ -524,8 +525,6 @@ class ObsMapContent(TextContent):
 
     def slurp(self, container):
         """Get data from the ``container``."""
-        container.rewind()
-
         if self.only is not None:
             ofilters = [re.compile(d if ':' in d else d + ':')
                         for d in self.only]
@@ -539,11 +538,13 @@ class ObsMapContent(TextContent):
                      any([f.match(om) for f in ofilters])) and
                     not any([f.match(om) for f in dfilters]))
 
-        self.extend(filter(item_filter,
-                           [ObsMapItem(* x.split())
-                            for x in [line.strip() for line in container]
-                            if x and not x.startswith('#')]))
-        self._size = container.totalsize
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self.extend(filter(item_filter,
+                               [ObsMapItem(* x.split())
+                                for x in [line.strip() for line in container]
+                                if x and not x.startswith('#')]))
+            self._size = container.totalsize
 
     @classmethod
     def formatted_data(self, item):

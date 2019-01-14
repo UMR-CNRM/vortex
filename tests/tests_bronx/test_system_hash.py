@@ -38,7 +38,10 @@ class TestHashAdapter(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def _read_md5line(self, i_fh):
-        return i_fh.readline().split(' ')[0]
+        line = i_fh.readline()
+        if isinstance(line, bytes):
+            line = line.decode(encoding='ascii', errors='ignore')
+        return line.split(' ')[0]
 
     def test_hash_compute(self):
         # Filename or FileHandle to hash string

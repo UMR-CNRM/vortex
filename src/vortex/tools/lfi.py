@@ -13,6 +13,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes.tracking import Tracker
 
 from . import addons
+from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: Export nothing
 __all__ = []
@@ -92,6 +93,10 @@ class LFI_Status(object):
                 print(l)
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self.rc in self.ok)
 
 
@@ -262,7 +267,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         return None
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, sync=False):
+                   port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -270,7 +275,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             hostname = self.sh._fix_fthostname(hostname)
 
             st = LFI_Status()
-            ftp = self.sh.ftp(hostname, logname)
+            ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
                 packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
@@ -289,10 +294,11 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             return st
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline, sync=sync)
+                                 logname=logname, cpipeline=cpipeline,
+                                 port=port, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None, sync=False):
+                      port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -300,15 +306,19 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             if self.sh.ftraw and self.rawftshell is not None:
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
-                                        hostname=hostname, logname=logname,
+                                        hostname=hostname, logname=logname, port=port,
                                         specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(newsource)  # Delete the request file
                 return rc
             else:
-                return self._std_ftput(source, destination, hostname, logname, sync=sync)
+                if port is None:
+                    port = DEFAULT_FTP_PORT
+                return self._std_ftput(source, destination, hostname, logname,
+                                       port=port, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline, sync=sync)
+                                    logname=logname, port=port,
+                                    cpipeline=cpipeline, sync=sync)
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_rawftput

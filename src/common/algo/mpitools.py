@@ -102,7 +102,7 @@ class MpiNWP(mpitools.MpiBinaryBasic):
         if 'NAMPAR1' in namcontents:
             np1 = namcontents['NAMPAR1']
             for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
-                if np1[nstr] > self.nprocs:
+                if isinstance(np1[nstr], (int, float)) and np1[nstr] > self.nprocs:
                     logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
                     np1[nstr] = self.nprocs
                     namw = True

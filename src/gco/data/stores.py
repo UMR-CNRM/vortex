@@ -3,13 +3,13 @@
 # pylint: disable=unused-argument
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import ast
 import collections
 import copy
 import hashlib
 import re
-import six
 
 from bronx.fancies import loggers
 
@@ -426,9 +426,11 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
 
     @classmethod
     def _hashdir(cls, eltid):
+        if six.PY2:
+            eltid = six.text_type(eltid)
         cleaned = cls._eltid_cleaner0.sub('', eltid)
         cleaned = cls._eltid_cleaner1.sub(r'\1\2', cleaned)
-        return hashlib.md5(cleaned).hexdigest()[0]
+        return hashlib.md5(cleaned.encode(encoding="utf-8")).hexdigest()[0]
 
     def _universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""

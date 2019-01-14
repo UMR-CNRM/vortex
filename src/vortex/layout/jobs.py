@@ -58,126 +58,281 @@ def _guess_vapp_vconf_xpid(t, path=None):
     return _JobBasicConf('/'.join(lpath), *lpath[-3:])
 
 
+def _mkjob_opts_detect_1(t, ** opts):
+    """Detect options that does not depend on the configuration file."""
+    tr_opts = dict()
+    auto_opts = dict()
+
+    # Things guessed from the directory name
+    opset = _guess_vapp_vconf_xpid(t)
+    appbase = opts.pop('appbase', opset.appbase)
+    target_appbase  = opts.get('target_appbase', opset.appbase)
+    xpid = opts.get('xpid', opset.xpid)
+    vapp = opts.pop('vapp', opset.vapp)
+    vconf = opts.pop('vconf', opset.vconf)
+
+    taskconf = opts.pop('taskconf', None)
+    if taskconf:
+        jobconf = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(appbase, vapp, vconf, taskconf)
+        taskconf = '_' + taskconf
+    else:
+        jobconf = '{0:s}/conf/{1:s}_{2:s}.ini'.format(appbase, vapp, vconf)
+        taskconf = ''
+
+    # Other pre-calculated stuff
+    tr_opts['appbase'] = appbase
+    tr_opts['target_appbase'] = target_appbase
+    tr_opts['xpid'] = xpid
+    tr_opts['vapp'] = vapp
+    tr_opts['vconf'] = vconf
+    tr_opts['jobconf'] = jobconf
+    tr_opts['taskconf'] = taskconf
+
+    return tr_opts, auto_opts, opts
+
+
+def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
+    """Detect options that depend on the configuration file."""
+
+    # The mkjob profile and associated conf
+    profile = opts.pop('profile', 'void')
+    p_tplconf = tplconf.get(profile, None)
+    if p_tplconf is None:
+        emsg = "Job's profile << {:s} >> not found.".format(profile)
+        logger.critical(emsg)
+        raise ValueError(emsg)
+
+    # Fix the task's name
+    name = re.sub(r'\.py$', '', opts.pop('name', 'autojob'))
+
+    # Try to find default rundate/runtime according to the jobname
+    runtime = opts.pop('runtime', None)
+    rundate = opts.pop('rundate', None)
+    cutoff = opts.pop('cutoff', None)
+    if runtime is None and rundate is None:
+        vtxdate = _RE_VORTEXDATE.search(name)
+        if vtxdate:
+            rundate = date.Date(vtxdate.group('date') +
+                                vtxdate.group('hh') + vtxdate.group('mm'))
+            runtime = date.Time('{:s}:{:s}'.format(vtxdate.group('hh'),
+                                                   vtxdate.group('mm')))
+            if cutoff is None:
+                cutoff = dict(A='assim', P='production').get(vtxdate.group('cutoff'))
+            name = _RE_VORTEXDATE.sub('', name)
+        else:
+            optime = _RE_OPTIME.search(name)
+            if optime:
+                runtime = date.Time('{:s}:{:s}'.format(optime.group('hh'), optime.group('mm')))
+                name = _RE_OPTIME.sub('', name)
+
+    # Try to find default member number according to the jobname
+    member = opts.pop('member', None)
+    if member is None:
+        mblookup = _RE_MEMBER.search(name)
+        if mblookup:
+            member = int(mblookup.group('member'))
+            name = _RE_MEMBER.sub('', name)
+
+    # Get the job's configuration
+    p_jobconf = jobconf.get(name, None)
+    if p_jobconf is None:
+        logger.error('No job configuration for job name=%s', name)
+        logger.warning('Going on with an emtpy job configuration... probably a bad idea !')
+        p_jobconf = dict()
+
+    def opts_plus_job(what, default):
+        """Function that look up in command line options, then in job's conf."""
+        return opts.pop(what, p_jobconf.get(what, default))
+
+    def opts_plus_job_plus_tpl(what, default):
+        """
+        Function that look up in command line options, then in job's conf,
+        then in template's conf."""
+        return opts.pop(what, p_jobconf.get(what, p_tplconf.get(what, default)))
+
+    # A last chance for these super-stars : they may be set in job's conf...
+    if rundate is None:
+        rundate = p_jobconf.get('rundate', None)
+    if runtime is None:
+        runtime = p_jobconf.get('runtime', None)
+    if cutoff is None:
+        cutoff = p_jobconf.get('cutoff', None)
+    if member is None:
+        member = p_jobconf.get('member', None)
+
+    if member is not None:
+        try:
+            member = int(member)
+        except ValueError:
+            pass
+
+    # Special treatment for xpid and target_appbase (they may be in jobconf but
+    # command line value remain the preferred value)
+    for stuff in ('xpid', 'target_appbase'):
+        if stuff not in opts:
+            if stuff in p_jobconf:
+                tr_opts[stuff] = p_jobconf[stuff]
+        else:
+            del opts[stuff]
+
+    # Switch verbosity from boolean to plain string
+    verb = opts_plus_job_plus_tpl('verbose', True)
+    if isinstance(verb, bool):
+        verb = 'verbose' if verb else 'noverbose'
+
+    # Adapt the partition name if refill is on
+    refill = opts.pop('refill', False)
+    partition = opts_plus_job_plus_tpl('partition', None)
+    if refill:
+        partition = opts_plus_job_plus_tpl('refill_partition', None)
+
+    # SuiteBg
+    suitebg = opts_plus_job_plus_tpl('suitebg', None)
+
+    # Rundates
+    rundates = opts_plus_job_plus_tpl('rundates', None)
+
+    # Lists...
+    for explist in ('loadedmods', 'loadedaddons', 'ldlibs', 'extrapythonpath'):
+        val = opts_plus_job_plus_tpl(explist, None)
+        if val:
+            tr_opts[explist] = ','.join(["'{:s}'".format(x)
+                                         for x in re.split(r'\s*,\s*', val)
+                                         if len(x)])
+            if tr_opts[explist]:
+                tr_opts[explist] += ','  # Always ends with a ,
+
+    # A lot of basic stuffs...
+    tr_opts['create'] = opts.pop('create', date.at_second().iso8601())
+    tr_opts['mkuser'] = opts.pop('mkuser', t.glove.user)
+    tr_opts['mkhost'] = opts.pop('mkhost', t.sh.hostname)
+    tr_opts['mkopts'] = opts.pop('mkopts')
+    tr_opts['pwd'] = opts.pop('pwd', t.sh.getcwd())
+    tr_opts['home'] = opts_plus_job('home', t.env.HOME)
+
+    tr_opts['python'] = opts_plus_job_plus_tpl('python', t.sh.which('python'))
+    tr_opts['pyopts'] = opts_plus_job_plus_tpl('pyopts', '-u')
+
+    tr_opts['task'] = opts_plus_job_plus_tpl('task', 'void')
+
+    # Other pre-calculated stuff
+    tr_opts['verbose'] = verb
+    tr_opts['name'] = name
+    tr_opts['file'] = opts.pop('file', name + '.py')
+    if rundate is None:
+        tr_opts['rundate'] = None
+    else:
+        try:
+            rundate = date.Date(rundate).ymdh
+        except (ValueError, TypeError):
+            pass
+        tr_opts['rundate'] = "'" + six.text_type(rundate) + "'"  # Ugly, but that's history
+    if runtime is None:
+        tr_opts['runtime'] = None
+    else:
+        try:
+            runtime = date.Time(runtime)
+        except (ValueError, TypeError):
+            pass
+        tr_opts['runtime'] = "'" + six.text_type(runtime) + "'"  # Ugly, but that's history
+    if cutoff is not None:
+        tr_opts['cutoff'] = cutoff
+    tr_opts['member'] = member
+    auto_opts['member'] = member
+    if suitebg is None:
+        tr_opts['suitebg'] = suitebg
+    else:
+        tr_opts['suitebg'] = "'" + suitebg + "'"  # Ugly, but that's history
+    auto_opts['suitebg'] = suitebg
+    tr_opts['refill'] = refill
+    if partition is not None:
+        tr_opts['partition'] = partition
+    if rundates:
+        tr_opts['rundates'] = rundates
+        auto_opts['rundates'] = rundates
+    else:
+        tr_opts['rundates'] = ''
+
+    # The list of auto command-line options to ignore
+    auto_options_filter_opts = opts.pop('auto_options_filter', ())
+    auto_options_filter = (opts_plus_job_plus_tpl('auto_options_filter', '').split(',') +
+                           list(auto_options_filter_opts))
+    # All the remaining stuff...
+    for k, v in opts.items():
+        tr_opts.setdefault(k, v)
+        if k not in auto_options_filter:
+            auto_opts.setdefault(k, v)
+    for k, v in p_jobconf.items():
+        tr_opts.setdefault(k, v)
+    for k, v in p_tplconf.items():
+        tr_opts.setdefault(k, v)
+
+    return tr_opts, auto_opts
+
+
+def _mkjob_type_translate(k, v):
+    """Dump values as strings for auto_options export..."""
+    if 'dates' in k:
+        return "bronx.stdtypes.date.daterangex('{:s}')".format(v)
+    elif 'date' in k:
+        return "bronx.stdtypes.date.Date('{:s}')".format(v)
+    else:
+        if isinstance(v, six.string_types):
+            return "'{:s}'".format(v)
+        else:
+            return six.text_type(v)
+
+
+def _mkjob_opts_autoexport(auto_opts):
+    return ',\n'.join(['    ' + k + '=' + _mkjob_type_translate(k, v)
+                       for k, v in sorted(auto_opts.items())])
+
+
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        profile   = 'void',
         inifile   = '@job-default.ini',
-        create    = date.at_second().iso8601(),
-        mkuser    = t.glove.user,
-        mkhost    = t.sh.hostname,
-        name      = 'autojob',
-        home      = t.env.HOME,
-        rundate   = None,
-        rundates  = '',
-        runtime   = None,
-        suitebg   = None,
-        member    = None,
-        taskconf  = None,
-        wrap      = True,
-        verbose   = True,
+        wrap      = False,
     )
     opts.update(kw)
 
-    # Fix actual options of the create process
-    opts.setdefault('mkopts', six.text_type(kw))
+    # Detect some basic options that do not depend on the configuration files
+    tr_opts, auto_opts, r_kw = _mkjob_opts_detect_1(t, mkopts=six.text_type(kw), **kw)
 
-    # Switch verbosity from boolean to plain string
-    if isinstance(opts['verbose'], bool):
-        opts['verbose'] = 'verbose' if opts['verbose'] else 'noverbose'
-
-    # Fix the task's name
-    opts['name'] = re.sub(r'\.py$', '', opts['name'])
-    opts.setdefault('file', opts['name'] + '.py')
-
-    # Try to find default rundate/runtime according to the jobname
-    if opts['runtime'] is None and opts['rundate'] is None:
-        vtxdate = _RE_VORTEXDATE.search(opts['name'])
-        if vtxdate:
-            opts['rundate'] = date.Date(vtxdate.group('date') +
-                                        vtxdate.group('hh') + vtxdate.group('mm')).ymdhm
-            opts['runtime'] = six.text_type(date.Time('{:s}:{:s}'.format(vtxdate.group('hh'),
-                                                                         vtxdate.group('mm'))))
-            if 'cutoff' not in opts:
-                opts['cutoff'] = dict(A='assim', P='production').get(vtxdate.group('cutoff'))
-            opts['name'] = _RE_VORTEXDATE.sub('', opts['name'])
-        else:
-            optime = _RE_OPTIME.search(opts['name'])
-            if optime:
-                opts['runtime'] = six.text_type(date.Time('{:s}:{:s}'.format(optime.group('hh'),
-                                                                             optime.group('mm'))))
-                opts['name'] = _RE_OPTIME.sub('', opts['name'])
-
-    for xopt in ('rundate', 'runtime'):
-        if isinstance(opts[xopt], six.string_types):
-            opts[xopt] = "'" + opts[xopt] + "'"
-
-    # Try to find default member number according to the jobname
-    if opts['member'] is None:
-        mblookup = _RE_MEMBER.search(opts['name'])
-        if mblookup:
-            opts['member'] = int(mblookup.group('member'))
-            opts['name'] = _RE_MEMBER.sub('', opts['name'])
-
-    # Add the current working directory
-    opts['pwd'] = t.sh.getcwd()
-
+    # Read the configuration files
     try:
         iniparser = ExtendedReadOnlyConfigParser(inifile=opts['inifile'])
-        opts['tplinit'] = iniparser.file
         tplconf = iniparser.as_dict()
     except Exception as pb:
-        logger.warning('Could not read config %s', str(pb))
-        tplconf = dict()
+        emsg = 'Could not read the << {:s} >> config file: {!s}'.format(opts['inifile'], pb)
+        logger.critical(emsg)
+        raise ValueError(emsg)
 
-    tplconf = tplconf.get(opts['profile'])
-
-    if opts.get('refill', False):
-        opts['partition'] = tplconf.get('refill_partition')
-
-    opset = _guess_vapp_vconf_xpid(t)
-
-    tplconf.setdefault('python', t.sh.which('python'))
-    tplconf.setdefault('pyopts', '-u')
-    tplconf.setdefault('appbase', opset.appbase)
-    tplconf.setdefault('target_appbase', opset.appbase)
-    tplconf.setdefault('xpid', opset.xpid)
-    tplconf.setdefault('vapp', opset.vapp)
-    tplconf.setdefault('vconf', opset.vconf)
-
-    tplconf.update(opts)
-
-    tplconf.setdefault('file', opts['name'] + '.py')
-
-    if tplconf['taskconf']:
-        jobconf = '{0:s}/conf/{1:s}_{2:s}_{3:s}.ini'.format(tplconf['appbase'],
-                                                            tplconf['vapp'], tplconf['vconf'],
-                                                            tplconf['taskconf'])
-        tplconf['taskconf'] = '_' + tplconf['taskconf']
+    if t.sh.path.exists(tr_opts['jobconf']):
+        t.sh.header('Reading ' + tr_opts['jobconf'])
+        try:
+            jobparser = ExtendedReadOnlyConfigParser(inifile=tr_opts['jobconf'])
+            jobconf = jobparser.as_dict()
+        except Exception as pb:
+            emsg = 'Could not read the << {:s} >> config file: {!s}'.format(tr_opts['jobconf'], pb)
+            logger.critical(emsg)
+            raise ValueError(emsg)
     else:
-        jobconf = '{0:s}/conf/{1:s}_{2:s}.ini'.format(tplconf['appbase'],
-                                                      tplconf['vapp'], tplconf['vconf'])
-        tplconf['taskconf'] = ''
+        emsg = 'Could not find the << {:s} >> config file.'.format(tr_opts['jobconf'])
+        logger.error(emsg)
+        raise ValueError(emsg)
 
-    if t.sh.path.exists(jobconf):
-        t.sh.header('Add ' + jobconf)
-        jobparser = ExtendedReadOnlyConfigParser(inifile=jobconf)
-        tplconf.update(jobparser.as_dict().get(opts['name'], dict()))
+    # Detect most of the options that depend on the configuration file
+    tr_opts, auto_opts = _mkjob_opts_detect_2(t, tplconf, jobconf,
+                                              tr_opts, auto_opts, ** r_kw)
 
-    if tplconf['suitebg'] is not None:
-        tplconf['suitebg'] = "'" + tplconf['suitebg'] + "'"
+    # Dump auto_exported options
+    tr_opts['auto_options'] = _mkjob_opts_autoexport(auto_opts)
 
-    for explist in ('loadedmods', 'loadedaddons', 'ldlibs'):
-        if explist in tplconf:
-            tplconf[explist] = ','.join(["'{:s}'".format(x)
-                                         for x in re.split(r'\s*,\s*', tplconf[explist])
-                                         if len(x)])
-            if tplconf[explist]:
-                tplconf[explist] += ','  # Always ends with a ,
-
-    corejob = load_template(t, tplconf['template'], encoding="script")
-    opts['tplfile'] = corejob.srcfile
-    pycode = string.Template(corejob.substitute(tplconf)).substitute(tplconf)
+    # Generate the job
+    corejob = load_template(t, tr_opts['template'], encoding="script")
+    tr_opts['tplfile'] = corejob.srcfile
+    pycode = string.Template(corejob.substitute(tr_opts)).substitute(tr_opts)
 
     if opts['wrap']:
         def autojob():
@@ -188,7 +343,7 @@ def mkjob(t, **kw):
         ast.parse(pycode, 'compile.mkjob.log', 'exec')
         objcode = pycode
 
-    return objcode, tplconf
+    return objcode, tr_opts
 
 
 @nicedeco
@@ -332,11 +487,17 @@ class JobAssistant(footprints.FootprintBase):
     def _add_specials(self, t, prefix=None, **kw):
         """Print some of the environment variables."""
         prefix = prefix or self.special_prefix
+        # Suffixed variables
         specials = kw.get('actual', dict())
         filtered = {k: v for k, v in specials.items() if k.startswith(prefix)}
+        # Auto variables
+        auto = kw.get('auto_options', dict())
+        for k, v in auto.items():
+            filtered.setdefault(prefix + k, v)
+        # Summarise
         if filtered:
-            t.sh.header('Copying actual {:s} variables to the environment'.format(prefix))
-            t.env.update({k: v for k, v in specials.items() if k.startswith(prefix)})
+            t.sh.header('Copying actual {:s} variables to the environment or auto_options'.format(prefix))
+            t.env.update(filtered)
             self.print_somevariables(t, prefix=prefix)
 
     @_extendable

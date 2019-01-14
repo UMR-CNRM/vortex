@@ -270,10 +270,9 @@ def main():
     logger.debug('Requested action = %s', action)
     logger.debug('Current working directory = %s', os.getcwd())
     logger.debug('Detailed list or arguments')
-    for key, value in vars(args).iteritems():
+    for key, value in vars(args).items():
         logger.debug('  + {} = {!s}'.format(key, value))
 
-    
     try:
         with interrupt.SignalInterruptHandler(emitlogs=False):
             vortex_delayed_init(t)
@@ -285,7 +284,7 @@ def main():
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         return 1
 
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")

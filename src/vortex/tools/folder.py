@@ -17,6 +17,7 @@ import tempfile
 
 from bronx.fancies import loggers
 import footprints
+from vortex.tools.net import DEFAULT_FTP_PORT
 from vortex.util.iosponge import IoSponge
 from . import addons
 
@@ -150,7 +151,7 @@ class FolderShell(addons.FtrawEnableAddon):
                         self.sh.mv(item, self.sh.path.join(destination, item))
             else:
                 logger.error('Nothing to unpack')
-        except StandardError as trouble:
+        except Exception as trouble:
             logger.critical('Unable to proceed folder post-ftget step')
             raise trouble
         finally:
@@ -158,13 +159,13 @@ class FolderShell(addons.FtrawEnableAddon):
             self.sh.rm(loctmp)
 
     def _folder_ftget(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None):
+                      port=DEFAULT_FTP_PORT, cpipeline=None):
         """Proceed direct ftp get on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         hostname = self.sh._fix_fthostname(hostname)
         source, destination = self._folder_preftget(source, destination)
-        ftp = self.sh.ftp(hostname, logname)
+        ftp = self.sh.ftp(hostname, logname, port=port)
         if ftp:
             loccwd = self.sh.getcwd()
             loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
@@ -190,7 +191,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return False
 
     def _folder_rawftget(self, source, destination, hostname=None, logname=None,
-                         cpipeline=None):
+                         port=None, cpipeline=None):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -203,7 +204,8 @@ class FolderShell(addons.FtrawEnableAddon):
                 extname = self.sh.path.splitext(source)[1]
                 try:
                     rc = self.sh.ftserv_get(source, self.tmpname + extname,
-                                            hostname=hostname, logname=logname)
+                                            hostname=hostname, logname=logname,
+                                            port=port)
                     self.sh.untar(self.tmpname + extname, autocompress=False)
                 finally:
                     self.sh.rm(self.tmpname + extname)
@@ -211,10 +213,12 @@ class FolderShell(addons.FtrawEnableAddon):
                 self._folder_postftget(destination, loccwd, loctmp)
             return rc
         else:
-            return self._folder_ftget(source, destination, hostname, logname)
+            if port is None:
+                port = DEFAULT_FTP_PORT
+            return self._folder_ftget(source, destination, hostname, logname, port=port)
 
     def _folder_batchrawftget(self, source, destination, hostname=None, logname=None,
-                              cpipeline=None):
+                              port=None, cpipeline=None):
         """Use ftserv to fetch several folder-like resources"""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -233,7 +237,8 @@ class FolderShell(addons.FtrawEnableAddon):
                 d_extname = self.sh.path.splitext(actual_s)[1]
                 tmpdestinations.append(self.sh.path.join(d_tmpdir, self.tmpname + d_extname))
 
-            rc = self.sh.ftserv_batchget(actualsources, tmpdestinations, hostname, logname)
+            rc = self.sh.ftserv_batchget(actualsources, tmpdestinations, hostname,
+                                         logname, port=port)
             if rc:
                 for d, t in zip(actualdestinations, tmpdestinations):
                     loctmp = self.sh.path.dirname(t)
@@ -251,7 +256,7 @@ class FolderShell(addons.FtrawEnableAddon):
             raise RuntimeError('You are not supposed to land here !')
 
     def _folder_ftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None, sync=False):
+                      port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -262,7 +267,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
         source = self.sh.path.abspath(source)
 
-        ftp = self.sh.ftp(hostname, logname)
+        ftp = self.sh.ftp(hostname, logname, port=port)
         if ftp:
             packed_size = self._packed_size(source)
             p = self._folder_pack_stream(source)
@@ -275,7 +280,7 @@ class FolderShell(addons.FtrawEnableAddon):
             return False
 
     def _folder_rawftput(self, source, destination, hostname=None, logname=None,
-                         cpipeline=None, sync=False):
+                         port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
@@ -289,12 +294,15 @@ class FolderShell(addons.FtrawEnableAddon):
                 request_fh.write(six.text_type(self.sh.path.dirname(newsource)))
             self.sh.readonly(request)
             rc = self.sh.ftserv_put(request, destination,
-                                    hostname=hostname, logname=logname,
+                                    hostname=hostname, logname=logname, port=port,
                                     specialshell=self.rawftshell, sync=sync)
             self.sh.rm(request)
             return rc
         else:
-            return self._folder_ftput(source, destination, hostname, logname, sync=sync)
+            if port is None:
+                port = DEFAULT_FTP_PORT
+            return self._folder_ftput(source, destination, hostname, logname,
+                                      port=port, sync=sync)
 
     def _folder_scpget(self, source, destination, hostname, logname=None, cpipeline=None):
         """Retrieve a folder using scp."""

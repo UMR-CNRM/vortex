@@ -26,12 +26,13 @@ while True:
         print("Retry...")
 
 mess = client.recv(255)
-client.send(b'OK')
+client.send('OK'.encode(encoding='utf-8'))
 client.close()
 
-if mess == b'STEP':
+mess = mess.decode(encoding='utf-8')
+if mess == 'STEP':
     sys.exit(0)
-elif mess == b'STOP':
+elif mess == 'STOP':
     os.unlink(file)
     sys.exit(0)
 else:

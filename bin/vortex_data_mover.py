@@ -272,7 +272,7 @@ def tweak_attrs(attr_d, sub_arrays):
 def bootstrap_rhs(conf):
     """Generate the resource handlers' list."""
     rhs = list()
-    
+
     # Recursive calls until all loops are dealt with...
     loops = conf.get('loops', dict())
 
@@ -404,7 +404,7 @@ def just_check(todolist):
             total += 1
             try:
                 rc = item['in'].check()
-            except StandardError:
+            except Exception:
                 rc = False
             failures += int(not rc)
             logger.info('%06s: %s', '  ok  ' if rc else '**KO**', item['in'].location())
@@ -423,7 +423,7 @@ def get_and_push(todolist):
             total += 1
             try:
                 rc = item['in'].get(intent=vortex.layout.dataflow.intent.IN)
-            except StandardError:
+            except Exception:
                 rc = False
             logger.info('get %06s: %s', '  ok  ' if rc else '**KO**', item['in'].location())
             if not rc:
@@ -432,7 +432,7 @@ def get_and_push(todolist):
                 continue
             try:
                 rc = item['out'].put()
-            except StandardError:
+            except Exception:
                 rc = False
             logger.info('put %06s: %s', '  ok  ' if rc else '**KO**', item['out'].location())
             if not rc:
@@ -477,13 +477,11 @@ if __name__ == '__main__':
     if args.verbose is None:
         logger.setLevel('INFO')
         loggers.getLogger('bronx').setLevel('WARNING')
-        logger.setLevel('WARNING')
         vortex.logger.setLevel('ERROR')
-    if args.verbose >= 1:
+    if args.verbose and args.verbose >= 1:
         loggers.getLogger('bronx').setLevel('INFO')
-        logger.setLevel('INFO')
         vortex.logger.setLevel('INFO')
-    if args.verbose >= 2:
+    if args.verbose and args.verbose >= 2:
         logger.setLevel('DEBUG')
 
     # Read the YAML conf

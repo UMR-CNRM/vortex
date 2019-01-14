@@ -224,7 +224,7 @@ class MpiTool(footprints.FootprintBase):
         :param list[str] args: Command line arguments for each of the binaries.
         """
         cmdl = [ self.launcher, ]
-        for k, v in self._reshaped_mpiopts().items():
+        for k, v in sorted(self._reshaped_mpiopts().items()):
             cmdl.append(self.optprefix + six.text_type(k))
             if v is not None:
                 cmdl.append(six.text_type(v))
