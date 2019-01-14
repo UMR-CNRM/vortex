@@ -16,6 +16,7 @@ class S2MTaskMixIn(object):
     nightruntime = Time(hour=3, minute=0)
     firstassimruntime = Time(hour=6, minute=0)
     secondassimruntime = Time(hour=9, minute=0)
+    monthly_analysis_time = Time(hour=12, minute=0)
 
     def s2moper_filter_execution_error(self, exc):
         """Define the behaviour in case of errors.
@@ -38,16 +39,25 @@ class S2MTaskMixIn(object):
 
         accept_errors = not determinitic_error or nerrors < 5
 
+        if accept_errors:
+            print (self.warningmessage(nerrors, exc))
+        return accept_errors, warning
+
+    def reforecast_filter_execution_error(self, exc):
+        warning = {}
+        nerrors = len(list(enumerate(exc)))
+        warning["nfail"] = nerrors
+        accept_errors = nerrors < 5
+        if accept_errors:
+            print (self.warningmessage(nerrors, exc))
+        return accept_errors, warning
+
+    def warningmessage(self, nerrors, exc):
         warningline = "!" * 40 + "\n"
         warningmessage = (warningline + "ALERT :" + str(nerrors) +
                           " members produced a delayed exception.\n" +
                           warningline + str(exc) + warningline)
-
-        if accept_errors:
-            print (warningmessage)
-            return True, warning  # Mask the exception and allows the code to exit normally
-        else:
-            return False, warning   # The delayed exception will be raised to stop execution
+        return warningmessage
 
     def get_period(self):
 
@@ -67,6 +77,12 @@ class S2MTaskMixIn(object):
             if self.conf.rundate.hour == self.nightruntime.hour:
                 # The night run performs a 4 day analysis
                 datebegin = dateend - Period(days=4)
+            elif self.conf.rundate.hour == self.monthly_analysis_time.hour:
+                if self.conf.rundate.month <= 7:
+                    year = self.conf.rundate.year - 1
+                else:
+                    year = self.conf.rundate.year
+                datebegin = Date(year, 7, 31, 6)
             else:
                 # The daytime runs perform a 1 day analysis
                 datebegin = dateend - Period(days=1)

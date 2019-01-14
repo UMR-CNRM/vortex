@@ -108,7 +108,17 @@ AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: S2MReforecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SurfexComponent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfexComponentMultiDates
    :show-inheritance:
    :members:
    :member-order: alphabetical

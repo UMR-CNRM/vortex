@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies           import loggers
 from bronx.stdtypes.date     import Date, Time
+
 import footprints
 from footprints.util import rangex
 
@@ -15,6 +16,7 @@ from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, na
 from common.data.modelstates import InitialCondition
 from common.data.obs         import ObsRaw
 
+from vortex.syntax.stdattrs import a_date
 from cen.syntax.stdattrs     import cendateperiod_deco
 
 #: No automatic export
@@ -86,7 +88,7 @@ class SafranGuess(GeoFlowResource):
             else:
                 raise SafranObsDateError('SAFRAN guess are synoptic, therefore the hour must be 0, 6, 12 or 18')
         elif self.conf.source_app == 'cep':
-            return 'cep_' + self.data.nivologyseason()
+            return 'cep_' + self.data.nivologyseason
 
 
 @namebuilding_delete('src')
@@ -306,13 +308,13 @@ class SafranObsRaw(ObsRaw):
         info = 'SAFRAN observation files (SYNOP observations)',
         attr = dict(
             part = dict(
-                values  = ['synop', 'precipitation', 'hourlyobs', 'radiosondage', 'nebulosity'],
+                values  = ['synop', 'precipitation', 'hourlyobs', 'radiosondage', 'nebulosity', 'all'],
             ),
             model = dict(
                 values  = ['safran'],
             ),
             stage = dict(
-                values = ['safrane', 'sypluie']
+                values = ['safrane', 'sypluie', 'safran']
             ),
             cendev_map = dict(
                 type     = footprints.FPDict,
@@ -335,10 +337,39 @@ class SafranObsRaw(ObsRaw):
     def cendev_basename(self):
         prefix = self.cendev_map.get(self.part, self.part[0].upper())
         allowed = rangex(self.cendev_hours.get(self.part, self.cendev_hours['default']))
-        if self.date.hour in allowed:
+        if self.part == 'nebulosity':
+            return '{0:s}{1:s}.tgz'.format(prefix, self.date.yymd)
+        elif self.date.hour in allowed:
             return prefix + self.date.yymdh
         else:
             raise SafranObsDateError(allowed)
 
     def reanalysis_basename(self):
         return self.cendev_basename()
+
+
+@namebuilding_append('cen_period', lambda self: [{'begindate': self.begindate},
+                                                 {'enddate': self.enddate}])
+class SafranPackedObs(GeoFlowResource):
+
+    _footprint = dict(
+        info = 'SAFRAN packed observations covering the given period',
+        attr = dict(
+            kind = dict(
+                values = ['packedobs'],
+            ),
+            model = dict(
+                values  = ['safran'],
+            ),
+            nativefmt = dict(
+                values = ['tar'],
+                default = 'tar'
+            ),
+            begindate = a_date,
+            enddate   = a_date,
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'observations'

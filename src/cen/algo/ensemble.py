@@ -25,7 +25,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge, forcinput_applymask
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -104,6 +104,11 @@ class GuessWorker(_S2MWorker):
             ),
             interpreter = dict(
                 values = [ 'python' ]
+            ),
+            reforecast = dict(
+                type     = bool,
+                default  = False,
+                optional = True,
             ),
         )
     )
@@ -752,6 +757,8 @@ class SurfexWorker(_S2MWorker):
             self.link_in(self.system.path.join(rundir, required_link), required_link)
         for required_link in list_files_link_ifnotprovided:
             self.link_ifnotprovided(self.system.path.join(rundir, required_link), required_link)
+            # For reforecast:
+            self.link_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_link), required_link)
 
         rdict = self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
@@ -798,7 +805,8 @@ class SurfexWorker(_S2MWorker):
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
 
-                    forcinput_tomerge(forcinglist, "FORCING.nc",)
+                    print (forcinglist)
+                    forcinput_applymask(forcinglist, "FORCING.nc",)
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
@@ -954,7 +962,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
 
-                    forcinput_tomerge(forcinglist, "FORCING.nc",)
+                    forcinput_applymask(forcinglist, "FORCING.nc",)
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
@@ -1000,7 +1008,12 @@ class Guess(ParaExpresso):
             ),
             interpreter = dict(
                 values = [ 'python']
-            )
+            ),
+            reforecast = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -1013,6 +1026,7 @@ class Guess(ParaExpresso):
         '''Create a common instruction dictionary that will be used by the workers.'''
         ddict = super(Guess, self)._default_common_instructions(rh, opts)
         ddict['interpreter'] = self.interpreter
+        ddict['reforecast'] = self.reforecast
         return ddict
 
     def execute(self, rh, opts):
@@ -1071,7 +1085,7 @@ class S2MComponent(ParaBlindRun):
             datebegin = a_date,
             dateend   = a_date,
             execution = dict(
-                values   = ['analysis', 'forecast', 'reforecast'],
+                values   = ['analysis', 'forecast'],
                 optional = True,
             )
         )
@@ -1202,6 +1216,54 @@ class S2MReanalysis(S2MComponent):
         self._default_post_execute(rh, opts)
 
 
+class S2MReforecast(S2MComponent):
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel.',
+        attr = dict(
+            execution = dict(
+                values   = ['reforecast'],
+                optional = False,
+            ),
+        ),
+    )
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
+
+        for attribute in self.footprint_attributes:
+            if attribute not in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+        common_i = self._default_common_instructions(rh, opts)
+        # Note: The number of members and the name of the subdirectories could be
+        # auto-detected using the sequence
+        subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
+        deterministic = [True] * len(subdirs)
+        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
+        self._default_post_execute(rh, opts)
+
+    def get_individual_instructions(self, rh, opts):
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        list_dates_begin = list()
+        list_dates_end = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+                list_dates_begin.append(am.rh.resource.date + Period(hours=12))
+                list_dates_end.append(am.rh.resource.date + Period(hours=108))
+
+        return subdirs, list_dates_begin, list_dates_end
+
+
 @echecker.disabled_if_unavailable
 class SurfexComponent(S2MComponent):
 
@@ -1244,6 +1306,13 @@ class SurfexComponent(S2MComponent):
                 type = bool,
                 optional = True,
                 default = False,
+            ),
+            multidates = dict(
+                info = "If True, several dates allowed",
+                type = bool,
+                optional = True,
+                default = False,
+                values = [False]
             )
         )
     )
@@ -1349,3 +1418,68 @@ class PrepareForcingComponent(TaylorRun):
 
     def role_ref_namebuilder(self):
         return 'Forcing'
+
+
+@echecker.disabled_if_unavailable
+class SurfexComponentMultiDates(SurfexComponent):
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel.',
+        attr = dict(
+            multidates = dict(
+                info = "If True, several dates allowed",
+                type = bool,
+                values = [True]
+            )
+        )
+    )
+
+    def get_dates(self, subdirs):
+        listdatebegin_str = map(self.system.path.dirname, subdirs)
+
+        # Pour l'instant je fais le porc parce que le passage de dateend ne marche pas du tout
+        duration = Period(days=4)
+
+        listdatebegin = []
+        listdateend = []
+        for datebegin_str in listdatebegin_str:
+            datebegin = Date(datebegin_str)
+            listdatebegin.append(datebegin)
+            listdateend.append(datebegin + duration)
+
+        return listdatebegin, listdateend
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+
+        common_i = self._default_common_instructions(rh, opts)
+
+        subdirs = self.get_subdirs(rh, opts)
+        listdatebegin, listdateend = self.get_dates(subdirs)
+        listdateinit = listdatebegin[:]
+
+#         print ("DEBUGGING")
+#         print (len(subdirs))
+#         print (len(listdatebegin))
+#         print (len(listdateend))
+#         print (common_i)
+#         print ("END DEBUGGING")
+
+        if self.subensemble:
+            escroc = ESCROC_subensembles(self.subensemble, self.members)
+            physical_options = escroc.physical_options
+            snow_parameters = escroc.snow_parameters
+            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend, physical_options=physical_options, snow_parameters=snow_parameters))
+        else:
+            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend))
+        self._default_post_execute(rh, opts)
+
+    def _default_common_instructions(self, rh, opts):
+        '''Create a common instruction dictionary that will be used by the workers.'''
+        ddict = super(SurfexComponentMultiDates, self)._default_common_instructions(rh, opts)
+        ddict.pop('datebegin')
+        ddict.pop('dateend')
+        ddict.pop('dateinit')
+
+        return ddict

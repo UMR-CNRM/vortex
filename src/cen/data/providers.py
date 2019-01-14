@@ -81,7 +81,7 @@ class S2MReanalysisProvider(Provider):
         info['level_one'] = self.vconf.split('@')[0]
         info['level_two'] = ''
         suffix = map_suffix[info['level_one']]
-        season = resource.date.nivologyseason()
+        season = resource.date.nivologyseason
         if resource.realkind == 'observations':
             if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
                 info['level_two']   = 'obs/rs' + season + suffix
@@ -151,7 +151,7 @@ class CenSopranoDevProvider(Provider):
         info['model'] = 's2m'
         info['level_one'] = self.vconf.split('@')[0]
         suffix = map_suffix[info['level_one']]
-        season = resource.date.nivologyseason()
+        season = resource.date.nivologyseason
         if resource.realkind == 'observations':
             if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
                 info['level_two']   = 'obs/rs' + season + suffix
