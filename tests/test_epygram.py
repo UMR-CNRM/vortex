@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 numpy_looks_fine = True
 try:
@@ -93,6 +94,12 @@ class _EpyTestBase(unittest.TestCase):
 @loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramContents(_EpyTestBase):
 
+    def assertDictLikeEqual(self, new, ref):
+        if six.PY2:
+            self.assertItemsEqual(new, ref)
+        else:
+            self.assertCountEqual(new, ref)
+
     def test_contents(self):
         # FA
         fa_c = vortex.data.containers.SingleFile(filename=self.demofile('historic.light.fa'),
@@ -103,8 +110,8 @@ class TestEpygramContents(_EpyTestBase):
             self.assertEqual(ct.data.format, 'FA')
             self.assertListEqual(['S090TEMPERATURE', 'SURFTEMPERATURE', ],
                                  ct.data.listfields())
-            self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
-                                  ct.metadata)
+            self.assertDictLikeEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
+                                     ct.metadata)
         # GRIB
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
                                                    actualfmt='grib')
@@ -112,8 +119,8 @@ class TestEpygramContents(_EpyTestBase):
         ct.slurp(grib_c)
         self.assertEqual(ct.data.format, 'GRIB')
         self.assertEqual(12, len(ct.data.listfields()))
-        self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
-                              ct.metadata)
+        self.assertDictLikeEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
+                                 ct.metadata)
 
 
 @loggers.unittestGlobalLevel(tloglevel)
