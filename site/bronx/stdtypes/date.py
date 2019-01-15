@@ -1094,6 +1094,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """YYYYMMDDHHMMSS formated string."""
         return self.strftime('%Y%m%d%H%M%S')
 
+    @property
+    def mmddhh(self):
+        return self.strftime('%m%d%H')
+
     def stamp(self):
         """Compact concatenation up to microseconds."""
         return self.ymdhms + '{0:06d}'.format(self.microsecond)

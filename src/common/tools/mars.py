@@ -58,4 +58,4 @@ def callMarsExtract(sh, query_file, command=None, fatal=True):
     :return: The return code of the Mars extraction.
     """
     command_line = " ".join([command, query_file])
-    return sh.spawn([command_line, ], shell=False, output=False, fatal=fatal)
+    return sh.spawn([command_line, ], shell=True, output=False, fatal=fatal)

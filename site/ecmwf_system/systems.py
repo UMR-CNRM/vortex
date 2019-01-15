@@ -55,7 +55,7 @@ class CCA(ECMWFCrayXC):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r'cca(?:(?:-login|ppn)?\d+|-batch)(?:\.|$)')
+            hostname = footprints.FPRegex(r'cca(?:(?:-login|ppn|mom)?\d+|-batch)(?:\.|$)')
         ),
     )
 
@@ -73,6 +73,6 @@ class CCB(ECMWFCrayXC):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r'ccb(?:(?:-login|ppn)?\d+|-batch)(?:\.|$)')
+            hostname = footprints.FPRegex(r'ccb(?:(?:-login|ppn|mom)?\d+|-batch)(?:\.|$)')
         ),
     )

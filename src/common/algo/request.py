@@ -549,36 +549,45 @@ class GetMarsResource(AlgoComponent):
             role='Query',
             kind='mars_query',
         )
+        if len(input_queries) <1:
+            logger.exception('No query file found for the Mars extraction. Stop.')
+            raise MarsGetError('No query file found for the Mars extraction')
 
         rc_all = True
 
+        # Find the command to be launched
+        actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
+
+        # Prepare the substitutions' dictionnary
+        dictkeyvalue = copy.deepcopy(self.substitutions)
+        if self.date is not None:
+            dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
+            dictkeyvalue["YYYYMMDD"] = self.date.ymd
+            dictkeyvalue["HH"] = self.date.hh
+
+        # For each input query, extract the files
         for input_query in input_queries:
+            # Prepare the query file used
+            query_content = input_query.rh.contents
+            query_content.setitems(dictkeyvalue)
+            input_query.rh.save()
             # Launch each input queries in a dedicated file
             # (to check that the files do not overwrite each other)
-            query_file = input_query.rh.container.abspath
-            local_directory = '_'.join([query_file, self.date.ymdhms])
+            query_file_path = input_query.rh.container.abspath
+            #query_file_name = input_query.rh.container.filename
+            local_directory = '_'.join([query_file_path, self.date.ymdhms])
+            logger.info("Here is the content of the query file %s (after substitution):", query_file_path)
+            self.system.cat(query_file_path, output=False)
             with self.system.cdcontext(local_directory, create=True):
-                # Prepare the query file used
-                query = input_query.rh
-                query_abspath = query.container.abspath
-                query_content = query.contents
-                dictkeyvalue = copy.deepcopy(self.substitutions)
-                if self.date is not None:
-                    dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
-                    dictkeyvalue["YYYYMMDD"] = self.date.ymd
-                    dictkeyvalue["HH"] = self.date.hh
-                query_content.setitems(dictkeyvalue)
-                query.save()
-                logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
-                query.container.cat()
+                # Make two links before launching the extraction
+                #self.system.symlink(query_file_path, query_file_name)
                 # Launch the command
-                actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
-                rc = callMarsExtract(sh=self.system, query_file=query_abspath, fatal=self.fatal,
+                rc = callMarsExtract(sh=self.system, query_file=query_file_path, fatal=self.fatal,
                                      command=actual_command)
                 if not rc:
                     if self.fatal:
-                        logger.error("Problem during the Mars request of %s", query_abspath)
+                        logger.error("Problem during the Mars request of %s", query_file_path)
                         raise MarsGetError
                     else:
-                        logger.warning("Problem during the Mars request of %s", query_abspath)
+                        logger.warning("Problem during the Mars request of %s", query_file_path)
                 rc_all = rc_all and rc
