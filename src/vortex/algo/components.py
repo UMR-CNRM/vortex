@@ -872,7 +872,13 @@ class Expresso(ExecutableAlgoComponent):
             ),
             engine = dict(
                 values = ['exec', 'launch']
-            )
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
+            ),
         )
     )
 
@@ -888,6 +894,7 @@ class Expresso(ExecutableAlgoComponent):
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
+        # Generic config
         actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
         args = [actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
@@ -898,7 +905,13 @@ class Expresso(ExecutableAlgoComponent):
             plocale = locale.getdefaultlocale()[1]
             logger.info('Script stdin:\n%s', rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
-        self.spawn(args, opts, stdin=rh_stdin)
+        # Python path stuff
+        newpypath = ':'.join(self.extendpypath)
+        if 'pythonpath' in self.env:
+            newpypath += ':{:s}'.format(self.env.pythonpath)
+        # launching the program...
+        with self.env.delta_context(pythonpath=newpypath):
+            self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaExpresso(TaylorRun):
@@ -917,10 +930,16 @@ class ParaExpresso(TaylorRun):
         attr = dict(
             interpreter = dict(
                 info   = 'The interpreter needed to run the script.',
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = ['exec', 'launch']
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
             ),
         )
     )
@@ -932,12 +951,27 @@ class ParaExpresso(TaylorRun):
         """
         return rh is not None
 
+    def _interpreter_args_fix(self, rh, opts):
+        absexec = self.absexcutable(rh.container.localpath())
+        if self.interpreter == 'awk':
+            return ['-f', absexec]
+        else:
+            return [absexec, ]
+
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
-        ddict['progname'] = self.interpreter
-        ddict['progargs'] = footprints.FPList([self.absexcutable(rh.container.localpath()), ] +
+        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
+        ddict['progname'] = actual_interpreter
+        ddict['progargs'] = footprints.FPList(self._interpreter_args_fix(rh, opts) +
                                               self.spawn_command_line(rh))
+        ddict['progenvdelta'] = footprints.FPDict()
+        # Deal with the python path
+        newpypath = ':'.join(self.extendpypath)
+        if 'pythonpath' in self.env:
+            newpypath += ':{:s}'.format(self.env.pythonpath)
+        if newpypath:
+            ddict['progenvdelta']['pythonpath'] = newpypath
         return ddict
 
 
