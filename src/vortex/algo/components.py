@@ -969,7 +969,7 @@ class ParaExpresso(TaylorRun):
         # Deal with the python path
         newpypath = ':'.join(self.extendpypath)
         if 'pythonpath' in self.env:
-            newpypath += ':{:s}'.format(self.env.pythonpath)
+            self.env.pythonpath += ':{:s}'.format(newpypath)
         if newpypath:
             ddict['progenvdelta']['pythonpath'] = newpypath
         return ddict
