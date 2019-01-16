@@ -571,7 +571,7 @@ class AlgoComponent(footprints.FootprintBase):
         stdin_text = rh.resource.stdin_text(**opts)
         if stdin_text is not None:
             plocale = locale.getdefaultlocale()[1]
-            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='wb')
+            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='w+b')
             if isinstance(stdin_text, six.text_type):
                 tmpfh.write(stdin_text.encode(plocale))
             else:
