@@ -75,7 +75,9 @@ def build_suite(testlist):
 
 
 if __name__ == '__main__':
-    
+    # Jump into the test directory
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
     # Setup the import test (to be a little faster...)
     os.environ['VORTEX_IMPORT_UNITTEST_DO_DUMPS'] = '0'
 

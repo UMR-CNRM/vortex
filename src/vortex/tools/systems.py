@@ -993,7 +993,7 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
                     rc = p_out.decode(plocale, 'replace')
@@ -1626,7 +1626,7 @@ class OSExtended(System):
             if logname:
                 extras.extend(['-u', logname])
             ftcmd = self.ftgetcmd or 'ftget'
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0])),
                                         mode='wb') as tmpio:
                 tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)

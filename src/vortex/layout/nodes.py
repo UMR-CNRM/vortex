@@ -775,8 +775,8 @@ class Driver(getbytag.GetByTag, NiceLayout):
 
     _tag_default = 'pilot'
 
-    def __init__(self, ticket, nodes=(),
-                 rundate=None, iniconf=None, jobname=None, options=None):
+    def __init__(self, ticket, nodes=(), rundate=None, iniconf=None,
+                 jobname=None, options=None, iniencoding=None):
         """Setup default args value and read config file job."""
         self._ticket = t = ticket
         self._conf = None
@@ -788,6 +788,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         if j_assist is not None:
             self._special_prefix = j_assist.special_prefix.upper()
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
+        self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
         self._nbpass  = 0
@@ -830,6 +831,10 @@ class Driver(getbytag.GetByTag, NiceLayout):
         return self._iniconf
 
     @property
+    def iniencoding(self):
+        return self._iniencoding
+
+    @property
     def jobconf(self):
         return self._jobconf
 
@@ -849,12 +854,14 @@ class Driver(getbytag.GetByTag, NiceLayout):
     def nbpass(self):
         return self._nbpass
 
-    def read_config(self, inifile=None):
+    def read_config(self, inifile=None, iniencoding=None):
         """Read specified ``inifile`` initialisation file."""
         if inifile is None:
             inifile = self.iniconf
+        if iniencoding is None:
+            iniencoding = self.iniencoding
         try:
-            iniparser = GenericConfigParser(inifile)
+            iniparser = GenericConfigParser(inifile, encoding=iniencoding)
             thisconf  = iniparser.as_dict(merged=False)
         except Exception:
             logger.critical('Could not read config %s', inifile)
@@ -881,7 +888,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
             logger.warning('This driver does not have any configuration file')
             self._jobconf = dict()
         else:
-            self._jobconf = self.read_config(self.iniconf)
+            self._jobconf = self.read_config(self.iniconf, self.iniencoding)
 
         self._conf = ConfigSet()
         updconf = self.jobconf.get('defaults', dict())

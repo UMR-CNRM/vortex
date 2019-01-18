@@ -283,6 +283,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
+                                inputs_charset = 'utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'
@@ -297,6 +298,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
+                                inputs_charset = 'utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'

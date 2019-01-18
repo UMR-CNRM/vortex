@@ -77,6 +77,8 @@ def build_suite(testlist):
 
 
 if __name__ == '__main__':
+    # Jump into the test directory
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
     # Ensure that stdout is fine...
     sys.stdout = codecs.getwriter('utf8')(sys.stdout)

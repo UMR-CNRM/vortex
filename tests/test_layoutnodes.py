@@ -269,7 +269,8 @@ class TestHeavyNodesStuff(unittest.TestCase):
             dr = Driver(tag='job_demo_drv_' + extra, ticket=self.t,
                         nodes=[TestTask(tag='forecast1_' + extra, ticket=self.t, **opts),
                                TestTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
-                        options = opts)
+                        options = opts,
+                        iniencoding='utf-8')
             dr.setup()
             dr.run()
             # Config

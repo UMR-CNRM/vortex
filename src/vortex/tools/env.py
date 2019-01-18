@@ -118,7 +118,7 @@ class Environment(object):
     def _uencode(k):
         """Encode the unicode to a raw string (if needed)."""
         if six.PY2:
-            return k.encode(sys.getfilesystemencoding(), 'surrogateescape')
+            return k.encode(sys.getfilesystemencoding() or 'ascii', 'surrogateescape')
         else:
             return k
 
@@ -126,7 +126,7 @@ class Environment(object):
     def _udecode(k):
         """Encode the raw string into an Unicode string (if needed)."""
         if six.PY2:
-            return k.decode(sys.getfilesystemencoding(), 'surrogateescape')
+            return k.decode(sys.getfilesystemencoding() or 'ascii', 'surrogateescape')
         else:
             return k
 
