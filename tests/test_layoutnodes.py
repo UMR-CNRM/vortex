@@ -246,7 +246,8 @@ class TestHeavyNodesStuff(unittest.TestCase):
             self.assertSequenceEqual(list(item.items()), list(ref.items()))
 
     def assertTaskPwd(self, got, expected):
-        self.assertEqual(got, self.sh.path.join(self.t.rundir, self.t.tag, expected))
+        self.assertEqual(self.sh.path.realpath(got),
+                         self.sh.path.realpath(self.sh.path.join(self.t.rundir, self.t.tag, expected)))
 
     def _test_nodes_simple(self, extra, refill=False, play=False, steps=()):
         self.dumpconfig(_JOBCONF1.format(extra=extra))

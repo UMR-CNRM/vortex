@@ -86,35 +86,36 @@ class utImport(TestCase):
                 for modname in [m for m in modules if m not in exclude]:
                     nterm.increment(modname)
                     self.assertTrue(importlib.import_module(modname))
-        # Then dump all the footprints
-        tdump = fp.dump.TxtDumper()
-        jdump = fp.dump.JsonableDumper()
-        xdump = fp.dump.XmlDomDumper(named_nodes=('attr', 'remap'))
-        collected = fp.collected_classes()
-        with loggers.contextboundGlobalLevel(tloglevel):
-            with DynamicTerminal("> dumping all collectable classes ", len(collected)) as nterm:
-                for cls in collected:
-                    nterm.increment(cls.__name__)
-                    clsfp = cls.footprint_retrieve()
-                    # Normal txt dump: easy
-                    trashstr = tdump.dump(clsfp)
-                    # Jsonable dump: we check that it's actually jsonable !
-                    trashstr = jdump.dump(clsfp)
-                    try:
-                        trashstr = json.dumps(trashstr)
-                    except Exception:
-                        print("\n> Json.dumps: trashstr is:\n", trashstr)
-                        raise
-                    # XML dump: we also try to generate the document !
-                    try:
-                        trashstr = xdump.dump(clsfp.as_dict(),
-                                              root='footprint',
-                                              rootattr={'class': '{:s}.{:s}'.format(cls.__module__,
-                                                                                    cls.__name__)})
-                        trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
-                    except Exception:
-                        print("\n> xdump.dump: clsfp.as_dict() is:\n", clsfp.as_dict())
-                        raise
+        if not os.environ.get('VORTEX_IMPORT_UNITTEST_DO_DUMPS', '1') == '0':
+            # Then dump all the footprints
+            tdump = fp.dump.TxtDumper()
+            jdump = fp.dump.JsonableDumper()
+            xdump = fp.dump.XmlDomDumper(named_nodes=('attr', 'remap'))
+            collected = fp.collected_classes()
+            with loggers.contextboundGlobalLevel(tloglevel):
+                with DynamicTerminal("> dumping all collectable classes ", len(collected)) as nterm:
+                    for cls in collected:
+                        nterm.increment(cls.__name__)
+                        clsfp = cls.footprint_retrieve()
+                        # Normal txt dump: easy
+                        trashstr = tdump.dump(clsfp)
+                        # Jsonable dump: we check that it's actually jsonable !
+                        trashstr = jdump.dump(clsfp)
+                        try:
+                            trashstr = json.dumps(trashstr)
+                        except Exception:
+                            print("\n> Json.dumps: trashstr is:\n", trashstr)
+                            raise
+                        # XML dump: we also try to generate the document !
+                        try:
+                            trashstr = xdump.dump(clsfp.as_dict(),
+                                                  root='footprint',
+                                                  rootattr={'class': '{:s}.{:s}'.format(cls.__module__,
+                                                                                        cls.__name__)})
+                            trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
+                        except Exception:
+                            print("\n> xdump.dump: clsfp.as_dict() is:\n", clsfp.as_dict())
+                            raise
 
 
 if __name__ == '__main__':
