@@ -18,9 +18,16 @@ import footprints as fp
 import vortex
 import common  # @UnusedImport
 
-non_standard_dep = {'yaml': ['bronx.fancies.multicfg', 'bronx.fancies.dispatch' ],
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg',
+                             'bronx.fancies.dispatch' ],
                     'PIL': ['bronx.datagrip.pyexttiff', ],
-                    'numpy': ['bronx.datagrip.pyexttiff', ], }
+                    'numpy': ['bronx.datagrip.pyexttiff',
+                              'bronx.graphics.colormapping',
+                              'bronx.meteo.constants',
+                              'bronx.meteo.conversion',
+                              'bronx.syntax.arrays'],
+                    'matplotlib': ['bronx.graphics.colormapping',
+                                   'bronx.graphics.axes' ]}
 
 tloglevel = 'critical'
 
