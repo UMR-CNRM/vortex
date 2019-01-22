@@ -99,6 +99,8 @@ class TestRealLinuxNetstat(unittest.TestCase):
         self.assertIsInstance(ns.udp_netstats(), list)
 
 
+@unittest.skipUnless(platform.system() == 'Linux',
+                     'Linux system check')
 class TestFakeLinuxNetstat(unittest.TestCase):
 
     def setUp(self):
@@ -122,6 +124,8 @@ class TestFakeLinuxNetstat(unittest.TestCase):
             _LINUX_LPORT = self.lports_f
             _LINUX_PORTS_V4 = self.ports_v4_f
             _LINUX_PORTS_V6 = self.ports_v6_f
+            _LINUX_AF_INET4 = 2
+            _LINUX_AF_INET6 = 10
 
         self.testcls = FakeLinuxNetstats
 

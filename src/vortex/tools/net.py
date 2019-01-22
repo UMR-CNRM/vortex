@@ -1628,6 +1628,8 @@ class LinuxNetstats(AbstractNetstats):
                        'udp': '/proc/net/udp'}
     _LINUX_PORTS_V6 = {'tcp': '/proc/net/tcp6',
                        'udp': '/proc/net/udp6'}
+    _LINUX_AF_INET4 = socket.AF_INET
+    _LINUX_AF_INET6 = socket.AF_INET6
 
     def __init__(self):
         self.__unprivileged_ports = None
@@ -1641,14 +1643,14 @@ class LinuxNetstats(AbstractNetstats):
             self.__unprivileged_ports = sorted(unports - set(range(tmpports[0], tmpports[1] + 1)))
         return self.__unprivileged_ports
 
-    @staticmethod
-    def _ip_from_hex(hexip, family=socket.AF_INET):
-        if family == socket.AF_INET:
+    @classmethod
+    def _ip_from_hex(cls, hexip, family=_LINUX_AF_INET4):
+        if family == cls._LINUX_AF_INET4:
             packed = struct.pack("<I".encode('utf8'), int(hexip, 16))
-        elif family == socket.AF_INET6:
+        elif family == cls._LINUX_AF_INET6:
             packed = struct.unpack(">IIII".encode('utf8'),
                                    binascii.a2b_hex(hexip))
-            packed = struct.pack("@IIII".encode('utf8'), * packed)
+            packed = struct.pack("@IIII".encode('utf8'), *packed)
         else:
             raise ValueError("Unknown address family.")
         return socket.inet_ntop(family, packed)
@@ -1657,17 +1659,17 @@ class LinuxNetstats(AbstractNetstats):
         tmpports = dict()
         with io.open(self._LINUX_PORTS_V4[proto], 'r') as netstats:
             netstats.readline()  # Skip the header line
-            tmpports[socket.AF_INET] = [re.split(r':\b|\s+', x.strip())[1:6]
-                                        for x in netstats.readlines()]
+            tmpports[self._LINUX_AF_INET4] = [re.split(r':\b|\s+', x.strip())[1:6]
+                                              for x in netstats.readlines()]
         with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
             netstats.readline()  # Skip the header line
-            tmpports[socket.AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
-                                         for x in netstats.readlines()]
+            tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
+                                              for x in netstats.readlines()]
         tmpports = [[rclass(family,
                             self._ip_from_hex(l[0], family), int(l[1], 16),
                             self._ip_from_hex(l[2], family), int(l[3], 16),
                             int(l[4], 16)) for l in tmpports[family]]
-                    for family in (socket.AF_INET, socket.AF_INET6)]
+                    for family in (self._LINUX_AF_INET4, self._LINUX_AF_INET6)]
         return functools.reduce(operator.add, tmpports)
 
     def tcp_netstats(self):
