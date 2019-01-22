@@ -100,7 +100,11 @@ class termcolors(object):
         if exit_map is None:
             exit_map = enter_map
         item = item.replace(' ', '').lower()
-        return '\033[{0:s}m{1:s}\033[{2:s}m'.format(six.text_type(enter_map.get(item)), six.text_type(text), six.text_type(exit_map.get('default')))
+        return '\033[{0:s}m{1:s}\033[{2:s}m'.format(
+            six.text_type(enter_map.get(item)),
+            six.text_type(text),
+            six.text_type(exit_map.get('default'))
+        )
 
     @classmethod
     def setfont(cls, text, item):

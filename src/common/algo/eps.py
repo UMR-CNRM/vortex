@@ -225,7 +225,8 @@ class CombiSVunit(CombiSV):
 
 
 class CombiSVnorm(CombiSV):
-    """Compute a norm consistent with the background error and combine the normed SV to create the SV perturbations."""
+    """Compute a norm consistent with the background error
+     and combine the normed SV to create the SV perturbations."""
 
     _footprint = dict(
         attr = dict(
@@ -322,7 +323,7 @@ class CombiIC(Combi):
         nbAe = len(aesecs)
         nbPert = nbPert or nbAe
         # If less AE members (but nor too less) than ic to build
-        if nbAe < nbPert and nbPert <= 2 * nbAe:
+        if nbAe < nbPert <= 2 * nbAe:
             logger.info("%d AE perturbations needed, %d AE members available: the first ones are duplicated.",
                         nbPert, nbAe)
             prefix = aesecs[0].rh.container.filename.split('_')[0]
@@ -351,7 +352,8 @@ class CombiIC(Combi):
 
 
 class CombiBreeding(CombiPert):
-    """Compute a norm consistent with the background error and combine the normed SV to create the SV perturbations."""
+    """Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations."""
 
     _footprint = dict(
         attr = dict(
@@ -396,7 +398,8 @@ class CombiBreeding(CombiPert):
 
 
 class SurfCombiIC(BlindRun):
-    """Combine the deterministic surface with the perturbed surface to create the initial surface conditions."""
+    """Combine the deterministic surface with the perturbed surface
+    to create the initial surface conditions."""
 
     _footprint = dict(
         attr = dict(
@@ -482,7 +485,7 @@ class Clustering(BlindRun, grib.EcGribComponent):
             fileList = sorted([six.text_type(grib.rh.container.localpath())
                                for grib in grib_sections])
 
-        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+        if self.nbmembers is None or self.nbmembers > self.nbclust:
 
             # Tweak the namelist
             namsec = self.setlink(initrole='Namelist', initkind='namelist')
@@ -499,7 +502,7 @@ class Clustering(BlindRun, grib.EcGribComponent):
 
     def execute(self, rh, opts):
         # If the number of members is big enough -> normal processing
-        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+        if self.nbmembers is None or self.nbmembers > self.nbclust:
             logger.info("Normal clustering run (%d members, %d clusters)",
                         self.nbmembers, self.nbclust)
             super(Clustering, self).execute(rh, opts)

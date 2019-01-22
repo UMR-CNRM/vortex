@@ -641,7 +641,8 @@ class PertSurf(BlackBox):
 
 
 class AddPearp(BlackBox):
-    """Tool that adds perturbations taken from a given PEARP member to the deterministic initial conditions."""
+    """Tool that adds perturbations taken from a given PEARP member
+    to the deterministic initial conditions."""
 
     _footprint = [
         gvar,

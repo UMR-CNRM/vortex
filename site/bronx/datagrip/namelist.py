@@ -266,6 +266,7 @@ class LiteralParser(object):
         2.
 
     """
+
     def __init__(self,
                  re_flags     = _RE_FLAGS,
                  re_integer   = '^' + _SIGNED_INT_LITERAL_CONSTANT + '$',
@@ -847,6 +848,7 @@ class NamelistBlock(collections.MutableMapping):
                         else:
                             split_k.append(int(strindexes))
                 return tuple(split_k)
+
             if sorting == FIRST_ORDER_SORTING:
                 keylist = sorted(self._keys, key=str2tup)
             elif sorting == SECOND_ORDER_SORTING:
@@ -1203,7 +1205,7 @@ class NamelistParser(object):
 
     def _namelist_block_parse(self, source):
         """Parse a block of namelist."""
-        source = self._namelist_clean(source, extraclean=(self.endblock, ))
+        source = self._namelist_clean(source, extraclean=(self.endblock,))
         block_name = self.bname.match(source[1:]).group(0)
         source = self._namelist_clean(source[1 + len(block_name):])
         namelist = NamelistBlock(block_name)

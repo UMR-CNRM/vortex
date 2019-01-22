@@ -350,7 +350,8 @@ def bufr_bnames(resource, provider):
         mode_map = dict(fc='prv', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
-        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:], int(resource.date.hh), region)
+        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:],
+                                                           int(resource.date.hh), region)
 
 
 def SurgesResultNative_bnames(resource, provider):
@@ -443,7 +444,13 @@ def gridpoint_bnames(resource, provider):
             mode_map = dict(fc= 'prv', an='ana')
             region = region_map.get(provider.vconf[:3], provider.vconf[:3])
             mode = mode_map.get(provider.vconf[4:][:2], None)
-            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour)
+            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(
+                mode,
+                provider.vconf[-3:],
+                int(resource.date.hh),
+                region,
+                resource.term.hour
+            )
             return localname
         else:
             return None

@@ -3,14 +3,15 @@ A bunch of classes and functions that deal with TNT configuration files and
 directives.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import io
 import os
-import six
 import string
 import sys
+
+import six
 
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
@@ -32,6 +33,7 @@ class TntDirectiveError(Exception):
 
 class TntDirectiveUnkownError(TntDirectiveError):
     """The TNT directive is unknown."""
+
     def __init__(self, name):
         errmsg = 'The "{:s}" directive is not allowed with TNT.'.format(name)
         super(TntDirectiveUnkownError, self).__init__(errmsg)
@@ -39,6 +41,7 @@ class TntDirectiveUnkownError(TntDirectiveError):
 
 class TntDirectiveValueError(TntDirectiveError):
     """An inappropriate value was given as a TNT directive."""
+
     def __init__(self, name, value):
         errmsg = '"{!s}" is not an appropriate value for the "{:s}" directive.'.format(value, name)
         super(TntDirectiveValueError, self).__init__(errmsg)
@@ -181,7 +184,7 @@ def read_directives(filename):
     if os.path.splitext(filename)[1] in ('.yaml', '.yml'):
         import yaml
         with io.open(filename, 'r') as yamlfh:
-            return TntDirective(** yaml.load(yamlfh))
+            return TntDirective(**yaml.load(yamlfh))
     else:
         prev_bytecode_flag = sys.dont_write_bytecode
         try:
@@ -197,7 +200,7 @@ def read_directives(filename):
                 m = imp.load_source(filename, os.path.abspath(filename))
         finally:
             sys.dont_write_bytecode = prev_bytecode_flag
-        return TntDirective(** {k: v for k, v in m.__dict__.items() if not k.startswith('_')})
+        return TntDirective(**{k: v for k, v in m.__dict__.items() if not k.startswith('_')})
 
 
 # TNTstack directives part
@@ -230,7 +233,7 @@ class TntStackDirective(object):
             if 'external' in v:
                 newdir = read_directives(os.path.join(self._basedir, v['external']))
             else:
-                newdir = TntDirective(** v)
+                newdir = TntDirective(**v)
             self._directives[k] = newdir
 
     def _checkdict(self, action, values, attr, str_or_list=False):

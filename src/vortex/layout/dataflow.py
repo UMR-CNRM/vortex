@@ -967,7 +967,8 @@ class LocalTracker(defaultdict):
                              self.__class__)
 
     def is_tracked_input(self, local):
-        """Check if the given `local` container is listed as an input and associated with a valid :class:`~vortex.data.handlers.Handler`.
+        """Check if the given `local` container is listed as an input and associated with
+        a valid :class:`~vortex.data.handlers.Handler`.
 
         :param local: Local name of the input that will be checked
         """

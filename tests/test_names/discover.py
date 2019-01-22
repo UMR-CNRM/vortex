@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Crawl into test directories and find available tests.
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 

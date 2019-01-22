@@ -304,9 +304,10 @@ class _GetBDMCommons(FootprintCopier):
 
     @staticmethod
     def execute(self, rh, opts):
-        """
-        Launch the BDM request(s).
-        The results of each request are stored in a directory local_directory to avoid files overwritten by others
+        """Launch the BDM request(s).
+
+        The results of each request are stored in a directory local_directory
+        to avoid files overwritten by others
         """
 
         # Look for the input queries

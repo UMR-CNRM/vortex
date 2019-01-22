@@ -40,19 +40,19 @@ statics = [
 
 resources_list = []
 
-### model Namelist
+# ## model Namelist
 for n in namelists:
     resources_list.append( toolbox.rload(
         rd, kind = 'namelist', nmtype=n[0], local=local_dir+n[1]).pop()
     )
 
-### Statics files
+# ## Statics files
 for s in statics:
     resources_list.append( toolbox.rload(
         rd, kind=s[0], grid=grid, local=local_dir+s[1]).pop()
     )
 
-### moorings positions:
+# ## moorings positions:
 for i in range(1, 16):
     id_moor = Term(i)
     resources_list.append( toolbox.rload(
@@ -60,20 +60,20 @@ for i in range(1, 16):
         local=local_dir+'position_ijproc.moor_bin_'+str(id_moor)).pop()
     )
 
-## mooring:
+# # mooring:
 for atype in [ 'moor', 'sect' ]:
     resources_list.append( toolbox.rload(
         rd, kind='moorings', model='psy3', grid=grid, type=atype,
         local=local_dir+'position.'+atype+'.PSY3V2R2').pop()
     )
 
-## coordinates
+# # coordinates
 resources_list.append( toolbox.rload(
     rd, kind = 'coordinates', grid=grid,
     local=local_dir+'coordinates_'+grid.upper()+'_LIM.nc').pop()
 )
 
-## binaries
+# # binaries
 resources_list.append( toolbox.rload(
     rd, kind = 'binary', assim=True, type='main', term=0,
     local=local_dir+'/palm_main').pop()
@@ -100,7 +100,7 @@ resources_list.append( toolbox.rload(
     local=local_dir+'createlisttxtbylib.x').pop()
 )
 
-## climato
+# # climato
 clim_month = '11'
 clim_year = '05'
 clim_fields = [ 'Sal', 'Tem' ]
@@ -110,8 +110,8 @@ for f in clim_fields:
         local=local_dir+'Levitus'+clim_year+'_'+f+'_'+grid.upper()+'m'+clim_month+'.nc').pop()
     )
 
-## assim files:
-#t.debug()
+# # assim files:
+# t.debug()
 resources_list.append( toolbox.rload(
     rd, kind='bathymetry', assim=True, grid=grid,
     local=local_dir+'bathy3D.cmz').pop()
@@ -144,17 +144,17 @@ for bogus in bogus_namelist:
     )
 
 
-#resources_list.append( toolbox.rload(rd,
+# resources_list.append( toolbox.rload(rd,
 #        kind='atmforcing', grid=grid, field='BULKCLOU', origin='ECMWF',
 #        timecoverage='daily', start_date='20111228', end_date='20111228',
 #        remote='proutproutprout',
 #        local=local_dir+'test.nc').pop()
 #    )
 
-################################################################################
+# ###############################################################################
 print(t.prompt, "Resources loading duration=", t.duration())
 
-#exit() ### cougar down ...
+# exit() ### cougar down ...
 
 # fetch all resources
 for r in resources_list:
@@ -174,11 +174,9 @@ for r in resources_list:
     file_name = r.container.localpath()
     file_size = mysys.path.getsize(file_name)
     total_size += file_size
-    print(t.prompt, file_size, ' -> ' + mysys.path.dirname(file_name) + \
+    print(t.prompt, file_size, ' -> ' + mysys.path.dirname(file_name) +
                                   '/' + mysys.path.basename(file_name))
     mysys.unlink(file_name)
 
 print(t.prompt, "Total size fetched = ", float(total_size)/1024/1024, "MO")
 print(t.prompt, "Total duration=", t.duration())
-
-

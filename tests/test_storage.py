@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+
+"""
 Created on 13 nov. 2018
 
 @author: meunierlf
 
 :note: Tests for the Archive Storage are located in test_twistednet since an FTP
        server is required for the test.
-'''
+"""
+
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io

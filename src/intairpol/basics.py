@@ -70,7 +70,10 @@ class AirTool(footprints.FootprintBase):
             ),
             bkup_path = dict(
                 optional = True,
-                default  = DelayedEnvValue('INTAIRPOL_BKUP_PATH', upfirst('bkup') or vortex.sh().env['HOME'] + '/bkup'),
+                default  = DelayedEnvValue(
+                    'INTAIRPOL_BKUP_PATH',
+                    upfirst('bkup') or vortex.sh().env['HOME'] + '/bkup'
+                ),
             ),
         )
     )

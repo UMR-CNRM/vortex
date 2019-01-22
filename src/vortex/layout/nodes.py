@@ -8,10 +8,10 @@ for any :mod:`vortex` experiment.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import six
-
 import collections
 import re
+
+import six
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
@@ -20,8 +20,8 @@ from bronx.syntax.iterators import izip_pcn
 
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
-from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 from vortex.syntax.stdattrs import Namespace
+from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 
 logger = loggers.getLogger(__name__)
 
@@ -50,10 +50,10 @@ class NiceLayout(object):
         titlecallback = titlecallback or self.header
         titlecallback(msg)
         if kw:
-            maxlen = max([ len(x) for x in kw.keys() ])
+            maxlen = max([len(x) for x in kw.keys()])
             for k, v in sorted(six.iteritems(kw)):
                 print(' +', k.ljust(maxlen), '=', six.text_type(v))
-            print
+            print()
         else:
             print(" + ...\n")
 
@@ -152,7 +152,7 @@ class ConfigSet(collections.MutableMapping):
 
     def copy(self):
         newobj = self.__class__()
-        newobj.update(** self)
+        newobj.update(**self)
         return newobj
 
 
@@ -313,7 +313,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Set some parameters if defined in environment but not in actual conf."""
         autoconf = dict()
         localstrip = len(self._locprefix)
-        for localvar in sorted([ x for x in self.env.keys() if x.startswith(self._locprefix) ]):
+        for localvar in sorted([x for x in self.env.keys() if x.startswith(self._locprefix)]):
             if localvar[localstrip:] not in self.conf:
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
@@ -342,7 +342,7 @@ class Node(getbytag.GetByTag, NiceLayout):
     def cycles(self):
         """Update and register some configuration cycles."""
 
-        other_cycles = [ x for x in self.conf.keys() if x.endswith('_cycle') ]
+        other_cycles = [x for x in self.conf.keys() if x.endswith('_cycle')]
         if 'cycle' in self.conf or other_cycles:
             self.header("Registering cycles")
 
@@ -366,15 +366,15 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Set toolbox defaults, extended with actual arguments ``extras``."""
         t = self.ticket
         toolbox.defaults(
-            model     = t.glove.vapp,
-            namespace = self.conf.get('namespace', Namespace('vortex.cache.fr')),
+            model      = t.glove.vapp,
+            namespace  = self.conf.get('namespace', Namespace('vortex.cache.fr')),
             gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
         )
 
         if 'rundate' in self.conf:
             toolbox.defaults['date'] = self.conf.rundate
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'model', ):
+        for optk in ('cutoff', 'geometry', 'cycle', 'model',):
             if optk in self.conf:
                 toolbox.defaults[optk] = self.conf.get(optk)
 
@@ -502,16 +502,14 @@ class Node(getbytag.GetByTag, NiceLayout):
         """
         pass
 
-    def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
+    def component_runner(self, tbalgo, tbx=(None,), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component.
 
         This is a helper method that maybe useful (its use is not mandatory).
         """
         # it may be necessary to setup a default value for OpenMP...
         env_update = dict()
-        if ('openmp' not in self.conf or
-                ('openmp' in self.conf and
-                 not isinstance(self.conf.openmp, (list, tuple)))):
+        if 'openmp' not in self.conf or not isinstance(self.conf.openmp, (list, tuple)):
             env_update['OMP_NUM_THREADS'] = int(self.conf.get('openmp', 1))
 
         # If some mpiopts are in the config file, use them...
@@ -519,11 +517,11 @@ class Node(getbytag.GetByTag, NiceLayout):
         mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
                                   'prefixcommand') if s in mpiopts or s in self.conf]:
-                mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
+            mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
 
         # if the prefix command is missing in the configuration file, look in the input sequence
         if 'prefixcommand' not in mpiopts:
-            prefixes = self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand'))
+            prefixes = self.ticket.context.sequence.effective_inputs(role=re.compile('Prefixcommand'))
             if len(prefixes) > 1:
                 raise RuntimeError("Only one prefix command can be used...")
             for sec in prefixes:
@@ -540,26 +538,26 @@ class Node(getbytag.GetByTag, NiceLayout):
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
-            tbx = zip(* tbx)
+            tbx = zip(*tbx)
         with self.env.delta_context(**env_update):
             for binary in tbx:
                 try:
-                    tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
+                    tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
                 except Exception as e:
                     mask_delayed, f_infos = self.filter_execution_error(e)
                     if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
                         logger.warning("The delayed exception is masked:\n%s", str(f_infos))
-                        self.report_execution_warning(e, ** f_infos)
+                        self.report_execution_warning(e, **f_infos)
                     else:
                         logger.error("Un-filtered execution error:\n%s", str(f_infos))
-                        self.report_execution_error(e, ** f_infos)
+                        self.report_execution_error(e, **f_infos)
                         raise
 
 
 class Family(Node):
     """Logical group of :class:`Family` or :class:`Task`.
 
-     Compared to the usual :class:`Node` class, additional attributes are:
+    Compared to the usual :class:`Node` class, additional attributes are:
 
     :param nodes: The list of :class:`Family` or :class:`Task` objects that
                   are members of this family
@@ -678,7 +676,7 @@ class LoopFamily(Family):
     def contents(self):
         if self._actual_content is None:
             self._actual_content = list()
-            for pvars, cvars, nvars in izip_pcn(* [self.conf.get(lc) for lc in self._loopconf]):
+            for pvars, cvars, nvars in izip_pcn(*[self.conf.get(lc) for lc in self._loopconf]):
                 if self._loopneedprev and all([v is None for v in pvars]):
                     continue
                 if self._loopneednext and all([v is None for v in nvars]):
@@ -686,7 +684,7 @@ class LoopFamily(Family):
                 extras = {v: x for v, x in zip(self._loopvariable, cvars)}
                 extras.update({v + '_prev': x for v, x in zip(self._loopvariable, pvars)})
                 extras.update({v + '_next': x for v, x in zip(self._loopvariable, nvars)})
-                suffix = self._loopsuffix.format(* cvars)
+                suffix = self._loopsuffix.format(*cvars)
                 for node in self._contents:
                     self._actual_content.append(node.loopclone(suffix, extras))
         return self._actual_content
@@ -763,15 +761,15 @@ class Task(Node):
         if 'io_openmp' in self.conf:
             t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.io_openmp)
         if triggered:
-            self.nicedump('IOSERVER Environment', ** {k: v for k, v in t.env.items()
-                                                      if k.startswith('VORTEX_IOSERVER_')})
+            self.nicedump('IOSERVER Environment', **{k: v for k, v in t.env.items()
+                                                     if k.startswith('VORTEX_IOSERVER_')})
 
     def io_poll(self, prefix=None):
         """Complete the polling of data produced by the execution step."""
         sh = self.sh
         if prefix and sh.path.exists('io_poll.todo'):
             for iopr in prefix:
-                sh.header('IO poll <' + iopr  + '>')
+                sh.header('IO poll <' + iopr + '>')
                 rc = sh.io_poll(iopr)
                 print(rc)
                 print(rc.result)
@@ -813,7 +811,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
-        self._nbpass  = 0
+        self._nbpass = 0
 
         # Build the tree to schedule
         self._contents = list()
@@ -884,7 +882,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
             iniencoding = self.iniencoding
         try:
             iniparser = GenericConfigParser(inifile, encoding=iniencoding)
-            thisconf  = iniparser.as_dict(merged=False)
+            thisconf = iniparser.as_dict(merged=False)
         except Exception:
             logger.critical('Could not read config %s', inifile)
             raise

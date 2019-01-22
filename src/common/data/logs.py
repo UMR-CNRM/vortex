@@ -314,7 +314,7 @@ class SectionsSlice(collections.Sequence):
 
     def uniquefilter(self, **kwargs):
         """Like :meth:`filter` but checks that only one element matches."""
-        newslice = self.filter(** kwargs)
+        newslice = self.filter(**kwargs)
         if len(newslice) == 0:
             raise ValueError("No section was found")
         elif len(newslice) > 1:
@@ -369,6 +369,7 @@ class SectionsSlice(collections.Sequence):
                                              .format(attr, idx))
                 else:
                     raise AttributeError("A '{:s}' attribute must be there !".format(self._INDEX_ATTR))
+
             return _attr_lookup
 
 

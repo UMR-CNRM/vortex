@@ -104,7 +104,9 @@ class SignalInterruptHandler(object):
         if not self._active:
             def handler(signum, frame):
                 self.deactivate()
-                self._logstuff(logging.ERROR, 'Signal %d was caught. All original signal handler are restored.', signum)
+                self._logstuff(logging.ERROR,
+                    'Signal %d was caught. All original signal handler are restored.',
+                    signum)
                 if signum == signal.SIGINT:
                     raise KeyboardInterrupt()
                 else:

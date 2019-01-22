@@ -91,7 +91,10 @@ class OpDigger(Digger):
     def find_date(self, **kw):
         """Core function to find a proper reference for a given date."""
         rv = dict()
-        for term in [date.Time(x) for x in footprints.util.rangex(0, end=kw['term'].fmthm, step=kw['step']) if x not in kw['notterm']]:
+        for term in [date.Time(x)
+                     for x in footprints.util.rangex(0, end=kw['term'].fmthm, step=kw['step'])
+                     if x not in kw['notterm']
+                     ]:
             isotime = term.fmthm
             xdate = kw['date'] - date.Period(term)
             self.cfg.select(date=xdate)

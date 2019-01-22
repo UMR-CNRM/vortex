@@ -205,7 +205,8 @@ class Norms(object):
                             print(lines[idx + 1])
                             raise NotImplementedError('spectral norms level by level.')
                         else:
-                            val = lines[idx + 1].split()[line.index(fld.split()[0])]  # .split()[0] necessary for KINETIC ENERGY
+                            # .split()[0] necessary for KINETIC ENERGY
+                            val = lines[idx + 1].split()[line.index(fld.split()[0])]
                     self.spnorms[fld] = val
 
     def _parse_gridpoint_norms(self, lines):

@@ -108,7 +108,8 @@ class Coupling(FullPos):
                 self.grab(cplsurf_in, comment='coupling surface source')
                 if sh.path.exists(infilesurf):
                     if isMany:
-                        logger.critical('Cannot process multiple surface historic files if %s exists.', infilesurf)
+                        logger.critical('Cannot process multiple surface historic files if %s exists.',
+                                        infilesurf)
                 else:
                     sh.cp(cplsurf_in.rh.container.localpath(), infilesurf,
                           fmt=cplsurf_in.rh.container.actualfmt, intent=intent.IN)

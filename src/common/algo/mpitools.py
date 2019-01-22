@@ -95,7 +95,7 @@ class MpiNWP(mpitools.MpiBinaryBasic):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = super(MpiNWP, self).setup_namelist_delta(namcontents, namlocal)
-        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
+        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
             namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
             namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
             namw = True

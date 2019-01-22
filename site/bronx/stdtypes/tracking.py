@@ -6,7 +6,7 @@ Tools to handle changes in some context.
 
 Changes could be creation, deletion, modification.
 """
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 
@@ -76,7 +76,7 @@ class Tracker(object):
                     raise ValueError("Whenever provided, arguments must consists of hashable items.")
         if before is not None and after is not None:
             before = frozenset(before)
-            after  = frozenset(after)
+            after = frozenset(after)
             self._deleted = before - after
             self._created = after - before
             self._unchanged = before & after

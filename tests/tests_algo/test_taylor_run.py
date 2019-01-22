@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
@@ -9,10 +9,11 @@ import sys
 import tempfile
 import unittest
 
-from bronx.fancies import loggers
-import footprints
+import six
 
+import footprints
 import vortex
+from bronx.fancies import loggers
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
@@ -29,6 +30,7 @@ def stderr2out_deco(f):
             return f(*kargs, **kwargs)
         finally:
             sys.stderr = oldstderr
+
     wrapped_f.__name__ = f.__name__
     return wrapped_f
 

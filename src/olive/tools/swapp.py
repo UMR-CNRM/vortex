@@ -158,8 +158,8 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
         raise
 
     def olive_gnam_hook(t, namrh):
-        t.sh.subtitle('Applying the following namelist patch {} to namelist {}'.format(nickname,
-                                                                                       namrh.container.localpath()))
+        t.sh.subtitle('Applying the following namelist patch {} '
+                      'to namelist {}'.format(nickname, namrh.container.localpath()))
         print(namdelta_l.dumps())
         namrh.contents.merge(namdelta_l)
         namrh.save()

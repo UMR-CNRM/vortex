@@ -399,7 +399,7 @@ class Boss(object):
     Template for bosses.
     A Boss is an object supposed to order tasks to a series of workers.
 
-    Optionally can be attributed to the Boss a *name* and a *verbose*\ ity
+    Optionally can be attributed to the Boss a *name* and a *verbose*-ity
     (to report in log, the workers reports).
 
     Also, a *scheduler* can be assigned, to rule the ordering of tasks to
@@ -435,7 +435,8 @@ class Boss(object):
         self._sharedmemory_common_instructions = sharedmemory_common_instructions
 
         self.workers_messenger = mpc.Queue()
-        (self.control_messenger_in, self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
+        (self.control_messenger_in,
+         self.control_messenger_out) = mpc.Pipe()  # in = inside subprocess, out = main
         self.control_messenger_out.send(self.control_signals['HALT'])
 
         self._parent_pid = os.getpid()
@@ -739,7 +740,10 @@ class Boss(object):
                         # received a control signal
                         if control == self.control_signals['SEND_REPORT']:
                             try:
-                                self._send_report({'workers_report': report, 'status': 'interim'}, splitmode=True)
+                                self._send_report(
+                                    {'workers_report': report, 'status': 'interim'},
+                                    splitmode=True
+                                )
                             except ValueError:
                                 # ValueError = report too big.
                                 # We are sure that a PickleError won't occur
@@ -781,7 +785,10 @@ class Boss(object):
                 else:
                     # got a new message from workers !
                     report.append(reported)
-                    if isinstance(reported['report'], (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)):
+                    if isinstance(
+                        reported['report'],
+                        (Exception, KeyboardInterrupt, interrupt.SignalInterruptError)
+                    ):
                         # worker got an exception
                         taylorism_log.error("error encountered with worker " +
                                             reported['name'] +

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 A set of servers.
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 

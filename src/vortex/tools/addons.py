@@ -116,7 +116,7 @@ class Addon(footprints.FootprintBase):
             less elegant but it plays nice with MTOOL.
         """
         ctxtag = contexts.Context.tag_focus()
-        if (ctxtag not in self._context_cache and self.toolkind is not None):
+        if ctxtag not in self._context_cache and self.toolkind is not None:
             ltrack = contexts.current().localtracker
             # NB: 'str' is important because local might be in unicode...
             candidates = [six.text_type(self.sh.path.realpath(local))

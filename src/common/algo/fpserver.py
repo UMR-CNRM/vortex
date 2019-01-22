@@ -16,7 +16,7 @@ import time
 from bronx.fancies import loggers
 
 from vortex.algo.components import AlgoComponentError
-from vortex.layout.monitor    import BasicInputMonitor
+from vortex.layout.monitor  import BasicInputMonitor
 
 from .ifsroot import IFSParallel
 
@@ -252,7 +252,8 @@ class FullPosServer(IFSParallel):
         if len(target_climgeos) > 1:
             lonlat_only = all([g.kind == 'lonlat' for g in target_climgeos])
             if not lonlat_only:
-                raise AlgoComponentError('Multiple target geometries are not allowed except for lon/lat geometries.')
+                raise AlgoComponentError('Multiple target geometries are not allowed except '
+                                         'for lon/lat geometries.')
 
         # Sanity check on selection namelists
         if namxx:

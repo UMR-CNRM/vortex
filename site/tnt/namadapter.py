@@ -5,11 +5,12 @@ Set of adapter classes that uses external namelist's parsers to provide
 functionalities that fit the needs of TNT utilities.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import abc
 import collections
 import re
+
 import six
 
 from bronx.fancies import loggers
@@ -240,7 +241,7 @@ class AbstractNamelistAdapter(collections.Mapping):
                 except ValueError:
                     raise ValueError('unable to convert variable {} from {} to bool'.
                                      format(key, str(value)))
-            elif t in ('C'):
+            elif t in ('C',):
                 try:
                     value = str(value)
                 except ValueError:

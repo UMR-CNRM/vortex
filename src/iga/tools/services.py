@@ -800,6 +800,7 @@ class DayfileReportService(FileReportService):
                 optional = True,
                 type     = bool,
                 default  = False,
+                alias=['async', ],
             ),
             jname=dict(
                 optional=True,

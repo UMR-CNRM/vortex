@@ -18,7 +18,8 @@ import arpifs_listings
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description='Tool designed to compare the output listings (norms or Jo-tables) of an IFS/ARPEGE/ALADIN/AROME experiment.')
+    parser = argparse.ArgumentParser(description='Tool designed to compare the output listings (norms '
+                                                 'or Jo-tables) of an IFS/ARPEGE/ALADIN/AROME experiment.')
     parser.add_argument('listings',
                         nargs=2,
                         help="Names of the output listings.")
@@ -40,9 +41,9 @@ if __name__ == '__main__':
     parser.add_argument('-w',
                         dest='which',
                         default='first_and_last_spectral',
-                        help=("(for 'norms' comparison only, 'text' mode): either 'all' to " +
-                              "compare norms for all steps found in listings, " +
-                              "or 'first_and_last_spectral' (default) for the first and last spectral norms only."))
+                        help=("(for 'norms' comparison only, 'text' mode): either 'all' to compare " +
+                              "norms for all steps found in listings, or 'first_and_last_spectral' " +
+                              "(default) for the first and last spectral norms only."))
     parser.add_argument('-m',
                         dest='mode',
                         default='text',

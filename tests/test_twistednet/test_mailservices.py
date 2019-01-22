@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Test Vortex's Mailing Services
-'''
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 

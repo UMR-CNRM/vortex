@@ -3,12 +3,11 @@
 
 from __future__ import print_function
 
+import argparse
 import os
+import subprocess
 import sys
 import time
-import subprocess
-import argparse
-
 
 sync_py = './decoy_sync.py'
 

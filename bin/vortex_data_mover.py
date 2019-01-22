@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-'''
+"""
 vortex_data_mover.py -- Retrieve data with Vortex and put them to another location.
 
 
@@ -88,7 +88,7 @@ Here is a YAML configuration file example:
           nativefmt: grib
           format: grib
 
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 

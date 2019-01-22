@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from contextlib import contextmanager
 import os
 import sys
 import unittest
+from contextlib import contextmanager
+
+import six
 
 import arpifs_listings
-
 import footprints
 import vortex
 from vortex.tools import listings
@@ -44,7 +44,7 @@ L1SIZE = 3000
 
 
 def _find_testfile(fname):
-        return os.path.join(DATADIR, fname)
+    return os.path.join(DATADIR, fname)
 
 
 @contextmanager

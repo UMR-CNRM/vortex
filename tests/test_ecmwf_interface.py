@@ -69,6 +69,7 @@ class TestPrepareArguments(TestCase):
                                 dict_args, {"value": "toto", },
                                 list_options, ["i", ])
 
+
 class TestBuildCommandLine(TestCase):
 
     def test_build_commandline(self):
@@ -76,14 +77,14 @@ class TestBuildCommandLine(TestCase):
         # Test 1
         command = "ecmwf"
         list_args = list()
-        dict_args = {"target":"titi"}
+        dict_args = {"target": "titi"}
         list_options = list()
         command_line = interface.build_command_line(command, list_args, dict_args, list_options)
         self.assertEqual(command_line, "ecmwf -target titi")
         # Test 2
         command = "ecmwf"
         list_args = ["toto.txt", "titi.txt"]
-        dict_args = {"value":["titi1", "titi2"]}
+        dict_args = {"value": ["titi1", "titi2"]}
         list_options = ["u", "verbose", "r"]
         command_line = interface.build_command_line(command, list_args, dict_args, list_options)
         self.assertEqual(command_line, "ecmwf toto.txt titi.txt -value titi1 titi2 -u -verbose -r")

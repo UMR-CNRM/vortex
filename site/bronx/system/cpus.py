@@ -11,6 +11,7 @@ the /proc/cpuinfo virtual file.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 import abc
@@ -26,7 +27,6 @@ import subprocess
 from bronx.fancies import loggers
 
 logger = loggers.getLogger(__name__)
-
 
 #: Data about a given CPU
 CpuInfo = namedtuple('CpuInfo', ('socket_id', 'core_id'))
@@ -198,7 +198,7 @@ class LinuxCpusInfo(CpusInfo):
                     cpumatch = self._CPU_RE.match(line)
                     if cpumatch:
                         if cpu_n is not None:
-                            self._cpus[cpu_n] = CpuInfo(** cpu)
+                            self._cpus[cpu_n] = CpuInfo(**cpu)
                         cpu_n = int(cpumatch.group(1))
                         cpu = dict()
                         continue
@@ -215,7 +215,7 @@ class LinuxCpusInfo(CpusInfo):
                         cpu['core_id'] = int(cpucorematch.group(1))
                         continue
             if cpu_n is not None:
-                            self._cpus[cpu_n] = CpuInfo(** cpu)
+                self._cpus[cpu_n] = CpuInfo(**cpu)
         return self._cpus
 
 

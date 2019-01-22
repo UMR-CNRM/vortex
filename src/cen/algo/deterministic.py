@@ -65,7 +65,12 @@ class Surfex_PreProcess(AlgoComponent):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            newcontent = update_surfex_namelist_object(namelist.contents, self.datebegin, forcing = self.forcingname, dateend = self.dateend)
+            newcontent = update_surfex_namelist_object(
+                namelist.contents,
+                self.datebegin,
+                forcing = self.forcingname,
+                dateend = self.dateend
+            )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()
@@ -95,9 +100,11 @@ class Generate_Clim_TG(AlgoComponent):
 
 
 class Pgd_Parallel_from_Forcing(Parallel):
-    '''This algo component is designed to run PGD with MPI parallelization and using a FORCING.nc as input for topography.'''
+    """This algo component is designed to run PGD with MPI parallelization and using
+    a FORCING.nc as input for topography."""
     _footprint = dict(
-        info = 'This algo component is designed to run PGD with MPI parallelization and using a FORCING.nc as input for topography.',
+        info = 'This algo component is designed to run PGD with MPI parallelization '
+               'and using a FORCING.nc as input for topography.',
         attr = dict(
             kind = dict(values = ['pgd_from_forcing']),
             forcingname = dict(
@@ -119,10 +126,12 @@ class Pgd_Parallel_from_Forcing(Parallel):
 
 @echecker.disabled_if_unavailable
 class Surfex_Parallel(Parallel):
-    '''This algo component is designed to run SURFEX experiments over large domains with MPI parallelization.'''
+    """This algo component is designed to run SURFEX experiments over large domains
+    with MPI parallelization."""
 
     _footprint = dict(
-        info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains '
+               'with MPI parallelization.',
         attr = dict(
             binary = dict(
                 values = ['OFFLINE'],
@@ -217,14 +226,19 @@ class Surfex_Parallel(Parallel):
         for namelist in self.find_namelists():
             # Update the contents of the namelist (date and location)
             # Location taken in the FORCING file.
-            newcontent = update_surfex_namelist_object(namelist.contents, datebegin, dateend = dateend, updateloc=False)
+            newcontent = update_surfex_namelist_object(
+                namelist.contents,
+                datebegin,
+                dateend = dateend,
+                updateloc=False
+            )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
             newnam.close()
 
     def modify_prep(self, datebegin_this_run):
-        ''' The PREP file needs to be modified if the init date differs from the starting date
-         or if a threshold needs to be applied on snow water equivalent.'''
+        """The PREP file needs to be modified if the init date differs from the starting date
+         or if a threshold needs to be applied on snow water equivalent."""
 
         modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
         modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit

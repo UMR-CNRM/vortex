@@ -2,26 +2,26 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import locale
-import sys
-import traceback
-import shlex
-import tempfile
 import multiprocessing
+import shlex
+import sys
+import tempfile
+import traceback
 
+import six
+
+import footprints
+import vortex
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from taylorism import Boss
-import footprints
-
-import vortex
-from vortex.algo  import mpitools
-from vortex.tools.parallelism import ParallelResultParser
+from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.tools.parallelism import ParallelResultParser
 
 #: No automatic export
 __all__ = []
@@ -41,6 +41,7 @@ class AlgoComponentAssertionError(AlgoComponentError):
 
 class DelayedAlgoComponentError(AlgoComponentError):
     """Triggered when exceptions occured during the execution but were delayed."""
+
     def __init__(self, excs):
         super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
         self._excs = excs
@@ -58,6 +59,7 @@ class DelayedAlgoComponentError(AlgoComponentError):
 
 class ParallelInconsistencyAlgoComponentError(Exception):
     """Generic exception class for Algo Components."""
+
     def __init__(self, target):
         msg = "The len of {:s} is inconsistent with the number or ResourceHandlers."
         super(ParallelInconsistencyAlgoComponentError, self).__init__(msg.format(target))
@@ -262,14 +264,16 @@ class AlgoComponent(footprints.FootprintBase):
         else:
             for arg in self.flyput_args():
                 logger.info('Check arg <%s>', arg)
-                if any([ x.rh.container.basename.startswith(arg) for x in self.promises ]):
+                if any([x.rh.container.basename.startswith(arg) for x in self.promises]):
                     logger.info(
                         'Match some promise %s',
-                        str([ x.rh.container.basename for x in self.promises if x.rh.container.basename.startswith(arg) ])
+                        str([x.rh.container.basename for x in self.promises
+                             if x.rh.container.basename.startswith(arg)])
                     )
                     actual_args.append(arg)
                 else:
-                    logger.info('Do not match any promise %s', str([ x.rh.container.basename for x in self.promises ]))
+                    logger.info('Do not match any promise %s',
+                                str([x.rh.container.basename for x in self.promises]))
             return actual_args
 
     def flyput_sleep(self):
@@ -303,7 +307,7 @@ class AlgoComponent(footprints.FootprintBase):
                         data.extend(rc.result)
                     except AttributeError:
                         data.extend(rc)
-                data = [ x for x in data if x ]
+                data = [x for x in data if x]
                 logger.info('Polling retrieved data %s', str(data))
                 for thisdata in data:
                     if self.flymapping:
@@ -312,14 +316,15 @@ class AlgoComponent(footprints.FootprintBase):
                             raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
                     else:
                         mappeddata = thisdata
-                    candidates = [ x for x in self.promises if x.rh.container.basename == mappeddata ]
+                    candidates = [x for x in self.promises if x.rh.container.basename == mappeddata]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()
                         if thisdata != mappeddata:
                             logger.info('Linking <%s> to <%s> (fmt=%s) before put',
                                         thisdata, mappeddata, bingo.rh.container.actualfmt)
-                            self.system.cp(thisdata, mappeddata, intent='in', fmt=bingo.rh.container.actualfmt)
+                            self.system.cp(thisdata, mappeddata, intent='in',
+                                           fmt=bingo.rh.container.actualfmt)
                         bingo.put(incache=True)
                     else:
                         logger.warning('Polled data not promised <%s>', thisdata)
@@ -408,7 +413,7 @@ class AlgoComponent(footprints.FootprintBase):
                 data.extend(rc.result)
             except AttributeError:
                 data.extend(rc)
-            data = [ x for x in data if x ]
+            data = [x for x in data if x]
             logger.info('Polling retrieved data %s', str(data))
         return data
 
@@ -480,8 +485,7 @@ class AlgoComponent(footprints.FootprintBase):
         a SIGTERM is sent.
         """
         # This test should always succeed...
-        if (self._server_synctool is not None and
-                self._server_process is not None):
+        if self._server_synctool is not None and self._server_process is not None:
             # Is the process still running ?
             if self._server_process.is_alive():
                 # Try to stop it nicely
@@ -597,8 +601,8 @@ class AlgoComponent(footprints.FootprintBase):
                 if self.serversync_method is None:
                     raise ValueError('The serversync_method must be provided.')
                 self._server_synctool = footprints.proxy.serversynctool(
-                    method = self.serversync_method,
-                    medium = self.serversync_medium,
+                    method      = self.serversync_method,
+                    medium      = self.serversync_medium,
                     raiseonexit = self._SERVERSYNC_RAISEONEXIT,
                 )
                 self._server_synctool.set_servercheck_callback(self.server_alive)
@@ -650,8 +654,10 @@ class AlgoComponent(footprints.FootprintBase):
 
     def abortfabrik(self, step, msg):
         """A shortcut to avoid next steps of the run."""
+
         def fastexit(self, *args, **kw):
             logger.warning('Run <%s> skipped because abort occured [%s]', step, msg)
+
         return fastexit
 
     def abort(self, msg='Not documented'):
@@ -664,10 +670,10 @@ class AlgoComponent(footprints.FootprintBase):
         self._status = True
 
         # Get instance shorcuts to context and system objects
-        self.ticket  = vortex.sessions.current()
+        self.ticket = vortex.sessions.current()
         self.context = self.ticket.context
-        self.system  = self.context.system
-        self.target  = kw.pop('target', None)
+        self.system = self.context.system
+        self.target = kw.pop('target', None)
         if self.target is None:
             self.target = self.system.default_target
 
@@ -681,16 +687,16 @@ class AlgoComponent(footprints.FootprintBase):
         with self.env:
 
             # The actual "run" recipe
-            self.prepare(rh, kw)            #1
-            self.fsstamp(kw)                #2
+            self.prepare(rh, kw)            # 1
+            self.fsstamp(kw)                # 2
             try:
-                self.execute(rh, kw)        #3
+                self.execute(rh, kw)        # 3
             finally:
-                self.execute_finalise(kw)   #3.1
-            self.fscheck(kw)                #4
-            self.postfix(rh, kw)            #5
-            self.dumplog(kw)                #6
-            self.delayed_exceptions(kw)     #7
+                self.execute_finalise(kw)   # 3.1
+            self.fscheck(kw)                # 4
+            self.postfix(rh, kw)            # 5
+            self.dumplog(kw)                # 6
+            self.delayed_exceptions(kw)     # 7
 
         # Free local references
         self.env = None
@@ -702,11 +708,11 @@ class AlgoComponent(footprints.FootprintBase):
         """Standard glance to objects."""
         tab = '  ' * indent
         print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
-        for subobj in ( 'kind', 'engine', 'interpreter'):
+        for subobj in ('kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
                 print('{0}  {1:s}: {2!s}'.format(tab, subobj, obj))
-        print
+        print()
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
@@ -726,7 +732,7 @@ class AlgoComponent(footprints.FootprintBase):
                            initrole, initkind)
 
         if initname is not None:
-            for l in [ x.rh.container.localpath() for x in initsec ]:
+            for l in [x.rh.container.localpath() for x in initsec]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)
                     break
@@ -737,7 +743,7 @@ class AlgoComponent(footprints.FootprintBase):
 class ExecutableAlgoComponent(AlgoComponent):
     """Component in charge of running executable resources."""
 
-    _abstract  = True
+    _abstract = True
 
     def valid_executable(self, rh):
         """
@@ -750,7 +756,7 @@ class ExecutableAlgoComponent(AlgoComponent):
 class xExecutableAlgoComponent(ExecutableAlgoComponent):
     """Component in charge of running executable resources."""
 
-    _abstract  = True
+    _abstract = True
 
     def valid_executable(self, rh):
         """
@@ -1121,7 +1127,7 @@ class Parallel(xExecutableAlgoComponent):
             mpi = footprints.proxy.mpitool(
                 sysname = self.system.sysname,
                 mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
-                ** mpi_extras
+                **mpi_extras
             )
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
@@ -1139,20 +1145,20 @@ class Parallel(xExecutableAlgoComponent):
 
             # The main program
             master = footprints.proxy.mpibinary(
-                kind = self.binarysingle,
-                nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
-                ** mpi_desc)
+                kind=self.binarysingle,
+                nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                **mpi_desc)
             master.options = opts.get('mpiopts', dict())
-            master.master  = self.absexcutable(rh[0].container.localpath())
+            master.master = self.absexcutable(rh[0].container.localpath())
             bins = [master, ]
 
             # A potential IO server
             io = self.ioserver
             if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
                 io = footprints.proxy.mpibinary(
-                    kind = self.ioname,
-                    tasks   = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
-                    openmp  = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
+                    kind   = self.ioname,
+                    tasks  = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
+                    openmp = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
                 io.options = {x[3:]: opts[x]
                               for x in opts.keys() if x.startswith('io_')}
                 io.master = master.master
@@ -1186,9 +1192,13 @@ class Parallel(xExecutableAlgoComponent):
             # Create MpiBinaryDescription objects
             bins = list()
             for i, r in enumerate(rh):
-                bins.append(footprints.proxy.mpibinary(kind = bnames[i],
-                                                       nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
-                                                       ** mpi_desc))
+                bins.append(
+                    footprints.proxy.mpibinary(
+                        kind  = bnames[i],
+                        nodes = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                        **mpi_desc
+                    )
+                )
                 # Reshape mpiopts
                 bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
                 bins[i].master  = self.absexcutable(r.container.localpath())
@@ -1196,7 +1206,7 @@ class Parallel(xExecutableAlgoComponent):
         # Nothing to do: binary descriptions are provided by the user
         else:
             if len(self.binaries) != len(rh):
-                    raise ParallelInconsistencyAlgoComponentError("self.binaries")
+                raise ParallelInconsistencyAlgoComponentError("self.binaries")
             bins = self.binaries
             for i, r in enumerate(rh):
                 bins[i].master = self.absexcutable(r.container.localpath())

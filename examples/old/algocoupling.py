@@ -25,7 +25,7 @@ c = t.context
 sh = t.system()
 
 if sh.cd(e.HOME + '/tmp/rundir'):
-    #sh.rmglob('-rf', '*')
+    # sh.rmglob('-rf', '*')
     print(t.prompt, sh.pwd())
 
 today = date.today()

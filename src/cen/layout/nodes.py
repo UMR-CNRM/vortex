@@ -40,7 +40,7 @@ class S2MTaskMixIn(object):
         accept_errors = not determinitic_error or nerrors < 5
 
         if accept_errors:
-            print (self.warningmessage(nerrors, exc))
+            print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def reforecast_filter_execution_error(self, exc):
@@ -49,7 +49,7 @@ class S2MTaskMixIn(object):
         warning["nfail"] = nerrors
         accept_errors = nerrors < 5
         if accept_errors:
-            print (self.warningmessage(nerrors, exc))
+            print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):

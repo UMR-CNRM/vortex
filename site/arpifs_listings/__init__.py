@@ -76,9 +76,9 @@ def compare_files(file_test, file_ref,
 
 def show_TL_test(filename, outputname='TL-test.png'):
     """Show a graphical interpretation of the TL-test."""
-    l = listings.OutputListing(filename, pattern_type='TL-test')
-    l.parse_TL_test()
-    fig, _ = l.tl_test.plot()
+    listing = listings.OutputListing(filename, pattern_type='TL-test')
+    listing.parse_TL_test()
+    fig, _ = listing.tl_test.plot()
     if outputname is None:
         fig.show()
     else:

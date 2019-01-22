@@ -404,3 +404,9 @@ class Deposit(getbytag.GetByTag):
                 self.logger.warning('Mkdir', pool=self.tag, archivepath=self.archivepath)
             else:
                 self.clean_archive()
+
+
+if __name__ == '__main__':
+    import doctest
+    result = doctest.testmod(verbose=False)
+    print('{}/{} tests passed.'.format(result.attempted - result.failed, result.attempted))

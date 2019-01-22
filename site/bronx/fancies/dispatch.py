@@ -65,7 +65,8 @@ class CmdLiner(cmd.Cmd):
     Abstract class for dealing with shell-like options oriented command line tasks.
     """
 
-    def __init__(self, name='cmdliner', prompt=None, maxlen=999, logfile=None, fgcolor='lightyellow', fgshell='lightcyan'):
+    def __init__(self, name='cmdliner', prompt=None, maxlen=999, logfile=None,
+                 fgcolor='lightyellow', fgshell='lightcyan'):
         """
         It should be a good habit to give a significant name to the ``CmdLiner`` object
         so that history files are not mixed (read at initialisation).
@@ -131,7 +132,9 @@ class CmdLiner(cmd.Cmd):
         if kw.get('raw', False):
             print(text)
         else:
-            print(termcolors.colored(text, fgcolor=kw.get('fgcolor', self.fgcolor), setfont=kw.get('setfont', 'bold')))
+            print(termcolors.colored(text,
+                                     fgcolor=kw.get('fgcolor', self.fgcolor),
+                                     setfont=kw.get('setfont', 'bold')))
         if self.logflag:
             self.report(termcolors.clean(text))
 

@@ -140,7 +140,7 @@ class GEnv(GcoProvider):
         """
         gconf = genv.contents(cycle=self.genv)
         if (not gconf) and self.gautofill:
-            logger.info('Auto-registering cycle '+self.genv)
+            logger.info('Auto-registering cycle ' + self.genv)
             genv.autofill(cycle=self.genv)
             gconf = genv.contents(cycle=self.genv)
         if not gconf:

@@ -71,7 +71,8 @@ class OpJobAssistantTest(JobAssistant):
             if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
                 t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
             if "LOG_SBATCH" in t.env():
-                t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+                t.sh.softlink(t.env["LOG_SBATCH"],
+                              '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
         nb_slurm = self.print_somevariables(t, 'SLURM')
         tg = vortex.sh().default_target
@@ -85,7 +86,8 @@ class OpJobAssistantTest(JobAssistant):
             if t.env.OP_GCOCACHE is None:
                 t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
         else:
-            logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
+            logger.warning('No "LUSTRE_OPER" variable in the environment, '
+                           'unable to export MTOOLDIR and datadir')
 
         if "LOG_SBATCH" in t.env():
             t.env.setvar("LOG", t.env["LOG_SBATCH"])

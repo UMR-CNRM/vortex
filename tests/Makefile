@@ -29,7 +29,7 @@ check: check27
 
 check27:
 	$(PYTHON) ./do_working_tests-2.7.py
-    
+
 check3:
 	$(PYTHON3) ./do_working_tests-3.py
 

@@ -60,7 +60,7 @@ class OdbMonitoring(OdbProcess):
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
     def prepare(self, rh, opts):
-        """Update some variables in the namelist and verify the presence or not of the accumulated statistics file"""
+        """Update some variables in the namelist and check the presence of the accumulated statistics file."""
 
         # Let ancestors handling most of the env setting
         super(OdbMonitoring, self).prepare(rh, opts)
@@ -109,7 +109,8 @@ class OdbMonitoring(OdbProcess):
         mnt_cumul = self.cumul
         if self.cutoff == 'production':
             mnt_cumul = False
-            logger.info('No output accumulated statistics file will be produced because cutoff = production : force cumul to False')
+            logger.info('No output accumulated statistics file will be produced because '
+                        'cutoff = production : force cumul to False')
 
         # Monitoring namelist
         namrh = self.context.sequence.effective_inputs(

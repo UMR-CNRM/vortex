@@ -287,7 +287,7 @@ class JoSensor(_JoMixinPlus):
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
         """
-        _write_n(out, '  %s' % (self.name))
+        _write_n(out, '  %s' % self.name)
         for vname in self._diff_superset(ref):
             self[vname].print_diff(ref[vname],
                                    bw=bw,

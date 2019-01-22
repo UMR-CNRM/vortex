@@ -321,7 +321,7 @@ class LongerFirstScheduler(NewMaxMemoryScheduler):
         pending_instructions.sort(key=lambda tup: tup.get('expected_time', 0), reverse=True)
         for instructions in pending_instructions:
             actual_memory = instructions.get('memory', self.memory_per_task)
-            if ((actual_memory <= available_memory) and (available_threads > 0)):
+            if (actual_memory <= available_memory) and (available_threads > 0):
                 launchable.append(instructions)
                 available_memory -= actual_memory
                 available_threads -= 1

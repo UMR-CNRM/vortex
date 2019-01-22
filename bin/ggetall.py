@@ -44,7 +44,8 @@ def parse_command_line():
     parser = argparse.ArgumentParser(description=description)
 
     helpstr = 'file(s) containing a list of cycles to freeze ; defaults to "[{}, {}]"'
-    parser.add_argument('-f', '--file', nargs='+', help=helpstr.format(DEFAULT_OPER_CYCLES_FILE, DEFAULT_DBLE_CYCLES_FILE))
+    helpmsg = helpstr.format(DEFAULT_OPER_CYCLES_FILE, DEFAULT_DBLE_CYCLES_FILE)
+    parser.add_argument('-f', '--file', nargs='+', help=helpmsg)
     parser.add_argument('-c', '--cycles', nargs='+', help='name(s) of cycle(s) to freeze')
     parser.add_argument('-r', '--remove', help='name of the cycle to remove')
     parser.add_argument('-l', '--list', help='only list cycles to handle, and exit', action='store_true')

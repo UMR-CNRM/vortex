@@ -51,8 +51,8 @@ class CorrOmegaSurf(Parallel):
         sh = self.system
 
         gridrh = self.context.sequence.effective_inputs(
-            role=('AltitudeFields'),
-            kind=('gridpoint')
+            role='AltitudeFields',
+            kind='gridpoint'
         )
         gridrh.sort(key=lambda s: s.rh.resource.term)
 
@@ -546,8 +546,8 @@ class MkStatsCams(Expresso):
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
         hmfiles = self.context.sequence.effective_inputs(
-            role=('HMBroadcastFiles'),
-            kind=('gridpoint')
+            role='HMBroadcastFiles',
+            kind='gridpoint'
         )
 
         # We take any input file to guess prefix and mask

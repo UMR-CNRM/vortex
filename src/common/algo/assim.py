@@ -124,7 +124,7 @@ class SeaIceAnalysis(IFSParallel):
 
         super(SeaIceAnalysis, self).prepare(rh, opts)
 
-        namrh_list = [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
+        namrh_list = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
                                                                             kind='namelist',)]
 
         if not namrh_list:
@@ -454,8 +454,8 @@ class Minim(IFSODBCCMA):
             nprec_ev = evmaprh[0].rh.contents.data['evlen']
             # If there are preconditioning EV: update the namelist
             if nprec_ev > 0:
-                for namrh in [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                                    kind='namelist',)]:
+                for namrh in [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                                   kind='namelist',)]:
                     namc = namrh.contents
                     try:
                         namc['NAMVAR'].NPCVECS = nprec_ev
@@ -480,7 +480,7 @@ class Minim(IFSODBCCMA):
         prec = sh.ls('MEMINI*')
         if prec:
             prec_info = dict(evlen=len(prec))
-            prec_info['evnum'] = [ int(x[6:])  for x in prec ]
+            prec_info['evnum'] = [int(x[6:]) for x in prec]
             sh.json_dump(prec_info, 'precev_map.out', indent=4)
 
         super(Minim, self).postfix(rh, opts)
@@ -602,15 +602,15 @@ class IceNetCDF2Ascii(BlindRun):
                     hn_file = filename
                     logger.info('The input file for the North hemisphere is: %s.', hn_file)
                 else:
-                    logger.warning('There was already one file for the North hemisphere. The following one, %s, is not used.',
-                                   filename)
+                    logger.warning('There was already one file for the North hemisphere. '
+                                   'The following one, %s, is not used.', filename)
             elif part == "ice_hs":
                 if hs_file == '':
                     hs_file = filename
                     logger.info('The input file for the South hemisphere is: %s.', hs_file)
                 else:
-                    logger.warning('There was already one file for the South hemisphere. The following one, %s, is not used.',
-                                   filename)
+                    logger.warning('There was already one file for the South hemisphere. '
+                                   'The following one, %s, is not used.', filename)
             else:
                 logger.warning('The following file is not used: %s.', filename)
         self.input_file_hn = hn_file

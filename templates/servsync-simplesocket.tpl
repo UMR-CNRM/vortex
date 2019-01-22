@@ -1,6 +1,6 @@
 #!$python
 
-from __future__ import print_function, absolute_import, unicode_literals, division                  
+from __future__ import print_function, absolute_import, unicode_literals, division
 import socket, time, sys, os
 
 file = os.path.realpath(__file__)

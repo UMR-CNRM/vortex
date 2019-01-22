@@ -7,9 +7,8 @@ import io
 import socket
 import sys
 
-from bronx.fancies import loggers
 import footprints
-
+from bronx.fancies import loggers
 from vortex import sessions
 from vortex.util import config
 

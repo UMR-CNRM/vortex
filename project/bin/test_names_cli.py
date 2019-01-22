@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-'''
+"""
 project.bin.test_names_cli.py -- Manages Unit-Tests from the test_names package.
 
 There are several possible actions:
@@ -12,7 +12,7 @@ There are several possible actions:
 * check: Run the test(s), Load the reference data, Check the results
 * dump: Dump a new set of reference data
 
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -81,7 +81,7 @@ def _do_action_dump(only):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

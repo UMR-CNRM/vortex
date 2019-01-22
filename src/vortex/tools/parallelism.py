@@ -307,7 +307,7 @@ class ParallelResultParser(object):
         :param dict res: A result record
         """
         if isinstance(res, Exception):
-            raise(res)
+            raise res
         else:
             sys.stdout.flush()
             logger.info('Parallel processing results for %s', res['name'])

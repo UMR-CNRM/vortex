@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+
+"""
 Created on 13 nov. 2018
 
 @author: meunierlf
-'''
+"""
+
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 

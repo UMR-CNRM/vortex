@@ -357,7 +357,7 @@ class _UgetStoreMixin(object):
         if rc:
             if extract:
                 # The file to extract may be in a tar file...
-                if (self.system.is_tarname(uname) and self.system.is_tarfile(uname)):
+                if self.system.is_tarname(uname) and self.system.is_tarfile(uname):
                     destdir = self.system.tarname_radix(self.system.path.realpath(uname))
                     if self.system.path.exists(destdir):
                         logger.info("%s was already unpacked during a previous extract.", destdir)
@@ -483,7 +483,11 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
                     stuff.update(rc)
                 elif rc is True:
                     return rc
-        return sorted([s for s in stuff if not (s.endswith('.' + self.storehash) and s[:-(len(self.storehash) + 1)] in stuff)])
+        return sorted([s for s in stuff
+                       if not (s.endswith('.' + self.storehash) and
+                               s[:-(len(self.storehash) + 1)] in stuff
+                               )
+                       ])
 
     def ugetprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""

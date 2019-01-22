@@ -7,28 +7,28 @@ Net tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import six
-from six.moves.urllib import parse as urlparse
-
 import abc
 import binascii
 import collections
-from collections import namedtuple
 import ftplib
 import functools
 import io
 import operator
-import re
 import random
+import re
 import socket
 import stat
 import struct
 import time
+from collections import namedtuple
 from datetime import datetime
 
+import six
+from six.moves.urllib import parse as urlparse
+
 from bronx.fancies import loggers
-from bronx.syntax.decorators import nicedeco, secure_getattr
 from bronx.net.netrc import netrc
+from bronx.syntax.decorators import nicedeco, secure_getattr
 
 #: No automatic export
 __all__ = []
@@ -442,7 +442,7 @@ class StdFtp(object):
     :class:`ExtendedFtplib` and :class:`ftplib.FTP` class).
     """
 
-    _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'stderr', )
+    _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'stderr',)
 
     def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None):
         """
@@ -957,6 +957,7 @@ class Ssh(object):
 
     Also handles remote copy via scp or ssh, which is intimately linked
     """
+
     def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None):
         """
         :param System sh: The :class:`System` object that is to be used.
@@ -1077,7 +1078,7 @@ class Ssh(object):
     def scpput(self, source, destination, scpopts=''):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
+        - ``source`` is a single file or a directory, not a pattern (no '*.grib').
         - ``destination`` is the remote name, unless it ends with '/', in
           which case it is the containing directory, and the remote name is
           the basename of ``source`` (like a real cp or scp):
@@ -1127,7 +1128,7 @@ class Ssh(object):
     def scpget(self, source, destination, scpopts='', isadir=False):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is the remote name, not a pattern (no '\*.grib').
+        - ``source`` is the remote name, not a pattern (no '*.grib').
         - ``destination`` is a single file or a directory, unless it ends with
           '/', in which case it is the containing directory, and the remote name
           is the basename of ``source`` (like a real cp or scp):
@@ -1271,7 +1272,7 @@ class Ssh(object):
                            '{:d}:{:s}:{:d}'.format(entranceport,
                                                    finaldestination, finalport),
                            myremote],
-                          stdin   = False, output  = False)
+                          stdin=False, output=False)
         tunnel = ActiveSshTunnel(self.sh, p, entranceport, finaldestination, finalport)
         elapsed = 0.
         while (not self.sh.check_localport(entranceport)) and elapsed < maxwait:
@@ -1344,6 +1345,7 @@ def _check_fatal(func):
     This decorator is very specialised and should be used solely with the AssistedSsh
     class since it relies on several attributes (_fatal, _maxtries).
     """
+
     def wrapped(*args, **kwargs):
         self = args[0]
         if self._fatal_in_progress:
@@ -1360,6 +1362,7 @@ def _check_fatal(func):
             finally:
                 self._fatal_in_progress = False
             return rc
+
     return wrapped
 
 
@@ -1370,6 +1373,7 @@ def _tryagain(func):
     This decorator is very specialised and should be used solely with the AssistedSsh
     class since it relies on several attributes (_retry_in_progress, _retries, _maxtries).
     """
+
     def wrapped(*args, **kwargs):
         self = args[0]
         if self._retry_in_progress:
@@ -1389,6 +1393,7 @@ def _tryagain(func):
                 self._retries = trycount
                 self._retry_in_progress = False
             return rc
+
     return wrapped
 
 
