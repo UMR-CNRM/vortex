@@ -50,17 +50,26 @@ class Succeeder(examples.Sleeper):
         info = "Suceeds.",
         attr = dict(
             succeed = dict(
-                info   = "Supposed to succeed.",
-                type   = bool,
-                values = [True]
+                info     = "Supposed to succeed.",
+                type     = bool,
+                values   = [True]
             ),
+            bind_test = dict(
+                info     = "Do the bind test.",
+                type     = bool,
+                optional = True,
+                default  = False,
+            )
         )
     )
 
     def _task(self):
         """Succeed at doing nothing."""
-        super(Succeeder, self)._task()
-        return ("Succeeded.", self.binding())
+        time.sleep(self.sleeping_time)
+        if self.bind_test:
+            return ("Succeeded.", self.binding())
+        else:
+            return ("Succeeded.", )
 
 
 class Failer(examples.Sleeper):
@@ -82,9 +91,8 @@ class Failer(examples.Sleeper):
 
     def _task(self):
         """Fails (an exception is raised) at doing nothing."""
-        super(Failer, self)._task()
+        time.sleep(self.sleeping_time)
         raise _TestError("Failer: failed")
-        return ("Failed.", self.binding())
 
 
 @loggers.unittestGlobalLevel(tloglevel)
@@ -131,12 +139,12 @@ class UtTaylorism(TestCase):
         for scheduler in (footprints.proxy.scheduler(limit='threads', max_threads=2),
                           schedulers.MaxThreadsScheduler(max_threads=2)):
             boss = taylorism.run_as_server(
-                common_instructions     = dict(),
+                common_instructions     = dict(succeed=True,),
                 individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
                 scheduler               = scheduler,
             )
             time.sleep(0.1)
-            boss.set_instructions(dict(), individual_instructions=dict(sleeping_time=[0.001, ]))
+            boss.set_instructions(dict(succeed=True,), individual_instructions=dict(sleeping_time=[0.001, ]))
             boss.wait_till_finished()
             report = boss.get_report()
             self.assertEqual(len(report['workers_report']), 4, "4 instructions have been sent, which is not the size of report.")
@@ -165,7 +173,7 @@ class UtTaylorism(TestCase):
         """Checks that the binding works."""
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(wakeup_sentence='yo', succeed=True),
+            common_instructions     = dict(wakeup_sentence='yo', succeed=True, bind_test=True),
             individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
             scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2, binded=True),
         )
@@ -196,7 +204,7 @@ class UtTaylorism(TestCase):
         """Checks that expansion in workers name works fine."""
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(name='jean-pierre_[sleeping_time]'),
+            common_instructions     = dict(name='jean-pierre_[sleeping_time]', succeed=True,),
             individual_instructions = dict(sleeping_time = [0.001, 0.01]),
             scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
