@@ -104,8 +104,7 @@ _fmtshcmd_docbonus = """
 # Constant items
 
 #: Definition of a named tuple ftpflavour
-FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'],
-                             verbose=False)
+FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'])
 
 #: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
 FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)

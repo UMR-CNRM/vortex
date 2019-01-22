@@ -121,7 +121,7 @@ class CombiPert(Combi):
 
 
 #: Definition of a named tuple that holds informations on SV for a given zone
-_SvInfoTuple = collections.namedtuple('SvInfoTuple', ['available', 'expected'], verbose=False)
+_SvInfoTuple = collections.namedtuple('SvInfoTuple', ['available', 'expected'])
 
 
 class CombiSV(CombiPert):

@@ -40,13 +40,13 @@ class SectionFatalError(Exception):
 
 
 #: Definition of a named tuple INTENT
-IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
+IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'])
 
 #: Predefined INTENT values IN, OUT and INOUT.
 intent = IntentTuple(IN='in', OUT='out', INOUT='inout')
 
 #: Definition of a named tuple IXO sequence
-IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
+IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
 
 #: Predefined IXO sequence values INPUT, OUTPUT and EXEC.
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
