@@ -28,7 +28,7 @@ from twisted.cred.portal import Portal
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-from test_twistednet.utils import wait_for_port
+from .utils import wait_for_port
 
 logger = loggers.getLogger(__name__)
 
