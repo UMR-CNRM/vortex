@@ -13,6 +13,7 @@ tries  = 0
 while True:
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.setblocking(1)
         client.connect(address)
         break
     except socket.error as e:

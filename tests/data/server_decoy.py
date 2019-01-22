@@ -32,7 +32,7 @@ def server(sleep, crash, verb):
                     sys.exit(1)
                 else:
                     if verb:
-                        print('Fake processing. Sleeping {:d} seconds'.format(sleep))
+                        print('Fake processing. Sleeping {:g} seconds'.format(sleep))
                     time.sleep(sleep)
                     i += 1
                     fd = open('server_decoy_processing_{:d}'.format(i), 'w')

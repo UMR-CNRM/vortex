@@ -102,8 +102,8 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Create the sockect
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((socket.getfqdn(), 0))
-        self._socket.listen(1)
         self._socket.settimeout(self.checkinterval)
+        self._socket.listen(1)
         # Current connection
         self._socket_conn = None
         # Create the script that will be called by the server
@@ -131,7 +131,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             # NB: For send/recv, the settimeout also applies...
             self._socket_conn.send(mess.encode(encoding='utf-8'))
             repl = self._socket_conn.recv(255).decode(encoding='utf-8')
-            logger.info('Server replied "%s".', repl)
+            logger.info('Server replied "%s" to %s.', repl, mess)
             self._socket_conn.close()
             self._socket_conn = None
             if repl != 'OK':
@@ -156,6 +156,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             else:
                 logger.info('The server stopped.')
         else:
+            self._socket_conn.settimeout(self.checkinterval)
             logger.info('The server is now waiting')
 
     def trigger_run(self):
