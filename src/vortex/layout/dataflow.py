@@ -33,6 +33,9 @@ logger = loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
 
+# re._pattern_type is removed in python3.7
+six.add_move(six.MovedAttribute('Pattern', 're', 're', old_attr='_pattern_type', new_attr='Pattern'))
+
 
 class SectionFatalError(Exception):
     """Exception when fatal mode is activated."""
@@ -392,7 +395,7 @@ class Sequence(observer.Observer):
                 not isinstance(allowed, collections.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
-            if ((isinstance(pattern, re._pattern_type) and pattern.search(stuff)) or
+            if ((isinstance(pattern, six.moves.Pattern) and pattern.search(stuff)) or
                     (pattern == stuff)):
                 return True
         return False
