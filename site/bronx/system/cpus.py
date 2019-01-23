@@ -47,7 +47,8 @@ class CpusInfo(object):
         self._cpus = None
         self._cpus_hierarchy = None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def cpus(self):
         """The raw dictionary of the system's CPUs."""
         pass

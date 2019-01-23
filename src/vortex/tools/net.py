@@ -1586,7 +1586,8 @@ UdpConnectionStatus = namedtuple('UdpConnectionStatus', _ConnectionStatusAttrs)
 class AbstractNetstats(object):
     """AbstractNetstats classes provide all kind of informations on network connections."""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def unprivileged_ports(self):
         """The list of unprivileged port that may be opened by any user."""
         pass
