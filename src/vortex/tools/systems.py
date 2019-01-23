@@ -492,7 +492,7 @@ class System(footprints.FootprintBase):
     def flush_stdall(self):
         """Flush stdout and stderr."""
         sys.stdout.flush()
-        sys.stderr.flush
+        sys.stderr.flush()
 
     @contextlib.contextmanager
     def mute_stderr(self):
