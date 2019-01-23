@@ -2599,7 +2599,7 @@ class OSExtended(System):
 
     def _signal_intercept_init(self):
         """Initialise the signal handler object (but do not activate it)."""
-        self._sighandler = SignalInterruptHandler()
+        self._sighandler = SignalInterruptHandler(emitlogs=False)
 
     def signal_intercept_on(self):
         """Activate the signal's catching.
