@@ -228,7 +228,7 @@ class utExpand(TestCase):
             # No match
             rv = util.expand(dict(
                 arg='multi',
-                look='xx_{glob:a:\w+}_{glob:b:\d+}',
+                look=r'xx_{glob:a:\w+}_{glob:b:\d+}',
                 seta='[glob:a]',
                 setb='[glob:b]'
             ))
@@ -236,7 +236,7 @@ class utExpand(TestCase):
             # Match a complex directory
             rv = util.expand(dict(
                 arg='multi',
-                look=tmpd + '/*_{glob:a:\w+}_{glob:b:\d+}',
+                look=tmpd + r'/*_{glob:a:\w+}_{glob:b:\d+}',
                 seta='[glob:a]',
                 setb='[glob:b]'
             ))
@@ -256,7 +256,7 @@ class utExpand(TestCase):
                 os.chdir(tmpd)
                 rv = util.expand(dict(
                     arg='multi',
-                    look='xx_{glob:a:\w+}_{glob:b:\d+}',
+                    look=r'xx_{glob:a:\w+}_{glob:b:\d+}',
                     seta='[glob:a]',
                     setb='[glob:b]'
                 ))
@@ -272,7 +272,7 @@ class utExpand(TestCase):
                 ])
                 rv = util.expand(dict(
                     arg='multi',
-                    look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2})?}',
+                    look=r'x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2})?}',
                     seta='[glob:a]',
                     setb='[glob:b]'
                 ))
@@ -294,11 +294,11 @@ class utExpand(TestCase):
                 ])
                 with self.assertRaises(ValueError):
                     rv = util.expand(dict(
-                        look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2)?}',  # Unbalanced
+                        look=r'x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2)?}',  # Unbalanced
                     ))
                 with self.assertRaises(ValueError):
                     rv = util.expand(dict(
-                        look='xx_{glob:a:\w+}_{glob:b:[\d+}',  # Compilation error
+                        look=r'xx_{glob:a:\w+}_{glob:b:[\d+}',  # Compilation error
                     ))
             finally:
                 os.chdir(curdir)

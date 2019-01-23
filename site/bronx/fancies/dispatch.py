@@ -119,8 +119,9 @@ class CmdLiner(cmd.Cmd):
         if len(self.history):
             if re.match('^!!', line):
                 line = re.sub('^!!', self.history.nice(self.history.last), line)
-            elif re.match('^!\d+', line):
-                line = re.sub('^!(\d+)', lambda m: self.history.nice(self.history.getbynumber(int(m.group(1)))), line)
+            elif re.match(r'^!\d+', line):
+                line = re.sub(r'^!(\d+)', lambda m: self.history.nice(self.history.getbynumber(int(m.group(
+                    1)))), line)
         if line:
             self.history.append(line)
             self.setprompt()

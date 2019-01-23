@@ -115,9 +115,9 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 fqdn = socket.getfqdn()
 do_lfi_addon = False
 do_rawftp = False
-if re.match('[lps]x\w+\d+\.cnrm\.meteo.fr', fqdn):
+if re.match(r'[lps]x\w+\d+\.cnrm\.meteo.fr', fqdn):
     tmpbase = os.path.join(os.environ['HOME'], 'tmp')
-elif re.match('(beaufix|prolix)', fqdn):
+elif re.match(r'(beaufix|prolix)', fqdn):
     do_lfi_addon = True
     do_rawftp = True
     tmpbase = (os.environ['TMPDIR'] or

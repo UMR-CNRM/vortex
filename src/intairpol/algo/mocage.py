@@ -557,7 +557,7 @@ class MkStatsCams(Expresso):
         actualprefix, actualmask = example.container.localpath().split('+', 1)
 
         # Replacing any leading digit with a wildcard '?'
-        x = re.match('(\d+)', actualmask)
+        x = re.match(r'(\d+)', actualmask)
         if x:
             digits = len(x.group(0))
             actualmask = '?' * digits + actualmask[digits:]

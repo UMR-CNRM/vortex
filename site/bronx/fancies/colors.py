@@ -80,7 +80,7 @@ class termcolors(object):
 
     @classmethod
     def clean(cls, text):
-        return re.sub('\\033\[\d+(?:;\d+)*m', '', text)
+        return re.sub(r'\\033\[\d+(?:;\d+)*m', '', text)
 
     @classmethod
     def colored(cls, text, fgcolor=None, bgcolor=None, setfont=None):

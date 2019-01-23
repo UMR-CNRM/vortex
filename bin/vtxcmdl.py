@@ -153,10 +153,10 @@ def actual_action(action, t, args, fatal=True):
 def argvalue_rewrite(value):
     """Detect and process special values in arguments."""
     if value.startswith('rangex'):
-        value = re.split('\s*,\s*', value[7:-1])
+        value = re.split(r'\s*,\s*', value[7:-1])
         return fp.util.rangex(*value)
     elif value.startswith('daterangex'):
-        value = re.split('\s*,\s*', value[11:-1])
+        value = re.split(r'\s*,\s*', value[11:-1])
         return date.daterangex(*value)
     else:
         return value
@@ -170,7 +170,7 @@ def process_remaining(margs, rargs):
       * --key=value
       * --key value
     """
-    re_arg0 = re.compile('--(\w+)(?:=(.*))?$')
+    re_arg0 = re.compile(r'--(\w+)(?:=(.*))?$')
     while len(rargs):
         argmatch = re_arg0.match(rargs.pop(0))
         if argmatch is None:
@@ -256,7 +256,7 @@ def main():
     args.gautofill = True
 
     # Process the action (get/true)
-    program_match = re.match('vtx(get|put|prestage)(?:\.py)?$', program_name)
+    program_match = re.match(r'vtx(get|put|prestage)(?:\.py)?$', program_name)
     if program_match is None:
         raise NotImplementedError("Unrecognised script name.")
     else:

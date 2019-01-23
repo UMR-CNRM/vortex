@@ -24,27 +24,27 @@ patterns = {'spectral norms': 'SPECTRAL NORMS -',
             'gpnorms partA': 'GPNORM',
             'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
             'fullpos gpnorms': 'FULL-POS GPNORMS', }
-_re_openfa = '(?P<subroutine>OPENFA)'
-_re_cnt34 = '(?P<subroutine>CNT[3-4]((TL)|(AD))*)'
-_re_comment = '(?P<comment>(\s\w+)+)'
-_re_unit = '(?P<unit>\d+)'
-_re_filename = '(?P<filename>(\w|\+)+)'
-_re_nstep = '(?P<nstep>\d+)'
-_re_stepo = '(?P<subroutine>STEPO((TL)|(AD))*)'
-_re_scan2m = '(?P<subroutine>SCAN2M((TL)|(AD))*)'
-_re_nsim4d = '(?P<nsim4d>\d+)'
-_re_cdconf = '(?P<cdconf>\w+)'
-_re_pcstep = '(\((?P<pc_step>(PREDICTOR)|(CORRECTOR))\)\s+)?'
-_re_dfi = '(?P<dfi>DFI STEP)'
-_re_dfistep = '(?P<dfi_step>(\+|\-)\d+\/\s*\d+)'
-CNT_steps = {'openfa_info': '\s*' + _re_openfa + ':' + _re_comment + '\s*$',
-             'openfa': '\s*' + _re_openfa + ':\s+' + _re_unit + '\s+' + _re_filename + '\s*$',
-             'nstep_stepo': '\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_stepo + '\s+' + _re_cdconf + '\s*$',
-             'nstep_scan2m': '\s*NSTEP =\s+' + _re_nstep + '\s+' + _re_scan2m + '\s+' + _re_cdconf + '\s*$',
-             'norms_at_nstep': '\s*NORMS AT NSTEP\s+' + _re_cnt34 + '\s+' + _re_pcstep + _re_nstep + '\s*$',
-             'start_cnt4_nsim4d': '\s*START\s+' + _re_cnt34 + ', NSIM4D=\s+' + _re_nsim4d + '\s*$',
-             'end_cnt3': '\s*END\s+' + _re_cnt34 + '\s*$',
-             'dfi_step': '\s*(\d|:)*\s+' + _re_dfi + '\s+' + _re_dfistep + '\s*\+CPU=.*\s*$',
+_re_openfa = r'(?P<subroutine>OPENFA)'
+_re_cnt34 = r'(?P<subroutine>CNT[3-4]((TL)|(AD))*)'
+_re_comment = r'(?P<comment>(\s\w+)+)'
+_re_unit = r'(?P<unit>\d+)'
+_re_filename = r'(?P<filename>(\w|\+)+)'
+_re_nstep = r'(?P<nstep>\d+)'
+_re_stepo = r'(?P<subroutine>STEPO((TL)|(AD))*)'
+_re_scan2m = r'(?P<subroutine>SCAN2M((TL)|(AD))*)'
+_re_nsim4d = r'(?P<nsim4d>\d+)'
+_re_cdconf = r'(?P<cdconf>\w+)'
+_re_pcstep = r'(\((?P<pc_step>(PREDICTOR)|(CORRECTOR))\)\s+)?'
+_re_dfi = r'(?P<dfi>DFI STEP)'
+_re_dfistep = r'(?P<dfi_step>(\+|\-)\d+\/\s*\d+)'
+CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
+             'openfa': r'\s*' + _re_openfa + r':\s+' + _re_unit + r'\s+' + _re_filename + r'\s*$',
+             'nstep_stepo': r'\s*NSTEP =\s+' + _re_nstep + r'\s+' + _re_stepo + r'\s+' + _re_cdconf + r'\s*$',
+             'nstep_scan2m': r'\s*NSTEP =\s+' + _re_nstep + r'\s+' + _re_scan2m + r'\s+' + _re_cdconf + r'\s*$',
+             'norms_at_nstep': r'\s*NORMS AT NSTEP\s+' + _re_cnt34 + r'\s+' + _re_pcstep + _re_nstep + r'\s*$',
+             'start_cnt4_nsim4d': r'\s*START\s+' + _re_cnt34 + r', NSIM4D=\s+' + _re_nsim4d + r'\s*$',
+             'end_cnt3': r'\s*END\s+' + _re_cnt34 + r'\s*$',
+             'dfi_step': r'\s*(\d|:)*\s+' + _re_dfi + r'\s+' + _re_dfistep + r'\s*\+CPU=.*\s*$',
              }
 CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
@@ -265,10 +265,10 @@ class Norms(object):
          >
         """
         re_float = re_for_fortran_scientific_format.pattern
-        re_pattern = re.compile('\s+(?P<fldname>([\w\.\/\s])+) :' +
-                                ' (?P<ave>' + re_float + ')' +
-                                ' (?P<min>' + re_float + ')' +
-                                ' (?P<max>' + re_float + ')' + '$')
+        re_pattern = re.compile(r'\s+(?P<fldname>([\w\.\/\s])+) :' +
+                                r' (?P<ave>' + re_float + ')' +
+                                r' (?P<min>' + re_float + ')' +
+                                r' (?P<max>' + re_float + ')' + '$')
         start = 0
         sub_extract = lines
         while True:

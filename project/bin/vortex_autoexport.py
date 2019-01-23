@@ -80,10 +80,10 @@ _TOOLBOX_PREFIX = 'vortex'
 class ToolboxProvider(object):
     """Abstract class for a Toolbox provider."""
 
-    _ALLOWED_VERSIONS = [re.compile('master$'),
-                         re.compile('olive-dev$'),
-                         re.compile('cen[_-]dev$'),
-                         re.compile('\d+\.\d+\.\d+$')]
+    _ALLOWED_VERSIONS = [re.compile(r'master$'),
+                         re.compile(r'olive-dev$'),
+                         re.compile(r'cen[_-]dev$'),
+                         re.compile(r'\d+\.\d+\.\d+$')]
 
     def __init__(self, tmpdir, wantedversion):
         """

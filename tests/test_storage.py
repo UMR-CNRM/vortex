@@ -27,7 +27,7 @@ from vortex.tools.storage import MarketPlaceCache
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 
-CACHE_CONFIG = """
+CACHE_CONFIG = r"""
 [marketplace-vortex]
 siteconf=cache-marketplace-unittest.ini
 externalconf_fail1_path=do_not_exists
@@ -40,7 +40,7 @@ externalconf_ok2_path=utest-market.ini
 externalconf_ok2_restrict=\w+/\w+/[^@]+@utest/
 """
 
-MARKET_SITECONFIG = """
+MARKET_SITECONFIG = r"""
 [ABCD-arpege]
 rootdir=markets/ABCDmarket
 regex=arome/\w+/ABCD/
@@ -49,7 +49,7 @@ regex=arome/\w+/ABCD/
 rootdir=markets/ABCDmarket
 """
 
-MARKET_EXT1 = """
+MARKET_EXT1 = r"""
 [ABCD-arpege]
 rootdir=markets/XBCDmarket
 regex=\w+/\w+/XBCD/
@@ -60,7 +60,7 @@ rootdir=markets/ABCDmarket
 regex=******grr
 """
 
-MARKET_EXT2 = """
+MARKET_EXT2 = r"""
 [numbered_tests]
 rootdir=markets/utest_market
 regex=\w+/\w+/test\d+@utest/

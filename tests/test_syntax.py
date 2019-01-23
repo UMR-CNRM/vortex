@@ -28,15 +28,15 @@ class TestDelayedInit(unittest.TestCase):
     def test_delayed_init_basics(self):
         scrontch = None
         di = DelayedInit(scrontch, _initialise_scrontch)
-        self.assertRegexpMatches(str(di), 'Not yet Initialised>$')
-        self.assertRegexpMatches(repr(di), 'Not yet Initialised>$')
+        self.assertRegex(str(di), r'Not yet Initialised>$')
+        self.assertRegex(repr(di), r'Not yet Initialised>$')
         self.assertEqual(di.ping(), "Ping")
         self.assertEqual(str(di), "Hey !")
-        self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
+        self.assertRegex(repr(di), r'proxied=<.*\.Scrontch')
         scrontch = Scrontch("Hi !")
         di = DelayedInit(scrontch, _initialise_scrontch)
         self.assertEqual(str(di), "Hi !")
-        self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
+        self.assertRegex(repr(di), r'proxied=<.*\.Scrontch')
         self.assertEqual(di.ping(), "Ping")
 
 

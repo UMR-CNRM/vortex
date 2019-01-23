@@ -36,7 +36,7 @@ def slurm_parameters(t, **kw):
         slurm['nn'] = 1
 
     try:
-        slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+        slurm['nnp'] = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
     except (ValueError, TypeError) as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
@@ -45,8 +45,8 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            guess_cpus = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) // 2
-            guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+            guess_cpus = int(re.sub(r'\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) // 2
+            guess_tasks = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus // guess_tasks
         except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))
@@ -205,7 +205,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
     """
     Remove a frozen cycle: undoes what freeze_cycle did, but without removing
-    any file in use by any of the other frozen cycles ("\*.genv" in genvpath).
+    any file in use by any of the other frozen cycles ("*.genv" in genvpath).
     """
     sh = t.sh
 

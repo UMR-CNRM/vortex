@@ -173,7 +173,7 @@ if six.PY2:
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
-    l = list(re.sub(' ?(UTC|GMT)$', '', datestr.strip()))
+    l = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
     if len(l) > 4 and l[4] != '-':
         l[4:4] = ['-', ]
     if len(l) > 7 and l[7] != '-':

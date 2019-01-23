@@ -326,7 +326,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFDLFCST+{glob:h:\d+}',
+                local       = r'DHFDLFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -342,7 +342,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFGLFCST+{glob:h:\d+}',
+                local       = r'DHFGLFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -358,7 +358,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFZOFCST+{glob:h:\d+}',
+                local       = r'DHFZOFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -374,7 +374,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'NODE.{glob:a:\d+}_{glob:b:\d+}',
+                local       = r'NODE.{glob:a:\d+}_{glob:b:\d+}',
                 actualfmt   = 'ascii',
                 seta        = '[glob:a]',
                 setb        = '[glob:b]',

@@ -102,7 +102,7 @@ class ConfigSet(collections.MutableMapping):
         if value is not None and isinstance(value, six.string_types):
             # Support for old style dictionaries (compatibility)
             if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
-                    not re.match(r'^\w+\(dict\(.*\)\)$', value)):
+                  not re.match(r'^\w+\(dict\(.*\)\)$', value)):
                 key = key[:-4]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
@@ -110,11 +110,11 @@ class ConfigSet(collections.MutableMapping):
                     value = 'dict(' + value + ')'
             # Support for geometries (compatibility)
             if (('geometry' in key or 'geometries' in key) and
-                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
+                  (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
             # Support for oldstyle range (compatibility)
             if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
-                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
+                  not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
                 key = key[:-6]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)

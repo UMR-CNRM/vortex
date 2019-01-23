@@ -176,7 +176,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
     """Apply the inflation scheme on a given modelstate."""
 
     _RUNSTORE = 'RUNOUT'
-    _USELESS_MATCH = re.compile('^(?P<target>\w+)\+term\d+:\d+$')
+    _USELESS_MATCH = re.compile(r'^(?P<target>\w+)\+term\d+:\d+$')
 
     _footprint = dict(
         info='Operations around the background error covariance matrix',
@@ -396,7 +396,7 @@ class IFSCovB(IFSEdaEnsembleAbstractAlgo):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
             for filename in self.system.listdir(repname):
-                level = re.search('_L(\d+)$', filename)
+                level = re.search(r'_L(\d+)$', filename)
                 if level is not None:
                     self.system.softlink(self.system.path.join(repname, filename),
                                          radical.format(num, level.group(1)))

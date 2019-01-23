@@ -93,7 +93,7 @@ def _checkingfunction_dict(options):
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:
             raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
-        rolematch = re.match('(\w+)(?:\+(\w+))?$', checkrole)
+        rolematch = re.match(r'(\w+)(?:\+(\w+))?$', checkrole)
         if rolematch:
             ctx = sessions.current().context
             checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(1))]

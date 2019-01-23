@@ -94,7 +94,7 @@ class UGetShell(cmd.Cmd):
     _valid_pull = _valid_check
     _valid_push = _valid_check
     _valid_list = re.compile(r'(?P<what>data|env)(?:\s+from\s+(?P<listlocation>\w+))?(?:\s+matching\s+(?P<grep>.*))?\s*$')
-    _valid_diff = re.compile(r'env\s+' + _valid_partial_ugetid + '(?:\s+wrt\s+(?:' +
+    _valid_diff = re.compile(r'env\s+' + _valid_partial_ugetid + r'(?:\s+wrt\s+(?:' +
                              r'(?P<gco>g)?(?P<what>env)\s+' + _valid_partial_baseid + '|'
                              r'(?P<parent>parent)'
                              r'))?\s*$')
@@ -232,7 +232,7 @@ class UGetShell(cmd.Cmd):
             path = '/'.join(path)
         # Detect the location and tries to find a corresponding username
         username = ''
-        m_path = re.search('@(\w+)$', path)
+        m_path = re.search(r'@(\w+)$', path)
         if m_path:
             ftuser = self._locationconfig_get(m_path.group(1), 'ftuser')
             if ftuser:
@@ -370,7 +370,8 @@ class UGetShell(cmd.Cmd):
                     reslist.append((False, uri))
             else:
                 reslist.append((True, uri))
-            return [re.sub('^\w+@', '', self._storearch.locate(r[1])) if r[0] else '!!!MISSING!!!'
+            return [re.sub(r'^\w+@', '', self._storearch.locate(r[1]))
+                    if r[0] else '!!!MISSING!!!'
                     for r in reslist]
 
     # Cmd.Cmd related stuff

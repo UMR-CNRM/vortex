@@ -447,7 +447,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         """Reformulates the remote path to compatible vortex namespace."""
         rlist = []
         xpath = remote['path'].split('/')
-        if re.match('^@(\w+)$', xpath[2]):
+        if re.match(r'^@(\w+)$', xpath[2]):
             f_uuid = UgetId('uget:fake' + xpath[2])
             for h in range(16):
                 a_remote = copy.copy(remote)
@@ -583,7 +583,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        if re.match('^@(\w+)$', xpath[2]):
+        if re.match(r'^@(\w+)$', xpath[2]):
             f_uuid = UgetId('uget:fake' + xpath[2])
             remote['path'] = self.system.path.join(f_uuid.location, xpath[1])
         else:

@@ -424,7 +424,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFDLFCST+{glob:h:\d+}',
+        local       = r'DHFDLFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -440,7 +440,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFGLFCST+{glob:h:\d+}',
+        local       = r'DHFGLFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -456,7 +456,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFZOFCST+{glob:h:\d+}',
+        local       = r'DHFZOFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -472,7 +472,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'NODE.{glob:a:\d+}_{glob:b:\d+}',
+        local       = r'NODE.{glob:a:\d+}_{glob:b:\d+}',
         actualfmt   = 'ascii',
         seta        = '[glob:a]',
         setb        = '[glob:b]',

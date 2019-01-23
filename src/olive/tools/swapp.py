@@ -171,10 +171,10 @@ def olive_generic_hook_factory(body):
     """User-defined hook functions factory."""
     lines = body.split("\n")
     # Remove a possibly blank first line
-    if re.match('^\s*$', lines[0]):
+    if re.match(r'^\s*$', lines[0]):
         del lines[0]
     # If the first line is indented, that's wrong => dedent
-    imatch = re.match('^(\s+)', lines[0])
+    imatch = re.match(r'^(\s+)', lines[0])
     ilen = len(imatch.group(1)) if imatch else 0
     body = "\n".join([line[ilen:] for line in lines])
     bytecode = compile(body, '<string>', 'exec')

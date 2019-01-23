@@ -140,7 +140,7 @@ class DefinedArgumentParser(ArgumentParser):
         storeaction = self.actual_parser.add_argument(*opts, **kw)
         storeaction.callback = callback
         storeaction.optname = optname
-        storeaction.optclean = re.sub('_X\d+$', '', storeaction.dest)
+        storeaction.optclean = re.sub(r'_X\d+$', '', storeaction.dest)
         return storeaction
 
     def refine_argument(self):
