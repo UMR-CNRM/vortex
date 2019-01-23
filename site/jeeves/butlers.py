@@ -708,7 +708,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def multi_start(self):
         """Start a pool of co-workers processes."""
         self.ptask = 0
-        self.async = dict()
+        self.asynchronous = dict()
         self.procs = self.config['driver'].get('maxprocs', 4)
         maxtasks = self.config['driver'].get('maxtasks', 64)
         self.ppool = multiprocessing.Pool(self.procs, None, None, maxtasks)
@@ -721,10 +721,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Join all active coprocesses."""
         if self.procs:
             # at least, some multiproccessing setup had occured
-            self.info('Terminate', procs=self.procs, remaining=len(self.async))
+            self.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
             # look at the remaining tasks
-            for (pnum, syncinfo) in self.async.items():
+            for (pnum, syncinfo) in self.asynchronous.items():
                 self.warning('Task not complete', pnum=pnum)
                 try:
                     jpool, jfile, asyncr = syncinfo
@@ -737,7 +737,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     self.info('Return', pnum=pnum, rc=prc, result=pvalue)
                     self.migrate(pools.get(tag=jpool), jfile)
                 finally:
-                    del self.async[pnum]
+                    del self.asynchronous[pnum]
 
             # try to clean the current active pool of processes
             try:
@@ -810,8 +810,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
             except Exception as trouble:
                 self.critical('Callback', error=trouble, result=result)
             finally:
-                if pnum is not None and pnum in self.async:
-                    jpool, jfile, u_asyncr = self.async[pnum]
+                if pnum is not None and pnum in self.asynchronous:
+                    jpool, jfile, u_asyncr = self.asynchronous[pnum]
                     poolbase = pools.get(tag=jpool)
                     pooltarget = None
                     if prc:
@@ -822,11 +822,11 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     else:
                         pooltarget = 'retry'
                     self.migrate(poolbase, jfile, target=pooltarget)
-                    del self.async[pnum]
+                    del self.asynchronous[pnum]
                 else:
-                    self.error('Unknown async process', pnum=pnum)
+                    self.error('Unknown asynchronous process', pnum=pnum)
         else:
-            self.error('Undefined result from async processing')
+            self.error('Undefined result from asynchronous processing')
 
     def dispatch(self, func, ask, acfg, jpool, jfile):
         """Multiprocessing dispatching."""
@@ -838,7 +838,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:
             opts[extra] = acfg.get(extra, None)
         try:
-            self.async[pnum] = (
+            self.asynchronous[pnum] = (
                 jpool,
                 jfile,
                 self.ppool.apply_async(

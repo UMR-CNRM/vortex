@@ -796,11 +796,11 @@ class DayfileReportService(FileReportService):
                 optional = True,
                 default  = None,
             ),
-            async = dict(
+            asynchronous = dict(
                 optional = True,
                 type     = bool,
                 default  = False,
-                alias=['async', ],
+                alias    = ['async', ],
             ),
             jname=dict(
                 optional=True,
@@ -881,7 +881,7 @@ class DayfileReportService(FileReportService):
         if self.message is None:
             return True
 
-        if self.async:
+        if self.asynchronous:
             if self.filename is None:
                 self.filename = 'DAYFMSG.' + date.now().ymd
             target = self.direct_target()
