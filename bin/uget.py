@@ -505,7 +505,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('location', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with io.open(self._config_file, 'w') as fpconf:
+            with open(self._config_file, 'w') as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):
