@@ -21,6 +21,7 @@ import bronx.stdtypes.date
 import footprints as fp
 import gco
 import vortex.syntax.stdattrs
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.fancies.loggers import contextboundGlobalLevel
 from .utils import YamlOrderedDict
@@ -349,7 +350,7 @@ class SingleTest(object):
 # ------------------------------------------------------------------------------
 # Utility classes that handles footprint's descriptions and test results
 
-class TestResults(collections.Mapping):
+class TestResults(collections_abc.Mapping):
     """Utility class that holds test's results."""
 
     def __init__(self):
@@ -398,7 +399,7 @@ class TestResults(collections.Mapping):
 
 
 @functools.total_ordering
-class TestParameters(collections.Hashable):
+class TestParameters(collections_abc.Hashable):
     """Utility class that holds a footprint's description."""
 
     def __init__(self, desc):

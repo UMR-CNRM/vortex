@@ -8,16 +8,15 @@ for any :mod:`vortex` experiment.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import collections
 import re
 
 import six
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
-
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
 from vortex.syntax.stdattrs import Namespace
@@ -58,7 +57,7 @@ class NiceLayout(object):
             print(" + ...\n")
 
 
-class ConfigSet(collections.MutableMapping):
+class ConfigSet(collections_abc.MutableMapping):
     """Simple struct-like object that acts as a lower case dictionary.
 
     Two syntax are available to add a new entry in a :class:`ConfigSet` object:

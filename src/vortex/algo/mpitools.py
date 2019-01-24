@@ -73,12 +73,12 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import collections
 import shlex
 
 import six
 
 import footprints
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.tools import env
 
@@ -192,7 +192,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_binaries(self, value):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
-        if not (isinstance(value, collections.Iterable) and
+        if not (isinstance(value, collections_abc.Iterable) and
                 all([isinstance(b, MpiBinaryDescription) for b in value])):
             raise ValueError('This should be an Iterable of MpiBinaryDescription instances.')
         self._binaries = value

@@ -8,18 +8,18 @@ Changes could be creation, deletion, modification.
 """
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import collections
+from bronx.compat.moves import collections_abc
 
 
 class Tracker(object):
     """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items.
 
-    :param collections.Iterable before: The reference list of items
-    :param collections.Iterable after: The possibly modified list of items
-    :param collections.Iterable deleted: The list of deleted items
-    :param collections.Iterable created: The list of created items
-    :param collections.Iterable updated: The list of updated items
-    :param collections.Iterable unchanged: The list of unchanged items
+    :param collections.abc.Iterable before   : The reference list of items
+    :param collections.abc.Iterable after    : The possibly modified list of items
+    :param collections.abc.Iterable deleted  : The list of deleted items
+    :param collections.abc.Iterable created  : The list of created items
+    :param collections.abc.Iterable updated  : The list of updated items
+    :param collections.abc.Iterable unchanged: The list of unchanged items
 
     There are two way to initialise such an object:
 
@@ -71,8 +71,8 @@ class Tracker(object):
     def __init__(self, before=None, after=None, deleted=None, created=None, updated=None, unchanged=None):
         for args in (before, after, deleted, created, updated, unchanged):
             if args is not None:
-                if not (isinstance(args, collections.Iterable) and
-                        all([isinstance(item, collections.Hashable) for item in args])):
+                if not (isinstance(args, collections_abc.Iterable) and
+                        all([isinstance(item, collections_abc.Hashable) for item in args])):
                     raise ValueError("Whenever provided, arguments must consists of hashable items.")
         if before is not None and after is not None:
             before = frozenset(before)
@@ -175,8 +175,8 @@ class Tracker(object):
 class MappingTracker(Tracker):
     """A tracker that compute the differences between two mappings (e.g. dicitonaries).
 
-    :param collections.Mapping before: The reference mapping
-    :param collections.Mapping after: The (possibly) modified mapping
+    :param collections.abc.Mapping before: The reference mapping
+    :param collections.abc.Mapping after : The (possibly) modified mapping
 
     On the contrary to the :class:`Tracker` class, the :data:`deleted`, :data:`created`,
     :data:`updated` and :data:`unchanged` properties are read-only.
@@ -205,9 +205,9 @@ class MappingTracker(Tracker):
     """
 
     def __init__(self, before, after):
-        if not isinstance(before, collections.Mapping):
+        if not isinstance(before, collections_abc.Mapping):
             raise ValueError('The before argument must be some kind of mapping.')
-        if not isinstance(after, collections.Mapping):
+        if not isinstance(after, collections_abc.Mapping):
             raise ValueError('The after argument must be some kind of mapping.')
         super(MappingTracker, self).__init__(before, after)
         super(MappingTracker, self)._set_updated([k for k in self.unchanged if after[k] != before[k]])

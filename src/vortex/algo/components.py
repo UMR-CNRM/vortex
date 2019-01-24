@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import collections
 import locale
 import multiprocessing
 import shlex
@@ -16,6 +15,7 @@ import six
 
 import footprints
 import vortex
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from taylorism import Boss
@@ -1115,7 +1115,7 @@ class Parallel(xExecutableAlgoComponent):
         """Initialise the mpitool object and finds out the command line."""
 
         # Rh is a list binaries...
-        if not isinstance(rh, collections.Iterable):
+        if not isinstance(rh, collections_abc.Iterable):
             rh = [rh, ]
 
         # Find the MPI launcher
@@ -1184,7 +1184,7 @@ class Parallel(xExecutableAlgoComponent):
             # Check mpiopts shape
             u_mpiopts = opts.get('mpiopts', dict())
             for k, v in u_mpiopts.items():
-                if not isinstance(v, collections.Iterable):
+                if not isinstance(v, collections_abc.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
@@ -1201,7 +1201,7 @@ class Parallel(xExecutableAlgoComponent):
                 )
                 # Reshape mpiopts
                 bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
-                bins[i].master  = self.absexcutable(r.container.localpath())
+                bins[i].master = self.absexcutable(r.container.localpath())
 
         # Nothing to do: binary descriptions are provided by the user
         else:

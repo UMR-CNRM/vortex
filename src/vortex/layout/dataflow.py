@@ -19,6 +19,7 @@ import re
 import traceback
 import weakref
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -392,7 +393,7 @@ class Sequence(observer.Observer):
     def _fuzzy_match(stuff, allowed):
         """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
         if (isinstance(allowed, six.string_types) or
-                not isinstance(allowed, collections.Iterable)):
+                not isinstance(allowed, collections_abc.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
             if ((isinstance(pattern, six.moves.Pattern) and pattern.search(stuff)) or
@@ -864,7 +865,7 @@ class LocalTrackerEntry(object):
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
         for element in self._data[internal][action]:
-            if isinstance(element, collections.Mapping):
+            if isinstance(element, collections_abc.Mapping):
                 succeed = True
                 for key, val in skeleton.items():
                     succeed = succeed and ((key in element) and (element[key] == val))

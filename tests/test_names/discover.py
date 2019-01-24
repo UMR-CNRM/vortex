@@ -8,10 +8,10 @@ from __future__ import print_function, division, absolute_import, unicode_litera
 
 from six.moves import filter  # @UnresolvedImport
 
-import collections
 import io
 import os
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 
 from .utils import mkdir_p
@@ -25,7 +25,7 @@ RESULTSPATH = os.path.join(DATAPATH, 'namestest_results')
 REGISTERPATH = os.path.join(DATAPATH, 'namestest_register')
 
 
-class DiscoveredTests(collections.Mapping):
+class DiscoveredTests(collections_abc.Mapping):
     """Class for collection of available tests (represented as TestDriver objects)."""
 
     def __init__(self):
