@@ -226,6 +226,10 @@ class Footprint(object):
         self._firstguess_keys_internal = None
         self._resolve_keys_internal = None
 
+        # Instance docstring...
+        if setup.docstrings:
+            self.__doc__ = doc.format_docstring(self, setup.docstrings, abstractfpobj=True)
+
     @property
     def _fastkeys(self):
         return self._fp.get('fastkeys', set())
@@ -261,6 +265,11 @@ class Footprint(object):
 
     def __str__(self):
         return six.text_type(self.attr)
+
+    def __repr__(self):
+        """A condensed string representation of the present Footprint."""
+        return ('<{:s} object at {!s} | info="{:s}">'
+                .format(self.__class__.__name__, hex(id(self)), self.info))
 
     def allkeys(self):
         """Return a set of possible keys for the footprint's attributes."""

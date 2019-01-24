@@ -28,20 +28,18 @@ __all__ = [
     'a_namespace', 'a_hashalgo', 'a_compressionpipeline', 'a_block', 'a_number'
 ]
 
-#: Default values for atmospheric models.
+#: Possible values for the *model* attribute.
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
     'safran', 'ifs', 'aroifs',
 ])
 
-#: Default values for the most common binaries.
+#: Possible values for the most common binaries.
 binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                  'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd'])
+#: Possible values for the most common utility programs.
 utilities = set(['batodb'])
-
-#: Default attributes excluded from `repr` display
-notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 
 #: Known formats
 knownfmt = set([
@@ -52,11 +50,14 @@ knownfmt = set([
     'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
 
+#: Default attributes excluded from `repr` display
+notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
+
 
 class DelayedEnvValue(object):
     """
-    Store a environment variable and restitue value when needed,
-    eg. in a footprint evaluation.
+    Store an environment variable name and compute its value when needed,
+    *e.g.* in a footprint evaluation.
     """
 
     def __init__(self, varname, default=None, refresh=False):
@@ -88,6 +89,7 @@ class DelayedEnvValue(object):
 class DelayedInit(object):
     """
     Delays the proxied object creation until it's actually accessed.
+    *e.g.* in a footprint evaluation.
     """
 
     def __init__(self, proxied, initializer):
@@ -166,7 +168,7 @@ class FreeXPid(XPid):
         return self.split('@')[1]
 
 
-#: Default values for operational experiment names.
+#: The list of operational experiment names.
 opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
@@ -273,7 +275,7 @@ class Longitude(float):
 
 # predefined attributes
 
-#: Usual definition for the ``xpid`` or experiment name.
+#: Usual definition for the ``xpid`` (*e.g.* experiment name).
 a_xpid = dict(
     info     = "The experiment's identifier.",
     type     = XPid,
@@ -283,14 +285,14 @@ a_xpid = dict(
 xpid = footprints.Footprint(info = 'Abstract experiment id',
                             attr = dict(experiment = a_xpid))
 
-#: Usual definition for an Olive/Oper ``xpid`` or experiment name.
+#: Usual definition for an Olive/Oper ``xpid`` (*e.g.* experiment name).
 a_legacy_xpid = copy.copy(a_xpid)
 a_legacy_xpid['type'] = LegacyXPid
 
 legacy_xpid = footprints.Footprint(info = 'Abstract experiment id',
                                    attr = dict(experiment = a_legacy_xpid))
 
-#: Usual definition for a user-defined ``xpid`` or experiment name.
+#: Usual definition for a user-defined ``xpid`` (*e.g.* experiment name).
 a_free_xpid = copy.copy(a_xpid)
 a_free_xpid['type'] = FreeXPid
 
