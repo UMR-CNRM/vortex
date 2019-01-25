@@ -1542,7 +1542,7 @@ class OSExtended(System):
     def copy2ftspool(self, source, nest=False, **kwargs):
         """Make a copy of **source** to the FtSpool cache."""
         h = hashlib.new('md5')
-        h.update(source)
+        h.update(source.encode(encoding='utf-8'))
         outputname = 'vortex_{:s}_P{:06d}_{:s}'.format(date.now().strftime('%Y%m%d%H%M%S-%f'),
                                                        self.getpid(), h.hexdigest())
         if nest:

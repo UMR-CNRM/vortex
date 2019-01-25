@@ -59,7 +59,7 @@ class TestHashAdapter(unittest.TestCase):
         # String 2 Hash
         strdata = u'dgerqgjnmrsgr864bgvsrdvsrce'
         self.assertEqual(self.md5_h.string2hash(strdata),
-                         hashlib.md5(strdata.encode()).hexdigest())
+                         hashlib.md5(strdata.encode(encoding='utf-8')).hexdigest())
         # Automatic check
         self.assertTrue(self.md5_h.filecheck(self.bin_path, self.md5_path))
         with io.open(self.md5_path, 'r') as m_fh:
