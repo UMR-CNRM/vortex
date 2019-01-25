@@ -526,7 +526,7 @@ class HideService(Service):
                 'HIDDEN',
                 date.now().strftime('%Y%m%d%H%M%S.%f'),
                 'P{0:06d}'.format(self.sh.getpid()),
-                hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
+                hashlib.md5(self.sh.path.abspath(filename).encode(encoding='utf-8')).hexdigest()
             ))
         )
         self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)

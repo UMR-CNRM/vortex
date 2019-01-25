@@ -263,7 +263,8 @@ class OpArchiveStore(ArchiveStore):
         elif extract:
             extract = extract[0]
             targetpath = basename
-        targetstamp = targetpath + '.stamp' + hashlib.md5(l_remote['path']).hexdigest()
+        targetstamp = (targetpath + '.stamp' +
+                       hashlib.md5(l_remote['path'].encode(encoding='utf-8')).hexdigest())
         rc = False
         if l_remote['path'] is not None:
             if extract and self.system.path.exists(targetpath):
