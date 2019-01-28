@@ -15,6 +15,7 @@ import re
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
 
 from vortex import toolbox, VortexForceComplete
@@ -133,6 +134,7 @@ class ConfigSet(collections.MutableMapping):
     def __contains__(self, key):
         return self._remap_key(key) in self._internal
 
+    @secure_getattr
     def __getattr__(self, key):
         if key in self:
             return self[key]

@@ -39,6 +39,7 @@ import footprints
 from footprints import FootprintBase
 from bronx.fancies import loggers
 from bronx.system import cpus, memory
+from bronx.syntax.decorators import secure_getattr
 
 import os
 import multiprocessing
@@ -382,6 +383,7 @@ class _AbstractOldSchedulerProxy(object):
         self.__target_scheduler = self._TARGET_CLASS(*kargs, **kwargs)
         super(_AbstractOldSchedulerProxy, self).__init__()
 
+    @secure_getattr
     def __getattr__(self, name):
         return getattr(self.__target_scheduler, name)
 

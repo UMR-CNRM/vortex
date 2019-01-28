@@ -32,6 +32,7 @@ from bronx.fancies import loggers, dump
 from bronx.fancies.colors import termcolors
 from bronx.fancies.wrapcmd import WrapCmdLineArgs
 import bronx.fancies.multicfg  # @UnusedImport
+from bronx.syntax.decorators import secure_getattr
 
 logger = loggers.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class StdColorFilter(object):
             fgcolor = self.fgcolor
         self.stdpipe.write(termcolors.colored(text, fgcolor=fgcolor, setfont=self.setfont))
 
+    @secure_getattr
     def __getattr__(self, attr):
         return getattr(self.stdpipe, attr)
 

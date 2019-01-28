@@ -59,6 +59,7 @@ from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
@@ -447,6 +448,7 @@ class System(footprints.FootprintBase):
             pass
         return self._xtrack.get(key, None)
 
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes.
 
