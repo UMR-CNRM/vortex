@@ -14,6 +14,7 @@ import re
 import six
 
 from bronx.stdtypes.date import Date, Time, Month
+from bronx.syntax.decorators import secure_getattr
 from bronx.system import hash as hashutils
 import footprints
 
@@ -96,6 +97,7 @@ class DelayedInit(object):
         self.__proxied = proxied
         self.__initializer = initializer
 
+    @secure_getattr
     def __getattr__(self, name):
         if self.__proxied is None:
             self.__proxied = self.__initializer()

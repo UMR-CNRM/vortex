@@ -27,6 +27,7 @@ from decimal import Decimal
 import io
 import re
 
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 
 # Numpy is not mandatory
@@ -580,10 +581,6 @@ class NamelistBlock(collections.MutableMapping):
         st['_literal'] = None  # It's recreated on the fly when needed...
         return st
 
-    def __setstate__(self, state):
-        """For deepcopy and pickle."""
-        self.__dict__.update(state)
-
     def set_name(self, name):
         """Change the namelist block name."""
         self.__dict__['_name'] = name.upper()
@@ -656,6 +653,7 @@ class NamelistBlock(collections.MutableMapping):
         """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)
 
+    @secure_getattr
     def __getattr__(self, varname):
         """Get ``varname`` variable's value (this is not case sensitive)."""
         return self.getvar(varname)

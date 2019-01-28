@@ -27,7 +27,7 @@ import time
 from datetime import datetime
 
 from bronx.fancies import loggers
-from bronx.syntax.decorators import nicedeco
+from bronx.syntax.decorators import nicedeco, secure_getattr
 from bronx.net.netrc import netrc
 
 #: No automatic export
@@ -161,6 +161,7 @@ class ExtendedFtplib(object):
             self.length,
         )
 
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_ftplib``."""
         actualattr = getattr(self._ftplib, key)
@@ -584,6 +585,7 @@ class StdFtp(object):
         else:
             return actualattr
 
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_extended_ftp``."""
         if self._extended_ftp_lookup_check(key):
@@ -744,6 +746,7 @@ class AutoRetriesFtp(StdFtp):
         retries_wrapper.__doc__ = func.__doc__
         return retries_wrapper
 
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in ``_extended_ftp``."""
         if self._extended_ftp_lookup_check(key):
