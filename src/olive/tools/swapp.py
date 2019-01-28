@@ -165,7 +165,7 @@ def olive_jobout_ectranssend(sh, env, output, mstep, localout):
         fhdir.write("void_password\n".encode())
         for stepfile in stepfiles:
             with io.open(stepfile, 'rb') as fhstep:
-                fhdir.write(fhstep.read() + "\n")
+                fhdir.write(fhstep.read() + b"\n")
         fhdir.flush()
 
         remote = sh.ectrans_remote_init(storage=env.VORTEX_UPDSERVER_HOST)
