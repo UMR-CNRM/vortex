@@ -27,7 +27,7 @@ class Safran(SurfaceModel):
                 ),
                 gvar = dict(
                     optional = True,
-                    default = '[kind]',
+                    default = 'master_[kind]',
                 ),
             )
         )
