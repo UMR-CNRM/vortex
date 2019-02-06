@@ -124,12 +124,19 @@ class CouplingOffsetConfTool(ConfTool):
                 type = FPDict,
             ),
             refill_cutoff = dict(
+                values = ['assim', 'production', 'all'],
                 info = 'By default, what is the cutoff name of the refill task.',
                 optional = True,
                 default = 'assim',
             ),
             compute_on_refill = dict(
                 info = 'Is it necessary to compute coupling files for the refilling cutoff ?',
+                optional = True,
+                default = True,
+                type = bool,
+            ),
+            isolated_refill = dict(
+                info = 'Are the refill tasks exclusive with prepare tasks ?',
                 optional = True,
                 default = True,
                 type = bool,
@@ -201,7 +208,8 @@ class CouplingOffsetConfTool(ConfTool):
         # Pre-compute the default refill_map
         self._refill_terms_map = dict()
         self._refill_terms_map[self.refill_cutoff] = self._compute_refill_terms(self.refill_cutoff,
-                                                                                self.compute_on_refill)
+                                                                                self.compute_on_refill,
+                                                                                self.isolated_refill)
         if self.verbose:
             print('**** Refill tasks activation map (default refill_cutoff is: {:s}):'.format(self.refill_cutoff))
             print('{:s}  :  {:s}'.format(self._rtask_fmtkey(('VAPP', 'VCONF', 'XPID', 'MODEL', 'CUTOFF')),
@@ -308,10 +316,14 @@ class CouplingOffsetConfTool(ConfTool):
         terms_map = {k: sorted(terms) for k, terms in terms_map.items()}
         return terms_map
 
-    def _compute_refill_terms(self, refill_cutoff, compute_on_refill):
+    def _compute_refill_terms(self, refill_cutoff, compute_on_refill, isolated_refill):
         finaldates = collections.defaultdict(functools.partial(collections.defaultdict,
                                                                functools.partial(collections.defaultdict, set)))
-        possiblehours = self.target_hhs[refill_cutoff]
+        if refill_cutoff == 'all':
+            possiblehours = sorted(functools.reduce(lambda x, y: x | y,
+                                                    [set(l) for l in self.target_hhs.values()]))
+        else:
+            possiblehours = self.target_hhs[refill_cutoff]
 
         # Look 24hr ahead
         for c, cv in self._cpl_data.items():
@@ -320,7 +332,9 @@ class CouplingOffsetConfTool(ConfTool):
                 offset = self._hh_offset(h, infos.base, infos.dayoff)
                 for possibleh in possiblehours:
                     roffset = self._hh_offset(h, possibleh, 0)
-                    if (roffset > 0 or (compute_on_refill and roffset == 0 and refill_cutoff == c)) and roffset <= offset:
+                    if ((roffset > 0 or
+                            (compute_on_refill and roffset == 0 and (refill_cutoff == 'all' or refill_cutoff == c))) and
+                            (roffset < offset or (isolated_refill and roffset == offset))):
                         finaldates[key][possibleh][offset - roffset].update([s + offset for s in infos.steps])
 
         for key, vdict in finaldates.items():
@@ -429,7 +443,9 @@ class CouplingOffsetConfTool(ConfTool):
         """The terms that should be computed for a given refill task."""
         refill_cutoff = self.refill_cutoff if refill_cutoff is None else refill_cutoff
         if refill_cutoff not in self._refill_terms_map:
-            self._refill_terms_map[refill_cutoff] = self._compute_refill_terms(refill_cutoff)
+            self._refill_terms_map[refill_cutoff] = self._compute_refill_terms(refill_cutoff,
+                                                                               self.compute_on_refill,
+                                                                               self.isolated_refill)
         if model is None:
             model = vapp
         mydate, myhh = self._process_date(date)
