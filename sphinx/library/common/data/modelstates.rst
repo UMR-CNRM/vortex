@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: HistoricSubset
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BiasDFI
    :show-inheritance:
    :members:
