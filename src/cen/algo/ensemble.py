@@ -25,7 +25,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_tomerge, forcinput_applymask
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -103,7 +103,7 @@ class GuessWorker(_S2MWorker):
                 values = ['guess', 'intercep']
             ),
             interpreter = dict(
-                values = [ 'python' ]
+                values = [ 'python', 'current' ]
             ),
             reforecast = dict(
                 type     = bool,
@@ -242,12 +242,15 @@ class _SafranWorker(_S2MWorker):
 
     def check_mandatory_resources(self, rdict, filenames):
         outcome = True
+        missing_files = list()
         for filename in filenames:
             if not self.system.path.exists(filename):
                 logger.error('The %s mandatory flow resources are missing.', filename)
-                outcome = False
-        rdict['rc'] = rdict['rc'] and outcome
-        return outcome
+                missing_files.append(filename)
+        if len(missing_files) > 0:
+            rdict['rc'] = InputCheckerError("The following mandatory resources are missing : " + " ".join(missing_files))
+            outcome = False
+        return rdict, outcome
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -326,11 +329,12 @@ class _SafranWorker(_S2MWorker):
                     logger.warning('The flow resources %s is missing.', p)
                     if fatal:
                         logger.warning('The mandatory flow resources %s is missing.', p)
-                        raise InputCheckerError("Some of the mandatory resources are missing.")
+                        # raise InputCheckerError("Some of the mandatory resources are missing.")
 
         if len(actual_dates) < 5:
             print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             print(actual_dates)
+            # In this case, actual_dates is filled with the mandatory dates
             actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
             # raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
         elif len(actual_dates) > 5 and len(actual_dates) < 9:
@@ -408,21 +412,24 @@ class SafraneWorker(_SafranWorker):
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
         nech = len(dates) if len(dates) == 9 else 5
         self.get_guess(dates)
-        for d in dates:
-            logger.info('Running date : {0:s}'.format(d.ymdh))
-            self.sapdat(d, nech)
-            # Creation of the 'sapfich' file containing the name of the output file
-            with io.open('sapfich', 'w') as f:
-                f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
-            list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
-            try:
-                self.local_spawn(list_name)
-                # Reanalysis : if the execution was allright we don't need the log file
-#                if self.execution in ['reanalysis', 'reforecast']:
-#                    self.system.remove(list_name)
-            except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-                return rdict  # Note than in the other case return rdict is at the end
+        mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
+        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh) for d in mandatory_dates])
+        if go:
+            for d in dates:
+                logger.info('Running date : {0:s}'.format(d.ymdh))
+                self.sapdat(d, nech)
+                # Creation of the 'sapfich' file containing the name of the output file
+                with io.open('sapfich', 'w') as f:
+                    f.write('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
+                list_name = self.system.path.join(thisdir, self.kind + d.ymdh + '.out')
+                try:
+                    self.local_spawn(list_name)
+                    # Reanalysis : if the execution was allright we don't need the log file
+    #                if self.execution in ['reanalysis', 'reforecast']:
+    #                    self.system.remove(list_name)
+                except ExecutionError:
+                    rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+
         return rdict
 
 
@@ -520,7 +527,8 @@ class SyvaprWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        if self.check_mandatory_resources(rdict, ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
+        rdict, go = self.check_mandatory_resources(rdict, ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
+        if go:
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5')
@@ -534,8 +542,8 @@ class SyvaprWorker(_SafranWorker):
                     self.mv_if_exists('SAF4D_{0:s}'.format(suffix), 'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
                 rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-            finally:
-                return rdict  # Note than in the other case return rdict is at the end
+
+        return rdict  # Note than in the other case return rdict is at the end
 
 
 class SyvafiWorker(_SafranWorker):
@@ -564,8 +572,8 @@ class SyvafiWorker(_SafranWorker):
 #                self.system.remove(list_name)
         except ExecutionError:
             rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-        finally:
-            return rdict  # Note than in the other case return rdict is at the end
+
+        return rdict
 
 
 class SyrmrrWorker(_SafranWorker):
@@ -580,7 +588,8 @@ class SyrmrrWorker(_SafranWorker):
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
 
-        if self.check_mandatory_resources(rdict, ['SAPLUI5' + dates[-1].ymdh]):
+        rdict, go = self.check_mandatory_resources(rdict, ['SAPLUI5' + dates[-1].ymdh])
+        if go:
             self.link_in('SAPLUI5' + dates[-1].ymdh, 'fort.12')
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
             try:
@@ -592,8 +601,8 @@ class SyrmrrWorker(_SafranWorker):
 #                    self.system.remove(list_name)
             except ExecutionError:
                 rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-            finally:
-                return rdict  # Note than in the other case return rdict is at the end
+
+        return rdict
 
 
 class SytistWorker(_SafranWorker):
@@ -627,7 +636,8 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
         for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
             self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
-        if self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates]):
+        rdict, go = self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
+        if go:
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
             list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
@@ -635,8 +645,8 @@ class SytistWorker(_SafranWorker):
                 self.local_spawn(list_name)
             except ExecutionError:
                 rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-            finally:
-                return rdict  # Note than in the other case return rdict is at the end
+
+        return rdict
 
     def sapdat(self, thisdate, nech=5):
         # Creation of the 'sapdat' file containing the exact date of the file to be processed.
@@ -1007,7 +1017,7 @@ class Guess(ParaExpresso):
                 values = [ 'guess'],
             ),
             interpreter = dict(
-                values = [ 'python']
+                values = [ 'python', 'current']
             ),
             reforecast = dict(
                 type     = bool,
