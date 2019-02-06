@@ -124,6 +124,7 @@ class Coupling3DVConfToolTest(unittest.TestCase):
                          '4dvarfr')
 
     def test_weird_coupling_refill(self):
+        # Implicitly: refill_cutoff=assim (default)
         self.assertEqual(self.wtool.refill_terms('2016123120', 'assim', 'arpege', '4dvarfr'),
                          {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(6, 0), Time(7, 0)]}})
         self.assertEqual(self.wtool.refill_terms('2016123120', 'production', 'arpege', '4dvarfr'),
@@ -136,10 +137,53 @@ class Coupling3DVConfToolTest(unittest.TestCase):
                          {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(6, 0), Time(7, 0)]}})
         self.assertEqual(self.wtool.refill_terms('2016123122', 'production', 'arpege', '4dvarfr'),
                          {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(5, 0)]}})
+        with self.assertRaises(CouplingOffsetConfRefillError):
+            self.wtool.refill_terms('2017010100', 'production', 'arpege', 'courtfr')
         self.assertEqual(self.wtool.refill_terms('2017010100', 'assim', 'arpege', '4dvarfr'),
                          {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(7, 0)],
                                    str(Date(2017, 1, 1, 0, 0)): [Time(6, 0), Time(7, 0)]}})
         self.assertEqual(self.wtool.refill_terms('2017010100', 'production', 'arpege', '4dvarfr'),
+                         {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('2-15-1')]}})
+
+    def test_weird_coupling_refill_a(self):
+        self.assertEqual(self.wtool.refill_terms('2016123120', 'assim', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(6, 0), Time(7, 0)]}})
+        self.assertEqual(self.wtool.refill_terms('2016123120', 'production', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(h) for h in rangex('3-15-1')]}})
+        self.assertEqual(self.wtool.refill_terms('2016123123', 'assim', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(6, 0), Time(7, 0)]}})
+        with self.assertRaises(CouplingOffsetConfRefillError):
+            self.wtool.refill_terms('2016123123', 'production', 'arpege', '4dvarfr',
+                                    refill_cutoff='production')
+        self.assertEqual(self.wtool.refill_terms('2016123122', 'assim', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(6, 0), Time(7, 0)]}})
+        self.assertEqual(self.wtool.refill_terms('2016123122', 'production', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(5, 0)]}})
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'production', 'arpege', 'courtfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('1-42-1')]}})
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'assim', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2016, 12, 31, 18, 0)): [Time(7, 0)],
+                                   str(Date(2017, 1, 1, 0, 0)): [Time(6, 0), Time(7, 0)]}})
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'production', 'arpege', '4dvarfr',
+                                                 refill_cutoff='all'),
+                         {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('2-15-1')]}})
+
+    def test_weird_coupling_refill_p(self):
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'production', 'arpege', 'courtfr',
+                                                 refill_cutoff='production'),
+                         {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('1-42-1')]}})
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'assim', 'arpege', '4dvarfr',
+                                                 refill_cutoff='production'),
+                         {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(6, 0), Time(7, 0)]}})
+        self.assertEqual(self.wtool.refill_terms('2017010100', 'production', 'arpege', '4dvarfr',
+                                                 refill_cutoff='production'),
                          {'date': {str(Date(2017, 1, 1, 0, 0)): [Time(h) for h in rangex('2-15-1')]}})
 
 
@@ -547,8 +591,8 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                cplsteps=self._STEPS, cpldayoff=self._DAYOFF,
-                                               cplmodel=self._MODEL,
-                                               verbose=False)
+                                               cplmodel=self._MODEL, isolated_refill=False,
+                                               refill_cutoff='all', verbose=False)
 
     def test_weird_coupling_prepare(self):
         self.assertListEqual(self.wtool.prepare_terms('2017010112', 'production', 'arpege', '4dvarfr', 'oops'),
@@ -587,18 +631,18 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
         self.assertEqual(self.wtool.refill_terms('2016123118', 'production', 'arpege', '4dvarfr', 'arpege'),
                          {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('18-48-1')],
                                    str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
+                                   str(Date(2016, 12, 30, 12, 0)): [Time(h) for h in rangex('30-42-1')],
                                    }})
         self.assertEqual(self.wtool.refill_terms('2016123118', 'production', 'arpege', '4dvarfr', 'oops'),
                          {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('12-30-1')],
                                    str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('18-24-1')],
                                    }})
         self.assertEqual(self.wtool.refill_terms('2016123112', 'production', 'arpege', '4dvarfr', 'arpege'),
-                         {'date': {str(Date(2016, 12, 31, 12, 0)): [Time(h) for h in rangex('18-30-1')],
-                                   str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
-                                   str(Date(2016, 12, 30, 12, 0)): [Time(h) for h in rangex('30-42-1')],
+                         {'date': {str(Date(2016, 12, 31, 0, 0)): [Time(h) for h in rangex('24-126-1')],
+                                   str(Date(2016, 12, 30, 12, 0)): [Time(h) for h in rangex('24-48-1')],
                                    }})
         self.assertListEqual(sorted(self.wtool.refill_dates('2016123112', 'production', 'arpege', '4dvarfr')),
-                             sorted(['2016-12-30T12:00:00Z', '2016-12-31T12:00:00Z', '2016-12-31T00:00:00Z']))
+                             sorted(['2016-12-30T12:00:00Z', '2016-12-31T00:00:00Z']))
         self.assertListEqual(sorted(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr')),
                              sorted([Month(12, year=2016), Month(1, year=2017)]))
 
