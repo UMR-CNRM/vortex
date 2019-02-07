@@ -232,7 +232,7 @@ def rst_finder(mainpack):
             else:
                 cleanlist.append(a_file)
 
-    rstdepth = max([rst_depth(f) for f in rstfiles])
+    rstdepth = max([0] + [rst_depth(f) for f in rstfiles])
     dirslist = set([os.path.dirname(f) for f in rstfiles])
     rstdirs = [RstIndexEntry(d, rstfiles, dirslist, mainpack, rstdepth) for d in dirslist]
     rstdirs.sort(key=lambda x: x.tocdepth)
