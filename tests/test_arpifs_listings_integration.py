@@ -60,11 +60,10 @@ def capture(command, *args, **kwargs):
 
 class TestArpIfsIntegration(unittest.TestCase):
 
-    def assertRegex(self, *kargs, **kwargs):
-        if six.PY3:
-            return super(TestArpIfsIntegration, self).assertRegex(*kargs, **kwargs)
-        else:
-            return super(TestArpIfsIntegration, self).assertRaisesRegexp(*kargs, **kwargs)
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
 
     def test_addons_diff(self):
         addon = listings.ArpIfsListingsTool(kind='arpifs_listings',

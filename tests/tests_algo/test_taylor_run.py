@@ -117,6 +117,11 @@ class MyTaylorRunAlgoWorker(TaylorVortexWorker):
 
 class TestTaylorRunAlgo(unittest.TestCase):
 
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
+
     def setUp(self):
         # Generate a temporary directory
         self.sh = vortex.sessions.current().system()
@@ -153,8 +158,8 @@ class TestTaylorRunAlgo(unittest.TestCase):
         self.assertTrue(found)
         with io.open(found, 'r') as fhin:
             alllines = fhin.readlines()
-        self.assertRegexpMatches(alllines[0], "^Test print {:06d}$".format(loopcount))
-        self.assertRegexpMatches(alllines[1], "^.*Test log   {:06d}".format(loopcount))
+        self.assertRegex(alllines[0], "^Test print {:06d}$".format(loopcount))
+        self.assertRegex(alllines[1], "^.*Test log   {:06d}".format(loopcount))
         self.assertEqual(len(alllines), 2)  # No DEBUG stuff
 
     def test_basic_taylorun(self):

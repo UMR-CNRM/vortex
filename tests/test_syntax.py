@@ -25,6 +25,11 @@ def _initialise_scrontch():
 
 class TestDelayedInit(unittest.TestCase):
 
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
+
     def test_delayed_init_basics(self):
         scrontch = None
         di = DelayedInit(scrontch, _initialise_scrontch)
