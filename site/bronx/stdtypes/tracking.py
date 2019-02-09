@@ -33,15 +33,15 @@ class Tracker(object):
         >>> a=[1,2,3,4,5,6]
         >>> b=[1,2,4,6,7]
         >>> tracker=Tracker(before=a, after=b)
-        >>> tracker.dump()
+        >>> tracker.dump()   # doctest: +NORMALIZE_WHITESPACE
         Section deleted: 3, 5
         Section created: 7
-        Section updated: 
+        Section updated:
         Section unchanged: 1, 2, 4, 6
-        >>> tracker.differences()
+        >>> tracker.differences()   # doctest: +NORMALIZE_WHITESPACE
         Section deleted: 3, 5
         Section created: 7
-        Section updated: 
+        Section updated:
         >>> list(tracker)
         [1, 2, 3, 4, 5, 6, 7]
         >>> tracker.updated = [2, 4]
@@ -223,4 +223,5 @@ class MappingTracker(Tracker):
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()
