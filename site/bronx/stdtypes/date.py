@@ -658,28 +658,28 @@ class Period(datetime.timedelta):
         These four objects are identical::
 
             >>> Period(days=2, hours=1, seconds=30)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period('P2DT1H30S')
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period(176430)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
             >>> Period(2, 3630)
-            Period(2, 3630)
+            Period(days=2, seconds=3630)
 
         Addition and subtraction are implemented (if the other operand is not a
         :class:`Period` object, a conversion is attempted)::
 
             >>> Period('PT6H') + Period('PT6H')
-            Period(0, 43200)
+            Period(seconds=43200)
             >>> Period('PT6H') + 'PT6H'
-            Period(0, 43200)
+            Period(seconds=43200)
             >>> Period('PT6H') + 43200
-            Period(0, 64800)
+            Period(seconds=64800)
 
         Multiplication (by an integer) is implemented::
 
             >>> Period('PT6H') * 2
-            Period(0, 43200)
+            Period(seconds=43200)
 
         Comparison operators are all available.
         """
@@ -785,6 +785,22 @@ class Period(datetime.timedelta):
 
     def __str__(self):
         return self.isoformat()
+
+    def __repr__(self):
+        """Python changes the repr for timedelta between 3.5 and 3.7
+
+        This forces the 3.7 way for all versions.
+        """
+        args = []
+        if self.days:
+            args.append("days=%d" % self.days)
+        if self.seconds:
+            args.append("seconds=%d" % self.seconds)
+        if self.microseconds:
+            args.append("microseconds=%d" % self.microseconds)
+        if not args:
+            args.append('0')
+        return "%s(%s)" % (self.__class__.__name__, ', '.join(args))
 
 
 class _GetattrCalculatorMixin(object):
@@ -967,9 +983,9 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             >>> Date('2017010100') - 'PT12H'
             Date(2016, 12, 31, 12, 0)
             >>> Date('2017010100') - Date('2017010212')
-            Period(-2, 43200)
+            Period(days=-2, seconds=43200)
             >>> Date('2017010100') - '2017010212'
-            Period(-2, 43200)
+            Period(days=-2, seconds=43200)
 
         Comparison operators are all available.
 
