@@ -164,7 +164,8 @@ class ManualInputMonitor(_StateFullMembersList):
 
     _mcontainer = OrderedDict
 
-    def __init__(self, context, targets, caching_freq=20, crawling_threshold=100):
+    def __init__(self, context, targets, caching_freq=20, crawling_threshold=100,
+                 mute=False):
         """
         If the list of inputs is too long (see the *crawling_threshold*
         option), not all of the inputs will be checked at once: The first
@@ -193,6 +194,7 @@ class ManualInputMonitor(_StateFullMembersList):
         self._seq = context.sequence
         self._caching_freq = caching_freq
         self._crawling_threshold = crawling_threshold
+        self._mute = mute
         self._inactive_since = time.time()
         self._last_healthcheck = 0
 
@@ -423,8 +425,9 @@ class ManualInputMonitor(_StateFullMembersList):
                 break
             if prp is None:
                 prp = ParallelResultParser(self._ctx)
-            self._ctx.system.highlight("The InputMonitor got news for: {!s}"
-                                       .format(r['name']))
+            if not self._mute:
+                self._ctx.system.highlight("The InputMonitor got news for: {!s}"
+                                           .format(r['name']))
             prp(r)
             self._key_update(r)
 
@@ -508,7 +511,7 @@ class BasicInputMonitor(ManualInputMonitor):
     _mcontainer = OrderedDict
 
     def __init__(self, context, role=None, kind=None,
-                 caching_freq=20, crawling_threshold=100):
+                 caching_freq=20, crawling_threshold=100, mute=False):
         """
         If the list of inputs is too long (see the *crawling_threshold*
         option), not all of the inputs will be checked at once: The first
@@ -541,7 +544,8 @@ class BasicInputMonitor(ManualInputMonitor):
                                      for x in context.sequence.filtered_inputs(role=self._role,
                                                                                kind=self._kind)],
                                     caching_freq=caching_freq,
-                                    crawling_threshold=crawling_threshold)
+                                    crawling_threshold=crawling_threshold,
+                                    mute=mute)
 
 
 class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
