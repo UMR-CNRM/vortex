@@ -86,7 +86,7 @@ class ToolboxProvider(object):
     """Abstract class for a Toolbox provider."""
 
     _ALLOWED_VERSIONS = [re.compile('master$'),
-                         re.compile('olive-(?:dev|ecmwf)$'),
+                         re.compile('olive-(?:dev|ecmwf|lf)$'),
                          re.compile('cen[_-]dev$'),
                          re.compile('\d+\.\d+\.\d+$')]
 
