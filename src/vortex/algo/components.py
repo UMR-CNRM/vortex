@@ -428,7 +428,7 @@ class AlgoComponent(footprints.FootprintBase):
         try:
             # allow 5 sec to put data into queue (it should be more than enough)
             ctxrec = queue_ctx.get(block=True, timeout=time_sleep + 5)
-        except multiprocessing.queues.Empty:
+        except six.moves.queue.Empty:
             logger.warning("Impossible to get the Context recorder")
             ctxrec = None
         finally:
