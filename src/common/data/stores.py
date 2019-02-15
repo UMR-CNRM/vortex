@@ -13,8 +13,6 @@ import footprints
 from vortex.data.stores import Store
 from vortex.syntax.stdattrs import compressionpipeline
 
-from common.tools.agt import agt_actual_command
-
 #: No automatic export
 __all__ = []
 
@@ -78,29 +76,38 @@ class BdpeStore(Store):
         _, targetmix, str_date, more = remote['path'].split('/')
         p_target, f_target, s_archive = targetmix.split('_')
         productid, str_term = more[5:].split('+')
-        args = '{id} {date} {term} {local}'.format(
-            id    = productid,
-            date  = date.Date(str_date).ymdhms,  # yyyymmddhhmmss
-            term  = date.Time(str_term).fmtraw,  # HHHHmm
-            local = local,
-        )
-        extraenv=dict(
+        args = [
+            productid,                   # id
+            date.Date(str_date).ymdhms,  # date: yyyymmddhhmmss
+            date.Time(str_term).fmtraw,  # term: HHHHmm
+            local,                       # local
+        ]
+        extraenv = dict(
             BDPE_CIBLE_PREFEREE=p_target,
             BDPE_CIBLE_INTERDITE=f_target
         )
         if s_archive == 'True':
             extraenv['BDPE_LECTURE_ARCHIVE_AUTORISEE'] = 'oui'
-        actual_command = agt_actual_command(self.system, 'agt_lirepe', args, extraenv=extraenv)
 
-        logger.debug('lirepe_cmd: %s', actual_command)
+        wsinterpreter = self.system.default_target.get('bdpe:wsclient_interpreter', None)
+        wscommand = self.system.default_target.get('bdpe:wsclient_path', None)
+        if wscommand is None:
+            raise RuntimeError('bdpe:wsclient_path has to be set in the target config')
 
-        rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
+        args.insert(0, wscommand)
+        if wsinterpreter is not None:
+            args.insert(0, wsinterpreter)
+
+        logger.debug('lirepe_cmd: %s', " ".join(args))
+
+        with self.system.env.delta_context(** extraenv):
+            rc = self.system.spawn(args, output=False, fatal=False)
         rc = rc and self.system.path.exists(local)
 
         diagfile = local + '.diag'
         if not rc:
             logger.warning('Something went wrong with the following command: %s',
-                           actual_command)
+                           " ".join(args))
             if self.system.path.exists(diagfile):
                 logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)
