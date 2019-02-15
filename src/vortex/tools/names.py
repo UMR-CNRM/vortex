@@ -238,7 +238,10 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     def _pack_std_item_truncation(self, value):
         """Packing of the geometry's truncation value."""
-        return 'tl{!s}'.format(value)
+        if isinstance(value, tuple):
+            return 't{1:s}{2:s}{0!s}'.format(* value)
+        else:
+            return 'tl{!s}'.format(value)
 
     def _pack_std_item_filtering(self, value):
         """Packing of the geometry's filtering value."""
