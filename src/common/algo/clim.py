@@ -13,6 +13,7 @@ import six
 
 from bronx.fancies import loggers
 import footprints
+from vortex.util.structs import FootprintCopier
 
 from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
@@ -26,8 +27,12 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class BuildPGD(BlindRun):
-    """Preparation of physiographic fields for Surfex."""
+class _BuildPGDCommons(FootprintCopier):
+    """Class variables and methods usefull for BuildPGD.
+
+    They will be copied to the "real" BuildPGD classes using the FootprintCopier
+    metaclass.
+    """
 
     _footprint = dict(
         info = "Physiographic fields for Surfex.",
@@ -38,12 +43,25 @@ class BuildPGD(BlindRun):
         )
     )
 
+    @staticmethod
     def prepare(self, rh, opts):
         """DrHook stuff."""
-        super(BuildPGD, self).prepare(rh, opts)
+        super(self.__class__, self).prepare(rh, opts)
         # Basic exports
         for optpack in ['drhook', 'drhook_not_mpi']:
             self.export(optpack)
+
+
+class BuildPGD(BlindRun):
+    """Preparation of physiographic fields for Surfex."""
+
+    __metaclass__ = _BuildPGDCommons
+
+
+class BuildPGD_MPI(Parallel):
+    """Preparation of physiographic fields for Surfex, launch with MPI."""
+
+    __metaclass__ = _BuildPGDCommons
 
 
 class C923(IFSParallel):
