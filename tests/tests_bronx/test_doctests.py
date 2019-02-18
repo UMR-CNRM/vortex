@@ -10,7 +10,7 @@ from bronx.datagrip import namelist
 from bronx.fancies import display, loggers
 from bronx.patterns import getbytag, observer
 from bronx.stdtypes import date, history, tracking
-from bronx.syntax import iterators
+from bronx.syntax import iterators, minieval
 
 
 class utDocTests(unittest.TestCase):
@@ -30,6 +30,7 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(history)
         self.assert_doctests(tracking)
         self.assert_doctests(iterators)
+        self.assert_doctests(minieval)
 
 
 if __name__ == '__main__':
