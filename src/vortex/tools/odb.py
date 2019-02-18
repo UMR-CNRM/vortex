@@ -143,6 +143,30 @@ class OdbComponent(object):
             logger.critical('Missing ODB input data for %s', self.fullname())
             raise ValueError('Missing ODB input data')
         return allodb
+    
+    def handle_odbraw(self, fatal=True):
+        """Look for extras ODB raw."""
+        sh = self.system
+        thiscwd = sh.getcwd()
+        odbraw = [
+            x.rh for x in self.context.sequence.effective_inputs(kind = 'odbraw')
+            if x.rh.container.actualfmt == 'odb'
+        ]
+        if not odbraw:
+            if fatal:
+                logger.error('No ODB bias table found')
+        else:
+            rawdbnames = [ x.resource.layout.upper() for x in odbraw ]
+            for rawname in rawdbnames:
+                self.env[ 'ODB_SRCPATH_' + rawname] = sh.path.join(thiscwd, rawname)
+                self.env[ 'ODB_DATAPATH_' + rawname] = sh.path.join(thiscwd, rawname)
+                for badlink in [bl for bl in sh.glob(rawname + '/*.h')
+                                if sh.path.islink(bl) and not sh.path.exists(bl)]:
+                    sh.unlink(badlink)
+            allio = ['IOASSIGN']
+            allio.extend([ sh.path.join(x, 'IOASSIGN') for x in rawdbnames ])
+            sh.cat(*allio, output='IOASSIGN.full')
+            sh.mv('IOASSIGN.full', 'IOASSIGN')
 
 
 class TimeSlots(object):
