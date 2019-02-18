@@ -7,11 +7,14 @@ import six
 
 import collections
 from string import Template
+import copy
+import re
 
 from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 from bronx.syntax.decorators import secure_getattr
+from bronx.stdtypes.date import Date
 
 from vortex import sessions
 
@@ -246,6 +249,80 @@ class JsonDictContent(AlmostDictContent):
                 iod = container.iodesc()
                 t.sh.json_dump(self.data, iod, indent=4)
         container.updfill(True)
+
+    def get_path(self, path):
+        """
+        Get value at given path of the tree, e.g.:
+
+        self.get_path(['a', 'b', 'c']) <=> self['a']['b']['c']
+        """
+        def _get(d, p):
+            if len(p) == 1:
+                return d[p[0]]
+            else:
+                return _get(d[p[0]], p[1:])
+        return _get(self._data, path)
+
+    def set_path(self, path, value):
+        """
+        Set value at given path of the tree, e.g.:
+
+        self.set_path(['a', 'b', 'c'], value) <=> self['a']['b']['c'] = value
+        """
+        def _set(d, p, v):
+            if len(p) == 1:
+                d[p[0]] = v
+            else:
+                _set(d[p[0]], p[1:], v)
+        _set(self._data, path, value)
+
+    def walk_leaves(self):
+        """Walks the tree of the AlmostDict, returning paths to each leaf."""
+        tree = []
+
+        def walk(d, path=None):
+            if path is None:
+                path = []
+            if isinstance(d, list) or isinstance(d, tuple):
+                for i, v in enumerate(d):
+                    path.append(i)
+                    walk(v, path)
+                    path.pop()
+            elif isinstance(d, dict):
+                for k,v in d.items():
+                    path.append(k)
+                    walk(v, path)
+                    path.pop()
+            else:
+                tree.append(copy.copy(path))
+        walk(self._data)
+        return tree
+
+    def set_macro(self, name, value):
+        """
+        Replace name by value in values of leaves among the tree.
+
+        :param name: name of the macro
+        :param value: value to give
+        """
+        for path in self.walk_leaves():
+            if self.get_path(path) == name:
+                self.set_path(path, value)
+
+    def set_macro_dates(self, keywords):
+        """
+        Set macro dates in JSON, according to the following syntax:
+
+        If, for instance, **keywords** == {'__now__':a_bronx_Date},
+        any leaf looking like '__now__' or '__now__/-PT3H'
+        will be replaced by the according date, formatted as iso8601.
+        """
+        for path in self.walk_leaves():
+            leaf = self.get_path(path)
+            for k, v in keywords.items():
+                if isinstance(leaf, six.string_types) and re.match(k + '(/(-|\+)*P.+)*', leaf):
+                    d = Date(leaf.replace(k, v))
+                    self.set_path(path, d.iso8601())
 
 
 class AlmostListContent(DataContent):
