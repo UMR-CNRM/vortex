@@ -647,4 +647,12 @@ def global_snames(resource, provider):
         else:
             scope = resource.scope
         bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
+    if resource.realkind == 'listing_ouloutput':
+        if resource.scope == 'surf':
+            bname = 'OULOUTPUT_SURFAN.' + suff
+        elif resource.scope == 'oulan':
+            bname = 'OULOUTPUT.' + suff
+        else:
+            bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + '.' + suff
     return bname
+

@@ -33,7 +33,7 @@ class Listing_Observations_Request(GeoFlowResource):
                     default  = 'ascii',
                 ),
                 scope = dict(
-                    values  = ['conv', 'surf', 'b1', 'b2', 'b3', 'b4','1','oulan'],
+                    values  = ['conv','surf','b1','b2','b3','b4','1','oulan'],
                 ),
                 term = dict(
                     optional = True,
