@@ -51,6 +51,7 @@ class OOPSParallel(Parallel, grib.EcGribComponent):
         # ecCodes
         self.eccodes_setup(rh, opts, compat=True)
         self.set_macros_in_config()
+        self.boost_defaults()
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -64,10 +65,24 @@ class OOPSParallel(Parallel, grib.EcGribComponent):
         config = self.context.sequence.effective_inputs(role=('Config',))[0].rh
         incfg = config.contents
         for k,v in self.config_macros.items():
-            print('am:',k,v)
             incfg.set_macro(k, v)
         incfg.set_macro_dates({'__now__':self.date.iso8601()})
         config.save()
+
+    def boost_defaults(self):
+        """
+        Set defaults for BOOST environment variables.
+        Do not overwrite pre-initialised ones.
+        """
+        defaults = {
+            'BOOST_TEST_CATCH_SYSTEM_ERRORS':'no',
+            'BOOST_TEST_DETECT_FP_EXCEPTIONS':'yes',
+            'BOOST_TEST_LOG_FORMAT':'XML',
+            'BOOST_TEST_LOG_LEVEL':'message',
+            'BOOST_TEST_OUTPUT_FORMAT':'XML',
+            'BOOST_TEST_REPORT_FORMAT':'XML',
+            'BOOST_TEST_RESULT_CODE':'yes'}
+        self.env.default(**defaults)
 
 
 class OOPSODB(OOPSParallel, odb.OdbComponent):
@@ -103,7 +118,7 @@ class OOPSODB(OOPSParallel, odb.OdbComponent):
                 optional        = True,
                 default         = 'ccma',
                 access          = 'rwx',
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,  # @UndefinedVariable
             ),
         )
     )
