@@ -21,6 +21,7 @@ logger = loggers.getLogger(__name__)
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)
+_arpege_vconf   = ('4dvarfr',)
 
 
 def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
@@ -148,6 +149,8 @@ def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None,
             return None
         prefix = 'PE'
         suffix = map_suffix[(cutoff, reseau)]
+        if cutoff == 'production' and vconf in _arpege_vconf:
+            suffix = suffix[1:]
     else:
         return None
     return prefix, suffix
@@ -433,6 +436,8 @@ def gridpoint_bnames(resource, provider):
                 localname = prefix + '_' + suffix + '_' + six.text_type(provider.member) + '_' \
                     + resource.geometry.area + '_' + resource.term.fmthour
             else:
+                if resource.term.fmthour == '0108' and prefix == 'PE':
+                    suffix = 'PM'
                 localname = prefix + suffix + nw_term + resource.geometry.area
         elif resource.model == 'arome':
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
