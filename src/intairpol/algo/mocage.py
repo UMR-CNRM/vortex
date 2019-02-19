@@ -366,7 +366,7 @@ class PPCamsBDAP(BlindRun):
             newcontainer.cat()
 
             # Link in the forecast file
-            self.system.softlink(r.container.localpath(), 'HMFILE.nc')
+            self.system.softlink(r.container.localpath(), 'HMMACC.nc')
 
             # Execute
             super(PPCamsBDAP, self).execute(rh, opts)
@@ -379,7 +379,7 @@ class PPCamsBDAP(BlindRun):
             if self.system.path.exists('MFM_V5+.grib2'):
                 sh.mv('MFM_V5+.grib2', actualname)
 
-            sh.rmall('HMFILE.nc', 'HM_HYBRID.nc', 'HM.nc')
+            sh.rmall('HMMACC.nc', 'HM_HYBRID.nc', 'HM.nc')
 
             # The grib2 output may be promised for BDAP transferts : put method applied to these outputs
             # put these outputs in the cache ; IGA will perform the following actions.
