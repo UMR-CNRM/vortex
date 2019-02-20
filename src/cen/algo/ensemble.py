@@ -242,13 +242,12 @@ class _SafranWorker(_S2MWorker):
 
     def check_mandatory_resources(self, rdict, filenames):
         outcome = True
-        missing_files = list()
+        missing_files = False
         for filename in filenames:
             if not self.system.path.exists(filename):
-                logger.error('The %s mandatory flow resources are missing.', filename)
-                missing_files.append(filename)
-        if len(missing_files) > 0:
-            rdict['rc'] = InputCheckerError("The following mandatory resources are missing : " + " ".join(missing_files))
+                missing_files = True
+        if missing_files:
+            rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
             outcome = False
         return rdict, outcome
 
@@ -947,8 +946,10 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
-        self._prepare_forcing_task(rundir, thisdir, rdict)
+        rdict = self._prepare_forcing_task(rundir, thisdir, rdict)
         self.postfix()
+
+        return rdict
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
@@ -1001,6 +1002,8 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
                 save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+
+        return rdict
 
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
