@@ -494,7 +494,6 @@ class GeometryIllustration(StaticGeoResource):
         return 'geometry_plot'
 
 
-@namebuilding_insert('radical', lambda s: 'stabal')
 @namebuilding_append('src', lambda s: [s.stat, s.level, s.nbfiles])
 class Stabal(ModelGeoResource):
     """
@@ -532,7 +531,7 @@ class Stabal(ModelGeoResource):
                 ),
             )
         )
-        ]
+    ]
 
     @property
     def realkind(self):

@@ -745,7 +745,6 @@ class _AddPolesWorker(TaylorVortexWorker):
             add_poles_to_GLOB_file(self.filename)
 
 
-
 class Festat(Parallel):
     """
     Class to run the festat binary.
@@ -765,7 +764,6 @@ class Festat(Parallel):
             ),
             prefix = dict(
                 info = "Name of the files for the binary",
-                type = six.string_types,
                 optional = True,
                 default = "CNAME",
             ),
@@ -777,7 +775,7 @@ class Festat(Parallel):
     def prepare(self, rh, opts):
         # Check the namelist
         input_namelist = self.context.sequence.effective_inputs(role="Namelist", kind="namelist")
-        if len(input_namelist)!=1:
+        if len(input_namelist) != 1:
             logger.error("One and only one namelist must be provided.")
             raise ValueError("One and only one namelist must be provided.")
         else:
