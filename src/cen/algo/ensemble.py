@@ -1459,13 +1459,6 @@ class SurfexComponentMultiDates(SurfexComponent):
         listdatebegin, listdateend = self.get_dates(subdirs)
         listdateinit = listdatebegin[:]
 
-#         print ("DEBUGGING")
-#         print (len(subdirs))
-#         print (len(listdatebegin))
-#         print (len(listdateend))
-#         print (common_i)
-#         print ("END DEBUGGING")
-
         if self.subensemble:
             escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
