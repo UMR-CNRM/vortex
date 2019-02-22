@@ -11,6 +11,7 @@ import copy
 import io
 import six
 
+from bronx.datagrip import namelist
 from bronx.fancies import loggers
 import footprints
 
@@ -18,7 +19,8 @@ from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
 from vortex.tools.parallelism import TaylorVortexWorker
 from common.algo.ifsroot import IFSParallel
-from bronx.datagrip import namelist
+from common.tools.drhook import DrHookDecoMixin
+
 
 #: No automatic export
 __all__ = []
@@ -26,7 +28,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class BuildPGD(BlindRun):
+class BuildPGD(BlindRun, DrHookDecoMixin):
     """Preparation of physiographic fields for Surfex."""
 
     _footprint = dict(
@@ -37,13 +39,6 @@ class BuildPGD(BlindRun):
             ),
         )
     )
-
-    def prepare(self, rh, opts):
-        """DrHook stuff."""
-        super(BuildPGD, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
 
 
 class C923(IFSParallel):
