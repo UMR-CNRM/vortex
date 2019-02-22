@@ -12,7 +12,7 @@ import json
 
 import footprints
 
-from oops.syntax.stdattrs import test_type, expected_target, select_expected_target
+from common.syntax.stdattrs import test_type, expected_target, select_expected_target
 from .oopsroot import OOPSParallel, OOPSODB
 
 #: No automatic export

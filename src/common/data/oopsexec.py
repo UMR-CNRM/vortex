@@ -7,7 +7,7 @@ import footprints
 
 from vortex.data.executables import NWPModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
-from oops.syntax.stdattrs import run
+from common.syntax.stdattrs import run
 
 #: No automatic export
 __all__ = []

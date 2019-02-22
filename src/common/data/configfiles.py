@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Const files for OOPS.
+Various config files.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
