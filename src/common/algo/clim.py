@@ -11,15 +11,16 @@ import copy
 import io
 import six
 
+from bronx.datagrip import namelist
 from bronx.fancies import loggers
 import footprints
-from vortex.util.structs import FootprintCopier
 
 from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
 from vortex.tools.parallelism import TaylorVortexWorker
 from common.algo.ifsroot import IFSParallel
-from bronx.datagrip import namelist
+from common.tools.drhook import DrHookDecoMixin
+
 
 #: No automatic export
 __all__ = []
@@ -27,12 +28,8 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class _BuildPGDCommons(FootprintCopier):
-    """Class variables and methods usefull for BuildPGD.
-
-    They will be copied to the "real" BuildPGD classes using the FootprintCopier
-    metaclass.
-    """
+class BuildPGD(BlindRun, DrHookDecoMixin):
+    """Preparation of physiographic fields for Surfex."""
 
     _footprint = dict(
         info = "Physiographic fields for Surfex.",
@@ -43,25 +40,18 @@ class _BuildPGDCommons(FootprintCopier):
         )
     )
 
-    @staticmethod
-    def prepare(self, rh, opts):
-        """DrHook stuff."""
-        super(self.__class__, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
 
-
-class BuildPGD(BlindRun):
+class BuildPGD_MPI(Parallel, DrHookDecoMixin):
     """Preparation of physiographic fields for Surfex."""
 
-    __metaclass__ = _BuildPGDCommons
-
-
-class BuildPGD_MPI(Parallel):
-    """Preparation of physiographic fields for Surfex, launch with MPI."""
-
-    __metaclass__ = _BuildPGDCommons
+    _footprint = dict(
+        info = "Physiographic fields for Surfex.",
+        attr = dict(
+            kind = dict(
+                values   = ['buildpgd'],
+            ),
+        )
+    )
 
 
 class C923(IFSParallel):

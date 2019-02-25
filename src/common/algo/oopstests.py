@@ -69,7 +69,7 @@ class _OOPSTestComponent(object):
             print("Expected Target for Test:", target)
             self.env.update(EXPECTED_RESULT=json.dumps(target))
         else:
-            self.env.update(EXPECTED_RESULT=json.dumps({'significant_digits':"10"}))
+            self.env.update(EXPECTED_RESULT=json.dumps({'significant_digits': "10"}))
 
     def prepare(self, rh, opts):
         super(_OOPSTestComponent, self).prepare(rh, opts)
@@ -131,7 +131,7 @@ class OOPSecma2ccma(_OOPSTestComponent, OOPSODB):
                         for line in content:
                             outodb.write(line.replace('ECMA', 'CCMA'))
                     if f in ('ECMA.iomap', 'ECMA.sch'):
-                        sh.rm(sh.path.join(edir,f))
+                        sh.rm(sh.path.join(edir, f))
             sh.mv(edir, edir.replace('ECMA', 'CCMA'))
 
 

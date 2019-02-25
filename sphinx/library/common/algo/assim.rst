@@ -16,11 +16,6 @@ Package
 Classes
 -------
 
-.. autoclass:: IFSODB
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: IFSODBCCMA
    :show-inheritance:
    :members:
