@@ -511,6 +511,43 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
+class IrregularGeometry(HorizontalGeometry):
+    """Irregular spherical grid."""
+
+    _tag_topcls = False
+
+
+    def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+        the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param int nlonmax: Maximum number of longitude points in the grid
+        :param int nlatmax: Maximum number of latitude points in the grid (in wave model case: nlatmax=nlat)
+        :param int resolution_expected: the real resolution = resolution_expected*cos(lat)
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
+        kw.setdefault('runit', 'dg')
+        super(IrregularGeometry, self).__init__(**kw)
+        self.kind = 'irregular'
+
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        if self.lam:
+            fmts = 'kind={0:s}, r={1:s}, limited-area={2:s}, nlon={3!s}, nlat={4!s}'
+        else:
+            fmts = 'kind={0:s}, r={1:s}, global, nlon={3!s}, nlat={4!s}'
+        return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
+
+
+class MassifGeometry(UnstructuredGeometry):
+    """Grid describing the partition of a mountain range in massifs."""
+
+
 # Pre-defined footprint attribute for any HorizontalGeometry
 
 #: Usual definition of the ``geometry`` attribute.

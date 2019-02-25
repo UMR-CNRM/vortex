@@ -699,6 +699,7 @@ class Archive(Storage):
             # Ftp control
             hostname = hostname,
             logname = kwargs.get('username', None),
+ #           logname = 'moce001',
             ** extras
         )
         return rc, extras

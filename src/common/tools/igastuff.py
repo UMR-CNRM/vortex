@@ -20,7 +20,7 @@ fuzzystr = dict(
     prefix = dict(
         # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
         gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE', hycom_grb='vent' ),
-        historic = dict( hycom_gss='s_init0_' ),
+        historic = dict( hycom_gss='s_init0_', mfwam_gss='LAW_', mfwam_spc='BLS_' ),
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' ),
@@ -173,6 +173,12 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                          'med@fcaoc': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
                          'oin@fcaro': 'surcotes_oi', },
+               'mfwam': {'globalcep02': 'mfwamglocep02',
+                         'globalcep01': 'mfwamglocep01',
+                         'globalarp02': 'mfwamgloarp02',
+                         'atourxarp01': 'mfwamatourx01arp',
+                         'frangparo0025': 'mfwamfrangp0025',
+                         'anguyaro': 'mfwamanguyaro' },
                }
 
 
@@ -213,4 +219,10 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                          'oin@ancep': 'surcotes_oi',
                          'oin@fcaro': 'surcotes_oi',
                          'oin@red'  : 'surcotes_oi', },
+               'mfwam': {'globalcep02': 'mfwamglocep02',
+                         'globalcep01': 'mfwamglocep01',
+                         'globalarp02': 'mfwamgloarp02',
+                         'atourxarp01': 'mfwamatourx01arp',
+                         'frangparo0025' : 'mfwamfrangp0025',
+                         'anguyaro': 'mfwamanguyaro'},
                }

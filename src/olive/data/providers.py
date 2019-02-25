@@ -191,6 +191,11 @@ class OpArchive(Provider):
                         fuzzy = (fuzzyname('prefix', 'historic', 'hycom_gss') +
                                  '.'.join((config, resource.date.ymdh[4:],
                                            fuzzyname('suffix', 'historic', 'hycom_gss'))))
+                    elif resource.model == 'mfwam':
+                        rr = archive_suffix(resource.model, resource.cutoff,
+                                            resource.date, vconf=self.vconf)
+                        fuzzy = (fuzzyname('prefix', 'historic', 'mfwam_gss') +
+                                 '_'.join((rr + '00',resource.term.fmtraw2)))
                     else:
                         igakey = getattr(self, keyattr)
                         if igakey in ('pearp', 'arpege', 'arp_court', 'aearp'):
@@ -202,6 +207,11 @@ class OpArchive(Provider):
                     if keyattr == 'modelkey':
                         if self.block == 'coupling_fc' and resource.model == 'arome':
                             fuzzy = 'guess_'
+                        elif resource.model == 'mfwam':
+                            rr = archive_suffix(resource.model, resource.cutoff,
+                                            resource.date, vconf=self.vconf)
+                            fuzzy = (fuzzyname('prefix', 'historic', 'mfwam_spc') +
+                                 '_'.join((rr + '00',resource.term.fmtraw2)))
                         else:
                             fuzzy = 'icmsh'
                             modelkey = resource.model + '_' + self.vapp
@@ -295,6 +305,8 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], dd))
                 elif re.match(r'surcotes|surcotes_oi', self.igakey):
                     return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
+                elif re.match(r'mfwam|vagues', self.igakey):
+                    return '/'.join(('vagues', suite, self.igakey, dd )).rstrip('/')
                 else:
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
 

@@ -9,6 +9,7 @@ from bronx.stdtypes.date import Date
 from vortex.data.outflow import ModelResource
 from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
+from common.data.namelists import Namelist
 
 #: No automatic export
 __all__ = []

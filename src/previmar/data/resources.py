@@ -8,8 +8,10 @@ from bronx.stdtypes.date import Date, Time, Period
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
+from common.data.modelstates import InitialCondition, Historic
+from common.data.gridfiles import GridPoint
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
-from common.data.modelstates import InitialCondition
+from .contents import AltidataContent
 
 #: No automatic export
 __all__ = []
@@ -51,6 +53,33 @@ class SolutionPoint(FlowResource):
     @property
     def realkind(self):
         return 'pts'
+
+
+class SolutionPointIMB(SolutionPoint):
+    """Class for port solutions of the HYCOM model i.e s*pts (ascii file)."""
+    _footprint = dict(
+        info = 'Surges model point solution',
+        attr = dict(
+            kind = dict(
+                values = ['PtsImb'],
+            ),
+            fields = dict(
+	      values = ['s_pts'],
+            ),
+	    modele_imbrique = dict(
+	      values = ['reunion','mayotte'],
+	    ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'pts'
+
+    def basename_info(self):
+        return dict(
+            radical = self.fields + '.' + self.modele_imbrique,
+        )
 
 
 @namebuilding_insert('radical', lambda s: s.fields)
@@ -234,9 +263,9 @@ class TideOnlyOut(InitialCondition):
 
 
 class ConfigData(Resource):
-    """Class of a simple file that contains configuration data for HYCOM."""
+    """Class of a simple file that contains configuration data for HYCOM/MFWAM."""
     _footprint = dict(
-        info = 'Configuration data for HYCOM',
+        info = 'Configuration data for HYCOM/MFWAM',
         attr = dict(
             nativefmt = dict(
                 default = 'ascii',
@@ -287,3 +316,185 @@ class TarResult(GeoFlowResource):
     @property
     def realkind(self):
         return 'surges_tarfile'
+
+    def basename_info(self):
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = [self.geometry.area, self.geometry.rnice],
+            radical = self.realkind,
+            src     = self.model,
+        )
+
+
+class InitWave(Historic):
+    """Class of"""
+    _footprint = dict(
+        info = 'WaveInitialCondition LAW and Spectrum data BLS on native grid',
+        attr = dict(
+            kind = dict(
+                values = ['InitWave'],
+            ),
+            fields = dict(
+                values = ['LAW', 'guess', 'BLS', 'spectre'],
+                remap = {
+                    'guess': 'LAW',
+                    'spectre': 'BLS',
+                },
+            ),
+            nativefmt = dict(
+                default = 'unknown',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'historic'
+
+    def basename_info(self):
+        lgeo = [self.geometry.area, self.geometry.rnice]
+        return dict(
+            fmt     = self.nativefmt,
+            geo     = lgeo,
+            radical = self.realkind + '.' + self.fields,
+            src     = self.model,
+            term    = self.term.fmthm,
+        )
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        if self.fields == 'BLS':
+            return '(icmshfix:modelkey)'
+	else:
+	    return '(histfix:modelkey)'
+
+
+class OutputWave(GridPoint):
+    """Class of"""
+    _footprint = dict(
+        info = 'forecast output MPP and analyse next assimilation APP',
+        attr = dict(
+            kind = dict(
+                values = ['OutputWave'],
+            ),
+            origin = dict(
+                values = ['fcst', 'ana', 'assim'],
+                remap = {
+                    'assim': 'ana',
+                },
+            ),
+            nativefmt = dict(
+                default = 'unknown' # grille irreguliere
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'WaveOutput'
+
+
+class INITWAM(GeoFlowResource):
+
+    _footprint = dict(
+        info = 'file for Extraction grb',
+        attr = dict(
+            nativefmt = dict(
+                default = ['foo'],
+            ),
+            kind = dict(
+                values = ['INITWAM'],
+            ),
+        )
+    )
+
+
+#class WAMGRIDINFO(GeoFlowResource):
+
+    #_footprint = dict(
+        #info = 'file for Extraction grb',
+        #attr = dict(
+            #nativefmt = dict(
+                #default = ['foo'],
+            #),
+            #kind = dict(
+                #values = ['WAM', 'wam_info'],
+            #),
+        #)
+    #)
+
+
+class AltidataWave(FlowResource):
+
+    _footprint = dict(
+        info = 'Altimetric data file',
+        attr = dict(
+            nativefmt = dict(
+                default = 'ascii',
+            ),
+#            scope = dict(
+#                optional = True,
+#                default = 'assim',
+#            ),
+            satellite = dict(
+                values = ['jason2','cryosat2','saral','allsat',
+                          'altidata', 'obs_alti', 'sentinel3',
+                          'S3al3'],
+                optional = True,
+                default = 'allsat',
+                remap = {
+                    'allsat': 'altidata',
+                    'sentinel3': 'S3al3',
+                },
+            ),
+            kind = dict(
+                values = ['AltidataWave','altidata'],
+            ),
+            clscontents=dict(
+                    default = AltidataContent
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'AltidataWave'
+
+    def basename_info(self):
+        return dict(
+            fmt     = self.nativefmt,
+            radical = self.realkind + '_' + self.satellite,
+            src     = self.model,
+        )
+
+
+class DiagAlti(AltidataWave):
+
+    _footprint = dict(
+        info = 'diagnostic file next altimetric filtering',
+        attr = dict(
+            kind = dict(
+                values = ['DiagAlti'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'diagalti'
+
+
+class WaveCurrent(FlowResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            kind = dict(
+                values = ['WaveCurrent'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'WaveCurrent'

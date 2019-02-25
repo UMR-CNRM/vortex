@@ -37,7 +37,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
                     remap   = dict(autoremap = 'first'),
                 ),
                 nativefmt = dict(
-                    values  = ['fa', 'grib', 'netcdf', 'unknown'],
+                    values  = ['fa', 'grib', 'netcdf', 'unknown', 'ascii'],
                     default = 'fa',
                 ),
             )
@@ -111,7 +111,7 @@ class LAMBoundary(_AbstractLAMBoundary):
     _footprint = dict(
         attr = dict(
             source = dict(
-                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf', 'psy4']
+                values  = ['arpege', 'aladin', 'arome', 'ifs', 'ecmwf', 'psy4', 'mfwam']
             ),
         )
     )

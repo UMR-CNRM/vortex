@@ -95,6 +95,8 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
         model_info = 'HYCOM'
     elif model == 'mocage':
         model_info = ''
+    elif model == 'mfwam':
+        model_info = 'MFWAM'
     else:
         logger.critical('Unknown model <%s> for op names fabrik', model)
         raise ValueError('Unknown model')
@@ -186,6 +188,7 @@ def global_pnames(provider, resource):
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
     # In the inline cache, Hycom data are stored in the "vagues" directory
     info['model'] = dict(hycom='vagues').get(info['model'], info['model'])
+    info['model'] = dict(mfwam='vagues').get(info['model'], info['model'])
     # The suite may not e consistent between the vortex cache and the inline cache
     info['suite'] = suite_map.get(info['suite'], info['suite'])
     return info
@@ -267,6 +270,10 @@ def analysis_bnames(resource, provider):
             suffix = resource.date.ymdh
         # s_init_sort_cep_OIN_ana.2017070900     (T0)
         return 's_init_sort_' + config + '.' + six.text_type(suffix)
+    elif resource.model == 'mfwam' and resource.filling == 'surf':
+        suffix = resource.date.ymdhms
+        suffix2 = resource.term.fmtraw2
+        return 'LAW' + str(suffix) + '_' + str(suffix2)
     else:
         anabase = 'ICMSH' + model_info + 'INIT'
         if resource.filling == 'surf':
@@ -281,8 +288,6 @@ def historic_bnames(resource, provider):
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
 
-    # s_init_aro_OIN_pre.2017070812.012
-    # s_init_red_OIN.2017070406.102 ((24h apres T0) + 72h + (6/12/18h)
     if resource.model == 'hycom':
         region_map = dict(atl='', med='_MED', oin='_OIN')
         mode_map = dict(fc='pre', an='ana')
@@ -309,6 +314,9 @@ def historic_bnames(resource, provider):
             else:
                 suffix = '.{0:03d}'.format(resource.term.hour)
         return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
+    if resource.model == 'mfwam':
+        prefix = resource.fields.upper()
+        return prefix + resource.date.ymdhms + '_' + resource.term.fmtraw2
 
     if provider.vconf == 'camsfcst':
         return 'HM' + resource.geometry.area + '+' + resource.term
@@ -343,9 +351,6 @@ def pts_bnames(resource, provider):
 def bufr_bnames(resource, provider):
     """docstring for bufr_bnames"""
     if resource.model == 'hycom':
-        # prv_000_aro_0_OIN.bfr
-        # prv_024_aro_0_OIN.bfr
-        # ana_000_cep_0_OIN.bfr
         region_map = dict(atl='', med='_MED', oin='_OIN')
         mode_map = dict(fc='prv', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
@@ -378,6 +383,27 @@ def SurgesWw3coupling_bnames(resource, provider):
         if re.match(r'level', resource.fields):
             config_new = '.' + config
         return resource.fields + config_new + '.gz'
+
+
+def WaveCurrent_bnames(resource, provider):
+    """docstring for"""
+    if resource.model == 'mfwam':
+        return 'currents_{0:s}'.format(resource.date.ymdhm)
+
+
+#def WaveWindandice_bnames(resource, provider):
+    #"""docstring"""
+    #if resource.model == 'mfwam':
+        #if provider.vconf == 'glocep01': ## dictinction job1 et job2
+            #return 'sfcwindin{0:s}_{1:s}'.format( '1', resource.date.ymdhm)
+        #else:
+            #return 'windandice_{0:s}'.format(resource.date.ymdhm)
+
+
+def AltidataWave_bnames(resource, provider):
+    """docstring"""
+    if resource.model == 'mfwam':
+        return 'altidata_{0:s}'.format(resource.date.ymdhm)
 
 
 def histsurf_bnames(resource, provider):
@@ -445,6 +471,15 @@ def gridpoint_bnames(resource, provider):
             mode = mode_map.get(provider.vconf[4:][:2], None)
             localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour)
             return localname
+        elif resource.model == 'mfwam':
+            logger.info("resourceterm %s", resource.term.hour)
+            if provider.vconf == 'globalcep01':
+                if six.text_type(resource.term.hour) == '24': ## dictinction job1 et job2
+                    return 'windandice{0:s}_{1:s}'.format('1', resource.date.ymdhm)
+                else:
+                    return 'windandice{0:s}_{1:s}'.format('2', resource.date.ymdhm)
+            else:
+                return 'windandice_{0:s}'.format(resource.date.ymdhm)
         else:
             return None
     else:

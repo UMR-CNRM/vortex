@@ -84,13 +84,15 @@ class IgaFinder(Finder):
         super(IgaFinder, self).__init__(*args, **kw)
 
     def fullpath(self, remote):
+        logger.info('remote %s',remote['path'])
+        logger.info('rootdir %s',self.rootdir)
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
             return self.system.path.join(self.rootdir, remote['path'])
 
     def fileget(self, remote, local, options):
-        #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('fileget on %s (to: %s)', rpath, local)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))

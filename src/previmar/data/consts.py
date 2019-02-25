@@ -227,3 +227,172 @@ class CouplingGridOasis(GenvUsageModelResource):
     @property
     def realkind(self):
         return 'CouplingGridOasis'
+
+
+class WamInfo(GenvModelResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_info'],
+            ),
+            gvar = dict(
+                default = '[model]_[fields]',
+            ),
+            fields = dict(
+                values = ['nested_info', 'nested_grids_info',
+                          'grid_tables', 'boundary_info', 'boundary_grid_info'],
+                remap = {
+                    'nested_info': 'nested_grids_info',
+                    'boundary_info': 'boundary_grid_info',
+                    }
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'waminfo'
+
+
+class WamSubGrid(GenvModelResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_subgrid'],
+            ),
+            gvar = dict(
+                default = '[model]_subgrid_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wamsubgrid'
+
+
+class AltimetriePreproc(GenvModelResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            nativefmt = dict(
+                values = ['ascii','foo', 'unknown'],
+            ),
+            kind = dict(
+                values = ['preprocalti'],
+            ),
+            gvar = dict(
+                default = '[model]_[fields]',
+            ),
+            fields = dict(
+                values = ['filtrevalue','bathyref','fort_alti','cst_alti'],
+                remap = {
+                    'filtrevalue': 'fort_alti',
+                    'bathyref': 'cst_alti',
+                },
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'preprocalti'
+
+
+class WamPreproc(GenvModelResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_preproc'],
+            ),
+            gvar = dict(
+                default = '[model]_preproc_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'
+
+
+class WamGridPost(GenvModelResource):
+
+    _footprint = dict(
+        info = '',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_grid_post'],
+            ),
+            gvar = dict(
+                default = '[model]_interpWave',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'
+
+
+#class FortAltimetrie(GenvModelResource):
+
+    #_footprint = dict(
+        #info = '',
+        #attr = dict(
+            #nativefmt = dict(
+                #default = 'ascii',
+            #),
+            #kind = dict(
+                #values = ['filtrevalue'],
+            #),
+            #gvar = dict(
+                #default = '[model]_fort_alti',
+            #),
+        #)
+    #)
+
+    #@property
+    #def realkind(self):
+        #return 'fortalti'
+
+
+#class Cstalti(GenvModelResource):
+
+    #_footprint = dict(
+        #info = '',
+        #attr = dict(
+            #nativefmt = dict(
+                #default = 'ascii',
+            #),
+            #kind = dict(
+                #values = ['bathyref'],
+            #),
+            #gvar = dict(
+                #default = '[model]_cst_alti',
+            #),
+        #)
+    #)
+
+    #@property
+    #def realkind(self):
+        #return 'cstalti'

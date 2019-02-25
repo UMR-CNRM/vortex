@@ -174,7 +174,7 @@ class IniZeroSurges(BlackBox):
 
 
 class FiltrageGrib(Script):
-    """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid"""
+    """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid."""
     _footprint = [
         gvar,
         dict(
@@ -182,6 +182,9 @@ class FiltrageGrib(Script):
             attr = dict(
                 kind = dict(
                     values = ['FilteringGrib']
+                ),
+                model = dict(
+                    values = ['hycom'],
                 ),
                 gvar = dict(
                     default  = 'pesurcote_filtrage_grib',
@@ -197,8 +200,32 @@ class FiltrageGrib(Script):
         return 'filteringGrib'
 
 
+class FiltrageGribWave(FiltrageGrib):
+    """Base class."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Filtering Grib input',
+            attr = dict(
+                model = dict(
+                    values = ['mfwam'],
+                ),
+                gvar = dict(
+                    default  = 'filtrage_grib',
+                    values   = ['wave_filtrage_grib', 'filtrage_grib'],
+                    remap    = {'filtrage_grib': 'wave_filtrage_grib' },
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'filteringGribWave'
+
+
 class FusionGrib(Script):
-    """Base class for Grib Fusion (Pmer, U,V 10-meters wind) on 2 different Model Grid"""
+    """Base class for Grib Fusion (Pmer, U,V 10-meters wind) on 2 different Model Grid."""
     _footprint = [
         gvar,
         dict(
@@ -222,7 +249,7 @@ class FusionGrib(Script):
 
 
 class ConversionGrib2Taux(BlackBox):
-    """A tool to convert Wind fields to Stress"""
+    """A tool to convert Wind fields to Stress."""
     _footprint = [
         gvar,
         gdomain,
@@ -302,3 +329,87 @@ class SurScriptSurges(BlackBox):
     @property
     def realkind(self):
         return 'SurScriptBinary'
+
+
+class MasterWaves(OceanographicModel):
+    """."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Master wave',
+            attr = dict(
+                kind = dict(
+                    values = ['MasterWaves'],
+                ),
+                model = dict(
+                    value = ['mfwam', ],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WaveChief'
+
+
+class Filteralti(BlackBox):
+    """."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'SurScript Surges',
+            attr = dict(
+                kind = dict(
+                    values = ['Filteralti'],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_filter_alti_[satellite]',
+                ),
+                satellite = dict(
+                    values = ['jason2','saral','cryosat2'],
+                ),
+                datedeb = dict(
+                    type     = Date,
+                ),
+                datefin = dict(
+                    type     = Date,
+                ),
+                binopts = dict(
+                    type     = str,
+                )
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'Filteralti'
+
+
+class InterpWave(BlackBox):
+    """."""
+    _footprint = [
+        gvar,
+        dict(
+            info = '',
+            attr = dict(
+                kind = dict(
+                    values = ['InterpWave'],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_interp',
+                ),
+                model = dict(
+                    value = ['mfwam', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'InterpWave'

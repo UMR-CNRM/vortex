@@ -1540,6 +1540,12 @@ class Time(_GetattrCalculatorMixin):
         return self.__mul__(other)
 
     @property
+    def fmtdh(self):
+        """DDHHMMSS formated string."""
+        me = int(self)//1440*1000000+(int(self)%1440)//60*10000+(int(self)%1440)%60*100
+        return '{0:08d}'.format(me)
+
+    @property
     def fmth(self):
         """HHHH formated string."""
         return self._formatted_str('{0:s}{1:04d}')
@@ -1563,6 +1569,11 @@ class Time(_GetattrCalculatorMixin):
     def fmtraw(self):
         """HHHH:MM formated string."""
         return self._formatted_str('{0:s}{1:04d}{2:02d}')
+
+    @property
+    def fmtraw2(self):
+        """HHHH:MM formated string."""
+        return self._formatted_str('{0:s}{1:08d}{2:04d}')
 
     def isoformat(self):
         """Almost ISO representation (HH:MM)."""
