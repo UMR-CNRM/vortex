@@ -435,7 +435,6 @@ class SypluieWorker(_SafranWorker):
     )
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
-        self.get_guess(dates)
         self.link_in('SAPLUI5' + dates[-1].ymdh, 'SAPLUI5_ARP')
         # Creation of the 'sapfich' file containing the name of the output file
         with io.open('sapfich', 'w') as f:
