@@ -567,7 +567,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         super(_UgetCacheStore, self).__init__(*args, **kw)
         del self.cache
 
-    def _universal_remap(self, remote):
+    def universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
@@ -589,11 +589,11 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
-        return self.incachecheck(self._universal_remap(remote), options)
+        return self.incachecheck(self.universal_remap(remote), options)
 
     def ugetlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
-        return self.incachelocate(self._universal_remap(remote), options)
+        return self.incachelocate(self.universal_remap(remote), options)
 
     def ugetlist(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
@@ -601,19 +601,19 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetprestageinfo(self, remote, options):
         """Proxy to :meth:`incacheprestageinfo`."""
-        return self.incacheprestageinfo(self._universal_remap(remote), options)
+        return self.incacheprestageinfo(self.universal_remap(remote), options)
 
     def _actual_fancyget(self, remote, local, options):
         return self.incacheget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        remote = self._universal_remap(remote)
+        remote = self.universal_remap(remote)
         return self._fancy_get(remote, local, options)
 
     def ugetput(self, local, remote, options):
         """Proxy to :meth:`incacheputt`."""
-        remote = self._universal_remap(remote)
+        remote = self.universal_remap(remote)
         extract = remote['query'].get('extract', None)
         if extract:
             logger.warning('Skip cache put with extracted %s', extract)
@@ -623,7 +623,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
-        return self.incachedelete(self._universal_remap(remote), options)
+        return self.incachedelete(self.universal_remap(remote), options)
 
 
 class UgetMtCacheStore(_UgetCacheStore):
@@ -677,14 +677,18 @@ class UgetCacheStore(MultiStore):
 
     def filtered_readable_openedstores(self, remote):
         ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_reads(remote['path'])])
+        for sto in self.openedstores[1:]:
+            r_remote = sto.universal_remap(remote)
+            if sto.cache.allow_reads(r_remote['path']):
+                ostores.append(sto)
         return ostores
 
     def filtered_writeable_openedstores(self, remote):
         ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_writes(remote['path'])])
+        for sto in self.openedstores[1:]:
+            r_remote = sto.universal_remap(remote)
+            if sto.cache.allow_writes(r_remote['path']):
+                ostores.append(sto)
         return ostores
 
     def alternates_netloc(self):
