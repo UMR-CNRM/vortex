@@ -324,18 +324,10 @@ class _SafranWorker(_S2MWorker):
                         actual_dates.append(date)
                     t = t + dt  # 3-hours check
 
-                if not self.system.path.islink(p):
-                    logger.warning('The flow resources %s is missing.', p)
-                    if fatal:
-                        logger.warning('The mandatory flow resources %s is missing.', p)
-                        # raise InputCheckerError("Some of the mandatory resources are missing.")
-
         if len(actual_dates) < 5:
-            print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
-            print(actual_dates)
+            # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             # In this case, actual_dates is filled with the mandatory dates
             actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-            # raise InputCheckerError("Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
         elif len(actual_dates) > 5 and len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
