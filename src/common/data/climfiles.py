@@ -496,11 +496,13 @@ class GeometryIllustration(StaticGeoResource):
 
 @namebuilding_append('src', lambda s: [s.stat, s.level, s.nbfiles])
 class Stabal(ModelGeoResource):
-    """
-    Spectral covariance operators:
+    """Spectral covariance operators.
+
+    Explanations for the ``stat`` attribute:
         * bal: cross-variables balances
         * cv: auto-correlations of the control variable
-        * cvt:
+        * cvt: ???
+
     A GenvKey can be given.
     """
 
