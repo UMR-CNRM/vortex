@@ -14,11 +14,11 @@ from bronx.compat.moves import collections_abc
 class Tracker(object):
     """Handling of simple state status through ``deleted``, ``created`` or ``updated`` items.
 
-    :param collections.abc.Iterable before   : The reference list of items
-    :param collections.abc.Iterable after    : The possibly modified list of items
-    :param collections.abc.Iterable deleted  : The list of deleted items
-    :param collections.abc.Iterable created  : The list of created items
-    :param collections.abc.Iterable updated  : The list of updated items
+    :param collections.abc.Iterable before: The reference list of items
+    :param collections.abc.Iterable after: The possibly modified list of items
+    :param collections.abc.Iterable deleted: The list of deleted items
+    :param collections.abc.Iterable created: The list of created items
+    :param collections.abc.Iterable updated: The list of updated items
     :param collections.abc.Iterable unchanged: The list of unchanged items
 
     There are two way to initialise such an object:
@@ -176,7 +176,7 @@ class MappingTracker(Tracker):
     """A tracker that compute the differences between two mappings (e.g. dicitonaries).
 
     :param collections.abc.Mapping before: The reference mapping
-    :param collections.abc.Mapping after : The (possibly) modified mapping
+    :param collections.abc.Mapping after: The (possibly) modified mapping
 
     On the contrary to the :class:`Tracker` class, the :data:`deleted`, :data:`created`,
     :data:`updated` and :data:`unchanged` properties are read-only.

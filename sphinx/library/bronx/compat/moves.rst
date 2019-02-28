@@ -9,9 +9,16 @@
 .. versionadded:: 1.6.1
 
 
-Data definition
----------------
-
-.. autodata:: __all__
+Data definitions
+----------------
 
 .. autodata:: collections_abc
+
+
+Class definitions
+-----------------
+
+.. autoclass:: re_Pattern
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

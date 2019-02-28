@@ -10,16 +10,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 from six.moves import map  # @UnresolvedImport
 
-import collections
 from collections import namedtuple, defaultdict
 import io
 import json
 import pprint
-import re
 import traceback
 import weakref
 
-from bronx.compat.moves import collections_abc
+from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -33,9 +31,6 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 _RHANDLERS_OBSBOARD = 'Resources-Handlers'
-
-# re._pattern_type is removed in python3.7
-six.add_move(six.MovedAttribute('Pattern', 're', 're', old_attr='_pattern_type', new_attr='Pattern'))
 
 
 class SectionFatalError(Exception):
@@ -396,7 +391,7 @@ class Sequence(observer.Observer):
                 not isinstance(allowed, collections_abc.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
-            if ((isinstance(pattern, six.moves.Pattern) and pattern.search(stuff)) or
+            if ((isinstance(pattern, re_Pattern) and pattern.search(stuff)) or
                     (pattern == stuff)):
                 return True
         return False

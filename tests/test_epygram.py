@@ -78,7 +78,10 @@ class _FakeRH(object):
 class _EpyTestBase(unittest.TestCase):
 
     def setUp(self, needFA=False):
-        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0', needFA=needFA)):
+        check_opts = dict()
+        if needFA:
+            check_opts['needFA'] = True
+        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0', ** check_opts)):
             raise self.skipTest('Epygram >= v1.0.0 with FA={} is not available'.format(needFA))
 
         uepy.epygram.epylog.setLevel('ERROR')
