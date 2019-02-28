@@ -11,6 +11,7 @@ from string import Template
 from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
+from bronx.syntax.decorators import secure_getattr
 
 from vortex import sessions
 
@@ -38,13 +39,7 @@ class DataContent(object):
         for k, v in six.iteritems(kw):
             self.__dict__['_' + k] = v
 
-    def __setstate__(self, state):
-        """
-        Needed for Python3 otherwise, __getattr__ is called while building
-        the new object.
-        """
-        self.__dict__.update(state)
-
+    @secure_getattr
     def __getattr__(self, attr):
         """Forward get attribute request to internal data object."""
         if attr not in ('__getstate__', '__deepcopy__'):

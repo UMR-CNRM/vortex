@@ -85,7 +85,7 @@ class HashAdapter(object):
         :param input_file: Path to a file or opened File-like object
         """
         output = six.BytesIO()
-        output.write(self.file2hash(input_file).encode('utf-8'))
+        output.write(self.file2hash(input_file).encode(encoding='utf-8'))
         output.seek(0)
         return output
 
@@ -105,7 +105,7 @@ class HashAdapter(object):
         :param input_data: Data on which the hash is computed
         """
         h = self._hinstance()
-        h.update(str(input_data).encode())
+        h.update(str(input_data).encode(encoding='utf-8'))
         return h.hexdigest()
 
     def filecheck(self, input_file, reference):

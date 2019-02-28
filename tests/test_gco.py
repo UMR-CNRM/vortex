@@ -110,6 +110,9 @@ class TestUgetUenv(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp(suffix='test_uget_uenv')
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
+        # Duplicate the environment...
+        newenv = self.sh.env.clone()
+        newenv.active(True)
         # Tweak the HOME directory in order to trick Uenv/Uget kack store
         self.sh.env.HOME = self.tmpdir
         # Set-up the MTOOLDIR
@@ -119,9 +122,12 @@ class TestUgetUenv(unittest.TestCase):
         self.sh.untar(datapath, verbose=False)
 
     def tearDown(self):
+        uenv.clearall()
+        # Revert to the previous environement
+        self.sh.env.active(False)
+        # Do some cleaning
         self.sh.cd(self.oldpwd)
         self.sh.rmtree(self.tmpdir)
-        uenv.clearall()
 
     def test_basics(self):
         uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')

@@ -3,8 +3,6 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import numpy as np
-
 from bronx.compat import random
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
@@ -144,6 +142,7 @@ class Escroc_Score_Ensemble(TaylorRun):
 
     def _default_post_execute(self, rh, opts):
         super(Escroc_Score_Ensemble, self)._default_post_execute(rh, opts)
+        import numpy as np
         report = self._boss.get_report()
 
         scores_all = np.empty((len(self.list_scores), len(self.members), len(self.list_var), 1), float)
@@ -334,6 +333,7 @@ class Escroc_Optim_Ensemble(TaylorRun):
 
     def _default_post_execute(self, rh, opts):
         super(Escroc_Optim_Ensemble, self)._default_post_execute(rh, opts)
+        import numpy as np
         report = self._boss.get_report()
 
         ntasks = len(report["workers_report"])

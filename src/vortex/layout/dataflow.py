@@ -934,7 +934,7 @@ class LocalTracker(defaultdict):
         lpath = rh.container.iotarget()
         if isinstance(lpath, six.string_types):
             if info.get('clear', False):
-                del self[lpath]
+                self.pop(lpath, None)
             else:
                 self[lpath].update_rh(rh, info)
         else:

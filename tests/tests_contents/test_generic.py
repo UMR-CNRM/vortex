@@ -36,6 +36,11 @@ class _BaseDataContentTest(TestCase):
                 if self._temporize:
                     self.insample[-1].temporize()
 
+    def tearDown(self):
+        super(_BaseDataContentTest, self).tearDown()
+        for todo in self.insample:
+            todo.close()
+
 
 class UtDataContent(_BaseDataContentTest):
 

@@ -115,7 +115,7 @@ class TestExpressoServer(unittest.TestCase):
         return rhScript
 
     def _run_algo(self, rhScript, niter, *kargs, **kwargs):
-        algo = fp.proxy.component(engine='exec', interpreter='python',
+        algo = fp.proxy.component(engine='exec', interpreter='current',
                                   niter=niter, server_run=True,
                                   serversync_method='simple_socket',
                                   serversync_medium=self.syncscript,

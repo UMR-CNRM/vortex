@@ -217,87 +217,93 @@ class utExpand(TestCase):
 
     def test_expand_glob(self):
         tmpd = tempfile.mkdtemp()
-        (u_tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
-        for a in ('hip', 'hop'):
-            for b in range(3):
-                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
-                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:{3:02d}'.format(tmpd, a, b, b * 9))
-                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:0'.format(tmpd, a, b))
-                shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:tr'.format(tmpd, a, b))
-        # No match
-        rv = util.expand(dict(
-            arg='multi',
-            look='xx_{glob:a:\w+}_{glob:b:\d+}',
-            seta='[glob:a]',
-            setb='[glob:b]'
-        ))
-        self.assertListEqual(sorted(rv), [])
-        # Match a complex directory
-        rv = util.expand(dict(
-            arg='multi',
-            look=tmpd + '/*_{glob:a:\w+}_{glob:b:\d+}',
-            seta='[glob:a]',
-            setb='[glob:b]'
-        ))
-        rv = sorted(rv,
-                    key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
-        self.assertListEqual(rv, [
-            {'arg': 'multi', 'look': tmpd + '/xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-            {'arg': 'multi', 'look': tmpd + '/xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-            {'arg': 'multi', 'look': tmpd + '/xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-            {'arg': 'multi', 'look': tmpd + '/xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-            {'arg': 'multi', 'look': tmpd + '/xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-            {'arg': 'multi', 'look': tmpd + '/xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
-        ])
-        # Jump to the tmp directory
-        os.chdir(tmpd)
-        rv = util.expand(dict(
-            arg='multi',
-            look='xx_{glob:a:\w+}_{glob:b:\d+}',
-            seta='[glob:a]',
-            setb='[glob:b]'
-        ))
-        rv = sorted(rv,
-                    key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
-        self.assertListEqual(rv, [
-            {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-            {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-            {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-            {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-            {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-            {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
-        ])
-        rv = util.expand(dict(
-            arg='multi',
-            look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2})?}',
-            seta='[glob:a]',
-            setb='[glob:b]'
-        ))
-        rv = sorted(rv,
-                    key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
-        self.assertListEqual(rv, [
-            {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
-            {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-            {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
-            {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-            {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
-            {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-            {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
-            {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-            {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
-            {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-            {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
-            {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
-        ])
-        with self.assertRaises(ValueError):
+        try:
+            (u_tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
+            for a in ('hip', 'hop'):
+                for b in range(3):
+                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
+                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:{3:02d}'.format(tmpd, a, b, b * 9))
+                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:0'.format(tmpd, a, b))
+                    shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:tr'.format(tmpd, a, b))
+            # No match
             rv = util.expand(dict(
-                look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2)?}',  # Unbalanced
+                arg='multi',
+                look='xx_{glob:a:\w+}_{glob:b:\d+}',
+                seta='[glob:a]',
+                setb='[glob:b]'
             ))
-        with self.assertRaises(ValueError):
+            self.assertListEqual(sorted(rv), [])
+            # Match a complex directory
             rv = util.expand(dict(
-                look='xx_{glob:a:\w+}_{glob:b:[\d+}',  # Compilation error
+                arg='multi',
+                look=tmpd + '/*_{glob:a:\w+}_{glob:b:\d+}',
+                seta='[glob:a]',
+                setb='[glob:b]'
             ))
-        shutil.rmtree(tmpd)
+            rv = sorted(rv,
+                        key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
+            self.assertListEqual(rv, [
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
+            ])
+            # Jump to the tmp directory
+            curdir = os.getcwd()
+            try:
+                os.chdir(tmpd)
+                rv = util.expand(dict(
+                    arg='multi',
+                    look='xx_{glob:a:\w+}_{glob:b:\d+}',
+                    seta='[glob:a]',
+                    setb='[glob:b]'
+                ))
+                rv = sorted(rv,
+                            key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
+                self.assertListEqual(rv, [
+                    {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
+                    {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
+                    {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
+                    {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
+                    {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
+                    {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
+                ])
+                rv = util.expand(dict(
+                    arg='multi',
+                    look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2})?}',
+                    seta='[glob:a]',
+                    setb='[glob:b]'
+                ))
+                rv = sorted(rv,
+                            key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
+                self.assertListEqual(rv, [
+                    {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
+                    {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
+                    {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
+                    {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
+                    {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
+                    {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
+                    {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
+                    {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
+                    {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
+                    {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
+                    {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
+                    {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
+                ])
+                with self.assertRaises(ValueError):
+                    rv = util.expand(dict(
+                        look='x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2)?}',  # Unbalanced
+                    ))
+                with self.assertRaises(ValueError):
+                    rv = util.expand(dict(
+                        look='xx_{glob:a:\w+}_{glob:b:[\d+}',  # Compilation error
+                    ))
+            finally:
+                os.chdir(curdir)
+        finally:
+            shutil.rmtree(tmpd)
 
     def test_expand_mixed(self):
         rv = util.expand(dict(

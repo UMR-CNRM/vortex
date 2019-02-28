@@ -15,14 +15,21 @@ import unittest
 import sys
 import textwrap
 
+test_support_ok = True
 try:
     from test import support as test_support
 except ImportError:  # For python <= 2.7.13
-    from test import test_support
+    try:
+        from test import test_support
+    except ImportError as e:
+        sys.stderr.write('{:s}: Import error < {:s} >.\n'.format(__file__, e))
+        test_support_ok = False
 
-temp_filename = test_support.TESTFN
+if test_support_ok:
+    temp_filename = test_support.TESTFN
 
 
+@unittest.skipUnless(test_support_ok, "test_support import failed.")
 class NetrcTestCase(unittest.TestCase):
 
     def make_nrc(self, test_data):

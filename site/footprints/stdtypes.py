@@ -11,6 +11,8 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import copy
 import re
 
+from bronx.syntax.decorators import secure_getattr
+
 #: Automatic export
 __all__ = ['FPDict', 'FPList', 'FPSet', 'FPTuple', 'FPRegex']
 
@@ -61,6 +63,7 @@ class FPRegex(object):
     def __init__(self, pattern, flags=0):
         self._re = re.compile(pattern, flags=flags)
 
+    @secure_getattr
     def __getattr__(self, name):
         return getattr(self._re, name)
 
@@ -69,9 +72,6 @@ class FPRegex(object):
         new = copy.copy(self)
         memo[id(self)] = new
         return new
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
 
     def footprint_export(self):
         return (self._re.pattern, self._re.flags)

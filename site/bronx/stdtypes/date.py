@@ -54,6 +54,8 @@ import locale
 import operator
 import re
 
+from bronx.syntax.decorators import secure_getattr
+
 #: No automatic export
 __all__ = []
 
@@ -161,7 +163,7 @@ def easter(year=None):
 local_date_functions = dict([
     (x.__name__, x)
     for x in locals().values()
-    if inspect.isfunction(x) and x.__doc__.startswith('Return the date')
+    if inspect.isfunction(x) and x.__doc__ and x.__doc__.startswith('Return the date')
 ])
 
 if six.PY2:
@@ -826,6 +828,7 @@ class _GetattrCalculatorMixin(object):
                 return factor * proxyclass(t)
             return _calculator_op_proxy
 
+    @secure_getattr
     def __getattr__(self, name):
         """Proxy to additions and subtractions (used in footprint's replacement).
 

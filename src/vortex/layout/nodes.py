@@ -15,6 +15,7 @@ import re
 
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
 
 from vortex import toolbox, VortexForceComplete
@@ -44,9 +45,10 @@ class NiceLayout(object):
         """Proxy to :meth:`~vortex.tools.systems.header` method."""
         return self.sh.header(*args, **kw)
 
-    def nicedump(self, msg, **kw):
+    def nicedump(self, msg, titlecallback=None, **kw):
         """Simple dump of the dict contents with ``msg`` as header."""
-        self.header(msg)
+        titlecallback = titlecallback or self.header
+        titlecallback(msg)
         if kw:
             maxlen = max([ len(x) for x in kw.keys() ])
             for k, v in sorted(six.iteritems(kw)):
@@ -132,6 +134,7 @@ class ConfigSet(collections.MutableMapping):
     def __contains__(self, key):
         return self._remap_key(key) in self._internal
 
+    @secure_getattr
     def __getattr__(self, key):
         if key in self:
             return self[key]
@@ -293,7 +296,8 @@ class Node(getbytag.GetByTag, NiceLayout):
 
         # Add potential options
         if self.options:
-            self.nicedump('Update conf with last minute arguments', **self.options)
+            self.nicedump('Update conf with last minute arguments',
+                          titlecallback=self.subtitle, **self.options)
             self.conf.update(self.options)
 
         # Then we broadcast the current configuration to the kids
@@ -313,7 +317,8 @@ class Node(getbytag.GetByTag, NiceLayout):
             if localvar[localstrip:] not in self.conf:
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
-            self.nicedump('Populate conf with local variables', **autoconf)
+            self.nicedump('Populate conf with local variables',
+                          titlecallback=self.subtitle, **autoconf)
             self.conf.update(autoconf)
 
     def conf2io(self):
@@ -326,7 +331,6 @@ class Node(getbytag.GetByTag, NiceLayout):
             self.conf.xpid = self.conf.get('suite', self.env.VORTEX_XPID)
         if self.conf.xpid is None:
             raise ValueError('Could not set a proper experiment id.')
-        logger.info('Experiment name is <%s>', self.conf.xpid)
 
     def register_cycle(self, cyclename):
         """Adds a new cycle to genv if a proper callback is defined."""
@@ -338,12 +342,16 @@ class Node(getbytag.GetByTag, NiceLayout):
     def cycles(self):
         """Update and register some configuration cycles."""
 
+        other_cycles = [ x for x in self.conf.keys() if x.endswith('_cycle') ]
+        if 'cycle' in self.conf or other_cycles:
+            self.header("Registering cycles")
+
         # At least, look for the main cycle
         if 'cycle' in self.conf:
             self.register_cycle(self.conf.cycle)
 
         # Have a look to other cycles
-        for other in [ x for x in self.conf.keys() if x.endswith('_cycle') ]:
+        for other in other_cycles:
             self.register_cycle(self.conf.get(other))
 
     def geometries(self):
@@ -593,6 +601,14 @@ class Family(Node):
         for node in self.contents:
             node.build_context()
 
+    def localenv(self):
+        """No env dump in families (it is enough to dump it in Tasks)."""
+        pass
+
+    def summary(self):
+        """No parameters dump in families (it is enough to dump it in Tasks)."""
+        pass
+
     def run(self, nbpass=0):
         """Execution driver: setup, run kids, complete."""
         self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
@@ -739,10 +755,16 @@ class Task(Node):
     def conf2io(self):
         """Broadcast IO SERVER configuration values to environment."""
         t = self.ticket
-        t.sh.header('IOSERVER Environment')
-        t.env.default(VORTEX_IOSERVER_NODES  = self.conf.get('io_nodes', 0))
-        t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.get('io_tasks', 6))
-        t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.get('io_openmp', 4))
+        triggered = any([i in self.conf for i in ('io_nodes', 'io_tasks', 'io_openmp')])
+        if 'io_nodes' in self.conf:
+            t.env.default(VORTEX_IOSERVER_NODES  = self.conf.io_nodes)
+        if 'io_tasks' in self.conf:
+            t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.io_tasks)
+        if 'io_openmp' in self.conf:
+            t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.io_openmp)
+        if triggered:
+            self.nicedump('IOSERVER Environment', ** {k: v for k, v in t.env.items()
+                                                      if k.startswith('VORTEX_IOSERVER_')})
 
     def io_poll(self, prefix=None):
         """Complete the polling of data produced by the execution step."""
@@ -775,8 +797,8 @@ class Driver(getbytag.GetByTag, NiceLayout):
 
     _tag_default = 'pilot'
 
-    def __init__(self, ticket, nodes=(),
-                 rundate=None, iniconf=None, jobname=None, options=None):
+    def __init__(self, ticket, nodes=(), rundate=None, iniconf=None,
+                 jobname=None, options=None, iniencoding=None):
         """Setup default args value and read config file job."""
         self._ticket = t = ticket
         self._conf = None
@@ -788,6 +810,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         if j_assist is not None:
             self._special_prefix = j_assist.special_prefix.upper()
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
+        self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
         self._nbpass  = 0
@@ -830,6 +853,10 @@ class Driver(getbytag.GetByTag, NiceLayout):
         return self._iniconf
 
     @property
+    def iniencoding(self):
+        return self._iniencoding
+
+    @property
     def jobconf(self):
         return self._jobconf
 
@@ -849,12 +876,14 @@ class Driver(getbytag.GetByTag, NiceLayout):
     def nbpass(self):
         return self._nbpass
 
-    def read_config(self, inifile=None):
+    def read_config(self, inifile=None, iniencoding=None):
         """Read specified ``inifile`` initialisation file."""
         if inifile is None:
             inifile = self.iniconf
+        if iniencoding is None:
+            iniencoding = self.iniencoding
         try:
-            iniparser = GenericConfigParser(inifile)
+            iniparser = GenericConfigParser(inifile, encoding=iniencoding)
             thisconf  = iniparser.as_dict(merged=False)
         except Exception:
             logger.critical('Could not read config %s', inifile)
@@ -881,7 +910,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
             logger.warning('This driver does not have any configuration file')
             self._jobconf = dict()
         else:
-            self._jobconf = self.read_config(self.iniconf)
+            self._jobconf = self.read_config(self.iniconf, self.iniencoding)
 
         self._conf = ConfigSet()
         updconf = self.jobconf.get('defaults', dict())

@@ -25,3 +25,5 @@ Functions
 .. autofunction:: timelimit
 
 .. autofunction:: unicode_filter
+
+.. autofunction:: secure_getattr
