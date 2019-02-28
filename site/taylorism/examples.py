@@ -98,7 +98,8 @@ class Summer(Worker):
 
     def _task(self):
         if self.use_lock:
-            self.shared_sum.acquire()  # acquire the lock, to be sure no other process is accessing the data meanwhile
+            # acquire the lock, to be sure no other process is accessing the data meanwhile
+            self.shared_sum.acquire()
         self.shared_sum[0] += self.value
         if self.use_lock:
             self.shared_sum.release()  # release the lock

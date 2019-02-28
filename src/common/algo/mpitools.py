@@ -90,7 +90,7 @@ def arpifs_commons_binarydeco(cls):
 
     def setup_namelist_delta(self, namcontents, namlocal):
         namw = orig_setup_namelist_delta(self, namcontents, namlocal)
-        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
+        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
             namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
             namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
             namw = True

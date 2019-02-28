@@ -312,7 +312,7 @@ class EcFlow(EcmwfLikeScheduler):
             else:
                 sshobj = self.sh.ssh('network', virtualnode=True,
                                      maxtries=sshretries, triesdelay=sshretrydelay)
-                self._tunnel = sshobj.tunnel(echost, int(ecport),maxwait=sshwait)
+                self._tunnel = sshobj.tunnel(echost, int(ecport), maxwait=sshwait)
                 if not self._tunnel:
                     rc = False
                 else:

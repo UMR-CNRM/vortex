@@ -638,7 +638,7 @@ class Archive(Storage):
                 try:
                     username = ftp.logname
                 finally:
-                    ftp.close
+                    ftp.close()
         baseinfo = dict(storage=self.actual_storage,
                         logname=username,
                         location=item, )

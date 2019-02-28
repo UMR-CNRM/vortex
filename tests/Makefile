@@ -29,7 +29,7 @@ check: check27
 
 check27:
 	$(PYTHON) ./do_working_tests-2.7.py
-    
+
 check3:
 	$(PYTHON3) ./do_working_tests-3.py
 
@@ -37,10 +37,10 @@ check3:
 tests: tests27 tests3
 
 tests27:
-	$(NOSE) $(NOSE_OPTS)
+	($(NOSE) $(NOSE_OPTS) 2>&1) | tee $@.log
 
 tests3:
-	$(NOSE3) $(NOSE_OPTS)
+	($(NOSE3) $(NOSE_OPTS) 2>&1) | tee $@.log
 
 # Run all test without nose
 baretests: baretests27 baretests3

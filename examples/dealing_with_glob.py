@@ -64,13 +64,13 @@ print("\nThe contents of the current directory is:")
 pprint.pprint(sh.dir())
 
 # Get the files of the directory
-print("\nPrint the files that have a name formatted as follow: my_file.\d+.\d+:\d+")
+print("\nPrint the files that have a name formatted as follow: " + r"my_file.\d+.\d+:\d+")
 rh_list1 = toolbox.rload(
     # Resource
     unknown = True,
     nickname = ["[glob:term]_[glob:num]"],
     # Container
-    local = "my_file.{glob:num:\d+}.{glob:term:\d+:\d+}",
+    local = r"my_file.{glob:num:\d+}.{glob:term:\d+:\d+}",
     # Provider
     block = "my_block",
     namespace = "vortex.cache.fr",
@@ -81,13 +81,13 @@ rh_list1 = toolbox.rload(
 for rh in rh_list1:
     print(" -> ".join([rh.container.filename, rh.resource.nickname]))
 
-print("\nPrint the files that have a name formatted as follow: my_file.\d.\d+:\d+")
+print("\nPrint the files that have a name formatted as follow: " + r"my_file.\d.\d+:\d+")
 rh_list2 = toolbox.rload(
     # Resource
     unknown = True,
     nickname = ["[glob:term]_[glob:num]"],
     # Container
-    local = "my_file.{glob:num:\d}.{glob:term:\d+:\d+}",
+    local = r"my_file.{glob:num:\d}.{glob:term:\d+:\d+}",
     # Provider
     block = "my_block",
     namespace = "vortex.cache.fr",

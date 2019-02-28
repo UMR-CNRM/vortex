@@ -299,9 +299,10 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend)
 
     def _execute_commons(self, rh, opts):
-        """
-        Launch the BDM request(s).
-        The results of each request are stored in a directory local_directory to avoid files overwritten by others
+        """Launch the BDM request(s).
+
+        The results of each request are stored in a directory local_directory
+        to avoid files overwritten by others
         """
 
         # Look for the input queries
@@ -540,7 +541,7 @@ class GetMarsResource(AlgoComponent):
             role='Query',
             kind='mars_query',
         )
-        if len(input_queries) <1:
+        if len(input_queries) < 1:
             logger.exception('No query file found for the Mars extraction. Stop.')
             raise MarsGetError('No query file found for the Mars extraction')
 
@@ -565,13 +566,10 @@ class GetMarsResource(AlgoComponent):
             # Launch each input queries in a dedicated file
             # (to check that the files do not overwrite each other)
             query_file_path = input_query.rh.container.abspath
-            #query_file_name = input_query.rh.container.filename
             local_directory = '_'.join([query_file_path, self.date.ymdhms])
             logger.info("Here is the content of the query file %s (after substitution):", query_file_path)
             self.system.cat(query_file_path, output=False)
             with self.system.cdcontext(local_directory, create=True):
-                # Make two links before launching the extraction
-                #self.system.symlink(query_file_path, query_file_name)
                 # Launch the command
                 rc = callMarsExtract(sh=self.system, query_file=query_file_path, fatal=self.fatal,
                                      command=actual_command)

@@ -68,7 +68,7 @@ def doc_dive(obj):
 def create_rst(rst, modname, module):
     print(' > Creating', rst)
 
-    if re.search(r'__init_\_.py$', module.__file__):
+    if re.search(r'__init__.py$', module.__file__):
         tplfile = 'doc_package_template.tpl'
     else:
         tplfile = 'doc_module_template.tpl'

@@ -79,7 +79,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple DelayedActionStatusTuple
-DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple', ['void', 'failed', 'done'], verbose=False)
+DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple', ['void', 'failed', 'done'])
 
 #: Predefined DelayedActionStatus values (void=Not ready yet, failed=processed but KO, done=processed)
 d_action_status = DelayedActionStatusTuple(void=0, failed=-1, done=1)

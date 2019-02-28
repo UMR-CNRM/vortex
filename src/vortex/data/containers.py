@@ -49,7 +49,9 @@ class Container(footprints.FootprintBase):
             mode = dict(
                 info            = "The file mode used to open the container.",
                 optional        = True,
-                values          = ['a', 'a+', 'ab', 'a+b', 'ab+', 'r', 'r+', 'rb', 'rb+', 'r+b', 'w', 'w+', 'wb', 'w+b', 'wb+'],
+                values          = ['a', 'a+', 'ab', 'a+b', 'ab+',
+                                   'r', 'r+', 'rb', 'rb+', 'r+b',
+                                   'w', 'w+', 'wb', 'w+b', 'wb+'],
                 remap           = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'},
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),

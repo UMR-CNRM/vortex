@@ -67,7 +67,8 @@ class SafranGuess(GeoFlowResource):
                     type = UnstructuredGeometry,
                 ),
                 cumul = dict(
-                    info     = "The duration of cumulative fields (equivalent to the initial model resource term).",
+                    info     = "The duration of cumulative fields (equivalent to the initial"
+                               " model resource term).",
                     type     = Time,
                 ),
             )
@@ -116,7 +117,8 @@ class SurfaceIO(GeoFlowResource):
                 dateend = dict(
                     info = "Last date of the forcing file",
                 ),
-                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                # This notion does not mean anything in our case (and seems to be
+                # rather ambiguous also in other cases)
                 cutoff = dict(
                     optional = True,
                 ),
@@ -212,14 +214,16 @@ class Prep(InitialCondition):
                     value = ['surf', ],
                     default = 'surf',
                 ),
-                # In operational applications, date is used to refer to the run time but the validity date of the file can be different.
+                # In operational applications, date is used to refer to the run time
+                # but the validity date of the file can be different.
                 # In research applications, there is only the validity date which makes sense.
                 datevalidity = dict(
                     optional = True,
                     type = Date,
                     default = '[date]',
                 ),
-                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                # This notion does not mean anything in our case (and seems to be rather
+                # ambiguous also in other cases)
                 cutoff = dict(
                     optional = True
                 )
@@ -265,7 +269,8 @@ class SnowObs(GeoFlowResource):
                 dateend = dict(
                     info = "Last date of the forcing file",
                 ),
-                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                # This notion does not mean anything in our case (and seems to be rather
+                # ambiguous also in other cases)
                 cutoff = dict(
                     optional = True
                 )

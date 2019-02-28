@@ -11,13 +11,15 @@ import collections
 import json
 import os
 import re
-import six
 import sys
 import traceback
 
-from vortex.util.structs    import ShellEncoder
+import six
+
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes.history import PrivateHistory
+from vortex.util.structs import ShellEncoder
 
 #: No automatic export
 __all__ = []
@@ -528,7 +530,7 @@ class Environment(object):
         self.rmgenericpath('PATH', value)
 
 
-collections.Mapping.register(Environment)
+collections_abc.Mapping.register(Environment)
 
 
 class EnvironmentDeltaContext():

@@ -42,7 +42,8 @@ class ConfTool(footprints.FootprintBase):
 
 #: Holds coupling's data for a particular cutoff/hour
 CouplingInfos = collections.namedtuple('CouplingInfos',
-                                       ('base', 'dayoff', 'cutoff', 'vapp', 'vconf', 'xpid', 'model', 'steps'))
+                                       ('base', 'dayoff', 'cutoff', 'vapp', 'vconf', 'xpid', 'model', 'steps')
+                                       )
 
 
 class CouplingOffsetConfError(Exception):
@@ -203,7 +204,11 @@ class CouplingOffsetConfTool(ConfTool):
                                          'Computed Terms'))
             for k in sorted(self._prepare_terms_map.keys()):
                 print('{:s}  :  {:s}'.format(self._cpl_fmtkey(k),
-                                             ' '.join([six.text_type(t.hour) for t in self._prepare_terms_map[k]])))
+                                             ' '.join([six.text_type(t.hour)
+                                                       for t in self._prepare_terms_map[k]
+                                                       ])
+                                             )
+                      )
 
         # Pre-compute the default refill_map
         self._refill_terms_map = dict()
@@ -282,7 +287,13 @@ class CouplingOffsetConfTool(ConfTool):
     @staticmethod
     def _cpl_fmtkey(k):
         cutoff_map = dict(production='prod')
-        return '{:5s} {:6s}  {:24s} {:s} ({:s})'.format(k[0], cutoff_map.get(k[5], k[5]), k[1] + '/' + k[2], k[3], k[4])
+        return '{:5s} {:6s}  {:24s} {:s} ({:s})'.format(
+            k[0],
+            cutoff_map.get(k[5], k[5]),
+            k[1] + '/' + k[2],
+            k[3],
+            k[4]
+        )
 
     @staticmethod
     def _rtask_key(cutoff, vapp, vconf, xpid, model):

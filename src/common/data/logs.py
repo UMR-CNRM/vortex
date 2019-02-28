@@ -4,14 +4,14 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import collections
 
+from bronx.compat.moves import collections_abc
 from vortex import sessions
+from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.data.flow import FlowResource
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import FmtInt
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
-from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.util.roles import setrole
 
 #: No automatic export
@@ -232,7 +232,7 @@ class TaskInfo(FlowResource):
         return 'taskinfo'
 
 
-class SectionsSlice(collections.Sequence):
+class SectionsSlice(collections_abc.Sequence):
     """Hold a list of dictionaries representing Sections."""
 
     _INDEX_PREFIX = 'sslice'
@@ -314,7 +314,7 @@ class SectionsSlice(collections.Sequence):
 
     def uniquefilter(self, **kwargs):
         """Like :meth:`filter` but checks that only one element matches."""
-        newslice = self.filter(** kwargs)
+        newslice = self.filter(**kwargs)
         if len(newslice) == 0:
             raise ValueError("No section was found")
         elif len(newslice) > 1:
@@ -369,6 +369,7 @@ class SectionsSlice(collections.Sequence):
                                              .format(attr, idx))
                 else:
                     raise AttributeError("A '{:s}' attribute must be there !".format(self._INDEX_ATTR))
+
             return _attr_lookup
 
 

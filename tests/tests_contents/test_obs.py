@@ -10,7 +10,7 @@ import sys
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-from tests_contents.test_generic import _BaseDataContentTest
+from .test_generic import _BaseDataContentTest
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
@@ -68,7 +68,7 @@ class UtVarBCContent(_BaseDataContentTest):
         self.assertEqual(len(ct), 13)  # This time _container_limit is big enough
 
 
-REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT                                          
+REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT
 acar BUFR acar 20170410 00
 tovhirs BUFR hirs 20170410 00"""
 

@@ -32,8 +32,7 @@ __all__ = []
 
 #: Class for possible states of a :class:`InputMonitorEntry` object
 EntryStateTuple = namedtuple('EntryStateTuple',
-                             ['ufo', 'expected', 'available', 'failed'],
-                             verbose=False)
+                             ['ufo', 'expected', 'available', 'failed'])
 
 #: Predefined :class:`InputMonitorEntry` state values
 EntrySt = EntryStateTuple(ufo='ufo', expected='expected', available='available',
@@ -41,8 +40,7 @@ EntrySt = EntryStateTuple(ufo='ufo', expected='expected', available='available',
 
 #: Class for possible states of a :class:`_Gang` object
 GangStateTuple = namedtuple('GangStateTuple',
-                            ['ufo', 'collectable', 'pcollectable', 'failed'],
-                            verbose=False)
+                            ['ufo', 'collectable', 'pcollectable', 'failed'])
 
 #: Predefined :class:`_Gang` state values
 GangSt = GangStateTuple(ufo='undecided', collectable='collectable',

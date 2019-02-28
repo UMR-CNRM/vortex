@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 # encoding: utf-8
-'''
+
+"""
 Exports Vortex to the many servers where it is installed.
 
 This script exports a given version of Vortex. It extracts it from the Git
@@ -12,7 +13,7 @@ a configuration file (see the ``--conf`` option)
 
 For now, only the SSH export service is implemented.
 
-'''
+"""
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 import six
@@ -85,10 +86,10 @@ _TEMPLATE_DIR = os.path.join(_VTXBASE, 'project', 'templates')
 class ToolboxProvider(object):
     """Abstract class for a Toolbox provider."""
 
-    _ALLOWED_VERSIONS = [re.compile('master$'),
-                         re.compile('olive-(?:dev|ecmwf|lf)$'),
-                         re.compile('cen[_-]dev$'),
-                         re.compile('\d+\.\d+\.\d+$')]
+    _ALLOWED_VERSIONS = [re.compile(r'master$'),
+                         re.compile(r'olive-(?:dev|ecmwf|lf)$'),
+                         re.compile(r'cen[_-]dev$'),
+                         re.compile(r'\d+\.\d+\.\d+$')]
 
     def __init__(self, tmpdir, wantedversion):
         """
@@ -705,7 +706,7 @@ class ExportTarget(object):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")

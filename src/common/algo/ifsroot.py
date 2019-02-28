@@ -256,7 +256,8 @@ class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
+        namcandidates = [x.rh
+                         for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()

@@ -119,7 +119,9 @@ class GnuScript(Executable):
 
     def command_line(self, **opts):
         """Returns a blank separated list of options."""
-        return ' '.join(['--' + k + ' ' + ' '.join([str(x) for x in footprints.util.mktuple(v)]) for k, v in opts.items()])
+        return ' '.join(['--' + k + ' ' + ' '.join([str(x)
+                                                    for x in footprints.util.mktuple(v)])
+                         for k, v in opts.items()])
 
 
 class Binary(Executable):

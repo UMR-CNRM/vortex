@@ -18,14 +18,15 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
     from snowtools.scores.ensemble import ESCROC_EnsembleScores
-    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles 
+    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Member(TaylorVortexWorker):
 
     _footprint = dict(
-        info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment without MPI parallelization.',
+        info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment '
+               'without MPI parallelization.',
         attr = dict(
             kind = dict(
                 values = ['scores_escroc'],
@@ -67,10 +68,12 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
         rdict = dict(rc=True)
 
-        list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
+        list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh +
+                    '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
         E = ESCROC_list_scores()
-        rdict["scores"] = E.compute_scores_allmembers(list_pro, "obs_insitu.nc", self.list_scores, self.list_var)
+        rdict["scores"] = E.compute_scores_allmembers(list_pro, "obs_insitu.nc",
+                                                      self.list_scores, self.list_var)
         rdict["members"] = self.members  # because in the report the members can be in a different order
 
         return rdict
@@ -130,7 +133,7 @@ class Escroc_Score_Ensemble(TaylorRun):
     )
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(Escroc_Score_Ensemble, self)._default_common_instructions(rh, opts)
         for attribute in ["datebegin", "dateend", "list_var", "list_scores"]:
             ddict[attribute] = getattr(self, attribute)
@@ -246,7 +249,8 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
 
         rdict = dict(rc=True)
 
-        list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh + '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
+        list_pro = ["PRO_" + self.datebegin.ymdh + "_" + self.dateend.ymdh +
+                    '_mb{0:04d}'.format(member) + ".nc" for member in self.members]
         print(list_pro)
         for var in self.list_var:
             E = ESCROC_EnsembleScores(list_pro, "obs_insitu.nc", var)
@@ -317,7 +321,7 @@ class Escroc_Optim_Ensemble(TaylorRun):
     )
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(Escroc_Optim_Ensemble, self)._default_common_instructions(rh, opts)
         for attribute in ["datebegin", "dateend", "list_var", "list_scores"]:
             ddict[attribute] = getattr(self, attribute)
@@ -374,7 +378,8 @@ class Escroc_Optim_Ensemble(TaylorRun):
             return [self.members[:]]
         else:
             # Initialization
-            # We want that all sites are tested with the same subensembles, this is why we fix the argument of random.seed()
+            # We want that all sites are tested with the same subensembles,
+            # this is why we fix the argument of random.seed()
             rgen = random.Random()
             rgen.seed(0)
             local_members = []

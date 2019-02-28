@@ -572,7 +572,8 @@ class Footprint(object):
             todokset.discard(k)
             kdef = attrs[k]
             nbpass += 1
-            if not self._replacement(nbpass, k, kfast, guess, extras, todok, todokfast, todokset) or guess[k] is None:
+            if (not self._replacement(nbpass, k, kfast, guess, extras, todok, todokfast, todokset) or
+                    guess[k] is None):
                 continue
 
             attr_seen.add(k)

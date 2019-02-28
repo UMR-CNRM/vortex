@@ -3,15 +3,16 @@ A bunch of classes and functions that deal with TNT configuration files and
 directives.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import collections
 import io
 import os
-import six
 import string
 import sys
 
+import six
+
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
 
@@ -32,6 +33,7 @@ class TntDirectiveError(Exception):
 
 class TntDirectiveUnkownError(TntDirectiveError):
     """The TNT directive is unknown."""
+
     def __init__(self, name):
         errmsg = 'The "{:s}" directive is not allowed with TNT.'.format(name)
         super(TntDirectiveUnkownError, self).__init__(errmsg)
@@ -39,6 +41,7 @@ class TntDirectiveUnkownError(TntDirectiveError):
 
 class TntDirectiveValueError(TntDirectiveError):
     """An inappropriate value was given as a TNT directive."""
+
     def __init__(self, name, value):
         errmsg = '"{!s}" is not an appropriate value for the "{:s}" directive.'.format(value, name)
         super(TntDirectiveValueError, self).__init__(errmsg)
@@ -66,14 +69,14 @@ class TntDirective(object):
         """Verify if *val* is some kind of a (block, key) tuple description."""
         keylist = list()
         # Reformat dictionaries, iterables, ...
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, collections_abc.Mapping):
             for b, v in val.items():
-                if isinstance(v, collections.Iterable) and not isinstance(v, six.string_types):
+                if isinstance(v, collections_abc.Iterable) and not isinstance(v, six.string_types):
                     keylist.extend([(b, kk) for kk in v])
                 else:
                     keylist.append((b, v), )
-        elif isinstance(val, collections.Iterable):
-            if all([isinstance(v, collections.Iterable) and not isinstance(v, six.string_types)
+        elif isinstance(val, collections_abc.Iterable):
+            if all([isinstance(v, collections_abc.Iterable) and not isinstance(v, six.string_types)
                     for v in val]):
                 keylist.extend(val)
             else:
@@ -101,12 +104,12 @@ class TntDirective(object):
     def _process_keys_to_set(self, val, theexc=None):
         kdict = dict()
         myexc = theexc or TntDirectiveValueError('keys_to_set', val)
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, collections_abc.Mapping):
             for k, v in val.items():
-                if isinstance(v, collections.Mapping):
+                if isinstance(v, collections_abc.Mapping):
                     for kk, vv in v.items():
                         kdict[self._check_keytuple((k, kk), myexc, unique=True)] = vv
-                elif isinstance(k, collections.Iterable):
+                elif isinstance(k, collections_abc.Iterable):
                     kdict[self._check_keytuple(k, myexc, unique=True)] = v
                 else:
                     raise myexc
@@ -123,16 +126,16 @@ class TntDirective(object):
         return kdict
 
     def _process_blocks_to_move(self, val):
-        if not (isinstance(val, collections.Mapping) and
+        if not (isinstance(val, collections_abc.Mapping) and
                 all([isinstance(k, six.string_types) and isinstance(v, six.string_types)
                      for k, v in val.items()])):
             raise TntDirectiveValueError('blocks_to_move', val)
         return {k: v for k, v in val.items()}
 
     def _process_set_of_blocks(self, val, realname):
-        if (isinstance(val, collections.Iterable) and
-                not isinstance(val, six.string_types) and
-                all([isinstance(v, six.string_types) for v in val])):
+        if (isinstance(val, collections_abc.Iterable) and
+              not isinstance(val, six.string_types) and
+              all([isinstance(v, six.string_types) for v in val])):
             return set(val)
         elif isinstance(val, six.string_types):
             return set([val, ])
@@ -146,7 +149,7 @@ class TntDirective(object):
         return self._process_set_of_blocks(val, 'new_blocks')
 
     def _process_macros(self, val):
-        if not (isinstance(val, collections.Mapping) and
+        if not (isinstance(val, collections_abc.Mapping) and
                 all([isinstance(k, six.string_types) for k in val.keys()])):
             raise TntDirectiveValueError('macros', val)
         return {k: v for k, v in val.items()}
@@ -181,7 +184,7 @@ def read_directives(filename):
     if os.path.splitext(filename)[1] in ('.yaml', '.yml'):
         import yaml
         with io.open(filename, 'r') as yamlfh:
-            return TntDirective(** yaml.load(yamlfh))
+            return TntDirective(**yaml.load(yamlfh))
     else:
         prev_bytecode_flag = sys.dont_write_bytecode
         try:
@@ -197,7 +200,7 @@ def read_directives(filename):
                 m = imp.load_source(filename, os.path.abspath(filename))
         finally:
             sys.dont_write_bytecode = prev_bytecode_flag
-        return TntDirective(** {k: v for k, v in m.__dict__.items() if not k.startswith('_')})
+        return TntDirective(**{k: v for k, v in m.__dict__.items() if not k.startswith('_')})
 
 
 # TNTstack directives part
@@ -223,14 +226,14 @@ class TntStackDirective(object):
         Read the *directives* attribute and create :class:`TntDirective` objects
         from that.
         """
-        if not (isinstance(directives, collections.Mapping) and
-                all([isinstance(v, collections.Mapping) for v in directives.values()])):
+        if not (isinstance(directives, collections_abc.Mapping) and
+                all([isinstance(v, collections_abc.Mapping) for v in directives.values()])):
             raise TntStackDirectiveError('The directives argument must be a mapping of mappings')
         for k, v in directives.items():
             if 'external' in v:
                 newdir = read_directives(os.path.join(self._basedir, v['external']))
             else:
-                newdir = TntDirective(** v)
+                newdir = TntDirective(**v)
             self._directives[k] = newdir
 
     def _checkdict(self, action, values, attr, str_or_list=False):
@@ -246,7 +249,7 @@ class TntStackDirective(object):
             tntlog.error("Error while processing todo list item:\n%s", values)
             raise TntStackDirectiveError('The "{:s}" entry is mandatory with the "{:s}" action'
                                          .format(attr, action))
-        if isinstance(stuff, six.string_types) or not isinstance(stuff, collections.Iterable):
+        if isinstance(stuff, six.string_types) or not isinstance(stuff, collections_abc.Iterable):
             stuff = [stuff, ]
         else:
             stuff = [v for v in stuff]
@@ -261,8 +264,8 @@ class TntStackDirective(object):
 
     def _todolist_init(self, todolist):
         """Read the *todolist* attribute and check that everything is ok."""
-        if not (isinstance(todolist, collections.Iterable) and
-                all([isinstance(v, collections.Mapping) for v in todolist])):
+        if not (isinstance(todolist, collections_abc.Iterable) and
+                all([isinstance(v, collections_abc.Mapping) for v in todolist])):
             raise TntStackDirectiveError('The todolist argument must be an iterable of mappings')
         for todo in todolist:
             action = todo.get('action', None)

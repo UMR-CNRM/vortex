@@ -20,7 +20,8 @@ class GenvUsageModelResource(GenvModelResource):
 
     _abstract = True
     _footprint = dict(
-        info = 'different use : model classic use for simulation or interpolation use for interpolation between grid of Hycom',
+        info = 'different use : model classic use for simulation or interpolation use '
+               'for interpolation between grid of Hycom',
         attr = dict(
             usage = dict(
                 values  = ['model', 'interpol'],

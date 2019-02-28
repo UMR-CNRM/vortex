@@ -7,19 +7,19 @@ Configuration management through ini files.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import six
-from six.moves.configparser import SafeConfigParser, ConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
-
 import io
 import itertools
 import re
 import sys
 
-from bronx.fancies import loggers
-from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
-import footprints
-from bronx.stdtypes import date as bdate
+import six
+from six.moves.configparser import NoSectionError, InterpolationDepthError
+from six.moves.configparser import SafeConfigParser, ConfigParser, NoOptionError
 
+import footprints
+from bronx.fancies import loggers
+from bronx.stdtypes import date as bdate
+from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 from vortex import sessions
 
 __all__ = []
@@ -31,7 +31,6 @@ if _PARSERPY32:
     _PARSERCLASS = ConfigParser
 else:
     _PARSERCLASS = SafeConfigParser
-
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
@@ -246,7 +245,7 @@ class GenericReadOnlyConfigParser(object):
         if merged:
             dico = dict()
         else:
-            dico = dict(defaults = dict(self.defaults()))
+            dico = dict(defaults=dict(self.defaults()))
         for section in self.sections():
             if merged:
                 dico[section] = dict(self.items(section))
@@ -339,7 +338,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
     def get(self, section, option, raw=False, myvars=None):
         """Behaves like the GenericConfigParser's ``get`` method."""
-        expanded = [ s for s in self._get_section_list(section) if s is not None ]
+        expanded = [s for s in self._get_section_list(section) if s is not None]
         if not expanded:
             raise NoSectionError(section)
         expanded.reverse()
@@ -394,7 +393,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
     def __getattr__(self, attr):
         # Give access to a very limited set of methods
-        if attr in ('defaults', ):
+        if attr in ('defaults',):
             return getattr(self.parser, attr)
         else:
             raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
@@ -487,7 +486,8 @@ class DelayedConfigParser(GenericConfigParser):
     def __getattribute__(self, attr):
         try:
             logger.debug('Getattr %s < %s >', attr, self)
-            if attr in filter(lambda x: not x.startswith('_'), dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
+            if attr in filter(lambda x: not x.startswith('_'),
+                              dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
                 object.__getattribute__(self, 'refresh')()
         except StandardError:
             logger.critical('Trouble getattr %s < %s >', attr, self)
@@ -594,8 +594,8 @@ class AppConfigStringDecoder(StringDecoder):
             values = self._sparser(value, itemsep=' ', keysep=':')
             if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
                     for k in values.keys()]):
-                return cb(** {k: self._value_expand(v, remap, subs)
-                              for k, v in values.items()})
+                return cb(**{k: self._value_expand(v, remap, subs)
+                             for k, v in values.items()})
         except StringDecoderSyntaxError:
             pass
         # The usual case...
@@ -613,7 +613,7 @@ class AppConfigStringDecoder(StringDecoder):
     def _build_fpgeneric(self, value, remap, subs, collector):
         fp = {k: self._value_expand(v, remap, subs)
               for k, v in six.iteritems(self._sparser(value, itemsep=' ', keysep=':'))}
-        obj = footprints.collectors.get(tag=collector).load(** fp)
+        obj = footprints.collectors.get(tag=collector).load(**fp)
         if obj is None:
             raise StringDecoderSyntaxError(value,
                                            'No object could be created from the {} collector'.
@@ -742,7 +742,7 @@ class ConfigurationTable(IniConf):
         if not hasattr(self, '_tablelist'):
             self._tablelist = list()
             d = self.config.as_dict()
-            for item, group in [ x.split(':') for x in self.config.parser.sections() if ':' in x ]:
+            for item, group in [x.split(':') for x in self.config.parser.sections() if ':' in x]:
                 try:
                     for k, v in d[item].items():
                         # Can occur in case of a redundant entry in the config file
@@ -790,7 +790,7 @@ class ConfigurationTable(IniConf):
         """Return a list of items with main key or name loosely matching the given argument."""
         return [x for x in self.tablelist
                 if any([re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
-                        for thiskey in self.searchkeys ])]
+                        for thiskey in self.searchkeys])]
 
 
 class TableItem(footprints.FootprintBase):
@@ -834,8 +834,7 @@ class TableItem(footprints.FootprintBase):
                                          six.text_type(self.footprint_getattr(k)), k))
         else:
             for k in self.footprint_attributes:
-                if ((not mkshort or self.footprint_getattr(k) is not None) and
-                        k != 'translator'):
+                if ((not mkshort or self.footprint_getattr(k) is not None) and k != 'translator'):
                     output_stack.append((k, six.text_type(self.footprint_getattr(k)), k))
         return output_stack
 
@@ -847,7 +846,7 @@ class TableItem(footprints.FootprintBase):
             max_keylen = max([len(i[0]) for i in output_stack])
             print_fmt = '{0:' + six.text_type(max_keylen) + 's} : {1:s}'
             for item in output_stack:
-                output_list.append(print_fmt.format(* item))
+                output_list.append(print_fmt.format(*item))
         return '\n'.join(output_list)
 
     def __str__(self):
@@ -872,7 +871,8 @@ class TableItem(footprints.FootprintBase):
             else:
                 i_other.append(item)
         return '**{}** : `{}`\n\n{}\n\n'.format(i_name[1],
-                                                ', '.join(['{0:s}={1:s}'.format(* i)
+                                                ', '.join(['{0:s}={1:s}'.format(*i)
                                                            for i in i_hot]),
-                                                '\n'.join(['    * {0:s}: {1:s}'.format(* i)
-                                                           for i in i_other]))
+                                                '\n'.join(['    * {0:s}: {1:s}'.format(*i)
+                                                           for i in i_other])
+                                                )
