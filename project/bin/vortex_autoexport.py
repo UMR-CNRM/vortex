@@ -408,8 +408,10 @@ class ShellAccessExportService(ExportService):
             if cleanup:
                 repl_cmd = "rm -rf {0:s}.tmpdel".format(final_dir)
                 if not self.sh_execute(repl_cmd, onerror_raise=False):
-                    logger.warn('Waiting 2 seconds and retries the delete...')
-                    time.sleep(2)
+                    naptime = float(self._internals.get('sleep_retry', 2))
+                    logger.warn('Waiting %s seconds and retries the delete...',
+                                str(naptime))
+                    time.sleep(naptime)
                     self.sh_execute(repl_cmd)
         logger.info("  The Vortex Toolbox was installed in {} on {}".format(final_dir,
                                                                             self.name))
