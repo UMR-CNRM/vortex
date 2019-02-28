@@ -526,7 +526,8 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                             raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
                     else:
                         mappeddata = thisdata
-                    candidates = [ x for x in self.promises if x.rh.container.basename == mappeddata ]
+                    candidates = [x for x in self.promises
+                                  if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()
@@ -693,6 +694,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         A first attempt is made to terminate it nicely. If it doesn't work,
         a SIGTERM is sent.
         """
+        rc = False
         # This test should always succeed...
         if (self._server_synctool is not None and
                 self._server_process is not None):

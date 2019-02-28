@@ -172,13 +172,15 @@ class CdContext(object):
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
-        self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
-        self.sh.cd(self.newpath, create=self.create)
+        if self.newpath not in ('', '.'):
+            self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
+            self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
-        self.sh.cd(self.oldpath)
-        if self.clean_onexit:
-            self.sh.rm(self.newpath)
+        if self.newpath not in ('', '.'):
+            self.sh.cd(self.oldpath)
+            if self.clean_onexit:
+                self.sh.rm(self.newpath)
 
 
 def setlocale(category, localename=None):

@@ -423,7 +423,8 @@ class FolderShell(addons.FtrawEnableAddon):
         return rc, dict_args
 
     @addons.require_external_addon('ectrans')
-    def _folder_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def _folder_ectransput(self, source, target, gateway=None, remote=None,
+                           cpipeline=None, sync=False):
         """Put a folder resource using ECtrans.
 
         :param source: source file
@@ -431,6 +432,7 @@ class FolderShell(addons.FtrawEnableAddon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline to be used, if provided
+        :param bool sync: If False, allow asynchronous transfers.
         :return: return code and additional attributes used
         """
         if cpipeline is not None:
@@ -445,7 +447,8 @@ class FolderShell(addons.FtrawEnableAddon):
                 rc, dict_args = self.sh.raw_ectransput(source=csource,
                                                        target=target,
                                                        gateway=gateway,
-                                                       remote=remote)
+                                                       remote=remote,
+                                                       sync=sync)
         finally:
             self.sh.rm(csource)
         return rc, dict_args

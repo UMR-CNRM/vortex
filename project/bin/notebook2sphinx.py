@@ -56,7 +56,7 @@ Subdirectory: {sub:s}
 
 '''
 _INDEX_SKEL = 'index_skeleton.rst'
-_NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+_NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                      '../templates'))
 
 

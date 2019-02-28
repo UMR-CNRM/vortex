@@ -375,7 +375,7 @@ class C901(IFSParallel):
                         ("GridpointFileGG", GRIDPOINT_FILE_GG)]
     LIST_CST_INPUT_FILES = [("ConstantSpectralFileSH", SPECTRAL_FILE_SH),
                             ("ConstantGridpointFileUA", GRIDPOINT_FILE_UA),
-                            ("ConstantGrdipointFileGG", GRIDPOINT_FILE_GG)]
+                            ("ConstantGridpointFileGG", GRIDPOINT_FILE_GG)]
 
     @property
     def realkind(self):

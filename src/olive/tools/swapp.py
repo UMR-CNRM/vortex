@@ -8,6 +8,8 @@ import io
 import re
 import socket
 import string
+import uuid
+import tempfile
 
 from bronx.datagrip import namelist as fortran
 from bronx.fancies import loggers
@@ -84,7 +86,7 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
         return stepfile
 
 
-def olive_jobout(sh, env, output, localout=None):
+def olive_jobout(sh, env, output, localout=None, mode='socket'):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
     logger.info('Prepare output <%s> at localout <%s>', output, str(localout))
@@ -106,6 +108,16 @@ def olive_jobout(sh, env, output, localout=None):
     else:
         localout = _olive_jobout_sizecontrol(sh, localout, directory='~')
 
+    if mode == 'socket':
+        return olive_jobout_socketsend(sh, env, output, mstep, localout)
+    elif mode == 'ectrans':
+        return olive_jobout_ectranssend(sh, env, output, mstep, localout)
+    else:
+        raise NotImplementedError('mode "{:s}" is not implemented'.format(mode))
+
+
+def olive_jobout_socketsend(sh, env, output, mstep, localout):
+    """Send the request to joboutd using a socket."""
     localhost = sh.default_target.inetname
     _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
     user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
@@ -131,8 +143,38 @@ def olive_jobout(sh, env, output, localout=None):
     else:
         rc = 0
         logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
-
     return rc
+
+
+def olive_jobout_ectranssend(sh, env, output, mstep, localout):
+    """Send the request to updsmsd using ectrans."""
+    if 'ectrans' not in sh.loaded_addons():
+        raise RuntimeError('The ectrans addon needs to be loaded !')
+    if 'VORTEX_UPDSERVER_HOST' not in env:
+        raise RuntimeError('The VORTEX_UPDSERVER_HOST variable needs to be defined')
+    if 'VORTEX_UPDSERVER_PATH' not in env:
+        raise RuntimeError('The VORTEX_UPDSERVER_PATH variable needs to be defined')
+
+    stepfiles = localout.split(':')
+    if mstep == 'on':
+        stepfiles = [s + '.out' for s in stepfiles]
+    with tempfile.NamedTemporaryFile('wb', prefix='jobout_send.') as fhdir:
+        # Create the directive file...
+        fhdir.write((output + "\n").encode())
+        fhdir.write((env.VORTEX_UPDSERVER_HOST + "\n").encode())
+        fhdir.write("void_password\n".encode())
+        for stepfile in stepfiles:
+            with io.open(stepfile, 'rb') as fhstep:
+                fhdir.write(fhstep.read() + b"\n")
+        fhdir.flush()
+
+        remote = sh.ectrans_remote_init(storage=env.VORTEX_UPDSERVER_HOST)
+        gateway = sh.ectrans_gateway_init()
+        return sh.raw_ectransput(source=fhdir.name,
+                                 target=sh.path.join(env.VORTEX_UPDSERVER_PATH,
+                                                     'jobout.' + uuid.uuid4().hex),
+                                 gateway=gateway, remote=remote,
+                                 priority=90, retryCnt=5, retryFrq=180, sync=False)
 
 
 def olive_enforce_oneshot(identifier):

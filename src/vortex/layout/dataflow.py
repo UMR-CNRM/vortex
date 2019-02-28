@@ -680,13 +680,15 @@ class SequenceInputsReport(object):
 
 def _str2unicode(jsencode):
     """Convert all the strings to Unicode."""
+    if not six.PY2:
+        return jsencode
     if isinstance(jsencode, dict):
         return {_str2unicode(key): _str2unicode(value)
                 for key, value in six.iteritems(jsencode)}
     elif isinstance(jsencode, list):
         return [_str2unicode(value) for value in jsencode]
     elif isinstance(jsencode, str):
-        return six.text_type(str)
+        return six.text_type(jsencode)
     else:
         return jsencode
 

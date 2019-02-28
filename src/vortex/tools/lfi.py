@@ -430,13 +430,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     fa_ecfsput = lfi_ecfsput = _std_ecfsput
 
     @addons.require_external_addon('ectrans')
-    def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def _std_ectransput(self, source, target, gateway=None, remote=None,
+                        cpipeline=None, sync=False):
         """
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline to be used, if provided
+        :param bool sync: If False, allow asynchronous transfers
         :return: return code and additional attributes used
         """
         if self.is_xlfi(source):
@@ -454,7 +456,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                     rc, dict_args = self.sh.raw_ectransput(source=psource,
                                                            target=target,
                                                            gateway=gateway,
-                                                           remote=remote)
+                                                           remote=remote,
+                                                           sync=sync)
             finally:
                 self.sh.rm(psource)
             return rc, dict_args
@@ -463,7 +466,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                                       target=target,
                                       gateway=gateway,
                                       remote=remote,
-                                      cpipeline=cpipeline)
+                                      cpipeline=cpipeline,
+                                      sync=sync)
 
     fa_ectransput = lfi_ectransput = _std_ectransput
 

@@ -56,6 +56,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ManualInputMonitor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BasicInputMonitor
    :show-inheritance:
    :members:

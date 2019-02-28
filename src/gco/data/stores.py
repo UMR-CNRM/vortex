@@ -15,6 +15,7 @@ from bronx.fancies import loggers
 
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
+from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser
 from gco.syntax.stdattrs import UgetId
 
@@ -104,11 +105,12 @@ class GcoCentralStore(Store):
                 optional = True,
                 default  = None
             ),
-            ggetroot = dict(
+            ggetarchive = dict(
                 optional = True,
                 default  = None
             ),
-            ggetarchive = dict(
+            ggetcache = dict(
+                type     = bool,
                 optional = True,
                 default  = None
             ),
@@ -130,37 +132,67 @@ class GcoCentralStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def _actualgget(self, rpath):
-        """Return actual (gtool, garchive, tampon, gname)."""
-        tg = self.system.default_target
-
-        lpath = rpath.lstrip('/').split('/')
-        gname = lpath.pop()
-
-        if 'GGET_TAMPON' in self.system.env:
-            tampon = self.system.env.GGET_TAMPON
-        else:
-            rootdir = self.ggetroot
-            if rootdir is None:
-                rootdir = tg.get('gco:rootdir', '')
-            tampon = rootdir + '/' + '/'.join(lpath)
-
-        gcmd = self.ggetcmd
-        if gcmd is None:
-            gcmd = tg.get('gco:ggetcmd', 'gget')
-
+    @property
+    def _actual_gpath(self):
         gpath = self.ggetpath
         if gpath is None:
             if 'GGET_PATH' in self.system.env:
                 gpath = self.system.env.GGET_PATH
             else:
-                gpath = tg.get('gco:ggetpath', '')
+                gpath = self.system.default_target.get('gco:ggetpath', '')
+        return gpath
 
+    @property
+    def _actual_gcmd(self):
+        gcmd = self.ggetcmd
+        if gcmd is None:
+            gcmd = self.system.default_target.get('gco:ggetcmd', 'gget')
+        return gcmd
+
+    @property
+    def _actual_garchive(self):
         garchive = self.ggetarchive
         if garchive is None:
-            garchive = tg.get('gco:ggetarchive', 'hendrix')
+            garchive = self.system.default_target.get('gco:ggetarchive', 'hendrix')
+        return garchive
 
-        return (self.system.path.join(gpath, gcmd), garchive, tampon, gname)
+    @property
+    def _actual_gcache(self):
+        gcache = self.ggetcache
+        if gcache is None:
+            gcache = self.system.default_target.get('gco:ggetcache', 'True')
+            gcache = bool(vartrue.match(gcache))
+        return gcache
+
+    def _actualgget(self, rpath):
+        """Return actual (gtool, garchive, tampon, gname)."""
+        lpath = rpath.lstrip('/').split('/')
+        gname = lpath.pop()
+        cmd = [self.system.path.join(self._actual_gpath, self._actual_gcmd),
+               '-host', self._actual_garchive]
+        if not self._actual_gcache:
+            cmd.append('-no-cache')
+        return (cmd, gname)
+
+    def _gspawn(self, cmd):
+        with self.system.env.clone() as lenv:
+            # Needed for gget to work with ectrans
+            if 'ectrans' in self.system.loaded_addons():
+                remote = self.system.ectrans_remote_init(storage=self._actual_garchive)
+                gateway = self.system.ectrans_gateway_init()
+                logger.debug('ectrans setup: gateway=%s remote=%s', gateway, remote)
+                lenv.ECTRANS_GATEWAY = gateway
+                lenv.ECTRANS_REMOTE = remote
+            # Gget needs the file to be readable to everyone (otherwise the
+            # "tampon" does not work
+            rc = False
+            p_umask = self.system.umask(0o0022)
+            try:
+                logger.debug('gget command: %s', ' '.join(cmd))
+                rc = self.system.spawn(cmd, output=True)
+            finally:
+                self.system.umask(p_umask)
+            return rc
 
     def ggetcheck(self, remote, options):
         """Verify disponibility in GCO's tampon using ``gget`` external tool."""
@@ -172,21 +204,17 @@ class GcoCentralStore(Store):
 
     def ggetlocate(self, remote, options):
         """Get location in GCO's tampon using ``gget`` external tool."""
-        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
-        sh = self.system
-        sh.env.GGET_TAMPON = tampon
-        gloc = sh.spawn([gtool, '-path', '-host', archive, gname], output=True)
-        if gloc and sh.path.exists(gloc[0]):
+        (gcmd, gname) = self._actualgget(remote['path'])
+        gloc = self._gspawn(gcmd + ['-path', gname])
+        if gloc and self.system.path.exists(gloc[0]):
             return gloc[0]
         else:
             return False
 
     def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
-        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
+        (gcmd, gname) = self._actualgget(remote['path'])
         sh = self.system
-        sh.env.GGET_TAMPON = tampon
-
         if options is None:
             options = dict()
         fmt = options.get('fmt', 'foo')
@@ -195,7 +223,7 @@ class GcoCentralStore(Store):
             logger.info("The resource was already fetched in a previous extract.")
             rc = True
         else:
-            rc = sh.spawn([gtool, '-host', archive, gname], output=False)
+            rc = self._gspawn(gcmd + [gname])
 
         if rc and sh.path.exists(gname):
             if extract:
