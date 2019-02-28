@@ -96,7 +96,13 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
                 type = int,
                 default = 1,
                 optional = True
-            )
+            ),
+            progenvdelta = dict(
+                info = 'Any alteration to environment variables',
+                type = footprints.FPDict,
+                default = footprints.FPDict({}),
+                optional = True
+            ),
         )
     )
 
@@ -119,10 +125,11 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
         logger.info("Starting the following command: %s (taskset=%s, id=%d)",
                     " ".join([self.progname, ] + self.progargs),
                     str(self.progtaskset), self.scheduler_ticket)
-        self.system.spawn([self.progname, ] + self.progargs, output=tmpio,
-                          fatal=True, taskset=self.progtaskset,
-                          taskset_id=self.scheduler_ticket,
-                          taskset_bsize=self.progtaskset_bsize)
+        with self.system.env.delta_context(** self.progenvdelta):
+            self.system.spawn([self.progname, ] + self.progargs, output=tmpio,
+                              fatal=True, taskset=self.progtaskset,
+                              taskset_id=self.scheduler_ticket,
+                              taskset_bsize=self.progtaskset_bsize)
 
     def delayed_error_local_spawn(self, stdoutfile, rcdict):
         """local_spawn wrapped in a try/except in order to trigger delayed exceptions."""
