@@ -10,24 +10,23 @@ import io
 import re
 import time
 
-import footprints
-
 from bronx.fancies import loggers
 from bronx.stdtypes.date import utcnow
 from bronx.stdtypes.dictionaries import Foo
 from bronx.system.memory import convert_bytes_in_unit
+import footprints
+from taylorism import Boss
 
 from vortex.tools.systems   import ExecutionError
-from vortex.tools           import odb
-from vortex.algo.components import Parallel
-from vortex.util.structs    import FootprintCopier
-from vortex.syntax.stdattrs import a_date
 
-from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
-
+from vortex.algo.components import Parallel, ParaBlindRun
 from vortex.tools.parallelism import VortexWorkerBlindRun
-from vortex.algo.components import ParaBlindRun
-from taylorism import Boss
+
+from gco.syntax.stdattrs import arpifs_cycle
+
+from common.data.obs        import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
+from common.tools           import odb, drhook
+
 
 #: No automatic export
 __all__ = []
@@ -52,42 +51,45 @@ class Bateur(VortexWorkerBlindRun):
     actual run-time and consumed memory (versus predictions).
     """
 
-    _footprint = dict(
-        info="Bateur: launches a single bator execution in a parallel context",
-        attr=dict(
-            base=dict(
-                info        = 'name of the odb database to process',
-            ),
-            workdir=dict(
-                info        = 'working directory of the run',
-            ),
-            inputsize = dict(
-                info        = 'input files total size in bytes',
-                type        = int,
-                default     = 0,
+    _footprint = [
+        arpifs_cycle,
+        dict(
+            info="Bateur: launches a single bator execution in a parallel context",
+            attr=dict(
+                base=dict(
+                    info        = 'name of the odb database to process',
+                ),
+                workdir=dict(
+                    info        = 'working directory of the run',
+                ),
+                inputsize = dict(
+                    info        = 'input files total size in bytes',
+                    type        = int,
+                    default     = 0,
+                )
             )
         )
-    )
+    ]
 
     @property
     def memory_in_bytes(self):
         return self.memory * 1024 * 1024
 
     def vortex_task(self, **kwargs):
-
-        cwd = self.system.pwd()
+        odb_drv = odb.OdbDriver(self.cycle,
+                                self.system, self.system.env, self.system.default_target)
         self.system.cd('wkdir_' + self.base)
-        self.system.env.ODB_SRCPATH_ECMA  = self.system.path.join(self.workdir,
-                                                                  'ECMA.' + self.base)
-        self.system.env.ODB_DATAPATH_ECMA = self.system.path.join(self.workdir,
-                                                                  'ECMA.' + self.base)
+
+        dbpath = self.system.path.join(self.workdir, 'ECMA.' + self.base)
+        listpath = self.system.path.join(self.workdir, "listing." + self.base)
+
+        odb_drv.fix_db_path('ecma', dbpath)
 
         real_time = - time.time()
         start_time = utcnow().isoformat()
         rdict = dict(rc=True)
-        list_name = self.system.path.join(cwd, "listing." + self.base)
         try:
-            self.local_spawn(list_name)
+            self.local_spawn(listpath)
         except ExecutionError:
             rdict['rc'] = Raw2OdbExecutionError(self.base)
         real_time += time.time()
@@ -112,86 +114,16 @@ class Bateur(VortexWorkerBlindRun):
                                   )
 
         # Save a copy of io assign map in the new database
-        if self.system.path.isdir(self.system.env.ODB_SRCPATH_ECMA):
-            self.system.cp('../IOASSIGN',
-                           self.system.path.join(self.system.env.ODB_SRCPATH_ECMA, 'IOASSIGN'))
+        if self.system.path.isdir(dbpath):
+            self.system.cp(self.system.path.join(self.workdir, 'odb_db_template', 'IOASSIGN'),
+                           self.system.path.join(dbpath, 'IOASSIGN'))
         else:
             logger.warning('ODB database not created: ' + self.base)
 
         return rdict
 
 
-class _OdbProcessCommons(FootprintCopier):
-    """Base class for any ODB algo component."""
-
-    _footprint = dict(
-        attr = dict(
-            date = a_date,
-            npool = dict(
-                type     = int,
-            ),
-            iomethod = dict(
-                type     = int,
-                optional = True,
-                default  = 1,
-            ),
-            slots = dict(
-                type     = odb.TimeSlots,
-                optional = True,
-                default  = odb.TimeSlots(7, chunk='PT1H'),
-            ),
-            virtualdb = dict(
-                optional = True,
-                default  = 'ecma',
-                access   = 'rwx',
-            ),
-        )
-    )
-
-    @staticmethod
-    def input_obs(self):
-        """Find any observations with the proper kind, without any regards to role."""
-        obsall = [x for x in self.context.sequence.effective_inputs(kind = 'observations')]
-        obsall.sort(key=lambda s: s.rh.resource.part)
-        return obsall
-
-    @staticmethod
-    def _odbobj_setup(self):
-        """Setup the ODB object."""
-        self.odb.setup(
-            date     = self.date,
-            npool    = self.npool,
-            nslot    = self.slots.nslot,
-            iomethod = self.iomethod,
-        )
-
-
-class OdbProcess(six.with_metaclass(_OdbProcessCommons, Parallel, odb.OdbComponent)):
-    """Base class for any blindrun ODB algo component."""
-
-    _abstract = True
-
-    def prepare(self, rh, opts):
-        """Mostly used for setting environment."""
-        super(OdbProcess, self).prepare(rh, opts)
-        self.export('drhook')
-        self._odbobj_setup()
-
-
-class TaylorOdbProcess(six.with_metaclass(_OdbProcessCommons, ParaBlindRun, odb.OdbComponent)):
-    """Base class for any taylorism based ODB algo component."""
-
-    _abstract = True
-
-    def prepare(self, rh, opts):
-        """Mostly used for setting environment."""
-        super(TaylorOdbProcess, self).prepare(rh, opts)
-        self.export('drhook')
-        self.export('drhook_not_mpi')
-        self._odbobj_setup()
-
-
-class Raw2ODBparallel(TaylorOdbProcess):
+class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Convert raw observations files to ODB using taylorism."""
 
     _footprint = dict(
@@ -206,7 +138,9 @@ class Raw2ODBparallel(TaylorOdbProcess):
             engine = dict(
                 values = ['blind', 'parallel']  # parallel -> for backward compatibility
             ),
-            ioassign = dict(),
+            ioassign = dict(
+                optional = False,
+            ),
             lamflag = dict(
                 info     = 'Activate LAMFLAG (i.e work for Limited Area Model)',
                 type     = bool,
@@ -283,7 +217,8 @@ class Raw2ODBparallel(TaylorOdbProcess):
 
     def input_obs(self):
         """Find out which are the usable observations."""
-        obsall = super(Raw2ODBparallel, self).input_obs()
+        obsall = [x for x in self.context.sequence.effective_inputs(kind = 'observations')]
+        obsall.sort(key=lambda s: s.rh.resource.part)
 
         # Looking for valid raw observations
         sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
@@ -367,11 +302,9 @@ class Raw2ODBparallel(TaylorOdbProcess):
         sh = self.system
         cycle = rh.resource.cycle
 
-        # First create the proper IO assign table
-        self.odb.ioassign_create(
-            npool    = self.npool,
-            ioassign = self.ioassign
-        )
+        # First create the proper IO assign table for any of the resulting ECMA databases
+        self.odb_create_db('ECMA', 'odb_db_template')
+        self.env.IOASSIGN = sh.path.abspath(sh.path.join('odb_db_template', 'IOASSIGN'))
 
         # Looking for input observations
         obsok = self.input_obs()
@@ -444,10 +377,14 @@ class Raw2ODBparallel(TaylorOdbProcess):
 
         # Let ancestors handling most of the env setting
         super(Raw2ODBparallel, self).prepare(rh, opts)
+        self.env.update(
+            BATOR_NBPOOL = self.npool,
+            BATODB_NBPOOL = self.npool,
+            BATOR_NBSLOT = self.slots.nslot,
+            BATODB_NBSLOT = self.slots.nslot, )
         self.env.default(
             TIME_INIT_YYYYMMDD = self.date.ymd,
-            TIME_INIT_HHMMSS   = self.date.hm + '00',
-        )
+            TIME_INIT_HHMMSS   = self.date.hm + '00', )
         if self.lamflag:
             for lamvar in ('BATOR_LAMFLAG', 'BATODB_LAMFLAG'):
                 logger.info('Setting env %s = %d', lamvar, 1)
@@ -562,7 +499,7 @@ class Raw2ODBparallel(TaylorOdbProcess):
         self._default_pre_execute(rh, opts)
         common_i = self._default_common_instructions(rh, opts)
         # Update the common instructions
-        common_i.update(dict(workdir=workdir, ))
+        common_i.update(dict(workdir=workdir, cycle=cycle, ))
 
         self._add_instructions(common_i, scheduler_instructions)
 
@@ -650,13 +587,16 @@ class Raw2ODBparallel(TaylorOdbProcess):
         super(Raw2ODBparallel, self).postfix(rh, opts)
 
 
-class OdbAverage(OdbProcess):
+class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """TODO the father of this component is very much welcome."""
 
     _footprint = dict(
         attr = dict(
             kind = dict(
                 values = ['average'],
+            ),
+            binarysingle = dict(
+                default = 'basicobsort',
             ),
             ioassign = dict(),
             outdb = dict(
@@ -677,53 +617,37 @@ class OdbAverage(OdbProcess):
         sh = self.system
 
         # Looking for input observations
-        obsall = [x for x in self.input_obs() if x.rh.resource.layout == 'ecma']
-
+        obsall = [x for x in self.lookupodb() if x.rh.resource.layout.lower() == 'ecma']
         # One database at a time
-        if not obsall:
-            raise ValueError('Could not find any ECMA input')
+        if len(obsall) != 1:
+            raise ValueError('One and only one ECMA input should be here')
         self.bingo = ecma = obsall[0]
 
         # First create a fake CCMA
         self.layout_new = self.outdb.upper()
-        sh.mkdir(self.layout_new)
-        ccma_path = sh.path.abspath(self.layout_new)
-        ccma_io   = sh.path.join(ccma_path, 'IOASSIGN')
+        ccma_path = self.odb_create_db(self.layout_new)
+        self.odb.fix_db_path(self.layout_new, ccma_path)
+
         self.layout_in = ecma.rh.resource.layout.upper()
         ecma_path = sh.path.abspath(ecma.rh.container.localpath())
-        ecma_pool = sh.path.join(ecma_path, '1')
+        self.odb.fix_db_path(self.layout_in, ecma_path)
 
+        self.odb.ioassign_gather(ecma_path, ccma_path)
+
+        ecma_pool = sh.path.join(ecma_path, '1')
         if not sh.path.isdir(ecma_pool):
             logger.error('The input ECMA base is empty')
             self.abort('No ECMA input')
             return
 
-        ecma_io = sh.path.join(ecma_path, 'IOASSIGN')
-        self.env.ODB_SRCPATH_CCMA  = ccma_path
-        self.env.ODB_DATAPATH_CCMA = ccma_path
-        self.env.ODB_SRCPATH_ECMA  = ecma_path
-        self.env.ODB_DATAPATH_ECMA = ecma_path
+        self.odb.create_poolmask(self.layout_new, ccma_path)
 
         # Some extra settings
         self.env.update(
-            ODB_CCMA_CREATE_POOLMASK = 1,
-            ODB_CCMA_POOLMASK_FILE   = sh.path.join(ccma_path, self.layout_new + '.poolmask'),
             TO_ODB_CANARI            = 0,
             TO_ODB_REDUC             = self.env.TO_ODB_REDUC or 1,
             TO_ODB_SETACTIVE         = 1,
         )
-
-        # Then create the proper IO assign table
-        self.odb.ioassign_create(
-            layout   = self.layout_new,
-            npool    = self.npool,
-            ioassign = self.ioassign
-        )
-
-        sh.cat(ecma_io, 'IOASSIGN', output='IOASSIGN.full')
-        sh.mv('IOASSIGN.full', 'IOASSIGN')
-        sh.cp('IOASSIGN', ccma_io)
-        sh.cp('IOASSIGN', ecma_io)
 
         # Let ancesters handling most of the env setting
         super(OdbAverage, self).prepare(rh, opts)
@@ -774,7 +698,7 @@ class OdbAverage(OdbProcess):
         super(OdbAverage, self).postfix(rh, opts)
 
 
-class OdbMatchup(OdbProcess):
+class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Report some information from post-minim CCMA to post-screening ECMA base."""
 
     _footprint = dict(
@@ -797,15 +721,15 @@ class OdbMatchup(OdbProcess):
 
         # Looking for input observations
         obsscr_virtual = [
-            x for x in self.input_obs()
+            x for x in self.lookupodb()
             if x.rh.resource.stage.startswith('screen') and x.rh.resource.part == 'virtual'
         ]
         obsscr_parts = [
-            x for x in self.input_obs()
+            x for x in self.lookupodb()
             if x.rh.resource.stage.startswith('screen') and x.rh.resource.part != 'virtual'
         ]
         obscompressed = [
-            x for x in self.input_obs()
+            x for x in self.lookupodb()
             if x.rh.resource.stage.startswith('min') or x.rh.resource.stage.startswith('traj')
         ]
 
@@ -824,25 +748,20 @@ class OdbMatchup(OdbProcess):
                             else self.fcmalayout)
         ecma_path = sh.path.abspath(ecma.rh.container.localpath())
         ccma_path = sh.path.abspath(ccma.rh.container.localpath())
-        self.env.ODB_SRCPATH_CCMA  = ccma_path
-        self.env.ODB_DATAPATH_CCMA = ccma_path
-        self.env.ODB_SRCPATH_ECMA  = ecma_path
-        self.env.ODB_DATAPATH_ECMA = ecma_path
 
+        self.odb.fix_db_path(self.layout_screening, ecma_path)
+        self.odb.fix_db_path(self.layout_compressed, ccma_path)
+        self.odb.ioassign_gather(ccma_path, ecma_path)
+
+        # Ok, but why ???
         sh.cp(sh.path.join(ecma_path, 'ECMA.dd'), sh.path.join(ccma_path, 'ECMA.dd'))
-        sh.cat(
-            sh.path.join(ccma_path, 'IOASSIGN'),
-            sh.path.join(ecma_path, 'IOASSIGN'),
-            output='IOASSIGN'
-        )
 
         # Let ancesters handling most of the env setting
         super(OdbMatchup, self).prepare(rh, opts)
 
         # Fix the input database intent
-        self.odb.is_rw_or_overwrite_method(ecma)
-        for section in obsscr_parts:
-            self.odb.is_rw_or_overwrite_method(section)
+        self.odb_rw_or_overwrite_method(ecma)
+        self.odb_rw_or_overwrite_method(* obsscr_parts)
 
     def spawn_command_options(self):
         """Prepare command line options to binary."""
@@ -856,7 +775,7 @@ class OdbMatchup(OdbProcess):
         )
 
 
-class FlagsCompute(OdbProcess):
+class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Compute observations flags."""
 
     _footprint = dict(
@@ -865,22 +784,11 @@ class FlagsCompute(OdbProcess):
             kind = dict(
                 values = ['flagscomp'],
             ),
-            ioassign = dict(),
-            iomethod = dict(
-                type = int,
-                default = 1,
-                optional = True,
-            ),
-            npool = dict(
-                default = 1,
-                type = int,
-                optional = True,
-            ),
         ),
     )
 
-    def prepare(self, rh, opts):
-        """Prepare the execution."""
+    def execute(self, rh, opts):
+        """Spawn the binary for each of the input databases."""
         # Look for the input databases
         input_databases = self.context.sequence.effective_inputs(
             role = 'ECMA',
@@ -888,35 +796,18 @@ class FlagsCompute(OdbProcess):
         )
         # Check that there is at least one database
         if len(input_databases) < 1:
-            logger.exception('No database in input. Stop.')
-            raise AttributeError
-        self.odb.ioassign_create(
-            npool=self.npool,
-        )
-        # Let ancesters handling most of the env setting
-        super(FlagsCompute, self).prepare(rh, opts)
+            raise AttributeError('No database in input. Stop.')
 
-    def spawn(self, args, opts):
-        """Spawn the binary."""
-        # Look for the input databases
-        input_databases = self.context.sequence.effective_inputs(
-            role = 'ECMA',
-            kind = 'observations',
-        )
         for input_database in input_databases:
             ecma = input_database.rh
             ecma_filename = ecma.container.filename
-            ecma_part = ecma.resource.part
-            ecma_abspath = ecma.container.abspath
-            self.env.ODB_SRCPATH_ECMA  = ecma_abspath
-            logger.info('Variable %s set to %s.', 'ODB_SRCPATH_ECMA', ecma_abspath)
-            self.env.ODB_DATAPATH_ECMA = ecma_abspath
-            logger.info('Variable %s set to %s.', 'ODB_DATAPATH_ECMA', ecma_abspath)
+            # Environment variable to set DB path
+            self.odb.fix_db_path(ecma.resource.layout, ecma.container.abspath)
             self.env.setvar('ODB_ECMA', ecma_filename)
             logger.info('Variable %s set to %s.', 'ODB_ECMA', ecma_filename)
-            if not self.system.path.exists('IOASSIGN'):
-                self.system.cp('/'.join([ecma_filename, 'IOASSIGN']), 'IOASSIGN')
+            # Path to the IOASSIGN file
+            self.env.IOASSIGN = self.system.path.join(ecma.container.abspath, 'IOASSIGN')
             # Let ancesters handling most of the env setting
-            super(FlagsCompute, self).spawn(args, opts)
+            super(FlagsCompute, self).execute(rh, opts)
             # Rename the output file according to the name of the part of the observations treated
-            self.system.mv('BDM_CQ', '_'.join(['BDM_CQ', ecma_part]))
+            self.system.mv('BDM_CQ', '_'.join(['BDM_CQ', ecma.resource.part]))

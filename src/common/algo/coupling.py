@@ -9,6 +9,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date
 
 from common.algo.ifsroot import IFSParallel
+from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
 
@@ -212,7 +213,7 @@ class CouplingLAM(Coupling):
         return opts
 
 
-class Prep(BlindRun):
+class Prep(BlindRun, DrHookDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
     _footprint = dict(
@@ -289,9 +290,6 @@ class Prep(BlindRun):
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Prep, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
         # Convert the initial clim if needed...
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):

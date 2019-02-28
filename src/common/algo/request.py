@@ -6,7 +6,6 @@ A set of AlgoComponents interrogating various databases.
 """
 
 from __future__ import division, print_function, absolute_import, unicode_literals
-import six
 
 import copy
 
@@ -14,10 +13,9 @@ from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 import footprints
 
-from vortex.algo.components import AlgoComponent, Expresso, BlindRun
+from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, Expresso, BlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
-from vortex.util.structs import FootprintCopier
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
 from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
 from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
@@ -255,14 +253,10 @@ class GetBDCPResource(AlgoComponent):
         return rc_all
 
 
-class _GetBDMCommons(FootprintCopier):
-    """Class variables and methods usefull for BDM extractions.
+class _GetBDMDecoMixin(AlgoComponentDecoMixin):
+    """Class variables and methods usefull for BDM extractions."""
 
-    They will be copied to the "real" GetBDM* classes using the FootprintCopier
-    metaclass.
-    """
-
-    _footprint = dict(
+    _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
         attr = dict(
             date = a_date,
             pwd_file = dict(
@@ -282,14 +276,12 @@ class _GetBDMCommons(FootprintCopier):
                 optional = True,
             )
         )
-    )
+    )]
 
-    @staticmethod
     def _verbose_env_export(self, varname, value):
         self.env.setvar(varname, value)
         logger.info('Setting environment variable %s = %s', varname, str(value))
 
-    @staticmethod
     def _prepare_commons(self, rh, opts):
         """
         Prepare the launch of the script
@@ -298,12 +290,15 @@ class _GetBDMCommons(FootprintCopier):
         self._verbose_env_export('PWD_FILE', self.pwd_file)
         self._verbose_env_export('DMT_DATE_PIVOT', self.date.ymdhms)
 
-    @staticmethod
-    def spawn_command_options(self):
-        return dict(query=self.defaut_queryname)
+    _MIXIN_PREPARE_HOOKS = (_prepare_commons, )
 
-    @staticmethod
-    def execute(self, rh, opts):
+    def _spawn_command_options_extend(self, prev):
+        prev['query'] = self.defaut_queryname
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend)
+
+    def _execute_commons(self, rh, opts):
         """
         Launch the BDM request(s).
         The results of each request are stored in a directory local_directory to avoid files overwritten by others
@@ -344,8 +339,9 @@ class _GetBDMCommons(FootprintCopier):
         if not rc_all:
             logger.error('At least one of the BDM request failed. Please check the logs above.')
 
-    @staticmethod
-    def postfix(self, rh, opts):
+    _MIXIN_EXECUTE_OVERWRITE = _execute_commons
+
+    def _postfix_commons(self, rh, opts):
         """Concatenate the batormap from the different tasks and check if there is no duplicated entries."""
 
         # BATORMAP concatenation
@@ -396,11 +392,10 @@ class _GetBDMCommons(FootprintCopier):
         # Concatenate the listings
         self.system.cat(*listing_files, output = listing_filename)
 
-        # Do the standard postfix
-        super(self.__class__, self).postfix(rh, opts)
+    _MIXIN_POSTFIX_HOOKS = (_postfix_commons, )
 
 
-class GetBDMBufr(six.with_metaclass(_GetBDMCommons, Expresso)):
+class GetBDMBufr(Expresso, _GetBDMDecoMixin):
     """Algo component to get BDM resources considering a BDM query file."""
 
     _footprint = dict(
@@ -449,8 +444,6 @@ class GetBDMBufr(six.with_metaclass(_GetBDMCommons, Expresso)):
         """
         # Do the standard pre-treatment
         super(GetBDMBufr, self).prepare(rh, opts)
-        # Commons...
-        self._prepare_commons(rh, opts)
 
         # Some exports to be done
         self._verbose_env_export('EXTR_ENV', self.extra_env_opt)
@@ -464,7 +457,7 @@ class GetBDMBufr(six.with_metaclass(_GetBDMCommons, Expresso)):
             raise BDMRequestConfigurationError('No query file found for the BDM extraction')
 
 
-class GetBDMOulan(six.with_metaclass(_GetBDMCommons, BlindRun)):
+class GetBDMOulan(BlindRun, _GetBDMDecoMixin):
     """Algo component to get BDM files using Oulan."""
 
     _footprint = dict(
@@ -498,8 +491,6 @@ class GetBDMOulan(six.with_metaclass(_GetBDMCommons, BlindRun)):
         """Prepare the execution of the Oulan extraction binary."""
         # Do the standard pre-treatment
         super(GetBDMOulan, self).prepare(rh, opts)
-        # Commons...
-        self._prepare_commons(rh, opts)
 
         # Export additional variables
         self._verbose_env_export('DB_FILE', self.db_file)
@@ -538,7 +529,7 @@ class GetMarsResource(AlgoComponent):
         )
     )
 
-    def execute_single(self, rh, opts):
+    def execute(self, rh, opts):
         """
         Launch the Mars request(s).
         The results of each requests are stored in a directory to avoid

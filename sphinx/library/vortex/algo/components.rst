@@ -37,13 +37,32 @@ Exceptions
    :members:
    :member-order: alphabetical
 
-Classes
--------
+Base classes
+------------
+
+Base class and its metaclass
+****************************
 
 .. autoclass:: AlgoComponent
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AlgoComponentMeta
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+Base Mixin class
+****************
+
+.. autoclass:: AlgoComponentDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Abstract classes with some refinements on binaries verification
+***************************************************************
 
 .. autoclass:: ExecutableAlgoComponent
    :show-inheritance:
@@ -55,17 +74,10 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: TaylorRun
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Ready to use AlgoComponents (for basic needs) 
+---------------------------------------------
 
 .. autoclass:: BlindRun
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ParaBlindRun
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -75,12 +87,26 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ParaExpresso
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Parallel
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Base classes for AlgoComponents implementing task parallelism (using taylorism)
+------------------------------------------------------------------------------- 
+
+.. autoclass:: TaylorRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ParaBlindRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ParaExpresso
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 

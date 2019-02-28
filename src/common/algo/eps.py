@@ -15,8 +15,9 @@ import footprints
 from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
-from vortex.tools import grib
+from vortex.tools.grib import EcGribDecoMixin
 from .ifsroot import IFSParallel
+from common.tools.drhook import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -51,16 +52,10 @@ class Svect(IFSParallel):
         return 'svector'
 
 
-class Combi(BlindRun, grib.EcGribComponent):
+class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     """Build the initial conditions of the EPS."""
 
     _abstract = True
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super(Combi, self).prepare(rh, opts)
-        self.export('drhook_not_mpi')
-        self.eccodes_setup(rh, opts, compat=True)
 
     def execute(self, rh, opts):
         """Standard Combi execution."""
@@ -425,7 +420,7 @@ class SurfCombiIC(BlindRun):
         namsec[0].rh.save()
 
 
-class Clustering(BlindRun, grib.EcGribComponent):
+class Clustering(BlindRun, EcGribDecoMixin):
     """Select by clustering a sample of members among the whole set."""
 
     _footprint = dict(
@@ -452,8 +447,6 @@ class Clustering(BlindRun, grib.EcGribComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
-
-        self.eccodes_setup(rh, opts, compat=True)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')

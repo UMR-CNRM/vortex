@@ -17,6 +17,7 @@ Sub-modules
 * :mod:`bronx.stdtypes.dictionaries`
 * :mod:`bronx.stdtypes.history`
 * :mod:`bronx.stdtypes.tracking`
+* :mod:`bronx.stdtypes.xtemplates`
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

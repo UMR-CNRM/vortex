@@ -313,7 +313,6 @@ class Correl(GenvModelResource):
             scope = dict(
                 optional = True,
                 default  = 'misc',
-                values   = ['misc'],
             ),
             gvar = dict(
                 default  = '[scope]_correl'

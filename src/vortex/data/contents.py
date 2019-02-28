@@ -7,11 +7,15 @@ import six
 
 import collections
 from string import Template
+import copy
+import re
 
 from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
+from bronx.stdtypes.xtemplates import DefaultTemplate
 from bronx.syntax.decorators import secure_getattr
+from bronx.stdtypes.date import Date
 
 from vortex import sessions
 
@@ -228,6 +232,10 @@ class JsonDictContent(AlmostDictContent):
     The internal data is supposed to be read from a json file.
     """
 
+    def __init__(self, **kw):
+        self._bronx_tpl = None
+        super(JsonDictContent, self).__init__(** kw)
+
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
@@ -235,6 +243,15 @@ class JsonDictContent(AlmostDictContent):
             container.rewind()
             self._data = t.sh.json_load(container.iotarget())
             self._size = container.totalsize
+
+    def bronx_tpl_render(self, **kwargs):
+        """Use :mod:`bronx.stdtypes.xtemplates` to render a JSON template."""
+        if self._bronx_tpl is None:
+            # Freeze the original data
+            self._bronx_tpl = self._data
+        # Start rendering and overwrite data
+        dt = DefaultTemplate(self._bronx_tpl)
+        self._data = dt.render(**kwargs)
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""

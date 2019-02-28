@@ -15,6 +15,7 @@ import multiprocessing
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.decorators import nicedeco
 from taylorism import Boss
 import footprints
 
@@ -63,7 +64,220 @@ class ParallelInconsistencyAlgoComponentError(Exception):
         super(ParallelInconsistencyAlgoComponentError, self).__init__(msg.format(target))
 
 
-class AlgoComponent(footprints.FootprintBase):
+@nicedeco
+def _clsmtd_mixin_locked(f):
+    """
+    This is a utility decorator (for class methods) : it ensure that the method can only
+    be called on a bare :class:`AlgoComponentDecoMixin` class.
+    """
+    def wrapped_clsmethod(cls, *kargs, **kwargs):
+        if issubclass(cls, AlgoComponent):
+            raise RuntimeError("This class method should not be called once the mixin is in use.")
+        return f(cls, *kargs, **kwargs)
+    return wrapped_clsmethod
+
+
+class AlgoComponentDecoMixin(object):
+    """
+    This is the base class for any Mixin class targeting :class:`AlgoComponent`
+    classes.
+
+    Like any Mixin class, this Mixin class primary use is to define methods that
+    will be available to the child class.
+
+    However, this classes will also interact with the :class:`AlgoComponentMeta`
+    metaclass to alter the behaviour of the :class:`AlgoComponent` class it is
+    used with. Several "alteration" will be made to the resulting
+    :class:`AlgoComponent` class.
+
+        * A bunch of footprints' attribute can be added to the resulting class.
+          This is controlled by the :data:`MIXIN_AUTO_FPTWEAK` and
+          :data:`_MIXIN_EXTRA_FOOTPRINTS` class variables.
+          If :data:`MIXIN_AUTO_FPTWEAK` is ``True`` (which is the default), the
+          :class:`~footrprints.Footprint` objects listed in the
+          :data:`_MIXIN_EXTRA_FOOTPRINTS` tuple will be prepended to the resulting
+          :class:`AlgoComponent` class footprint definition.
+
+        * The ``execute`` method of the resulting class can be overwritten by
+          the method referenced in the :data:`_MIXIN_EXECUTE_OVERWRITE` class
+          variable. This is allowed only if no ``execute`` method is defined
+          manually and if no other :class:`AlgoComponentDecoMixin` tries to
+          overwrite it as well. If these two conditions are not met, a
+          :class:`RuntimeError` exception will be thrown by the the
+          :class:`AlgoComponentMeta` metaclass.
+
+        * A bunch of the :class:`AlgoComponent`'s methods can be decorated. This
+          is controlled by the :data:`MIXIN_AUTO_DECO` class variable (``True``
+          by default) and a bunch of other class variables containing tuples.
+          They are described below:
+
+              * :data:`_MIXIN_PREPARE_PREHOOKS`: Tuple of method that will be
+                executed before the original prepare method.
+
+              * :data:`_MIXIN_PREPARE_HOOKS`: Tuple of method that will be
+                executed after the original prepare method.
+
+              * :data:`_MIXIN_POSTFIX_PREHOOKS`: Tuple of method that will be
+                executed before the original postfix method.
+
+              * :data:`_MIXIN_POSTFIX_HOOKS`: Tuple of method that will be
+                executed after the original postfix method.
+
+              * :data:`_MIXIN_SPAWN_HOOKS`: Tuple of method that will be
+                executed after the original spawn_hook method.
+
+              * :data:`_MIXIN_CLI_OPTS_EXTEND`: Tuple of method that will be
+                executed after the original ``spawn_command_options`` method. Such
+                method will receive one argument (``self`` set aside): the value
+                returned by the original ``spawn_command_options`` method.
+
+              * :data:`_MIXIN_STDIN_OPTS_EXTEND`: Tuple of method that will be
+                executed after the original ``spawn_stdin_options`` method. Such
+                method will receive one argument (``self`` set aside): the value
+                returned by the original ``spawn_stdin_options`` method.
+
+    """
+
+    MIXIN_AUTO_FPTWEAK = True
+    MIXIN_AUTO_DECO = True
+
+    _MIXIN_EXTRA_FOOTPRINTS = ()
+
+    _MIXIN_PREPARE_PREHOOKS = ()
+    _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_POSTFIX_PREHOOKS = ()
+    _MIXIN_POSTFIX_HOOKS = ()
+    _MIXIN_SPAWN_HOOKS = ()
+
+    _MIXIN_CLI_OPTS_EXTEND = ()
+    _MIXIN_STDIN_OPTS_EXTEND = ()
+
+    _MIXIN_EXECUTE_OVERWRITE = None
+
+    def __new__(cls, *args, **kwargs):
+        """Ensure that the mixin cannot be instantiated."""
+        if not issubclass(cls, AlgoComponent):
+            # This class cannot be instanciated by itself !
+            raise RuntimeError('< {0.__name__:s} > is a mixin class: it cannot be instantiated.'
+                               .format(cls))
+        else:
+            return super(AlgoComponentDecoMixin, cls).__new__(cls)
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_tweak_footprint(cls, fplocal):
+        """Update the footprint definition list."""
+        for fp in cls._MIXIN_EXTRA_FOOTPRINTS:
+            assert isinstance(fp, footprints.Footprint)
+            fplocal.insert(0, fp)
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def _get_algo_wrapped(cls, targetcls, targetmtd, hooks, prehooks=(), reentering=False):
+        """Wraps **targetcls**'s **targetmtd** method."""
+        orig_mtd = getattr(targetcls, targetmtd)
+        if prehooks and reentering:
+            raise ValueError('Conflicting values between prehooks and reenterin.')
+
+        def wrapped_method(self, *kargs, **kwargs):
+            for phook in prehooks:
+                phook(self, *kargs, **kwargs)
+            rv = orig_mtd(self, *kargs, **kwargs)
+            if reentering:
+                kargs = [rv, ] + list(kargs)
+            for phook in hooks:
+                rv = phook(self, *kargs, **kwargs)
+                if reentering:
+                    kargs[0] = rv
+            if reentering:
+                return rv
+
+        wrapped_method.__name__ = orig_mtd.__name__
+        wrapped_method.__doc__ = ((orig_mtd.__doc__ or '').rstrip('\n') +
+                                  "\n\nDecorated by :class:`{0.__module__:s}{0.__name__:s}`."
+                                  .format(cls))
+        wrapped_method.__dict__.update(orig_mtd.__dict__)
+        return wrapped_method
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_algo_deco(cls, targetcls):
+        """
+        Applies all the necessary decorators to the **targetcls**
+        :class:`AlgoComponent` class.
+        """
+        if not issubclass(targetcls, AlgoComponent):
+            raise RuntimeError('This class can only be mixed in AlgoComponent classes.')
+        for targetmtd, hooks, prehooks, reenter in [('prepare',
+                                                     cls._MIXIN_PREPARE_HOOKS,
+                                                     cls._MIXIN_PREPARE_PREHOOKS,
+                                                     False),
+                                                    ('postfix',
+                                                     cls._MIXIN_POSTFIX_HOOKS,
+                                                     cls._MIXIN_POSTFIX_PREHOOKS,
+                                                     False),
+                                                    ('spawn_hook',
+                                                     cls._MIXIN_SPAWN_HOOKS, (),
+                                                     False),
+                                                    ('spawn_command_options',
+                                                     cls._MIXIN_CLI_OPTS_EXTEND, (),
+                                                     True),
+                                                    ('spawn_stdin_options',
+                                                     cls._MIXIN_STDIN_OPTS_EXTEND, (),
+                                                     True), ]:
+            if hooks or prehooks:
+                setattr(targetcls, targetmtd,
+                        cls._get_algo_wrapped(targetcls, targetmtd, hooks, prehooks, reenter))
+        return targetcls
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_execute_overwrite(cls):
+        return cls._MIXIN_EXECUTE_OVERWRITE
+
+
+class AlgoComponentMeta(footprints.FootprintBaseMeta):
+    """Meta class for building :class:`AlgoComponent` classes.
+
+    In addition of performing footprints' usual stuff, it processes mixin classes
+    that derives from the :class:`AlgoComponentDecoMixin` class. See the
+    documentation of this class for more details.
+    """
+
+    def __new__(cls, n, b, d):
+        # Mixin candidates: a mixin must only be dealt with once hence the
+        # condition on issubclass(base, AlgoComponent
+        candidates = [base for base in b
+                      if (issubclass(base, AlgoComponentDecoMixin) and
+                          not issubclass(base, AlgoComponent))]
+        # Tweak footprints
+        todobases = [base for base in candidates if base.MIXIN_AUTO_FPTWEAK]
+        if todobases:
+            fplocal = d.get('_footprint', list())
+            if not isinstance(fplocal, list):
+                fplocal = [fplocal, ]
+            for base in todobases:
+                base.mixin_tweak_footprint(fplocal)
+            d['_footprint'] = fplocal
+        # Overwrite the execute method...
+        todobases = [base for base in candidates if base.mixin_execute_overwrite() is not None]
+        if len(todobases) > 1:
+            raise RuntimeError('Cannot overwrite < execute > multiple times: {:s}'
+                               .format(','.join([base.__name__ for base in todobases])))
+        if todobases:
+            if 'execute' in d:
+                raise RuntimeError('< execute > is already defined in the target class: cannot proceed')
+            d['execute'] = todobases[0].mixin_execute_overwrite()
+        # Create the class as usual
+        fpcls = super(AlgoComponentMeta, cls).__new__(cls, n, b, d)
+        # Apply decorators
+        todobases = [base for base in candidates if base.MIXIN_AUTO_DECO]
+        for base in reversed(todobases):
+            base.mixin_algo_deco(fpcls)
+        return fpcls
+
+
+class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBase)):
     """Component in charge of any kind of processing."""
 
     _SERVERSYNC_RAISEONEXIT = True

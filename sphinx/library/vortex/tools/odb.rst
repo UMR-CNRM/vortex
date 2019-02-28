@@ -1,37 +1,17 @@
-:mod:`vortex.tools.odb` --- Some ODB facilities
-===============================================
+:mod:`vortex.tools.odb` --- Some old ODB facilities
+===================================================
 
 .. automodule:: vortex.tools.odb
-   :synopsis: ODB facilities
+   :synopsis: Backward compatibility module.
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.7
 
-Package
--------
-
-.. autodata:: __all__
-
 Classes
 -------
 
-.. autoclass:: OdbComponent
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: OdbDriver
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: OdbShell
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: TimeSlots
    :show-inheritance:
    :members:
    :member-order: alphabetical

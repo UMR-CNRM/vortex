@@ -7,7 +7,7 @@ import unittest
 import logging
 logging.basicConfig(level=logging.ERROR)
 
-from vortex.tools import odb
+from common.tools import odb
 
 
 class UtTimeSlots(unittest.TestCase):

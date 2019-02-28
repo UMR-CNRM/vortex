@@ -97,7 +97,7 @@ class UtIndexedTable(_BaseDataContentTest):
         self.assertNotIn('other', ct)
 
 
-JSON_E = dict(a=1, b=1.5, c='toto', d=[1, 2, 3])
+JSON_E = dict(a=1, b=1.5, c='{{toto}}', d=[1, 2, 3])
 JSON_T = json.dumps(JSON_E)
 
 
@@ -110,6 +110,22 @@ class UtJsonContent(_BaseDataContentTest):
         ct = contents.JsonDictContent()
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, JSON_E)
+        self.assertEqual(ct.size, len(self.data[0]))
+        self.assertEqual(ct.is_diffable(), True)
+
+    def test_jsoncontent_templates(self):
+        ct = contents.JsonDictContent()
+        ct.slurp(self.insample[0])
+        ct.bronx_tpl_render(toto=1)
+        ref0 = JSON_E.copy()
+        ref0['c'] = 1
+        self.assertEqual(ct.data, ref0)
+        self.assertEqual(ct.size, len(self.data[0]))
+        self.assertEqual(ct.is_diffable(), True)
+        ct.bronx_tpl_render(toto='gruik')
+        ref0 = JSON_E.copy()
+        ref0['c'] = 'gruik'
+        self.assertEqual(ct.data, ref0)
         self.assertEqual(ct.size, len(self.data[0]))
         self.assertEqual(ct.is_diffable(), True)
 

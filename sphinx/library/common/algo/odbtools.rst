@@ -24,17 +24,7 @@ Exceptions
 Classes
 -------
 
-.. autoclass:: OdbProcess
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Raw2ODBparallel
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: TaylorOdbProcess
    :show-inheritance:
    :members:
    :member-order: alphabetical
