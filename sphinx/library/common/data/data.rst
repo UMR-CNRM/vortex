@@ -19,6 +19,7 @@ Included Modules
 * :mod:`common.data.assim`
 * :mod:`common.data.boundaries`
 * :mod:`common.data.climfiles`
+* :mod:`common.data.configfiles`
 * :mod:`common.data.consts`
 * :mod:`common.data.ctpini`
 * :mod:`common.data.diagnostics`
@@ -32,6 +33,7 @@ Included Modules
 * :mod:`common.data.monitoring`
 * :mod:`common.data.namelists`
 * :mod:`common.data.obs`
+* :mod:`common.data.oopsexec`
 * :mod:`common.data.providers`
 * :mod:`common.data.query`
 * :mod:`common.data.stores`

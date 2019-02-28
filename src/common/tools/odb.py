@@ -281,6 +281,29 @@ class OdbDriver(object):
             ODB_CCMA_POOLMASK_FILE   = self.sh.path.join(dbpath, layout + '.poolmask'),
         )
 
+    def change_layout(self, layout, layout_new, dbpath=None):
+        """Make the appropriate renaming of files in ECMA to CCMA."""
+        layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
+        layout_new = layout_new.upper()
+        logger.info('ODB: changing layout (%s -> %s) for %s.', layout, layout_new, dbpath)
+        for f in self.sh.ls(dbpath):
+            if f in [n.format(layout) for n in ('{:s}.dd', '{:s}.flags')]:
+                self.sh.mv(self.sh.path.join(dbpath, f),
+                           self.sh.path.join(dbpath, f.replace(layout, layout_new)))
+            if f in [n.format(layout) for n in ('{:s}.iomap', '{:s}.sch', 'IOASSIGN')]:
+                tmp_target = self.sh.path.join(dbpath, f + '.tmp_new')
+                with io.open(self.sh.path.join(dbpath, f), 'r') as inodb:
+                    with io.open(tmp_target, 'w') as outodb:
+                        for l in inodb:
+                            outodb.write(l.replace(layout, layout_new))
+                self.sh.mv(tmp_target,
+                           self.sh.path.join(dbpath, f.replace(layout, layout_new)))
+                if layout in f:
+                    self.sh.rm(self.sh.path.join(dbpath, f))
+            if f in [n.format(layout) for n in ('{:s}.IOASSING', 'IOASSIGN.{:s}')]:
+                # These files/links are not really necessary
+                self.sh.rm(self.sh.path.join(dbpath, f))
+
 
 #: Footprint's attributes needed to ODB to setup properly
 odbmix_attributes = footprints.Footprint(

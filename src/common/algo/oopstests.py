@@ -12,8 +12,9 @@ import json
 
 import footprints
 
-from common.syntax.stdattrs import test_type, expected_target, select_expected_target
-from .oopsroot import OOPSParallel, OOPSODB
+from vortex.algo.components import AlgoComponentDecoMixin
+from common.syntax.stdattrs import oops_test_type, oops_expected_target, oops_select_expected_target
+from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMemberDetectDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -21,28 +22,46 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
-class _OOPSTestComponent(object):
-    """
-    Extend OOPSParallel Algo Components with OOPS Tests features.
+class _OOPSTestDecoMixin(AlgoComponentDecoMixin):
+    """Extend OOPSParallel Algo Components with OOPS Tests features.
 
-    Algo footprint is supposed to include attribute *test_type*.
+    This mixin class is intended to be used with AlgoComponnent classes. It will
+    automatically add the ``test_type`` footprints' attribute and extend the
+    the dictionary that is used to build the binary' command line.
     """
 
-    def spawn_command_options(self):
+    _MIXIN_EXTRA_FOOTPRINTS = (oops_test_type, )
+
+    def _ooptest_cli_opts_extend(self, prev):
         """Prepare options for the resource's command line."""
-        options = super(_OOPSTestComponent, self).spawn_command_options()
-        options['test_type'] = self.test_type
-        return options
+        prev['test_type'] = self.test_type
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_ooptest_cli_opts_extend, )
+
+
+class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
+    """Extend OOPSParallel Algo Components with OOPS Tests verification features.
+
+    This mixin class is intended to be used with AlgoComponnent classes. It will
+    automatically add the ``expected_target`` and ``select_expected_target``
+    footprints' attributes and use them to setup the associatied environement
+    variable (see :meth:`set_expected_target`
+    """
+
+    _MIXIN_EXTRA_FOOTPRINTS = (oops_expected_target,
+                               oops_select_expected_target)
 
     def set_expected_target(self):
-        """
-        Set env variable EXPECTED_CONFIG according to a "dumps" of either:
+        """Set env variable EXPECTED_CONFIG.
 
-        # Algo attribute 'expected_target'
-        # JSON resource Role: Expected Target
+        It will create it using a JSON "dump" of either:
 
-        If provided, Algo attribute 'select_expected_target' is used to select
-        inner trees from the expected target dict.
+            * The Algo Component's attribute ``expected_target``;
+            * The JSON resource of role "Expected Target".
+
+        :note: If provided, the Algo Component's attribute '`select_expected_target'`
+            is used to select inner trees from the expected target dictionary.
         """
         target = None
         select = None
@@ -71,83 +90,86 @@ class _OOPSTestComponent(object):
         else:
             self.env.update(EXPECTED_RESULT=json.dumps({'significant_digits': "10"}))
 
-    def prepare(self, rh, opts):
-        super(_OOPSTestComponent, self).prepare(rh, opts)
+    def _ooptest_exptarget_prepare_hook(self, rh, opts):
+        """Call set_expected_target juste after prepare."""
         self.set_expected_target()
 
+    _MIXIN_PREPARE_HOOKS = (_ooptest_exptarget_prepare_hook, )
 
-class OOPSTest(_OOPSTestComponent, OOPSParallel):
+
+class OOPSTest(OOPSParallel, _OOPSTestDecoMixin, _OOPSTestExpTargetDecoMixin,
+               OOPSMemberDetectDecoMixin):
     """OOPS Tests without ODB."""
 
-    _footprint = [
-        test_type,
-        expected_target,
-        select_expected_target,
-        dict(
-            info = "OOPS Test run.",
-            attr = dict(
-                kind = dict(
-                    values   = ['ootest'],
-                ),
-            )
+    _footprint = dict(
+        info = "OOPS Test run.",
+        attr = dict(
+            kind = dict(
+                values = ['ootest'],
+            ),
+            test_type = dict(
+                outcast = ['ensemble/build', ]
+            ),
         )
-    ]
+    )
 
 
-class OOPSecma2ccma(_OOPSTestComponent, OOPSODB):
+class OOPSTestEnsBuild(OOPSParallel, _OOPSTestDecoMixin, OOPSMembersTermsDecoMixin):
+    """OOPS Tests without ODB: ensemble/build specific case"""
+
+    _footprint = dict(
+        info = "OOPS Test run.",
+        attr = dict(
+            kind = dict(
+                values = ['ootest'],
+            ),
+            test_type = dict(
+                values = ['ensemble/build', ]
+            ),
+        )
+    )
+
+
+class OOPSObsOpTest(OOPSODB, _OOPSTestDecoMixin, _OOPSTestExpTargetDecoMixin,
+                    OOPSMemberDetectDecoMixin):
+    """OOPS Obs Operators Tests."""
+
+    _footprint = dict(
+        info = "OOPS Obs Operators Tests.",
+        attr = dict(
+            kind = dict(
+                values = ['ootestobs'],
+            ),
+            virtualdb = dict(
+                default  = 'ccma',
+            ),
+        )
+    )
+
+
+class OOPSecma2ccma(OOPSODB, _OOPSTestDecoMixin):
     """OOPS Test ECMA 2 CCMA completer."""
 
-    _footprint = [
-        test_type,
-        dict(
-            info = "OOPS ECMA 2 CCMA completer.",
-            attr = dict(
-                kind = dict(
-                    values   = ['oo2ccma'],
-                ),
-                virtualdb = dict(
-                    values = ['ecma'],
-                ),
-            )
+    _footprint = dict(
+        info = "OOPS ECMA 2 CCMA completer.",
+        attr = dict(
+            kind = dict(
+                values = ['ootest2ccma'],
+            ),
+            virtualdb = dict(
+                values = ['ecma'],
+            ),
         )
-    ]
+    )
 
     def postfix(self, rh, opts):
+        """Rename the ECMA database once OOPS has run."""
         super(OOPSecma2ccma, self).postfix(rh, opts)
         self._mv_ecma2ccma()
 
     def _mv_ecma2ccma(self):
         """Make the appropriate renaming of files in ECMA to CCMA."""
-        sh = self.system
         for e in self.lookupodb():
             edir = e.rh.container.localpath()
-            for f in sh.ls(edir):
-                if f in ('ECMA.dd', 'ECMA.flags'):
-                    sh.mv(sh.path.join(edir, f), sh.path.join(edir, f.replace('ECMA', 'CCMA')))
-                if f in ('ECMA.iomap', 'ECMA.sch', 'IOASSIGN'):
-                    with io.open(sh.path.join(edir, f), 'r') as inodb:
-                        content = inodb.readlines()
-                    with io.open(sh.path.join(edir, f.replace('ECMA', 'CCMA')), 'w') as outodb:
-                        for line in content:
-                            outodb.write(line.replace('ECMA', 'CCMA'))
-                    if f in ('ECMA.iomap', 'ECMA.sch'):
-                        sh.rm(sh.path.join(edir, f))
-            sh.mv(edir, edir.replace('ECMA', 'CCMA'))
-
-
-class OOPSObsOpTest(_OOPSTestComponent, OOPSODB):
-    """OOPS Obs Operators Tests."""
-
-    _footprint = [
-        test_type,
-        expected_target,
-        select_expected_target,
-        dict(
-            info = "OOPS Obs Operators Tests.",
-            attr = dict(
-                kind = dict(
-                    values   = ['ootestobs'],
-                ),
-            )
-        )
-    ]
+            self.odb.change_layout('ECMA', 'CCMA', edir)
+            self.system.mv(edir, edir.replace('ECMA', 'CCMA'))

@@ -3,11 +3,9 @@
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import footprints
-
 from vortex.data.executables import NWPModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
-from common.syntax.stdattrs import run
+from common.syntax.stdattrs import oops_run
 
 #: No automatic export
 __all__ = []
@@ -19,18 +17,18 @@ class OOPSBinary(NWPModel):
     _footprint = [
         arpifs_cycle,
         gvar,
-        run,
+        oops_run,
         dict(
             info = 'OOPS Binary: an OOPS binary, dedicated to a task (a run in OOPS namespace).',
             attr = dict(
                 kind = dict(
-                    values = ['oopsbinary'],
+                    values = ['oopsbinary', ],
                 ),
                 gvar = dict(
-                    default = 'oops_binary_[run]',
+                    default = 'binary_[run]',
                 ),
                 run = dict(
-                    outcast = footprints.FPSet(('ootestcomponent',))
+                    outcast = ['ootestcomponent', ]
                 ),
             )
         )
@@ -55,8 +53,8 @@ class OOPSTestComponent(OOPSBinary):
         info = 'OOPS Component Test: can run a sub-test or a family of sub-tests',
         attr = dict(
             run = dict(
-                values   = ['ootestcomponent',],
-                outcast = footprints.FPSet(),
+                values   = ['ootestcomponent', ],
+                outcast  = [],
             ),
         ),
     )
