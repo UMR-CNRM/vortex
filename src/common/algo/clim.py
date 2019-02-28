@@ -751,3 +751,111 @@ class _AddPolesWorker(TaylorVortexWorker):
         from common.util.usepygram import add_poles_to_GLOB_file, epy_env_prepare
         with epy_env_prepare(self.ticket):
             add_poles_to_GLOB_file(self.filename)
+
+
+class Festat(Parallel):
+    """
+    Class to run the festat binary.
+    """
+
+    _footprint = dict(
+        info = "Run festat",
+        attr = dict(
+            kind = dict(
+                values = ['run_festat', ],
+            ),
+            nb_digits = dict(
+                info = "Number of digits on which the name of the files should be written",
+                type = int,
+                default = 3,
+                optional = True,
+            ),
+            prefix = dict(
+                info = "Name of the files for the binary",
+                optional = True,
+                default = "CNAME",
+            ),
+        ),
+    )
+
+    _nb_input_files = 0
+
+    def prepare(self, rh, opts):
+        # Check the namelist
+        input_namelist = self.context.sequence.effective_inputs(role="Namelist", kind="namelist")
+        if len(input_namelist) != 1:
+            logger.error("One and only one namelist must be provided.")
+            raise ValueError("One and only one namelist must be provided.")
+        else:
+            input_namelist = input_namelist[0].rh
+        # Create links for the input files
+        maxinsec = 10 ** self.nb_digits
+        insec = self.context.sequence.effective_inputs(role="InputFiles")
+        nbinsec = len(insec)
+        if nbinsec > maxinsec:
+            logger.error("The number of input files %s exceed the maximum number of files available %s.",
+                         nbinsec, maxinsec)
+            raise ValueError("The number of input files exceed the maximum number of files available.")
+        else:
+            logger.info("%s input files will be treated.", nbinsec)
+        i = 0
+        for sec in insec:
+            i += 1
+            self.system.symlink(sec.rh.container.actualpath(),
+                                "{prefix}{number}".format(prefix=self.prefix, number=str(i).zfill(self.nb_digits)))
+        # Put the number of sections and the prefix of the input files in the namelist
+        namcontents = input_namelist.contents
+        logger.info('Setup macro CNAME=%s in %s', self.prefix, input_namelist.container.actualpath())
+        namcontents.setmacro('CNAME', self.prefix)
+        logger.info('Setup macro NCASES=%s in %s', i, input_namelist.container.actualpath())
+        namcontents.setmacro('NCASES', i)
+        namcontents.rewrite(input_namelist.container)
+        self._nb_input_files = i
+        # Call the super class
+        super(Festat, self).prepare(rh, opts)
+
+    def postfix(self, rh, opts):
+        # Rename stabal files
+        list_stabal = self.system.glob("stab*")
+        for stabal in list_stabal:
+            self.system.mv(stabal, "{stabal}.ncases_{ncases}".format(stabal=stabal, ncases=self._nb_input_files))
+        # Deal with diag files
+        list_diag_stat = self.system.glob("co*y")
+        if len(list_diag_stat) > 0:
+            diastat_dir_name = "dia.stat.ncases_{ncases}".format(ncases=self._nb_input_files)
+            self.system.mkdir(diastat_dir_name)
+            for file in list_diag_stat:
+                self.system.mv(file, diastat_dir_name + "/")
+        list_diag_expl = self.system.glob("expl*y")
+        if len(list_diag_expl) > 0:
+            diaexpl_dir_name = "dia.expl.ncases_{ncases}".format(ncases=self._nb_input_files)
+            self.system.mkdir(diaexpl_dir_name)
+            for file in list_diag_expl:
+                self.system.mv(file, diaexpl_dir_name + "/")
+        # Call the superclass
+        super(Festat, self).postfix(rh, opts)
+
+
+class Fediacov(Parallel):
+    """
+    Class to compute diagnostics about covariance.
+    """
+
+    _footprint = dict(
+        info = "Run fediacov",
+        attr = dict(
+            kind = dict(
+                values = ['run_fediacov', ],
+            ),
+        ),
+    )
+
+    def postfix(self, rh, opts):
+        # Deal with diag files
+        list_diag = self.system.glob("*y")
+        if len(list_diag) > 0:
+            self.system.mkdir("diag")
+            for file in list_diag:
+                self.system.mv(file, "diag/")
+        # Call the superclass
+        super(Fediacov, self).postfix(rh, opts)

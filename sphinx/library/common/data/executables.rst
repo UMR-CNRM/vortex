@@ -147,6 +147,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Festat
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Rgrid
    :show-inheritance:
    :members:
@@ -168,11 +173,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: ExecReverser
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-. autoclass:: ExecCorromegasurf
    :show-inheritance:
    :members:
    :member-order: alphabetical

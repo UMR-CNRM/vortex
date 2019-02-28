@@ -804,3 +804,22 @@ class Rgrid(BlackBox):
         for k, v in opts.items():
             args.extend(['-' + k, v])
         return ' '.join(args)
+
+
+class Festat(BlackBox):
+    """Executable to compute the B matrix and statistics upon it."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Executable to compute the B matrix',
+            attr = dict(
+                kind = dict(
+                    values = ["festat", ],
+                ),
+                gvar = dict(
+                    optional = True,
+                ),
+            )
+        )
+    ]
