@@ -365,14 +365,8 @@ class SafranPackedObs(GeoFlowResource):
                 values = ['tar'],
                 default = 'tar'
             ),
-            begindate = dict(
-                type = Date,
-                defaut = '[date]',
-            ),
-            enddate   = dict(
-                type = Date,
-                defaut = '[date]',
-            ),
+            begindate = a_date,
+            enddate   = a_date,
         ),
     )
 

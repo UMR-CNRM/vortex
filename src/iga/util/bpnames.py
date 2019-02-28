@@ -655,4 +655,3 @@ def global_snames(resource, provider):
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + '.' + suff
     return bname
-

@@ -82,7 +82,7 @@
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/PE00003GLOB05
     - default: *id003
-      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErAM003GLOB05
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PEAM003GLOB05
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r0/PEAM003GLOB05
   - !test_names.core.SingleTest
@@ -157,7 +157,7 @@
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r6/PE06003GLOB05
     - default: *id003
-      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErSX003GLOB05
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PESX003GLOB05
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r6/PESX003GLOB05
   - !test_names.core.SingleTest
@@ -185,7 +185,7 @@
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r12/PE12003GLOB05
     - default: *id003
-      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErPM003GLOB05
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PEPM003GLOB05
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r12/PEPM003GLOB05
   - !test_names.core.SingleTest
@@ -245,6 +245,6 @@
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r18/PE18003GLOB05
     - default: *id003
-      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PErDH003GLOB05
+      location: file://oper.inline.fr/arpege/france/oper/data/bdap/PEDH003GLOB05
     - default: *id004
       location: op://oper.multi.fr/arpege/oper/production/2018/01/01/r18/PEDH003GLOB05

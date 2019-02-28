@@ -138,7 +138,7 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
         t.sh.header("Setting up the s2m path")
-        t.env.setvar("SNOWTOOLS_CEN",'/home/ch/mxpt001/vortex/snowtools')
+        t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
@@ -417,21 +417,28 @@ def opphase_hook_factory(optfilter=None):
 
     return hook_phase
 
-def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
-    """Hook functions factory to ecflow progress bar while the execution is running.
-    :param int maxvalue :  total number of items
-    :param bool useterm : if True use rh.resource.term for progress bar
-    :param module sharedadvance : <class 'multiprocessing.sharedctypes.Synchronized'>
-        example to use 'sharedadvance'(this code must be implemented in the task.py) :
-            import multiprocessing as mp
-            avancement = mp.Value('i',0)
 
-            hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
+def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
     """
-    def hook_ecfmeter(t,rh):
+    Hook functions factory to update an ecflow progress bar while the execution
+    is running.
+
+    :param int maxvalue:  total number of items
+    :param bool useterm: if True use rh.resource.term for progress bar
+    :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
+
+    example of use for 'sharedadvance'(this code must be implemented in the task.py)::
+
+        >>> import multiprocessing as mp
+        >>> avancement = mp.Value('i', 0)
+        >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
+
+    """
+    def hook_ecfmeter(t, rh):  # @UnusedVariable
         max_value = int(maxvalue)
+        current_value = 0
         if hasattr(rh.resource, 'term') and useterm:
-                current_value = int(rh.resource.term.fmth)
+                current_value = rh.resource.term.hour
         if sharedadvance:
             if useterm:
                 if sharedadvance.value < current_value:
@@ -445,6 +452,6 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
             current_value = sharedadvance.value
 
         progress = (current_value * 100.0) / max_value
-        ad.ecflow_meter('avancement',int(progress + 0.5))
+        ad.ecflow_meter('avancement', int(progress + 0.5))
 
     return hook_ecfmeter
