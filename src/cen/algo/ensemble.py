@@ -103,7 +103,7 @@ class GuessWorker(_S2MWorker):
                 values = ['guess', 'intercep']
             ),
             interpreter = dict(
-                values = [ 'python', 'current' ]
+                values = ['python', 'current' ]
             ),
             reforecast = dict(
                 type     = bool,
@@ -1011,7 +1011,7 @@ class Guess(ParaExpresso):
                 values = [ 'guess'],
             ),
             interpreter = dict(
-                values = [ 'python', 'current']
+                values = ['python', 'current']
             ),
             reforecast = dict(
                 type     = bool,
