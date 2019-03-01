@@ -62,6 +62,8 @@ Here is a YAML configuration file example:
       # First item
       - in:
           kind: historic
+          basedate: ${yyyymmddhh}
+          date: "[basedate]/-PT1H"
           model: surfex
           term: 1
           block: forecast
@@ -336,6 +338,9 @@ def bootstrap_rhs(conf):
             # Resolve subsitution arrays
             sub_variables = dict()
             sub_variables.update(in_defaults)
+            # Shortcut for "date"
+            if 'date' in in_defaults:
+                sub_variables['yyyymmddhh'] = in_defaults['date'].ymdh
             if 'hhcutoff_dicts' in conf:
                 if ('cutoff' in in_defaults and
                         ('date' in in_defaults or 'hh' in in_defaults)):
