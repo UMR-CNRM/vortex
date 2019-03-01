@@ -218,13 +218,15 @@ class utExpand(TestCase):
     def test_expand_glob(self):
         tmpd = tempfile.mkdtemp()
         try:
-            (u_tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
+            (tmpio, tmpf) = tempfile.mkstemp(dir=tmpd)
             for a in ('hip', 'hop'):
                 for b in range(3):
                     shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}'.format(tmpd, a, b))
                     shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:{3:02d}'.format(tmpd, a, b, b * 9))
                     shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:0'.format(tmpd, a, b))
                     shutil.copyfile(tmpf, '{0:s}/xx_{1:s}_{2:04d}:tr'.format(tmpd, a, b))
+            os.close(tmpio)
+            os.unlink(tmpf)
             # No match
             rv = util.expand(dict(
                 arg='multi',
