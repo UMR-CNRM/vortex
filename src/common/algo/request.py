@@ -296,7 +296,7 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
         prev['query'] = self.defaut_queryname
         return prev
 
-    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend)
+    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend, )
 
     def _execute_commons(self, rh, opts):
         """Launch the BDM request(s).
