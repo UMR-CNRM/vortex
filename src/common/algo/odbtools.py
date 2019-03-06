@@ -698,6 +698,61 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         super(OdbAverage, self).postfix(rh, opts)
 
 
+class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
+    """Take a screening ODB ECMA database and create the compressed CCMA database."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['odbcompress'],
+            ),
+            ioassign = dict(),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Find any ODB candidate in input files and fox ODB env accordingly."""
+
+        obsall = [x for x in self.lookupodb() if x.rh.resource.layout.lower() == 'ecma']
+        if len(obsall) > 1:
+            obsvirtual = [o for o in obsall if o.rh.resource.part == 'virtual']
+            if len(obsvirtual) != 1:
+                raise ValueError('One and only one virtual database must be provided')
+            ecma = obsvirtual[0]
+        elif len(obsall) == 1:
+            ecma = obsall[0]
+        else:
+            raise ValueError('No ECMA database provided')
+
+        # First create a fake CCMA
+        self.layout_new = 'ccma'
+        ccma_path = self.odb_create_db(self.layout_new)
+        self.odb.fix_db_path(self.layout_new, ccma_path)
+
+        self.layout_in = ecma.rh.resource.layout.upper()
+        ecma_path = self.system.path.abspath(ecma.rh.container.localpath())
+        self.odb.fix_db_path(self.layout_in, ecma_path)
+
+        self.odb.ioassign_gather(ecma_path, ccma_path)
+
+        self.odb.create_poolmask(self.layout_new, ccma_path)
+
+        self.odb_rw_or_overwrite_method(* obsall)
+
+        # Let ancesters handling most of the env setting
+        super(OdbCompress, self).prepare(rh, opts)
+
+    def spawn_command_options(self):
+        """Prepare command line options to binary."""
+        return dict(
+            dbin     = self.layout_in,
+            dbout    = self.layout_new,
+            npool    = self.npool,
+            nslot    = self.slots.nslot,
+            date     = self.date,
+        )
+
+
 class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Report some information from post-minim CCMA to post-screening ECMA base."""
 
