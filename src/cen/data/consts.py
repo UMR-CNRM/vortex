@@ -128,3 +128,4 @@ class ConfFile(Resource):
     @property
     def realkind(self):
         return self.vapp + '_' + self.vconf
+

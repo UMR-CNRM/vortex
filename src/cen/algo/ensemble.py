@@ -1129,7 +1129,7 @@ class SodaWorker(Parallel):
         super(SodaWorker, self).execute(rh, opts)
 
     def postfix(self, rh, opts):
-        # rename and mix surfout files for next offline assim
+        # rename ((and mix)) surfout files for next offline assim
         # rename background preps
         # delete soda symbolic links
         os.unlink('PREP.nc')
@@ -1137,15 +1137,19 @@ class SodaWorker(Parallel):
         # memberslistmix = self.members  # mixing deactivated for now (5/11/18)
 
         memberslist = range(1, len(self.members) + 1)
-        
+
         for dirIt, mb in zip(self.mbdirs, memberslist):
             os.unlink('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(mb) + '.nc')
             os.remove(dirIt + '/PREP.nc')
             self.system.mv(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + "_bg.nc")
             self.system.mv("SURFOUT" + str(mb) + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + ".nc")
             os.symlink(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + '/PREP.nc')
-            
 
+        # rename particle file
+        if os.path.exists('PART'):
+            self.system.cp('PART', 'PART_' + self.dateassim.ymdh + '.txt')
+        else:
+            print('no part file')
         # adapt the following line whenever the ISBA_analysis is available
         # save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
 

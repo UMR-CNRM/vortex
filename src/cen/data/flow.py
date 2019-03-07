@@ -408,8 +408,41 @@ class Snowobs_1date(SnowObs):
 
     @property
     def realkind(self):
-        return 'obs_' + str(self.part) + '_' +str(self.geometry.area)
+        return 'obs_' + str(self.part) + '_' + str(self.geometry.area)
 
+
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
+@namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
+class PfSample(GeoFlowResource):
+    '''
+    @author : B. Cluzet
+    (SODA): Class for PF sample text files (at each assim step)
+    either distributed (bound to a geom) or semi-distrib (no point dependency)
+    '''
+    
+    _footprint = [
+        dict(
+            info = 'pf sample file',
+            attr = dict(
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True
+                ),
+                model = dict(
+                    values = ['PART']
+                ),
+                dateassim = dict(
+                    info = "date of the analysis",
+                ),
+            )
+        )
+    ]
+    _extension_remap = dict(netcdf='.txt')  # BC to check this shit
+
+    @property
+    def realkind(self):
+        return str(self.model)
 
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
