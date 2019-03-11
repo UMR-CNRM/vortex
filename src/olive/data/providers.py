@@ -219,7 +219,7 @@ class OpArchive(Provider):
                                 fuzzy = fuzzy.upper()
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
-                    if(self.vapp == 'mocage'):
+                    if self.vapp == 'mocage':
                         valid = (resource.date + resource.term).ymdh
                         fuzzy = '+' + valid
                     if keyattr == 'modelkey' and self.block == 'coupling_fc':

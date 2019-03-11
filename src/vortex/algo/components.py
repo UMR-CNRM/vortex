@@ -2,26 +2,27 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
+
+import locale
+import multiprocessing
+import shlex
+import sys
+import tempfile
+import traceback
+
 import six
 
-import collections
-import locale
-import sys
-import traceback
-import shlex
-import tempfile
-import multiprocessing
-
+import footprints
+import vortex
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.decorators import nicedeco
 from taylorism import Boss
-import footprints
-
-import vortex
-from vortex.algo  import mpitools
-from vortex.tools.parallelism import ParallelResultParser
+from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.tools.parallelism import ParallelResultParser
 
 #: No automatic export
 __all__ = []
@@ -41,6 +42,7 @@ class AlgoComponentAssertionError(AlgoComponentError):
 
 class DelayedAlgoComponentError(AlgoComponentError):
     """Triggered when exceptions occured during the execution but were delayed."""
+
     def __init__(self, excs):
         super(DelayedAlgoComponentError, self).__init__("One or several errors occurs during the run.")
         self._excs = excs
@@ -58,12 +60,226 @@ class DelayedAlgoComponentError(AlgoComponentError):
 
 class ParallelInconsistencyAlgoComponentError(Exception):
     """Generic exception class for Algo Components."""
+
     def __init__(self, target):
         msg = "The len of {:s} is inconsistent with the number or ResourceHandlers."
         super(ParallelInconsistencyAlgoComponentError, self).__init__(msg.format(target))
 
 
-class AlgoComponent(footprints.FootprintBase):
+@nicedeco
+def _clsmtd_mixin_locked(f):
+    """
+    This is a utility decorator (for class methods) : it ensure that the method can only
+    be called on a bare :class:`AlgoComponentDecoMixin` class.
+    """
+    def wrapped_clsmethod(cls, *kargs, **kwargs):
+        if issubclass(cls, AlgoComponent):
+            raise RuntimeError("This class method should not be called once the mixin is in use.")
+        return f(cls, *kargs, **kwargs)
+    return wrapped_clsmethod
+
+
+class AlgoComponentDecoMixin(object):
+    """
+    This is the base class for any Mixin class targeting :class:`AlgoComponent`
+    classes.
+
+    Like any Mixin class, this Mixin class primary use is to define methods that
+    will be available to the child class.
+
+    However, this classes will also interact with the :class:`AlgoComponentMeta`
+    metaclass to alter the behaviour of the :class:`AlgoComponent` class it is
+    used with. Several "alteration" will be made to the resulting
+    :class:`AlgoComponent` class.
+
+        * A bunch of footprints' attribute can be added to the resulting class.
+          This is controlled by the :data:`MIXIN_AUTO_FPTWEAK` and
+          :data:`_MIXIN_EXTRA_FOOTPRINTS` class variables.
+          If :data:`MIXIN_AUTO_FPTWEAK` is ``True`` (which is the default), the
+          :class:`~footrprints.Footprint` objects listed in the
+          :data:`_MIXIN_EXTRA_FOOTPRINTS` tuple will be prepended to the resulting
+          :class:`AlgoComponent` class footprint definition.
+
+        * The ``execute`` method of the resulting class can be overwritten by
+          the method referenced in the :data:`_MIXIN_EXECUTE_OVERWRITE` class
+          variable. This is allowed only if no ``execute`` method is defined
+          manually and if no other :class:`AlgoComponentDecoMixin` tries to
+          overwrite it as well. If these two conditions are not met, a
+          :class:`RuntimeError` exception will be thrown by the the
+          :class:`AlgoComponentMeta` metaclass.
+
+        * A bunch of the :class:`AlgoComponent`'s methods can be decorated. This
+          is controlled by the :data:`MIXIN_AUTO_DECO` class variable (``True``
+          by default) and a bunch of other class variables containing tuples.
+          They are described below:
+
+              * :data:`_MIXIN_PREPARE_PREHOOKS`: Tuple of method that will be
+                executed before the original prepare method.
+
+              * :data:`_MIXIN_PREPARE_HOOKS`: Tuple of method that will be
+                executed after the original prepare method.
+
+              * :data:`_MIXIN_POSTFIX_PREHOOKS`: Tuple of method that will be
+                executed before the original postfix method.
+
+              * :data:`_MIXIN_POSTFIX_HOOKS`: Tuple of method that will be
+                executed after the original postfix method.
+
+              * :data:`_MIXIN_SPAWN_HOOKS`: Tuple of method that will be
+                executed after the original spawn_hook method.
+
+              * :data:`_MIXIN_CLI_OPTS_EXTEND`: Tuple of method that will be
+                executed after the original ``spawn_command_options`` method. Such
+                method will receive one argument (``self`` set aside): the value
+                returned by the original ``spawn_command_options`` method.
+
+              * :data:`_MIXIN_STDIN_OPTS_EXTEND`: Tuple of method that will be
+                executed after the original ``spawn_stdin_options`` method. Such
+                method will receive one argument (``self`` set aside): the value
+                returned by the original ``spawn_stdin_options`` method.
+
+    """
+
+    MIXIN_AUTO_FPTWEAK = True
+    MIXIN_AUTO_DECO = True
+
+    _MIXIN_EXTRA_FOOTPRINTS = ()
+
+    _MIXIN_PREPARE_PREHOOKS = ()
+    _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_POSTFIX_PREHOOKS = ()
+    _MIXIN_POSTFIX_HOOKS = ()
+    _MIXIN_SPAWN_HOOKS = ()
+
+    _MIXIN_CLI_OPTS_EXTEND = ()
+    _MIXIN_STDIN_OPTS_EXTEND = ()
+
+    _MIXIN_EXECUTE_OVERWRITE = None
+
+    def __new__(cls, *args, **kwargs):
+        """Ensure that the mixin cannot be instantiated."""
+        if not issubclass(cls, AlgoComponent):
+            # This class cannot be instanciated by itself !
+            raise RuntimeError('< {0.__name__:s} > is a mixin class: it cannot be instantiated.'
+                               .format(cls))
+        else:
+            return super(AlgoComponentDecoMixin, cls).__new__(cls)
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_tweak_footprint(cls, fplocal):
+        """Update the footprint definition list."""
+        for fp in cls._MIXIN_EXTRA_FOOTPRINTS:
+            assert isinstance(fp, footprints.Footprint)
+            fplocal.insert(0, fp)
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def _get_algo_wrapped(cls, targetcls, targetmtd, hooks, prehooks=(), reentering=False):
+        """Wraps **targetcls**'s **targetmtd** method."""
+        orig_mtd = getattr(targetcls, targetmtd)
+        if prehooks and reentering:
+            raise ValueError('Conflicting values between prehooks and reenterin.')
+
+        def wrapped_method(self, *kargs, **kwargs):
+            for phook in prehooks:
+                phook(self, *kargs, **kwargs)
+            rv = orig_mtd(self, *kargs, **kwargs)
+            if reentering:
+                kargs = [rv, ] + list(kargs)
+            for phook in hooks:
+                rv = phook(self, *kargs, **kwargs)
+                if reentering:
+                    kargs[0] = rv
+            if reentering:
+                return rv
+
+        wrapped_method.__name__ = orig_mtd.__name__
+        wrapped_method.__doc__ = ((orig_mtd.__doc__ or '').rstrip('\n') +
+                                  "\n\nDecorated by :class:`{0.__module__:s}{0.__name__:s}`."
+                                  .format(cls))
+        wrapped_method.__dict__.update(orig_mtd.__dict__)
+        return wrapped_method
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_algo_deco(cls, targetcls):
+        """
+        Applies all the necessary decorators to the **targetcls**
+        :class:`AlgoComponent` class.
+        """
+        if not issubclass(targetcls, AlgoComponent):
+            raise RuntimeError('This class can only be mixed in AlgoComponent classes.')
+        for targetmtd, hooks, prehooks, reenter in [('prepare',
+                                                     cls._MIXIN_PREPARE_HOOKS,
+                                                     cls._MIXIN_PREPARE_PREHOOKS,
+                                                     False),
+                                                    ('postfix',
+                                                     cls._MIXIN_POSTFIX_HOOKS,
+                                                     cls._MIXIN_POSTFIX_PREHOOKS,
+                                                     False),
+                                                    ('spawn_hook',
+                                                     cls._MIXIN_SPAWN_HOOKS, (),
+                                                     False),
+                                                    ('spawn_command_options',
+                                                     cls._MIXIN_CLI_OPTS_EXTEND, (),
+                                                     True),
+                                                    ('spawn_stdin_options',
+                                                     cls._MIXIN_STDIN_OPTS_EXTEND, (),
+                                                     True), ]:
+            if hooks or prehooks:
+                setattr(targetcls, targetmtd,
+                        cls._get_algo_wrapped(targetcls, targetmtd, hooks, prehooks, reenter))
+        return targetcls
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_execute_overwrite(cls):
+        return cls._MIXIN_EXECUTE_OVERWRITE
+
+
+class AlgoComponentMeta(footprints.FootprintBaseMeta):
+    """Meta class for building :class:`AlgoComponent` classes.
+
+    In addition of performing footprints' usual stuff, it processes mixin classes
+    that derives from the :class:`AlgoComponentDecoMixin` class. See the
+    documentation of this class for more details.
+    """
+
+    def __new__(cls, n, b, d):
+        # Mixin candidates: a mixin must only be dealt with once hence the
+        # condition on issubclass(base, AlgoComponent
+        candidates = [base for base in b
+                      if (issubclass(base, AlgoComponentDecoMixin) and
+                          not issubclass(base, AlgoComponent))]
+        # Tweak footprints
+        todobases = [base for base in candidates if base.MIXIN_AUTO_FPTWEAK]
+        if todobases:
+            fplocal = d.get('_footprint', list())
+            if not isinstance(fplocal, list):
+                fplocal = [fplocal, ]
+            for base in todobases:
+                base.mixin_tweak_footprint(fplocal)
+            d['_footprint'] = fplocal
+        # Overwrite the execute method...
+        todobases = [base for base in candidates if base.mixin_execute_overwrite() is not None]
+        if len(todobases) > 1:
+            raise RuntimeError('Cannot overwrite < execute > multiple times: {:s}'
+                               .format(','.join([base.__name__ for base in todobases])))
+        if todobases:
+            if 'execute' in d:
+                raise RuntimeError('< execute > is already defined in the target class: cannot proceed')
+            d['execute'] = todobases[0].mixin_execute_overwrite()
+        # Create the class as usual
+        fpcls = super(AlgoComponentMeta, cls).__new__(cls, n, b, d)
+        # Apply decorators
+        todobases = [base for base in candidates if base.MIXIN_AUTO_DECO]
+        for base in reversed(todobases):
+            base.mixin_algo_deco(fpcls)
+        return fpcls
+
+
+class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBase)):
     """Component in charge of any kind of processing."""
 
     _SERVERSYNC_RAISEONEXIT = True
@@ -262,14 +478,16 @@ class AlgoComponent(footprints.FootprintBase):
         else:
             for arg in self.flyput_args():
                 logger.info('Check arg <%s>', arg)
-                if any([ x.rh.container.basename.startswith(arg) for x in self.promises ]):
+                if any([x.rh.container.basename.startswith(arg) for x in self.promises]):
                     logger.info(
                         'Match some promise %s',
-                        str([ x.rh.container.basename for x in self.promises if x.rh.container.basename.startswith(arg) ])
+                        str([x.rh.container.basename for x in self.promises
+                             if x.rh.container.basename.startswith(arg)])
                     )
                     actual_args.append(arg)
                 else:
-                    logger.info('Do not match any promise %s', str([ x.rh.container.basename for x in self.promises ]))
+                    logger.info('Do not match any promise %s',
+                                str([x.rh.container.basename for x in self.promises]))
             return actual_args
 
     def flyput_sleep(self):
@@ -303,7 +521,7 @@ class AlgoComponent(footprints.FootprintBase):
                         data.extend(rc.result)
                     except AttributeError:
                         data.extend(rc)
-                data = [ x for x in data if x ]
+                data = [x for x in data if x]
                 logger.info('Polling retrieved data %s', str(data))
                 for thisdata in data:
                     if self.flymapping:
@@ -312,14 +530,16 @@ class AlgoComponent(footprints.FootprintBase):
                             raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
                     else:
                         mappeddata = thisdata
-                    candidates = [ x for x in self.promises if x.rh.container.basename == mappeddata ]
+                    candidates = [x for x in self.promises
+                                  if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
                     if candidates:
                         logger.info('Polled data is promised <%s>', thisdata)
                         bingo = candidates.pop()
                         if thisdata != mappeddata:
                             logger.info('Linking <%s> to <%s> (fmt=%s) before put',
                                         thisdata, mappeddata, bingo.rh.container.actualfmt)
-                            self.system.cp(thisdata, mappeddata, intent='in', fmt=bingo.rh.container.actualfmt)
+                            self.system.cp(thisdata, mappeddata, intent='in',
+                                           fmt=bingo.rh.container.actualfmt)
                         bingo.put(incache=True)
                     else:
                         logger.warning('Polled data not promised <%s>', thisdata)
@@ -408,7 +628,7 @@ class AlgoComponent(footprints.FootprintBase):
                 data.extend(rc.result)
             except AttributeError:
                 data.extend(rc)
-            data = [ x for x in data if x ]
+            data = [x for x in data if x]
             logger.info('Polling retrieved data %s', str(data))
         return data
 
@@ -423,7 +643,7 @@ class AlgoComponent(footprints.FootprintBase):
         try:
             # allow 5 sec to put data into queue (it should be more than enough)
             ctxrec = queue_ctx.get(block=True, timeout=time_sleep + 5)
-        except multiprocessing.queues.Empty:
+        except six.moves.queue.Empty:
             logger.warning("Impossible to get the Context recorder")
             ctxrec = None
         finally:
@@ -479,9 +699,9 @@ class AlgoComponent(footprints.FootprintBase):
         A first attempt is made to terminate it nicely. If it doesn't work,
         a SIGTERM is sent.
         """
+        rc = False
         # This test should always succeed...
-        if (self._server_synctool is not None and
-                self._server_process is not None):
+        if self._server_synctool is not None and self._server_process is not None:
             # Is the process still running ?
             if self._server_process.is_alive():
                 # Try to stop it nicely
@@ -570,8 +790,8 @@ class AlgoComponent(footprints.FootprintBase):
         opts = self.spawn_stdin_options()
         stdin_text = rh.resource.stdin_text(**opts)
         if stdin_text is not None:
-            plocale = locale.getdefaultlocale()[1]
-            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='wb')
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
+            tmpfh = tempfile.TemporaryFile(dir=self.system.pwd(), mode='w+b')
             if isinstance(stdin_text, six.text_type):
                 tmpfh.write(stdin_text.encode(plocale))
             else:
@@ -597,8 +817,8 @@ class AlgoComponent(footprints.FootprintBase):
                 if self.serversync_method is None:
                     raise ValueError('The serversync_method must be provided.')
                 self._server_synctool = footprints.proxy.serversynctool(
-                    method = self.serversync_method,
-                    medium = self.serversync_medium,
+                    method      = self.serversync_method,
+                    medium      = self.serversync_medium,
                     raiseonexit = self._SERVERSYNC_RAISEONEXIT,
                 )
                 self._server_synctool.set_servercheck_callback(self.server_alive)
@@ -650,8 +870,10 @@ class AlgoComponent(footprints.FootprintBase):
 
     def abortfabrik(self, step, msg):
         """A shortcut to avoid next steps of the run."""
+
         def fastexit(self, *args, **kw):
             logger.warning('Run <%s> skipped because abort occured [%s]', step, msg)
+
         return fastexit
 
     def abort(self, msg='Not documented'):
@@ -664,10 +886,10 @@ class AlgoComponent(footprints.FootprintBase):
         self._status = True
 
         # Get instance shorcuts to context and system objects
-        self.ticket  = vortex.sessions.current()
+        self.ticket = vortex.sessions.current()
         self.context = self.ticket.context
-        self.system  = self.context.system
-        self.target  = kw.pop('target', None)
+        self.system = self.context.system
+        self.target = kw.pop('target', None)
         if self.target is None:
             self.target = self.system.default_target
 
@@ -681,16 +903,16 @@ class AlgoComponent(footprints.FootprintBase):
         with self.env:
 
             # The actual "run" recipe
-            self.prepare(rh, kw)            #1
-            self.fsstamp(kw)                #2
+            self.prepare(rh, kw)            # 1
+            self.fsstamp(kw)                # 2
             try:
-                self.execute(rh, kw)        #3
+                self.execute(rh, kw)        # 3
             finally:
-                self.execute_finalise(kw)   #3.1
-            self.fscheck(kw)                #4
-            self.postfix(rh, kw)            #5
-            self.dumplog(kw)                #6
-            self.delayed_exceptions(kw)     #7
+                self.execute_finalise(kw)   # 3.1
+            self.fscheck(kw)                # 4
+            self.postfix(rh, kw)            # 5
+            self.dumplog(kw)                # 6
+            self.delayed_exceptions(kw)     # 7
 
         # Free local references
         self.env = None
@@ -702,11 +924,11 @@ class AlgoComponent(footprints.FootprintBase):
         """Standard glance to objects."""
         tab = '  ' * indent
         print('{0}{1:02d}. {2:s}'.format(tab, nb, repr(self)))
-        for subobj in ( 'kind', 'engine', 'interpreter'):
+        for subobj in ('kind', 'engine', 'interpreter'):
             obj = getattr(self, subobj, None)
             if obj:
                 print('{0}  {1:s}: {2!s}'.format(tab, subobj, obj))
-        print
+        print()
 
     def setlink(self, initrole=None, initkind=None, initname=None, inittest=lambda x: True):
         """Set a symbolic link for actual resource playing defined role."""
@@ -726,7 +948,7 @@ class AlgoComponent(footprints.FootprintBase):
                            initrole, initkind)
 
         if initname is not None:
-            for l in [ x.rh.container.localpath() for x in initsec ]:
+            for l in [x.rh.container.localpath() for x in initsec]:
                 if not self.system.path.exists(initname):
                     self.system.symlink(l, initname)
                     break
@@ -737,7 +959,7 @@ class AlgoComponent(footprints.FootprintBase):
 class ExecutableAlgoComponent(AlgoComponent):
     """Component in charge of running executable resources."""
 
-    _abstract  = True
+    _abstract = True
 
     def valid_executable(self, rh):
         """
@@ -750,7 +972,7 @@ class ExecutableAlgoComponent(AlgoComponent):
 class xExecutableAlgoComponent(ExecutableAlgoComponent):
     """Component in charge of running executable resources."""
 
-    _abstract  = True
+    _abstract = True
 
     def valid_executable(self, rh):
         """
@@ -872,7 +1094,13 @@ class Expresso(ExecutableAlgoComponent):
             ),
             engine = dict(
                 values = ['exec', 'launch']
-            )
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
+            ),
         )
     )
 
@@ -888,6 +1116,7 @@ class Expresso(ExecutableAlgoComponent):
         Run the specified resource handler through the current interpreter,
         using the resource command_line method as args.
         """
+        # Generic config
         actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
         args = [actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
@@ -895,10 +1124,16 @@ class Expresso(ExecutableAlgoComponent):
         logger.info('Run script %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             logger.info('Script stdin:\n%s', rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
-        self.spawn(args, opts, stdin=rh_stdin)
+        # Python path stuff
+        newpypath = ':'.join(self.extendpypath)
+        if 'pythonpath' in self.env:
+            newpypath += ':{:s}'.format(self.env.pythonpath)
+        # launching the program...
+        with self.env.delta_context(pythonpath=newpypath):
+            self.spawn(args, opts, stdin=rh_stdin)
 
 
 class ParaExpresso(TaylorRun):
@@ -917,10 +1152,16 @@ class ParaExpresso(TaylorRun):
         attr = dict(
             interpreter = dict(
                 info   = 'The interpreter needed to run the script.',
-                values = ['awk', 'ksh', 'bash', 'perl', 'python']
+                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
                 values = ['exec', 'launch']
+            ),
+            extendpypath = dict(
+                info     = "The list of things to be prepended in the python's path.",
+                type     = footprints.FPList,
+                default  = footprints.FPList([]),
+                optional = True
             ),
         )
     )
@@ -932,12 +1173,27 @@ class ParaExpresso(TaylorRun):
         """
         return rh is not None
 
+    def _interpreter_args_fix(self, rh, opts):
+        absexec = self.absexcutable(rh.container.localpath())
+        if self.interpreter == 'awk':
+            return ['-f', absexec]
+        else:
+            return [absexec, ]
+
     def _default_common_instructions(self, rh, opts):
         """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(ParaExpresso, self)._default_common_instructions(rh, opts)
-        ddict['progname'] = self.interpreter
-        ddict['progargs'] = footprints.FPList([self.absexcutable(rh.container.localpath()), ] +
+        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
+        ddict['progname'] = actual_interpreter
+        ddict['progargs'] = footprints.FPList(self._interpreter_args_fix(rh, opts) +
                                               self.spawn_command_line(rh))
+        ddict['progenvdelta'] = footprints.FPDict()
+        # Deal with the python path
+        newpypath = ':'.join(self.extendpypath)
+        if 'pythonpath' in self.env:
+            self.env.pythonpath += ':{:s}'.format(newpypath)
+        if newpypath:
+            ddict['progenvdelta']['pythonpath'] = newpypath
         return ddict
 
 
@@ -967,7 +1223,7 @@ class BlindRun(xExecutableAlgoComponent):
         logger.info('BlindRun executable resource %s', args)
         rh_stdin = self.spawn_stdin(rh)
         if rh_stdin is not None:
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             logger.info('BlindRun executable stdin (fileno:%d):\n%s',
                         rh_stdin.fileno(), rh_stdin.read().decode(plocale, 'replace'))
             rh_stdin.seek(0)
@@ -1109,7 +1365,7 @@ class Parallel(xExecutableAlgoComponent):
         """Initialise the mpitool object and finds out the command line."""
 
         # Rh is a list binaries...
-        if not isinstance(rh, collections.Iterable):
+        if not isinstance(rh, collections_abc.Iterable):
             rh = [rh, ]
 
         # Find the MPI launcher
@@ -1121,7 +1377,7 @@ class Parallel(xExecutableAlgoComponent):
             mpi = footprints.proxy.mpitool(
                 sysname = self.system.sysname,
                 mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
-                ** mpi_extras
+                **mpi_extras
             )
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
@@ -1139,20 +1395,20 @@ class Parallel(xExecutableAlgoComponent):
 
             # The main program
             master = footprints.proxy.mpibinary(
-                kind = self.binarysingle,
-                nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
-                ** mpi_desc)
+                kind=self.binarysingle,
+                nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                **mpi_desc)
             master.options = opts.get('mpiopts', dict())
-            master.master  = self.absexcutable(rh[0].container.localpath())
+            master.master = self.absexcutable(rh[0].container.localpath())
             bins = [master, ]
 
             # A potential IO server
             io = self.ioserver
             if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
                 io = footprints.proxy.mpibinary(
-                    kind = self.ioname,
-                    tasks   = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
-                    openmp  = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
+                    kind   = self.ioname,
+                    tasks  = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
+                    openmp = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
                 io.options = {x[3:]: opts[x]
                               for x in opts.keys() if x.startswith('io_')}
                 io.master = master.master
@@ -1178,7 +1434,7 @@ class Parallel(xExecutableAlgoComponent):
             # Check mpiopts shape
             u_mpiopts = opts.get('mpiopts', dict())
             for k, v in u_mpiopts.items():
-                if not isinstance(v, collections.Iterable):
+                if not isinstance(v, collections_abc.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
@@ -1186,17 +1442,21 @@ class Parallel(xExecutableAlgoComponent):
             # Create MpiBinaryDescription objects
             bins = list()
             for i, r in enumerate(rh):
-                bins.append(footprints.proxy.mpibinary(kind = bnames[i],
-                                                       nodes   = self.env.get('VORTEX_SUBMIT_NODES', 1),
-                                                       ** mpi_desc))
+                bins.append(
+                    footprints.proxy.mpibinary(
+                        kind  = bnames[i],
+                        nodes = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                        **mpi_desc
+                    )
+                )
                 # Reshape mpiopts
                 bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
-                bins[i].master  = self.absexcutable(r.container.localpath())
+                bins[i].master = self.absexcutable(r.container.localpath())
 
         # Nothing to do: binary descriptions are provided by the user
         else:
             if len(self.binaries) != len(rh):
-                    raise ParallelInconsistencyAlgoComponentError("self.binaries")
+                raise ParallelInconsistencyAlgoComponentError("self.binaries")
             bins = self.binaries
             for i, r in enumerate(rh):
                 bins[i].master = self.absexcutable(r.container.localpath())

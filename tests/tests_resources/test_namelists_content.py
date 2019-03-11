@@ -76,11 +76,10 @@ class DummyNamContainer(object):
 
     def write(self, thetxt):
         self.mytxt = thetxt
-    
+
     @contextlib.contextmanager
     def preferred_decoding(self, *kargs, **kwargs):
         yield
-    
 
 
 class UtNamelistContent(TestCase):

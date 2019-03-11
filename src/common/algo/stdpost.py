@@ -17,14 +17,15 @@ import footprints
 from taylorism import Boss
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
-from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel, AlgoComponentError
+from vortex.algo.components   import AlgoComponentDecoMixin, AlgoComponentError
+from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
-from vortex.tools             import grib
+from vortex.tools.grib        import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
 from vortex.tools.systems     import ExecutionError
-from vortex.util.structs      import FootprintCopier
 
 from common.tools.grib        import GRIBFilter
+from common.tools.drhook      import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -376,7 +377,7 @@ class Fa2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
-class StandaloneGRIBFilter(TaylorRun, grib.EcGribComponent):
+class StandaloneGRIBFilter(TaylorRun):
 
     _footprint = dict(
         attr = dict(
@@ -554,7 +555,7 @@ class DegradedDiagPEError(AlgoComponentError):
         return outstr
 
 
-class DiagPE(BlindRun, grib.EcGribComponent):
+class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     """Execution of diagnostics on grib input (ensemble forecasts specific)."""
     _footprint = dict(
         attr = dict(
@@ -605,14 +606,6 @@ class DiagPE(BlindRun, grib.EcGribComponent):
     )
 
     _method2output_map = dict(neighbour='GRIB_PE_VOISIN')
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super(DiagPE, self).prepare(rh, opts)
-        # Prevent DrHook to initialise MPI and setup grib_api
-        for optpack in ('drhook_not_mpi', ):
-            self.export(optpack)
-        self.eccodes_setup(rh, opts, compat=True)
 
     def spawn_hook(self):
         """Usually a good habit to dump the fort.4 namelist."""
@@ -822,14 +815,10 @@ class DiagPE(BlindRun, grib.EcGribComponent):
                     bm.health_check(interval=30)
 
 
-class _DiagPICommons(FootprintCopier):
-    """Class variables and methods usefull for DiagPI.
+class _DiagPIDecoMixin(AlgoComponentDecoMixin):
+    """Class variables and methods usefull for DiagPI."""
 
-    They will be copied to the "real" diagPI classes using the FootprintCopier
-    metaclass.
-    """
-
-    _footprint = dict(
+    _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
         attr = dict(
             kind = dict(
                 values = ['diagpi', 'diaglabo'],
@@ -851,13 +840,10 @@ class _DiagPICommons(FootprintCopier):
                 default  = 8,
             ),
         ),
-    )
+    )]
 
-    @staticmethod
-    def prepare(self, rh, opts):
+    def _prepare_pihook(self, rh, opts):
         """Set some variables according to target definition."""
-        super(self.__class__, self).prepare(rh, opts)
-        self.eccodes_setup(rh, opts, compat=True)
 
         # Check for input files to concatenate
         if self.gribcat:
@@ -872,22 +858,21 @@ class _DiagPICommons(FootprintCopier):
         # prepare for delayed filtering
         self._delayed_filtering = []
 
-    @staticmethod
-    def postfix(self, rh, opts):
+    def _postfix_pihook(self, rh, opts):
         """Filter outputs."""
         if self._delayed_filtering:
             self._batch_filter(self._delayed_filtering)
-        super(self.__class__, self).postfix(rh, opts)
 
-    @staticmethod
-    def spawn_hook(self):
+    def _spawn_pihook(self):
         """Usually a good habit to dump the fort.4 namelist."""
-        super(self.__class__, self).spawn_hook()
         if self.system.path.exists('fort.4'):
             self.system.subtitle('{0:s} : dump namelist <fort.4>'.format(self.realkind))
             self.system.cat('fort.4', output=False)
 
-    @staticmethod
+    _MIXIN_PREPARE_HOOKS = (_prepare_pihook, )
+    _MIXIN_POSTFIX_HOOKS = (_postfix_pihook, )
+    _MIXIN_SPAWN_HOOKS = (_spawn_pihook, )
+
     def _automatic_cat(self, list_in, list_out):
         """Concatenate the *list_in* and *list_out* input files."""
         if self.gribcat:
@@ -906,7 +891,6 @@ class _DiagPICommons(FootprintCopier):
             for ifile in inputs:
                 self.system.rm(ifile, fmt='grib')
 
-    @staticmethod
     def _batch_filter(self, candidates):
         """If no promises are made, the GRIB are filtered at once at the end."""
         # We re-serialise data because footprints don't like dictionaries
@@ -917,8 +901,7 @@ class _DiagPICommons(FootprintCopier):
                              candidates, [f + '_{filtername:s}' for f in candidates],
                              filters=FPTuple(filters), nthreads=self.gribfilter_tasks)
 
-    @staticmethod
-    def execute(self, rh, opts):
+    def _execute_picommons(self, rh, opts):
         """Loop on the various grib files provided."""
 
         # Intialise a GRIBFilter (at least try to)
@@ -1010,18 +993,20 @@ class _DiagPICommons(FootprintCopier):
             for thispromise in expected:
                 thispromise.put(incache=True)
 
+    _MIXIN_EXECUTE_OVERWRITE = _execute_picommons
 
-class DiagPI(six.with_metaclass(_DiagPICommons, BlindRun, grib.EcGribComponent)):
+
+class DiagPI(BlindRun, _DiagPIDecoMixin, EcGribDecoMixin):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
     pass
 
 
-class DiagPIMPI(six.with_metaclass(_DiagPICommons, Parallel, grib.EcGribComponent)):
+class DiagPIMPI(Parallel, _DiagPIDecoMixin, EcGribDecoMixin):
     """Execution of diagnostics on grib input (deterministic forecasts specific)."""
     pass
 
 
-class Fa2GaussGrib(BlindRun):
+class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
     """Standard FA conversion, e.g. with GOBPTOUT as a binary resource."""
 
     _footprint = dict(
@@ -1045,12 +1030,6 @@ class Fa2GaussGrib(BlindRun):
             ),
         )
     )
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super(Fa2GaussGrib, self).prepare(rh, opts)
-        # Prevent DrHook to initialize MPI
-        self.export('drhook_not_mpi')
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -1102,7 +1081,7 @@ class Fa2GaussGrib(BlindRun):
             self.system.rmall(self.fortinput)
 
 
-class Reverser(BlindRun):
+class Reverser(BlindRun, DrHookDecoMixin):
     """Compute the initial state for Ctpini."""
     _footprint = dict(
         info = "Compute initial state for Ctpini.",
@@ -1149,7 +1128,5 @@ class Reverser(BlindRun):
         param.save()
         logger.info("Here is the parameter file (after substitution):")
         param.container.cat()
-        # Define an environment variable
-        self.export('drhook_not_mpi')
         # Call the parent's prepare
         super(Reverser, self).prepare(rh, opts)

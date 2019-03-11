@@ -31,15 +31,16 @@ Module interface
 .. autofunction:: grep
 
 
-Pre-defined horizontal geometry attribute as an abstract footprints
--------------------------------------------------------------------
-
-.. autodata:: hgeometry
-
 Pre-defined horizontal geometry attribute as an abstract decorative footprints
 ------------------------------------------------------------------------------
 
 .. autodata:: hgeometry_deco
+
+
+Pre-defined horizontal geometry attribute as an abstract footprints
+-------------------------------------------------------------------
+
+.. autodata:: hgeometry
 
 
 Concrete geometry classes

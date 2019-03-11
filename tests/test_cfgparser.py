@@ -3,10 +3,11 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import logging
 import os
 
-import logging
 import footprints
+
 logging.basicConfig(level=logging.ERROR)
 
 from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
@@ -15,8 +16,8 @@ from unittest import TestCase, TestLoader, TextTestRunner
 
 from bronx.stdtypes import date
 
-from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, \
-    AppConfigStringDecoder, TableItem, ConfigurationTable
+from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser
+from vortex.util.config import AppConfigStringDecoder, TableItem, ConfigurationTable
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
@@ -343,7 +344,7 @@ Localisation : HELLO"""
 
     def test_bare(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'bare')
+                                          version='bare')
         self.assertEqual(set(c_conf.groups()), set(['utest_chemical', 'utest_volcanic']))
         self.assertEqual(set(c_conf.keys()), set(['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO']))
         self.assertEqual(len(c_conf.tablelist), 3)
@@ -356,11 +357,11 @@ Localisation : HELLO"""
 
     def test_traslate(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'tr')
+                                          version='tr')
         itemtest = c_conf.get('HELLO')
         self.assertEqual(str(itemtest), self._last_endump)
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'tr', language='fr')
+                                          version='tr', language='fr')
         itemtest = c_conf.get('HELLO')
         self.assertEqual(str(itemtest), self._last_frdump)
 

@@ -45,7 +45,7 @@ def izip_pcn(* iterables):
     except StopIteration:
         if prev[-1] is not void:
             yield prev[0], prev[-1], void
-        raise StopIteration()
+        return
 
 
 if __name__ == '__main__':

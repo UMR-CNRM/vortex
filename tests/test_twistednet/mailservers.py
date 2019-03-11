@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 A set of servers.
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
-import six
 
 import contextlib
 import six.moves.queue as basequeue
@@ -29,7 +28,7 @@ from twisted.cred.portal import Portal
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-from test_twistednet.utils import wait_for_port
+from .utils import wait_for_port
 
 logger = loggers.getLogger(__name__)
 
@@ -127,8 +126,7 @@ class TestMailServer(object):
         return True
 
     def check_port(self):
-        time.sleep(1)
-        # wait_for_port(self.port)
+        wait_for_port(self.port)
 
     @contextlib.contextmanager
     def __call__(self):

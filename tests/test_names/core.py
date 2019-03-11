@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Core classes needed to run names tests.
-'''
+"""
 
-
-from __future__ import print_function, division, absolute_import, unicode_literals
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import functools
@@ -15,26 +13,25 @@ import io
 import os
 import pprint
 
+import six
 import yaml
 
-from bronx.fancies import loggers
 import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
-import vortex.syntax.stdattrs
 import gco
-
-import common  # @UnusedImport
-import olive  # @UnusedImport
-import iga  # @UnusedImport
-import intairpol  # @UnusedImport
-import cen  # @UnusedImport
-import previmar  # @UnusedImport
-
-from .utils import YamlOrderedDict
-from test_algo_server import tloglevel
+import vortex.syntax.stdattrs
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
 from bronx.fancies.loggers import contextboundGlobalLevel
+from .utils import YamlOrderedDict
 
+import cen        # @UnusedImport
+import common     # @UnusedImport
+import iga        # @UnusedImport
+import intairpol  # @UnusedImport
+import olive      # @UnusedImport
+import previmar   # @UnusedImport
 
 logger = loggers.getLogger(__name__)
 
@@ -71,7 +68,7 @@ class TestNamesComparisonError(TestNamesError):
         outstr = super(TestNamesComparisonError, self).__str__() + '\n'
         outstr += 'List of defaults\n{!s}\n'.format(self._defaults)
         outstr += 'List of parameters\n{!s}'.format(self._desc)
-        return(outstr)
+        return outstr
 
 
 class TestNamesComparisonDiffError(TestNamesComparisonError):
@@ -85,7 +82,7 @@ class TestNamesComparisonDiffError(TestNamesComparisonError):
     def __str__(self):
         outstr = super(TestNamesComparisonDiffError, self).__str__() + '\n'
         outstr += '(me) {0._me!s}\n!=   {0._ref!s} (ref)'.format(self)
-        return(outstr)
+        return outstr
 
 
 class TestNamesComparisonNoRefError(TestNamesComparisonError):
@@ -210,7 +207,7 @@ class TestDriver(object):
         for tstack in self._todo:
             stackdump.append(sorted(tstack, key=lambda t: t.desc))
         with io.open(self._resultfile, 'w') as fhyaml:
-            yaml.dump(stackdump, fhyaml, default_flow_style = False)
+            yaml.dump(stackdump, fhyaml, default_flow_style=False)
 
     def load_references(self):
         """Read reference data from file."""
@@ -314,7 +311,7 @@ class SingleTest(object):
     def rh(self):
         """Generate the ResourceHandler associated with this test."""
         picked_up = fp.proxy.providers.pickup(  # @UndefinedVariable
-            * fp.proxy.resources.pickup_and_cache(self.desc.raw.copy())  # @UndefinedVariable
+            *fp.proxy.resources.pickup_and_cache(self.desc.raw.copy())  # @UndefinedVariable
         )
         logger.debug('Resource desc %s', picked_up)
         picked_up['container'] = self._DEFAULT_CONTAINER
@@ -353,7 +350,7 @@ class SingleTest(object):
 # ------------------------------------------------------------------------------
 # Utility classes that handles footprint's descriptions and test results
 
-class TestResults(collections.Mapping):
+class TestResults(collections_abc.Mapping):
     """Utility class that holds test's results."""
 
     def __init__(self):
@@ -402,7 +399,7 @@ class TestResults(collections.Mapping):
 
 
 @functools.total_ordering
-class TestParameters(collections.Hashable):
+class TestParameters(collections_abc.Hashable):
     """Utility class that holds a footprint's description."""
 
     def __init__(self, desc):

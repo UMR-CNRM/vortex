@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+
 import six
 
 numpy_looks_fine = True
@@ -76,9 +77,12 @@ class _FakeRH(object):
 
 class _EpyTestBase(unittest.TestCase):
 
-    def setUp(self):
-        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0')):
-            raise self.skipTest('Epygram >= v1.0.0 is not available')
+    def setUp(self, needFA=False):
+        check_opts = dict()
+        if needFA:
+            check_opts['needFA'] = True
+        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0', ** check_opts)):
+            raise self.skipTest('Epygram >= v1.0.0 with FA={} is not available'.format(needFA))
 
         uepy.epygram.epylog.setLevel('ERROR')
 
@@ -90,18 +94,20 @@ class _EpyTestBase(unittest.TestCase):
     def demofile(self, demofile):
         return self.sh.path.join(self.datapath, demofile)
 
-
-@loggers.unittestGlobalLevel(tloglevel)
-class TestEpygramContents(_EpyTestBase):
-
     def assertDictLikeEqual(self, new, ref):
         if six.PY2:
             self.assertItemsEqual(new, ref)
         else:
             self.assertCountEqual(new, ref)
 
-    def test_contents(self):
-        # FA
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramFaContents(_EpyTestBase):
+
+    def setUp(self):
+        super(TestEpygramFaContents, self).setUp(needFA=True)
+
+    def test_fa_contents(self):
         fa_c = vortex.data.containers.SingleFile(filename=self.demofile('historic.light.fa'),
                                                  actualfmt='fa')
         ct = vortex.data.contents.FormatAdapter(datafmt='fa')
@@ -112,7 +118,12 @@ class TestEpygramContents(_EpyTestBase):
                                  ct.data.listfields())
             self.assertDictLikeEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
                                      ct.metadata)
-        # GRIB
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramGribContents(_EpyTestBase):
+
+    def test_grib_contents(self):
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
                                                    actualfmt='grib')
         ct = vortex.data.contents.FormatAdapter(datafmt='grib')
@@ -127,7 +138,7 @@ class TestEpygramContents(_EpyTestBase):
 class TestEpygramAdvanced(_EpyTestBase):
 
     def setUp(self):
-        super(TestEpygramAdvanced, self).setUp()
+        super(TestEpygramAdvanced, self).setUp(needFA=True)
 
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_epygram')

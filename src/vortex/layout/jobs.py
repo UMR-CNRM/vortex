@@ -591,11 +591,13 @@ class JobAssistant(footprints.FootprintBase):
         try:
             cycle = GgetId(cycle)
         except ValueError:
+            print('** Cycle << {!s} >> will auto-register whenever necessary **'.format(cycle))
             return
         from gco.tools import genv
         if cycle in genv.cycles():
-            logger.info('Cycle %s already registered', cycle)
+            print('** Cycle << {!s} >> already registered **'.format(cycle))
         else:
+            print('\n** Cycle << {!s} >> is to be registered **'.format(cycle))
             genv.autofill(cycle)
             print(genv.as_rawstr(cycle=cycle))
 

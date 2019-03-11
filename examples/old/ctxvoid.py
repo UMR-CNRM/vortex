@@ -31,7 +31,7 @@ print(t.prompt, sh.pwd())
 
 arpege_cycle = 'cy36t1_op2.16'
 
-#domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
+# domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
 geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)

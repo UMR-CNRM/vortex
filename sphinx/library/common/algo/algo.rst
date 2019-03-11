@@ -28,5 +28,7 @@ Included Modules
 * :mod:`common.algo.monitoring`
 * :mod:`common.algo.mpitools`
 * :mod:`common.algo.odbtools`
+* :mod:`common.algo.oopsroot`
+* :mod:`common.algo.oopstests`
 * :mod:`common.algo.request`
 * :mod:`common.algo.stdpost`

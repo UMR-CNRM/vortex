@@ -91,7 +91,7 @@ def archive_suffix(model, cutoff, date, vconf=None):
             )
         )
     else:
-        if (re.search('court|arome', model) or (vconf in arpcourt_vconf)):
+        if re.search(r'court|arome', model) or vconf in arpcourt_vconf:
             rr = dict(
                 zip(
                     zip(

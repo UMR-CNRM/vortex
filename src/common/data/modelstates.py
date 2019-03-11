@@ -189,6 +189,12 @@ class Historic(GeoFlowResource):
                         modelstate = 'historic'
                     )
                 ),
+                subset = dict(
+                    # Dummy argument but avoid priority related messages with footprints
+                    info = 'With Historical files, leave subset empty...',
+                    optional = True,
+                    values = [None, ],
+                ),
                 nativefmt = dict(
                     values = ['fa', 'grib', 'lfi', 'netcdf', 'unknown', 'nc'],
                     remap = dict(nc='netcdf'),
@@ -242,6 +248,39 @@ class Historic(GeoFlowResource):
             return lgeo
         else:
             return super(Historic, self)._geo2basename_info(add_stretching=add_stretching)
+
+
+@namebuilding_insert('filtername', lambda s: s.subset)
+class HistoricSubset(GeoFlowResource):
+    """
+    Class for a subset of the historical state of a model (e.g. from a forecast).
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'Subset of an historic forecast file',
+            attr = dict(
+                kind = dict(
+                    values = ['historic', 'modelstate'],
+                    remap = dict(
+                        modelstate = 'historic'
+                    )
+                ),
+                subset = dict(
+                    info = "The subset of fields contained in this data.",
+                ),
+                nativefmt = dict(
+                    values = ['fa', 'grib', 'lfi', 'netcdf', 'unknown', 'nc'],
+                    remap = dict(nc='netcdf'),
+                    default = 'fa',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'historic'
 
 
 class BiasDFI(GeoFlowResource):

@@ -21,15 +21,15 @@ PY3READY      = tests_bronx tests_footprints tests_arpifs_listings tests_tnt tes
 
 all: check
 
-.PHONY: all check check27 check3 tests tests27 tests3 cover cover27 cover3 clean-coverage clean
+.PHONY: all check check27 check3 tests tests27 tests3 baretests baretests27 baretests3 cover cover27 cover3 clean-coverage clean
 
 
-# Tests that should always succeed
+# Tests that should always succeed and are fast enough
 check: check27
 
 check27:
-	$(PYTHON) ./do_working_tests.py
-    
+	$(PYTHON) ./do_working_tests-2.7.py
+
 check3:
 	$(PYTHON3) ./do_working_tests-3.py
 
@@ -37,10 +37,19 @@ check3:
 tests: tests27 tests3
 
 tests27:
-	$(NOSE) $(NOSE_OPTS)
+	($(NOSE) $(NOSE_OPTS) 2>&1) | tee $@.log
 
 tests3:
-	$(NOSE3) $(NOSE_OPTS)
+	($(NOSE3) $(NOSE_OPTS) 2>&1) | tee $@.log
+
+# Run all test without nose
+baretests: baretests27 baretests3
+
+baretests27:
+	$(PYTHON) ./do_all_tests.py
+
+baretests3:
+	$(PYTHON3) ./do_all_tests.py
 
 # Run all tests with nose and coverage
 cover: cover27

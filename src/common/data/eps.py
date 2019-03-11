@@ -9,6 +9,7 @@ from bronx.fancies import loggers
 import footprints
 
 from bronx.stdtypes.date      import Date, Time
+from bronx.syntax.decorators  import secure_getattr
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
 from vortex.syntax.stdattrs   import number_deco
@@ -161,6 +162,7 @@ class SampleContent(JsonDictContent):
                 except KeyError:
                     return None
 
+    @secure_getattr
     def __getattr__(self, attr):
         # Return an access function that corresponds to the key in "drawing"
         drawing_keys = set([item

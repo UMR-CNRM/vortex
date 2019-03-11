@@ -124,7 +124,7 @@ def _parse_globs(todo):
         * The python's glob string that can be used to look for files.
 
     """
-    gstart = re.compile('^{glob:(\w+):')
+    gstart = re.compile(r'^{glob:(\w+):')
     glob_names = set()
     finalglob = ''
     finalpattern = ''
@@ -237,7 +237,7 @@ def expand(desc):
         ... # - testfile_def_2
         ... # - testfile_def_3
         ... # - testfile_a_trap
-        >>> expand({'fname': 'testfile_{glob:i:\w+}_{glob:n:\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
+        >>> expand({'fname': r'testfile_{glob:i:\\w+}_{glob:n:\\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
         [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'}, {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'}, {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'}, {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
 
     Explanation: The files currently in the working directory are matched using regular

@@ -71,7 +71,8 @@ class OpJobAssistantTest(JobAssistant):
             if t.sh.path.islink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf'):
                 t.sh.unlink('/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
             if "LOG_SBATCH" in t.env():
-                t.sh.softlink(t.env["LOG_SBATCH"], '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
+                t.sh.softlink(t.env["LOG_SBATCH"],
+                              '/home/ch/mxpt001/resul/' + t.env["SLURM_JOB_NAME"] + '.dayf')
 
         nb_slurm = self.print_somevariables(t, 'SLURM')
         tg = vortex.sh().default_target
@@ -85,7 +86,8 @@ class OpJobAssistantTest(JobAssistant):
             if t.env.OP_GCOCACHE is None:
                 t.env.setvar("OP_GCOCACHE", lustre_oper + tg.get('gco:gcocache'))
         else:
-            logger.warning('No "LUSTRE_OPER" variable in the environment, unable to export MTOOLDIR and datadir')
+            logger.warning('No "LUSTRE_OPER" variable in the environment, '
+                           'unable to export MTOOLDIR and datadir')
 
         if "LOG_SBATCH" in t.env():
             t.env.setvar("LOG", t.env["LOG_SBATCH"])
@@ -136,6 +138,9 @@ class OpJobAssistantTest(JobAssistant):
         if not t.env.OP_MEMBER and t.env.get('DMT_ECHEANCE'):
             t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
+
+        t.sh.header("Setting up the s2m path")
+        t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
@@ -413,3 +418,42 @@ def opphase_hook_factory(optfilter=None):
             print(t.prompt, 'phasing file = ', rh)
 
     return hook_phase
+
+
+def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
+    """
+    Hook functions factory to update an ecflow progress bar while the execution
+    is running.
+
+    :param int maxvalue:  total number of items
+    :param bool useterm: if True use rh.resource.term for progress bar
+    :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
+
+    example of use for 'sharedadvance'(this code must be implemented in the task.py)::
+
+        >>> import multiprocessing as mp
+        >>> avancement = mp.Value('i', 0)
+        >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
+
+    """
+    def hook_ecfmeter(t, rh):  # @UnusedVariable
+        max_value = int(maxvalue)
+        current_value = 0
+        if hasattr(rh.resource, 'term') and useterm:
+                current_value = rh.resource.term.hour
+        if sharedadvance:
+            if useterm:
+                if sharedadvance.value < current_value:
+                    with sharedadvance.get_lock():
+                        sharedadvance.value = current_value
+                else:
+                    return
+            else:
+                with sharedadvance.get_lock():
+                    sharedadvance.value += 1
+            current_value = sharedadvance.value
+
+        progress = (current_value * 100.0) / max_value
+        ad.ecflow_meter('avancement', int(progress + 0.5))
+
+    return hook_ecfmeter

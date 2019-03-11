@@ -459,7 +459,8 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
             for info in sorted(attrmap[a], key=lambda x: x['name']):
                 print(' ' * 4, info['name'].ljust(22), '+', info['module'])
                 for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
-                    print(' ' * 29, '|', k, '=', str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(','))
+                    print(' ' * 29, '|', k, '=',
+                          str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(','))
             print()
 
     def show_attrkeys(self, only=None):

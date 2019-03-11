@@ -26,7 +26,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: EcGribComponent
+.. autoclass:: EcGribDecoMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical

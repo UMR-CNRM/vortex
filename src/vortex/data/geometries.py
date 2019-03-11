@@ -22,13 +22,13 @@ interface methods, :func:`get`, :func:`keys`, :func:`values` and :func:`items`::
 
     >>> from vortex.data import geometries
     >>> print(geometries.get(tag="global798"))
-    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' tl=798 c=2.4>
 
 It is also possible to retrieve an existing geometry using the :class:`Geometry`
 class constructor::
 
     >>> print(geometries.Geometry("global798"))
-    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' t=798 c=2.4>
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' tl=798 c=2.4>
 
 To build a new geometry, you need to pick the concrete geometry class that fits
 your needs. Currently available concrete geometries are:
@@ -47,7 +47,7 @@ For example, let's build a new gaussian grid::
     ...                          new=True)  # Mandatory to create new geometries
     <vortex.data.geometries.GaussGeometry object at 0x...>
     >>> print(geometries.Geometry("global2198"))
-    <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' t=2198 c=2.1>
+    <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' tl=2198 c=2.1>
 
 (From that moment on, the new geometry is available globally in Vortex)
 
@@ -196,6 +196,7 @@ class HorizontalGeometry(Geometry):
         """
         desc = dict(
             info = 'anonymous',
+            gridtype = None,
             area = None,
             nlon = None,
             nlat = None,
@@ -204,6 +205,7 @@ class HorizontalGeometry(Geometry):
             resolution = 0.,
             runit = None,
             truncation = None,
+            truncationtype = None,
             stretching = None,
             nmassif = None,
             nposts = None,
@@ -337,7 +339,10 @@ class CombinedGeometry(Geometry):
 # Concrete geometry classes
 
 class GaussGeometry(HorizontalGeometry):
-    """Gaussian grid (stretched or not, rotated or not)."""
+    """
+    Gaussian grid (stretched or not, rotated or not) associated with a spectral
+    represention.
+    """
 
     _tag_topcls = False
 
@@ -348,6 +353,10 @@ class GaussGeometry(HorizontalGeometry):
         :param str info: A free description of the geometry
         :param int truncation: The linear truncation
         :param float stretching: The stretching factor (1. for an unstretched grid)
+        :param str truncationtype: The method used to compute the spectral representation
+            (linear, quadratic or cubic).
+        :param str gridtype: The type of the gaussian grid (rgrid: the default
+            method used at Meteo-France until now, octahedral)
         :param str area: The location of the pole of interest (when stretching > 1.)
 
         .. note:: Gaussian grids are always global grids.
@@ -360,18 +369,41 @@ class GaussGeometry(HorizontalGeometry):
         self.lam = False  # Always false for gaussian grid
         if self.truncation is None or self.stretching is None:
             raise AttributeError("Some mandatory arguments are missing")
+        if self.gridtype is None:
+            self.gridtype = 'rgrid'
+        if self.truncationtype is None:
+            self.truncationtype = 'linear'
+        if self.truncationtype not in ('linear', 'quadratic', 'cubic'):
+            raise ValueError("Improper value {:s} for *truncationtype*"
+                             .format(self.truncationtype))
+        if self.gridtype not in ('rgrid', 'octahedral'):
+            raise ValueError("Improper value {:s} for *gridtype*"
+                             .format(self.gridtype))
+
+    @property
+    def short_truncationtype(self):
+        return self.truncationtype[0]
+
+    @property
+    def short_gridtype(self):
+        return self.gridtype[0] if self.gridtype != 'rgrid' else ''
 
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} t={1:d} c={2:g}>'.format(self.strheader(), self.truncation, self.stretching)
+        return '<{0:s} t{1:s}{2:s}={3:d} c={4:g}>'.format(self.strheader(),
+                                                          self.short_truncationtype,
+                                                          self.short_gridtype,
+                                                          self.truncation,
+                                                          self.stretching)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         if self.stretching > 1:
-            fmts = 'kind={0:s}, t={1:d}, c={2:g} (pole of interest over {3!s})'
+            fmts = 'kind={0:s}, t{1:s}{2:s}={3:d}, c={4:g} (pole of interest over {5!s})'
         else:
-            fmts = 'kind={0:s}, t={1:d}, c={2:g}'
-        return fmts.format(self.kind, self.truncation, self.stretching, self.area)
+            fmts = 'kind={0:s}, t{1:s}{2:s}={3:d}, c={4:g}'
+        return fmts.format(self.kind, self.short_truncationtype, self.short_gridtype,
+                           self.truncation, self.stretching, self.area)
 
 
 class ProjectedGeometry(HorizontalGeometry):
@@ -563,7 +595,9 @@ def _add_geo2basename_info(cls):
     def _geo2basename_info(self, add_stretching=True):
         """Return an array describing the geometry for the Vortex's name builder."""
         if isinstance(self.geometry, GaussGeometry):
-            lgeo = [{'truncation': self.geometry.truncation}, ]
+            lgeo = [{'truncation': (self.geometry.truncation,
+                                    self.geometry.short_truncationtype,
+                                    self.geometry.short_gridtype)}, ]
             if add_stretching:
                 lgeo.append({'stretching': self.geometry.stretching})
         elif isinstance(self.geometry, ProjectedGeometry):

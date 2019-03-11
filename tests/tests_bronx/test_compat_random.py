@@ -20,11 +20,6 @@ class TestCompatRandom(unittest.TestCase):
             choice=6,
             shuffle=['c', 6, 't', 'a', 2, 'x', 5, 3, 1],
             sample=[1, 2, 'x'], ),
-        'TotoIsHere': dict(
-            randrange=226,
-            choice='a',
-            shuffle=[2, 'a', 1, 'c', 'x', 5, 3, 't', 6],
-            sample=['a', 5, 'x'], ),
     }
 
     _ITEMS = ('a', 1, 'c', 2, 5, 6, 3, 't', 'x')

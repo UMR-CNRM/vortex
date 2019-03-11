@@ -443,7 +443,8 @@ class FlatReport(object):
             if done or skip:
                 focus = info.pop('focus')
                 if info:
-                    current[focus] = ' / '.join([six.text_type(x) + ': ' + six.text_type(info[x]) for x in info.keys()])
+                    current[focus] = ' / '.join([six.text_type(x) + ': ' + six.text_type(info[x])
+                                                 for x in info.keys()])
                 else:
                     current[focus] = None
 

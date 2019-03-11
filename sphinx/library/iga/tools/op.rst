@@ -25,6 +25,8 @@ Functions
 
 .. autofunction:: opphase_hook_factory
 
+.. autofunction:: opecfmeter_hook_factory
+
 Classes
 -------
 

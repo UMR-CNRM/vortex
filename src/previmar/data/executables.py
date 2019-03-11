@@ -35,7 +35,7 @@ class MasterSurges(OceanographicModel):
                     value = ['hycom', ],
                 ),
                 forcage = dict(
-                    values   = ['aro','cep','arp','aoc',],
+                    values   = ['aro', 'cep', 'arp', 'aoc', ],
                     optional = True,
                     default  = '',
                 ),
@@ -314,7 +314,7 @@ class SurScriptSurges(BlackBox):
     _footprint = [
         gvar,
         dict(
-            info = ('SurScript Surges used on double binaries execution'),
+            info = 'SurScript Surges used on double binaries execution',
             attr = dict(
                 kind = dict(
                     values = [ 'SurScriptBinary'],

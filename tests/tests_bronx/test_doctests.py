@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import doctest
 import unittest
@@ -9,8 +9,8 @@ import unittest
 from bronx.datagrip import namelist
 from bronx.fancies import display, loggers
 from bronx.patterns import getbytag, observer
-from bronx.stdtypes import date, history, tracking
-from bronx.syntax import iterators
+from bronx.stdtypes import date, history, tracking, xtemplates
+from bronx.syntax import iterators, minieval
 
 
 class utDocTests(unittest.TestCase):
@@ -29,7 +29,9 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(date)
         self.assert_doctests(history)
         self.assert_doctests(tracking)
+        self.assert_doctests(xtemplates)
         self.assert_doctests(iterators)
+        self.assert_doctests(minieval)
 
 
 if __name__ == '__main__':

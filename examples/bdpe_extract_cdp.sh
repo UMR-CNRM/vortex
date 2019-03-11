@@ -12,16 +12,16 @@
 #   * ok yesterday only without archive access
 
 case $(hostname) in
-   prolix*|beaufix*)
-      echo "running on HPC"
-      export HOME_SOPRA=/opt/softs/sopra
+	prolix*|beaufix*)
+		echo "running on HPC"
+		export HOME_SOPRA=/opt/softs/sopra
 		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/softs/sopra/lib
 		export base_transfert_agent=/home/ext/dsi/mtti/mtti023/agent-$(hostname)
 		export DIAP_AGENT_NUMPROG_AGENT=0x20000011
 		lirepe=/opt/softs/sopra/bin/lirepe
 		;;
 	*)
-      echo "running somewhere"
+		echo "running somewhere"
 		lirepe=lirepe
 		;;
 esac

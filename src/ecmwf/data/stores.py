@@ -67,7 +67,8 @@ class FinderECMWF(Finder):
                                                fmt=options.get("fmt", "foo"),
                                                cpipeline=options.get("compressionpipeline", None),
                                                gateway=ectrans_gateway,
-                                               remote=ectrans_remote)
+                                               remote=ectrans_remote,
+                                               sync=options.get('enforcesync', False))
         return rc
 
     def ectransdelete(self, remote, options):

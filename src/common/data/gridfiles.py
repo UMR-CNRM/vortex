@@ -50,7 +50,13 @@ class GridPoint(GeoFlowResource):
                     remap = dict(
                         fullpos = 'gridpoint'
                     )
-                )
+                ),
+                filtername = dict(
+                    # Dummy argument but avoid priority related messages with footprints
+                    info = 'With GridPoint files, leave filtername empty...',
+                    optional = True,
+                    values = [None, ],
+                ),
             )
         )
     ]
@@ -235,6 +241,10 @@ class FilteredGridPointExport(GridPointExport):
     _footprint = dict(
         info = 'GridPoint fields as exported and filtered for dissemination',
         attr = dict(
-            filtername = dict(),
+            filtername = dict(
+                info = "The filter used to obtain this data.",
+                optional = False,
+                values = [],
+            ),
         )
     )

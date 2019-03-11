@@ -15,3 +15,5 @@ Functions
 ---------
 
 .. autofunction:: update_namelist
+
+.. autofunction:: concatenate

@@ -59,6 +59,7 @@ from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
+from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
 from vortex.tools.env import Environment
@@ -103,8 +104,7 @@ _fmtshcmd_docbonus = """
 # Constant items
 
 #: Definition of a named tuple ftpflavour
-FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'],
-                             verbose=False)
+FtpFlavourTuple = namedtuple('FtpFlavourTuple', ['STD', 'RETRIES', 'CONNECTION_POOLS'])
 
 #: Predefined FTP_FLAVOUR values IN, OUT and INOUT.
 FTP_FLAVOUR = FtpFlavourTuple(STD=0, RETRIES=1, CONNECTION_POOLS=2)
@@ -171,13 +171,15 @@ class CdContext(object):
         self.newpath = self.sh.path.expanduser(newpath)
 
     def __enter__(self):
-        self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
-        self.sh.cd(self.newpath, create=self.create)
+        if self.newpath not in ('', '.'):
+            self.oldpath = self.sh.getcwdu() if six.PY2 else self.sh.getcwd()
+            self.sh.cd(self.newpath, create=self.create)
 
     def __exit__(self, etype, value, traceback):  # @UnusedVariable
-        self.sh.cd(self.oldpath)
-        if self.clean_onexit:
-            self.sh.rm(self.newpath)
+        if self.newpath not in ('', '.'):
+            self.sh.cd(self.oldpath)
+            if self.clean_onexit:
+                self.sh.rm(self.newpath)
 
 
 def setlocale(category, localename=None):
@@ -447,6 +449,7 @@ class System(footprints.FootprintBase):
             pass
         return self._xtrack.get(key, None)
 
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes.
 
@@ -491,7 +494,7 @@ class System(footprints.FootprintBase):
     def flush_stdall(self):
         """Flush stdout and stderr."""
         sys.stdout.flush()
-        sys.stderr.flush
+        sys.stderr.flush()
 
     @contextlib.contextmanager
     def mute_stderr(self):
@@ -993,7 +996,7 @@ class OSExtended(System):
                 p.wait()
             raise  # Fatal has no effect on that !
         else:
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             if p.returncode in ok:
                 if isinstance(output, bool) and output:
                     rc = p_out.decode(plocale, 'replace')
@@ -1542,7 +1545,7 @@ class OSExtended(System):
     def copy2ftspool(self, source, nest=False, **kwargs):
         """Make a copy of **source** to the FtSpool cache."""
         h = hashlib.new('md5')
-        h.update(source)
+        h.update(source.encode(encoding='utf-8'))
         outputname = 'vortex_{:s}_P{:06d}_{:s}'.format(date.now().strftime('%Y%m%d%H%M%S-%f'),
                                                        self.getpid(), h.hexdigest())
         if nest:
@@ -1626,7 +1629,7 @@ class OSExtended(System):
             if logname:
                 extras.extend(['-u', logname])
             ftcmd = self.ftgetcmd or 'ftget'
-            plocale = locale.getdefaultlocale()[1]
+            plocale = locale.getdefaultlocale()[1] or 'ascii'
             with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0])),
                                         mode='wb') as tmpio:
                 tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)
@@ -2606,7 +2609,7 @@ class OSExtended(System):
 
     def _signal_intercept_init(self):
         """Initialise the signal handler object (but do not activate it)."""
-        self._sighandler = SignalInterruptHandler()
+        self._sighandler = SignalInterruptHandler(emitlogs=False)
 
     def signal_intercept_on(self):
         """Activate the signal's catching.

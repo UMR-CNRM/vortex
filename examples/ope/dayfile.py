@@ -86,9 +86,9 @@ def test_dayfile():
             msg = '--message with mode={}--'.format(mode)
             ad.report(kind='dayfile', mode=mode, message=msg + '  Sync Named', filename='dayfile.log')
             ad.report(kind='dayfile', mode=mode, message=msg + ' ASync Named', filename='dayfile.log',
-                      async=True)
+                      asynchronous=True)
             ad.report(kind='dayfile', mode=mode, message=msg + '  Sync Anon')
-            ad.report(kind='dayfile', mode=mode, message=msg + ' Async Anon', async=1)
+            ad.report(kind='dayfile', mode=mode, message=msg + ' Async Anon', asynchronous=1)
 
 
 # only reporting needs to be 'on'

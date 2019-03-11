@@ -11,6 +11,7 @@ import re
 import tempfile
 
 from bronx.fancies import loggers
+from bronx.syntax.decorators import secure_getattr
 import footprints
 
 from vortex import sessions
@@ -48,7 +49,9 @@ class Container(footprints.FootprintBase):
             mode = dict(
                 info            = "The file mode used to open the container.",
                 optional        = True,
-                values          = ['a', 'a+', 'ab', 'a+b', 'ab+', 'r', 'r+', 'rb', 'rb+', 'r+b', 'w', 'w+', 'wb', 'w+b', 'wb+'],
+                values          = ['a', 'a+', 'ab', 'a+b', 'ab+',
+                                   'r', 'r+', 'rb', 'rb+', 'r+b',
+                                   'w', 'w+', 'wb', 'w+b', 'wb+'],
                 remap           = {'a+b': 'ab+', 'r+b': 'rb+', 'w+b': 'wb+'},
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
@@ -80,10 +83,19 @@ class Container(footprints.FootprintBase):
         self._pref_write = None
         self._filled = False
 
+    def __getstate__(self):
+        d = super(Container, self).__getstate__()
+        # Start from a clean slate regarding IO descriptors
+        d['_iod'] = None
+        d['_acmode'] = None
+        d['_acencoding'] = None
+        return d
+
+    @secure_getattr
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in internal io descriptor."""
         # It avoids to call self.iodesc() when footprint_export is called...
-        if key.startswith('footprint_export') or key == 'export_dict' or key == '_iod':
+        if key.startswith('footprint_export') or key in ('export_dict', '_iod'):
             raise AttributeError('Could not get an io descriptor')
         # Normal processing
         iod = self.iodesc()

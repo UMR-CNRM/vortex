@@ -5,13 +5,14 @@ Set of adapter classes that uses external namelist's parsers to provide
 functionalities that fit the needs of TNT utilities.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import abc
-import collections
 import re
+
 import six
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 
 tntlog = loggers.getLogger('tntlog')
@@ -38,7 +39,7 @@ SECOND_ORDER_SORTING = 2
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AbstractNamelistAdapter(collections.Mapping):
+class AbstractNamelistAdapter(collections_abc.Mapping):
     """Every Namelist adapter must derive from this abstract class."""
 
     @abc.abstractmethod
@@ -240,7 +241,7 @@ class AbstractNamelistAdapter(collections.Mapping):
                 except ValueError:
                     raise ValueError('unable to convert variable {} from {} to bool'.
                                      format(key, str(value)))
-            elif t in ('C'):
+            elif t in ('C',):
                 try:
                     value = str(value)
                 except ValueError:
@@ -269,7 +270,7 @@ class AbstractNamelistAdapter(collections.Mapping):
         """Retrieve the content of a namelist block.
 
         :return: The namelist block content
-        :rtype: any subclass of collections.Mapping
+        :rtype: any subclass of collections_abc.Mapping
         """
         pass
 
@@ -335,7 +336,7 @@ class AbstractMapableNamelistAdapter(AbstractNamelistAdapter):
 
     @staticmethod
     def _assert_mapping(obj):
-        assert isinstance(obj, collections.Mapping), \
+        assert isinstance(obj, collections_abc.Mapping), \
             'The "{!r}" must be some kind of Mapping.'
 
     def __contains__(self, item):
@@ -347,7 +348,7 @@ class AbstractMapableNamelistAdapter(AbstractNamelistAdapter):
         """Retrieve the content of a namelist block.
 
         :return: The namelist block content
-        :rtype: any subclass of collections.Mapping
+        :rtype: any subclass of collections_abc.Mapping
         """
         self._assert_mapping(self._parser)
         value = self._parser[item]

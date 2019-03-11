@@ -16,7 +16,7 @@ import sys
 
 # Automatically set the python path
 vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
@@ -232,7 +232,7 @@ def rst_finder(mainpack):
             else:
                 cleanlist.append(a_file)
 
-    rstdepth = max([rst_depth(f) for f in rstfiles])
+    rstdepth = max([0] + [rst_depth(f) for f in rstfiles])
     dirslist = set([os.path.dirname(f) for f in rstfiles])
     rstdirs = [RstIndexEntry(d, rstfiles, dirslist, mainpack, rstdepth) for d in dirslist]
     rstdirs.sort(key=lambda x: x.tocdepth)

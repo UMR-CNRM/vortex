@@ -40,7 +40,7 @@ class S2MTaskMixIn(object):
         accept_errors = not determinitic_error or nerrors < 5
 
         if accept_errors:
-            print (self.warningmessage(nerrors, exc))
+            print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def reforecast_filter_execution_error(self, exc):
@@ -49,7 +49,7 @@ class S2MTaskMixIn(object):
         warning["nfail"] = nerrors
         accept_errors = nerrors < 5
         if accept_errors:
-            print (self.warningmessage(nerrors, exc))
+            print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
@@ -99,8 +99,20 @@ class S2MTaskMixIn(object):
         return rundate_forcing
 
     def get_rundate_prep(self):
+
         alternates = []
-        if self.conf.previ:
+        if hasattr(self.conf, 'reinit'):
+            reinit = self.conf.reinit
+        else:
+            reinit = False
+
+        if reinit:
+            rundate_prep = self.conf.rundate.replace(hour=self.monthly_analysis_time.hour) - Period(days=1)
+            alternates.append((rundate_prep - Period(days=1), "assimilation"))
+            alternates.append((rundate_prep - Period(days=2), "assimilation"))
+            alternates.append((rundate_prep - Period(days=3), "assimilation"))
+
+        elif self.conf.previ:
             # Standard case: use the analysis of the same runtime
             rundate_prep = self.conf.rundate
             if self.conf.rundate.hour > self.firstassimruntime.hour:
@@ -115,8 +127,18 @@ class S2MTaskMixIn(object):
             alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) - Period(days=4), "production"))
 
         else:
+            if self.conf.rundate.hour == self.monthly_analysis_time.hour:
+                if self.conf.rundate.month <= 7:
+                    year = self.conf.rundate.year - 1
+                else:
+                    year = self.conf.rundate.year
+                rundate_prep = Date(year, 8, 4, 3)
+                alternates.append((rundate_prep - Period(days=1), "assimilation"))
+                alternates.append((rundate_prep - Period(days=2), "assimilation"))
+                alternates.append((rundate_prep - Period(days=3), "assimilation"))
+
             # Standard case: use today 03h for 06 et 09h runs, use yesterday 03h for 03h run
-            if self.conf.rundate.hour == self.nightruntime.hour:
+            elif self.conf.rundate.hour == self.nightruntime.hour:
                 rundate_prep = self.conf.rundate - Period(days=1)
                 # First alternate : J-2 for night run, J-1 for other runs
                 # Second alternate : J-3 for night run, J-2 for other runs
@@ -160,6 +182,12 @@ class S2MTaskMixIn(object):
                         return [self.conf.geometry.area.replace(suffix, '')]
         else:
             return [self.conf.geometry.area]
+
+    def get_alternate_safran(self):
+        if self.conf.geometry.area == 'postes':
+            return "safran", "postes", self.conf.geometry.list.split(",")
+        else:
+            return "safran", "massifs", [self.conf.geometry.area[0:3]]
 
     def get_source_safran(self, meteo="safran"):
 

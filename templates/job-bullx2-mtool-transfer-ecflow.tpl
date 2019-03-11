@@ -32,6 +32,7 @@ import locale
 locale.setlocale(locale.LC_ALL, '$defaultencoding')
 
 import bronx.stdtypes.date
+from bronx.system.interrupt import SignalInterruptError
 import footprints
 import vortex
 import vortex.layout.jobs
@@ -90,7 +91,7 @@ try:
 
     ja.complete()
 
-except Exception as trouble:
+except (Exception, SignalInterruptError, KeyboardInterrupt) as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
     #MTOOL include files=epilog.step

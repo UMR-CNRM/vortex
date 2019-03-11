@@ -214,7 +214,8 @@ def makejob(job):
 if __name__ == "__main__":
     args, jobs, report = parse_command_line()
     # L'option -l ne renvoie que la liste des jobs qui seraient traités si l'option n'avait pas été passée
-    # Si une des options -o ou -d est passée, on modifie les jobs existants et l'option -c défini le comportement pour ceux qui n'existent pas encore
+    # Si une des options -o ou -d est passée, on modifie les jobs existants
+    # et l'option -c définit le comportement pour ceux qui n'existent pas encore
     if args.list:
         list_jobs(jobs)
     elif args.info:

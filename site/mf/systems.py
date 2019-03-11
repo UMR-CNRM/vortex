@@ -9,7 +9,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 import ftplib
-import socket
 import uuid
 
 from bronx.fancies import loggers

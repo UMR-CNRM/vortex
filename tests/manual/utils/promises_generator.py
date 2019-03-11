@@ -105,7 +105,7 @@ def auto_promises(args, ready_event):
                         (args.lastdelay if lastmember else 0),
                         0)
             # Is the member failing ?
-            fail = lastmember and args.lastfails >= 0 and delay >= args.lastfails
+            fail = lastmember and 0 <= args.lastfails <= delay
             if fail:
                 delay = args.lastfails
             # Lets dal with this entry

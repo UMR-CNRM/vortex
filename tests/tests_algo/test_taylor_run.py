@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
@@ -9,10 +9,11 @@ import sys
 import tempfile
 import unittest
 
-from bronx.fancies import loggers
-import footprints
+import six
 
+import footprints
 import vortex
+from bronx.fancies import loggers
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
@@ -29,6 +30,7 @@ def stderr2out_deco(f):
             return f(*kargs, **kwargs)
         finally:
             sys.stderr = oldstderr
+
     wrapped_f.__name__ = f.__name__
     return wrapped_f
 
@@ -115,6 +117,11 @@ class MyTaylorRunAlgoWorker(TaylorVortexWorker):
 
 class TestTaylorRunAlgo(unittest.TestCase):
 
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
+
     def setUp(self):
         # Generate a temporary directory
         self.sh = vortex.sessions.current().system()
@@ -151,8 +158,8 @@ class TestTaylorRunAlgo(unittest.TestCase):
         self.assertTrue(found)
         with io.open(found, 'r') as fhin:
             alllines = fhin.readlines()
-        self.assertRegexpMatches(alllines[0], "^Test print {:06d}$".format(loopcount))
-        self.assertRegexpMatches(alllines[1], "^.*Test log   {:06d}".format(loopcount))
+        self.assertRegex(alllines[0], "^Test print {:06d}$".format(loopcount))
+        self.assertRegex(alllines[1], "^.*Test log   {:06d}".format(loopcount))
         self.assertEqual(len(alllines), 2)  # No DEBUG stuff
 
     def test_basic_taylorun(self):

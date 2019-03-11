@@ -1,6 +1,6 @@
 #!$python
 
-from __future__ import print_function, absolute_import, unicode_literals, division                  
+from __future__ import print_function, absolute_import, unicode_literals, division
 import socket, time, sys, os
 
 file = os.path.realpath(__file__)
@@ -13,6 +13,7 @@ tries  = 0
 while True:
     try:
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client.setblocking(1)
         client.connect(address)
         break
     except socket.error as e:

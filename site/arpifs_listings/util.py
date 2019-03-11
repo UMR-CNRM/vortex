@@ -11,19 +11,19 @@ import six
 __all__ = []
 
 # regular expressions tools
-_sign = '(\-|0)'
-_dot = '\.'
-_digits = '\d+'
-_exp = 'E?(\+|\-)\d{2,3}'
+_sign = r'(\-|0)'
+_dot = r'\.'
+_digits = r'\d+'
+_exp = r'E?(\+|\-)\d{2,3}'
 re_for_fortran_scientific_format = re.compile(_sign + _dot + _digits + _exp)
 
-_sign = '(?P<sign>' + _sign + ')'
-_digits = '(?P<digits>' + _digits + ')'
-_exp = 'E?(?P<exp>(\+|\-)\d{2,3})'
+_sign = r'(?P<sign>' + _sign + ')'
+_digits = r'(?P<digits>' + _digits + ')'
+_exp = r'E?(?P<exp>(\+|\-)\d{2,3})'
 
 # useful patterns
 re_for_fortran_scientific_format_groups = re.compile(_sign + _dot + _digits + _exp + '$')
-re_for_nan = re.compile('\s*N|nA|aN|n\s*')
+re_for_nan = re.compile(r'\s*N|nA|aN|n\s*')
 # useful error codes
 PARSING_ERROR_CODE = 999
 CRASHED_JOB_ERROR_CODE = -1

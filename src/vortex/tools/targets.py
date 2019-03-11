@@ -14,6 +14,7 @@ import platform
 import socket
 
 from bronx.fancies import loggers
+from bronx.syntax.decorators import secure_getattr
 import footprints as fp
 
 from vortex.util.config import GenericConfigParser
@@ -327,6 +328,7 @@ class Target(fp.FootprintBase):
                     self._specialproxies[alias] = self._specialproxies[ntype]
         return self._specialproxies
 
+    @secure_getattr
     def __getattr__(self, key):
         """Create attributes on the fly.
 
