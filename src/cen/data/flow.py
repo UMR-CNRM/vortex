@@ -15,6 +15,7 @@ from common.data.modelstates import InitialCondition
 from common.data.obs         import ObsRaw
 
 from cen.syntax.stdattrs     import cendateperiod_deco
+from vortex.data.resources import Resource
 
 #: No automatic export
 __all__ = []
@@ -285,6 +286,7 @@ class SnowObs(GeoFlowResource):
     def realkind(self):
         return "obs_insitu"
 
+
 """
 class SnowObs(ObsRaw):
     '''
@@ -402,25 +404,25 @@ class Snowobs_1date(SnowObs):
             )
         )
     ]
-    
-    _extension_remap = dict(netcdf='nc')
 
+    _extension_remap = dict(netcdf='nc')
 
     @property
     def realkind(self):
         return 'obs_' + str(self.part) + '_' + str(self.geometry.area)
 
 
-@namebuilding_delete('src')
-@namebuilding_delete('geo')
-@namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
-class PfSample(GeoFlowResource):
+# @namebuilding_delete('src')
+# @namebuilding_delete('geo')
+# @namebuilding_insert('cen_period', lambda self: [self.dateassim.ymdh, ])
+class PfSample(Resource):
     '''
     @author : B. Cluzet
     (SODA): Class for PF sample text files (at each assim step)
     either distributed (bound to a geom) or semi-distrib (no point dependency)
+    in any case, child of Resource makes it much more simple to handle
     '''
-    
+
     _footprint = [
         dict(
             info = 'pf sample file',
@@ -434,6 +436,7 @@ class PfSample(GeoFlowResource):
                 ),
                 dateassim = dict(
                     info = "date of the analysis",
+                    type = Date,
                 ),
             )
         )
@@ -442,7 +445,8 @@ class PfSample(GeoFlowResource):
 
     @property
     def realkind(self):
-        return str(self.model)
+        return str(self.model) + '_' + self.dateassim.ymdh + '.txt'
+
 
 class ScoresSnow(SurfaceIO):
     """Class for the safrane output files."""
