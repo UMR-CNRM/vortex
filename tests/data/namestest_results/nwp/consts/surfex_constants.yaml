@@ -97,6 +97,60 @@
       location: gget://gco.multi.fr/tampon/pgd_franmg.01km30.04.fa
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgd
+      namespace: olive.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: olive://olive.multi.fr/abcd/clim/PGDFILE-franmg.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgd
+      namespace: vortex.multi.fr
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgd
+      nativefmt: fa
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      experiment: abcd
+      kind: pgd
+      nativefmt: netcdf
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/clim/pgd.franmg-01km30.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: franmgsp
+      kind: pgd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_franmg.01km30.04.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: global1198
+      kind: pgd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_arpege.t1198.01.fa
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
       genv: cy42_op2.67
       kind: coverparams
       source: ecoclimap

@@ -162,3 +162,20 @@ def generic_pathname_insert(targetkey, valuecb, none_discard=False, setdefault=F
     _generic_pathinfo_insert_stuff.as_dump = _generic_pathinfo_insert_stuff_as_dump
 
     return _generic_pathinfo_insert_stuff
+
+
+def overwrite_realkind(thekind):
+    """Adds a realkind property
+
+    :param str thekind: The value returned by the realkind property
+    """
+
+    def _actual_overwrite_realkind(cls):
+
+        def realkind(self):
+            return thekind
+
+        cls.realkind = property(realkind)
+        return cls
+
+    return _actual_overwrite_realkind
