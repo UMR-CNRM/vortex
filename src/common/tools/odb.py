@@ -434,7 +434,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         :return: The path to the ODB database (the virtual database if a merge is
                  performed).
         """
-        if len(odbsections) > 1:
+        if len(odbsections) > 1 or self.virtualdb.lower() == 'ecma':
             logger.info('ODB: merge for: %s.', self.virtualdb)
             virtualdb_path = self.odb.ioassign_merge(
                 layout   = self.virtualdb,
