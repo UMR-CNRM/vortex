@@ -522,6 +522,9 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                           if (sh.path.isdir('ECMA.' + x.odb) and
                               sh.path.isdir('ECMA.' + x.odb + '/1'))]
 
+        # At least one non-empty database is needed...
+        self.algoassert(self.obsmapout, "At least one non-empty ODB database is expected")
+
         # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
