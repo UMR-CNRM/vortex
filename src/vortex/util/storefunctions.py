@@ -42,7 +42,9 @@ def mergecontents(options):
         ctx = sessions.current().context
         sections = list()
         for a_role in todo:
-            sections.extend(ctx.sequence.filtered_inputs(role=a_role))
+            sections.extend(ctx.sequence.effective_inputs(role=a_role))
+        if len(sections) == 0:
+            raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
         newcontent = helpers.merge_contents(sections)
         if sort:
             newcontent.sort()

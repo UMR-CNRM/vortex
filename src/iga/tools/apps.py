@@ -7,6 +7,8 @@ from bronx.fancies import loggers
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
+from vortex.algo.components import DelayedAlgoComponentError
+
 
 #: No automatic export
 __all__ = []
@@ -36,6 +38,21 @@ class OpTask(Task):
         # Note: If an MTOOL like tool was to be used, this should be changed...
         self.ticket.context.clear_promises()
         super(OpTask, self).__exit__(exc_type, exc_value, traceback)
+
+
+class MissingObsMixin(object):
+
+    def missing_obs_filter_error(self, exc):
+    
+        if isinstance(exc, DelayedAlgoComponentError):
+            logger.warning('Exception caught: %s', str(exc))
+            return True, dict()
+        else:
+            return super(self.__class__, self).filter_execution_warning(exc)
+            
+    def missing_obs_report(self, exc, **kw_infos):
+                
+        ad.opmail(task=self.tag, id ='execution_error', listing="TEST")
 
 
 class OpTaskMPI(OpTask):
