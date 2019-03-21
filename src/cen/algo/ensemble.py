@@ -1016,10 +1016,10 @@ class SurfexComponent(S2MComponent):
         common_i = self._default_common_instructions(rh, opts)
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
-        if self.kind == 'croco': # in croco case, slf. members is a (sometimes random) subselection of members but we don't wnt fancy subdirs
-            subdirs = ['mb{0:04d}'.format(m) for m in range(1, len(self.members) + 1)]
-        else:
-            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        # if self.kind == 'croco':  # in croco case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
+        #    subdirs = ['mb{0:04d}'.format(m) for m in range(1, len(self.members) + 1)]
+        # else:
+        subdirs = ['mb{0:04d}'.format(m) for m in self.members]
 
         if self.subensemble:
             if self.randomDraw:  # only works with E1* ensembles
