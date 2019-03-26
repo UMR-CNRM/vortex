@@ -7,18 +7,20 @@ for any :mod:`vortex` experiment.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import re
-
-import six
+import sys
 
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.patterns import getbytag
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
+from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
+from vortex.layout.subjobs import subjob_output_markup
 from vortex.syntax.stdattrs import Namespace
 from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 
@@ -101,7 +103,7 @@ class ConfigSet(collections_abc.MutableMapping):
         if value is not None and isinstance(value, six.string_types):
             # Support for old style dictionaries (compatibility)
             if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
-                  not re.match(r'^\w+\(dict\(.*\)\)$', value)):
+                    not re.match(r'^\w+\(dict\(.*\)\)$', value)):
                 key = key[:-4]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
@@ -109,11 +111,11 @@ class ConfigSet(collections_abc.MutableMapping):
                     value = 'dict(' + value + ')'
             # Support for geometries (compatibility)
             if (('geometry' in key or 'geometries' in key) and
-                  (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
+                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
             # Support for oldstyle range (compatibility)
             if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
-                  not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
+                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
                 key = key[:-6]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)
@@ -180,11 +182,15 @@ class Node(getbytag.GetByTag, NiceLayout):
             raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
+        self._subjobok  = kw.pop('subjob_allowed', True)
+        self._subjobtag = kw.pop('subjob_tag', None)
         self._cycle_cb  = kw.pop('register_cycle_prefix', None)
         j_assist        = kw.pop('jobassistant', None)
         if j_assist is not None:
             self._locprefix = j_assist.special_prefix.upper()
             self._cycle_cb = j_assist.register_cycle
+            self._subjobok = j_assist.subjob_allowed
+            self._subjobtag = j_assist.subjob_tag
         self._conf      = None
         self._contents  = list()
         self._aborted   = False
@@ -195,7 +201,9 @@ class Node(getbytag.GetByTag, NiceLayout):
                         ticket=self.ticket,
                         config_tag=self.config_tag,
                         special_prefix=self._locprefix,
-                        register_cycle_prefix=self._cycle_cb)
+                        register_cycle_prefix=self._cycle_cb,
+                        subjob_tag=self._subjobtag,
+                        subjob_allowed=self._subjobok)
         argsdict.update(self.options)
         return argsdict
 
@@ -454,7 +462,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Some cleaning and completion status."""
         self._aborted = aborted
 
-    def run(self, nbpass=0):
+    def run(self, nbpass=0, activated=True):
         """Abstract method: the actual job to do."""
         pass
 
@@ -606,15 +614,44 @@ class Family(Node):
         """No parameters dump in families (it is enough to dump it in Tasks)."""
         pass
 
-    def run(self, nbpass=0):
+    def run(self, nbpass=0, activated=True):
         """Execution driver: setup, run kids, complete."""
-        self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
-        self.setup()
-        self.summary()
-        for node in self.contents:
-            with node:
-                node.run()
-        self.complete()
+        if self._subjobok and self._subjobtag is None and 'paralleljobs_kind' in self.conf:
+            # Subjob are allowed and I'am the main job (because self._subjobtag is None) :
+            # => Run the family's content using subjobs
+            self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag, '(using subjobs)')))
+            # Create the subjob launcher
+            launcher_opts = {k[len('paralleljobs_'):]: self.conf[k]
+                             for k in self.conf if k.startswith('paralleljobs_')}
+            launchtool = fpx.subjobslauncher(scriptpath=sys.argv[0],
+                                             ** launcher_opts)
+            if launchtool is None:
+                raise RuntimeError('No subjob launcher could be found: check "paralleljobs_kind".')
+            launchtool.ticket = self.ticket
+
+            def node_recurse(node):
+                """Recursively find tags."""
+                o_set = set([node.tag, ])
+                for snode in node.contents:
+                    o_set = o_set | node_recurse(snode)
+                return o_set
+
+            # Launch each family's member
+            for node in self.contents:
+                launchtool(node.tag, node_recurse(node))
+            # Wait for everybody to complete
+            launchtool.waitall()
+        else:
+            # No subjobs configured or allowed: run the usual way...
+            activated = activated or self._subjobtag == self.tag
+            with subjob_output_markup(self._subjobtag == self.tag):
+                self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
+                self.setup()
+                self.summary()
+                for node in self.contents:
+                    with node:
+                        node.run(activated=activated)
+                self.complete()
 
 
 class LoopFamily(Family):
@@ -775,18 +812,21 @@ class Task(Node):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 
-    def run(self, nbpass=0):
+    def run(self, nbpass=0, activated=True):
         """Execution driver: build, setup, refill, process, complete."""
-        try:
-            self.build()
-            self.setup()
-            self.summary()
-            self.refill()
-            self.process()
-        except VortexForceComplete:
-            self.sh.title('Force complete')
-        finally:
-            self.complete()
+        activated = activated or self._subjobtag == self.tag
+        if activated:
+            with subjob_output_markup(self._subjobtag == self.tag):
+                try:
+                    self.build()
+                    self.setup()
+                    self.summary()
+                    self.refill()
+                    self.process()
+                except VortexForceComplete:
+                    self.sh.title('Force complete')
+                finally:
+                    self.complete()
 
 
 class Driver(getbytag.GetByTag, NiceLayout):
@@ -803,9 +843,11 @@ class Driver(getbytag.GetByTag, NiceLayout):
         # Set default parameters for the actual job
         self._options = dict() if options is None else options
         self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
+        self._subjob_tag = self._options.get('subjob_tag', None)
         j_assist = self._options.get('jobassistant', None)
         if j_assist is not None:
             self._special_prefix = j_assist.special_prefix.upper()
+            self._subjob_tag = j_assist.subjob_tag
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
         self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
@@ -927,4 +969,4 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._nbpass += 1
         for node in self.contents:
             with node:
-                node.run(nbpass=self.nbpass)
+                node.run(nbpass=self.nbpass, activated=self._subjob_tag is None)

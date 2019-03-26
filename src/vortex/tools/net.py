@@ -1024,6 +1024,20 @@ class Ssh(object):
                [myremote, ] + [remote_command, ])
         return self.sh.spawn(cmd, output=True, fatal=False)
 
+    def background_execute(self, remote_command, sshopts='', stdout=None, stderr=None):
+        """Execute the command remotely and return the object representing the ssh process.
+
+        Return a Popen object representing the ssh process. The user is reponsible
+        for calling pclose on this object and check the return code.
+        """
+        myremote = self.remote
+        if myremote is None:
+            return False
+        cmd = ([self._sshcmd, ] +
+               self._sshopts + sshopts.split() +
+               [myremote, ] + [remote_command, ])
+        return self.sh.popen(cmd, stdout=stdout, stderr=stderr)
+
     def cocoon(self, destination):
         """Create the remote directory to contain ``destination``.
            Return False on failure.
