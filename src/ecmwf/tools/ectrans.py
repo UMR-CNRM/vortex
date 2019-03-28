@@ -117,31 +117,49 @@ class ECtransTools(addons.Addon):
                 raise
 
     @staticmethod
-    def ectrans_defaults_init():
+    def ectrans_defaults_init(** kwargs):
         """Initialise the default for ECtrans.
 
         :return: the different structures used by the ECtrans interface initialised
         """
+        sync = kwargs.pop('sync', True)
         list_args = list()
         dict_args = dict()
-        dict_args["delay"] = '120'
-        dict_args["priority"] = 60
-        dict_args["retryCnt"] = 0
-        list_options = ["verbose", "overwrite"]
+        list_options = list()
+        for k, v in kwargs.items():
+            if isinstance(v, bool) and v:
+                list_options.append(k)
+            else:
+                dict_args[k] = v
+        if sync:
+            dict_args.setdefault("priority", 80)
+            dict_args.setdefault("retryCnt", 0)
+        else:
+            dict_args.setdefault("priority", 30)
+            dict_args.setdefault("retryCnt", 72)  # Retry for 12 hours
+            dict_args.setdefault("retryFrq", 600)  # 10 minutes between tries
+        if 'verbose' not in kwargs:
+            list_options.append('verbose')
+        if 'overwrite' not in kwargs:
+            list_options.append('overwrite')
         return list_args, list_options, dict_args
 
-    def raw_ectransput(self, source, target, gateway=None, remote=None):
+    def raw_ectransput(self, source, target, gateway=None, remote=None,
+                       sync=False, ** kwargs):
         """Put a resource using ECtrans (default class).
 
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
+        :param bool sync: If False, allow asynchronous transfers.
         :return: return code and additional attributes used
         """
         ectrans = ECtrans(system=self.sh)
-        list_args, list_options, dict_args = self.ectrans_defaults_init()
-        list_options.append("put")
+        list_args, list_options, dict_args = self.ectrans_defaults_init(sync=sync,
+                                                                        ** kwargs)
+        if sync:
+            list_options.append("put")
         dict_args["gateway"] = gateway
         dict_args["remote"] = remote
         dict_args["source"] = source
@@ -156,7 +174,8 @@ class ECtransTools(addons.Addon):
         return rc, dict_args
 
     @fmtshcmd
-    def ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def ectransput(self, source, target, gateway=None, remote=None,
+                   cpipeline=None, sync=False):
         """Put a resource using ECtrans.
 
         This class is not used if a particular method format_ectransput exists.
@@ -166,6 +185,7 @@ class ECtransTools(addons.Addon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline used if provided
+        :param bool sync: If False, allow asynchronous transfers.
         :return: return code and additional attributes used
         """
         if self.sh.is_iofile(source):
@@ -173,7 +193,8 @@ class ECtransTools(addons.Addon):
                 rc, dict_args = self.raw_ectransput(source=source,
                                                     target=target,
                                                     gateway=gateway,
-                                                    remote=remote)
+                                                    remote=remote,
+                                                    sync=sync)
             else:
                 csource = source + self.sh.safe_filesuffix()
                 try:
@@ -182,7 +203,8 @@ class ECtransTools(addons.Addon):
                     rc, dict_args = self.raw_ectransput(source=csource,
                                                         target=target,
                                                         gateway=gateway,
-                                                        remote=remote)
+                                                        remote=remote,
+                                                        sync=sync)
                 finally:
                     self.sh.rm(csource)
         else:

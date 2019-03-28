@@ -10,15 +10,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 from six.moves import map  # @UnresolvedImport
 
-import collections
 from collections import namedtuple, defaultdict
 import io
 import json
 import pprint
-import re
 import traceback
 import weakref
 
+from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -40,13 +39,13 @@ class SectionFatalError(Exception):
 
 
 #: Definition of a named tuple INTENT
-IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'], verbose=False)
+IntentTuple = namedtuple('IntentTuple', ['IN', 'OUT', 'INOUT'])
 
 #: Predefined INTENT values IN, OUT and INOUT.
 intent = IntentTuple(IN='in', OUT='out', INOUT='inout')
 
 #: Definition of a named tuple IXO sequence
-IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'], verbose=False)
+IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
 
 #: Predefined IXO sequence values INPUT, OUTPUT and EXEC.
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
@@ -389,10 +388,10 @@ class Sequence(observer.Observer):
     def _fuzzy_match(stuff, allowed):
         """Check if ``stuff`` is in ``allowed``. ``allowed`` may contain regex."""
         if (isinstance(allowed, six.string_types) or
-                not isinstance(allowed, collections.Iterable)):
+                not isinstance(allowed, collections_abc.Iterable)):
             allowed = [allowed, ]
         for pattern in allowed:
-            if ((isinstance(pattern, re._pattern_type) and pattern.search(stuff)) or
+            if ((isinstance(pattern, re_Pattern) and pattern.search(stuff)) or
                     (pattern == stuff)):
                 return True
         return False
@@ -680,13 +679,15 @@ class SequenceInputsReport(object):
 
 def _str2unicode(jsencode):
     """Convert all the strings to Unicode."""
+    if not six.PY2:
+        return jsencode
     if isinstance(jsencode, dict):
         return {_str2unicode(key): _str2unicode(value)
                 for key, value in six.iteritems(jsencode)}
     elif isinstance(jsencode, list):
         return [_str2unicode(value) for value in jsencode]
     elif isinstance(jsencode, str):
-        return six.text_type(str)
+        return six.text_type(jsencode)
     else:
         return jsencode
 
@@ -861,7 +862,7 @@ class LocalTrackerEntry(object):
     def _grep_stuff(self, internal, action, skeleton=dict()):
         stack = []
         for element in self._data[internal][action]:
-            if isinstance(element, collections.Mapping):
+            if isinstance(element, collections_abc.Mapping):
                 succeed = True
                 for key, val in skeleton.items():
                     succeed = succeed and ((key in element) and (element[key] == val))
@@ -934,7 +935,7 @@ class LocalTracker(defaultdict):
         lpath = rh.container.iotarget()
         if isinstance(lpath, six.string_types):
             if info.get('clear', False):
-                del self[lpath]
+                self.pop(lpath, None)
             else:
                 self[lpath].update_rh(rh, info)
         else:
@@ -967,7 +968,8 @@ class LocalTracker(defaultdict):
                              self.__class__)
 
     def is_tracked_input(self, local):
-        """Check if the given `local` container is listed as an input and associated with a valid :class:`~vortex.data.handlers.Handler`.
+        """Check if the given `local` container is listed as an input and associated with
+        a valid :class:`~vortex.data.handlers.Handler`.
 
         :param local: Local name of the input that will be checked
         """

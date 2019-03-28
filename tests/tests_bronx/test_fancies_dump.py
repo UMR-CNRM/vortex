@@ -95,6 +95,10 @@ expected_complex2_xml = """<?xml version="1.0" ?>
 """.format(name=__name__, noneset=re.sub(r'^<(.*)>$', r'\1',
                                          str(DTestProxySet((None, )))))
 
+# Remove indentation
+expected_complex2_xml = ''.join(re.split(r'\n\s*', expected_complex2_xml))
+
+
 expected_txt_dict = """{me:s}.DTestAsDict::<<
               __dict__:: dict(
                       me = 'AsDict',
@@ -184,8 +188,8 @@ class utDump(TestCase):
     def test_dump_xml(self):
         xd = XmlDomDumper()
         xdoc = xd.cleandump(complex2, "me")
-        self.assertEqual(xdoc.toprettyxml(indent='  ', newl="\n"),
-                         expected_complex2_xml)
+        res = ''.join(re.split(r'\n\s*', xdoc.toxml()))
+        self.assertEqual(res, expected_complex2_xml)
         # In Vortex, an extensive test is carried out in test_import
 
     def assertTxtDumper(self, obj, expected):

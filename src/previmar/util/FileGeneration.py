@@ -71,7 +71,8 @@ def EchoData(options):
         # Echeance simulation
         outstr += term_hh + "\n"
 
-        # initial initial_w : Echeance pour Generation des fichiers guess (h). En general initial_w et initial sont identiques;
+        # initial initial_w : Echeance pour Generation des fichiers guess (h).
+        # En general initial_w et initial sont identiques;
         outstr += six.text_type(Initial) + "  " + six.text_type(Initial_w) + "\n"
 
         # PR (Prevision) ou AA (Analyse)

@@ -171,8 +171,8 @@ class OpPhase(Action):
             return True
         if mode == 'atend':
             return False
-        logger.warn('Phase mode should be "immediate" or "atend", not "%s". '
-                    'Using "immediate".', mode)
+        logger.warning('Phase mode should be "immediate" or "atend", not "%s". '
+                       'Using "immediate".', mode)
         return True
 
     def execute(self, *args, **kw):
@@ -224,7 +224,7 @@ class OpPhase(Action):
 
         active = bool(env.get('OP_PHASE', 1))
         if not active:
-            logger.warn('OpPhase is not active (e.OP_PHASE={})'.format(env.get('OP_PHASE', '<not set>')))
+            logger.warning('OpPhase is not active (e.OP_PHASE={})'.format(env.get('OP_PHASE', '<not set>')))
 
         rc = True
         for rh in rhlist:
@@ -278,8 +278,8 @@ class OpPhase(Action):
 
         # Phase is inactive : tell what would be done
         if not active:
-            logger.warn('-- Would phase: %s', effective_path)
-            logger.warn('            to: %s', remote_path)
+            logger.warning('-- Would phase: %s', effective_path)
+            logger.warning('            to: %s', remote_path)
             return True
 
         jeeves_opts = dict(

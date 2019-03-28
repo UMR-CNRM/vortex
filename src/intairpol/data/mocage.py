@@ -171,10 +171,10 @@ class RestartFlagContent(TextContent):
     @property
     def restart(self):
         """Retrieves content file"""
-        return(int(self.data[0][0]))
+        return int(self.data[0][0])
 
     def if_restart(self, restartvalue, nominalvalue):
-        return(restartvalue if self.restart else nominalvalue)
+        return restartvalue if self.restart else nominalvalue
 
 
 @namebuilding_insert('radical', lambda s: 'clim_restart')

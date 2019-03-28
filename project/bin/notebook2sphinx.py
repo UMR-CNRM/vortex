@@ -56,7 +56,7 @@ Subdirectory: {sub:s}
 
 '''
 _INDEX_SKEL = 'index_skeleton.rst'
-_NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+_NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                      '../templates'))
 
 
@@ -101,7 +101,7 @@ class DefaultExporter(object):
                      '.. note::\n' +
                      '   ' +
                      'This page had been generated from a IPython/Jupyter notebook. ' +
-                     'You can :download:`download this notebook <{:s}>` individually or '. format(os.path.basename(a_file)) +
+                     'You can :download:`download this notebook <{:s}>` individually or '.format(os.path.basename(a_file)) +
                      "get a :download:`tarball <{:s}>` of all the project's notebooks.".format(tarpath) +
                      '\n\n')
         return (statement + rst + statement)
@@ -162,7 +162,7 @@ def _crawl_images():
             continue
         files.extend([os.path.join(dirpath, f)
                       for f in filenames
-                      if os.path.splitext(f)[1] in ('.png')])
+                      if os.path.splitext(f)[1] in ('.png',)])
     return files
 
 

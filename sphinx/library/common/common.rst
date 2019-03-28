@@ -15,4 +15,5 @@ Package
 
 * :mod:`common.algo`
 * :mod:`common.data`
+* :mod:`common.syntax`
 * :mod:`common.tools`

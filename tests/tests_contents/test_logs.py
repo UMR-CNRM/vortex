@@ -11,7 +11,7 @@ import sys
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
-from tests_contents.test_generic import _BaseDataContentTest
+from .test_generic import _BaseDataContentTest
 
 from common.data import logs
 

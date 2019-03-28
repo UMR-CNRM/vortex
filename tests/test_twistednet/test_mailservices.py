@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Test Vortex's Mailing Services
-'''
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
@@ -79,6 +79,27 @@ Content-Disposition: attachment; filename="{fname:s}"
 
 {b64:s}
 --{boundary:s}--""",
+    ascii_alt="""Content-Type: multipart/mixed; boundary="{boundary:s}"
+MIME-Version: 1.0
+From: test@unittest.dummy
+To: queue
+Subject: Test message (in english)
+
+--{boundary:s}
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+A very simple message.
+--{boundary:s}
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="{fname:s}"
+
+{b64:s}
+--{boundary:s}--""",
     french="""Content-Type: multipart/mixed; boundary="{boundary:s}"
 MIME-Version: 1.0
 From: test@unittest.dummy
@@ -96,6 +117,27 @@ Content-Type: application/octet-stream
 MIME-Version: 1.0
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="{fname:s}"
+
+{b64:s}
+--{boundary:s}--""",
+    french_alt="""Content-Type: multipart/mixed; boundary="{boundary:s}"
+MIME-Version: 1.0
+From: test@unittest.dummy
+To: queue
+Subject: =?utf-8?q?Message_de_test_=28en_Fran=C3=A7ais=29?=
+
+--{boundary:s}
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+
+Un message tr=C3=A8s simple.
+--{boundary:s}
+Content-Type: application/octet-stream
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="{fname:s}"
 
 {b64:s}
 --{boundary:s}--""",
@@ -219,7 +261,7 @@ class TestEmailServices(unittest.TestCase):
         logger.info('Expecting:\n%s', ref)
         self.assertEqual(me, head + ref)
 
-    def assertMessagePlusAttach(self, messages, ref, filename, attached):
+    def assertMessagePlusAttach(self, messages, refs, filename, attached):
         m = messages.get()
         m = [b.decode('ascii') for b in m]
         if m[-2] == '':
@@ -234,10 +276,19 @@ class TestEmailServices(unittest.TestCase):
         me = "\n".join(m)
         head = "Received: MpQueueMessageDelivery\n"
         logger.info('Received:\n%s', me)
-        logger.info('Expecting:\n%s', ref.format(boundary=boundary, fname=filename,
-                                                 b64=attached_b64))
-        self.assertEqual(me, head + ref.format(boundary=boundary, fname=filename,
-                                               b64=attached_b64))
+
+        for i, ref in enumerate(refs):
+            try:
+                logger.info('Expecting:\n%s', ref.format(boundary=boundary, fname=filename,
+                                                         b64=attached_b64))
+                self.assertEqual(me, head + ref.format(boundary=boundary, fname=filename,
+                                                       b64=attached_b64))
+            except AssertionError:
+                # last one
+                if i == len(refs) - 1:
+                    raise
+            else:
+                break
 
     def test_email_service(self):
         with self.server() as messages:
@@ -272,7 +323,7 @@ class TestEmailServices(unittest.TestCase):
                                         to = 'queue',
                                         ** self.servicedefaults)
                     eserv()
-                    self.assertMessagePlusAttach(messages, _REFS2[testid],
+                    self.assertMessagePlusAttach(messages, (_REFS2[testid], _REFS2[testid + '_alt']),
                                                  tmpfh.name, _BYTES2ATTACH)
             # Templated Mails
             eserv = fpx.service(kind="templatedmail",
@@ -283,6 +334,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
+                                inputs_charset = 'utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'
@@ -297,6 +349,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
+                                inputs_charset = 'utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'

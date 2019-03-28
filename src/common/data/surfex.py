@@ -271,7 +271,7 @@ class SurfaceTypeDB(ModelGeoResource):
 
 class BathymetryDB(ModelGeoResource):
     """
-    Class of a tar-zip (.dir/.hdr) file containing bathymetry database.
+    Class of file containing bathymetry database.
     A Genvkey can be given.
     """
     _footprint = [

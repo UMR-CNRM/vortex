@@ -37,17 +37,19 @@ def set_after(visibilityref, *args):
         visibility.insert(tag=newpriority, after=visibilityref)
 
 
-def _formating_basic(fp):
+def _formating_basic(fp, abstractfpobj = False):  # @UnusedVariable
     """Just use the default TxTDumper to generate a raw documentation."""
     return "\n\n    Footprint::\n\n" + fp.nice()
 
 
-def _formating_sphinx_v1(fp):
+def _formating_sphinx_v1(fp, abstractfpobj = False):
     """Create a docstring that will hopefully be nice in Sphinx."""
     indent = ' ' * 4  # Default indentation
     dumper = dump.OneLineTxtDumper(tag='sphinxdumper')
     dumper.reset()
     out = ['', '']
+
+    fpdict = fp.as_dict()
 
     def _sphinx_secured_dump(todump):
         d = dumper.dump(todump)
@@ -55,20 +57,29 @@ def _formating_sphinx_v1(fp):
         return re.sub(r'(?<=\w)(_)\b', r'\\_', d, count=0)
 
     # Footprint's level attributes
-    out.append(".. note:: This class is managed by footprint.\n")
-    out.append("     * info: {0.info}".format(fp))
-    out.append("     * priority: {}".format(_sphinx_secured_dump(fp.level)))
-    # Now, print out the rest (whatever is found)
-    for k, v in [(k, v) for k, v in fp.as_dict().items()
-                 if k not in ['info', 'priority', 'attr'] and v]:
-        out.append("     * {}: {}".format(k, _sphinx_secured_dump(v)))
-    out.append('')
+    todo_generic = [(k, v) for k, v in fpdict.items()
+                    if k not in ['info', 'priority', 'attr', 'only', 'decorator'] and v]
+    if abstractfpobj:
+        if todo_generic:
+            out.append(".. note:: Footprint's content:\n")
+        else:
+            out.append(".. note::\n")
+    else:
+        out.append(".. note:: This class is managed by footprint.\n")
+        out.append("     * info: {0.info}".format(fp))
+        out.append("     * priority: {}".format(_sphinx_secured_dump(fp.level)))
+    if todo_generic:
+        # Now, print out the rest (whatever is found)
+        for k, v in todo_generic:
+            out.append("     * {}: {}".format(k, _sphinx_secured_dump(v)))
+    if not abstractfpobj or todo_generic:
+        out.append('')
 
     # Now the attributes...
     out.append('   Automatic parameters from the footprint:\n')
     aliases = collections.OrderedDict()  # For later use
     # First sort alphabetically with respect to the attribute names
-    s_attrs = sorted(fp.as_dict()['attr'].items(), key=lambda item: item[0])
+    s_attrs = sorted(fpdict['attr'].items(), key=lambda item: item[0])
     # Then use visibility and zorder
     s_attrs = sorted(s_attrs,
                      key=lambda item: item[1]['doc_visibility'].rank * 200 - item[1]['doc_zorder'])
@@ -101,13 +112,26 @@ def _formating_sphinx_v1(fp):
                 aliases[alias] = attr
     out.append('')
 
+    # Only
+    if 'only' in fpdict and fpdict['only']:
+        out.append("   Only clauses:\n")
+        for attr, desc in sorted(fpdict['only'].items()):
+            out.append('     * **{}** - {!s}'.format(attr, desc))
+        out.append('')
+
+    # Decorators (for DecorativeFootprints)
+    if 'decorator' in fpdict and fpdict['decorator']:
+        out.append("   Decorators that will be applied on the target class:\n")
+        for deco in fpdict['decorator']:
+            out.append('     * {}'.format(_sphinx_secured_dump(deco)))
+        out.append('')
+
     # Aliases
     if aliases:
-        out.append("   Aliases of some parameters:")
-        out.append('')
+        out.append("   Aliases of some parameters:\n")
         for k, v in aliases.items():
             out.append("     * **{}** is an alias of {}.".format(k, v))
-    out.append('')
+        out.append('')
 
     return '\n'.join([indent + l for l in out])
 
@@ -117,6 +141,6 @@ _formating_styles = {1: _formating_basic,
                      2: _formating_sphinx_v1}
 
 
-def format_docstring(fp, formating_style):
+def format_docstring(fp, formating_style, abstractfpobj=False):
     """Call the appropriate formatting function given *formating_style*."""
-    return _formating_styles.get(formating_style, 1)(fp)
+    return _formating_styles.get(formating_style, 1)(fp, abstractfpobj)

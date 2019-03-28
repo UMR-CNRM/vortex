@@ -92,7 +92,7 @@ rundate = tools.date.Date(strdate)
 
 sh.subtitle('Rundate is ' + rundate.isoformat())
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 sh.title('Experiment Setup')
 
@@ -124,7 +124,7 @@ toolbox.defaults(
     namespace = 'vortex.cache.fr',      # Nous ne ferons des sorties que sur l'espace disque
 )
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 sh.title('Predefined Providers')
 
@@ -173,7 +173,7 @@ p_const = vortex.proxy.provider(
 
 print('Provider const :', p_const)
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 # Tentative de détermination plus ou moins hasardeuse de l'étape en cours
 # Ce genre de chose est évident superflue dans un système intégré
@@ -184,7 +184,7 @@ elif sys.argv[-1] in ('2', 'compute', 'run') or int(e.get('SLURM_NPROCS', 1)) > 
 else:
     npass = 1
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 if npass < 3:
 
@@ -329,12 +329,12 @@ if npass < 3:
         kind='ifsmodel',
     )
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
     sh.title('Effective Inputs')
     toolbox.show_inputs()
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 if npass == 2:
 
@@ -361,7 +361,7 @@ if npass == 2:
         mpiopts = dict(nn=22, nnp=4)        # Les options à passer au lanceur mpi
     )
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 if npass == 3:
 
@@ -424,7 +424,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFDLFCST+{glob:h:\d+}',
+        local       = r'DHFDLFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -440,7 +440,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFGLFCST+{glob:h:\d+}',
+        local       = r'DHFGLFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -456,7 +456,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'DHFZOFCST+{glob:h:\d+}',
+        local       = r'DHFZOFCST+{glob:h:\d+}',
         actualfmt   = 'lfa',
         # resource
             # implicit: cutoff, date, geometry, model
@@ -472,7 +472,7 @@ if npass == 3:
         # provider
         provider    = p_flux,
         # container
-        local       = 'NODE.{glob:a:\d+}_{glob:b:\d+}',
+        local       = r'NODE.{glob:a:\d+}_{glob:b:\d+}',
         actualfmt   = 'ascii',
         seta        = '[glob:a]',
         setb        = '[glob:b]',
@@ -483,12 +483,12 @@ if npass == 3:
         task        = e.get('SMSNAME', 'std-forecast'),
     )
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
     sh.title('Effective Outputs')
     toolbox.show_outputs()
 
-#--------------------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------------------
 
 sh.title('End of execution')
 

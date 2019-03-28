@@ -28,3 +28,26 @@ def update_namelist(t, rh, *completive_rh):
             touched = True
     if touched:
         rh.save()
+
+
+def concatenate(t, rh, *rhlist):
+    """Concatenate *rhlist* after *rh*."""
+    blocksize = 32 * 1024 * 1024  # 32Mb
+    rh.container.close()
+    myfh = rh.container.iodesc(mode='ab')
+    try:
+        for crh in rhlist:
+            if not isinstance(crh, (list, tuple)):
+                crh = [crh, ]
+            for arh in crh:
+                logger.info('Appending %s to self.', str(arh.container))
+                afh = arh.container.iodesc(mode='rb')
+                try:
+                    stuff = afh.read(blocksize)
+                    while stuff:
+                        myfh.write(stuff)
+                        stuff = afh.read(blocksize)
+                finally:
+                    arh.container.close()
+    finally:
+        rh.container.close()

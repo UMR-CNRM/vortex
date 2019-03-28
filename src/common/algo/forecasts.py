@@ -523,7 +523,8 @@ class FullPosBDAP(FullPos):
         sh = self.system
 
         for fpfile in [x for x in (sh.glob('RUNOUT*/PF{0:s}*'.format(self.xpname)) +
-                                   sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname))) if sh.path.isfile(x)]:
+                                   sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname)))
+                       if sh.path.isfile(x)]:
             sh.move(fpfile, sh.path.basename(fpfile),
                     fmt = 'grib' if fpfile.startswith('GRIB') else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')

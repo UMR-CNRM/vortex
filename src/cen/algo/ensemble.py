@@ -3,20 +3,20 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from collections import defaultdict
 import io
+from collections import defaultdict
+
 import six
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-import footprints
-
 from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
-from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.syntax.stdattrs import a_date
-from vortex.util.helpers import InputCheckerError
+from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
+from vortex.util.helpers import InputCheckerError
 
 logger = loggers.getLogger(__name__)
 
@@ -32,7 +32,7 @@ with echecker:
 
 
 class _S2MWorker(VortexWorkerBlindRun):
-    '''This algo component is designed to run an S2M task without MPI parallelization.'''
+    """This algo component is designed to run an S2M task without MPI parallelization."""
 
     _abstract  = True
     _footprint = dict(
@@ -103,7 +103,7 @@ class GuessWorker(_S2MWorker):
                 values = ['guess', 'intercep']
             ),
             interpreter = dict(
-                values = [ 'python', 'current' ]
+                values = ['python', 'current' ]
             ),
             reforecast = dict(
                 type     = bool,
@@ -198,16 +198,18 @@ class _SafranWorker(_S2MWorker):
         return self._days
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
-        _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS', 'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE']
+        _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
+                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE']
         for nam in _Safran_namelists:
             self.link_in(self.system.path.join(rundir, nam), nam)
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
-        _OP_files_common = ['OPlisteo', 'OPlysteo', 'OPlistem', 'Oplystem', 'OPlisteml', 'OPlysteml', 'OPclim',
-                            'OPNOmt', 'OPsat', 'OPnoir', 'OPposte']
+        _OP_files_common = ['OPlisteo', 'OPlysteo', 'OPlistem', 'Oplystem', 'OPlisteml', 'OPlysteml',
+                            'OPclim', 'OPNOmt', 'OPsat', 'OPnoir', 'OPposte']
         _OP_files_individual = ['OPguess', 'OPprevi', 'OPMET', 'OPSA', 'OPSG', 'OPSAP', 'OPSAN']
         if self.execution == 'reanalysis':
-            # In reanalysis tasks the parralelisation is made over the seasons so the observations are "individal files"
+            # In reanalysis tasks the parallelisation is made over the seasons so
+            # the observations are "individal files"
             _OP_files_individual.extend(['OPA', 'OPR', 'OPS', 'OPT'])
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
@@ -292,32 +294,35 @@ class _SafranWorker(_S2MWorker):
                     #     2) From J 6h to J+4 6h
                     #        The deterministic member takes the forecasts from the 0h J lead time
                     #        All PEARP members take the forecats froms the 18h J-1 lead time
-                    d = date - Period(hours = 6)
+                    d = date - Period(hours=6)
                     oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
                     else:
                         if dates[0] == self.datebegin:
-                            t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600)
+                            t = int((date - self.datebegin).days * 24 +
+                                    (date - self.datebegin).seconds / 3600)
                         else:
-                            t = int((date - self.datebegin).days * 24 + (date - self.datebegin).seconds / 3600) - 18
+                            t = int((date - self.datebegin).days * 24 +
+                                    (date - self.datebegin).seconds / 3600) - 18
                 else:
                     if date == dates[-1]:
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
-                        d = date - Period(hours = 6)
+                        d = date - Period(hours=6)
                         oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
                         if self.system.path.exists(oldp):
                             self.link_in(oldp, p)
                             actual_dates.append(date)
                         else:
-                            # If there is no 6-hour analysis we need at least a 24h forecast to have a cumulate rr24
+                            # If there is no 6-hour analysis we need at least a 24h forecast
+                            # to have a cumulate rr24
                             t = 24
                     else:
                         t = 0
                 while not self.system.path.islink(p) and (t <= 108):
-                    d = date - Period(hours = t)
+                    d = date - Period(hours=t)
                     oldp = 'P{0:s}_{1!s}'.format(d.yymdh, t)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
@@ -325,10 +330,11 @@ class _SafranWorker(_S2MWorker):
                     t = t + dt  # 3-hours check
 
         if len(actual_dates) < 5:
-            # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, got {1:d}".format(dates[0].ymdh, len(actual_dates)))
+            # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, "
+            #      "got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             # In this case, actual_dates is filled with the mandatory dates
             actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        elif len(actual_dates) > 5 and len(actual_dates) < 9:
+        elif 5 < len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
                 if date.hour not in [0, 6, 12, 18]:
@@ -348,7 +354,8 @@ class InterCEPWorker(_SafranWorker):
     )
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
-        _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS', 'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'surfz']
+        _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
+                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'surfz']
         for nam in _Safran_namelists:
             self.link_in(self.system.path.join(rundir, nam), nam)
 
@@ -404,7 +411,8 @@ class SafraneWorker(_SafranWorker):
         nech = len(dates) if len(dates) == 9 else 5
         self.get_guess(dates)
         mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh) for d in mandatory_dates])
+        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh)
+                                                           for d in mandatory_dates])
         if go:
             for d in dates:
                 logger.info('Running date : {0:s}'.format(d.ymdh))
@@ -416,11 +424,12 @@ class SafraneWorker(_SafranWorker):
                 try:
                     self.local_spawn(list_name)
                     # Reanalysis : if the execution was allright we don't need the log file
-    #                if self.execution in ['reanalysis', 'reforecast']:
-    #                    self.system.remove(list_name)
+                    # if self.execution in ['reanalysis', 'reforecast']:
+                    #     self.system.remove(list_name)
                 except ExecutionError:
-                    rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
-
+                    rdict['rc'] = S2MExecutionError(self.progname, self.deterministic,
+                                                    self.subdir,
+                                                    self.datebegin, self.dateend)
         return rdict
 
 
@@ -443,10 +452,11 @@ class SypluieWorker(_SafranWorker):
         try:
             self.local_spawn(list_name)
             # Reanalysis : if the execution was allright we don't need the log file
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
+            # if self.execution in ['reanalysis', 'reforecast']:
+            #     self.system.remove(list_name)
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                            self.datebegin, self.dateend)
         finally:
             return rdict  # Note than in the other case return rdict is at the end
 
@@ -484,10 +494,11 @@ class SyrpluieWorker(_SafranWorker):
         try:
             self.local_spawn(list_name)
             # Reanalysis : if the execution was allright we don't need the log file
-    #        if self.execution in ['reanalysis', 'reforecast']:
-    #            self.system.remove(list_name)
+            # if self.execution in ['reanalysis', 'reforecast']:
+            #     self.system.remove(list_name)
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                            self.datebegin, self.dateend)
         finally:
             return rdict  # Note than in the other case return rdict is at the end
 
@@ -526,12 +537,14 @@ class SyvaprWorker(_SafranWorker):
             try:
                 self.local_spawn(list_name)
                 # Reanalysis : if the execution was allright we don't need the log file
-#                if self.execution in ['reanalysis', 'reforecast']:
-#                    self.system.remove(list_name)
+                # if self.execution in ['reanalysis', 'reforecast']:
+                #     self.system.remove(list_name)
                 for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
-                    self.mv_if_exists('SAF4D_{0:s}'.format(suffix), 'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
+                    self.mv_if_exists('SAF4D_{0:s}'.format(suffix),
+                                      'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                                self.datebegin, self.dateend)
 
         return rdict  # Note than in the other case return rdict is at the end
 
@@ -558,10 +571,11 @@ class SyvafiWorker(_SafranWorker):
             self.local_spawn(list_name)
             self.local_spawn(list_name)
             self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
-#            if self.execution in ['reanalysis', 'reforecast']:
-#                self.system.remove(list_name)
+            # if self.execution in ['reanalysis', 'reforecast']:
+            #     self.system.remove(list_name)
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                            self.datebegin, self.dateend)
 
         return rdict
 
@@ -587,10 +601,11 @@ class SyrmrrWorker(_SafranWorker):
                 self.mv_if_exists('fort.13', 'SAPLUI5' + dates[-1].ymdh)
                 self.mv_if_exists('fort.14', 'SAPLUI5_ARP' + dates[-1].ymdh)
                 self.mv_if_exists('fort.15', 'SAPLUI5_ANA' + dates[-1].ymdh)
-#                if self.execution in ['reanalysis', 'reforecast']:
-#                    self.system.remove(list_name)
+                # if self.execution in ['reanalysis', 'reforecast']:
+                #     self.system.remove(list_name)
             except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                                self.datebegin, self.dateend)
 
         return rdict
 
@@ -613,8 +628,10 @@ class SytistWorker(_SafranWorker):
             self.sapdat(dates[-1], nech)
             rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
-        self.mv_if_exists('FORCING_massif.nc', 'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
-        self.mv_if_exists('FORCING_postes.nc', 'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+        self.mv_if_exists('FORCING_massif.nc',
+                          'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+        self.mv_if_exists('FORCING_postes.nc',
+                          'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         self.postfix()
 
@@ -634,7 +651,8 @@ class SytistWorker(_SafranWorker):
             try:
                 self.local_spawn(list_name)
             except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                                self.datebegin, self.dateend)
 
         return rdict
 
@@ -665,17 +683,19 @@ class S2MExecutionError(ExecutionError):
         super(S2MExecutionError, self).__init__(self.model + ' execution failed.')
 
     def __str__(self):
-        return ("Error while running " + self.model + " for member " + self.subdir + " for period " + self.datebegin.ymdh + " - " + self.dateend.ymdh)
+        return ("Error while running " + self.model + " for member " + self.subdir + " for period " +
+                self.datebegin.ymdh + " - " + self.dateend.ymdh)
 
     def __reduce__(self):
         red = list(super(S2MExecutionError, self).__reduce__())
-        red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin, self.dateend])  # Les arguments qui seront passes a __init__
+        red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin,
+                        self.dateend])  # Les arguments qui seront passes a __init__
         return tuple(red)
 
 
 @echecker.disabled_if_unavailable
 class SurfexWorker(_S2MWorker):
-    '''This algo component is designed to run a SURFEX experiment without MPI parallelization.'''
+    """This algo component is designed to run a SURFEX experiment without MPI parallelization."""
 
     _footprint = dict(
         info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
@@ -724,8 +744,8 @@ class SurfexWorker(_S2MWorker):
     )
 
     def modify_prep(self, datebegin_this_run):
-        ''' The PREP file needs to be modified if the init date differs from the starting date
-         or if a threshold needs to be applied on snow water equivalent.'''
+        """The PREP file needs to be modified if the init date differs from the starting date
+         or if a threshold needs to be applied on snow water equivalent."""
         modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
         modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit
         modif = modif_swe or modif_date
@@ -748,7 +768,8 @@ class SurfexWorker(_S2MWorker):
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
         list_files_copy = ["OPTIONS.nam"]
-        list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
+        list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
+                           "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
 
         for required_copy in list_files_copy:
@@ -758,7 +779,8 @@ class SurfexWorker(_S2MWorker):
         for required_link in list_files_link_ifnotprovided:
             self.link_ifnotprovided(self.system.path.join(rundir, required_link), required_link)
             # For reforecast:
-            self.link_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_link), required_link)
+            self.link_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_link),
+                                    required_link)
 
         rdict = self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
@@ -786,40 +808,51 @@ class SurfexWorker(_S2MWorker):
             if need_other_forcing:
 
                 if self.kind == "escroc":
-                    # ESCROC only : the forcing files are in the father directory (same forcing for all members)
+                    # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
                 elif sytron:
-                    # ensmeteo+sytron : the forcing files are supposed to be in the subdirectories of each member except for the sytron member
+                    # ensmeteo+sytron: the forcing files are supposed to be in the subdirectories
+                    # of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
                 else:
-                    # ensmeteo or ensmeteo+escroc : the forcing files are supposed to be in the subdirectories of each member
-                    # determinstic case : the forcing file(s) is/are in the only directory
+                    # ensmeteo or ensmeteo+escroc: the forcing files are supposed to be in the subdirectories
+                    # of each member
+                    # determinstic case: the forcing file(s) is/are in the only directory
                     forcingdir = thisdir
 
                 if len(self.geometry) > 1:
-                    print ("FORCING AGGREGATION")
+                    print("FORCING AGGREGATION")
                     forcinglist = []
                     for massif in self.geometry:
-                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif, datebegin_this_run, self.dateend)
+                        dateforcbegin, dateforcend = get_file_period(
+                            "FORCING",
+                            forcingdir + "/" + massif,
+                            datebegin_this_run,
+                            self.dateend)
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
 
-                    print (forcinglist)
-                    forcinput_applymask(forcinglist, "FORCING.nc",)
+                    print(forcinglist)
+                    forcinput_applymask(forcinglist, "FORCING.nc", )
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
-                    print ("LOOK FOR FORCING")
-                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
-                    print ("FORCING FOUND")
+                    print("LOOK FOR FORCING")
+                    dateforcbegin, dateforcend = get_file_period(
+                        "FORCING",
+                        forcingdir,
+                        datebegin_this_run,
+                        self.dateend)
+                    print("FORCING FOUND")
 
                     if self.geometry[0] in ["alp", "pyr", "cor"]:
-                        print ("FORCING EXTENSION")
+                        print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry[0]]
                         liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
                         self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
-                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, ["0", "20", "40"], liste_aspect)
+                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000,
+                                         ["0", "20", "40"], liste_aspect)
                         need_save_forcing = True
 
             if self.daily:
@@ -839,7 +872,13 @@ class SurfexWorker(_S2MWorker):
                     # Update the contents of the namelist (date and location)
                     # Location taken in the FORCING file.
                     print("MODIFY THE NAMELIST:" + namelist.container.basename)
-                    newcontent = update_surfex_namelist_object(namelist.contents, datebegin_this_run, dateend=dateend_this_run, updateloc=updateloc, physicaloptions=self.physical_options, snowparameters=self.snow_parameters)
+                    newcontent = update_surfex_namelist_object(
+                        namelist.contents,
+                        datebegin_this_run,
+                        dateend=dateend_this_run,
+                        updateloc=updateloc,
+                        physicaloptions=self.physical_options,
+                        snowparameters=self.snow_parameters)
                     newnam = footprints.proxy.container(filename=namelist.container.basename)
                     newcontent.rewrite(newnam)
                     newnam.close()
@@ -853,16 +892,18 @@ class SurfexWorker(_S2MWorker):
 
             try:
                 self.local_spawn(list_name)
-#                 Uncomment these lines to test the behaviour in case of failure of 1 member
-#                 if self.subdir == "mb006":
-#                     deterministic = self.subdir == "mb035"
-#                     print ("DEBUGINFO")
-#                     print (dir(self))
-#                     rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
+                # Uncomment these lines to test the behaviour in case of failure of 1 member
+                # if self.subdir == "mb006":
+                #     deterministic = self.subdir == "mb035"
+                #     print("DEBUGINFO")
+                #     print(dir(self))
+                #     rdict['rc'] = S2MExecutionError(self.progname, deterministic,
+                #                                     self.subdir, datebegin_this_run, dateend_this_run)
 
             except ExecutionError:
                 deterministic = self.subdir == "mb035"
-                rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir, datebegin_this_run, dateend_this_run)
+                rdict['rc'] = S2MExecutionError(self.progname, deterministic, self.subdir,
+                                                datebegin_this_run, dateend_this_run)
                 return rdict  # Note than in the other case return rdict is at the end
 
             # Copy the SURFOUT file for next iteration
@@ -875,14 +916,15 @@ class SurfexWorker(_S2MWorker):
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
-            save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
+            save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run,
+                             newprefix="PRO")
 
             # Prepare next iteration if needed
             datebegin_this_run = dateend_this_run
             need_other_run = dateend_this_run < self.dateend
 
-            print (dateend_this_run, self.dateend)
-            print ("INFO SAVE FORCING", need_save_forcing, need_other_run, need_other_forcing)
+            print(dateend_this_run, self.dateend)
+            print("INFO SAVE FORCING", need_save_forcing, need_other_run, need_other_forcing)
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
                 save_file_period(".", "FORCING", dateforcbegin, dateforcend)
@@ -894,7 +936,7 @@ class SurfexWorker(_S2MWorker):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingWorker(TaylorVortexWorker):
-    '''This algo component is designed to run a SURFEX experiment without MPI parallelization.'''
+    """This algo component is designed to run a SURFEX experiment without MPI parallelization."""
 
     _footprint = dict(
         info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
@@ -956,21 +998,23 @@ class PrepareForcingWorker(TaylorVortexWorker):
                 forcingdir = rundir
 
                 if len(self.geometry_in) > 1:
-                    print ("FORCING AGGREGATION")
+                    print("FORCING AGGREGATION")
                     forcinglist = []
                     for massif in self.geometry_in:
-                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif, datebegin_this_run, self.dateend)
+                        dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir + "/" + massif,
+                                                                     datebegin_this_run, self.dateend)
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
 
-                    forcinput_applymask(forcinglist, "FORCING.nc",)
+                    forcinput_applymask(forcinglist, "FORCING.nc", )
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
-                    print ("LOOK FOR FORCING")
-                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
-                    print ("FORCING FOUND")
+                    print("LOOK FOR FORCING")
+                    dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
+                                                                 datebegin_this_run, self.dateend)
+                    print("FORCING FOUND")
 
                     if self.geometry_in[0] in ["alp", "pyr", "cor"]:
                         if "allslopes" in self.geometry_out:
@@ -978,11 +1022,12 @@ class PrepareForcingWorker(TaylorVortexWorker):
                         elif "flat" in self.geometry_out:
                             list_slopes = ["0"]
 
-                        print ("FORCING EXTENSION")
+                        print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
                         liste_aspect  = infomassifs().get_list_aspect(8, list_slopes)
                         self.system.mv("FORCING.nc", "FORCING_OLD.nc")
-                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000, list_slopes, liste_aspect)
+                        forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs,
+                                         0, 5000, list_slopes, liste_aspect)
                         need_save_forcing = True
 
             dateend_this_run = min(self.dateend, dateforcend)
@@ -1011,7 +1056,7 @@ class Guess(ParaExpresso):
                 values = [ 'guess'],
             ),
             interpreter = dict(
-                values = [ 'python', 'current']
+                values = ['python', 'current']
             ),
             reforecast = dict(
                 type     = bool,
@@ -1027,7 +1072,7 @@ class Guess(ParaExpresso):
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(Guess, self)._default_common_instructions(rh, opts)
         ddict['interpreter'] = self.interpreter
         ddict['reforecast'] = self.reforecast
@@ -1101,7 +1146,7 @@ class S2MComponent(ParaBlindRun):
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
@@ -1186,7 +1231,7 @@ class S2MReanalysis(S2MComponent):
 
         while dateend_input < self.dateend:
             datebegin_input = dateend_input
-            dateend_input = min(datebegin_input.replace(year= datebegin_input.year + 1), self.dateend)
+            dateend_input = min(datebegin_input.replace(year=datebegin_input.year + 1), self.dateend)
             list_dates_begin_input.append(datebegin_input)
             list_dates_end_input.append(dateend_input)
 
@@ -1196,7 +1241,7 @@ class S2MReanalysis(S2MComponent):
         return list_dates_begin_input, list_dates_end_input
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
 
         for attribute in self.footprint_attributes:
@@ -1216,7 +1261,10 @@ class S2MReanalysis(S2MComponent):
         deterministic = [True] * len(subdirs)
         subdirs.sort()
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
+        self._add_instructions(common_i, dict(subdir=subdirs,
+                                              datebegin=list_dates_begin,
+                                              dateend=list_dates_end,
+                                              deterministic= deterministic))
         self._default_post_execute(rh, opts)
 
 
@@ -1233,7 +1281,7 @@ class S2MReforecast(S2MComponent):
     )
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(S2MComponent, self)._default_common_instructions(rh, opts)
 
         for attribute in self.footprint_attributes:
@@ -1251,7 +1299,10 @@ class S2MReforecast(S2MComponent):
         # auto-detected using the sequence
         subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
         deterministic = [True] * len(subdirs)
-        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=list_dates_begin, dateend=list_dates_end, deterministic= deterministic))
+        self._add_instructions(common_i, dict(subdir=subdirs,
+                                              datebegin=list_dates_begin,
+                                              dateend=list_dates_end,
+                                              deterministic=deterministic))
         self._default_post_execute(rh, opts)
 
     def get_individual_instructions(self, rh, opts):
@@ -1333,7 +1384,9 @@ class SurfexComponent(S2MComponent):
             escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
-            self._add_instructions(common_i, dict(subdir=subdirs, physical_options=physical_options, snow_parameters=snow_parameters))
+            self._add_instructions(common_i, dict(subdir=subdirs,
+                                                  physical_options=physical_options,
+                                                  snow_parameters=snow_parameters))
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
@@ -1395,7 +1448,7 @@ class PrepareForcingComponent(TaylorRun):
         self.env.DR_HOOK_NOT_MPI = 1
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             ddict[attribute] = getattr(self, attribute)
@@ -1409,15 +1462,17 @@ class PrepareForcingComponent(TaylorRun):
         # Note: The number of members and the name of the subdirectories could be
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
-        self._add_instructions(common_i, dict(subdir=subdirs, datebegin=self.datebegin[0], dateend=self.dateend[0]))
+        self._add_instructions(common_i, dict(subdir=subdirs,
+                                              datebegin=self.datebegin[0],
+                                              dateend=self.dateend[0]))
         self._default_post_execute(rh, opts)
 
     def postfix(self, rh, opts):
         pass
 
     def get_subdirs(self, rh, opts):
-        print (type(self.datebegin))
-        print (self.datebegin)
+        print(type(self.datebegin))
+        print(self.datebegin)
         return [begin.year for begin in self.datebegin[0]]
 
     def role_ref_namebuilder(self):
@@ -1467,13 +1522,21 @@ class SurfexComponentMultiDates(SurfexComponent):
             escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
-            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend, physical_options=physical_options, snow_parameters=snow_parameters))
+            self._add_instructions(common_i, dict(subdir=subdirs,
+                                                  datebegin=listdatebegin,
+                                                  dateinit=listdateinit,
+                                                  dateend=listdateend,
+                                                  physical_options=physical_options,
+                                                  snow_parameters=snow_parameters))
         else:
-            self._add_instructions(common_i, dict(subdir=subdirs, datebegin=listdatebegin, dateinit=listdateinit, dateend=listdateend))
+            self._add_instructions(common_i, dict(subdir=subdirs,
+                                                  datebegin=listdatebegin,
+                                                  dateinit=listdateinit,
+                                                  dateend=listdateend))
         self._default_post_execute(rh, opts)
 
     def _default_common_instructions(self, rh, opts):
-        '''Create a common instruction dictionary that will be used by the workers.'''
+        """Create a common instruction dictionary that will be used by the workers."""
         ddict = super(SurfexComponentMultiDates, self)._default_common_instructions(rh, opts)
         ddict.pop('datebegin')
         ddict.pop('dateend')

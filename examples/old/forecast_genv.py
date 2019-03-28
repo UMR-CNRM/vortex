@@ -19,7 +19,7 @@ import gco.syntax
 
 
 t = sessions.ticket()
-#t.debug()
+# t.debug()
 
 myenv = env.current()
 mysys = t.system()
@@ -27,7 +27,7 @@ mysys = t.system()
 mysys.chdir(myenv.TMPDIR + '/rundir')
 print(t.prompt, mysys.pwd())
 
-#domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
+# domain = ['GLOB15','GLOB25','EURAT01','EUROC25','GLOB05']
 domains = [ 'GLOB15' ]
 rundate = date.Date('2011092200')
 geo = GaussGeometry(id='Current op', area='france', truncation=798, lam=False)
@@ -60,7 +60,7 @@ genv.register(cycle=arpege_cycle, entry='double', CLIM_ARPEGE_T798='clim_arpege.
 genv.register(cycle=arpege_cycle, entry='double', CLIM_DAP_GLOB15='clim_dap.glob15.07')
 genv.register(cycle=arpege_cycle, entry='double', MAT_FILTER_GLOB15='mat.filter.glob15.07')
 gconf = genv.register(cycle=arpege_cycle, entry='double', NAMELIST_ARPEGE='cy36t1_op2.11.nam')
-#gconf = genv.register(cycle=arome_cycle, entry='double', NAMELIST_AROME='al36t1_arome-op2.13.nam')
+# gconf = genv.register(cycle=arome_cycle, entry='double', NAMELIST_AROME='al36t1_arome-op2.13.nam')
 
 print(t.prompt, ">>>>> GENV :", genv.cycles())
 print(t.prompt, gconf)
@@ -118,7 +118,7 @@ xxtdef = toolbox.rload(
     local='xxt.def',
 )
 
-#t.debug()
+# t.debug()
 namselect = toolbox.rload(
     kind='namselect',
     binary='arpege',

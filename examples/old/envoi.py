@@ -78,7 +78,7 @@ ad.mail(**dico1)
 ad.mail(**dico3)
 print('_'*80)
 
-#TODO: prepare a test to alert the supervision
+# TODO: prepare a test to alert the supervision
 ad.alarm(**dico4)
 ad.alarm_status()
 print('_'*80)

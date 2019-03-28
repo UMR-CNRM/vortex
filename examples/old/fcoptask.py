@@ -43,7 +43,7 @@ class Forecast(app.Application):
             namespace = 'vortex.cache.fr',      # Nous ne ferons des sorties que sur l'espace disque
         )
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
         self.subtitle('Predefined Providers')
 
@@ -240,12 +240,12 @@ class Forecast(app.Application):
                 kind        = 'ifsmodel',
             )
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
             self.subtitle('Effective Inputs')
             toolbox.show_inputs()
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
         if self.compute in self.steps:
 
@@ -268,7 +268,7 @@ class Forecast(app.Application):
                 mpiopts = dict(nn=t.env.SLURM_NNODES, nnp=4)
             )
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
         if self.backup in self.steps:
 
@@ -326,7 +326,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFDLFCST+{glob:h:\d+}',
+                local       = r'DHFDLFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -342,7 +342,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFGLFCST+{glob:h:\d+}',
+                local       = r'DHFGLFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -358,7 +358,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'DHFZOFCST+{glob:h:\d+}',
+                local       = r'DHFZOFCST+{glob:h:\d+}',
                 actualfmt   = 'lfa',
                 # resource
                     # implicit: cutoff, date, geometry, model
@@ -374,7 +374,7 @@ class Forecast(app.Application):
                 # provider
                 provider    = self.conf.p_flow,
                 # container
-                local       = 'NODE.{glob:a:\d+}_{glob:b:\d+}',
+                local       = r'NODE.{glob:a:\d+}_{glob:b:\d+}',
                 actualfmt   = 'ascii',
                 seta        = '[glob:a]',
                 setb        = '[glob:b]',
@@ -385,12 +385,12 @@ class Forecast(app.Application):
                 task        = e.get('SMSNAME', 'std-forecst'),
             )
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
             self.subtitle('Effective Outputs')
             toolbox.show_outputs()
 
-        #--------------------------------------------------------------------------------------------------
+        # --------------------------------------------------------------------------------------------------
 
         self.subtitle('End of execution')
 

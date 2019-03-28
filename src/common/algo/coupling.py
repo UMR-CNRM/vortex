@@ -9,6 +9,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date
 
 from common.algo.ifsroot import IFSParallel
+from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
 
@@ -108,7 +109,8 @@ class Coupling(FullPos):
                 self.grab(cplsurf_in, comment='coupling surface source')
                 if sh.path.exists(infilesurf):
                     if isMany:
-                        logger.critical('Cannot process multiple surface historic files if %s exists.', infilesurf)
+                        logger.critical('Cannot process multiple surface historic files if %s exists.',
+                                        infilesurf)
                 else:
                     sh.cp(cplsurf_in.rh.container.localpath(), infilesurf,
                           fmt=cplsurf_in.rh.container.actualfmt, intent=intent.IN)
@@ -212,7 +214,7 @@ class CouplingLAM(Coupling):
         return opts
 
 
-class Prep(BlindRun):
+class Prep(BlindRun, DrHookDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
     _footprint = dict(
@@ -289,9 +291,6 @@ class Prep(BlindRun):
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Prep, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
         # Convert the initial clim if needed...
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):
@@ -377,7 +376,7 @@ class C901(IFSParallel):
                         ("GridpointFileGG", GRIDPOINT_FILE_GG)]
     LIST_CST_INPUT_FILES = [("ConstantSpectralFileSH", SPECTRAL_FILE_SH),
                             ("ConstantGridpointFileUA", GRIDPOINT_FILE_UA),
-                            ("ConstantGrdipointFileGG", GRIDPOINT_FILE_GG)]
+                            ("ConstantGridpointFileGG", GRIDPOINT_FILE_GG)]
 
     @property
     def realkind(self):

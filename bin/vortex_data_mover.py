@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-'''
+"""
 vortex_data_mover.py -- Retrieve data with Vortex and put them to another location.
 
 
@@ -62,6 +62,8 @@ Here is a YAML configuration file example:
       # First item
       - in:
           kind: historic
+          basedate: ${yyyymmddhh}
+          date: "[basedate]/-PT1H"
           model: surfex
           term: 1
           block: forecast
@@ -88,7 +90,7 @@ Here is a YAML configuration file example:
           nativefmt: grib
           format: grib
 
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -115,9 +117,9 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 fqdn = socket.getfqdn()
 do_lfi_addon = False
 do_rawftp = False
-if re.match('[lps]x\w+\d+\.cnrm\.meteo.fr', fqdn):
+if re.match(r'[lps]x\w+\d+\.cnrm\.meteo.fr', fqdn):
     tmpbase = os.path.join(os.environ['HOME'], 'tmp')
-elif re.match('(beaufix|prolix)', fqdn):
+elif re.match(r'(beaufix|prolix)', fqdn):
     do_lfi_addon = True
     do_rawftp = True
     tmpbase = (os.environ['TMPDIR'] or
@@ -336,6 +338,9 @@ def bootstrap_rhs(conf):
             # Resolve subsitution arrays
             sub_variables = dict()
             sub_variables.update(in_defaults)
+            # Shortcut for "date"
+            if 'date' in in_defaults:
+                sub_variables['yyyymmddhh'] = in_defaults['date'].ymdh
             if 'hhcutoff_dicts' in conf:
                 if ('cutoff' in in_defaults and
                         ('date' in in_defaults or 'hh' in in_defaults)):

@@ -96,6 +96,10 @@ class TestDateNameBuilder(unittest.TestCase):
                                            {'truncation': 789},
                                            {'filtering': 'GLOB15'}])),
                          'dummy.c22-tl789-fglob15')
+        self.assertEqual(vb.pack(dict(geo=[{'stretching': 2.2},
+                                           {'truncation': (789, 'l', '')},
+                                           {'filtering': 'GLOB15'}])),
+                         'dummy.c22-tl789-fglob15')
         # compute: option
         self.assertEqual(vb.pack(dict(compute=[{'seta': 1},
                                                {'setb': 1}])),

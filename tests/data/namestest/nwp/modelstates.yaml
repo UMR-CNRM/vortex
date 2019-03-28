@@ -91,6 +91,19 @@ todo:
                 - mesonh
             - term: 0
               scenario: RCP6.0
+    # HistoricSubset
+    -   commons:
+            kind: historic
+            geometry: global1280co
+            nativefmt: grib
+            block: forecast
+            experiment: abcd
+            namespace: vortex.multi.fr
+            term: 24
+        tests: 
+            - subset:
+                - null
+                - gpatm
     # DFI Bias
     -   commons:
             kind: biasdfi

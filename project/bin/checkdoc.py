@@ -15,7 +15,7 @@ import sys
 
 # Automatically set the python path
 vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
@@ -68,7 +68,7 @@ def doc_dive(obj):
 def create_rst(rst, modname, module):
     print(' > Creating', rst)
 
-    if re.search(r'__init_\_.py$', module.__file__):
+    if re.search(r'__init__.py$', module.__file__):
         tplfile = 'doc_package_template.tpl'
     else:
         tplfile = 'doc_module_template.tpl'

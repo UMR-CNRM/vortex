@@ -246,7 +246,8 @@ class TestHeavyNodesStuff(unittest.TestCase):
             self.assertSequenceEqual(list(item.items()), list(ref.items()))
 
     def assertTaskPwd(self, got, expected):
-        self.assertEqual(got, self.sh.path.join(self.t.rundir, self.t.tag, expected))
+        self.assertEqual(self.sh.path.realpath(got),
+                         self.sh.path.realpath(self.sh.path.join(self.t.rundir, self.t.tag, expected)))
 
     def _test_nodes_simple(self, extra, refill=False, play=False, steps=()):
         self.dumpconfig(_JOBCONF1.format(extra=extra))
@@ -268,7 +269,8 @@ class TestHeavyNodesStuff(unittest.TestCase):
             dr = Driver(tag='job_demo_drv_' + extra, ticket=self.t,
                         nodes=[TestTask(tag='forecast1_' + extra, ticket=self.t, **opts),
                                TestTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
-                        options = opts)
+                        options = opts,
+                        iniencoding='utf-8')
             dr.setup()
             dr.run()
             # Config

@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Utility classes and function to work with the Mars database.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
 from vortex.util.config import GenericConfigParser
-
-"""
-Utility classes and function to work with the Mars database.
-"""
 
 #: No automatic export
 __all__ = []
@@ -58,4 +58,4 @@ def callMarsExtract(sh, query_file, command=None, fatal=True):
     :return: The return code of the Mars extraction.
     """
     command_line = " ".join([command, query_file])
-    return sh.spawn([command_line, ], shell=False, output=False, fatal=fatal)
+    return sh.spawn([command_line, ], shell=True, output=False, fatal=fatal)

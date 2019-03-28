@@ -42,7 +42,7 @@ rh = vortex.toolbox.rh(
     model          = 'arpege',
     namespace      = '[suite].archive.fr',
     suite          = 'oper',
-    term           =  8,
+    term           = 8,
     vapp           = '[model]',
     vconf          = '4dvarfr',
     geometry       = Geometry(tag='globalsp2'),

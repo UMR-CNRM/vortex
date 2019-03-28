@@ -3,16 +3,13 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
-
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
-import footprints
 
-from vortex.tools import odb
 from vortex.algo.components import BlindRun, Parallel
-from .ifsroot import IFSParallel
 from vortex.syntax.stdattrs import a_date
+from .ifsroot import IFSParallel
+from common.tools import odb, drhook
 
 #: No automatic export
 __all__ = []
@@ -124,7 +121,7 @@ class SeaIceAnalysis(IFSParallel):
 
         super(SeaIceAnalysis, self).prepare(rh, opts)
 
-        namrh_list = [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
+        namrh_list = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
                                                                             kind='namelist',)]
 
         if not namrh_list:
@@ -141,72 +138,7 @@ class SeaIceAnalysis(IFSParallel):
             namrh.contents.rewrite(namrh.container)
 
 
-class IFSODB(IFSParallel, odb.OdbComponent):
-    """Mix IFS behavior and some ODB facilities."""
-
-    _abstract  = True
-    _footprint = dict(
-        attr = dict(
-            npool = dict(
-                info        = 'The number of pool(s) in the ODB database.',
-                type        = int,
-                optional    = True,
-                default     = 1,
-            ),
-            iomethod = dict(
-                info        = 'The io_method of the ODB database.',
-                type        = int,
-                optional    = True,
-                default     = 1,
-                doc_zorder  = -50,
-            ),
-            slots = dict(
-                info     = 'The timeslots of the assimilation window.',
-                type     = odb.TimeSlots,
-                optional = True,
-                default  = odb.TimeSlots(7, chunk='PT1H'),
-            ),
-            virtualdb = dict(
-                info            = 'The type of the virtual ODB database.',
-                optional        = True,
-                default         = 'ecma',
-                access          = 'rwx',
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
-            ),
-            date = dict(
-                info            = 'The current run date.',
-                optional        = True,
-                access          = 'rwx',
-                type            = Date,
-                doc_zorder      = -50,
-            ),
-        )
-    )
-
-    def prepare(self, rh, opts):
-        """Mostly used for setting environment."""
-        super(IFSODB, self).prepare(rh, opts)
-        self.odb.setup(
-            layout   = self.virtualdb,
-            date     = self.date,
-            npool    = self.npool,
-            nslot    = self.slots.nslot,
-            iomethod = self.iomethod,
-        )
-
-    def setchannels(self, opts):
-        """Look up for namelist channels in effective inputs."""
-        namchan = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'namelist')
-            if 'channel' in x.rh.options
-        ]
-        for thisnam in namchan:
-            thisloc = re.sub(r'\d+$', '', thisnam.options['channel']) + 'channels'
-            if thisloc != thisnam.container.localpath():
-                self.system.softlink(thisnam.container.localpath(), thisloc)
-
-
-class Canari(IFSODB):
+class Canari(IFSParallel, odb.OdbComponentDecoMixin):
     """Surface analysis."""
 
     _footprint = dict(
@@ -214,6 +146,9 @@ class Canari(IFSODB):
         attr = dict(
             kind = dict(
                 values  = ['canari'],
+            ),
+            binarysingle = dict(
+                default = 'basicnwpobsort',
             ),
             conf = dict(
                 default = 701,
@@ -226,54 +161,41 @@ class Canari(IFSODB):
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
-
-        sh = self.system
+        super(Canari, self).prepare(rh, opts)
 
         # Looking for input observations
         obsodb = [ x for x in self.lookupodb() if x.rh.resource.part.startswith('surf') ]
-
         if not obsodb:
-            logger.critical('No surface obsdata in inputs')
             raise ValueError('No surface obsdata for canari')
+        self.odb_date_and_layout_from_sections(obsodb)
 
+        # Find the unique input ODb database
         ssurf = obsodb.pop()
-
         if obsodb:
             logger.error('More than one surface obsdata provided')
             logger.error('Using : %s / %s', ssurf.rh.resource.layout, ssurf.rh.resource.part)
             for sobs in obsodb:
                 logger.error('Skip : %s / %s', sobs.rh.resource.layout, sobs.rh.resource.part)
 
-        # Defaults settings
-        self.virtualdb = ssurf.rh.resource.layout
-        self.date      = ssurf.rh.resource.date
-        cma_path       = sh.path.abspath(ssurf.rh.container.localpath())
-        sh.cp(sh.path.join(cma_path, 'IOASSIGN'), 'IOASSIGN')
-        super(Canari, self).prepare(rh, opts)
+        # Fix paths + generate a global IOASSING file
+        cma_path = self.system.path.abspath(ssurf.rh.container.localpath())
+        self.odb.fix_db_path(self.virtualdb, cma_path)
+        self.odb.ioassign_gather(cma_path)
 
         # Some extra settings
+        self.odb.create_poolmask(self.virtualdb, cma_path)
+        self.odb.shuffle_setup(self.slots, mergedirect=True, ccmadirect=False)
         self.env.update(
-            ODB_SRCPATH_ECMA         = cma_path,
-            ODB_DATAPATH_ECMA        = cma_path,
-            ODB_CCMA_CREATE_POOLMASK = 1,
-            ODB_CCMA_POOLMASK_FILE   = sh.path.join(cma_path, self.virtualdb.upper() + '.poolmask'),
             ODB_POOLMASKING          = 1,
             ODB_PACKING              = -1,
             BASETIME                 = self.date.ymdh,
-            ODB_CCMA_TSLOTS          = self.slots.nslot,
-        )
-
-        self.env.default(
-            ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
         )
 
         # Fix the input DB intent
-        self.odb.is_rw_or_overwrite_method(ssurf)
+        self.odb_rw_or_overwrite_method(ssurf)
 
 
-class Screening(IFSODB):
+class Screening(IFSParallel, odb.OdbComponentDecoMixin):
     """Observation screening."""
 
     _footprint = dict(
@@ -283,7 +205,12 @@ class Screening(IFSODB):
                 values  = ['screening', 'screen', 'thinning'],
                 remap   = dict(autoremap = 'first'),
             ),
-            ioassign = dict(),
+            binarysingle = dict(
+                default = 'basicnwpobsort',
+            ),
+            ioassign = dict(
+                optional = False,
+            ),
             conf = dict(
                 default = 2,
             ),
@@ -295,131 +222,78 @@ class Screening(IFSODB):
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
-
-        sh = self.system
+        super(Screening, self).prepare(rh, opts)
 
         # Looking for input observations
         allodb = self.lookupodb()
+        self.odb_date_and_layout_from_sections(allodb)
 
-        # Assume that the first one looks like the others (something to care of later)
-        odbtop = allodb[0]
-        self.virtualdb = odbtop.rh.resource.layout
-        self.date      = odbtop.rh.resource.date
+        # Perform the pre-merging stuff (this will create the ECMA virtual DB)
+        virtualdb_path = self.odb_merge_if_needed(allodb)
+        # Prepare the CCMA DB
+        ccma_path = self.odb_create_db(layout='CCMA')
 
-        # Perform the premerging stuff
-        self.odb.ioassign_merge(
-            layout   = self.virtualdb,
-            ioassign = self.ioassign,
-            odbnames = [ x.rh.resource.part for x in allodb ],
-        )
-
-        # Prepare CCMA output
-        thiscwd = sh.getcwd()
-        thisdb  = self.virtualdb.upper()
-        self.env.update(
-            ODB_SRCPATH_CCMA  = sh.path.join(thiscwd, 'CCMA'),
-            ODB_DATAPATH_CCMA = sh.path.join(thiscwd, 'CCMA'),
-        )
-        sh.mkdir('CCMA')
-        self.odb.ioassign_create(
-            layout   = 'CCMA',
-            npool    = self.npool,
-            ioassign = self.ioassign
-        )
-        sh.ll('CCMA.IOASSIGN')
-        sh.cp('CCMA.IOASSIGN', sh.path.join('CCMA', 'IOASSIGN'))
-        sh.rm('IOASSIGN')
-        sh.cat(sh.path.join(thisdb, 'IOASSIGN'), 'CCMA.IOASSIGN', output='IOASSIGN')
-
-        # Defaults settings
-        super(Screening, self).prepare(rh, opts)
-
-        # Fix the input databases intent
-        for section in allodb:
-            self.odb.is_rw_or_overwrite_method(section)
+        # Fix paths + generate a global IOASSING file
+        self.odb.fix_db_path(self.virtualdb, virtualdb_path)
+        self.odb.fix_db_path('CCMA', ccma_path)
+        self.odb.ioassign_gather(virtualdb_path, ccma_path)
 
         # Some extra settings
-        self.env.update(
-            ODB_CCMA_CREATE_POOLMASK = 1,
-            ODB_CCMA_POOLMASK_FILE   = sh.path.join(thiscwd, thisdb, thisdb + '.poolmask'),
-            ODB_CCMA_CREATE_DIRECT   = 1,
-            BASETIME                 = self.date.ymdh,
-            ODB_CCMA_TSLOTS          = self.slots.nslot,
-        )
-
-        self.env.default(
-            ODB_MERGEODB_DIRECT      = 1,
-            ODB_CCMA_LEFT_MARGIN     = self.slots.leftmargin,
-            ODB_CCMA_RIGHT_MARGIN    = self.slots.rightmargin,
-        )
+        self.odb.create_poolmask(self.virtualdb, virtualdb_path)
+        self.odb.shuffle_setup(self.slots, mergedirect=True, ccmadirect=True)
 
         # Look for extras ODB raw
-        odbraw = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'odbraw')
-            if x.rh.container.actualfmt == 'odb'
-        ]
-        if not odbraw:
-            logger.error('No ODB bias table found')
-        else:
-            rawdbnames = [ x.resource.layout.upper() for x in odbraw ]
-            for rawname in rawdbnames:
-                self.env[ 'ODB_SRCPATH_' + rawname] = sh.path.join(thiscwd, rawname)
-                self.env[ 'ODB_DATAPATH_' + rawname] = sh.path.join(thiscwd, rawname)
-                for badlink in [bl for bl in sh.glob(rawname + '/*.h')
-                                if sh.path.islink(bl) and not sh.path.exists(bl)]:
-                    sh.unlink(badlink)
-            allio = ['IOASSIGN']
-            allio.extend([ sh.path.join(x, 'IOASSIGN') for x in rawdbnames ])
-            sh.cat(*allio, output='IOASSIGN.full')
-            sh.mv('IOASSIGN.full', 'IOASSIGN')
+        self.odb_handle_raw_dbs()
+
+        # Fix the input databases intent
+        self.odb_rw_or_overwrite_method(* allodb)
 
         # Look for channels namelists and set appropriate links
-        self.setchannels(opts)
+        self.setchannels()
 
 
-class IFSODBCCMA(IFSODB):
+class IFSODBCCMA(IFSParallel, odb.OdbComponentDecoMixin):
     """Specialised IFSODB for CCMA processing"""
 
     _abstract = True
     _footprint = dict(
-        attr=dict(
-            virtualdb=dict(
-                default='ccma',
+        attr = dict(
+            virtualdb = dict(
+                default = 'ccma',
+            ),
+            binarysingle = dict(
+                default = 'basicnwpobsort',
             ),
         )
     )
 
     def prepare(self, rh, opts):
         """Get a look at raw observations input files."""
+        super(IFSODBCCMA, self).prepare(rh, opts)
 
         sh = self.system
 
         # Looking for input observations
         allodb  = self.lookupodb()
         allccma = [ x for x in allodb if x.rh.resource.layout.lower() == 'ccma' ]
-
-        if not allccma:
-            logger.critical('Missing CCMA input data for ' + self.kind)
-            raise ValueError('Missing CCMA input data')
+        if allccma:
+            if len(allccma) > 1:
+                logger.error('Multiple CCMA databases detected: only the first one is taken into account')
+        else:
+            raise ValueError('Missing CCMA input data for ' + self.kind)
 
         # Set env and IOASSIGN
         ccma = allccma.pop()
         ccma_path = sh.path.abspath(ccma.rh.container.localpath())
-        sh.cp(sh.path.join(ccma_path, 'IOASSIGN'), 'IOASSIGN')
-        self.env.update(
-            ODB_SRCPATH_CCMA  = ccma_path,
-            ODB_DATAPATH_CCMA = ccma_path,
-        )
+        self.odb_date_and_layout_from_sections([ccma, ])
+        self.odb.fix_db_path(ccma.rh.resource.layout, ccma_path)
+        self.odb.ioassign_gather(ccma_path)
 
         # Fix the input database intent
-        self.odb.is_rw_or_overwrite_method(ccma)
+        self.odb_rw_or_overwrite_method(ccma)
 
         # Look for channels namelists and set appropriate links
-        self.setchannels(opts)
-
-        # Defaults settings
-        self.date = ccma.rh.resource.date
-        super(IFSODBCCMA, self).prepare(rh, opts)
+        self.setchannels()
 
 
 class Minim(IFSODBCCMA):
@@ -443,6 +317,7 @@ class Minim(IFSODBCCMA):
 
     def prepare(self, rh, opts):
         """Find out if preconditioning eigenvectors are here."""
+        super(Minim, self).prepare(rh, opts)
 
         # Check if a preconditioning EV map is here
         evmaprh = self.context.sequence.effective_inputs(role=('PreconEVMap',
@@ -454,8 +329,8 @@ class Minim(IFSODBCCMA):
             nprec_ev = evmaprh[0].rh.contents.data['evlen']
             # If there are preconditioning EV: update the namelist
             if nprec_ev > 0:
-                for namrh in [x.rh  for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                                    kind='namelist',)]:
+                for namrh in [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                                   kind='namelist',)]:
                     namc = namrh.contents
                     try:
                         namc['NAMVAR'].NPCVECS = nprec_ev
@@ -470,8 +345,6 @@ class Minim(IFSODBCCMA):
         else:
             logger.info("No preconditioning EV were found.")
 
-        super(Minim, self).prepare(rh, opts)
-
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
         sh = self.system
@@ -480,7 +353,7 @@ class Minim(IFSODBCCMA):
         prec = sh.ls('MEMINI*')
         if prec:
             prec_info = dict(evlen=len(prec))
-            prec_info['evnum'] = [ int(x[6:])  for x in prec ]
+            prec_info['evnum'] = [int(x[6:]) for x in prec]
             sh.json_dump(prec_info, 'precev_map.out', indent=4)
 
         super(Minim, self).postfix(rh, opts)
@@ -506,7 +379,7 @@ class Trajectory(IFSODBCCMA):
     )
 
 
-class PseudoTrajectory(BlindRun):
+class PseudoTrajectory(BlindRun, drhook.DrHookDecoMixin):
     """Copy a few fields from the Guess file into the Analysis file"""
     _footprint = dict(
         attr = dict(
@@ -516,11 +389,6 @@ class PseudoTrajectory(BlindRun):
             ),
         )
     )
-
-    def prepare(self, rh, opts):
-        """Add some defaults env values for mpitool itself."""
-        super(PseudoTrajectory, self).prepare(rh, opts)
-        self.export('drhook_not_mpi')
 
 
 class SstGrb2Ascii(BlindRun):
@@ -602,15 +470,15 @@ class IceNetCDF2Ascii(BlindRun):
                     hn_file = filename
                     logger.info('The input file for the North hemisphere is: %s.', hn_file)
                 else:
-                    logger.warning('There was already one file for the North hemisphere. The following one, %s, is not used.',
-                                   filename)
+                    logger.warning('There was already one file for the North hemisphere. '
+                                   'The following one, %s, is not used.', filename)
             elif part == "ice_hs":
                 if hs_file == '':
                     hs_file = filename
                     logger.info('The input file for the South hemisphere is: %s.', hs_file)
                 else:
-                    logger.warning('There was already one file for the South hemisphere. The following one, %s, is not used.',
-                                   filename)
+                    logger.warning('There was already one file for the South hemisphere. '
+                                   'The following one, %s, is not used.', filename)
             else:
                 logger.warning('The following file is not used: %s.', filename)
         self.input_file_hn = hn_file

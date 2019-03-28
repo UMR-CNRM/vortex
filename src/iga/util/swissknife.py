@@ -36,7 +36,7 @@ def slurm_parameters(t, **kw):
         slurm['nn'] = 1
 
     try:
-        slurm['nnp'] = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+        slurm['nnp'] = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
     except (ValueError, TypeError) as pb:
         logger.warning('SLURM_TASKS_PER_NODE: %s', str(pb))
         slurm['nnp'] = 1
@@ -45,8 +45,8 @@ def slurm_parameters(t, **kw):
         slurm['openmp'] = e.OMP_NUM_THREADS
     else:
         try:
-            guess_cpus = int(re.sub('\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) // 2
-            guess_tasks = int(re.sub('\(.*$', '', e.SLURM_TASKS_PER_NODE))
+            guess_cpus = int(re.sub(r'\(.*$', '', e.SLURM_JOB_CPUS_PER_NODE)) // 2
+            guess_tasks = int(re.sub(r'\(.*$', '', e.SLURM_TASKS_PER_NODE))
             slurm['openmp'] = guess_cpus // guess_tasks
         except (ValueError, TypeError) as pb:
             logger.warning('SLURM_JOB_CPUS_PER_NODE: %s', str(pb))

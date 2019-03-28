@@ -25,7 +25,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple PrestagingPriorityTuple
-PrestagingPriorityTuple = namedtuple('PrestagingPriorityTuple', ['urgent', 'normal', 'low'], verbose=False)
+PrestagingPriorityTuple = namedtuple('PrestagingPriorityTuple', ['urgent', 'normal', 'low'])
 
 #: Predefined PrestagingPriorities values for urgent, normal and low
 prestaging_p = PrestagingPriorityTuple(urgent=99, normal=50, low=0)

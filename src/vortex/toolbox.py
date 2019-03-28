@@ -79,7 +79,7 @@ def quickview(args, nb=0, indent=0):
         args = (args, )
     for x in args:
         if nb:
-            print
+            print()
         nb += 1
         quickview = getattr(x, 'quickview', None)
         if quickview:
@@ -178,7 +178,7 @@ def nicedump(msg, **kw):
     print('#', msg, ':')
     for k, v in sorted(six.iteritems(kw)):
         print('+', k.ljust(12), '=', str(v))
-    print
+    print()
 
 
 @contextmanager
@@ -398,7 +398,7 @@ def add_section(section, args, kw):
                         else:
                             secok.append(newsection)
                         if t.sh.trace:
-                            print
+                            print()
                     rlok.extend([newsection.rh for newsection in secok
                                  if newsection.any_coherentgroup_opened])
             else:
@@ -452,7 +452,7 @@ def show_inputs(context=None):
     for csi in inputs(ticket=t):
         t.sh.header('Input ' + str(csi))
         csi.show(ticket=t, context=context)
-        print
+        print()
 
 
 def output(*args, **kw):
@@ -500,7 +500,7 @@ def show_outputs(context=None):
     for cso in outputs(ticket=t):
         t.sh.header('Output ' + str(cso))
         cso.show(ticket=t, context=context)
-        print
+        print()
 
 
 def promise(*args, **kw):
@@ -736,7 +736,7 @@ def diff(*args, **kw):
                     logger.critical('Difference in resource comparison is fatal')
                     raise ValueError('Fatal diff')
             if t.sh.trace:
-                print
+                print()
             rlok.append(rc)
 
     return rlok

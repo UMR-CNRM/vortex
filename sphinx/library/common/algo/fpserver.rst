@@ -11,8 +11,17 @@
 .. autodata:: __all__
 
 
+Functions
+---------
+
+.. autofunction:: fullpos_server_flypoll
+
 Classes
 -------
+.. autoclass:: FullPosServerFlyPollPersistantState
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: FullPosServer
    :show-inheritance:

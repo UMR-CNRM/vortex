@@ -21,6 +21,7 @@ logger = loggers.getLogger(__name__)
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 _arome_vconf    = ('3dvarfr',)
+_arpege_vconf   = ('4dvarfr',)
 
 
 def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
@@ -148,6 +149,8 @@ def gribNames(cutoff, reseau, model, run=None, vapp=None, vconf=None,
             return None
         prefix = 'PE'
         suffix = map_suffix[(cutoff, reseau)]
+        if cutoff == 'production' and vconf in _arpege_vconf:
+            suffix = suffix[1:]
     else:
         return None
     return prefix, suffix
@@ -350,7 +353,8 @@ def bufr_bnames(resource, provider):
         mode_map = dict(fc='prv', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
-        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:], int(resource.date.hh), region)
+        return '{0:s}_{1:03d}_{2:s}_{3:d}{4:s}.bfr'.format(mode, resource.timeslot.hour, provider.vconf[-3:],
+                                                           int(resource.date.hh), region)
 
 
 def SurgesResultNative_bnames(resource, provider):
@@ -433,6 +437,8 @@ def gridpoint_bnames(resource, provider):
                 localname = prefix + '_' + suffix + '_' + six.text_type(provider.member) + '_' \
                     + resource.geometry.area + '_' + resource.term.fmthour
             else:
+                if resource.term.fmthour == '0108' and prefix == 'PE':
+                    suffix = 'PM'
                 localname = prefix + suffix + nw_term + resource.geometry.area
         elif resource.model == 'arome':
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
@@ -443,7 +449,13 @@ def gridpoint_bnames(resource, provider):
             mode_map = dict(fc= 'prv', an='ana')
             region = region_map.get(provider.vconf[:3], provider.vconf[:3])
             mode = mode_map.get(provider.vconf[4:][:2], None)
-            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(mode, provider.vconf[-3:], int(resource.date.hh), region, resource.term.hour)
+            localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(
+                mode,
+                provider.vconf[-3:],
+                int(resource.date.hh),
+                region,
+                resource.term.hour
+            )
             return localname
         else:
             return None
@@ -642,4 +654,11 @@ def global_snames(resource, provider):
         else:
             scope = resource.scope
         bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
+    if resource.realkind == 'listing_ouloutput':
+        if resource.scope == 'surf':
+            bname = 'OULOUTPUT_SURFAN.' + suff
+        elif resource.scope == 'oulan':
+            bname = 'OULOUTPUT.' + suff
+        else:
+            bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + '.' + suff
     return bname

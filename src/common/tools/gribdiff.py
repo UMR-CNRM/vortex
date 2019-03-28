@@ -95,8 +95,10 @@ class GRIBDIFF_Plus(GRIBAPI_Tool):
                     with io.open(grib1 + "_epygram_diffstats.log", "w") as outfh:
                         outfh.write(gdiff.format_diff(detailed=True))
                 else:
-                    res = _GRIBDIFF_Plus_Res(rc, False,
-                                             "grib_compare failed (but the Epygram diffs max number is exceeded...)")
+                    res = _GRIBDIFF_Plus_Res(
+                        rc, False,
+                        "grib_compare failed (but the Epygram diffs max number is exceeded...)"
+                    )
             else:
                 res = _GRIBDIFF_Plus_Res(rc, False,
                                          "grib_compare failed (Epygram unavailable)")

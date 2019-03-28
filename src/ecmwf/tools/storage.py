@@ -72,7 +72,8 @@ class ArchiveECMWF(Archive):
                                   fmt=kwargs.get("fmt", "foo"),
                                   cpipeline=kwargs.get("compressionpipeline", None),
                                   gateway=gateway,
-                                  remote=remote)
+                                  remote=remote,
+                                  sync=kwargs.get('enforcesync', False))
 
     def _ectransdelete(self, item, **kwargs):
         """Actual _delete using ectrans"""

@@ -11,6 +11,7 @@ from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
 from common.algo import ifsnaming  # @UnusedImport
+from common.tools import satrad, drhook
 
 #: No automatic export
 __all__ = []
@@ -18,7 +19,8 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class IFSParallel(Parallel, grib.EcGribComponent):
+class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
+                  grib.EcGribDecoMixin):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True
@@ -87,13 +89,6 @@ class IFSParallel(Parallel, grib.EcGribComponent):
                     optional        = True,
                     default         = 'XPVT',
                     doc_visibility  = footprints.doc.visibility.ADVANCED,
-                ),
-                drhookprof = dict(
-                    info            = 'Activate the DrHook profiling.',
-                    optional        = True,
-                    type            = bool,
-                    default         = False,
-                    doc_zorder      = -50,
                 ),
                 member = dict(
                     info            = ("The current member's number " +
@@ -261,7 +256,8 @@ class IFSParallel(Parallel, grib.EcGribComponent):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
+        namcandidates = [x.rh
+                         for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
         self.system.subtitle('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
@@ -309,20 +305,8 @@ class IFSParallel(Parallel, grib.EcGribComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(IFSParallel, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ('drhook{}'.format('prof' if self.drhookprof else ''), ):
-            self.export(optpack)
-        self.eccodes_setup(rh, opts, compat=True)
         # Namelist fixes
         self.prepare_namelists(rh, opts)
-        # Fix for RTTOV coefficients
-        rtcoefs = self.context.sequence.effective_inputs(role='RtCoef',
-                                                         kind='rtcoef')
-        if rtcoefs:
-            sh = self.system
-            rtpath = sh.path.dirname(sh.path.realpath(rtcoefs[0].rh.container.localpath()))
-            logger.info('Setting %s = %s', 'RTTOV_COEFDIR', rtpath)
-            self.env['RTTOV_COEFDIR'] = rtpath
 
     def execute_single(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""

@@ -13,6 +13,7 @@ from bronx.fancies import loggers
 import footprints
 
 from . import addons
+from vortex.algo.components import AlgoComponentDecoMixin
 from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: No automatic export
@@ -269,7 +270,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                    cpipeline=cpipeline)
 
     @addons.require_external_addon('ectrans')
-    def grib_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def grib_ectransput(self, source, target, gateway=None, remote=None,
+                        cpipeline=None, sync=False):
         """Put a grib resource using ECtrans.
 
         :param source: source file
@@ -277,6 +279,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline used, if provided
+        :param bool sync: If False, allow asynchronous transfers
         :return: return code and additional attributes used
         """
         if self.is_xgrib(source):
@@ -291,7 +294,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     rc, dict_args = self.sh.raw_ectransput(source=psource,
                                                            target=target,
                                                            gateway=gateway,
-                                                           remote=remote)
+                                                           remote=remote,
+                                                           sync=sync)
             finally:
                 self.sh.rm(psource)
             return rc, dict_args
@@ -300,11 +304,21 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                       target=target,
                                       gateway=gateway,
                                       remote=remote,
-                                      cpipeline=cpipeline)
+                                      cpipeline=cpipeline,
+                                      sync=sync)
 
 
-class EcGribComponent(object):
-    """Extend Algo Components with GribApi features."""
+class EcGribDecoMixin(AlgoComponentDecoMixin):
+    """Extend Algo Components with EcCodes/GribApi features."
+
+    This mixin class is intended to be used with AlgoComponnent classes. It will
+    automatically set up the ecCodes/GribApi environment variable given the
+    path to the EcCodes/GribApi library (which is found by performing a ``ldd``
+    on the AlgoComponnent's target binary).
+    """
+
+    _ECGRIB_SETUP_COMPAT = True
+    _ECGRIB_SETUP_FATAL = True
 
     def _ecgrib_libs_detext(self, rh):
         """Run ldd and tries to find ecCodes or grib_api libraries locations."""
@@ -417,6 +431,13 @@ class EcGribComponent(object):
         for a_var in (defvar, samplevar):
             logger.info('After eccodes_setup (compat=%s) : %s = %s', str(compat),
                         a_var, self.env.getvar(a_var))
+
+    def _ecgrib_mixin_setup(self, rh, opts):
+        self.eccodes_setup(rh, opts,
+                           compat=self._ECGRIB_SETUP_COMPAT,
+                           fatal=self._ECGRIB_SETUP_FATAL)
+
+    _MIXIN_PREPARE_HOOKS = (_ecgrib_mixin_setup, )
 
 
 class GRIBAPI_Tool(addons.Addon):

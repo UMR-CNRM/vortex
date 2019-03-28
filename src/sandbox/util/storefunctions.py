@@ -12,7 +12,8 @@ __all__ = []
 def echofunction(options):
     """Simple example of a function designed to be called by the FunctionStore.
 
-    :param options: The only argument is a dictionary that contains all the options passed to the store plus anything from the query part of the URI.
+    :param options: The only argument is a dictionary that contains all the options
+                    passed to the store plus anything from the query part of the URI.
 
     :return: Content of the desired local file
 

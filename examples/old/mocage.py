@@ -4,11 +4,10 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import vortex
-
 from vortex.syntax.stdattrs import models
-models.append('mocage')
-
 from sandbox.data.resources import SimpleTest
+
+models.append('mocage')
 
 t = vortex.ticket()
 t.warning()

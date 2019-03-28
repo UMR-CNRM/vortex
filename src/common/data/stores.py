@@ -84,7 +84,7 @@ class BdpeStore(Store):
             term  = date.Time(str_term).fmtraw,  # HHHHmm
             local = local,
         )
-        extraenv=dict(
+        extraenv = dict(
             BDPE_CIBLE_PREFEREE=p_target,
             BDPE_CIBLE_INTERDITE=f_target
         )

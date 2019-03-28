@@ -5,8 +5,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies import loggers
 
+from vortex.algo.components import Parallel
 from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
-from common.algo.odbtools import OdbProcess
+from common.tools import odb, drhook
 
 #: Automatic export of Monitoring class
 __all__ = [ ]
@@ -14,7 +15,7 @@ __all__ = [ ]
 logger = loggers.getLogger(__name__)
 
 
-class OdbMonitoring(OdbProcess):
+class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Compute monitoring statistics"""
     _footprint = dict(
         attr = dict(
@@ -60,22 +61,19 @@ class OdbMonitoring(OdbProcess):
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
     def prepare(self, rh, opts):
-        """Update some variables in the namelist and verify the presence or not of the accumulated statistics file"""
-
-        # Let ancestors handling most of the env setting
-        super(OdbMonitoring, self).prepare(rh, opts)
+        """Update some variables in the namelist and check the presence of the accumulated statistics file."""
 
         sh = self.system
 
         # Looking for input observations
         obsatm = [
-            x for x in self.input_obs()
+            x for x in self.lookupodb(fatal=False)
             if (x.rh.resource.stage.startswith('matchup') or
                 x.rh.resource.stage.startswith('screening')) and x.rh.resource.part == 'virtual'
         ]
 
         obssurf = [
-            x for x in self.input_obs()
+            x for x in self.self.lookupodb(fatal=False)
             if x.rh.resource.stage.startswith('canari') and (x.rh.resource.part == 'surf' or
                                                              x.rh.resource.part == 'ground')
         ]
@@ -92,12 +90,12 @@ class OdbMonitoring(OdbProcess):
         else:
             ecma = obssurf.pop(0)
         ecma_path = sh.path.abspath(ecma.rh.container.localpath())
-        self.env.ODB_SRCPATH_ECMA = ecma_path
-        logger.info('Setting ODB env %s = %s.', 'ODB_SRCPATH_ECMA', ecma_path)
-        self.env.ODB_DATAPATH_ECMA = ecma_path
-        logger.info('Setting ODB env %s = %s.', 'ODB_DATAPATH_ECMA', ecma_path)
+        self.odb.fix_db_path(ecma.rh.resource.layout, ecma_path)
         self.env.IOASSIGN = sh.path.join(ecma_path, 'IOASSIGN')
         logger.info('Setting ODB env %s = %s.', 'IOASSIGN', sh.path.join(ecma_path, 'IOASSIGN'))
+
+        # Let ancestors handling most of the env setting
+        super(OdbMonitoring, self).prepare(rh, opts)
 
         # Force to start a new accumulated statistics file if first day and first hour of the month
         mnt_start = self.start
@@ -109,7 +107,8 @@ class OdbMonitoring(OdbProcess):
         mnt_cumul = self.cumul
         if self.cutoff == 'production':
             mnt_cumul = False
-            logger.info('No output accumulated statistics file will be produced because cutoff = production : force cumul to False')
+            logger.info('No output accumulated statistics file will be produced because '
+                        'cutoff = production : force cumul to False')
 
         # Monitoring namelist
         namrh = self.context.sequence.effective_inputs(

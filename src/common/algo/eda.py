@@ -176,7 +176,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
     """Apply the inflation scheme on a given modelstate."""
 
     _RUNSTORE = 'RUNOUT'
-    _USELESS_MATCH = re.compile('^(?P<target>\w+)\+term\d+:\d+$')
+    _USELESS_MATCH = re.compile(r'^(?P<target>\w+)\+term\d+:\d+$')
 
     _footprint = dict(
         info='Operations around the background error covariance matrix',
@@ -396,12 +396,14 @@ class IFSCovB(IFSEdaEnsembleAbstractAlgo):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
             for filename in self.system.listdir(repname):
-                level = re.search('_L(\d+)$', filename)
+                level = re.search(r'_L(\d+)$', filename)
                 if level is not None:
-                    self.system.softlink(self.system.path.join(repname, filename), radical.format(num, level.group(1)))
+                    self.system.softlink(self.system.path.join(repname, filename),
+                                         radical.format(num, level.group(1)))
 
         for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'LaggedEnsemble'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')), start = 1):
+                                         key = attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start = 1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))

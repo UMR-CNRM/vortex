@@ -82,7 +82,7 @@ class ArpIfsSimplifiedCycle(object):
 
     It can be used in a footprint specification.
     """
-    _cy_re = re.compile(r'(?:u(?:env|get):)?(?:cy|al)(\d+)(?:t(\d{1,3}))?(?=_|$)(?:.*?(?:[_-]op(\d{1,3})))?')
+    _cy_re = re.compile(r'(?:u(?:env|get):)?(?:cy|al)(\d+)(?:t(\d{1,3}))?(?=_|@|\.|$)(?:.*?(?:[_-]op(\d{1,3})))?')
     _hash_shift = 10000
 
     def __init__(self, cyclestr):

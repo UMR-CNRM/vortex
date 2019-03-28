@@ -126,7 +126,7 @@ class StringDecoder(object):
     def __init__(self, substitution_cb=None, with_cache=True):
         self._subcb = substitution_cb
         # Regexes used in utility methods
-        self._builders_re = {k: re.compile(r'^' + k + '\((.*)\)$')
+        self._builders_re = {k: re.compile(r'^' + k + r'\((.*)\)$')
                              for k in self.BUILDERS}
         self._sub1_re = re.compile(r'[&\$]\{(\w+)\}')
         self._sub2_re = re.compile(r'[&\$]\{(\w+)\}$')
