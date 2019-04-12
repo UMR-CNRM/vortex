@@ -26,6 +26,11 @@ Abstract classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: IFSEdaLaggedEnsembleAbstractAlgo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 

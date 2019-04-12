@@ -1122,6 +1122,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return self.ymdhms + '{0:06d}'.format(self.microsecond)
 
     @property
+    def mm(self):
+        """MM (month) formated string."""
+        return self.strftime('%m')
+
+    @property
     def hm(self):
         """HHMM formated string."""
         return self.strftime('%H%M')
@@ -1135,6 +1140,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
     def hh(self):
         """HH formated string."""
         return self.strftime('%H')
+
+    @property
+    def h(self):
+        """H formated string."""
+        return self.strftime('%-H')
 
     def compact(self):
         """Compact concatenation of date values, up to the second (YYYYMMDDHHSS)."""

@@ -418,15 +418,16 @@ class UtSimpleWorkflow(TestCase):
     def test_coherentget(self):
         desc = self.default_fp_stuff
         vswitch = False
-        rh0a = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi,tata',
+        rh0a = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi,tata_[cutoff]',
                              kind='utest1', local = 'utest1_get0a', **desc)
         rh0b = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi',
                              kind='utest1', local = 'utest1_get0b', **desc)
         rh1 = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto',
                             kind='utest1', local = 'utest1_get1', **desc)
-        rh2 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='toto',
-                            kind='utest1,utest9,utest2', local = '[kind]_get2', **desc)
-        rh3 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='toto',
+        rh2 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='[failer]',
+                            kind='utest1,utest9,utest2', local = '[kind]_get2', failer='toto',
+                            **desc)
+        rh3 = toolbox.input(role='TOTO', now=True, verbose=vswitch, fatal=False, coherentgroup='[role:lower]',
                             kind='utest1', local = 'utest1_get3', **desc)
         rh3b = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='titi',
                              kind='utest9', local = 'utest9_get3b', **desc)

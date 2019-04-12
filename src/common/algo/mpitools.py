@@ -125,7 +125,7 @@ def arpifs_obsort_nprocab_binarydeco(cls):
                               self.nprocs)
         self.env.NPROCB = int(self.env.NPROCB or
                               self.nprocs // self.env.NPROCA)
-        logger.info("MPI Setup NPROCA=%d and NPROCB=%d", self.env.NPROCA, self.env.NRPOCB)
+        logger.info("MPI Setup NPROCA=%d and NPROCB=%d", self.env.NPROCA, self.env.NPROCB)
 
     if hasattr(orig_setup_env, '__doc__'):
         setup_environment.__doc__ = orig_setup_env.__doc__
