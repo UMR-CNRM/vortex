@@ -4,6 +4,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.data.stores     import Store, Finder
@@ -14,7 +15,7 @@ from gco.data.stores import GcoCacheStore
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class IgaGcoCacheStore(GcoCacheStore):
@@ -86,14 +87,13 @@ class IgaFinder(Finder):
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
-            return self.system.join(self.rootdir, remote['path'])
+            return self.rootdir + remote['path']
 
     def fileget(self, remote, local, options):
-        #"""Delegates to ``system`` the copy of ``remote`` to ``local``."""
+        """Delegates to ``system`` the copy of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('fileget on %s (to: %s)', rpath, local)
         rc = self.system.cp(rpath, local, intent=options.get('intent'), fmt=options.get('fmt'))
-        # plpl il y a une bonne raison pour avoir 'dict()' au lieu de 'options' ?
         rc = rc and self._hash_get_check(self.fileget, remote, local, options)
         if rc:
             self._localtarfix(local)

@@ -1,142 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-# Fabrik for root logger instances
-
-import logging
-import six
-
-#: No automatic export
-__all__ = []
-
-#: The actual set of pseudo-root loggers created
-roots = set()
-lognames = set()
-
-#: Default formatters
-formats = dict(
-    default = logging.Formatter(
-        fmt = '# [%(asctime)s][%(name)s][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s',
-        datefmt = '%Y/%m/%d-%H:%M:%S',
-    ),
-    fixsize = logging.Formatter(
-        fmt = '# [%(asctime)s][%(name)-24s][%(funcName)16s:%(lineno)04d][%(levelname)9s]: %(message)s',
-        datefmt = '%Y/%m/%d-%H:%M:%S',
-    ),
-)
-
-#: Console handler
-console = logging.StreamHandler()
-console.setLevel(logging.DEBUG)
-console.setFormatter(formats['default'])
+"""
+This module provides a few functions on top of the standard logging module in
+order to easily create new loggers (including root ones) and control their
+verbosity level.
 
 
-# A hook filter (optional)
-class LoggingFilter(logging.Filter):
-    """Add module name to record."""
+It is kept for backward compatibility, however :mod:`bronx.fancies.loggers` should
+be used now and on.
+"""
 
-    def filter(self, record):
-        """Remap top interactive module to ``prompt``."""
-        if record.funcName == '<module>':
-            record.funcName = 'prompt'
-        return True
+from __future__ import print_function, absolute_import, unicode_literals, division
 
+import sys
 
-def setRootLogger(logger, level=logging.INFO):
-    """Set appropriate Handler and Console to a top level logger."""
-    logger.setLevel(level)
-    logger.addHandler(console)
-    logger.addFilter(LoggingFilter(name=logger.name))
-    logger.propagate = False
-    roots.add(logger.name)
-    return logger
+# For bacward compatibility
+import logging  # @UnusedImport
 
+from bronx.fancies import loggers as _b_loggers
 
-def getLogger(modname):
-    """Return a standard logger in the scope of an appropriate root logger."""
-    rootname = modname.split('.')[0]
-    rootlogger = logging.getLogger(rootname)
-    if rootname not in roots:
-        setRootLogger(rootlogger)
-    lognames.add(modname)
-    if rootname == modname:
-        return rootlogger
-    else:
-        return logging.getLogger(modname)
+_ALIASES = dict()
+_ALIASES.update(dict(roots=_b_loggers.roots,
+                     lognames=_b_loggers.lognames,
+                     formats=_b_loggers.formats,
+                     console=_b_loggers.console,
+                     getLogger=_b_loggers.getLogger,
+                     setGlobalLevel=_b_loggers.setGlobalLevel,
+                     setRootLogger=_b_loggers.setRootLogger,
+                     setLogMethods=_b_loggers.setLogMethods,
+                     getActualLevel=_b_loggers.getActualLevel,
+                     LoggingFilter=_b_loggers.LoggingFilter,
+                     SlurpHandler=_b_loggers.SlurpHandler,
+                     )
+                )
 
-
-def setLogMethods(logger, methods=('debug', 'info', 'warning', 'error', 'critical')):
-    """Reset some loggers methods with methods from an external logger."""
-    for modname in lognames:
-        thislog = logging.getLogger(modname)
-        for logmethod in methods:
-            setattr(thislog, logmethod, getattr(logger, logmethod))
-
-
-def getActualLevel(level):
-    """Return the actual level value as long as the argument is valid."""
-    lnames = logging._levelNames if six.PY2 else logging._levelToName
-    if type(level) is int:
-        if level not in lnames:
-            level = None
-    else:
-        level = lnames.get(level.upper())
-    return level
-
-
-def setGlobalLevel(level):
-    """
-    Explicitly sets the logging level to the ``level`` value for all roots items.
-    """
-    thislevel = getActualLevel(level)
-    if thislevel is None:
-        print('ERROR!!! Try to set an unknown log level {:s}'.format(level))
-    else:
-        for rootname in roots:
-            r_logger = logging.getLogger(rootname)
-            r_logger.setLevel(thislevel)
-    return thislevel
-
-
-class SlurpHandler(logging.Handler):
-    """A strange Handler that accumulates the log-records in a list.
-
-    We try to make sure that each individual record is pickable.
-    """
-
-    def __init__(self, records_stack):
-        super(SlurpHandler, self).__init__()
-        self._stack = records_stack
-
-    def prepare(self, record):
-        """
-        Prepares a record for queuing.
-
-        The base implementation formats the record to merge the message
-        and arguments, and removes unpickleable items from the record
-        in-place.
-
-        :param record: The record to prepare.
-        """
-        self.format(record)
-        record.msg = record.message
-        record.args = None
-        record.exc_info = None
-        return record
-
-    def emit(self, record):
-        """
-        Emit a record.
-
-        Adds the LogRecord to the stack, preparing it for pickling first.
-
-        :param record: The record to emit.
-        """
-        try:
-            self._stack.append(self.prepare(record))
-        except (KeyboardInterrupt, SystemExit):
-            raise
-        except Exception:
-            self.handleError(record)
+for n, obj in _ALIASES.items():
+    sys.modules[__name__].__dict__.update(_ALIASES)

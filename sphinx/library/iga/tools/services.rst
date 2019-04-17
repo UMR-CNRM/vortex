@@ -82,6 +82,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: EcFlowOpService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: DMTEventService
    :show-inheritance:
    :members:

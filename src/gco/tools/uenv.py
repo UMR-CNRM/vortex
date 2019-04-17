@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 import footprints
 
 import vortex
@@ -15,7 +16,7 @@ from gco.syntax.stdattrs import GgetId, UgetId
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _DATASTORE_KIND = 'uenv_registered_cycle'
 
@@ -52,14 +53,14 @@ def contents(cycle, scheme=None, netloc=None):
         try:
             # First, try with a temporary ShouldFly (potentially, this allows
             # FtServ to be used
-            tmplocal = footprints.proxy.container(shouldfly=True)
+            tmplocal = footprints.proxy.container(shouldfly=True, mode='r')
             rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
         except (OSError, IOError) as e:
             print(e)
             try:
                 # This may happen if the user has insufficient rights on
                 # the current directory
-                tmplocal = footprints.proxy.container(incore=True)
+                tmplocal = footprints.proxy.container(incore=True, mode='r')
                 rc = localst.get(uriparse(uri_s), tmplocal.iotarget(), dict())
             except OSError:
                 rc = False

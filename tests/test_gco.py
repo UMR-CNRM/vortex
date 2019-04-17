@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 
+from bronx.fancies import loggers
 import footprints as fp
 
 import vortex
@@ -14,6 +15,8 @@ from gco.tools import genv, uenv
 from gco.syntax.stdattrs import UgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
+
+tloglevel = 'error'
 
 
 class FooResource(object):
@@ -36,11 +39,12 @@ class FooResource(object):
             raise ValueError
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestGcoGenv(unittest.TestCase):
 
     def setUp(self):
         self._ini_genvcmd = genv.genvcmd
-        genv.genvcmd = 'fake_genv.py'
+        genv.genvcmd = 'fake_genv.sh'
         self._ini_genvpath = genv.genvpath
         genv.genvpath = DATAPATHTEST
 
@@ -57,20 +61,20 @@ class TestGcoGenv(unittest.TestCase):
             gdata = fh.read().rstrip('\n').split('\n')
         genv.autofill('cy42_peace-op2.01', gdata)
         # Check keys
-        self.assertItemsEqual(genv.cycles(),
-                              ('cy42_op2.06', 'cy42_peace-op2.01'))
+        self.assertEqual(sorted(genv.cycles()),
+                         sorted(['cy42_op2.06', 'cy42_peace-op2.01']))
         # Clear
         genv.clearall()
-        self.assertItemsEqual(genv.cycles(), ())
+        self.assertEqual(genv.cycles(), [])
         # Start again...
         genv.autofill('cy42_op2.06')
         genv.autofill('blop', gdata)
-        self.assertItemsEqual(genv.cycles(),
-                              ('cy42_op2.06', 'cy42_peace-op2.01'))
+        self.assertEqual(sorted(genv.cycles()),
+                         sorted(['cy42_op2.06', 'cy42_peace-op2.01']))
         # Access it ?
         realstuff = [line for line in gdata if not line.startswith('CYCLE_NAME=')]
-        self.assertItemsEqual(genv.nicedump(cycle='cy42_peace-op2.01'),
-                              realstuff)
+        self.assertEqual(genv.nicedump(cycle='cy42_peace-op2.01'),
+                         realstuff)
         cy = genv.contents(cycle='cy42_op2.06')
         self.assertEqual(cy.TOOLS_LFI, "tools.lfi.05.tgz")
         # cy should be a copy of the real thing...
@@ -97,45 +101,40 @@ class TestGcoGenv(unittest.TestCase):
         self.assertEqual(provider.urlquery(resource), 'extract=toto')
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestUgetUenv(unittest.TestCase):
 
     def setUp(self):
-        # Get ride of loggers
-        glog = fp.loggers.getLogger('gco')
-        self._glog_level = glog.level
-        glog.setLevel('CRITICAL')
-        vlog = fp.loggers.getLogger('vortex')
-        self._vlog_level = vlog.level
-        vlog.setLevel('CRITICAL')
         # Temp directory
         self.sh = vortex.sessions.current().system()
         self.tmpdir = tempfile.mkdtemp(suffix='test_uget_uenv')
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
+        # Duplicate the environment...
+        newenv = self.sh.env.clone()
+        newenv.active(True)
         # Tweak the HOME directory in order to trick Uenv/Uget kack store
         self.sh.env.HOME = self.tmpdir
         # Set-up the MTOOLDIR
         self.sh.env.MTOOLDIR = self.tmpdir
         # Untar the Uget sample data
         datapath = self.sh.path.join(self.sh.glove.siteroot, 'tests', 'data', 'uget_uenv_fake.tar.bz2')
-        self.sh.untar(datapath)
+        self.sh.untar(datapath, verbose=False)
 
     def tearDown(self):
-        self.sh.cd(self.oldpwd)
-        self.sh.remove(self.tmpdir)
         uenv.clearall()
-        # restore loggers
-        glog = fp.loggers.getLogger('gco')
-        glog.setLevel(self._glog_level)
-        vlog = fp.loggers.getLogger('vortex')
-        vlog.setLevel(self._vlog_level)
+        # Revert to the previous environement
+        self.sh.env.active(False)
+        # Do some cleaning
+        self.sh.cd(self.oldpwd)
+        self.sh.rmtree(self.tmpdir)
 
     def test_basics(self):
         uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')
-        self.assertItemsEqual(uenv.cycles(),
-                              ('uget:cy42_op2.06@huguette', ))
+        self.assertEqual(uenv.cycles(),
+                         ['uget:cy42_op2.06@huguette', ])
         uenv.clearall()
-        self.assertItemsEqual(uenv.cycles(), ())
+        self.assertEqual(uenv.cycles(), [])
         # One should always provide scheme and netloc is the cycle is not yet registered
         with self.assertRaises(uenv.UenvError):
             uenv.contents('uget:cy42_op2.06@huguette')

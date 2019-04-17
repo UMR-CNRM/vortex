@@ -42,7 +42,22 @@ Generic Cache and Archive management classes
 Specialised Cache management classes
 ************************************
 
+.. autoclass:: FixedEntryCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MarketPlaceCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MtoolCache
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MtoolBuddiesCache
    :show-inheritance:
    :members:
    :member-order: alphabetical

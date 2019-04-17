@@ -14,10 +14,57 @@
 Public data
 -----------
 
+Fundamental constants
+*********************
+
+.. autodata:: Karman
+
+.. autodata:: Planck
+
+.. autodata:: Boltz
+
+.. autodata:: Avogadro
+
+.. autodata:: P0
+
 .. autodata:: g0
 
-.. autodata:: Cpd
+
+Thermodynamic constants
+***********************
+
+.. autodata:: Md
+
+.. autodata:: Mv
 
 .. autodata:: Rd
 
 .. autodata:: Rv
+
+.. autodata:: Cpd
+
+.. autodata:: Cpv
+
+.. autodata:: Cl
+
+.. autodata:: Ci
+
+.. autodata:: T0
+
+.. autodata:: Lv0
+
+.. autodata:: Ls0
+
+.. autodata:: Es0
+
+.. autodata:: gamw
+
+.. autodata:: betaw
+
+.. autodata:: alpw
+
+.. autodata:: gami
+
+.. autodata:: betai
+
+.. autodata:: alpi

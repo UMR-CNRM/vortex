@@ -4,12 +4,13 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
-import footprints
+
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Date
 
 from vortex.data.providers  import Provider
 from vortex.util.config     import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite, member, namespacefp
-from bronx.stdtypes.date import Time, Date
 from gco.data.providers import GEnv
 
 from common.tools.igastuff import IgakeyFactoryInline
@@ -19,13 +20,13 @@ import iga.util.bpnames as bp
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
-#: TODO move in config file
+# TODO: move in config file
 ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'aromeaefr',
                 'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
-#: TODO move in config file
+# TODO: move in config file
 ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}
 
 ATM_LIST_THREE = {'macc'}
@@ -163,7 +164,6 @@ class IgaProvider(Provider):
             return self.config.resolvedpath(resource, self.vapp, self.vconf)
 
 
-
 class SopranoProvider(Provider):
 
     _footprint = [
@@ -227,7 +227,7 @@ class SopranoProvider(Provider):
         elif self.vapp == 'arome' and self.vconf == 'aefrance':
             info['model'] = 'aromeaefr'
         elif self.vapp == 'mocage':
-            info['model'] = 'macc'    
+            info['model'] = 'macc'
         else:
             info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:
@@ -240,15 +240,15 @@ class SopranoProvider(Provider):
             info['level_three'] = info['sys_prod']
 
         elif info['model'] in ATM_LIST_THREE:
-            info['level_one']      = 'copernicus'
+            info['level_one'] = 'copernicus'
             if info['cutoff'] == 'production' and info['nativefmt'] == 'grib':
                 info['level_two']  = 'EXT_BDAP_MOCAGE_MACC'
                 info['level_three'] = ''
-            elif info['cutoff'] == 'assim' and info['nativefmt'] == 'grib':                                
-                info['level_two']  = 'EXT_BDAP_MOCAGE_MACC_00'                
+            elif info['cutoff'] == 'assim' and info['nativefmt'] == 'grib':
+                info['level_two'] = 'EXT_BDAP_MOCAGE_MACC_00'
             else:
-                info['level_two']  = 'BCcams'
-                info['level_three'] =  'BC_' + Date(resource.date.ymdh).ymd
+                info['level_two'] = 'BCcams'
+                info['level_three'] = 'BC_' + Date(resource.date.ymdh).ymd
         else:
             raise SopranoModelError('No such model: %s' % info['model'])
         logger.debug('sopranoprovider::pathname info %s', info)

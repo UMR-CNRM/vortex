@@ -7,14 +7,17 @@ from unittest import main
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
-from tests_contents.test_generic import _BaseDataContentTest
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
+from .test_generic import _BaseDataContentTest
+
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 from common.data import namelists
 
 
-XXT_T = b"""00:15   xxt00000015 select_fp1
+XXT_T = """00:15   xxt00000015 select_fp1
 00:30   xxt00000030 select_fp1
 00:45   xxt00000045 select_fp1
 1       xxt00000100 select_fp2
@@ -52,7 +55,8 @@ class UtXXTContent(_BaseDataContentTest):
         self.assertEqual(ct.xxtsrc(dict(), dict(term=Time('00:45'))),
                          'select_fp1')
         self.assertEqual(ct.xxtsrc(dict(term='blop'), dict()), None)
-        self.assertEqual(ct.xxtsrc(dict(term=0), dict()), None)
+        with loggers.contextboundGlobalLevel('critical'):
+            self.assertEqual(ct.xxtsrc(dict(term=0), dict()), None)
 
 
 if __name__ == '__main__':

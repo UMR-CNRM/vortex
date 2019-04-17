@@ -3,14 +3,17 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 import io
 import re
-import six
 import socket
 import string
+import uuid
+import tempfile
 
 from bronx.datagrip import namelist as fortran
-import footprints
+from bronx.fancies import loggers
+
 from vortex import sessions
 from vortex.util import config
 from vortex.data import geometries
@@ -19,7 +22,7 @@ from common.data.namelists import KNOWN_NAMELIST_MACROS
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 STEPFILE_MAX_SIZE = 2097152  # 2Mb
 
@@ -83,7 +86,7 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
         return stepfile
 
 
-def olive_jobout(sh, env, output, localout=None):
+def olive_jobout(sh, env, output, localout=None, mode='socket'):
     """Connect to OLIVE daemon in charge of SMS outputs."""
 
     logger.info('Prepare output <%s> at localout <%s>', output, str(localout))
@@ -105,6 +108,16 @@ def olive_jobout(sh, env, output, localout=None):
     else:
         localout = _olive_jobout_sizecontrol(sh, localout, directory='~')
 
+    if mode == 'socket':
+        return olive_jobout_socketsend(sh, env, output, mstep, localout)
+    elif mode == 'ectrans':
+        return olive_jobout_ectranssend(sh, env, output, mstep, localout)
+    else:
+        raise NotImplementedError('mode "{:s}" is not implemented'.format(mode))
+
+
+def olive_jobout_socketsend(sh, env, output, mstep, localout):
+    """Send the request to joboutd using a socket."""
     localhost = sh.default_target.inetname
     _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
     user = env.VORTEX_TARGET_LOGNAME or env.TARGET_LOGNAME or env.SWAPP_USER or sh.getlogin()
@@ -130,8 +143,38 @@ def olive_jobout(sh, env, output, localout=None):
     else:
         rc = 0
         logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
-
     return rc
+
+
+def olive_jobout_ectranssend(sh, env, output, mstep, localout):
+    """Send the request to updsmsd using ectrans."""
+    if 'ectrans' not in sh.loaded_addons():
+        raise RuntimeError('The ectrans addon needs to be loaded !')
+    if 'VORTEX_UPDSERVER_HOST' not in env:
+        raise RuntimeError('The VORTEX_UPDSERVER_HOST variable needs to be defined')
+    if 'VORTEX_UPDSERVER_PATH' not in env:
+        raise RuntimeError('The VORTEX_UPDSERVER_PATH variable needs to be defined')
+
+    stepfiles = localout.split(':')
+    if mstep == 'on':
+        stepfiles = [s + '.out' for s in stepfiles]
+    with tempfile.NamedTemporaryFile('wb', prefix='jobout_send.') as fhdir:
+        # Create the directive file...
+        fhdir.write((output + "\n").encode())
+        fhdir.write((env.VORTEX_UPDSERVER_HOST + "\n").encode())
+        fhdir.write("void_password\n".encode())
+        for stepfile in stepfiles:
+            with io.open(stepfile, 'rb') as fhstep:
+                fhdir.write(fhstep.read() + b"\n")
+        fhdir.flush()
+
+        remote = sh.ectrans_remote_init(storage=env.VORTEX_UPDSERVER_HOST)
+        gateway = sh.ectrans_gateway_init()
+        return sh.raw_ectransput(source=fhdir.name,
+                                 target=sh.path.join(env.VORTEX_UPDSERVER_PATH,
+                                                     'jobout.' + uuid.uuid4().hex),
+                                 gateway=gateway, remote=remote,
+                                 priority=90, retryCnt=5, retryFrq=180, sync=False)
 
 
 def olive_enforce_oneshot(identifier):
@@ -157,8 +200,8 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
         raise
 
     def olive_gnam_hook(t, namrh):
-        t.sh.subtitle('Applying the following namelist patch {} to namelist {}'.format(nickname,
-                                                                                       namrh.container.localpath()))
+        t.sh.subtitle('Applying the following namelist patch {} '
+                      'to namelist {}'.format(nickname, namrh.container.localpath()))
         print(namdelta_l.dumps())
         namrh.contents.merge(namdelta_l)
         namrh.save()
@@ -170,10 +213,10 @@ def olive_generic_hook_factory(body):
     """User-defined hook functions factory."""
     lines = body.split("\n")
     # Remove a possibly blank first line
-    if re.match('^\s*$', lines[0]):
+    if re.match(r'^\s*$', lines[0]):
         del lines[0]
     # If the first line is indented, that's wrong => dedent
-    imatch = re.match('^(\s+)', lines[0])
+    imatch = re.match(r'^(\s+)', lines[0])
     ilen = len(imatch.group(1)) if imatch else 0
     body = "\n".join([line[ilen:] for line in lines])
     bytecode = compile(body, '<string>', 'exec')

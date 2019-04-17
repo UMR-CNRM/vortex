@@ -7,9 +7,12 @@ from unittest import main
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
-from tests_contents.test_generic import _BaseDataContentTest
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
 
+from .test_generic import _BaseDataContentTest
+
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from vortex.data.containers import DataSizeTooBig, InCore
 from common.data import obs
@@ -23,7 +26,7 @@ class _FakeResource(object):
         self.other = 1
 
 
-VBC_T = b"""VARBC_cycle.version005
+VBC_T = """VARBC_cycle.version005
 MINI  20000101         0
       1624     10980
 ix=1
@@ -65,11 +68,11 @@ class UtVarBCContent(_BaseDataContentTest):
         self.assertEqual(len(ct), 13)  # This time _container_limit is big enough
 
 
-REFDATA_T = b"""conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT                                          
+REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT
 acar BUFR acar 20170410 00
 tovhirs BUFR hirs 20170410 00"""
 
-REFDATA_R = b"""conv     OBSOUL   conv             20170410 0
+REFDATA_R = """conv     OBSOUL   conv             20170410 0
 acar     BUFR     acar             20170410 00
 tovhirs  BUFR     hirs             20170410 00
 """
@@ -94,7 +97,7 @@ class UtRefdataContent(_BaseDataContentTest):
         self.assertEqual(outincore.read(), REFDATA_R)
 
 
-OBSMAP_T = b"""conv conv OBSOUL conv
+OBSMAP_T = """conv conv OBSOUL conv
 # Blop
 conv acar BUFR acar
 conv airep BUFR airep
@@ -131,7 +134,8 @@ class UtObsMapContent(_BaseDataContentTest):
         self.assertEqual(ct.fmtset(), set(['OBSOUL', 'BUFR']))
         self.assertEqual(ct.instrset(), set(['conv', 'airep', 'acar', 'amsua']))
         self.assertEqual(ct.getfmt(dict(part='airep'), dict()), 'BUFR')
-        self.assertEqual(ct.getfmt(dict(part='toto'), dict()), None)
+        with loggers.contextboundGlobalLevel('critical'):
+            self.assertEqual(ct.getfmt(dict(part='toto'), dict()), None)
         # Discard
         ct = obs.ObsMapContent(discarded=set(['conv', ]))
         ct.slurp(self.insample[0])

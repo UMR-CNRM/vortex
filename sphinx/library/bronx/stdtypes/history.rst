@@ -16,3 +16,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: History
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

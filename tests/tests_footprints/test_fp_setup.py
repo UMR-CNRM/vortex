@@ -7,6 +7,8 @@ from six import StringIO
 import sys
 from unittest import TestCase, main
 
+from bronx.fancies import loggers
+
 from footprints import reporting
 
 from footprints.config import FootprintSetup
@@ -22,7 +24,7 @@ class Foo(object):
 class utFootprintSetup(TestCase):
 
     def test_footprint_setup(self):
-        setup = FootprintSetup(new=True)
+        setup = FootprintSetup(tag='utest_fakesetup1', new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIsInstance(setup.nullreport, reporting.NullReport)
         self.assertIsInstance(setup.report, int)
@@ -46,7 +48,8 @@ class utFootprintSetup(TestCase):
         self.assertIs(setup, setup2)
         setup2 = setup(whatever=1)
         self.assertIs(setup, setup2)
-        setup2 = setup(tag='toto')
+        with loggers.contextboundGlobalLevel('error'):
+            setup2 = setup(tag='toto')
         self.assertIsNot(setup, setup2)
         sys.stdout = orig_out
 
@@ -80,7 +83,7 @@ class utFootprintSetup(TestCase):
         self.assertTrue(hasattr(foo, 'garbages'))
 
     def test_footprint_callback(self):
-        setup = FootprintSetup(new=True)
+        setup = FootprintSetup(tag='utest_fakesetup2', new=True)
         self.assertIsInstance(setup, FootprintSetup)
         self.assertIs(setup.callback, None)
 

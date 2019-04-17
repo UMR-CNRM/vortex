@@ -15,12 +15,14 @@ import sys
 
 # Automatically set the python path
 vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 
 from argparse import ArgumentParser
+
+from bronx.fancies import loggers
 
 import vortex
 from vortex.util.introspection import Sherlock
@@ -66,7 +68,7 @@ def doc_dive(obj):
 def create_rst(rst, modname, module):
     print(' > Creating', rst)
 
-    if re.search(r'__init_\_.py$', module.__file__):
+    if re.search(r'__init__.py$', module.__file__):
         tplfile = 'doc_package_template.tpl'
     else:
         tplfile = 'doc_module_template.tpl'
@@ -133,7 +135,7 @@ def generate_console_report(report, light=False):
             print(hint)
             print()
     else:
-        for k, v in sorted(report.iteritems()):
+        for k, v in sorted(report.items()):
             print('=' * 80)
             print('REPORT /', k, '/', _KEY_TRANSLATION.get(k, k), '(', len(v), ')')
             for reportrst in v:
@@ -159,7 +161,7 @@ def generate_rst_report(rstoutput, report):
 
 def check_module(rstnames, rstloc, modulename, module, report):
     intro = Sherlock()
-    for objname, objptr1 in intro.getlocalmembers(module).iteritems():
+    for objname, objptr1 in intro.getlocalmembers(module).items():
         objtype = 'class' if inspect.isclass(objptr1) else 'function'
         if ((objtype, objname) not in rstnames) and (not objname.startswith('_')):
             report['miss'].append((rstloc + ': ' + objname,
@@ -171,7 +173,7 @@ def check_module(rstnames, rstloc, modulename, module, report):
             report['quid'].append(modulename + ': ' + objname)
         # Dig into classes methods
         if inspect.isclass(objptr1):
-            for objmeth, objptr2 in intro.getlocalmembers(objptr1, module).iteritems():
+            for objmeth, objptr2 in intro.getlocalmembers(objptr1, module).items():
                 thedoc = inspect.getdoc(objptr2)
                 if not thedoc:
                     if (not ((re.match('__.*__$', objmeth)) or
@@ -209,7 +211,6 @@ def main():
     args.discard = args.discard.split(',')
 
     sh = vortex.sh()
-    sh.header('Checking vortex ' + vortex.__version__ + ' library documentation')
 
     intro = Sherlock()
 
@@ -226,7 +227,8 @@ def main():
         if any([modulename.startswith(d) for d in args.discard]):
             continue
         if not loaded:
-            sh.import_module(modulename)
+            with loggers.contextboundGlobalLevel('error'):
+                sh.import_module(modulename)
 
         module = sys.modules[modulename]
         rst = intro.rstfile(module)

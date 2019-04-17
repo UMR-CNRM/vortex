@@ -12,8 +12,6 @@
 Interface
 ---------
 
-.. autofunction:: rangex
-
 .. autofunction:: inplace
 
 .. autofunction:: expand
@@ -27,41 +25,6 @@ Interface
 
 Base Classes
 ------------
-
-.. autoclass:: GetByTagMeta
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: GetByTag
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Catalog
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: SpecialDict
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: LowerCaseDict
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: UpperCaseDict
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: TimeInt
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: FoxyFormatter
    :show-inheritance:

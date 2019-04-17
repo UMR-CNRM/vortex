@@ -21,6 +21,7 @@ pip-log.txt
 coverage_report
 .coverage
 .tox
+tests/test*.log
 
 # metrics reports
 flake8_report.txt

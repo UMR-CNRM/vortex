@@ -16,14 +16,14 @@ import sys
 
 # Automatically set the python path
 vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
-import footprints as fp
+from bronx.fancies import loggers
 
 # Main script logger
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _DOC_TEMPLATE = os.path.join(vortexbase, 'project', 'templates',
                              'doc_package_index.tpl')
@@ -107,7 +107,8 @@ class RstIndexEntry(object):
             deptimes = [os.path.getmtime(self.packagedir if self.packagedir else './'), ]
             # My own's python code (the documentation may have been altered)
             try:
-                m = importlib.import_module(self.my_module)
+                with loggers.contextboundGlobalLevel('error'):
+                    m = importlib.import_module(self.my_module)
             except ImportError:
                 logger.warning("%s does not exist, that's weird.", self.my_module)
             else:
@@ -128,12 +129,14 @@ class RstIndexEntry(object):
     def build_rst(self, versionid):
         """Build the index file."""
         try:
-            m = importlib.import_module(self.my_module)
+            with loggers.contextboundGlobalLevel('error'):
+                m = importlib.import_module(self.my_module)
         except ImportError:
             logger.warning("%s does not exist, that's weird.", self.my_module)
             index_t = "No Python module could be found for {:s}".format(self.my_module)
         else:
-            m = importlib.import_module(self.my_module)
+            with loggers.contextboundGlobalLevel('error'):
+                m = importlib.import_module(self.my_module)
             if hasattr(m, '__tocinfoline__'):
                 index_t = m.__tocinfoline__
             elif hasattr(m, '__doc__'):
@@ -229,7 +232,7 @@ def rst_finder(mainpack):
             else:
                 cleanlist.append(a_file)
 
-    rstdepth = max([rst_depth(f) for f in rstfiles])
+    rstdepth = max([0] + [rst_depth(f) for f in rstfiles])
     dirslist = set([os.path.dirname(f) for f in rstfiles])
     rstdirs = [RstIndexEntry(d, rstfiles, dirslist, mainpack, rstdepth) for d in dirslist]
     rstdirs.sort(key=lambda x: x.tocdepth)
@@ -280,14 +283,14 @@ def main():
     rstdirs, rstfiles = rst_finder(actual_packname)
 
     if args.clean:
-        logger.info("Now cleaning ReST %s files.", _INDEX)
+        logger.debug("Now cleaning ReST %s files.", _INDEX)
         clean_indexes(rstfiles)
         return
 
     if args.force:
         logger.info("Forcing all index re-generation.")
     else:
-        logger.info("Generating index files whenever needed.")
+        logger.debug("Generating index files whenever needed.")
 
     for d in rstdirs:
         if args.force or d.redo():

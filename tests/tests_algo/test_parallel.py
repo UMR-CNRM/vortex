@@ -35,7 +35,7 @@ class FakeBinaryRh(object):
 
 class TestParallel(unittest.TestCase):
 
-    _mpiauto = 'mpiauto --wrap --wrap-stdeo-pack --wrap-stdeo --verbose --init-timeout-restart 2'
+    _mpiauto = 'mpiauto --init-timeout-restart 2 --verbose --wrap --wrap-stdeo --wrap-stdeo-pack'
 
     def setUp(self):
         self.t = vortex.ticket()

@@ -5,13 +5,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
-import footprints
-
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
 
 #: No automatic export
 __all__ = []
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def EchoData(options):
@@ -54,7 +53,7 @@ def EchoData(options):
             fin_res   = int(term_hh)
 
         Initial   = Initial_w
-        if forcage in {'ARP', 'ARO', 'CEP'}:
+        if forcage in {'ARP', 'ARO', 'CEP', 'AOC'}:
             red_maree = 'NON'
             Initial   = Initial_w
         elif forcage in 'RED':
@@ -72,7 +71,8 @@ def EchoData(options):
         # Echeance simulation
         outstr += term_hh + "\n"
 
-        # initial initial_w : Echeance pour Generation des fichiers guess (h). En general initial_w et initial sont identiques;
+        # initial initial_w : Echeance pour Generation des fichiers guess (h).
+        # En general initial_w et initial sont identiques;
         outstr += six.text_type(Initial) + "  " + six.text_type(Initial_w) + "\n"
 
         # PR (Prevision) ou AA (Analyse)
@@ -104,7 +104,7 @@ def EchoData(options):
         outstr += write_wind_txt
 
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))
 
 
 def RulesGribFunction(options):
@@ -120,4 +120,4 @@ def RulesGribFunction(options):
     outstr += "}"
 
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))

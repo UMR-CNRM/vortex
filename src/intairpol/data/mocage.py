@@ -3,7 +3,7 @@
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource, GeoFlowResource
@@ -13,7 +13,7 @@ from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, name
 #: Automatic export of  class
 __all__ = [ ]
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_delete('src')
@@ -171,10 +171,10 @@ class RestartFlagContent(TextContent):
     @property
     def restart(self):
         """Retrieves content file"""
-        return(int(self.data[0][0]))
+        return int(self.data[0][0])
 
     def if_restart(self, restartvalue, nominalvalue):
-        return(restartvalue if self.restart else nominalvalue)
+        return restartvalue if self.restart else nominalvalue
 
 
 @namebuilding_insert('radical', lambda s: 'clim_restart')

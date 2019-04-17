@@ -11,20 +11,24 @@ import copy
 import io
 import six
 
+from bronx.datagrip import namelist
+from bronx.fancies import loggers
 import footprints
 
-from vortex.algo.components import BlindRun, AlgoComponent, Parallel
+from vortex.algo.components import BlindRun, AlgoComponent, Parallel, TaylorRun
 from vortex.data.geometries import HorizontalGeometry
+from vortex.tools.parallelism import TaylorVortexWorker
 from common.algo.ifsroot import IFSParallel
-from bronx.datagrip import namelist
+from common.tools.drhook import DrHookDecoMixin
+
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
-class BuildPGD(BlindRun):
+class BuildPGD(BlindRun, DrHookDecoMixin):
     """Preparation of physiographic fields for Surfex."""
 
     _footprint = dict(
@@ -36,12 +40,18 @@ class BuildPGD(BlindRun):
         )
     )
 
-    def prepare(self, rh, opts):
-        """DrHook stuff."""
-        super(BuildPGD, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
+
+class BuildPGD_MPI(Parallel, DrHookDecoMixin):
+    """Preparation of physiographic fields for Surfex."""
+
+    _footprint = dict(
+        info = "Physiographic fields for Surfex.",
+        attr = dict(
+            kind = dict(
+                values   = ['buildpgd'],
+            ),
+        )
+    )
 
 
 class C923(IFSParallel):
@@ -197,7 +207,7 @@ class SetFilteredOrogInPGD(AlgoComponent):
 
     def execute(self, rh, opts):  # @UnusedVariable
         """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
-        from common.util.usepygram import epy_env_prepare
+        from common.util.usepygram import epygram_checker, epy_env_prepare
         from bronx.meteo.constants import g0
         # Handle resources
         clim = self.context.sequence.effective_inputs(role=('Clim',))
@@ -216,6 +226,11 @@ class SetFilteredOrogInPGD(AlgoComponent):
             g.operation('/', g0)
             g.fid['FA'] = 'SFX.ZS'
             # write as orography
+            if epygram_checker.is_available(version='1.3.6'):
+                epypgd.fieldencoding(g.fid['FA'], update_fieldscompression=True)
+            else:
+                # blank read, just to update fieldscompression
+                epypgd.readfield(g.fid['FA'], getdata=False)
             epypgd.writefield(g, compression=epypgd.fieldscompression.get(g.fid['FA'], None))
             epypgd.close()
 
@@ -267,6 +282,12 @@ class MakeLAMDomain(AlgoComponent):
                 type = bool,
                 default = False
             ),
+            i_width_in_pgd = dict(
+                info = "Add I-width size in BuildPGD namelist.",
+                optional = True,
+                type = bool,
+                default = False
+            ),
             # plot
             illustration = dict(
                 info = "Create the domain illustration image.",
@@ -294,7 +315,11 @@ class MakeLAMDomain(AlgoComponent):
     def __init__(self, *args, **kwargs):
         super(MakeLAMDomain, self).__init__(*args, **kwargs)
         from common.util.usepygram import epygram_checker
-        ev = '1.3.2' if self.e_zone_in_pgd else '1.2.14'
+        ev = '1.2.14'
+        if self.e_zone_in_pgd:
+            ev = '1.3.2'
+        if self.i_width_in_pgd:
+            ev = '1.3.3'
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
@@ -304,7 +329,8 @@ class MakeLAMDomain(AlgoComponent):
         if self.mode == 'center_dims':
             params = ['center_lon', 'center_lat', 'Xpoints_CI', 'Ypoints_CI',
                       'resolution']
-            params_extended = params + ['tilting', 'Iwidth', 'force_projection', 'maximize_CI_in_E']
+            params_extended = params + ['tilting', 'Iwidth', 'force_projection',
+                                        'maximize_CI_in_E', 'reference_lat']
         elif self.mode == 'lonlat_included':
             params = ['lonmin', 'lonmax', 'latmin', 'latmax',
                       'resolution']
@@ -338,7 +364,9 @@ class MakeLAMDomain(AlgoComponent):
                                     **self.plot_params)
         dm_extra_params = dict()
         if self.e_zone_in_pgd:
-            dm_extra_params = dict(Ezone_in_pgd=self.e_zone_in_pgd)
+            dm_extra_params['Ezone_in_pgd'] = self.e_zone_in_pgd
+        if self.i_width_in_pgd:
+            dm_extra_params['Iwidth_in_pgd'] = self.i_width_in_pgd
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,
                                                  orography_subtruncation=self.orography_truncation,
@@ -675,3 +703,159 @@ class MakeBDAPDomain(AlgoComponent):
                             '.'.join([self.geometry.tag,
                                       'namel_c923_orography',
                                       'geoblocks']))
+
+
+class AddPolesToGLOB(TaylorRun):
+    """
+    Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.
+    """
+
+    _footprint = dict(
+        info = "Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.",
+        attr = dict(
+            kind = dict(
+                values   = ['add_poles'],
+            ),
+        )
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(AddPolesToGLOB, self).__init__(*args, **kwargs)
+        from common.util.usepygram import epygram_checker
+        ev = '1.3.4'
+        self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
+                        " is needed here")
+
+    def execute(self, rh, opts):  # @UnusedVariable
+        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        clims = self.context.sequence.effective_inputs(role=('Clim',))
+        self._add_instructions(common_i, dict(filename=[s.rh.container.localpath()
+                                                        for s in clims]))
+        self._default_post_execute(rh, opts)
+
+
+class _AddPolesWorker(TaylorVortexWorker):
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['add_poles']
+            ),
+            filename = dict(
+                info='The file to be processed.'),
+        )
+    )
+
+    def vortex_task(self, **_):
+        from common.util.usepygram import add_poles_to_GLOB_file, epy_env_prepare
+        with epy_env_prepare(self.ticket):
+            add_poles_to_GLOB_file(self.filename)
+
+
+class Festat(Parallel):
+    """
+    Class to run the festat binary.
+    """
+
+    _footprint = dict(
+        info = "Run festat",
+        attr = dict(
+            kind = dict(
+                values = ['run_festat', ],
+            ),
+            nb_digits = dict(
+                info = "Number of digits on which the name of the files should be written",
+                type = int,
+                default = 3,
+                optional = True,
+            ),
+            prefix = dict(
+                info = "Name of the files for the binary",
+                optional = True,
+                default = "CNAME",
+            ),
+        ),
+    )
+
+    _nb_input_files = 0
+
+    def prepare(self, rh, opts):
+        # Check the namelist
+        input_namelist = self.context.sequence.effective_inputs(role="Namelist", kind="namelist")
+        if len(input_namelist) != 1:
+            logger.error("One and only one namelist must be provided.")
+            raise ValueError("One and only one namelist must be provided.")
+        else:
+            input_namelist = input_namelist[0].rh
+        # Create links for the input files
+        maxinsec = 10 ** self.nb_digits
+        insec = self.context.sequence.effective_inputs(role="InputFiles")
+        nbinsec = len(insec)
+        if nbinsec > maxinsec:
+            logger.error("The number of input files %s exceed the maximum number of files available %s.",
+                         nbinsec, maxinsec)
+            raise ValueError("The number of input files exceed the maximum number of files available.")
+        else:
+            logger.info("%s input files will be treated.", nbinsec)
+        i = 0
+        for sec in insec:
+            i += 1
+            self.system.symlink(sec.rh.container.actualpath(),
+                                "{prefix}{number}".format(prefix=self.prefix, number=str(i).zfill(self.nb_digits)))
+        # Put the number of sections and the prefix of the input files in the namelist
+        namcontents = input_namelist.contents
+        logger.info('Setup macro CNAME=%s in %s', self.prefix, input_namelist.container.actualpath())
+        namcontents.setmacro('CNAME', self.prefix)
+        logger.info('Setup macro NCASES=%s in %s', i, input_namelist.container.actualpath())
+        namcontents.setmacro('NCASES', i)
+        namcontents.rewrite(input_namelist.container)
+        self._nb_input_files = i
+        # Call the super class
+        super(Festat, self).prepare(rh, opts)
+
+    def postfix(self, rh, opts):
+        # Rename stabal files
+        list_stabal = self.system.glob("stab*")
+        for stabal in list_stabal:
+            self.system.mv(stabal, "{stabal}.ncases_{ncases}".format(stabal=stabal, ncases=self._nb_input_files))
+        # Deal with diag files
+        list_diag_stat = self.system.glob("co*y")
+        if len(list_diag_stat) > 0:
+            diastat_dir_name = "dia.stat.ncases_{ncases}".format(ncases=self._nb_input_files)
+            self.system.mkdir(diastat_dir_name)
+            for file in list_diag_stat:
+                self.system.mv(file, diastat_dir_name + "/")
+        list_diag_expl = self.system.glob("expl*y")
+        if len(list_diag_expl) > 0:
+            diaexpl_dir_name = "dia.expl.ncases_{ncases}".format(ncases=self._nb_input_files)
+            self.system.mkdir(diaexpl_dir_name)
+            for file in list_diag_expl:
+                self.system.mv(file, diaexpl_dir_name + "/")
+        # Call the superclass
+        super(Festat, self).postfix(rh, opts)
+
+
+class Fediacov(Parallel):
+    """
+    Class to compute diagnostics about covariance.
+    """
+
+    _footprint = dict(
+        info = "Run fediacov",
+        attr = dict(
+            kind = dict(
+                values = ['run_fediacov', ],
+            ),
+        ),
+    )
+
+    def postfix(self, rh, opts):
+        # Deal with diag files
+        list_diag = self.system.glob("*y")
+        if len(list_diag) > 0:
+            self.system.mkdir("diag")
+            for file in list_diag:
+                self.system.mv(file, "diag/")
+        # Call the superclass
+        super(Fediacov, self).postfix(rh, opts)

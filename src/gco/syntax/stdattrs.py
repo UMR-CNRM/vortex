@@ -82,7 +82,7 @@ class ArpIfsSimplifiedCycle(object):
 
     It can be used in a footprint specification.
     """
-    _cy_re = re.compile(r'(?:u(?:env|get):)?(?:cy|al)(\d+)(?:t(\d{1,3}))?(?=_|$)(?:.*?(?:[_-]op(\d{1,3})))?')
+    _cy_re = re.compile(r'(?:u(?:env|get):)?(?:cy|al)(\d+)(?:t(\d{1,3}))?(?=_|@|\.|$)(?:.*?(?:[_-]op(\d{1,3})))?')
     _hash_shift = 10000
 
     def __init__(self, cyclestr):
@@ -118,7 +118,7 @@ class ArpIfsSimplifiedCycle(object):
                 ('_op{:d}'.format(self._op - 1) if self._op else ''))
 
     def __repr__(self):
-        return '{} | {!s}'.format(self.__class__, self)
+        return '<{} | {!s}>'.format(object.__repr__(self).lstrip('<').rstrip('>'), self)
 
     def export_dict(self):
         """The pure dict/json output is the raw integer"""

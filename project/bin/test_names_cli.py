@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 
-'''
+"""
 project.bin.test_names_cli.py -- Manages Unit-Tests from the test_names package.
 
 There are several possible actions:
@@ -12,7 +12,7 @@ There are several possible actions:
 * check: Run the test(s), Load the reference data, Check the results
 * dump: Dump a new set of reference data
 
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
@@ -24,13 +24,13 @@ import re
 
 # Automatically set the python path
 vortexbase = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
-                    os.path.dirname(os.path.abspath(__file__)))
+                    os.path.dirname(os.path.realpath(__file__)))
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 sys.path.insert(0, os.path.join(vortexbase, 'project'))
 sys.path.insert(0, os.path.join(vortexbase, 'tests'))
 
-import footprints as fp
+from bronx.fancies import loggers
 
 from test_names import discover
 
@@ -81,7 +81,7 @@ def _do_action_dump(only):
 
 
 def main():
-    '''Process command line options.'''
+    """Process command line options."""
 
     program_name = os.path.basename(sys.argv[0])
     program_shortdesc = program_name + ' -- ' + __import__('__main__').__doc__.lstrip("\n")
@@ -103,7 +103,7 @@ def main():
     args = parser.parse_args()
 
     if args.verbose:
-        fp.loggers.getLogger('test_names').setLevel('DEBUG')
+        loggers.getLogger('test_names').setLevel('DEBUG')
 
     for action in args.actions:
         globals()['{:s}{:s}'.format(ACTION_FUNCTION_ID, action)](args.only)

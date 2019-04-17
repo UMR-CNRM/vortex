@@ -106,4 +106,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Stabal
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

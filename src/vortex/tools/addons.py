@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import six
 
+from bronx.fancies import loggers
 from bronx.syntax.decorators import nicedeco
 import footprints
 
@@ -13,7 +14,7 @@ from vortex.layout import contexts
 from vortex.tools.env import Environment
 from vortex.tools.systems import OSExtended
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
@@ -115,7 +116,7 @@ class Addon(footprints.FootprintBase):
             less elegant but it plays nice with MTOOL.
         """
         ctxtag = contexts.Context.tag_focus()
-        if (ctxtag not in self._context_cache and self.toolkind is not None):
+        if ctxtag not in self._context_cache and self.toolkind is not None:
             ltrack = contexts.current().localtracker
             # NB: 'str' is important because local might be in unicode...
             candidates = [six.text_type(self.sh.path.realpath(local))

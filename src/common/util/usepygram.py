@@ -10,6 +10,10 @@ in EPyGrAM package.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import copy
+
+from bronx.fancies import loggers
+from bronx.stdtypes import date
 from bronx.stdtypes.date import Date, Time, Period
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
@@ -18,12 +22,18 @@ from footprints import proxy as fpx
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 epygram_checker = ExternalCodeImportChecker('epygram')
 with epygram_checker as ec_register:
     import epygram  # @UnusedImport
     ec_register.update(version=epygram.__version__)
+    try:
+        u_unused = epygram.formats.FA
+        hasFA = True
+    except AttributeError:
+        hasFA = False
+    ec_register.update(needFA=hasFA)
     logger.info('Epygram %s loaded.', str(epygram.__version__))
 
 
@@ -313,3 +323,47 @@ def geopotentiel2zs(t, rh, rhsource, pack=None):
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
+
+
+@epygram_checker.disabled_if_unavailable(version='1.3.4')
+def add_poles_to_GLOB_file(filename):
+    """
+    Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.
+    """
+    import numpy
+    rin = epygram.formats.resource(filename, 'r')
+    filename_out = filename + '+poles'
+    rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
+                                    validity=epygram.base.FieldValidity(
+                                        date_time=date.today(),
+                                        term=date.Period(0, 0, 0)),
+                                    processtype=rin.processtype,
+                                    cdiden=rin.cdiden)
+    assert rin.geometry.gimme_corners_ll()['ul'][1] < 90., \
+        'This file already contains poles.'
+    for f in rin.listfields():
+        if f == 'SPECSURFGEOPOTEN':
+            continue
+        fld = rin.readfield(f)
+        write_args = {}
+        if isinstance(fld, epygram.fields.H2DField):
+            # create new geometry
+            newdims = copy.deepcopy(fld.geometry.dimensions)
+            newdims['Y'] += 2
+            newgrid = copy.deepcopy(fld.geometry.grid)
+            newgrid['input_position'] = (newgrid['input_position'][0],
+                                         newgrid['input_position'][1] + 1)
+            newgeom = fpx.geometrys.almost_clone(fld.geometry,
+                                                 dimensions=newdims,
+                                                 grid=newgrid)
+            # compute poles data value as mean of last latitude circle
+            newdata = numpy.zeros((newdims['Y'], newdims['X']))
+            newdata[1:-1, :] = fld.data[...]
+            newdata[0, :] = newdata[1, :].mean()
+            newdata[-1, :] = newdata[-2, :].mean()
+            # clone field with new geometry
+            fld = fpx.fields.almost_clone(fld, geometry=newgeom)
+            fld.data = newdata
+            # get initial compression
+            write_args = dict(compression=rin.fieldscompression[fld.fid['FA']])
+        rout.writefield(fld, **write_args)

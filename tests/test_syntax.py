@@ -1,6 +1,8 @@
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import unittest
+
+import six
 
 from vortex.syntax.stdattrs import DelayedInit, Latitude, Longitude
 
@@ -23,18 +25,23 @@ def _initialise_scrontch():
 
 class TestDelayedInit(unittest.TestCase):
 
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
+
     def test_delayed_init_basics(self):
         scrontch = None
         di = DelayedInit(scrontch, _initialise_scrontch)
-        self.assertRegexpMatches(str(di), 'Not yet Initialised>$')
-        self.assertRegexpMatches(repr(di), 'Not yet Initialised>$')
+        self.assertRegex(str(di), r'Not yet Initialised>$')
+        self.assertRegex(repr(di), r'Not yet Initialised>$')
         self.assertEqual(di.ping(), "Ping")
         self.assertEqual(str(di), "Hey !")
-        self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
+        self.assertRegex(repr(di), r'proxied=<.*\.Scrontch')
         scrontch = Scrontch("Hi !")
         di = DelayedInit(scrontch, _initialise_scrontch)
         self.assertEqual(str(di), "Hi !")
-        self.assertRegexpMatches(repr(di), 'proxied=<.*\.Scrontch')
+        self.assertRegex(repr(di), r'proxied=<.*\.Scrontch')
         self.assertEqual(di.ping(), "Ping")
 
 

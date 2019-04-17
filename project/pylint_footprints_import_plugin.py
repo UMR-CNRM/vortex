@@ -34,7 +34,7 @@ def _footprint_members_add(cls):
             thefp = coldata[fname]['footprint']
     if thefp is not None:
         # Loop on footprint attributes
-        for attr, desc  in thefp['attr'].items():
+        for attr, desc in thefp['attr'].items():
 
             thetype = desc.get('type', six.text_type.__name__)
             # If the attribute is a complex type, try to load the

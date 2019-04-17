@@ -4,14 +4,14 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import collections
 
+from bronx.compat.moves import collections_abc
 from vortex import sessions
+from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.data.flow import FlowResource
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import FmtInt
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
-from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.util.roles import setrole
 
 #: No automatic export
@@ -232,7 +232,7 @@ class TaskInfo(FlowResource):
         return 'taskinfo'
 
 
-class SectionsSlice(collections.Sequence):
+class SectionsSlice(collections_abc.Sequence):
     """Hold a list of dictionaries representing Sections."""
 
     _INDEX_PREFIX = 'sslice'
@@ -245,6 +245,9 @@ class SectionsSlice(collections.Sequence):
         if isinstance(i, six.string_types) and i.startswith(self._INDEX_PREFIX):
             i = int(i[len(self._INDEX_PREFIX):])
         return self._data[i]
+
+    def __eq__(self, other):
+        return self.to_list() == other.to_list()
 
     def __len__(self):
         return len(self._data)
@@ -263,22 +266,30 @@ class SectionsSlice(collections.Sequence):
         :note: A special treatment is made for the 'role' key (the role factory is used
         and the 'alternate' attribute may also be looked for).
 
+        :note: A special case is made for the attribute 'kind' of the section which can be
+        accessed via the 'section_kind' attribute (the attribute 'kind' is used for the resource attribute).
+
         :note: if *k* is not found at the top level of the dictionary, the
         'resource', 'provider' and 'container' parts of the 'rh'sub-dictionary
         are also looked for.
         """
         if k == 'role':
             return item[k] or item['alternate']
+        elif k == 'kind' and k in item.get('rh', dict()).get('resource', dict()):
+            return item['rh']['resource'][k]
+        elif k == 'section_kind' and 'kind' in item:
+            return item['kind']
         elif k in item:
             return item[k]
-        elif k in item['rh']['resource']:
+        elif k in item.get('rh', dict()).get('resource', dict()):
             return item['rh']['resource'][k]
-        elif k in item['rh']['provider']:
+        elif k in item.get('rh', dict()).get('provider', dict()):
             return item['rh']['provider'][k]
-        elif k in item['rh']['container']:
+        elif k in item.get('rh', dict()).get('container', dict()):
             return item['rh']['container'][k]
         else:
-            raise KeyError("'%s' wasn't found in the designated dictionary")
+            raise KeyError("'{:s}' wasn't found in the designated dictionary"
+                           .format(k))
 
     def _sloppy_ckeck(self, item, k, v):
         """Perform a _sloppy_lookup and check the result against *v*."""
@@ -303,7 +314,7 @@ class SectionsSlice(collections.Sequence):
 
     def uniquefilter(self, **kwargs):
         """Like :meth:`filter` but checks that only one element matches."""
-        newslice = self.filter(** kwargs)
+        newslice = self.filter(**kwargs)
         if len(newslice) == 0:
             raise ValueError("No section was found")
         elif len(newslice) > 1:
@@ -315,6 +326,11 @@ class SectionsSlice(collections.Sequence):
     def indexes(self):
         """Returns an index list of all the element contained if the present object."""
         return [self._INDEX_PREFIX + '{:d}'.format(i) for i in range(len(self))]
+
+    def __deepcopy__(self, memo):
+        newslice = self.__class__(self._data)
+        memo[id(self)] = newslice
+        return newslice
 
     def __getattr__(self, attr):
         """Provides an easy access to content's data with footprint's mechanisms.*
@@ -332,11 +348,14 @@ class SectionsSlice(collections.Sequence):
         be generated using the :meth:`indexes` property), the corresponding element
         will be searched using :meth:`_sloppy_lookup`.
         """.format(idx_attr=self._INDEX_ATTR)
+        if attr.startswith('__'):
+            raise AttributeError(attr)
         if len(self) == 1:
             try:
                 return self._sloppy_lookup(self[0], attr)
             except KeyError:
-                raise AttributeError("%s wasn't found in the unique dictionary", attr)
+                raise AttributeError("'{:s}' wasn't found in the unique dictionary"
+                                     .format(attr))
         elif len(self) == 0:
             raise AttributeError("The current SectionsSlice is empty. No attribute lookup allowed !")
         else:
@@ -346,9 +365,11 @@ class SectionsSlice(collections.Sequence):
                     try:
                         return self._sloppy_lookup(self[idx], attr)
                     except KeyError:
-                        raise AttributeError("'%s' wasn't found in the %d-th dictionary", attr, idx)
+                        raise AttributeError("'{:s}' wasn't found in the {!s}-th dictionary"
+                                             .format(attr, idx))
                 else:
-                    raise AttributeError("A '%s' attribute must be there !", self._INDEX_ATTR)
+                    raise AttributeError("A '{:s}' attribute must be there !".format(self._INDEX_ATTR))
+
             return _attr_lookup
 
 
@@ -362,17 +383,19 @@ class SectionsJsonListContent(DataContent):
     def slurp(self, container):
         """Get data from the ``container``."""
         t = sessions.current()
-        container.rewind()
-        self._data = SectionsSlice(t.sh.json_load(container.iotarget()))
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._data = SectionsSlice(t.sh.json_load(container.iotarget()))
         self._size = len(self._data)
 
     def rewrite(self, container):
         """Write the data in the specified container."""
         t = sessions.current()
         container.close()
-        mode = container.set_wmode(container.mode)
-        iod = container.iodesc(mode)
-        t.sh.json_dump(self.data.to_list(), iod, indent=4)
+        with container.preferred_decoding(byte=False):
+            with container.preferred_write():
+                iod = container.iodesc()
+                t.sh.json_dump(self.data.to_list(), iod, indent=4)
         container.updfill(True)
 
 

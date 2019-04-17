@@ -7,11 +7,11 @@ This package handles some common targets used at Meteo France.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import ftplib
 import six
-import socket
+import ftplib
 import uuid
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.tools.targets import Target
@@ -20,8 +20,10 @@ from vortex.tools.prestaging import PrestagingTool
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
+
+# Any kind of DSI's Supercomputer
 
 class MeteoBull(Target):
     """Bull Computer."""
@@ -56,16 +58,13 @@ class Beaufix(MeteoBull):
     _footprint = dict(
         info = 'Bull Beaufix Supercomputer at Meteo France',
         attr = dict(
-            hostname = dict(
-                values = (
-                    [ x + str(y) for x in ('beaufix',) for y in range(1836) ] +
-                    [ x + str(y) for x in ('beaufixlogin',) for y in range(6) ] +
-                    [ x + str(y) for x in ('beaufixtransfert',) for y in range(8) ] )
-            ),
             inetname = dict(
                 default = 'beaufix',
                 values  = ['beaufix']
             ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'beaufix(?:login|transfert)?\d+(?:\.|$)')
         )
     )
 
@@ -76,44 +75,18 @@ class Prolix(MeteoBull):
     _footprint = dict(
         info = 'Bull Prolix Supercomputer at Meteo France',
         attr = dict(
-            hostname = dict(
-                values = (
-                    [ x + str(y) for x in ('prolix',) for y in range(1800) ] +
-                    [ x + str(y) for x in ('prolixlogin',) for y in range(6) ] +
-                    [ x + str(y) for x in ('prolixtransfert',) for y in range(8) ] )
-            ),
             inetname = dict(
                 default = 'prolix',
                 values  = ['prolix']
             ),
-        )
-    )
-
-
-class Aneto(Target):
-    """Aneto cluster at Meteo-France CNRM."""
-
-    _footprint = dict(
-        info='Aneto Cluster at CNRM',
-        attr=dict(
-            hostname=dict(
-                values=[x + str(y) for x in ('ncx',) for y in range(30)] +
-                [x + str(y) for x in ('ntx',) for y in range(6)]
-            ),
-            inetname=dict(
-                default='aneto',
-                values=['aneto']
-            ),
-            inifile=dict(
-                optional=True,
-                default='@target-aneto.ini',
-            ),
         ),
-        priority = dict(
-            level = footprints.priorities.top.TOOLBOX
+        only = dict(
+            hostname = footprints.FPRegex(r'prolix(?:login|transfert)?\d+(?:\.|$)')
         )
     )
 
+
+# Any kind of DSI's Soprano servers
 
 class MeteoSoprano(Target):
     """A Soprano Server."""
@@ -141,7 +114,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
             hostname = dict(
                 values = ['alose', 'pagre', 'rason', 'orphie'],
             ),
-            inifile=dict(
+            inifile = dict(
                 optional=True,
                 default='@target-soprano_dev_rh6.ini',
             ),
@@ -152,6 +125,88 @@ class MeteoSopranoDevRH6(MeteoSoprano):
         """Generic name to be used in acess paths"""
         return 'soprano_dev_rh6'
 
+
+# Any kind of CNRM servor or workstation
+
+class UmrCnrmTarget(Target):
+    """Restrict the FQDN to cnrm.meteo.fr."""
+
+    _abstract = True
+    _footprint = dict(
+        info='Aneto Cluster at CNRM',
+        only = dict(
+            fqdn = [footprints.FPRegex(r'.+\.cnrm\.meteo\.fr$'),
+                    footprints.FPRegex(r'.+\.umr-cnrm\.fr$')]
+        ),
+        priority = dict(
+            level = footprints.priorities.top.TOOLBOX
+        )
+    )
+
+
+class Aneto(UmrCnrmTarget):
+    """Aneto cluster at Meteo-France CNRM."""
+
+    _footprint = dict(
+        info='Aneto Cluster at CNRM',
+        attr=dict(
+            inetname=dict(
+                default = 'aneto',
+                values = ['aneto']
+            ),
+            inifile=dict(
+                default = '@target-[inetname].ini',
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'n[ctx]\d+(?:\.|$)')
+        )
+    )
+
+
+class CnrmLinuxWorkstation(UmrCnrmTarget):
+    """Aneto cluster at Meteo-France CNRM."""
+
+    _footprint = dict(
+        info='Aneto Cluster at CNRM',
+        attr=dict(
+            sysname = dict(
+                values = [ 'Linux' ]
+            ),
+            inifile=dict(
+                default = '@target-cnrmworkstation.ini',
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'[lp]x\w+(?:\.|$)')
+        )
+    )
+
+    def cache_storage_alias(self):
+        """The tag used when reading Cache Storage configuration files."""
+        return 'cnrmworkstation'
+
+
+class CnrmLinuxServer(UmrCnrmTarget):
+    """Aneto cluster at Meteo-France CNRM."""
+
+    _footprint = dict(
+        info='Aneto Cluster at CNRM',
+        attr=dict(
+            sysname = dict(
+                values = [ 'Linux' ]
+            ),
+            inifile=dict(
+                default = '@target-cnrmserver.ini',
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'sx\w+\d+(?:\.|$)')
+        )
+    )
+
+
+# Prestaging tools for MF mass storage archives
 
 class HendrixPrestagingTool(PrestagingTool):
 
@@ -188,24 +243,24 @@ class HendrixPrestagingTool(PrestagingTool):
                                      'stagereq',
                                      uuid.uuid4().hex[:16],
                                      'MIG'])
-        request_data = six.StringIO()
-        request_data.write('\n'.join(request))
+        request_data = six.BytesIO()
+        request_data.write(('\n'.join(request)).encode(encoding='utf_8'))
         request_data.seek(0)
         try:
             ftp = self.system.ftp(self.storage, logname=self.logname)
-        except (ftplib.all_errors, socket.error) as e:
+        except ftplib.all_errors as e:
             logger.error('Prestaging to %s: unable to connect: %s', self.storage, str(e))
             ftp = None
         if ftp:
             try:
                 rc = ftp.cd(self.stagedir)
-            except (IOError, ftplib.all_errors) as e:
+            except ftplib.all_errors as e:
                 logger.error('Prestaging to %s: error with "cd": %s', self.storage, str(e))
                 rc = False
             if rc:
                 try:
                     ftp.put(request_data, request_filename)
-                except (IOError, ftplib.all_errors) as e:
+                except ftplib.all_errors as e:
                     logger.error('Prestaging to %s: error with "put": %s', self.storage, str(e))
                     rc = False
             ftp.close()

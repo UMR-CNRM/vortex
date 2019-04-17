@@ -13,10 +13,12 @@
 Sub-packages
 ------------
 
+* :mod:`bronx.compat`
 * :mod:`bronx.datagrip`
 * :mod:`bronx.fancies`
 * :mod:`bronx.graphics`
 * :mod:`bronx.meteo`
+* :mod:`bronx.patterns`
 * :mod:`bronx.stdtypes`
 * :mod:`bronx.syntax`
 * :mod:`bronx.system`

@@ -45,6 +45,13 @@ if __name__ == '__main__':
                             dest='namdelta',
                             type=str,
                             help='path to a file that contains a namelist delta.')
+    directives.add_argument('-c',
+                        dest='check_namelist',
+                        action='store_true',
+                        help='check that the namelist is ok and do a first order sorting. \
+                              This option is equivalent to. \
+                              "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
+                        default=False)
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
@@ -94,7 +101,7 @@ if __name__ == '__main__':
                         default=False)
     args = parser.parse_args()
 
-    if args.firstorder_sorting:
+    if args.firstorder_sorting or args.check_namelist:
         sorting = tnt.namadapter.FIRST_ORDER_SORTING
     elif args.secondorder_sorting:
         sorting = tnt.namadapter.SECOND_ORDER_SORTING
@@ -114,8 +121,11 @@ if __name__ == '__main__':
         if args.directives:
             directives = tnt.config.read_directives(args.directives)
         else:
-            with io.open(args.namdelta, 'r') as fhnam:
-                directives = tnt.config.TntDirective(namdelta=fhnam.read())
+            if args.check_namelist:
+                directives = tnt.config.TntDirective()
+            else:
+                with io.open(args.namdelta, 'r') as fhnam:
+                    directives = tnt.config.TntDirective(namdelta=fhnam.read())
         for nam in args.namelists:
             tnt.util.set_verbose(args.verbose, nam)
             tnt.util.process_namelist(nam, directives,

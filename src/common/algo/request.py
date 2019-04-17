@@ -9,12 +9,13 @@ from __future__ import division, print_function, absolute_import, unicode_litera
 
 import copy
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 import footprints
-from vortex.algo.components import AlgoComponent, Expresso, BlindRun
+
+from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, Expresso, BlindRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
-from vortex.util.structs import FootprintCopier
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
 from common.tools.bdmp import BDMPrequest_actual_command, BDMPGetError
 from common.tools.bdcp import BDCPrequest_actual_command, BDCPGetError
@@ -25,7 +26,7 @@ from common.data.obs import ObsMapContent
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class GetBDAPResource(AlgoComponent):
@@ -252,14 +253,10 @@ class GetBDCPResource(AlgoComponent):
         return rc_all
 
 
-class _GetBDMCommons(FootprintCopier):
-    """Class variables and methods usefull for BDM extractions.
+class _GetBDMDecoMixin(AlgoComponentDecoMixin):
+    """Class variables and methods usefull for BDM extractions."""
 
-    They will be copied to the "real" GetBDM* classes using the FootprintCopier
-    metaclass.
-    """
-
-    _footprint = dict(
+    _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
         attr = dict(
             date = a_date,
             pwd_file = dict(
@@ -279,14 +276,12 @@ class _GetBDMCommons(FootprintCopier):
                 optional = True,
             )
         )
-    )
+    )]
 
-    @staticmethod
     def _verbose_env_export(self, varname, value):
         self.env.setvar(varname, value)
         logger.info('Setting environment variable %s = %s', varname, str(value))
 
-    @staticmethod
     def _prepare_commons(self, rh, opts):
         """
         Prepare the launch of the script
@@ -295,15 +290,19 @@ class _GetBDMCommons(FootprintCopier):
         self._verbose_env_export('PWD_FILE', self.pwd_file)
         self._verbose_env_export('DMT_DATE_PIVOT', self.date.ymdhms)
 
-    @staticmethod
-    def spawn_command_options(self):
-        return dict(query=self.defaut_queryname)
+    _MIXIN_PREPARE_HOOKS = (_prepare_commons, )
 
-    @staticmethod
-    def execute(self, rh, opts):
-        """
-        Launch the BDM request(s).
-        The results of each request are stored in a directory local_directory to avoid files overwritten by others
+    def _spawn_command_options_extend(self, prev):
+        prev['query'] = self.defaut_queryname
+        return prev
+
+    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend)
+
+    def _execute_commons(self, rh, opts):
+        """Launch the BDM request(s).
+
+        The results of each request are stored in a directory local_directory
+        to avoid files overwritten by others
         """
 
         # Look for the input queries
@@ -341,8 +340,9 @@ class _GetBDMCommons(FootprintCopier):
         if not rc_all:
             logger.error('At least one of the BDM request failed. Please check the logs above.')
 
-    @staticmethod
-    def postfix(self, rh, opts):
+    _MIXIN_EXECUTE_OVERWRITE = _execute_commons
+
+    def _postfix_commons(self, rh, opts):
         """Concatenate the batormap from the different tasks and check if there is no duplicated entries."""
 
         # BATORMAP concatenation
@@ -393,14 +393,11 @@ class _GetBDMCommons(FootprintCopier):
         # Concatenate the listings
         self.system.cat(*listing_files, output = listing_filename)
 
-        # Do the standard postfix
-        super(self.__class__, self).postfix(rh, opts)
+    _MIXIN_POSTFIX_HOOKS = (_postfix_commons, )
 
 
-class GetBDMBufr(Expresso):
+class GetBDMBufr(Expresso, _GetBDMDecoMixin):
     """Algo component to get BDM resources considering a BDM query file."""
-
-    __metaclass__ = _GetBDMCommons
 
     _footprint = dict(
         info = 'Algo component to get BDM BUFR.',
@@ -448,8 +445,6 @@ class GetBDMBufr(Expresso):
         """
         # Do the standard pre-treatment
         super(GetBDMBufr, self).prepare(rh, opts)
-        # Commons...
-        self._prepare_commons(rh, opts)
 
         # Some exports to be done
         self._verbose_env_export('EXTR_ENV', self.extra_env_opt)
@@ -463,10 +458,8 @@ class GetBDMBufr(Expresso):
             raise BDMRequestConfigurationError('No query file found for the BDM extraction')
 
 
-class GetBDMOulan(BlindRun):
+class GetBDMOulan(BlindRun, _GetBDMDecoMixin):
     """Algo component to get BDM files using Oulan."""
-
-    __metaclass__ = _GetBDMCommons
 
     _footprint = dict(
         info = "Algo component to get BDM files using Oulan.",
@@ -499,8 +492,6 @@ class GetBDMOulan(BlindRun):
         """Prepare the execution of the Oulan extraction binary."""
         # Do the standard pre-treatment
         super(GetBDMOulan, self).prepare(rh, opts)
-        # Commons...
-        self._prepare_commons(rh, opts)
 
         # Export additional variables
         self._verbose_env_export('DB_FILE', self.db_file)
@@ -539,7 +530,7 @@ class GetMarsResource(AlgoComponent):
         )
     )
 
-    def execute_single(self, rh, opts):
+    def execute(self, rh, opts):
         """
         Launch the Mars request(s).
         The results of each requests are stored in a directory to avoid
@@ -550,36 +541,42 @@ class GetMarsResource(AlgoComponent):
             role='Query',
             kind='mars_query',
         )
+        if len(input_queries) < 1:
+            logger.exception('No query file found for the Mars extraction. Stop.')
+            raise MarsGetError('No query file found for the Mars extraction')
 
         rc_all = True
 
+        # Find the command to be launched
+        actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
+
+        # Prepare the substitutions' dictionnary
+        dictkeyvalue = copy.deepcopy(self.substitutions)
+        if self.date is not None:
+            dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
+            dictkeyvalue["YYYYMMDD"] = self.date.ymd
+            dictkeyvalue["HH"] = self.date.hh
+
+        # For each input query, extract the files
         for input_query in input_queries:
+            # Prepare the query file used
+            query_content = input_query.rh.contents
+            query_content.setitems(dictkeyvalue)
+            input_query.rh.save()
             # Launch each input queries in a dedicated file
             # (to check that the files do not overwrite each other)
-            query_file = input_query.rh.container.abspath
-            local_directory = '_'.join([query_file, self.date.ymdhms])
+            query_file_path = input_query.rh.container.abspath
+            local_directory = '_'.join([query_file_path, self.date.ymdhms])
+            logger.info("Here is the content of the query file %s (after substitution):", query_file_path)
+            self.system.cat(query_file_path, output=False)
             with self.system.cdcontext(local_directory, create=True):
-                # Prepare the query file used
-                query = input_query.rh
-                query_abspath = query.container.abspath
-                query_content = query.contents
-                dictkeyvalue = copy.deepcopy(self.substitutions)
-                if self.date is not None:
-                    dictkeyvalue["YYYYMMDDHH"] = self.date.ymdh
-                    dictkeyvalue["YYYYMMDD"] = self.date.ymd
-                    dictkeyvalue["HH"] = self.date.hh
-                query_content.setitems(dictkeyvalue)
-                query.save()
-                logger.info("Here is the content of the query file %s (after substitution):", query_abspath)
-                query.container.cat()
                 # Launch the command
-                actual_command = findMarsExtractCommand(sh=self.system, command=self.command)
-                rc = callMarsExtract(sh=self.system, query_file=query_abspath, fatal=self.fatal,
+                rc = callMarsExtract(sh=self.system, query_file=query_file_path, fatal=self.fatal,
                                      command=actual_command)
                 if not rc:
                     if self.fatal:
-                        logger.error("Problem during the Mars request of %s", query_abspath)
+                        logger.error("Problem during the Mars request of %s", query_file_path)
                         raise MarsGetError
                     else:
-                        logger.warning("Problem during the Mars request of %s", query_abspath)
+                        logger.warning("Problem during the Mars request of %s", query_file_path)
                 rc_all = rc_all and rc

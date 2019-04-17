@@ -1,22 +1,38 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
+import sys
 import tempfile
 import unittest
 
-import footprints
+import six
 
+import footprints
 import vortex
+from bronx.fancies import loggers
 from vortex.algo.components import TaylorRun
 from vortex.tools.parallelism import TaylorVortexWorker
 
-tlog = footprints.loggers.getLogger('taylorism')
-vlog = footprints.loggers.getLogger('vortex')
-testlogger = footprints.loggers.getLogger(__name__)
+tlog = loggers.getLogger('taylorism')
+vlog = loggers.getLogger('vortex')
+testlogger = loggers.getLogger(__name__)
+
+
+def stderr2out_deco(f):
+    def wrapped_f(*kargs, **kwargs):
+        oldstderr = sys.stderr
+        sys.stderr = sys.stdout
+        try:
+            return f(*kargs, **kwargs)
+        finally:
+            sys.stderr = oldstderr
+
+    wrapped_f.__name__ = f.__name__
+    return wrapped_f
 
 
 class MyTaylorRunAlgo(TaylorRun):
@@ -65,6 +81,9 @@ class MyTaylorRunAlgo(TaylorRun):
 
         self._default_post_execute(rh, opts)
 
+    def postfix_post_dirlisting(self):
+        pass
+
 
 class MyTaylorRunAlgoWorker(TaylorVortexWorker):
 
@@ -97,6 +116,11 @@ class MyTaylorRunAlgoWorker(TaylorVortexWorker):
 
 
 class TestTaylorRunAlgo(unittest.TestCase):
+
+    if six.PY2:
+        def assertRegex(self, text, regex, msg=None):
+            """This method should be removed when python2 dies."""
+            self.assertRegexpMatches(text, regex, msg)
 
     def setUp(self):
         # Generate a temporary directory
@@ -134,8 +158,8 @@ class TestTaylorRunAlgo(unittest.TestCase):
         self.assertTrue(found)
         with io.open(found, 'r') as fhin:
             alllines = fhin.readlines()
-        self.assertRegexpMatches(alllines[0], "^Test print {:06d}$".format(loopcount))
-        self.assertRegexpMatches(alllines[1], "^.*Test log   {:06d}".format(loopcount))
+        self.assertRegex(alllines[0], "^Test print {:06d}$".format(loopcount))
+        self.assertRegex(alllines[1], "^.*Test log   {:06d}".format(loopcount))
         self.assertEqual(len(alllines), 2)  # No DEBUG stuff
 
     def test_basic_taylorun(self):
@@ -144,6 +168,7 @@ class TestTaylorRunAlgo(unittest.TestCase):
         algo.run()
         self.assertOutputs('basic1', 8)
 
+    @stderr2out_deco
     def test_failing_taylorun(self):
         algo = footprints.proxy.component(kind='unittest_taylor_run_1',
                                           prefix='failing1', loopcount=8, failer=2)

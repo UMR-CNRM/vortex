@@ -11,7 +11,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import logging
 import re
 import platform
+import socket
 
+from bronx.fancies import loggers
+from bronx.syntax.decorators import secure_getattr
 import footprints as fp
 
 from vortex.util.config import GenericConfigParser
@@ -20,7 +23,16 @@ from vortex import sessions
 #: No automatic export
 __all__ = []
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
+
+
+def default_fqdn():
+    """Tries to find the Fully-Qualified Domain Name of the host."""
+    try:
+        fqdn = socket.getfqdn()
+    except socket.error:
+        fqdn = platform.node()
+    return fqdn
 
 
 class Target(fp.FootprintBase):
@@ -49,6 +61,10 @@ class Target(fp.FootprintBase):
                 optional = True,
                 default  = platform.node(),
             ),
+            fqdn = dict(
+                optional = True,
+                default  = default_fqdn(),
+            ),
             sysname = dict(
                 optional = True,
                 default  = platform.system(),
@@ -61,6 +77,10 @@ class Target(fp.FootprintBase):
             inifile = dict(
                 optional = True,
                 default  = '@target-[hostname].ini',
+            ),
+            defaultinifile = dict(
+                optional = True,
+                default  = 'target-commons.ini',
             ),
             iniauto = dict(
                 type     = bool,
@@ -83,7 +103,9 @@ class Target(fp.FootprintBase):
         self._sepcialnodesaliases = None
         self._specialproxies = None
         if self._actualconfig is None:
-            self._actualconfig = GenericConfigParser(inifile=self.inifile, mkforce=self.iniauto)
+            self._actualconfig = GenericConfigParser(inifile=self.inifile,
+                                                     mkforce=self.iniauto,
+                                                     defaultinifile=self.defaultinifile)
 
     @property
     def realkind(self):
@@ -95,6 +117,10 @@ class Target(fp.FootprintBase):
 
     def generic(self):
         """Generic name is inetname by default."""
+        return self.inetname
+
+    def cache_storage_alias(self):
+        """The tag used when reading Cache Storage configuration files."""
         return self.inetname
 
     def get(self, key, default=None):
@@ -302,6 +328,7 @@ class Target(fp.FootprintBase):
                     self._specialproxies[alias] = self._specialproxies[ntype]
         return self._specialproxies
 
+    @secure_getattr
     def __getattr__(self, key):
         """Create attributes on the fly.
 

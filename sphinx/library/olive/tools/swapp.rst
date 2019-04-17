@@ -25,6 +25,10 @@ Interface functions
 
 .. autofunction:: olive_jobout
 
+.. autofunction:: olive_jobout_socketsend
+
+.. autofunction:: olive_jobout_ectranssend
+
 .. autofunction:: olive_gnam_hook_factory
 
 .. autofunction:: olive_generic_hook_factory

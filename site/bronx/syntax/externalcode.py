@@ -53,10 +53,10 @@ from distutils.version import LooseVersion
 import traceback
 import types
 
+from bronx.fancies import loggers
 from bronx.fancies.display import join_list_in_proper_english
-import footprints
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ExternalCodeUnavailableError(Exception):
@@ -109,13 +109,14 @@ class ExternalCodeImportChecker(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Catch any ImportError and deal with it !"""
-        if exc_type is ImportError:
-            logger.warning('The %s package is unavailable.', str(self.nickname))
-            logger.debug(traceback.format_exception(exc_type, exc_value, exc_traceback))
-            self._checked_out = False
-            return True
         if exc_type is None:
             self._checked_out = True
+        else:
+            if issubclass(exc_type, ImportError):
+                logger.warning('The %s package is unavailable.', str(self.nickname))
+                logger.debug(traceback.format_exception(exc_type, exc_value, exc_traceback))
+                self._checked_out = False
+                return True
 
     def is_available(self, **kwargs):
         """Is it ok ?

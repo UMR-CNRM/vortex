@@ -1,0 +1,190 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: alp
+            model: safran
+            namespace: vortex.multi.fr
+            vapp: s2m
+            vconf: alp
+
+todo:
+    # Safran Guess
+    -   commons:
+            experiment: OPER@vernaym
+            kind: guess
+            cumul: 6
+            source_app: arpege
+            source_conf: pearp
+            block: massif
+            cutoff: production
+        tests:
+            -   experiment: OPER
+            -   nativefmt: txt
+            -   namebuild: cen
+            -   namespace: s2m.archive.fr
+            -   model:
+                    - safran
+                    - null
+                namebuild:
+                    - cen
+                    - null
+            -   source_app: arome
+                source_conf: pefrance
+    # SurfaceForcing
+    -   commons:
+            experiment: OPER@vernaym
+            block: massif
+            kind: MeteorologicalForcing
+            cutoff:
+              -   production
+              -   null
+            datebegin: '201812010000'
+            dateend: '201812020000'
+            model:
+              -   safran
+              -   obs
+            namebuild:
+              -   null
+              -   cen
+              -   flat@cen
+        tests:
+            -   experiment: OPER
+                scenario: RCP6.0
+            -   nativefmt:
+                    - nc
+                    - netcdf
+            -   source_app: null
+                source_conf: null
+            -   source_app: arpege
+                source_conf: 4dvarfr
+
+                    - null
+                    - arpege
+                source_conf:
+                    source_app:
+                        null: null
+                        arpege: pearp
+    # Pro
+    -   commons:
+            experiment: OPER@vernaym
+            block: massif
+            kind: SnowpackSimulation
+            cutoff:
+              -   production
+              -   null
+            datebegin: '201812010000'
+            dateend: '201812020000'
+            model: surfex
+            namebuild:
+              -   null
+              -   cen
+              -   flat@cen
+        tests:
+            -   experiment: OPER
+            -   scenario: RCP6.0
+            -   nativefmt:
+                    - nc
+                    - netcdf
+                    - null
+    # Prep
+    -   commons:
+            experiment: OPER@vernaym
+            block: massif
+            kind: PREP
+            cutoff:
+              -   production
+              -   null
+            model: surfex
+            namebuild:
+              -   null
+              -   cen
+              -   flat@cen
+        tests:
+            -   experiment: OPER
+            -   nativefmt:
+                    - nc
+                    - netcdf
+                    - ascii
+                    - null
+            -   origin: toto
+                scenario: RCP6.0
+            -   datevalidity: '2018120200'
+            -   filling: surf
+            -   filtering: dfi
+            -   geometry: pyr
+    # SnowObs
+    -   commons:
+            experiment: OPER@vernaym
+            block: massif
+            kind: SnowObservations
+            cutoff:
+              -   production
+              -   null
+            model: obs
+            namebuild:
+              -   null
+              -   cen
+              -   flat@cen
+            datebegin: '201812010000'
+            dateend: '201812020000'
+        tests:
+            -   experiment: OPER
+            -   nativefmt:
+                    - nc
+                    - netcdf
+                    - null
+            -   geometry: pyr
+            -   datebegin: '201801020000'
+            -   datebegin: '201701020000'
+    # ScoresSnow
+    -   commons:
+            experiment: OPER@vernaym
+            block: massif
+            kind: ScoresSnow
+            cutoff:
+              -   production
+              -   null
+            datebegin: '201812010000'
+            dateend: '201812020000'
+            model: surfex
+            namebuild:
+              -   null
+              -   cen
+              -   flat@cen
+        tests:
+            -   experiment: OPER
+            -   nativefmt:
+                    - nc
+                    - netcdf
+                    - null
+    # SafranObsRaw
+    -   commons:
+            experiment:
+              -   OPER@vernaym
+              -   OPER
+            block: massif
+            kind: observations
+            cutoff: production
+            model: safran
+            stage: safrane
+            nativefmt: ascii
+            date: '2018010106'
+        tests:
+            -   stage: sypluie
+                part: radiosondage
+            -   part:
+                    - precipitation
+                    - hourlyobs
+            -   part:
+                    - synop
+                    - precipitation
+                    - hourlyobs
+                    - nebulosity
+                namespace:
+                    -   s2m.archive.fr
+                    -   cendev.soprano.fr
+                storage:
+                    namespace:
+                        s2m.archive.fr: null
+                        cendev.soprano.fr: guppy.meteo.fr

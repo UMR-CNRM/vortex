@@ -12,7 +12,8 @@ __all__ = []
 def echofunction(options):
     """Simple example of a function designed to be called by the FunctionStore.
 
-    :param options: The only argument is a dictionary that contains all the options passed to the store plus anything from the query part of the URI.
+    :param options: The only argument is a dictionary that contains all the options
+                    passed to the store plus anything from the query part of the URI.
 
     :return: Content of the desired local file
 
@@ -31,4 +32,4 @@ def echofunction(options):
     for i, msg in enumerate(msgs):
         outstr += "\nMessage #{:d} is: {:s}\n".format(i, msg)
     # NB: The result have to be a file like object !
-    return six.StringIO(outstr)
+    return six.BytesIO(outstr.encode(encoding='utf_8'))

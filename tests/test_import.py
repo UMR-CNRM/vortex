@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from unittest import TestCase, main
 import importlib
+import io
 import json
 import os
 import sys
@@ -12,56 +13,64 @@ import sys
 # Otherwise os.getcwd may fail with nose
 os.chdir(os.environ['HOME'])
 
+from bronx.fancies import loggers
 import footprints as fp
 import vortex
+import common  # @UnusedImport
 
-vlog = fp.loggers.getLogger('vortex')
-clog = fp.loggers.getLogger('common')
-
-non_standard_dep = {'yaml': ['bronx.fancies.multicfg', ],
+non_standard_dep = {'yaml': ['bronx.fancies.multicfg',
+                             'bronx.fancies.dispatch' ],
                     'PIL': ['bronx.datagrip.pyexttiff', ],
-                    'numpy': ['bronx.datagrip.pyexttiff', ], }
+                    'numpy': ['bronx.datagrip.pyexttiff',
+                              'bronx.graphics.colormapping',
+                              'bronx.meteo.constants',
+                              'bronx.meteo.conversion',
+                              'bronx.syntax.arrays'],
+                    'matplotlib': ['bronx.graphics.colormapping',
+                                   'bronx.graphics.axes' ]}
+
+tloglevel = 'critical'
 
 
 class DynamicTerminal(object):
 
     def __init__(self, header, total):
+        self.active_terminal = False
+        if hasattr(sys.stdout, 'fileno'):
+            try:
+                if os.isatty(sys.stdout.fileno()):
+                    self.active_terminal = True
+            except io.UnsupportedOperation:
+                pass
         self._header = header
         numberfmt = '{:0' + str(len(str(total))) + 'd}'
         self._ifmt = numberfmt + '/' + numberfmt.format(total) + ' ({!s})'
 
     def __enter__(self):
-        sys.stdout.write(self._header)
+        if self.active_terminal:
+            sys.stdout.write(self._header)
         self._iwatermark = 0
         self._icounter = 0
         return self
 
     def increment(self, msg):
         self._icounter += 1
-        display = self._ifmt.format(self._icounter, msg)
-        sys.stdout.write(("\b" * self._iwatermark if self._iwatermark else '') +
-                         display.ljust(max(self._iwatermark, len(display))))
-        self._iwatermark = max(self._iwatermark, len(display))
+        if self.active_terminal:
+            display = self._ifmt.format(self._icounter, msg)
+            sys.stdout.write(("\b" * self._iwatermark if self._iwatermark else '') +
+                             display.ljust(max(self._iwatermark, len(display))))
+            self._iwatermark = max(self._iwatermark, len(display))
 
     def __exit__(self, etype, value, traceback):
-        sys.stdout.write("\n")
+        if self.active_terminal:
+            sys.stdout.write("\n")
 
 
 class utImport(TestCase):
 
-    def setUp(self):
-        self.vlogL = vlog.level
-        self.clogL = clog.level
-        vlog.setLevel('ERROR')
-        clog.setLevel('ERROR')
-
-    def tearDown(self):
-        vlog.setLevel(self.vlogL)
-        clog.setLevel(self.clogL)
-
     def test_pyVersion(self):
         sh = vortex.sh()
-        self.assertTrue(sh.python > '2.7')
+        self.assertTrue(sh.python > '2.7.0')
 
     def _test_ignore_modules(self):
         exclude = set()
@@ -79,43 +88,45 @@ class utImport(TestCase):
         exclude = self._test_ignore_modules()
         # Try to import all modules
         modules = sh.vortex_modules()
-        with DynamicTerminal("> importing module ", len(modules) - len(exclude)) as nterm:
-            for modname in [m for m in modules if m not in exclude]:
-                nterm.increment(modname)
-                self.assertTrue(importlib.import_module(modname))
-        # Then dump all the footprints
-        tdump = fp.dump.TxtDumper()
-        jdump = fp.dump.JsonableDumper()
-        xdump = fp.dump.XmlDomDumper(named_nodes=('attr', 'remap'))
-        collected = fp.collected_classes()
-        with DynamicTerminal("> dumping all collectable classes ", len(collected)) as nterm:
-            for cls in collected:
-                nterm.increment(cls.__name__)
-                clsfp = cls.footprint_retrieve()
-                # Normal txt dump: easy
-                trashstr = tdump.dump(clsfp)
-                # Jsonable dump: we check that it's actually jsonable !
-                trashstr = jdump.dump(clsfp)
-                try:
-                    trashstr = json.dumps(trashstr)
-                except:
-                    print("\n> Json.dumps: trashstr is:\n", trashstr)
-                    raise
-                # XML dump: we also try to generate the document !
-                try:
-                    trashstr = xdump.dump(clsfp.as_dict(),
-                                          root='footprint',
-                                          rootattr={'class': '{:s}.{:s}'.format(cls.__module__,
-                                                                                cls.__name__)})
-                    trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
-                except:
-                    print("\n> xdump.dump: clsfp.as_dict() is:\n", clsfp.as_dict())
-                    raise
+        with loggers.contextboundGlobalLevel(tloglevel):
+            with DynamicTerminal("> importing module ", len(modules) - len(exclude)) as nterm:
+                for modname in [m for m in modules if m not in exclude]:
+                    nterm.increment(modname)
+                    self.assertTrue(importlib.import_module(modname))
+        if not os.environ.get('VORTEX_IMPORT_UNITTEST_DO_DUMPS', '1') == '0':
+            # Then dump all the footprints
+            tdump = fp.dump.TxtDumper()
+            jdump = fp.dump.JsonableDumper()
+            xdump = fp.dump.XmlDomDumper(named_nodes=('attr', 'remap'))
+            collected = fp.collected_classes()
+            with loggers.contextboundGlobalLevel(tloglevel):
+                with DynamicTerminal("> dumping all collectable classes ", len(collected)) as nterm:
+                    for cls in collected:
+                        nterm.increment(cls.__name__)
+                        clsfp = cls.footprint_retrieve()
+                        # Normal txt dump: easy
+                        trashstr = tdump.dump(clsfp)
+                        # Jsonable dump: we check that it's actually jsonable !
+                        trashstr = jdump.dump(clsfp)
+                        try:
+                            trashstr = json.dumps(trashstr)
+                        except Exception:
+                            print("\n> Json.dumps: trashstr is:\n", trashstr)
+                            raise
+                        # XML dump: we also try to generate the document !
+                        try:
+                            trashstr = xdump.dump(clsfp.as_dict(),
+                                                  root='footprint',
+                                                  rootattr={'class': '{:s}.{:s}'.format(cls.__module__,
+                                                                                        cls.__name__)})
+                            trashstr = trashstr.toprettyxml(indent='  ', encoding='utf-8')
+                        except Exception:
+                            print("\n> xdump.dump: clsfp.as_dict() is:\n", clsfp.as_dict())
+                            raise
 
 
 if __name__ == '__main__':
     main()
-    vortex.exit()
 
 
 def get_test_class():

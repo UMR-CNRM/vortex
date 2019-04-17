@@ -5,10 +5,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
 
 from common.algo.ifsroot import IFSParallel
+from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun
 from vortex.layout.dataflow import intent
 
@@ -17,7 +18,7 @@ from .forecasts import FullPos
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Coupling(FullPos):
@@ -108,7 +109,8 @@ class Coupling(FullPos):
                 self.grab(cplsurf_in, comment='coupling surface source')
                 if sh.path.exists(infilesurf):
                     if isMany:
-                        logger.critical('Cannot process multiple surface historic files if %s exists.', infilesurf)
+                        logger.critical('Cannot process multiple surface historic files if %s exists.',
+                                        infilesurf)
                 else:
                     sh.cp(cplsurf_in.rh.container.localpath(), infilesurf,
                           fmt=cplsurf_in.rh.container.actualfmt, intent=intent.IN)
@@ -212,7 +214,7 @@ class CouplingLAM(Coupling):
         return opts
 
 
-class Prep(BlindRun):
+class Prep(BlindRun, DrHookDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
     _footprint = dict(
@@ -289,9 +291,6 @@ class Prep(BlindRun):
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Prep, self).prepare(rh, opts)
-        # Basic exports
-        for optpack in ['drhook', 'drhook_not_mpi']:
-            self.export(optpack)
         # Convert the initial clim if needed...
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):
@@ -345,8 +344,8 @@ class Prep(BlindRun):
                     thispromise.put(incache=True)
 
             # Some cleaning
-            sh.rmall('*.des', fmt = r.container.actualfmt)
-            sh.rmall('PREP1.*', fmt = r.container.actualfmt)
+            sh.rmall('*.des')
+            sh.rmall('PREP1.*')
 
 
 class C901(IFSParallel):
@@ -358,84 +357,134 @@ class C901(IFSParallel):
             kind = dict(
                 values = ["c901", ]
             ),
-
+            clim = dict(
+                type = bool
+            ),
+            xpname = dict(
+                default = 'a001'
+            )
         )
     )
 
-    ATM_FC_FILE = "ICMUAa001INIT"
-    ATM_FC_SPE_FILE = "ICMSHa001INIT"
-    SURF_FC_FILE = "ICMGGa001INIT"
-    SURF_ANA_FILE = "ICMGGb001INIT"
-    OROGRAPHY_SPE_FILE = "ICMSHb001INIT"
-    OUTPUT_FILE_NAME = "CN90xa001INIT"
+    SPECTRAL_FILE_SH = "ICMSH{prefix}INIT{suffix}"
+    GRIDPOINT_FILE_UA = "ICMUA{prefix}INIT{suffix}"
+    GRIDPOINT_FILE_GG = "ICMGG{prefix}INIT{suffix}"
+    OUTPUT_FILE_NAME = "CN90x{}INIT"
     OUTPUT_LISTING_NAME = "NODE.001_01"
+    LIST_INPUT_FILES = [("SpectralFileSH", SPECTRAL_FILE_SH),
+                        ("GridpointFileUA", GRIDPOINT_FILE_UA),
+                        ("GridpointFileGG", GRIDPOINT_FILE_GG)]
+    LIST_CST_INPUT_FILES = [("ConstantSpectralFileSH", SPECTRAL_FILE_SH),
+                            ("ConstantGridpointFileUA", GRIDPOINT_FILE_UA),
+                            ("ConstantGridpointFileGG", GRIDPOINT_FILE_GG)]
 
     @property
     def realkind(self):
         return "c901"
+
+    def sort_files_per_prefix(self, list_types, unique=False):
+        """Function used to sort the files according to their prefix in a given type"""
+        result = dict()
+        for (file_role, file_template) in list_types:
+            result[file_role] = dict()
+            input_files = self.context.sequence.effective_inputs(
+                role = file_role
+            )
+            template = file_template.format(prefix=r"(?P<prefix>\S{4})", suffix=r"(?P<suffix>\S*)")
+            for file_s in input_files:
+                file_name = file_s.rh.container.filename
+                find_elements = re.search(template, file_name)
+                if find_elements is None:
+                    logger.error("The name of the file %s do not follow the template %s.", file_name, template)
+                    raise ValueError("The name of the file do not follow the template.")
+                else:
+                    if find_elements.group("prefix") not in result[file_role]:
+                        result[file_role][find_elements.group("prefix")] = list()
+                    else:
+                        if unique:
+                            logger.error("Only one file should be present for each type and each suffix.")
+                            raise ValueError("Only one file should be present for each suffix.")
+                    result[file_role][find_elements.group("prefix")].append(file_s)
+            if result[file_role]:
+                for file_prefix in result[file_role]:
+                    result[file_role][file_prefix].sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
+            else:
+                del result[file_role]
+        return result
 
     def execute(self, rh, opts):
         """Loop on the various files provided"""
 
         sh = self.system
 
-        surf_fc_files = self.context.sequence.effective_inputs(
-            role = "SurfaceModelState"
-        )
-        surf_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
-        surf_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in surf_fc_files]
-        atm_fc_files = self.context.sequence.effective_inputs(
-            role = "AtmosphereModelState"
-        )
-        atm_fc_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
-        atm_fc_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_files]
-        atm_fc_spe_files = self.context.sequence.effective_inputs(
-            role = "AtmosphereModelSpectralState"
-        )
-        atm_fc_spe_files.sort(key=lambda s: s.rh.resource.date + s.rh.resource.term)
-        atm_fc_spe_files_terms = [s.rh.resource.date + s.rh.resource.term for s in atm_fc_spe_files]
-        current_surf_ana_file = self.context.sequence.effective_inputs(
-            role = "SurfaceAnalysis"
-        )[0]
-        current_orography_spe_file = self.context.sequence.effective_inputs(
-            role = "OrographySpectralState"
-        )[0]
+        # Create the template for files to be removed at each validity date and for the outputname
+        deleted_spectral_file_SH = self.SPECTRAL_FILE_SH.format(prefix="*", suffix="")
+        deleted_gridpoint_file_UA = self.GRIDPOINT_FILE_UA.format(prefix="*", suffix="")
+        deleted_gridpoint_file_GG = self.GRIDPOINT_FILE_GG.format(prefix="*", suffix="")
+        output_name = self.OUTPUT_FILE_NAME.format(self.xpname.upper())
 
-        self.algoassert(surf_fc_files_terms != atm_fc_files_terms or surf_fc_files_terms != atm_fc_spe_files_terms,
-                        "The files of each type must have the same validity dates.")
+        # Sort input files
+        sorted_cst_input_files = self.sort_files_per_prefix(self.LIST_CST_INPUT_FILES, unique=True)
+        sorted_input_files = self.sort_files_per_prefix(self.LIST_INPUT_FILES)
 
-        for current_surf_fc_file in surf_fc_files:
-            # Create the needed links for the run
-            self.algoassert(sh.path.exists(self.SURF_FC_FILE),
-                            "The file {} already exists. It should not.".format(self.SURF_FC_FILE))
-            sh.cp(current_surf_fc_file.rh.container.iotarget(), self.SURF_FC_FILE, intent="in")
-            current_atm_fc_file = atm_fc_files.pop()
-            self.algoassert(sh.path.exists(self.ATM_FC_FILE),
-                            "The file {} already exists. It should not.".format(self.ATM_FC_FILE))
-            sh.cp(current_atm_fc_file.rh.container.iotarget(), self.ATM_FC_FILE, intent='in')
-            current_atm_fc_spe_file = atm_fc_spe_files.pop()
-            self.algoassert(sh.path.exists(self.ATM_FC_SPE_FILE),
-                            "The file {} already exists. It should not.".format(self.ATM_FC_SPE_FILE))
-            sh.cp(current_atm_fc_spe_file.rh.container.iotarget(), self.ATM_FC_SPE_FILE, intent='in')
-            self.algoassert(sh.path.exists(self.SURF_ANA_FILE),
-                            "The file {} already exists. It should not.".format(self.SURF_ANA_FILE))
-            sh.cp(current_surf_ana_file.rh.container.iotarget(), self.SURF_ANA_FILE, intent='in')
-            self.algoassert(sh.path.exists(self.OROGRAPHY_SPE_FILE),
-                            "The file {} already exists. It should not.".format(self.OROGRAPHY_SPE_FILE))
-            sh.cp(current_orography_spe_file.rh.container.iotarget(), self.OROGRAPHY_SPE_FILE, intent='in')
-            # Find the validity date and the associated climatology file
-            actual_date = current_surf_fc_file.resource.date + current_surf_fc_file.resource.term
-            actualmonth = date.Month(actual_date)
-            self.climfile_fixer(rh, convkind='modelclim', month=actualmonth,
-                                inputrole=('GlobalClim', 'InitialClim'),
-                                inputkind='clim_model')
+        # Determine the validity present for each non constant input files, check that they are the same for all
+        # Also create the list of the filenames that should be deleted
+        input_validity = list()
+        for file_role in sorted_input_files:
+            for file_prefix in sorted_input_files[file_role]:
+                input_validity.append([s.rh.resource.date + s.rh.resource.term
+                                       for s in sorted_input_files[file_role][file_prefix]])
+        test_wrong_input_validity = True
+        for i in range(1, len(input_validity)):
+            test_wrong_input_validity = test_wrong_input_validity and (input_validity[0] == input_validity[i])
+        self.algoassert(test_wrong_input_validity, "The files of each type must have the same validity dates.")
+
+        # Modify namelist
+        input_namelist = self.context.sequence.effective_inputs(
+            role = "Namelist",
+            kind = "namelist"
+        )
+        for namelist in input_namelist:
+            namcontents = namelist.rh.contents
+            logger.info('Setup macro LLCLIM=%s in %s', self.clim, namelist.rh.container.actualpath())
+            namcontents.setmacro('LLCLIM', self.clim)
+            namcontents.rewrite(namelist.rh.container)
+
+        for current_validity in input_validity[0]:
+            # Deal with constant input files (gridpoint and spectral)
+            for (file_role, file_template) in self.LIST_CST_INPUT_FILES:
+                if file_role in sorted_cst_input_files:
+                    for file_prefix in sorted_cst_input_files[file_role]:
+                        file_name = file_template.format(prefix=file_prefix, suffix="")
+                        current_file_input = sorted_cst_input_files[file_role][file_prefix][0]
+                        self.algoassert(not sh.path.exists(file_name),
+                                        "The file {} already exists. It should not.".format(file_name))
+                        sh.cp(current_file_input.rh.container.iotarget(), file_name, intent="in")
+
+            # Deal with other input files (gridpoint and spectral)
+            for (file_role, file_template) in self.LIST_INPUT_FILES:
+                if file_role in sorted_input_files:
+                    for file_prefix in sorted_input_files[file_role]:
+                        file_name = file_template.format(prefix=file_prefix, suffix="")
+                        current_file_input = sorted_input_files[file_role][file_prefix].pop()
+                        self.algoassert(not sh.path.exists(file_name),
+                                        "The file {} already exists. It should not.".format(file_name))
+                        sh.cp(current_file_input.rh.container.iotarget(), file_name, intent="in")
+
+            if self.clim:
+                # Find the right climatology file
+                current_month = date.Month(current_validity)
+                self.climfile_fixer(rh, convkind='modelclim', month=current_month,
+                                    inputrole=('GlobalClim', 'InitialClim'),
+                                    inputkind='clim_model')
+
             # Standard execution
             super(C901, self).execute(rh, opts)
             # Move the output file
-            current_term = current_surf_fc_file.rh.resource.term
-            sh.move(self.OUTPUT_FILE_NAME, self.OUTPUT_FILE_NAME + "+{}".format(current_term.fmthm))
+            current_term = current_file_input.rh.resource.term
+            sh.move(output_name, output_name + "+{}".format(current_term.fmthm))
             # Cat all the listings into a single one
             sh.cat(self.OUTPUT_LISTING_NAME, output='NODE.all')
             # Remove unneeded files
-            sh.rmall(self.ATM_FC_FILE, self.ATM_FC_SPE_FILE, self.SURF_FC_FILE, self.SURF_ANA_FILE,
-                     self.OROGRAPHY_SPE_FILE, self.OUTPUT_LISTING_NAME, 'std*')
+            sh.rmall(deleted_spectral_file_SH, deleted_gridpoint_file_GG, deleted_gridpoint_file_UA,
+                     'std*', self.OUTPUT_LISTING_NAME)

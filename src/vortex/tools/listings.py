@@ -40,7 +40,7 @@ class ArpIfsListingDiff_Result(object):
 
     def differences(self):
         """Print a summary of the listing comparison."""
-        print
+        # print()  # activation breaks test_arpifs_listings_integration.py
         if self._norms_eq:
             if all(self._norms_eq.values()):
                 print("Norms   check succeeded for all steps.")
@@ -51,7 +51,7 @@ class ArpIfsListingDiff_Result(object):
                     "\n  ".join([str(k) for k, v in self._norms_eq.items() if not v])))
         else:
             print("No norms found in the new listing or no matching norms.")
-        print
+        # print()  # activation breaks test_arpifs_listings_integration.py
         if self._jos_eq:
             diffprinted = False
             for k, v in self._jos_eq.items():
@@ -91,6 +91,10 @@ class ArpIfsListingDiff_Status(object):
         return self._result
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self._norms_ok and self._jos_ok)
 
 

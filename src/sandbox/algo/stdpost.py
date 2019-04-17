@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import collections
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.algo.components import AlgoComponent
 from bronx.system.hash import HashAdapter
@@ -13,7 +13,7 @@ from bronx.system.hash import HashAdapter
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 _GribInfosKey = collections.namedtuple('_GribInfosKey', ('vapp', 'vconf', 'member', 'domain'))

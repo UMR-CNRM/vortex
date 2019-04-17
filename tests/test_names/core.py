@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Core classes needed to run names tests.
-'''
+"""
 
-
-from __future__ import print_function, division, absolute_import, unicode_literals
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 import functools
@@ -15,24 +13,27 @@ import io
 import os
 import pprint
 
+import six
 import yaml
 
+import bronx.stdtypes.catalog
 import bronx.stdtypes.date
 import footprints as fp
-import vortex.syntax.stdattrs
 import gco
-
-import common  # @UnusedImport
-import olive  # @UnusedImport
-import iga  # @UnusedImport
-import intairpol  # @UnusedImport
-import cen  # @UnusedImport
-import previmar  # @UnusedImport
-
+import vortex.syntax.stdattrs
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
+from bronx.fancies.loggers import contextboundGlobalLevel
 from .utils import YamlOrderedDict
 
+import cen        # @UnusedImport
+import common     # @UnusedImport
+import iga        # @UnusedImport
+import intairpol  # @UnusedImport
+import olive      # @UnusedImport
+import previmar   # @UnusedImport
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------
@@ -67,7 +68,7 @@ class TestNamesComparisonError(TestNamesError):
         outstr = super(TestNamesComparisonError, self).__str__() + '\n'
         outstr += 'List of defaults\n{!s}\n'.format(self._defaults)
         outstr += 'List of parameters\n{!s}'.format(self._desc)
-        return(outstr)
+        return outstr
 
 
 class TestNamesComparisonDiffError(TestNamesComparisonError):
@@ -81,7 +82,7 @@ class TestNamesComparisonDiffError(TestNamesComparisonError):
     def __str__(self):
         outstr = super(TestNamesComparisonDiffError, self).__str__() + '\n'
         outstr += '(me) {0._me!s}\n!=   {0._ref!s} (ref)'.format(self)
-        return(outstr)
+        return outstr
 
 
 class TestNamesComparisonNoRefError(TestNamesComparisonError):
@@ -158,44 +159,45 @@ class TestDriver(object):
         del default['vconf']
         return getattr(self, '_format_default_{:s}'.format(self._defaults_style))(default)
 
-    def compute_results(self):
+    def compute_results(self, loglevel='info'):
         """Launch all the tests (compute the associated locations)."""
         original_stag = vortex.sessions.get().tag
         try:
-            gl = vortex.sessions.getglove(user='tourist')
-            t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
-            logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
-            t.env.MTOOLDIR = '/'
-            # Deal with genvs
-            for genv in self._genvs:
-                try:
-                    with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
-                        genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
-                except IOError:
-                    logger.error("Genv cycle << %s >> not found.", genv)
-                    raise
-                gco.tools.genv.autofill(cycle=genv, gcout=genvstuff)
-                logger.debug("Genv cycle << %s >> registered", genv)
-            # Run things for each default
-            for default in self._defaults:
-                original_vapp = t.glove.vapp
-                original_vconf = t.glove.vconf
-                original_defaults = fp.setup.defaults.copy()  # @UndefinedVariable
-                try:
-                    rawdefault = default.raw.copy()
-                    if 'vapp' in rawdefault:
-                        t.glove.vapp = rawdefault['vapp']
-                    if 'vconf' in rawdefault:
-                        t.glove.vconf = rawdefault['vconf']
-                    fp.setup.defaults = self._format_default(rawdefault)
-                    logger.debug("Glove's vapp/vconf: %s/%s", t.glove.vapp, t.glove.vconf)
-                    logger.debug("Footprints defaults: %s", str(fp.setup.defaults))
-                    for tstack in self._todo:
-                        tstack.compute_results(default)
-                finally:
-                    t.glove.vapp = original_vapp
-                    t.glove.vconf = original_vconf
-                    fp.setup.defaults = original_defaults
+            with contextboundGlobalLevel(loglevel):
+                gl = vortex.sessions.getglove(user='tourist')
+                t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
+                logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
+                t.env.MTOOLDIR = '/'
+                # Deal with genvs
+                for genv in self._genvs:
+                    try:
+                        with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
+                            genvstuff = [l.rstrip('\n') for l in fhgenv.readlines()]
+                    except IOError:
+                        logger.error("Genv cycle << %s >> not found.", genv)
+                        raise
+                    gco.tools.genv.autofill(cycle=genv, gcout=genvstuff)
+                    logger.debug("Genv cycle << %s >> registered", genv)
+                # Run things for each default
+                for default in self._defaults:
+                    original_vapp = t.glove.vapp
+                    original_vconf = t.glove.vconf
+                    original_defaults = fp.setup.defaults.copy()  # @UndefinedVariable
+                    try:
+                        rawdefault = default.raw.copy()
+                        if 'vapp' in rawdefault:
+                            t.glove.vapp = rawdefault['vapp']
+                        if 'vconf' in rawdefault:
+                            t.glove.vconf = rawdefault['vconf']
+                        fp.setup.defaults = self._format_default(rawdefault)
+                        logger.debug("Glove's vapp/vconf: %s/%s", t.glove.vapp, t.glove.vconf)
+                        logger.debug("Footprints defaults: %s", str(fp.setup.defaults))
+                        for tstack in self._todo:
+                            tstack.compute_results(default)
+                    finally:
+                        t.glove.vapp = original_vapp
+                        t.glove.vconf = original_vconf
+                        fp.setup.defaults = original_defaults
         finally:
             vortex.sessions.switch(original_stag)
 
@@ -205,7 +207,7 @@ class TestDriver(object):
         for tstack in self._todo:
             stackdump.append(sorted(tstack, key=lambda t: t.desc))
         with io.open(self._resultfile, 'w') as fhyaml:
-            yaml.dump(stackdump, fhyaml, default_flow_style = False)
+            yaml.dump(stackdump, fhyaml, default_flow_style=False)
 
     def load_references(self):
         """Read reference data from file."""
@@ -226,7 +228,7 @@ class TestDriver(object):
             me.check_against(ref)
 
 
-class TestsStack(fp.util.Catalog):
+class TestsStack(bronx.stdtypes.catalog.Catalog):
     """Contains a subset of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):
@@ -309,7 +311,7 @@ class SingleTest(object):
     def rh(self):
         """Generate the ResourceHandler associated with this test."""
         picked_up = fp.proxy.providers.pickup(  # @UndefinedVariable
-            * fp.proxy.resources.pickup_and_cache(self.desc.raw.copy())  # @UndefinedVariable
+            *fp.proxy.resources.pickup_and_cache(self.desc.raw.copy())  # @UndefinedVariable
         )
         logger.debug('Resource desc %s', picked_up)
         picked_up['container'] = self._DEFAULT_CONTAINER
@@ -348,7 +350,7 @@ class SingleTest(object):
 # ------------------------------------------------------------------------------
 # Utility classes that handles footprint's descriptions and test results
 
-class TestResults(collections.Mapping):
+class TestResults(collections_abc.Mapping):
     """Utility class that holds test's results."""
 
     def __init__(self):
@@ -397,7 +399,7 @@ class TestResults(collections.Mapping):
 
 
 @functools.total_ordering
-class TestParameters(collections.Hashable):
+class TestParameters(collections_abc.Hashable):
     """Utility class that holds a footprint's description."""
 
     def __init__(self, desc):

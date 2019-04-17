@@ -14,6 +14,7 @@ import re
 import six
 
 from bronx.stdtypes.date import Date, Time, Month
+from bronx.syntax.decorators import secure_getattr
 from bronx.system import hash as hashutils
 import footprints
 
@@ -28,20 +29,19 @@ __all__ = [
     'a_namespace', 'a_hashalgo', 'a_compressionpipeline', 'a_block', 'a_number'
 ]
 
-#: Default values for atmospheric models.
+#: Possible values for the *model* attribute.
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
-    'safran', 'ifs',
+    'safran', 'ifs', 'aroifs',
 ])
 
-#: Default values for the most common binaries.
+#: Possible values for the most common binaries.
 binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
-                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd'])
+                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
+                 'ifs', 'oops'])
+#: Possible values for the most common utility programs.
 utilities = set(['batodb'])
-
-#: Default attributes excluded from `repr` display
-notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
 
 #: Known formats
 knownfmt = set([
@@ -52,11 +52,14 @@ knownfmt = set([
     'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
 
+#: Default attributes excluded from `repr` display
+notinrepr = set(['kind', 'unknown', 'clscontents', 'gvar', 'nativefmt'])
+
 
 class DelayedEnvValue(object):
     """
-    Store a environment variable and restitue value when needed,
-    eg. in a footprint evaluation.
+    Store an environment variable name and compute its value when needed,
+    *e.g.* in a footprint evaluation.
     """
 
     def __init__(self, varname, default=None, refresh=False):
@@ -88,12 +91,14 @@ class DelayedEnvValue(object):
 class DelayedInit(object):
     """
     Delays the proxied object creation until it's actually accessed.
+    *e.g.* in a footprint evaluation.
     """
 
     def __init__(self, proxied, initializer):
         self.__proxied = proxied
         self.__initializer = initializer
 
+    @secure_getattr
     def __getattr__(self, name):
         if self.__proxied is None:
             self.__proxied = self.__initializer()
@@ -149,7 +154,7 @@ class LegacyXPid(XPid):
 class FreeXPid(XPid):
     """Basestring wrapper for experiment ids (User defined)."""
 
-    _re_valid = re.compile(r'^\w+@\w+$')
+    _re_valid = re.compile(r'^\S+@\w+$')
 
     def __new__(cls, value):
         if not cls._re_valid.match(value):
@@ -166,7 +171,7 @@ class FreeXPid(XPid):
         return self.split('@')[1]
 
 
-#: Default values for operational experiment names.
+#: The list of operational experiment names.
 opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
@@ -273,7 +278,7 @@ class Longitude(float):
 
 # predefined attributes
 
-#: Usual definition for the ``xpid`` or experiment name.
+#: Usual definition for the ``xpid`` (*e.g.* experiment name).
 a_xpid = dict(
     info     = "The experiment's identifier.",
     type     = XPid,
@@ -283,14 +288,14 @@ a_xpid = dict(
 xpid = footprints.Footprint(info = 'Abstract experiment id',
                             attr = dict(experiment = a_xpid))
 
-#: Usual definition for an Olive/Oper ``xpid`` or experiment name.
+#: Usual definition for an Olive/Oper ``xpid`` (*e.g.* experiment name).
 a_legacy_xpid = copy.copy(a_xpid)
 a_legacy_xpid['type'] = LegacyXPid
 
 legacy_xpid = footprints.Footprint(info = 'Abstract experiment id',
                                    attr = dict(experiment = a_legacy_xpid))
 
-#: Usual definition for a user-defined ``xpid`` or experiment name.
+#: Usual definition for a user-defined ``xpid`` (*e.g.* experiment name).
 a_free_xpid = copy.copy(a_xpid)
 a_free_xpid['type'] = FreeXPid
 
@@ -536,6 +541,14 @@ a_member = dict(
 )
 
 member = footprints.Footprint(info = 'Abstract member', attr = dict(member = a_member))
+
+#: Usual definition of the ``scenario`` attribute
+a_scenario = dict(
+    info     = "The scenario identifier of the climate simulation (optional, especially in an NWP context).",
+    optional = True,
+)
+
+scenario = footprints.Footprint(info = 'Abstract scenario', attr = dict(scenario = a_scenario))
 
 #: Usual definition of the ``number`` attribute (e.g. a perturbation number)
 a_number = dict(

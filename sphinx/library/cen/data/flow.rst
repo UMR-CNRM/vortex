@@ -62,3 +62,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SafranPackedObs
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

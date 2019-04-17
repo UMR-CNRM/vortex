@@ -15,6 +15,8 @@ import ftplib
 import re
 import six
 
+from bronx.fancies import loggers
+from bronx.patterns import observer
 from bronx.stdtypes import date
 from bronx.system import hash as hashutils
 import footprints
@@ -33,7 +35,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: Export base class
 __all__ = ['Store']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
@@ -48,7 +50,7 @@ def observer_board(obsname=None):
     """Proxy to :func:`footprints.observers.get`."""
     if obsname is None:
         obsname = OBSERVER_TAG
-    return footprints.observers.get(tag=obsname)
+    return observer.get(tag=obsname)
 
 
 class StoreGlue(object):
@@ -217,10 +219,6 @@ class Store(footprints.FootprintBase):
         self._cpipeline = False
         self.delayed = False
 
-    def __del__(self):
-        self._observer.notify_del(self, dict())
-        super(Store, self).__del__()
-
     @property
     def realkind(self):
         return 'store'
@@ -232,6 +230,10 @@ class Store(footprints.FootprintBase):
 
     def use_cache(self):
         """Boolean function to check if the current store use a local cache."""
+        return False
+
+    def has_fast_check(self):
+        """How fast and reliable is a check call ?"""
         return False
 
     def _observer_notify(self, action, rc, remote, local=None, options=None):
@@ -357,16 +359,21 @@ class Store(footprints.FootprintBase):
         remote['path'] = remote['path'] + '.' + self.storehash  # Name of the hash file
         remote['query'].pop('extract', None)  # Ignore any extract request
         try:
-            # First, try to fetch the sum in a real file
-            # (in order to potentially use ftserv...)
-            tempcontainer = footprints.proxy.container(shouldfly=True)
+            tempcontainer = None
             try:
-                rc = callback(remote, tempcontainer.iotarget(), options)
-            except (OSError, IOError):
-                # This may happen if the user has insufficient rights on
-                # the current directory
-                tempcontainer = footprints.proxy.container(incore=True)
-                rc = callback(remote, tempcontainer.iotarget(), options)
+                # First, try to fetch the sum in a real file
+                # (in order to potentially use ftserv...)
+                tempcontainer = footprints.proxy.container(shouldfly=True, mode='rb')
+                try:
+                    rc = callback(remote, tempcontainer.iotarget(), options)
+                except (OSError, IOError, ExecutionError):
+                    # This may happen if the user has insufficient rights on
+                    # the current directory
+                    tempcontainer = footprints.proxy.container(incore=True, mode='w+b')
+                    rc = callback(remote, tempcontainer.iotarget(), options)
+            except (OSError, IOError, ExecutionError):
+                logger.warning('Something went very wrong when fetching the hash file ! (assuming rc=False)')
+                rc = False
             # check the hash key
             hadapt = hashutils.HashAdapter(self.storehash)
             rc = rc and hadapt.filecheck(local, tempcontainer)
@@ -375,24 +382,47 @@ class Store(footprints.FootprintBase):
             else:
                 logger.warning("%s hash sanity check failed.", self.storehash)
         finally:
-            tempcontainer.clear()
+            if tempcontainer is not None:
+                tempcontainer.clear()
         return rc
 
-    def get(self, remote, local, options=None):
+    def _actual_get(self, action, remote, local, options=None, result_id=None):
         """Proxy method to dedicated get method according to scheme."""
-        logger.debug('Store get from %s to %s', remote, local)
+        logger.debug('Store %s from %s to %s', action, remote, local)
         if options is not None and options.get('incache', False) and not self.use_cache():
             self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
             return False
         else:
             if (options is None or (not options.get('insitu', False)) or
                     self.use_cache()):
-                rc = getattr(self, self.scheme + 'get', self.notyet)(remote, local, options)
+                if result_id:
+                    rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
+                else:
+                    rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
                 self._observer_notify('get', rc, remote, local=local, options=options)
                 return rc
             else:
                 logger.error('Only cache stores can be used when insitu is True.')
                 return False
+
+    def get(self, remote, local, options=None):
+        """Proxy method to dedicated get method according to scheme."""
+        return self._actual_get('get', remote, local, options)
+
+    def earlyget(self, remote, local, options=None):
+        """Proxy method to dedicated earlyget method according to scheme."""
+        logger.debug('Store earlyget from %s to %s', remote, local)
+        rc = None
+        if options is None or not options.get('incache', False) or self.use_cache():
+            if options is None or (not options.get('insitu', False)) or self.use_cache():
+                available_dget = getattr(self, self.scheme + 'earlyget', None)
+                if available_dget is not None:
+                    rc = available_dget(remote, local, options)
+        return rc
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        """Proxy method to dedicated finaliseget method according to scheme."""
+        return self._actual_get('finaliseget', remote, local, options, result_id=result_id)
 
     def _hash_put(self, callback, local, remote, options=None):
         """Put a hash file next to the 'real' file."""
@@ -478,7 +508,7 @@ class MultiStore(footprints.FootprintBase):
         sh = kw.pop('system', sessions.system())
         super(MultiStore, self).__init__(*args, **kw)
         self._sh = sh
-        self.openedstores = self.loadstores()
+        self._openedstores = self.loadstores()
         self.delayed = False
 
     @property
@@ -513,6 +543,16 @@ class MultiStore(footprints.FootprintBase):
         logger.debug('Multistore %s includes active stores %s', self, activestores)
         return activestores
 
+    @property
+    def openedstores(self):
+        return self._openedstores
+
+    def filtered_readable_openedstores(self, remote):  # @UnusedVariable
+        return self._openedstores
+
+    def filtered_writeable_openedstores(self, remote):  # @UnusedVariable
+        return self._openedstores
+
     def alternates_scheme(self):
         """Default method returns actual scheme in a tuple."""
         return (self.scheme,)
@@ -538,6 +578,10 @@ class MultiStore(footprints.FootprintBase):
         """Boolean function to check if any included store use a local cache."""
         return any([x.use_cache() for x in self.openedstores])
 
+    def has_fast_check(self):
+        """How fast and reliable is a check call ?"""
+        return all([x.has_fast_check() for x in self.openedstores])
+
     @property
     def readonly(self):
         return all([x.readonly for x in self.openedstores])
@@ -550,7 +594,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and check for the resource."""
         logger.debug('Multistore check from %s', remote)
         rc = False
-        for sto in self.openedstores:
+        for sto in self.filtered_readable_openedstores(remote):
             rc = sto.check(remote.copy(), options)
             if rc:
                 break
@@ -559,10 +603,11 @@ class MultiStore(footprints.FootprintBase):
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
         logger.debug('Multistore locate %s', remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_readable_openedstores(remote)
+        if not f_ostores:
             return False
         rloc = list()
-        for sto in self.openedstores:
+        for sto in f_ostores:
             logger.debug('Multistore locate at %s', sto)
             tmp_rloc = sto.locate(remote.copy(), options)
             if tmp_rloc:
@@ -573,7 +618,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores and list the expected resource for each of them."""
         logger.debug('Multistore list %s', remote)
         rlist = set()
-        for sto in self.openedstores:
+        for sto in self.filtered_readable_openedstores(remote):
             logger.debug('Multistore list at %s', sto)
             tmp_rloc = sto.list(remote.copy(), options)
             if isinstance(tmp_rloc, (list, tuple, set)):
@@ -585,75 +630,112 @@ class MultiStore(footprints.FootprintBase):
     def prestage(self, remote, options=None):
         """Go through internal opened stores and prestage the resource for each of them."""
         logger.debug('Multistore prestage %s', remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_readable_openedstores(remote)
+        if not f_ostores:
             return False
         rc = True
-        for sto in self.openedstores:
+        for sto in f_ostores:
             logger.debug('Multistore prestage at %s', sto)
             rc = rc and sto.prestage(remote.copy(), options)
         return rc
 
-    def get(self, remote, local, options=None):
+    def _refilling_get(self, remote, local, options=None, result_id=None):
         """Go through internal opened stores for the first available resource."""
-        logger.debug('Multistore get from %s to %s', remote, local)
         rc = False
         refill_in_progress = True
+        f_rd_ostores = self.filtered_readable_openedstores(remote)
+        if self.refillstore:
+            f_wr_ostores = self.filtered_writeable_openedstores(remote)
         get_options = copy.copy(options) if options is not None else dict()
         get_options['silent'] = True
         while refill_in_progress:
-            for num, sto in enumerate(self.openedstores):
+            for num, sto in enumerate(f_rd_ostores):
                 logger.debug('Multistore get at %s', sto)
-                rc = sto.get(remote.copy(), local, get_options)
+                if result_id and num == len(f_rd_ostores) - 1:
+                    rc = sto.finaliseget(result_id, remote.copy(), local, get_options)
+                    result_id = None  # result_ids can not be re-used during refill
+                else:
+                    rc = sto.get(remote.copy(), local, get_options)
+                    if rc:
+                        result_id = None  # result_ids can not be re-used during refills
                 # Are we trying a refill ? -> find the previous writeable store
                 restores = []
                 if rc and self.refillstore and num > 0:
-                    restores = [ostore for ostore in self.openedstores[:num]
-                                if ostore.writeable]
+                    restores = [ostore for ostore in f_rd_ostores[:num]
+                                if ostore.writeable and ostore in f_wr_ostores]
                 # Do the refills and check if one of them succeed
                 refill_in_progress = False
                 for restore in restores:
                     # Another refill may have filled the gap...
                     if not restore.check(remote.copy(), options):
-                        logger.info('Refill back in writeable store [%s]', restore)
+                        logger.info('Refill back in writeable store [%s].', restore)
                         try:
                             refill_in_progress = ((restore.put(local, remote.copy(), options) and
                                                    (options.get('intent', _CACHE_GET_INTENT_DEFAULT) !=
                                                     _CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
-                        except ExecutionError as e:
+                        except (ExecutionError, IOError, OSError) as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
                             logger.error("This error is ignored... but that's ugly !")
                 if refill_in_progress:
-                    logger.info("Starting another round because at least one refill succeeded")
+                    logger.info("Starting another round because at least one refill succeeded.")
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
         if not rc:
             self._verbose_log(options, 'warning',
-                              "None of the opened store succeeded... that's too bad !",
-                              slevel='info')
+                              "Multistore get {:s}://{:s}: none of the opened store succeeded."
+                              .format(self.scheme, self.netloc), slevel='info')
         return rc
+
+    def get(self, remote, local, options=None):
+        """Go through internal opened stores for the first available resource."""
+        logger.debug('Multistore get from %s to %s', remote, local)
+        return self._refilling_get(remote, local, options)
+
+    def earlyget(self, remote, local, options=None):
+        logger.debug('Multistore earlyget from %s to %s', remote, local)
+        f_ostores = self.filtered_readable_openedstores(remote)
+        get_options = copy.copy(options) if options is not None else dict()
+        if len(f_ostores) > 1:
+            first_checkable = all([s.has_fast_check() for s in f_ostores[:-1]])
+            # Early-fetch is only available on the last resort store...
+            if first_checkable and all([not s.check(remote.copy(), get_options)
+                                        for s in f_ostores[:-1]]):
+                return f_ostores[-1].earlyget(remote.copy(), local, get_options)
+            else:
+                return None
+        elif len(f_ostores) == 1:
+            return f_ostores[0].earlyget(remote.copy(), local, get_options)
+        else:
+            return None
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        logger.debug('Multistore finaliseget from %s to %s', remote, local)
+        return self._refilling_get(remote, local, options, result_id=result_id)
 
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
         logger.debug('Multistore put from %s to %s', local, remote)
-        if not self.openedstores:
+        f_ostores = self.filtered_writeable_openedstores(remote)
+        if not f_ostores:
             logger.warning('Funny attempt to put on an empty multistore...')
             return False
         rc = True
-        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
-            logger.info('Multistore put at %s', sto)
+        for sto in [ostore for ostore in f_ostores if ostore.writeable]:
+            logger.debug('Multistore put at %s', sto)
             rcloc = sto.put(local, remote.copy(), options)
-            logger.info('Multistore out = %s', rcloc)
+            logger.debug('Multistore out = %s', rcloc)
             rc = rc and rcloc
         return rc
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
         logger.debug('Multistore delete from %s', remote)
+        f_ostores = self.filtered_writeable_openedstores(remote)
         rc = False
-        for sto in [ostore for ostore in self.openedstores if ostore.writeable]:
-            logger.info('Multistore delete at %s', sto)
+        for sto in [ostore for ostore in f_ostores if ostore.writeable]:
+            logger.debug('Multistore delete at %s', sto)
             rc = sto.delete(remote.copy(), options)
             if not rc:
                 break
@@ -678,6 +760,10 @@ class MagicPlace(Store):
     @property
     def realkind(self):
         return 'magicstore'
+
+    def has_fast_check(self):
+        """A void check is very fast !"""
+        return True
 
     def magiccheck(self, remote, options):
         """Void - Always False."""
@@ -752,6 +838,10 @@ class FunctionStore(Store):
     def realkind(self):
         return 'functionstore'
 
+    def has_fast_check(self):
+        """A void check is very fast !"""
+        return True
+
     def functioncheck(self, remote, options):
         """Void - Always False."""
         return False
@@ -781,7 +871,15 @@ class FunctionStore(Store):
         if fres is not None:
             if 'intent' in options and options['intent'] == dataflow.intent.IN:
                 logger.info('Ignore intent <in> for function input.')
-            # NB: fres should be a file like object (StringIO will do the trick)
+            # Handle StringIO objects, by changing them to ByteIOs...
+            if isinstance(fres, six.StringIO):
+                s_fres = fres
+                s_fres.seek(0)
+                fres = six.BytesIO()
+                for l in s_fres:
+                    fres.write(l.encode(encoding='utf-8'))
+                fres.seek(0)
+            # NB: fres should be a file like object (BytesIO will do the trick)
             return self.system.cp(fres, local)
         else:
             return False
@@ -841,7 +939,7 @@ class Finder(Store):
         if (isinstance(local, six.string_types) and self.system.path.isfile(local) and
                 self.system.is_tarfile(local)):
             destdir = self.system.path.dirname(self.system.path.realpath(local))
-            self.system.smartuntar(local, destdir, output=False)
+            self.system.smartuntar(local, destdir)
 
     def filecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists on the ``system`` provided."""
@@ -912,7 +1010,9 @@ class Finder(Store):
         if ftp:
             try:
                 rc = ftp.size(self.fullpath(remote))
-            except (ValueError, TypeError, ftplib.all_errors):
+            except (ValueError, TypeError):
+                pass
+            except ftplib.all_errors:
                 pass
             finally:
                 ftp.close()
@@ -1107,6 +1207,33 @@ class ArchiveStore(Store):
         )
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
+    def inarchiveearlyget(self, remote, local, options):
+        logger.debug('inarchiveearlyget on %s://%s/%s (to: %s)',
+                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.earlyretrieve(
+            self._inarchiveformatpath(remote), local,
+            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
+        )
+        return rc
+
+    def inarchivefinaliseget(self, result_id, remote, local, options):
+        logger.info('inarchivefinaliseget on %s://%s/%s (to: %s)',
+                    self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
+        rc = self.archive.finaliseretrieve(
+            result_id,
+            self._inarchiveformatpath(remote), local,
+            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username = remote['username'],
+            compressionpipeline = self._actual_cpipeline,
+        )
+        return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
+
     def inarchiveput(self, local, remote, options):
         logger.info('inarchiveput to %s://%s/%s (from: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
@@ -1133,6 +1260,11 @@ class ArchiveStore(Store):
         )
 
 
+def _default_remoteconfig_dict():
+    """Just an utility method for ConfigurableArchiveStore."""
+    return dict(restrict=None, seen = False)
+
+
 class ConfigurableArchiveStore(object):
     """Generic Archive Store with the ability to read a configuration file.
 
@@ -1152,7 +1284,48 @@ class ConfigurableArchiveStore(object):
         else:
             return None
 
-    def _load_config(self, conf):
+    def _ingest_remote_config(self, r_id, r_confdict, global_confdict):
+        logger.info("Reading config file: %s (id=%s)", r_confdict['uri'], r_id)
+        url = net.uriparse(r_confdict['uri'])
+        tempstore = footprints.proxy.store(
+            scheme=url['scheme'],
+            netloc=url['netloc'],
+            storetrack=False,
+        )
+        retry = False
+        # First, try with a temporary ShouldFly
+        try:
+            tempcontainer = footprints.proxy.container(shouldfly=True)
+            remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
+        except (OSError, IOError):
+            # This may happen if the user has insufficient rights on
+            # the current directory
+            retry = True
+        finally:
+            self.system.remove(tempcontainer.filename)
+        # Is retry needed ? This time a completely virtual file is used.
+        if retry:
+            remotecfg_parser = self._get_remote_config(tempstore, url,
+                                                       footprints.proxy.container(incore=True))
+        # Update the configuration using the parser
+        if remotecfg_parser is not None:
+            for section in remotecfg_parser.sections():
+                logger.debug("New location found: %s", section)
+                # Filtering based on the regex : No collisions allowed !
+                if r_confdict['restrict'] is not None:
+                    if r_confdict['restrict'].search(section):
+                        global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                    else:
+                        logger.error('According to the "restrict" clause, ' +
+                                     'you are not allowed to define the %s location !', section)
+                else:
+                    global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+            r_confdict['seen'] = True
+        else:
+            raise IOError("The remote configuration {:s} couldn't be found."
+                          .format(r_confdict['uri']))
+
+    def _load_config(self, conf, tlocation):
         """Load the store configuration.
 
         1. The global store's configuration file is read (see
@@ -1166,63 +1339,68 @@ class ConfigurableArchiveStore(object):
         The relevant content of the configuration file is stored in the ``conf``
         dictionary.
         """
-        logger.info("Some store configuration data is needed (for %s://%s)",
-                    self.scheme, self.netloc)
-
         # Because _store_global_config and _datastore_id must be overwritten...
         assert self._store_global_config is not None
         assert self._datastore_id is not None
 
-        # Global configuration file
-        logger.info("Reading config file: %s", self._store_global_config)
-        maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-        conf['host'] = dict(maincfg.items(self.archive.actual_storage))
+        if not conf:
+            # This is the first call to this method
+            logger.info("Some store configuration data is needed (for %s://%s)",
+                        self.scheme, self.netloc)
 
-        # Look for a local configuration file
-        localcfg = conf['host'].get('localconf', None)
-        if localcfg is not None:
-            logger.info("Reading config file: %s", localcfg)
-            localcfg = config.GenericConfigParser(inifile=localcfg)
+            # Global configuration file
+            logger.info("Reading config file: %s", self._store_global_config)
+            maincfg = config.GenericConfigParser(inifile=self._store_global_config)
+            conf['host'] = dict(maincfg.items(self.archive.actual_storage))
             conf['locations'] = defaultdict(dict)
-            conf['locations']['generic'] = localcfg.defaults()
-            for section in localcfg.sections():
-                logger.debug("New location found: %s", section)
-                conf['locations'][section] = dict(localcfg.items(section))
 
-        # Look for remote configurations
-        remotecfgs = sorted([key for key in conf['host'].keys()
-                             if key.startswith('remoteconf')])
-        for remotecfg in [conf['host'][k] for k in remotecfgs]:
-            logger.info("Reading config file: %s", remotecfg)
-            url = net.uriparse(remotecfg)
-            tempstore = footprints.proxy.store(
-                scheme=url['scheme'],
-                netloc=url['netloc'],
-                storetrack=False,
-            )
-            retry = False
-            # First, try with a temporary ShouldFly
-            try:
-                tempcontainer = footprints.proxy.container(shouldfly=True)
-                remotecfg_parser = self._get_remote_config(tempstore, url, tempcontainer)
-            except (OSError, IOError):
-                # This may happen if the user has insufficient rights on
-                # the current directory
-                retry = True
-            finally:
-                self.system.remove(tempcontainer.filename)
-            # Is retry needed ? This time a completely virtual file is used.
-            if retry:
-                remotecfg_parser = self._get_remote_config(tempstore, url,
-                                                           footprints.proxy.container(incore=True))
-            # Update the configuration using the parser
-            if remotecfg_parser is not None:
-                for section in remotecfg_parser.sections():
+            # Look for a local configuration file
+            localcfg = conf['host'].get('localconf', None)
+            if localcfg is not None:
+                logger.info("Reading config file: %s", localcfg)
+                localcfg = config.GenericConfigParser(inifile=localcfg)
+                conf['locations']['generic'] = localcfg.defaults()
+                for section in localcfg.sections():
                     logger.debug("New location found: %s", section)
-                    conf['locations'][section].update(dict(remotecfg_parser.items(section)))
-            else:
-                raise IOError("The remote configuration {:s} couldn't be found."
-                              .format(remotecfg))
+                    conf['locations'][section] = dict(localcfg.items(section))
+
+            # Look for remote configurations
+            tg_inet = self.system.default_target.inetname
+            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
+            for key in conf['host'].keys():
+                k_match = re.match(r'generic_(remoteconf\w*)_uri$', key)
+                if k_match:
+                    r_id = k_match.group(1)
+                    g_uri_key = key
+                    i_uri_key = '{:s}_{:s}_uri'.format(tg_inet, r_id)
+                    g_restrict_key = 'generic_{:s}_restrict'.format(r_id)
+                    i_restrict_key = '{:s}_{:s}_restrict'.format(tg_inet, r_id)
+                    if i_uri_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['uri'] = conf['host'][i_uri_key]
+                    else:
+                        conf['remoteconfigs'][r_id]['uri'] = conf['host'][g_uri_key]
+                    if i_restrict_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['restrict'] = conf['host'][i_restrict_key]
+                    elif g_restrict_key in conf['host'].keys():
+                        conf['remoteconfigs'][r_id]['restrict'] = conf['host'][g_restrict_key]
+                    # Trying to compile the regex !
+                    if conf['remoteconfigs'][r_id]['restrict'] is not None:
+                        try:
+                            conf['remoteconfigs'][r_id]['restrict'] = re.compile(conf['remoteconfigs'][r_id]['restrict'])
+                        except re.error as e:
+                            logger.error('The regex provided for %s does not compile !: "%s".',
+                                         r_id, str(e))
+                            logger.error('Please fix that quickly... Meanwhile, %s is ignored !', r_id)
+                            del conf['remoteconfigs'][r_id]
+
+            for r_confk, r_conf in conf['remoteconfigs'].items():
+                if r_conf['restrict'] is None:
+                    self._ingest_remote_config(r_confk, r_conf, conf)
+
+        for r_confk, r_conf in conf['remoteconfigs'].items():
+            if ((not r_conf['seen']) and r_conf['restrict'] is not None and
+                    r_conf['restrict'].search(tlocation)):
+                self._ingest_remote_config(r_confk, r_conf, conf)
 
     def _actual_fromconf(self, uuid, item):
         """For a given **uuid**, Find the corresponding value of the **item** key
@@ -1235,10 +1413,8 @@ class ConfigurableArchiveStore(object):
         ds = sessions.current().datastore
         conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
                       default_payload=dict(), readonly=True)
-        if not conf:
-            # If the configuration is empty, do what it takes...
-            self._load_config(conf)
         mylocation = uuid.location
+        self._load_config(conf, mylocation)
         st_root = None
         if mylocation in conf['locations']:
             st_root = conf['locations'][mylocation].get(item, None)
@@ -1335,6 +1511,16 @@ class VortexArchiveStore(ArchiveStore):
         remote = self.remap_read(remote, options)
         return self.inarchiveget(remote, local, options)
 
+    def vortexearlyget(self, remote, local, options):
+        """Remap and ftpget sequence."""
+        remote = self.remap_read(remote, options)
+        return self.inarchiveearlyget(remote, local, options)
+
+    def vortexfinaliseget(self, result_id, remote, local, options):
+        """Remap and ftpget sequence."""
+        remote = self.remap_read(remote, options)
+        return self.inarchivefinaliseget(result_id, remote, local, options)
+
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
         if not self.storetrue:
@@ -1430,7 +1616,7 @@ class VortexOpArchiveStore(VortexArchiveStore):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        if len(xpath) >= 5 and re.match('^\d{8}T\d{2,4}', xpath[4]):
+        if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
             # If a date is detected
             vxdate = list(xpath[4])
             vxdate.insert(4, '/')
@@ -1507,8 +1693,19 @@ class CacheStore(Store):
         tg = self.system.default_target
         return tg.inetname if self.storage is None else self.storage
 
+    @property
+    def config_name(self):
+        """Returns the current :attr:`storage`."""
+        tg = self.system.default_target
+        idname = tg.cache_storage_alias() if self.storage is None else self.storage
+        return '@cache-{!s}.ini'.format(idname)
+
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
+        return True
+
+    def has_fast_check(self):
+        """Because that's why caching is used !"""
         return True
 
     @property
@@ -1521,6 +1718,7 @@ class CacheStore(Store):
             self._cache = footprints.proxy.caches.default(
                 kind       = self.underlying_cache_kind,
                 storage    = self.hostname,
+                inifile    = self.config_name,
                 rootdir    = self.rootdir,
                 headdir    = self.headdir,
                 rtouch     = self.rtouch,
@@ -1578,6 +1776,9 @@ class CacheStore(Store):
             uniquelevel_ignore = options.get('uniquelevel_ignore', True),
             silent             = options.get('silent', False),
         )
+        if rc or not options.get('silent', False):
+            logger.info('incacheget retrieve rc=%s location=%s', str(rc),
+                        str(self.incachelocate(remote, options)))
         return rc and self._hash_get_check(self.incacheget, remote, local, options)
 
     def incacheput(self, local, remote, options):
@@ -1591,6 +1792,8 @@ class CacheStore(Store):
             fmt    = options.get('fmt'),
             info   = options.get('rhandler', None),
         )
+        logger.info('incacheput insert rc=%s location=%s', str(rc),
+                    str(self.incachelocate(remote, options)))
         return rc and self._hash_put(self.incacheput, local, remote, options)
 
     def incachedelete(self, remote, options):
@@ -1619,7 +1822,7 @@ class _VortexCacheBaseStore(CacheStore):
             ),
             headdir = dict(
                 default = 'vortex',
-                outcast = ['xp'],
+                outcast = ['xp', ],
             ),
             rtouch = dict(
                 default = True,
@@ -1671,8 +1874,7 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         info = 'VORTEX MTOOL like Cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vortex.cache.fr', 'vortex.cache-mt.fr',
-                           'vortex-free.cache.fr', 'vortex-free.cache-mt.fr',
+                values  = ['vortex.cache-mt.fr', 'vortex-free.cache-mt.fr',
                            'vsop.cache-mt.fr'],
             ),
             strategy = dict(
@@ -1680,6 +1882,89 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
             ),
         )
     )
+
+
+class VortexCacheBuddiesStore(_VortexCacheBaseStore):
+    """Some kind of MTOOL cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = 'VORTEX MTOOL like Cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache-buddies.fr', 'vortex-free.cache-buddies.fr', ],
+            ),
+            strategy = dict(
+                default = 'mtoolbuddies',
+            ),
+            headdir = dict(
+                default = 'vortexbuddies',
+            ),
+            rtouch = dict(
+                default = False,
+            ),
+            readonly = dict(
+                values  = [True, ],
+                default = True,
+            )
+        )
+    )
+
+
+class VortexCacheMarketPlaceStore(_VortexCacheBaseStore):
+    """Some kind of centralised cache for VORTEX experiments."""
+
+    _footprint = dict(
+        info = "VORTEX's centralised Cache access",
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache-market.fr', 'vortex-free.cache-market.fr', ],
+            ),
+            strategy = dict(
+                default = 'marketplace',
+            ),
+            rtouch = dict(
+                default = False,
+            ),
+        )
+    )
+
+
+class VortexCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'VORTEX cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['vortex'],
+            ),
+            netloc = dict(
+                values  = ['vortex.cache.fr', 'vortex-free.cache.fr', ],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_reads(remote['path'])])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
+        mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
+        ma_netloc = '{base:s}.cache-market.{country:s}'.format(** netloc_m.groupdict())
+        return [mt_netloc, bd_netloc, ma_netloc]
 
 
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
@@ -1868,6 +2153,10 @@ class PromiseStore(footprints.FootprintBase):
         """Shortcut to current system interface."""
         return self._sh
 
+    def has_fast_check(self):
+        """It depends..."""
+        return self.other.has_fast_check()
+
     def mkpromise_info(self, remote, options):
         """Build a dictionary with relevant informations for the promise."""
         return dict(
@@ -1915,7 +2204,7 @@ class PromiseStore(footprints.FootprintBase):
             rc = self.promise.get(remote.copy(), local, options)
         except (IOError, OSError) as e:
             # If something goes wrong, assume that the promise file had been
-            # deleted during the execution of self.promise.get (which can cause
+            # deleted during the execution of self.promise.check (which can cause
             # IOError or OSError to be raised).
             logger.info('An error occured while fetching the promise file: %s', str(e))
             logger.info('Assuming this is a negative result...')
@@ -1931,6 +2220,42 @@ class PromiseStore(footprints.FootprintBase):
             pr_file = self.mkpromise_file(pr_info, local)
             self.system.move(pr_file, local)
             rc = self.delayed = True
+        return rc
+
+    def earlyget(self, remote, local, options=None):
+        """Possible early-get on the target store."""
+        logger.debug('Promise early-get %s', remote)
+        result_id = None
+        if options is None:
+            options = dict()
+        try:
+            rc = (self.promise.has_fast_check and
+                  self.promise.check(remote.copy(), options))
+        except (IOError, OSError) as e:
+            logger.debug('An error occurred while checking for the promise file: %s', str(e))
+            logger.debug('Assuming this is a negative result...')
+            rc = False
+        if not rc:
+            result_id = self.other.earlyget(remote.copy(), local, options)
+        return result_id
+
+    def finaliseget(self, result_id, remote, local, options=None):
+        logger.debug('Promise finalise-get %s', remote)
+        if options is None:
+            options = dict()
+        self.delayed = False
+        logger.info('Try promise from store %s', self.promise)
+        try:
+            rc = self.promise.get(remote.copy(), local, options)
+        except (IOError, OSError) as e:
+            logger.debug('An error occurred while fetching the promise file: %s', str(e))
+            logger.debug('Assuming this is a negative result...')
+            rc = False
+        if rc:
+            self.delayed = True
+        else:
+            logger.info('Try promise from store %s', self.other)
+            rc = self.other.finaliseget(result_id, remote.copy(), local, options)
         return rc
 
     @staticmethod

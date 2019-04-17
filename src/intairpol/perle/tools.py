@@ -7,18 +7,18 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 TODO: Module documentation
 """
 
-import io
 import six
+import io
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
 
 import vortex
 from vortex.syntax.stdattrs import DelayedEnvValue, Latitude, Longitude
 
 from intairpol.basics import AirTool
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 SIMULATION_LEVELS = dict(
     EXERCICE = 0,

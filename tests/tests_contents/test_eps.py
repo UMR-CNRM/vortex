@@ -9,8 +9,10 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
-from tests_contents.test_generic import _BaseDataContentTest
+if __name__ == '__main__':
+    sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
+
+from .test_generic import _BaseDataContentTest
 
 from common.data import eps
 
@@ -85,6 +87,10 @@ class UtSampleContent(_BaseDataContentTest):
         self.assertEqual(ct.vapps, ['arpege', 'arpege'])
         self.assertEqual(ct.timedelta(dict(targetdate='201610172100', targetterm=24), dict()),
                          '27:00')
+        # Deepcopy
+        ct3 = copy.deepcopy(ct)
+        self.assertIsNot(ct3, ct)
+        self.assertEqual(ct3.data, ct.data)
 
 
 if __name__ == '__main__':

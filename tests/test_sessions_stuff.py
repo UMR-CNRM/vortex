@@ -23,7 +23,7 @@ class UtSession(TestCase):
     def setUp(self):
         self.rootsession = sessions.current()
         self.oldlog = self.rootsession.loglevel
-        self.rootsession.error()  # Decrease loglevel
+        self.rootsession.critical()  # Decrease loglevel
         self.sh = self.rootsession.system()
         self.tmpdir = self.sh.path.realpath(tempfile.mkdtemp(prefix='test_sessions_stuff_'))
         self.sh.cd(self.sh.path.dirname(self.tmpdir))

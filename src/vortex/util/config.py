@@ -10,22 +10,33 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import io
 import itertools
 import re
+import sys
+
 import six
-from six.moves.configparser import SafeConfigParser, NoOptionError, NoSectionError, InterpolationDepthError
+from six.moves.configparser import NoSectionError, InterpolationDepthError
+from six.moves.configparser import SafeConfigParser, ConfigParser, NoOptionError
 
-from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 import footprints
-from footprints.util import rangex
-
+from bronx.fancies import loggers
+from bronx.stdtypes import date as bdate
+from bronx.syntax.parsing import StringDecoder, StringDecoderSyntaxError
 from vortex import sessions
 
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
+
+_PARSERPY32 = sys.version_info[0:2] >= (3, 2)
+if _PARSERPY32:
+    _PARSERCLASS = ConfigParser
+else:
+    _PARSERCLASS = SafeConfigParser
 
 _RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
 
 _RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
+
+_DEFAULT_CONFIG_PARSER = ConfigParser if six.PY3 else SafeConfigParser
 
 
 def load_template(t, tplfile, encoding=None):
@@ -88,17 +99,20 @@ def load_template(t, tplfile, encoding=None):
 class GenericReadOnlyConfigParser(object):
     """A Basic ReadOnly configuration file parser.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
         (see the :meth:`setfile` method for more details)
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
     :param type clsparser: The class that will be used to create a parser object
         (if needed)
+    :param str encoding: The configuration file encoding
+    :param str defaultinifile: The name of a default ini file (read before,
+         and possibly overwritten by **inifile**)
 
     :note: Some of the parser's methods are directly accessible because ``__getattr__``
         is implemented. For this ReadOnly class, only methods ``defaults``,
@@ -110,11 +124,12 @@ class GenericReadOnlyConfigParser(object):
     _RE_AUTO_SETFILE = re.compile(r'^@([^/]+\.ini)$')
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None):
+                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
         self.parser = parser
         self.mkforce = mkforce
         self.clsparser = clsparser
         self.defaultencoding = encoding
+        self.defaultinifile = defaultinifile
         if inifile:
             self.setfile(inifile, encoding=None)
         else:
@@ -166,11 +181,27 @@ class GenericReadOnlyConfigParser(object):
         self.file = None
         filestack = list()
         local = sessions.system()
+        glove = sessions.current().glove
         if not isinstance(inifile, six.string_types):
+            if self.defaultinifile:
+                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                if local.path.exists(sitedefaultinifile):
+                    with io.open(sitedefaultinifile, 'r', encoding=encoding) as a_fh:
+                        if _PARSERPY32:
+                            self.parser.read_file(a_fh)
+                        else:
+                            self.parser.readfp(a_fh)
+                else:
+                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             # Assume it's an IO descriptor
             inifile.seek(0)
-            self.parser.readfp(inifile)
+            if _PARSERPY32:
+                self.parser.read_file(inifile)
+            else:
+                self.parser.readfp(inifile)
             self.file = repr(inifile)
+            if self.defaultinifile:
+                self.file = sitedefaultinifile + "," + self.file
         else:
             # Let's continue as usual
             autofile = self._RE_AUTO_SETFILE.match(inifile)
@@ -181,7 +212,6 @@ class GenericReadOnlyConfigParser(object):
                     raise ValueError('Configuration file ' + inifile + ' not found')
             else:
                 autofile = autofile.group(1)
-                glove = sessions.current().glove
                 sitefile = glove.siteconf + '/' + autofile
                 persofile = glove.configrc + '/' + autofile
                 if local.path.exists(sitefile):
@@ -195,17 +225,27 @@ class GenericReadOnlyConfigParser(object):
                         local.touch(persofile)
                     else:
                         raise ValueError('Configuration file ' + inifile + ' not found')
+            if self.defaultinifile:
+                sitedefaultinifile = glove.siteconf + '/' + self.defaultinifile
+                if local.path.exists(sitedefaultinifile):
+                    # Insert at the beginning (i.e. smallest priority)
+                    filestack.insert(0, local.path.abspath(sitedefaultinifile))
+                else:
+                    raise ValueError('Configuration file ' + sitedefaultinifile + ' not found')
             self.file = ",".join(filestack)
             for a_file in filestack:
                 with io.open(a_file, 'r', encoding=encoding) as a_fh:
-                    self.parser.readfp(a_fh)
+                    if _PARSERPY32:
+                        self.parser.read_file(a_fh)
+                    else:
+                        self.parser.readfp(a_fh)
 
     def as_dict(self, merged=True):
         """Export the configuration file as a dictionary."""
         if merged:
             dico = dict()
         else:
-            dico = dict(defaults = dict(self.defaults()))
+            dico = dict(defaults=dict(self.defaults()))
         for section in self.sections():
             if merged:
                 dico[section] = dict(self.items(section))
@@ -234,11 +274,11 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
     several other sections. The basic interpolation (with the usual ``%(varname)s``
     syntax) is available.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -298,7 +338,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
     def get(self, section, option, raw=False, myvars=None):
         """Behaves like the GenericConfigParser's ``get`` method."""
-        expanded = [ s for s in self._get_section_list(section) if s is not None ]
+        expanded = [s for s in self._get_section_list(section) if s is not None]
         if not expanded:
             raise NoSectionError(section)
         expanded.reverse()
@@ -353,7 +393,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 
     def __getattr__(self, attr):
         # Give access to a very limited set of methods
-        if attr in ('defaults', ):
+        if attr in ('defaults',):
             return getattr(self.parser, attr)
         else:
             raise AttributeError(self.__class__.__name__ + " instance has no attribute '" +
@@ -369,16 +409,19 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
 class GenericConfigParser(GenericReadOnlyConfigParser):
     """A Basic Read/Write configuration file parser.
 
-    It relies on a :class:`ConfigParser.SafeConfigParser` parser (or another class
+    It relies on a :class:`ConfigParser.ConfigParser` parser (or another class
     that satisfies the interface) to access the configuration data.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
     :param type clsparser: The class that will be used to create a parser object
         (if needed)
+    :param str encoding: The configuration file encoding
+    :param str defaultinifile: The name of a default ini file (read before,
+         and possibly overwritten by **inifile**)
 
     :note: All of the parser's methods are directly accessible because ``__getattr__``
         is implemented. The user will refer to the Python's ConfigParser module
@@ -386,8 +429,9 @@ class GenericConfigParser(GenericReadOnlyConfigParser):
     """
 
     def __init__(self, inifile=None, parser=None, mkforce=False,
-                 clsparser=SafeConfigParser, encoding=None):
-        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser, encoding)
+                 clsparser=_DEFAULT_CONFIG_PARSER, encoding=None, defaultinifile=None):
+        super(GenericConfigParser, self).__init__(inifile, parser, mkforce, clsparser,
+                                                  encoding, defaultinifile)
         self.updates = list()
 
     def setall(self, kw):
@@ -442,7 +486,8 @@ class DelayedConfigParser(GenericConfigParser):
     def __getattribute__(self, attr):
         try:
             logger.debug('Getattr %s < %s >', attr, self)
-            if attr in filter(lambda x: not x.startswith('_'), dir(SafeConfigParser) + ['setall', 'save']):
+            if attr in filter(lambda x: not x.startswith('_'),
+                              dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
                 object.__getattribute__(self, 'refresh')()
         except StandardError:
             logger.critical('Trouble getattr %s < %s >', attr, self)
@@ -453,7 +498,7 @@ class JacketConfigParser(GenericConfigParser):
     """Configuration parser for Jacket files.
 
     :param str inifile: Path to a configuration file or a configuration file name
-    :param ConfigParser.SafeConfigParser parser: an existing configuration parser
+    :param ConfigParser.ConfigParser parser: an existing configuration parser
         object the will be used to access the configuration
     :param bool mkforce: If the configuration file doesn't exists. Create an empty
         one in ``~/.vortexrc``
@@ -470,7 +515,7 @@ class JacketConfigParser(GenericConfigParser):
         Return for the specified ``option`` in the ``section`` a sequence of values
         build on the basis of a comma separated list.
         """
-        s = SafeConfigParser.get(self, section, option)
+        s = _DEFAULT_CONFIG_PARSER.get(self, section, option)
         tmplist = s.replace(' ', '').split(',')
         if len(tmplist) > 1:
             return tmplist
@@ -500,9 +545,12 @@ class AppConfigStringDecoder(StringDecoder):
 
     """
 
-    BUILDERS = StringDecoder.BUILDERS + ['rangex', 'iniconf', 'conftool']
+    BUILDERS = StringDecoder.BUILDERS + ['geometry', 'date', 'time',
+                                         'rangex', 'daterangex',
+                                         'iniconf', 'conftool']
 
     def remap_geometry(self, value):
+        """Convert all values to Geometry objects."""
         from vortex.data import geometries
         try:
             value = geometries.get(tag=value)
@@ -510,25 +558,62 @@ class AppConfigStringDecoder(StringDecoder):
             pass
         return value
 
-    def _build_rangex(self, value, remap, subs):
-        """Build a dictionary from the **value** string."""
+    def remap_date(self, value):
+        """Convert all values to bronx' Date objects."""
+        try:
+            value = bdate.Date(value)
+        except (ValueError, TypeError):
+            pass
+        return value
+
+    def remap_time(self, value):
+        """Convert all values to bronx' Time objects."""
+        try:
+            value = bdate.Time(value)
+        except (ValueError, TypeError):
+            pass
+        return value
+
+    def _build_geometry(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        from vortex.data import geometries
+        return geometries.get(tag=val)
+
+    def _build_date(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        return bdate.Date(val)
+
+    def _build_time(self, value, remap, subs):
+        val = self._value_expand(value, remap, subs)
+        return bdate.Time(val)
+
+    def _build_generic_rangex(self, cb, value, remap, subs):
+        """Build a rangex or daterangex from the **value** string."""
         # Try to read names arguments
         try:
             values = self._sparser(value, itemsep=' ', keysep=':')
             if all([k in ('start', 'end', 'step', 'shift', 'fmt', 'prefix')
                     for k in values.keys()]):
-                return rangex(** {k: self._value_expand(v, remap, subs)
-                                  for k, v in values.items()})
+                return cb(**{k: self._value_expand(v, remap, subs)
+                             for k, v in values.items()})
         except StringDecoderSyntaxError:
             pass
         # The usual case...
-        return rangex([self._value_expand(v, remap, subs)
-                       for v in self._sparser(value, itemsep=',')])
+        return cb([self._value_expand(v, remap, subs)
+                   for v in self._sparser(value, itemsep=',')])
+
+    def _build_rangex(self, value, remap, subs):
+        """Build a rangex from the **value** string."""
+        return self._build_generic_rangex(bdate.timeintrangex, value, remap, subs)
+
+    def _build_daterangex(self, value, remap, subs):
+        """Build a daterangex from the **value** string."""
+        return self._build_generic_rangex(bdate.daterangex, value, remap, subs)
 
     def _build_fpgeneric(self, value, remap, subs, collector):
         fp = {k: self._value_expand(v, remap, subs)
               for k, v in six.iteritems(self._sparser(value, itemsep=' ', keysep=':'))}
-        obj = footprints.collectors.get(tag=collector).load(** fp)
+        obj = footprints.collectors.get(tag=collector).load(**fp)
         if obj is None:
             raise StringDecoderSyntaxError(value,
                                            'No object could be created from the {} collector'.
@@ -657,7 +742,7 @@ class ConfigurationTable(IniConf):
         if not hasattr(self, '_tablelist'):
             self._tablelist = list()
             d = self.config.as_dict()
-            for item, group in [ x.split(':') for x in self.config.parser.sections() if ':' in x ]:
+            for item, group in [x.split(':') for x in self.config.parser.sections() if ':' in x]:
                 try:
                     for k, v in d[item].items():
                         # Can occur in case of a redundant entry in the config file
@@ -705,7 +790,7 @@ class ConfigurationTable(IniConf):
         """Return a list of items with main key or name loosely matching the given argument."""
         return [x for x in self.tablelist
                 if any([re.search(item, x.footprint_getattr(thiskey), re.IGNORECASE)
-                        for thiskey in self.searchkeys ])]
+                        for thiskey in self.searchkeys])]
 
 
 class TableItem(footprints.FootprintBase):
@@ -749,8 +834,7 @@ class TableItem(footprints.FootprintBase):
                                          six.text_type(self.footprint_getattr(k)), k))
         else:
             for k in self.footprint_attributes:
-                if ((not mkshort or self.footprint_getattr(k) is not None) and
-                        k != 'translator'):
+                if ((not mkshort or self.footprint_getattr(k) is not None) and k != 'translator'):
                     output_stack.append((k, six.text_type(self.footprint_getattr(k)), k))
         return output_stack
 
@@ -762,7 +846,7 @@ class TableItem(footprints.FootprintBase):
             max_keylen = max([len(i[0]) for i in output_stack])
             print_fmt = '{0:' + six.text_type(max_keylen) + 's} : {1:s}'
             for item in output_stack:
-                output_list.append(print_fmt.format(* item))
+                output_list.append(print_fmt.format(*item))
         return '\n'.join(output_list)
 
     def __str__(self):
@@ -787,7 +871,8 @@ class TableItem(footprints.FootprintBase):
             else:
                 i_other.append(item)
         return '**{}** : `{}`\n\n{}\n\n'.format(i_name[1],
-                                                ', '.join(['{0:s}={1:s}'.format(* i)
+                                                ', '.join(['{0:s}={1:s}'.format(*i)
                                                            for i in i_hot]),
-                                                '\n'.join(['    * {0:s}: {1:s}'.format(* i)
-                                                           for i in i_other]))
+                                                '\n'.join(['    * {0:s}: {1:s}'.format(*i)
+                                                           for i in i_other])
+                                                )

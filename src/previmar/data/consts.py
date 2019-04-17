@@ -5,21 +5,23 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
-import footprints
+from bronx.fancies import loggers
+
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelResource
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class GenvUsageModelResource(GenvModelResource):
 
     _abstract = True
     _footprint = dict(
-        info = 'different use : model classic use for simulation or interpolation use for interpolation between grid of Hycom',
+        info = 'different use : model classic use for simulation or interpolation use '
+               'for interpolation between grid of Hycom',
         attr = dict(
             usage = dict(
                 values  = ['model', 'interpol'],

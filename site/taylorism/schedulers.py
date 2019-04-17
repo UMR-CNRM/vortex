@@ -35,14 +35,16 @@ Dependencies
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import footprints
 from footprints import FootprintBase
+from bronx.fancies import loggers
 from bronx.system import cpus, memory
+from bronx.syntax.decorators import secure_getattr
 
 import os
 import multiprocessing
-import footprints
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 MAX_NUMBER_PROCESSES = 512
 
@@ -319,7 +321,7 @@ class LongerFirstScheduler(NewMaxMemoryScheduler):
         pending_instructions.sort(key=lambda tup: tup.get('expected_time', 0), reverse=True)
         for instructions in pending_instructions:
             actual_memory = instructions.get('memory', self.memory_per_task)
-            if ((actual_memory <= available_memory) and (available_threads > 0)):
+            if (actual_memory <= available_memory) and (available_threads > 0):
                 launchable.append(instructions)
                 available_memory -= actual_memory
                 available_threads -= 1
@@ -381,6 +383,7 @@ class _AbstractOldSchedulerProxy(object):
         self.__target_scheduler = self._TARGET_CLASS(*kargs, **kwargs)
         super(_AbstractOldSchedulerProxy, self).__init__()
 
+    @secure_getattr
     def __getattr__(self, name):
         return getattr(self.__target_scheduler, name)
 

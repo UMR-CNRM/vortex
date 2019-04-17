@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.data.outflow  import StaticResource
+from vortex.data.outflow import StaticResource
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import date_deco, cutoff_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert

@@ -9,14 +9,16 @@ import six
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes.tracking import Tracker
 
 from . import addons
+from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: Export nothing
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
@@ -91,6 +93,10 @@ class LFI_Status(object):
                 print(l)
 
     def __nonzero__(self):
+        """Python2 compatibility."""
+        return self.__bool__()
+
+    def __bool__(self):
         return bool(self.rc in self.ok)
 
 
@@ -261,23 +267,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         return None
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, sync=False):
+                   port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xlfi(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
+            hostname = self.sh._fix_fthostname(hostname)
+
             st = LFI_Status()
-            if hostname is None:
-                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-            if hostname is None:
-                st.rc = 1
-                st.result = ['No archive host provided']
-                return st
-
-            if logname is None:
-                logname = self.sh.env.VORTEX_ARCHIVE_USER
-
-            ftp = self.sh.ftp(hostname, logname)
+            ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
                 packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
@@ -296,10 +294,11 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             return st
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline, sync=sync)
+                                 logname=logname, cpipeline=cpipeline,
+                                 port=port, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None, sync=False):
+                      port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xlfi(source):
             if cpipeline is not None:
@@ -307,15 +306,19 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             if self.sh.ftraw and self.rawftshell is not None:
                 newsource = self.sh.copy2ftspool(source, fmt='lfi')
                 rc = self.sh.ftserv_put(newsource, destination,
-                                        hostname=hostname, logname=logname,
+                                        hostname=hostname, logname=logname, port=port,
                                         specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(newsource)  # Delete the request file
                 return rc
             else:
-                return self._std_ftput(source, destination, hostname, logname, sync=sync)
+                if port is None:
+                    port = DEFAULT_FTP_PORT
+                return self._std_ftput(source, destination, hostname, logname,
+                                       port=port, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline, sync=sync)
+                                    logname=logname, port=port,
+                                    cpipeline=cpipeline, sync=sync)
 
     fa_ftput = lfi_ftput = _std_ftput
     fa_rawftput = lfi_rawftput = _std_rawftput
@@ -378,6 +381,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         else:
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
+            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)
@@ -392,8 +396,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     @addons.require_external_addon('ecfs')
     def _std_ecfsput(self, source, target, cpipeline=None, options=None):
-        """TODO: define xlfi_pack in the parent class
-
+        """
         :param source: source file
         :param target: target file
         :param cpipeline: compression pipeline to be used, if provided
@@ -406,8 +409,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
-                rc = rc and self.xlfi_pack(source=source,
-                                           destination=psource)
+                st = self._std_copy(source=source,
+                                    destination=psource,
+                                    pack=True)
+                rc = rc and st.rc
                 dict_args = dict()
                 if rc:
                     rc, dict_args = self.sh.ecfsput(source=psource,
@@ -425,14 +430,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     fa_ecfsput = lfi_ecfsput = _std_ecfsput
 
     @addons.require_external_addon('ectrans')
-    def _std_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
-        """TODO: define xlfi_pack in the parent class
-
+    def _std_ectransput(self, source, target, gateway=None, remote=None,
+                        cpipeline=None, sync=False):
+        """
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline to be used, if provided
+        :param bool sync: If False, allow asynchronous transfers
         :return: return code and additional attributes used
         """
         if self.is_xlfi(source):
@@ -441,14 +447,17 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             psource = source + self.sh.safe_filesuffix()
             rc = LFI_Status()
             try:
-                rc = rc and self.xlfi_pack(source=source,
-                                           destination=psource)
+                st = self._std_copy(source=source,
+                                    destination=psource,
+                                    pack=True)
+                rc = rc and st.rc
                 dict_args = dict()
                 if rc:
                     rc, dict_args = self.sh.raw_ectransput(source=psource,
                                                            target=target,
                                                            gateway=gateway,
-                                                           remote=remote)
+                                                           remote=remote,
+                                                           sync=sync)
             finally:
                 self.sh.rm(psource)
             return rc, dict_args
@@ -457,7 +466,8 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
                                       target=target,
                                       gateway=gateway,
                                       remote=remote,
-                                      cpipeline=cpipeline)
+                                      cpipeline=cpipeline,
+                                      sync=sync)
 
     fa_ectransput = lfi_ectransput = _std_ectransput
 

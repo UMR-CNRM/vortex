@@ -12,7 +12,7 @@ from vortex.syntax.stdattrs import namespacefp, FmtInt
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 map_suffix = {'alp': '_al', 'pyr': '_py', 'cor': '_co'}
 
@@ -79,8 +79,9 @@ class S2MReanalysisProvider(Provider):
         """
         info = self.pathinfo(resource)
         info['level_one'] = self.vconf.split('@')[0]
+        info['level_two'] = ''
         suffix = map_suffix[info['level_one']]
-        season = resource.date.nivologyseason()
+        season = resource.date.nivologyseason
         if resource.realkind == 'observations':
             if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
                 info['level_two']   = 'obs/rs' + season + suffix
@@ -150,7 +151,7 @@ class CenSopranoDevProvider(Provider):
         info['model'] = 's2m'
         info['level_one'] = self.vconf.split('@')[0]
         suffix = map_suffix[info['level_one']]
-        season = resource.date.nivologyseason()
+        season = resource.date.nivologyseason
         if resource.realkind == 'observations':
             if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
                 info['level_two']   = 'obs/rs' + season + suffix
@@ -166,88 +167,3 @@ class CenSopranoDevProvider(Provider):
         logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)
         return self.config.resolvedpath(resource, self.vapp, self.vconf, self.storage)
-
-
-class CenSxcenProvider(VortexFreeStd):
-
-    _footprint = [
-        namespacefp,
-        dict(
-            info = 'CEN sxcen.cnrm provider',
-            attr = dict(
-                member = dict(
-                    type    = FmtInt,  # BC quid ? à remplacer
-                    args    = dict(fmt = '04'),
-                    optional = True,
-                ),
-
-                namespace = dict(
-                    values   = ['vortex.sxcen.fr'],
-                    optional  = False,
-                ),
-                storage = dict(
-                    values   = ['sxcen.cnrm.meteo.fr']
-                ),
-                tube = dict(
-                    optional = True,
-                    values   = ['scp', 'ftp'],
-                    default  = 'ftp'
-                ),
-                rootpath = dict(
-                    optional = True,
-                    default = "/cnrm/cen/users/NO_SAVE/cluzetb/vortex/"
-                ),
-                block = dict(optional = True)
-            )
-        )
-    ]
-
-    def __init__(self, *args, **kw):
-        logger.debug('SXCEN dev job provider init %s', self.__class__)
-        super(CenSxcenProvider, self).__init__(*args, **kw)
-
-    @property
-    def realkind(self):
-        return 'vortex'
-
-    def scheme(self, resource):
-        """The actual scheme is the ``tube`` attribute of the current provider."""
-        return self.tube
-
-    def netloc(self, resource):
-        """The actual netloc is the ``namespace`` attribute of the current provider."""
-        return self.storage
-
-    def pathname(self, resource):
-        """Constructs pathname of the ``resource`` according to :func:`pathinfo`."""
-
-        rpath = [self.rootpath,
-                 self.vapp,
-                 self.vconf,
-                 self.experiment,
-                 ]
-        print("block=")
-        print(self.block)
-        if self.member is not None:
-            print(self.member)
-            rpath.append('mb' + str(self.member))
-        if self.block:
-            rpath.append(self.block)
-
-        print(os.path.join(*rpath))
-        return(os.path.join(*rpath))
-        '''
-        """
-        The actual pathname is the directly obtained from the templated ini file
-        provided through the ``config`` footprint attribute.
-        """
-        info = self.pathinfo(resource)
-        info['model'] = 's2m'
-        info['level_one'] = self.vconf.split('@')[0]
-        # suffix = map_suffix[info['level_one']]
-        region = resource.geometry.tag
-        info['level_two'] = region
-        logger.debug('censxcenprovider::pathname info %s', info)
-        self.config.setall(info)
-        return self.config.resolvedpath(resource, self.vapp, self.vconf, self.storage)
-        '''

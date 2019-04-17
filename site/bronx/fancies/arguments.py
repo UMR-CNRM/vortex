@@ -18,9 +18,11 @@ import re
 
 import footprints
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.decorators import secure_getattr
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ArgumentParser(footprints.FootprintBase):
@@ -98,6 +100,7 @@ class ArgumentParser(footprints.FootprintBase):
         self.actual_parser.prog = value
     prog = property(_get_prog, _set_prog)
 
+    @secure_getattr
     def __getattr__(self, attr):
         if attr.startswith('add_'):
             raise AttributeError(self.__class__.__name__ + " object has no attribute '" + str(attr) + "'")
@@ -137,7 +140,7 @@ class DefinedArgumentParser(ArgumentParser):
         storeaction = self.actual_parser.add_argument(*opts, **kw)
         storeaction.callback = callback
         storeaction.optname = optname
-        storeaction.optclean = re.sub('_X\d+$', '', storeaction.dest)
+        storeaction.optclean = re.sub(r'_X\d+$', '', storeaction.dest)
         return storeaction
 
     def refine_argument(self):
@@ -209,7 +212,7 @@ class DefinedArgumentParser(ArgumentParser):
             help     = 'Logging level',
             choices  = ('debug', 'info', 'warning', 'error', 'critical'),
             default  = 'warning',
-            callback = footprints.loggers.setGlobalLevel,
+            callback = loggers.setGlobalLevel,
         )
 
     def add_defined_focus(self):

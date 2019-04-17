@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource, ModelGeoResource
 from vortex.syntax.stdattrs import month_deco
-from vortex.syntax.stddeco import namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_insert, namebuilding_append
 from gco.syntax.stdattrs import gvar, GenvDomain
 
 #: No automatic export
@@ -492,3 +492,54 @@ class GeometryIllustration(StaticGeoResource):
     @property
     def realkind(self):
         return 'geometry_plot'
+
+
+@namebuilding_append('src', lambda s: [s.stat, s.level, s.nbfiles])
+class Stabal(ModelGeoResource):
+    """Spectral covariance operators.
+
+    Explanations for the ``stat`` attribute:
+        * bal: cross-variables balances
+        * cv: auto-correlations of the control variable
+        * cvt: ???
+
+    A GenvKey can be given.
+    """
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Spectral covariance operators',
+            attr = dict(
+                kind = dict(
+                    values = ['stabal'],
+                ),
+                stat = dict(
+                    values = ['bal', 'cv', 'cvt'],
+                ),
+                level = dict(
+                    type     = int,
+                    optional = True,
+                    default  = 96,
+                    values   = [41, 96],
+                ),
+                nbfiles = dict(
+                    default = 0,
+                    optional = True,
+                    type = int,
+                ),
+                gvar = dict(
+                    default  = 'stabal[level]_[stat]'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'stabal'
+
+    @property
+    def truncation(self):
+        """Returns geometry's truncation."""
+        return self.geometry.truncation

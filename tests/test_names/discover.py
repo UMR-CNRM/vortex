@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Crawl into test directories and find available tests.
-'''
+"""
 
 from __future__ import print_function, division, absolute_import, unicode_literals
 
-import collections
+from six.moves import filter  # @UnresolvedImport
+
 import io
-from itertools import ifilter
 import os
 
-import footprints as fp
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
 
 from .utils import mkdir_p
 
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 DATAPATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
@@ -24,7 +25,7 @@ RESULTSPATH = os.path.join(DATAPATH, 'namestest_results')
 REGISTERPATH = os.path.join(DATAPATH, 'namestest_register')
 
 
-class DiscoveredTests(collections.Mapping):
+class DiscoveredTests(collections_abc.Mapping):
     """Class for collection of available tests (represented as TestDriver objects)."""
 
     def __init__(self):
@@ -36,7 +37,7 @@ class DiscoveredTests(collections.Mapping):
         """Go through the test directories and finfg YAML files."""
         tfiles = set()
         for root, _, filenames in os.walk(TESTSPATH):
-            for filename in ifilter(lambda f: f.endswith('.yaml'), filenames):
+            for filename in filter(lambda f: f.endswith('.yaml'), filenames):
                 tfiles.add(os.path.join(root, filename))
         self._tfiles = sorted(tfiles)
 

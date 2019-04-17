@@ -3,19 +3,23 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-import re
 import six
 from six.moves.urllib import parse as urlparse
 
+import io
+import re
+
+from bronx.fancies import loggers
 import footprints
 
 from . import addons
+from vortex.algo.components import AlgoComponentDecoMixin
+from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
@@ -159,19 +163,13 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return True
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
-                   cpipeline=None, sync=False):
+                   port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
-            if hostname is None:
-                hostname = self.sh.env.VORTEX_ARCHIVE_HOST
-            if hostname is None:
-                return False
-            if logname is None:
-                logname = self.sh.env.VORTEX_ARCHIVE_USER
-
-            ftp = self.sh.ftp(hostname, logname)
+            hostname = self.sh._fix_fthostname(hostname)
+            ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
                 packed_size = self._packed_size(source)
                 p = self._pack_stream(source)
@@ -183,10 +181,11 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             return rc
         else:
             return self.sh.ftput(source, destination, hostname=hostname,
-                                 logname=logname, cpipeline=cpipeline, sync=sync)
+                                 logname=logname, port=port,
+                                 cpipeline=cpipeline, sync=sync)
 
     def _std_rawftput(self, source, destination, hostname=None, logname=None,
-                      cpipeline=None, sync=False):
+                      port=None, cpipeline=None, sync=False):
         """Use ftserv as much as possible."""
         if self.is_xgrib(source):
             if cpipeline is not None:
@@ -200,16 +199,20 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     request_fh.writelines('\n'.join(newsources))
                 self.sh.readonly(request)
                 rc = self.sh.ftserv_put(request, destination,
-                                        hostname=hostname, logname=logname,
+                                        hostname=hostname, logname=logname, port=port,
                                         specialshell=self.rawftshell, sync=sync)
                 self.sh.rm(request)
                 return rc
             else:
+                if port is None:
+                    port = DEFAULT_FTP_PORT
                 return self._std_ftput(source, destination,
-                                       hostname=hostname, logname=logname, sync=sync)
+                                       hostname=hostname, logname=logname,
+                                       port=port, sync=sync)
         else:
             return self.sh.rawftput(source, destination, hostname=hostname,
-                                    logname=logname, cpipeline=cpipeline, sync=sync)
+                                    logname=logname, port=port,
+                                    cpipeline=cpipeline, sync=sync)
 
     grib_ftput = _std_ftput
     grib_rawftput = _std_rawftput
@@ -219,6 +222,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
+            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)
@@ -235,7 +239,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
     grib_scpput = _std_scpput
 
     @addons.require_external_addon('ecfs')
-    def _std_ecfsput(self, source, target, cpipeline=None, options=None):
+    def grib_ecfsput(self, source, target, cpipeline=None, options=None):
         """ Put a grib resource using ECfs.
 
         :param source: source file
@@ -266,7 +270,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                    cpipeline=cpipeline)
 
     @addons.require_external_addon('ectrans')
-    def grib_ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def grib_ectransput(self, source, target, gateway=None, remote=None,
+                        cpipeline=None, sync=False):
         """Put a grib resource using ECtrans.
 
         :param source: source file
@@ -274,6 +279,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline used, if provided
+        :param bool sync: If False, allow asynchronous transfers
         :return: return code and additional attributes used
         """
         if self.is_xgrib(source):
@@ -288,7 +294,8 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                     rc, dict_args = self.sh.raw_ectransput(source=psource,
                                                            target=target,
                                                            gateway=gateway,
-                                                           remote=remote)
+                                                           remote=remote,
+                                                           sync=sync)
             finally:
                 self.sh.rm(psource)
             return rc, dict_args
@@ -297,11 +304,21 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                       target=target,
                                       gateway=gateway,
                                       remote=remote,
-                                      cpipeline=cpipeline)
+                                      cpipeline=cpipeline,
+                                      sync=sync)
 
 
-class EcGribComponent(object):
-    """Extend Algo Components with GribApi features."""
+class EcGribDecoMixin(AlgoComponentDecoMixin):
+    """Extend Algo Components with EcCodes/GribApi features."
+
+    This mixin class is intended to be used with AlgoComponnent classes. It will
+    automatically set up the ecCodes/GribApi environment variable given the
+    path to the EcCodes/GribApi library (which is found by performing a ``ldd``
+    on the AlgoComponnent's target binary).
+    """
+
+    _ECGRIB_SETUP_COMPAT = True
+    _ECGRIB_SETUP_FATAL = True
 
     def _ecgrib_libs_detext(self, rh):
         """Run ldd and tries to find ecCodes or grib_api libraries locations."""
@@ -414,6 +431,13 @@ class EcGribComponent(object):
         for a_var in (defvar, samplevar):
             logger.info('After eccodes_setup (compat=%s) : %s = %s', str(compat),
                         a_var, self.env.getvar(a_var))
+
+    def _ecgrib_mixin_setup(self, rh, opts):
+        self.eccodes_setup(rh, opts,
+                           compat=self._ECGRIB_SETUP_COMPAT,
+                           fatal=self._ECGRIB_SETUP_FATAL)
+
+    _MIXIN_PREPARE_HOOKS = (_ecgrib_mixin_setup, )
 
 
 class GRIBAPI_Tool(addons.Addon):

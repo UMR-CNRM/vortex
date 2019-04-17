@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.flow       import GeoFlowResource
 from common.data.assim      import _BackgroundErrorInfo
@@ -14,7 +14,7 @@ from gco.syntax.stdattrs    import gvar
 #: Automatic export off
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))

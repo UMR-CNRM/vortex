@@ -3,6 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 numpy_looks_fine = True
 try:
     import numpy as np
@@ -12,15 +14,18 @@ except ImportError:
 import tempfile
 import unittest
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time
-import footprints
+from bronx.system import interrupt
 
 import vortex
-import common.util.usepygram as uepy
-from common.tools.grib import GRIBFilter
+import common  # @UnusedImport
 
-clog = footprints.loggers.getLogger('common')
-clog.setLevel('ERROR')
+tloglevel = 'critical'
+
+with loggers.contextboundGlobalLevel(tloglevel):
+    import common.util.usepygram as uepy
+    from common.tools.grib import GRIBFilter
 
 u10_filter = '''
 {
@@ -72,9 +77,12 @@ class _FakeRH(object):
 
 class _EpyTestBase(unittest.TestCase):
 
-    def setUp(self):
-        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0')):
-            raise self.skipTest('Epygram >= v1.0.0 is not available')
+    def setUp(self, needFA=False):
+        check_opts = dict()
+        if needFA:
+            check_opts['needFA'] = True
+        if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0', ** check_opts)):
+            raise self.skipTest('Epygram >= v1.0.0 with FA={} is not available'.format(needFA))
 
         uepy.epygram.epylog.setLevel('ERROR')
 
@@ -86,11 +94,20 @@ class _EpyTestBase(unittest.TestCase):
     def demofile(self, demofile):
         return self.sh.path.join(self.datapath, demofile)
 
+    def assertDictLikeEqual(self, new, ref):
+        if six.PY2:
+            self.assertItemsEqual(new, ref)
+        else:
+            self.assertCountEqual(new, ref)
 
-class TestEpygramContents(_EpyTestBase):
 
-    def test_contents(self):
-        # FA
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramFaContents(_EpyTestBase):
+
+    def setUp(self):
+        super(TestEpygramFaContents, self).setUp(needFA=True)
+
+    def test_fa_contents(self):
         fa_c = vortex.data.containers.SingleFile(filename=self.demofile('historic.light.fa'),
                                                  actualfmt='fa')
         ct = vortex.data.contents.FormatAdapter(datafmt='fa')
@@ -99,34 +116,41 @@ class TestEpygramContents(_EpyTestBase):
             self.assertEqual(ct.data.format, 'FA')
             self.assertListEqual(['S090TEMPERATURE', 'SURFTEMPERATURE', ],
                                  ct.data.listfields())
-            self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
-                                  ct.metadata)
-        # GRIB
+            self.assertDictLikeEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
+                                     ct.metadata)
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramGribContents(_EpyTestBase):
+
+    def test_grib_contents(self):
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
                                                    actualfmt='grib')
         ct = vortex.data.contents.FormatAdapter(datafmt='grib')
         ct.slurp(grib_c)
         self.assertEqual(ct.data.format, 'GRIB')
         self.assertEqual(12, len(ct.data.listfields()))
-        self.assertItemsEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
-                              ct.metadata)
+        self.assertDictLikeEqual({'date': Date(2016, 5, 30, 18, 0), 'term': Time(0, 0)},
+                                 ct.metadata)
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramAdvanced(_EpyTestBase):
 
     def setUp(self):
-        super(TestEpygramAdvanced, self).setUp()
+        super(TestEpygramAdvanced, self).setUp(needFA=True)
 
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_epygram')
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
-        self.sh.signal_intercept_on()
+        self.shandler = interrupt.SignalInterruptHandler(emitlogs=False)
+        self.shandler.activate()
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
-        self.sh.signal_intercept_off()
+        self.shandler.deactivate()
 
     def test_epygram_hooks(self):
         self.sh.cp(self.demofile('historic.verylight.fa'),

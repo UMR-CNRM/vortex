@@ -31,7 +31,7 @@ class ADTest(object):
     signature = 'TEST OF THE ADJOINT'
     p_fxy = '< F(X) , Y >'
     p_xfy = '< X , F*(Y) >'
-    p_zero = 'THE DIFFERENCE IS\s*((?P<n_times_zero>(\d*\.\d+)|(\**))\s+)+TIMES THE ZERO OF THE MACHINE$'
+    p_zero = r'THE DIFFERENCE IS\s*((?P<n_times_zero>(\d*\.\d+)|(\**))\s+)+TIMES THE ZERO OF THE MACHINE$'
     zero_overflow = 21
 
     def __init__(self, source):
@@ -99,10 +99,10 @@ class TLTest(object):
     """
 
     signature = 'TEST OF THE TANGENT LINEAR'
-    p_lambda = 'LAMBDA\s*=\s*(?P<lambda>-?\d{1,2})$'
+    p_lambda = r'LAMBDA\s*=\s*(?P<lambda>-?\d{1,2})$'
     p_lambda = re.compile(p_lambda)
-    p_ratio = '(?P<fld>\w+\.?)\s*I =\s*(?P<gridpoint>\d+)\s+' + \
-              'RAT = (?P<ratio>' + re_for_fortran_scientific_format.pattern + ')\s+.*'
+    p_ratio = r'(?P<fld>\w+\.?)\s*I =\s*(?P<gridpoint>\d+)\s+' + \
+              r'RAT = (?P<ratio>' + re_for_fortran_scientific_format.pattern + r')\s+.*'
     p_ratio = re.compile(p_ratio)
 
     def __init__(self, source):

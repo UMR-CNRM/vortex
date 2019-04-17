@@ -110,10 +110,10 @@ def vortex_delayed_init(t):
 def actual_action(action, t, args, fatal=True):
     """Performs the action request by the user (get/put/prestage)."""
     from vortex import toolbox
-    rhanlers = toolbox.rload(**vars(args))
+    rhandlers = toolbox.rload(**vars(args))
     with t.sh.ftppool():
-        for n, rh in enumerate(rhanlers):
-            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhanlers)))
+        for n, rh in enumerate(rhandlers):
+            t.sh.subtitle("Resource Handler {:02d}/{:02d}".format(n + 1, len(rhandlers)))
             rh.quickview()
             if rh.complete:
                 rst = False
@@ -121,7 +121,7 @@ def actual_action(action, t, args, fatal=True):
                     rst = getattr(rh, action)()
                 except (KeyboardInterrupt, interrupt.SignalInterruptError):
                     if action == 'get':
-                        # Get ride of incomplete files
+                        # Get rid of incomplete files
                         logger.warning("The transfer was interrupted. Cleaning %s.",
                                        rh.container.localpath())
                         t.sh.remove(rh.container.localpath(), fmt=args.format)
@@ -153,24 +153,24 @@ def actual_action(action, t, args, fatal=True):
 def argvalue_rewrite(value):
     """Detect and process special values in arguments."""
     if value.startswith('rangex'):
-        value = re.split('\s*,\s*', value[7:-1])
+        value = re.split(r'\s*,\s*', value[7:-1])
         return fp.util.rangex(*value)
     elif value.startswith('daterangex'):
-        value = re.split('\s*,\s*', value[11:-1])
+        value = re.split(r'\s*,\s*', value[11:-1])
         return date.daterangex(*value)
     else:
         return value
 
 
 def process_remaining(margs, rargs):
-    """Process all the remainging arguments and add them to the margs namespace.
+    """Process all the remaining arguments and add them to the margs namespace.
 
     All the remaining arguments must conform to the following convention:
 
       * --key=value
       * --key value
     """
-    re_arg0 = re.compile('--(\w+)(?:=(.*))?$')
+    re_arg0 = re.compile(r'--(\w+)(?:=(.*))?$')
     while len(rargs):
         argmatch = re_arg0.match(rargs.pop(0))
         if argmatch is None:
@@ -240,7 +240,6 @@ def main():
         (loglevel_main, loglevel_fp) = ('DEBUG', 'INFO')
     else:
         (loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG')
-    interrupt.logger.setLevel(loglevel_main)
     vortex.logger.setLevel(loglevel_main)
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
@@ -253,8 +252,11 @@ def main():
     prestage = args.prestage
     del args.prestage
 
+    # automatically fill genv if need be
+    args.gautofill = True
+
     # Process the action (get/true)
-    program_match = re.match('vtx(get|put|prestage)(?:\.py)?$', program_name)
+    program_match = re.match(r'vtx(get|put|prestage)(?:\.py)?$', program_name)
     if program_match is None:
         raise NotImplementedError("Unrecognised script name.")
     else:
@@ -268,22 +270,21 @@ def main():
     logger.debug('Requested action = %s', action)
     logger.debug('Current working directory = %s', os.getcwd())
     logger.debug('Detailed list or arguments')
-    for key, value in vars(args).iteritems():
+    for key, value in vars(args).items():
         logger.debug('  + {} = {!s}'.format(key, value))
 
     try:
-        t.sh.signal_intercept_on()
-        vortex_delayed_init(t)
-        if action == 'get' and prestage:
-            actual_action('prestage', t, args, fatal=fatal)
-        actual_action(action, t, args, fatal=fatal)
-        t.sh.signal_intercept_off()
+        with interrupt.SignalInterruptHandler(emitlogs=False):
+            vortex_delayed_init(t)
+            if action == 'get' and prestage:
+                actual_action('prestage', t, args, fatal=fatal)
+            actual_action(action, t, args, fatal=fatal)
 
     except (KeyboardInterrupt, interrupt.SignalInterruptError) as e:
         sys.stderr.write(program_name + ": " + repr(e) + "\n")
         return 1
 
-    except Exception, e:
+    except Exception as e:
         traceback.print_exc()
         indent = len(program_name) * " "
         sys.stderr.write(program_name + ": " + repr(e) + "\n")

@@ -3,6 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 from unittest import TestCase, main
 
 from bronx.datagrip import namelist as fortran
@@ -75,6 +76,10 @@ class DummyNamContainer(object):
 
     def write(self, thetxt):
         self.mytxt = thetxt
+
+    @contextlib.contextmanager
+    def preferred_decoding(self, *kargs, **kwargs):
+        yield
 
 
 class UtNamelistContent(TestCase):

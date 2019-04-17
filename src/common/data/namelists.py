@@ -7,7 +7,7 @@ import io
 import re
 import six
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex import sessions
 from vortex.tools import env
@@ -23,7 +23,7 @@ from gco.syntax.stdattrs import gvar
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 KNOWN_NAMELIST_MACROS = set(['NPROC', 'NBPROC', 'NBPROC_IO', 'NCPROC', 'NDPROC',
                              'NBPROCIN', 'NBPROCOUT', 'IDAT', 'CEXP',
@@ -96,13 +96,14 @@ class NamelistContent(AlmostDictContent):
 
     def slurp(self, container):
         """Get data from the ``container`` namelist."""
-        container.rewind()
         if not self._parser:
-            self._parser = NamelistParser(macros=self._declaredmacros)
-        try:
-            namset = self._parser.parse(container.read())
-        except (ValueError, IOError) as e:
-            raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
+                self._parser = NamelistParser(macros=self._declaredmacros)
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            try:
+                namset = self._parser.parse(container.read())
+            except (ValueError, IOError) as e:
+                raise NamelistContentError('Could not parse container contents: {!s}'.format(e))
         self._data = namset
         for macro, value in self._macros.items():
             self._data.setmacro(macro, value)
@@ -118,7 +119,8 @@ class NamelistContent(AlmostDictContent):
 
         """
         container.close()
-        container.write(self.dumps(sorting=sorting))
+        with container.preferred_decoding(byte=False):
+            container.write(self.dumps(sorting=sorting))
         container.close()
 
 
@@ -205,6 +207,27 @@ class Namelist(ModelResource):
         return 'extract=' + self._find_source()
 
 
+class NamelistDelta(Namelist):
+    """
+    Class for namelist deltas (i.e. small bits of namelists).
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values   = ['namdelta', 'deltanam', ]
+            ),
+            source = dict(
+                default     = 'deltanam.[binary]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'namdelta'
+
+
 class NamelistUtil(Namelist):
     """
     Class for namelists utilities
@@ -214,7 +237,7 @@ class NamelistUtil(Namelist):
         attr = dict(
             kind = dict(
                 values   = ['namelist_util', 'namutil'],
-                remap    = dict(namelist_util = 'namutil'),
+                remap    = dict(autoremap = 'first'),
             ),
             gvar = dict(
                 values   = ['NAMELIST_UTILITIES'],

@@ -3,17 +3,21 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import logging
 import os
 
-import logging
 import footprints
+
 logging.basicConfig(level=logging.ERROR)
 
 from six.moves.configparser import InterpolationMissingOptionError, NoSectionError, NoOptionError
 
 from unittest import TestCase, TestLoader, TextTestRunner
-from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser, \
-    AppConfigStringDecoder, TableItem, ConfigurationTable
+
+from bronx.stdtypes import date
+
+from vortex.util.config import ExtendedReadOnlyConfigParser, GenericConfigParser
+from vortex.util.config import AppConfigStringDecoder, TableItem, ConfigurationTable
 from vortex.data import geometries
 from iga.data.providers import IgaCfgParser
 
@@ -229,6 +233,11 @@ class TestAppConfigDecoder(TestCase):
         tgeometries = 'geometry(global798,globalsp2)'
         self.assertListEqual(self.cd(tgeometries), [geometries.get(tag='global798'),
                                                     geometries.get(tag='globalsp2')])
+        ttimes = 'time(1,12:00)'
+        self.assertListEqual(self.cd(ttimes), [date.Time('1:00'), date.Time('12:00')])
+        tdates = 'date(grrrr,2018010100,2018-01-01T00:00)'
+        self.assertListEqual(self.cd(tdates), ['grrrr', date.Date('2018010100'), date.Date('2018010100')])
+        # Builders
         trangex = 'rangex(1-35-1)'
         self.assertListEqual(self.cd(trangex), list(range(1, 36)))
         trangex = 'rangex(1-35-1,37,38-42-2)'
@@ -239,6 +248,19 @@ class TestAppConfigDecoder(TestCase):
         self.assertListEqual(self.cd(trangex), [0, 1, 2])
         trangex = 'rangex(start:1 end:3 shift:-0:30)'
         self.assertListEqual(self.cd(trangex), ['0000:30', '0001:30', '0002:30'])
+        tdrangex = 'daterangex(2017123112-2018010112-PT12H)'
+        self.assertListEqual(self.cd(tdrangex),
+                             [date.Date(2017, 12, 31, 12, 0), date.Date(2018, 1, 1, 0, 0),
+                              date.Date(2018, 1, 1, 12, 0)])
+        tdrangex = 'daterangex(start:2018010100 end:date(2018-01-02T00:00) step:PT12H shift:-PT12H)'
+        self.assertListEqual(self.cd(tdrangex),
+                             [date.Date(2017, 12, 31, 12, 0), date.Date(2018, 1, 1, 0, 0),
+                              date.Date(2018, 1, 1, 12, 0)])
+        # Other simple builders...
+        tbuild = 'dict(a:geometry(global798) b:time(12:00) c:date(2018-01-01T00:00))'
+        self.assertDictEqual(self.cd(tbuild),
+                             dict(a=geometries.get(tag='global798'),
+                                  b=date.Time('12:00'), c=date.Date('2018010100')))
 
 
 class _UnitTestTableItem(TableItem):
@@ -322,7 +344,7 @@ Localisation : HELLO"""
 
     def test_bare(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'bare')
+                                          version='bare')
         self.assertEqual(set(c_conf.groups()), set(['utest_chemical', 'utest_volcanic']))
         self.assertEqual(set(c_conf.keys()), set(['AGUA-DE-PAU', 'ARDOUKOBA', 'HELLO']))
         self.assertEqual(len(c_conf.tablelist), 3)
@@ -335,11 +357,11 @@ Localisation : HELLO"""
 
     def test_traslate(self):
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'tr')
+                                          version='tr')
         itemtest = c_conf.get('HELLO')
         self.assertEqual(str(itemtest), self._last_endump)
         c_conf = footprints.proxy.iniconf(kind='utestsites', family='utestfamily',
-                                          version = 'tr', language='fr')
+                                          version='tr', language='fr')
         itemtest = c_conf.get('HELLO')
         self.assertEqual(str(itemtest), self._last_frdump)
 

@@ -11,7 +11,6 @@ import tempfile
 import unittest
 
 from bronx.system.hash import HashAdapter
-from bronx.system.interrupt import SignalInterruptHandler
 
 DATADIR = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
@@ -23,9 +22,6 @@ class TestHashAdapter(unittest.TestCase):
         self.tmpdir = tempfile.mkdtemp(suffix='test_utils_hash')
         self.oldpwd = os.getcwd()
         os.chdir(self.tmpdir)
-
-        self.sigh = SignalInterruptHandler()
-        self.sigh.activate()
 
         self.bin_path = os.path.join(DATADIR, 'random_data.bin')
         self.md5_path = os.path.join(DATADIR, 'random_data.bin.md5')
@@ -40,10 +36,12 @@ class TestHashAdapter(unittest.TestCase):
     def tearDown(self):
         os.chdir(self.oldpwd)
         shutil.rmtree(self.tmpdir)
-        self.sigh.deactivate()
 
     def _read_md5line(self, i_fh):
-        return i_fh.readline().split(' ')[0]
+        line = i_fh.readline()
+        if isinstance(line, bytes):
+            line = line.decode(encoding='ascii', errors='ignore')
+        return line.split(' ')[0]
 
     def test_hash_compute(self):
         # Filename or FileHandle to hash string
@@ -61,7 +59,7 @@ class TestHashAdapter(unittest.TestCase):
         # String 2 Hash
         strdata = u'dgerqgjnmrsgr864bgvsrdvsrce'
         self.assertEqual(self.md5_h.string2hash(strdata),
-                         hashlib.md5(strdata.encode()).hexdigest())
+                         hashlib.md5(strdata.encode(encoding='utf-8')).hexdigest())
         # Automatic check
         self.assertTrue(self.md5_h.filecheck(self.bin_path, self.md5_path))
         with io.open(self.md5_path, 'r') as m_fh:

@@ -101,6 +101,21 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: VortexCacheBuddiesStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexCacheMarketPlaceStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexCacheStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexCacheOp2ResearchStore
    :show-inheritance:
    :members:

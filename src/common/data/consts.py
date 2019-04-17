@@ -313,7 +313,6 @@ class Correl(GenvModelResource):
             scope = dict(
                 optional = True,
                 default  = 'misc',
-                values   = ['misc'],
             ),
             gvar = dict(
                 default  = '[scope]_correl'
@@ -620,41 +619,6 @@ class MatFilter(GenvModelGeoResource):
                 '.c{!s}'.format(self.geometry.stretching))
 
 
-class Stabal(GenvModelGeoResource):
-    """
-    Spectral covariance operators:
-        *  bal: cross-variables balances
-        * cv: auto-correlations of the control variable
-
-    A GenvKey can be given.
-    """
-
-    _footprint = dict(
-        info = 'Spectral covariance operators',
-        attr = dict(
-            kind = dict(
-                values = ['stabal'],
-            ),
-            stat = dict(
-                values = ['bal', 'cv'],
-            ),
-            level = dict(
-                type     = int,
-                optional = True,
-                default  = 96,
-                values   = [41, 96],
-            ),
-            gvar = dict(
-                default  = 'stabal[level]_[stat]'
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'stabal'
-
-
 class WaveletTable(GenvModelGeoResource):
     """
     Wavelet covariance operators: auto-correlations of the control variable.
@@ -865,3 +829,29 @@ class TruncObj(GenvModelGeoResource):
     @property
     def realkind(self):
         return 'truncobj'
+
+
+class InterChannelsCorrelations(GenvModelResource):
+    """
+    Inter channels correlations for a specific instrument/sensor.
+    A Genvkey can be given.
+    """
+
+    _footprint = dict(
+        info = 'Inter channel correlations for a given instrument.',
+        attr = dict(
+            kind = dict(
+                values = ['correlations', ],
+            ),
+            instrument = dict(
+                values  = ['cris', 'iasi', ],
+            ),
+            gvar = dict(
+                default = 'correlations_[instrument]'
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'correlations'

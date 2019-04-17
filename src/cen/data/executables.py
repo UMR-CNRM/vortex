@@ -3,14 +3,14 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.executables import Script, SurfaceModel
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Safran(SurfaceModel):
@@ -27,7 +27,7 @@ class Safran(SurfaceModel):
                 ),
                 gvar = dict(
                     optional = True,
-                    default = '[kind]',
+                    default = 'master_[kind]',
                 ),
             )
         )

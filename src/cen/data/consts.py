@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from common.data.consts import GenvModelGeoResource
 from gco.syntax.stdattrs import gdomain
@@ -12,7 +12,7 @@ from vortex.data.resources import Resource
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class List(GenvModelGeoResource):
@@ -23,8 +23,9 @@ class List(GenvModelGeoResource):
             info = 'Config file used by  S2M models.',
             attr = dict(
                 kind = dict(
-                    values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml', 'carpost',
-                              'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist', 'metadata', 'NORELo', 'NORELm'],
+                    values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
+                              'carpost', 'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist',
+                              'metadata', 'NORELo', 'NORELm'],
                 ),
                 nativefmt = dict(
                     values  = ['ascii'],

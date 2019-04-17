@@ -12,13 +12,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class VortexNameBuilderError(ValueError):
@@ -192,6 +193,11 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         if 'member' in d and d['member'] is not None:
             pathbits.append(self._pack_std_item_member(d['member']))
 
+    def _pack_pathname_append_scenario(self, pathbits, d):
+        """Pack the provider's scenario identifier (optional)."""
+        if 'scenario' in d and d['scenario'] is not None:
+            pathbits.append(self._pack_std_item_scenario(d['scenario']))
+
     def _pack_pathname_append_block(self, pathbits, d):
         """Pack the provider's block name."""
         if 'block' in d:
@@ -232,7 +238,10 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     def _pack_std_item_truncation(self, value):
         """Packing of the geometry's truncation value."""
-        return 'tl{!s}'.format(value)
+        if isinstance(value, tuple):
+            return 't{1:s}{2:s}{0!s}'.format(* value)
+        else:
+            return 'tl{!s}'.format(value)
 
     def _pack_std_item_filtering(self, value):
         """Packing of the geometry's filtering value."""
@@ -263,6 +272,9 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
 
     def _pack_std_item_member(self, value):
         return 'mb{:03d}'.format(value)
+
+    def _pack_std_item_scenario(self, value):
+        return 's{:s}'.format(value)
 
     def _pack_std_items(self, items):
         """
@@ -363,7 +375,7 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         return name1
 
     def _join_basename_bit(self, d, entry, prefix='.', sep='-', packcb=None):
-        if d[entry]:
+        if d[entry] is not None:
             if packcb is None:
                 return prefix + sep.join(self._pack_std_items(d[entry]))
             else:
@@ -457,6 +469,7 @@ class VortexDateNameBuilder(AbstractActualVortexNameBuilder):
         """
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_flowdate(pathbits, d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
@@ -496,6 +509,7 @@ class VortexPeriodNameBuilder(AbstractActualVortexNameBuilder):
         """
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_flowperiod(pathbits, d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits
@@ -534,6 +548,7 @@ class VortexFlatNameBuilder(AbstractActualVortexNameBuilder):
         according to the so-called standard style.
         """
         pathbits = self._pack_pathname_init(d)
+        self._pack_pathname_append_scenario(pathbits, d)
         self._pack_pathname_append_member(pathbits, d)
         self._pack_pathname_append_block(pathbits, d)
         return pathbits

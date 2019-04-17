@@ -4,11 +4,12 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy
-import six
 
+from bronx.fancies import loggers
 import footprints
 
 from bronx.stdtypes.date      import Date, Time
+from bronx.syntax.decorators  import secure_getattr
 from vortex.data.flow         import FlowResource
 from vortex.data.contents     import JsonDictContent, TextContent
 from vortex.syntax.stdattrs   import number_deco
@@ -18,7 +19,7 @@ from common.data.modelstates  import Historic
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('radical', lambda s: {'unit': 'u', 'normed': 'n'}.get(s.processing, '') + s.realkind)
@@ -161,8 +162,9 @@ class SampleContent(JsonDictContent):
                 except KeyError:
                     return None
 
+    @secure_getattr
     def __getattr__(self, attr):
-        # Return an access function that corresponds to the key
+        # Return an access function that corresponds to the key in "drawing"
         drawing_keys = set([item
                             for d in self.data.get('drawing', []) if isinstance(d, dict)
                             for item in d.keys()])
@@ -179,6 +181,18 @@ class SampleContent(JsonDictContent):
                 else:
                     return elt[attr] if isinstance(elt, dict) else None
             return _attr_access
+        # Return an access function that corresponds to the key in "population"
+        population_keys = set([item
+                              for d in self.data.get('population', []) if isinstance(d, dict)
+                              for item in d.keys()])
+        if attr in population_keys:
+            def _attr_access(g, x):
+                n = g.get('number', x.get('number', None))
+                if n is None:
+                    return None
+                else:
+                    return self.data['population'][n - 1][attr]
+            return _attr_access
         # Returns the list of drawn keys
         listing_keys = set([item + 's'
                             for d in self.data.get('drawing', []) if isinstance(d, dict)
@@ -193,16 +207,24 @@ class SampleContent(JsonDictContent):
             return [d[attr[:-1]] for d in self.data['population']]
         raise AttributeError()
 
-    def timedelta(self, g, x):
-        """Find the time difference between the resource's date and the targetdate."""
+    def targetdate(self, g, x):
         targetdate = g.get('targetdate', x.get('targetdate', None))
         if targetdate is None:
-            raise ValueError("A targetdate attribute must be present if timedelta is used")
-        targetdate = Date(targetdate)
+            raise ValueError("A targetdate attribute must be present if targetdate is used")
+        return Date(targetdate)
+
+    def targetterm(self, g, x):
+        targetterm = g.get('targetterm', x.get('targetterm', None))
+        if targetterm is None:
+            raise ValueError("A targetterm attribute must be present if targetterm is used")
+        return Time(targetterm)
+
+    def timedelta(self, g, x):
+        """Find the time difference between the resource's date and the targetdate."""
         targetterm = Time(g.get('targetterm', x.get('targetterm', 0)))
         thedate = Date(self.date(g, x))
-        period = (targetdate + targetterm) - thedate
-        return six.text_type(period.time())
+        period = (self.targetdate(g, x) + targetterm) - thedate
+        return period.time()
 
     def _actual_diff(self, ref):
         me = copy.copy(self.data)

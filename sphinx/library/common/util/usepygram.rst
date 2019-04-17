@@ -38,6 +38,8 @@ Functions
 
 .. autofunction:: geopotentiel2zs
 
+.. autofunction:: add_poles_to_GLOB_file
+
 Classes
 -------
 

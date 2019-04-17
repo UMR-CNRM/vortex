@@ -3,8 +3,8 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
-import footprints
 
 from vortex.data.outflow import ModelResource
 from gco.syntax.stdattrs import gvar, gdomain
@@ -13,7 +13,7 @@ from previmar.data.contents import SurgeTemplate
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class BlkdatNamFiles(ModelResource):

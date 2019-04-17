@@ -17,6 +17,7 @@ Modules
 * :mod:`ecmwf.tools.ecfs`
 * :mod:`ecmwf.tools.ectrans`
 * :mod:`ecmwf.tools.interfaces`
+* :mod:`ecmwf.tools.schedulers`
 
 Included modules
 ----------------

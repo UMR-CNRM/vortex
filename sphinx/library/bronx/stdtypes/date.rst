@@ -9,8 +9,8 @@
 .. versionadded:: 0.1
 
 
-Classes
--------
+Main Classes
+------------
 
 .. autoclass:: Date
    :show-inheritance:
@@ -33,13 +33,20 @@ Classes
    :member-order: alphabetical
 
 
-Utility class
--------------
+Functions that generate list of dates or times
+----------------------------------------------
 
-.. autoclass:: _GetattrCalculatorMixin
-   :show-inheritance:
-   :members: __getattr__
-   :member-order: alphabetical
+.. autofunction:: daterangex
+
+.. autofunction:: timerangex
+
+.. autofunction:: timeintrangex
+
+
+Generator function for timeseries of dates
+------------------------------------------
+
+.. autofunction:: daterange
 
 
 Helper functions
@@ -81,4 +88,16 @@ Utility functions
 
 .. autofunction:: daterange
 
-.. autofunction:: daterangex
+
+Utility classes
+---------------
+
+.. autoclass:: _GetattrCalculatorMixin
+   :show-inheritance:
+   :members: __getattr__
+   :member-order: alphabetical
+
+.. autoclass:: TimeInt
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -9,18 +9,20 @@ import io
 import re
 import six
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.util.structs import ShellEncoder
 from vortex.algo.components import BlindRun
 from vortex.layout.dataflow import intent
-from vortex.tools import grib
+from vortex.tools.grib import EcGribDecoMixin
 from .ifsroot import IFSParallel
+from common.tools.drhook import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Svect(IFSParallel):
@@ -50,16 +52,10 @@ class Svect(IFSParallel):
         return 'svector'
 
 
-class Combi(BlindRun, grib.EcGribComponent):
+class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     """Build the initial conditions of the EPS."""
 
     _abstract = True
-
-    def prepare(self, rh, opts):
-        """Set some variables according to target definition."""
-        super(Combi, self).prepare(rh, opts)
-        self.export('drhook_not_mpi')
-        self.eccodes_setup(rh, opts, compat=True)
 
     def execute(self, rh, opts):
         """Standard Combi execution."""
@@ -120,7 +116,7 @@ class CombiPert(Combi):
 
 
 #: Definition of a named tuple that holds informations on SV for a given zone
-_SvInfoTuple = collections.namedtuple('SvInfoTuple', ['available', 'expected'], verbose=False)
+_SvInfoTuple = collections.namedtuple('SvInfoTuple', ['available', 'expected'])
 
 
 class CombiSV(CombiPert):
@@ -167,8 +163,7 @@ class CombiSV(CombiPert):
                     '\n'.join(['- {0:8s}: {1.available:3d} ({1.expected:3d} expected).'.format(z, n)
                                for z, n in nbVect.items()]))
         # Writing the singular vectors per areas in a json file
-        with io.open(self.info_fname, 'wb') as fhinfo:
-            self.system.json_dump(nbVect, fhinfo)
+        self.system.json_dump(nbVect, self.info_fname)
 
         # Tweak the namelists
         namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')
@@ -225,7 +220,8 @@ class CombiSVunit(CombiSV):
 
 
 class CombiSVnorm(CombiSV):
-    """Compute a norm consistent with the background error and combine the normed SV to create the SV perturbations."""
+    """Compute a norm consistent with the background error
+     and combine the normed SV to create the SV perturbations."""
 
     _footprint = dict(
         attr = dict(
@@ -322,7 +318,7 @@ class CombiIC(Combi):
         nbAe = len(aesecs)
         nbPert = nbPert or nbAe
         # If less AE members (but nor too less) than ic to build
-        if nbAe < nbPert and nbPert <= 2 * nbAe:
+        if nbAe < nbPert <= 2 * nbAe:
             logger.info("%d AE perturbations needed, %d AE members available: the first ones are duplicated.",
                         nbPert, nbAe)
             prefix = aesecs[0].rh.container.filename.split('_')[0]
@@ -351,7 +347,8 @@ class CombiIC(Combi):
 
 
 class CombiBreeding(CombiPert):
-    """Compute a norm consistent with the background error and combine the normed SV to create the SV perturbations."""
+    """Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations."""
 
     _footprint = dict(
         attr = dict(
@@ -396,7 +393,8 @@ class CombiBreeding(CombiPert):
 
 
 class SurfCombiIC(BlindRun):
-    """Combine the deterministic surface with the perturbed surface to create the initial surface conditions."""
+    """Combine the deterministic surface with the perturbed surface
+    to create the initial surface conditions."""
 
     _footprint = dict(
         attr = dict(
@@ -425,7 +423,7 @@ class SurfCombiIC(BlindRun):
         namsec[0].rh.save()
 
 
-class Clustering(BlindRun, grib.EcGribComponent):
+class Clustering(BlindRun, EcGribDecoMixin):
     """Select by clustering a sample of members among the whole set."""
 
     _footprint = dict(
@@ -452,8 +450,6 @@ class Clustering(BlindRun, grib.EcGribComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(Clustering, self).prepare(rh, opts)
-
-        self.eccodes_setup(rh, opts, compat=True)
 
         grib_sections = self.context.sequence.effective_inputs(role='ModelState',
                                                                kind='gridpoint')
@@ -482,7 +478,7 @@ class Clustering(BlindRun, grib.EcGribComponent):
             fileList = sorted([six.text_type(grib.rh.container.localpath())
                                for grib in grib_sections])
 
-        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+        if self.nbmembers is None or self.nbmembers > self.nbclust:
 
             # Tweak the namelist
             namsec = self.setlink(initrole='Namelist', initkind='namelist')
@@ -499,7 +495,7 @@ class Clustering(BlindRun, grib.EcGribComponent):
 
     def execute(self, rh, opts):
         # If the number of members is big enough -> normal processing
-        if (self.nbmembers is None or self.nbmembers > self.nbclust):
+        if self.nbmembers is None or self.nbmembers > self.nbclust:
             logger.info("Normal clustering run (%d members, %d clusters)",
                         self.nbmembers, self.nbclust)
             super(Clustering, self).execute(rh, opts)

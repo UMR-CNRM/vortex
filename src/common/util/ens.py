@@ -7,12 +7,13 @@ A collection of utility functions used in the context of Ensemble forecasts.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import json
-from random import seed, sample
-import re
 import six
+import json
+import re
 
-import footprints
+from bronx.compat import random
+from bronx.fancies import loggers
+
 from vortex import sessions
 from vortex.data.stores import FunctionStoreCallbackError
 from vortex.util import helpers
@@ -20,7 +21,7 @@ from vortex.util import helpers
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def drawingfunction(options):
@@ -48,7 +49,8 @@ def drawingfunction(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         date = rhdict['resource']['date']
-        seed(int(date[:-2]))
+        rgen = random.Random()
+        rgen.seed(int(date[:-2]))
         nbsample = rhdict['resource'].get('nbsample', 0)
         if not nbsample:
             raise FunctionStoreCallbackError('The resource must hold a non-null nbsample attribute')
@@ -57,8 +59,8 @@ def drawingfunction(options):
             raise FunctionStoreCallbackError('The resource must hold a non-empty population attribute')
         nbset = len(population)
 
-        tirage = (sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
-                  sample(population, nbsample % nbset))
+        tirage = (rgen.sample(population * (nbsample // nbset), (nbsample // nbset) * nbset) +
+                  rgen.sample(population, nbsample % nbset))
         logger.info('List of random elements: %s', ', '.join([six.text_type(x) for x in tirage]))
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
@@ -72,7 +74,7 @@ def drawingfunction(options):
                    population = population)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.StringIO(json.dumps(outdict, indent=4))
+    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def _checkingfunction_dict(options):
@@ -83,15 +85,15 @@ def _checkingfunction_dict(options):
     rhdict = options.get('rhandler', None)
     if rhdict:
         # If no nbsample is provided, easy to achieve...
-        nbsample = rhdict['resource'].get('nbsample', 0)
+        nbsample = rhdict['resource'].get('nbsample', None)
         # ...and if no explicit minimum of resources, nbsample is the minimum
-        nbmin = int(options.get('min', [nbsample]).pop())
-        if nbsample < nbmin:
+        nbmin = int(options.get('min', [(0 if nbsample is None else nbsample), ]).pop())
+        if nbsample is not None and nbsample < nbmin:
             logger.warning('%d resources needed, %d required: sin of gluttony ?', nbsample, nbmin)
         checkrole = rhdict['resource'].get('checkrole', None)
         if not checkrole:
             raise FunctionStoreCallbackError('The resource must hold a non-empty checkrole attribute')
-        rolematch = re.match('(\w+)(?:\+(\w+))?$', checkrole)
+        rolematch = re.match(r'(\w+)(?:\+(\w+))?$', checkrole)
         if rolematch:
             ctx = sessions.current().context
             checklist = [sec.rh for sec in ctx.sequence.filtered_inputs(role=rolematch.group(1))]
@@ -134,7 +136,7 @@ def checkingfunction(options):
                    population = avail_list)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
-    return six.StringIO(json.dumps(outdict, indent=4))
+    return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
 
 
 def safedrawingfunction(options):

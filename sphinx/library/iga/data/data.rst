@@ -16,5 +16,6 @@ Package
 Included Modules
 ----------------
 
+* :mod:`iga.data.iga`
 * :mod:`iga.data.providers`
 * :mod:`iga.data.stores`

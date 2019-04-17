@@ -8,17 +8,21 @@ for any :mod:`vortex` experiment.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import collections
 import re
+
 import six
 
-import footprints
-
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
+from bronx.patterns import getbytag
+from bronx.syntax.decorators import secure_getattr
+from bronx.syntax.iterators import izip_pcn
 from vortex import toolbox, VortexForceComplete
-from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
+from vortex.algo.components import DelayedAlgoComponentError
 from vortex.syntax.stdattrs import Namespace
+from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']
@@ -40,19 +44,20 @@ class NiceLayout(object):
         """Proxy to :meth:`~vortex.tools.systems.header` method."""
         return self.sh.header(*args, **kw)
 
-    def nicedump(self, msg, **kw):
+    def nicedump(self, msg, titlecallback=None, **kw):
         """Simple dump of the dict contents with ``msg`` as header."""
-        self.header(msg)
+        titlecallback = titlecallback or self.header
+        titlecallback(msg)
         if kw:
-            maxlen = max([ len(x) for x in kw.keys() ])
+            maxlen = max([len(x) for x in kw.keys()])
             for k, v in sorted(six.iteritems(kw)):
                 print(' +', k.ljust(maxlen), '=', six.text_type(v))
-            print
+            print()
         else:
             print(" + ...\n")
 
 
-class ConfigSet(collections.MutableMapping):
+class ConfigSet(collections_abc.MutableMapping):
     """Simple struct-like object that acts as a lower case dictionary.
 
     Two syntax are available to add a new entry in a :class:`ConfigSet` object:
@@ -96,7 +101,7 @@ class ConfigSet(collections.MutableMapping):
         if value is not None and isinstance(value, six.string_types):
             # Support for old style dictionaries (compatibility)
             if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
-                    not re.match(r'^\w+\(dict\(.*\)\)$', value)):
+                  not re.match(r'^\w+\(dict\(.*\)\)$', value)):
                 key = key[:-4]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
@@ -104,11 +109,11 @@ class ConfigSet(collections.MutableMapping):
                     value = 'dict(' + value + ')'
             # Support for geometries (compatibility)
             if (('geometry' in key or 'geometries' in key) and
-                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
+                  (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
                 value = 'geometry(' + value + ')'
             # Support for oldstyle range (compatibility)
             if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
-                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
+                  not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
                 key = key[:-6]
                 if re.match(r'^\w+\(.*\)$', value):
                     value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)
@@ -123,11 +128,12 @@ class ConfigSet(collections.MutableMapping):
         return len(self._internal)
 
     def clear(self):
-        self._internal = dict()
+        self._internal.clear()
 
     def __contains__(self, key):
         return self._remap_key(key) in self._internal
 
+    @secure_getattr
     def __getattr__(self, key):
         if key in self:
             return self[key]
@@ -137,13 +143,19 @@ class ConfigSet(collections.MutableMapping):
     def __setattr__(self, attr, value):
         self[attr] = value
 
+    def __delattr__(self, key):
+        if key in self:
+            del self[key]
+        else:
+            raise AttributeError('No such parameter <' + key + '>')
+
     def copy(self):
         newobj = self.__class__()
-        newobj.update(** self)
+        newobj.update(**self)
         return newobj
 
 
-class Node(footprints.util.GetByTag, NiceLayout):
+class Node(getbytag.GetByTag, NiceLayout):
     """Base class type for any element in the logical layout.
 
     :param str tag: The node's tag (must be unique !)
@@ -164,6 +176,8 @@ class Node(footprints.util.GetByTag, NiceLayout):
         self.options    = dict()
         self.play       = kw.pop('play', False)
         self._ticket    = kw.pop('ticket', None)
+        if self._ticket is None:
+            raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
         self._cycle_cb  = kw.pop('register_cycle_prefix', None)
@@ -281,7 +295,8 @@ class Node(footprints.util.GetByTag, NiceLayout):
 
         # Add potential options
         if self.options:
-            self.nicedump('Update conf with last minute arguments', **self.options)
+            self.nicedump('Update conf with last minute arguments',
+                          titlecallback=self.subtitle, **self.options)
             self.conf.update(self.options)
 
         # Then we broadcast the current configuration to the kids
@@ -297,11 +312,12 @@ class Node(footprints.util.GetByTag, NiceLayout):
         """Set some parameters if defined in environment but not in actual conf."""
         autoconf = dict()
         localstrip = len(self._locprefix)
-        for localvar in sorted([ x for x in self.env.keys() if x.startswith(self._locprefix) ]):
+        for localvar in sorted([x for x in self.env.keys() if x.startswith(self._locprefix)]):
             if localvar[localstrip:] not in self.conf:
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
-            self.nicedump('Populate conf with local variables', **autoconf)
+            self.nicedump('Populate conf with local variables',
+                          titlecallback=self.subtitle, **autoconf)
             self.conf.update(autoconf)
 
     def conf2io(self):
@@ -314,7 +330,6 @@ class Node(footprints.util.GetByTag, NiceLayout):
             self.conf.xpid = self.conf.get('suite', self.env.VORTEX_XPID)
         if self.conf.xpid is None:
             raise ValueError('Could not set a proper experiment id.')
-        logger.info('Experiment name is <%s>', self.conf.xpid)
 
     def register_cycle(self, cyclename):
         """Adds a new cycle to genv if a proper callback is defined."""
@@ -326,12 +341,16 @@ class Node(footprints.util.GetByTag, NiceLayout):
     def cycles(self):
         """Update and register some configuration cycles."""
 
+        other_cycles = [x for x in self.conf.keys() if x.endswith('_cycle')]
+        if 'cycle' in self.conf or other_cycles:
+            self.header("Registering cycles")
+
         # At least, look for the main cycle
         if 'cycle' in self.conf:
             self.register_cycle(self.conf.cycle)
 
         # Have a look to other cycles
-        for other in [ x for x in self.conf.keys() if x.endswith('_cycle') ]:
+        for other in other_cycles:
             self.register_cycle(self.conf.get(other))
 
     def geometries(self):
@@ -346,15 +365,15 @@ class Node(footprints.util.GetByTag, NiceLayout):
         """Set toolbox defaults, extended with actual arguments ``extras``."""
         t = self.ticket
         toolbox.defaults(
-            model     = t.glove.vapp,
-            namespace = self.conf.get('namespace', Namespace('vortex.cache.fr')),
+            model      = t.glove.vapp,
+            namespace  = self.conf.get('namespace', Namespace('vortex.cache.fr')),
             gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
         )
 
         if 'rundate' in self.conf:
             toolbox.defaults['date'] = self.conf.rundate
 
-        for optk in ('cutoff', 'geometry', 'cycle', 'model', ):
+        for optk in ('cutoff', 'geometry', 'cycle', 'model',):
             if optk in self.conf:
                 toolbox.defaults[optk] = self.conf.get(optk)
 
@@ -432,27 +451,64 @@ class Node(footprints.util.GetByTag, NiceLayout):
             pass
 
     def complete(self, aborted=False):
-        """Some cleaning and completetion status."""
+        """Some cleaning and completion status."""
         self._aborted = aborted
 
     def run(self, nbpass=0):
         """Abstract method: the actual job to do."""
         pass
 
-    def report_execution_error(self):
-        """may be overwritten if a report needs to be sent."""
+    def filter_execution_error(self, exc):  # @UnusedVariable
+        """
+        May be overwritten if exceptions generated by the AlgoComponent needs
+        to be filtered.
+
+        :param Exception exc: The exception that triggered the call
+
+        :return: Two elements. The first item (boolean) tells whether or not
+                 a delayed exception error is to be masked. The second item is a
+                 (possibly empty) dictionary that gives some extra information
+                 about the warning/error (such information could be used to
+                 generate a meaningful alert email).
+
+        :note: Do not re-raised the **exc** exception in this method.
+        """
+        return False, dict()
+
+    def report_execution_warning(self, exc, **kw_infos):  # @UnusedVariable
+        """
+        May be overwritten if a report needs to be sent when a filtered
+        execution error occurs.
+
+        :param Exception exc: The exception that triggered the call
+        :param dict kw_infos: Any kind of extra informations provided by the
+            :meth:`filter_execution_error`.
+
+        :note: Do not re-raised the **exc** exception in this method.
+        """
         pass
 
-    def component_runner(self, tbalgo, tbx=(None, ), **kwargs):
+    def report_execution_error(self, exc, **kw_infos):  # @UnusedVariable
+        """
+        May be overwritten if a report needs to be sent when an un-filtered
+        execution error occurs.
+
+        :param Exception exc: The exception that triggered the call
+        :param dict kw_infos: Any kind of extra informations provided by the
+            :meth:`filter_execution_error`.
+
+        :note: Do not re-raised the **exc** exception in this method.
+        """
+        pass
+
+    def component_runner(self, tbalgo, tbx=(None,), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component.
 
         This is a helper method that maybe useful (its use is not mandatory).
         """
         # it may be necessary to setup a default value for OpenMP...
         env_update = dict()
-        if ('openmp' not in self.conf or
-                ('openmp' in self.conf and
-                 not isinstance(self.conf.openmp, (list, tuple)))):
+        if 'openmp' not in self.conf or not isinstance(self.conf.openmp, (list, tuple)):
             env_update['OMP_NUM_THREADS'] = int(self.conf.get('openmp', 1))
 
         # If some mpiopts are in the config file, use them...
@@ -460,11 +516,11 @@ class Node(footprints.util.GetByTag, NiceLayout):
         mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
         for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
                                   'prefixcommand') if s in mpiopts or s in self.conf]:
-                mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
+            mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
 
         # if the prefix command is missing in the configuration file, look in the input sequence
         if 'prefixcommand' not in mpiopts:
-            prefixes = self.ticket.context.sequence.effective_inputs(role =re.compile('Prefixcommand'))
+            prefixes = self.ticket.context.sequence.effective_inputs(role=re.compile('Prefixcommand'))
             if len(prefixes) > 1:
                 raise RuntimeError("Only one prefix command can be used...")
             for sec in prefixes:
@@ -481,20 +537,26 @@ class Node(footprints.util.GetByTag, NiceLayout):
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
-            tbx = zip(* tbx)
+            tbx = zip(*tbx)
         with self.env.delta_context(**env_update):
             for binary in tbx:
                 try:
-                    tbalgo.run(binary, mpiopts = mpiopts, **kwargs)
-                except Exception:
-                    self.report_execution_error()
-                    raise
+                    tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
+                except Exception as e:
+                    mask_delayed, f_infos = self.filter_execution_error(e)
+                    if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
+                        logger.warning("The delayed exception is masked:\n%s", str(f_infos))
+                        self.report_execution_warning(e, **f_infos)
+                    else:
+                        logger.error("Un-filtered execution error:\n%s", str(f_infos))
+                        self.report_execution_error(e, **f_infos)
+                        raise
 
 
 class Family(Node):
     """Logical group of :class:`Family` or :class:`Task`.
 
-     Compared to the usual :class:`Node` class, additional attributes are:
+    Compared to the usual :class:`Node` class, additional attributes are:
 
     :param nodes: The list of :class:`Family` or :class:`Task` objects that
                   are members of this family
@@ -536,6 +598,14 @@ class Family(Node):
         for node in self.contents:
             node.build_context()
 
+    def localenv(self):
+        """No env dump in families (it is enough to dump it in Tasks)."""
+        pass
+
+    def summary(self):
+        """No parameters dump in families (it is enough to dump it in Tasks)."""
+        pass
+
     def run(self, nbpass=0):
         """Execution driver: setup, run kids, complete."""
         self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
@@ -561,32 +631,59 @@ class LoopFamily(Family):
     :param str loopsuffix: The suffix that will be added to the child's tag.
                            By default '+loopvariable{!s}' (where {!s} will be
                            replaced by the loop control variable's value).
+    :param bool loopneedprev: Ensure that the previous value is available
+    :param bool loopneednext: Ensure that the next value is available
     """
 
     def __init__(self, **kw):
         logger.debug('Family init %s', repr(self))
         super(LoopFamily, self).__init__(**kw)
+        # On what should we iterate ?
         self._loopconf = kw.pop('loopconf', None)
         if not self._loopconf:
             raise ValueError('The "loopconf" named argument must be given')
-        self._loopvariable = kw.pop('_loopvariable', self._loopconf.rstrip('s'))
-        self._loopsuffix = kw.pop('loopsuffix', '+' + self._loopvariable + '{!s}')
+        else:
+            self._loopconf = self._loopconf.split(',')
+        # Find the loop's variable names
+        self._loopvariable = kw.pop('_loopvariable', None)
+        if self._loopvariable is None:
+            self._loopvariable = [s.rstrip('s') for s in self._loopconf]
+        else:
+            self._loopvariable = self._loopvariable.split(',')
+            if len(self._loopvariable) != len(self._loopconf):
+                raise ValueError('Inconsistent size between loopconf and loopvariable')
+        # Find the loop suffixes
+        self._loopsuffix = kw.pop('loopsuffix', None)
+        if self._loopsuffix is None:
+            self._loopsuffix = '+' + self._loopvariable[0] + '{0!s}'
+        # Prev/Next
+        self._loopneedprev = kw.pop('loopneedprev', False)
+        self._loopneednext = kw.pop('loopneednext', False)
+        # Initialisation stuff
         self._actual_content = None
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         baseargs = super(LoopFamily, self)._args_loopclone(tagsuffix, extras)
-        baseargs['loopconf'] = self._loopconf
-        baseargs['loopvariable'] = self._loopvariable
+        baseargs['loopconf'] = ','.join(self._loopconf)
+        baseargs['loopvariable'] = ','.join(self._loopvariable)
         baseargs['loopsuffix'] = self._loopsuffix
+        baseargs['loopneedprev'] = self._loopneedprev
+        baseargs['loopneednext'] = self._loopneednext
         return baseargs
 
     @property
     def contents(self):
         if self._actual_content is None:
             self._actual_content = list()
-            for var in self.conf.get(self._loopconf):
-                extras = {self._loopvariable: var}
-                suffix = self._loopsuffix.format(var)
+            for pvars, cvars, nvars in izip_pcn(*[self.conf.get(lc) for lc in self._loopconf]):
+                if self._loopneedprev and all([v is None for v in pvars]):
+                    continue
+                if self._loopneednext and all([v is None for v in nvars]):
+                    continue
+                extras = {v: x for v, x in zip(self._loopvariable, cvars)}
+                extras.update({v + '_prev': x for v, x in zip(self._loopvariable, pvars)})
+                extras.update({v + '_next': x for v, x in zip(self._loopvariable, nvars)})
+                suffix = self._loopsuffix.format(*cvars)
                 for node in self._contents:
                     self._actual_content.append(node.loopclone(suffix, extras))
         return self._actual_content
@@ -655,17 +752,23 @@ class Task(Node):
     def conf2io(self):
         """Broadcast IO SERVER configuration values to environment."""
         t = self.ticket
-        t.sh.header('IOSERVER Environment')
-        t.env.default(VORTEX_IOSERVER_NODES  = self.conf.get('io_nodes', 0))
-        t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.get('io_tasks', 6))
-        t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.get('io_openmp', 4))
+        triggered = any([i in self.conf for i in ('io_nodes', 'io_tasks', 'io_openmp')])
+        if 'io_nodes' in self.conf:
+            t.env.default(VORTEX_IOSERVER_NODES  = self.conf.io_nodes)
+        if 'io_tasks' in self.conf:
+            t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.io_tasks)
+        if 'io_openmp' in self.conf:
+            t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.io_openmp)
+        if triggered:
+            self.nicedump('IOSERVER Environment', **{k: v for k, v in t.env.items()
+                                                     if k.startswith('VORTEX_IOSERVER_')})
 
     def io_poll(self, prefix=None):
         """Complete the polling of data produced by the execution step."""
         sh = self.sh
         if prefix and sh.path.exists('io_poll.todo'):
             for iopr in prefix:
-                sh.header('IO poll <' + iopr  + '>')
+                sh.header('IO poll <' + iopr + '>')
                 rc = sh.io_poll(iopr)
                 print(rc)
                 print(rc.result)
@@ -686,13 +789,13 @@ class Task(Node):
             self.complete()
 
 
-class Driver(footprints.util.GetByTag, NiceLayout):
+class Driver(getbytag.GetByTag, NiceLayout):
     """Iterable object for a simple scheduling of :class:`Application` objects."""
 
     _tag_default = 'pilot'
 
-    def __init__(self, ticket=None, nodes=(),
-                 rundate=None, iniconf=None, jobname=None, options=None):
+    def __init__(self, ticket, nodes=(), rundate=None, iniconf=None,
+                 jobname=None, options=None, iniencoding=None):
         """Setup default args value and read config file job."""
         self._ticket = t = ticket
         self._conf = None
@@ -704,9 +807,10 @@ class Driver(footprints.util.GetByTag, NiceLayout):
         if j_assist is not None:
             self._special_prefix = j_assist.special_prefix.upper()
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
+        self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
-        self._nbpass  = 0
+        self._nbpass = 0
 
         # Build the tree to schedule
         self._contents = list()
@@ -721,7 +825,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
                         tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),
                         ticket  = self.ticket,
                         nodes   = x,
-                        ** self._options
+                        ** dict(self._options)
                     )
                 )
 
@@ -746,6 +850,10 @@ class Driver(footprints.util.GetByTag, NiceLayout):
         return self._iniconf
 
     @property
+    def iniencoding(self):
+        return self._iniencoding
+
+    @property
     def jobconf(self):
         return self._jobconf
 
@@ -765,14 +873,16 @@ class Driver(footprints.util.GetByTag, NiceLayout):
     def nbpass(self):
         return self._nbpass
 
-    def read_config(self, inifile=None):
+    def read_config(self, inifile=None, iniencoding=None):
         """Read specified ``inifile`` initialisation file."""
         if inifile is None:
             inifile = self.iniconf
+        if iniencoding is None:
+            iniencoding = self.iniencoding
         try:
-            iniparser = GenericConfigParser(inifile)
-            thisconf  = iniparser.as_dict(merged=False)
-        except StandardError:
+            iniparser = GenericConfigParser(inifile, encoding=iniencoding)
+            thisconf = iniparser.as_dict(merged=False)
+        except Exception:
             logger.critical('Could not read config %s', inifile)
             raise
         return thisconf
@@ -797,7 +907,7 @@ class Driver(footprints.util.GetByTag, NiceLayout):
             logger.warning('This driver does not have any configuration file')
             self._jobconf = dict()
         else:
-            self._jobconf = self.read_config(self.iniconf)
+            self._jobconf = self.read_config(self.iniconf, self.iniencoding)
 
         self._conf = ConfigSet()
         updconf = self.jobconf.get('defaults', dict())

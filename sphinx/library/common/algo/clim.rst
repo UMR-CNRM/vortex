@@ -44,7 +44,29 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: BuildPGD_MPI
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FinalizePGD
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AddPolesToGLOB
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Festat
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: Fediacov
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   
+   

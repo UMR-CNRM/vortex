@@ -7,13 +7,12 @@ This package handles some common targets used at ECMWF.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-#: No automatic export
-__all__ = []
-
 import footprints
-logger = footprints.loggers.getLogger(__name__)
 
 from vortex.tools.targets import Target
+
+#: No automatic export
+__all__ = []
 
 
 class ECMWFCrayXC(Target):
@@ -50,17 +49,14 @@ class CCA(ECMWFCrayXC):
     _footprint = dict(
         info = 'Cray CCA Supercomputer at ECMWF',
         attr = dict(
-            hostname = dict(
-                values = (
-                    [x + str(y) for x in ('cca',) for y in range(1836)] +
-                    [x + str(y) for x in ('cca-login',) for y in range(1, 5)] +
-                    ['cca-batch', ])
-            ),
             inetname = dict(
                 default = 'cca',
                 values  = ['cca']
             ),
-        )
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'cca(?:(?:-login|ppn|mom)?\d+|-batch)(?:\.|$)')
+        ),
     )
 
 
@@ -71,15 +67,12 @@ class CCB(ECMWFCrayXC):
     _footprint = dict(
         info = 'Cray CCB Supercomputer at ECMWF',
         attr = dict(
-            hostname = dict(
-                values = (
-                    [x + str(y) for x in ('ccb',) for y in range(1836)] +
-                    [x + str(y) for x in ('ccb-login',) for y in range(1, 5)] +
-                    ['ccb-batch', ])
-            ),
             inetname = dict(
                 default = 'ccb',
                 values  = ['ccb']
             ),
-        )
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'ccb(?:(?:-login|ppn|mom)?\d+|-batch)(?:\.|$)')
+        ),
     )

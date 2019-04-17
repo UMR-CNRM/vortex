@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import re
 
+from bronx.fancies import loggers
 import footprints
 
 from vortex.algo import mpitools
@@ -13,7 +14,7 @@ from vortex.syntax.stdattrs import DelayedEnvValue
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class MpiAuto(mpitools.MpiTool):
@@ -80,36 +81,95 @@ class MpiAuto(mpitools.MpiTool):
                     raise IOError('The prefixcommand do not exists.')
 
 
-class MpiNWP(mpitools.MpiBinaryBasic):
-    """The kind of binaries used in NWP"""
+def arpifs_commons_binarydeco(cls):
+    """Handle usual IFS/Arpege namelist tweaking.
 
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['basicnwp', ],
-            ),
-        ),
-    )
+    Note: This is a class decorator for class somehow based on MpiBinaryDescription
+    """
+    orig_setup_namelist_delta = getattr(cls, 'setup_namelist_delta')
 
     def setup_namelist_delta(self, namcontents, namlocal):
-        """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
-        namw = super(MpiNWP, self).setup_namelist_delta(namcontents, namlocal)
-        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
+        namw = orig_setup_namelist_delta(self, namcontents, namlocal)
+        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
             namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
             namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
             namw = True
         if 'NAMPAR1' in namcontents:
             np1 = namcontents['NAMPAR1']
             for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
-                if np1[nstr] > self.nprocs:
+                if isinstance(np1[nstr], (int, float)) and np1[nstr] > self.nprocs:
                     logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
                     np1[nstr] = self.nprocs
                     namw = True
         return namw
 
+    if hasattr(orig_setup_namelist_delta, '__doc__'):
+        setup_namelist_delta.__doc__ = orig_setup_namelist_delta.__doc__
+
+    setattr(cls, 'setup_namelist_delta', setup_namelist_delta)
+    return cls
+
+
+# Some IFS/Arpege specific things :
+
+def arpifs_obsort_nprocab_binarydeco(cls):
+    """Handle usual IFS/Arpege environement tweaking for OBSORT (nproca & nprocb).
+
+    Note: This is a class decorator for class somehow based on MpiBinaryDescription
+    """
+    orig_setup_env = getattr(cls, 'setup_environment')
+
+    def setup_environment(self, opts):
+        orig_setup_env(self, opts)
+        self.env.NPROCA = int(self.env.NPROCA or
+                              self.nprocs)
+        self.env.NPROCB = int(self.env.NPROCB or
+                              self.nprocs // self.env.NPROCA)
+        logger.info("MPI Setup NPROCA=%d and NPROCB=%d", self.env.NPROCA, self.env.NRPOCB)
+
+    if hasattr(orig_setup_env, '__doc__'):
+        setup_environment.__doc__ = orig_setup_env.__doc__
+
+    setattr(cls, 'setup_environment', setup_environment)
+    return cls
+
+
+@arpifs_commons_binarydeco
+class MpiNWP(mpitools.MpiBinaryBasic):
+    """The kind of binaries used in IFS/Arpege."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['basicnwp', ]),
+        ),
+    )
+
+
+@arpifs_obsort_nprocab_binarydeco
+@arpifs_commons_binarydeco
+class MpiNWPObsort(mpitools.MpiBinaryBasic):
+    """The kind of binaries used in IFS/Arpege when the ODB OBSSORT code needs to be run."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['basicnwpobsort', ]),
+        ),
+    )
+
+
+@arpifs_obsort_nprocab_binarydeco
+class MpiObsort(mpitools.MpiBinaryBasic):
+    """The kind of binaries used when the ODB OBSSORT code needs to be run."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['basicobsort', ]),
+        ),
+    )
+
 
 class MpiNWPIO(mpitools.MpiBinaryIOServer):
-    """Standard IFS NWP IO server."""
+    """Standard IFS/Arpege NWP IO server."""
 
     _footprint = dict(
         attr = dict(

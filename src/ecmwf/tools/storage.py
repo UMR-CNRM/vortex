@@ -8,19 +8,20 @@ This package is used to implement the Archive Store class only used at ECMWF.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-from vortex.tools.storage import Archive
+from vortex.tools.storage import Archive, DEFAULT_ARCHIVE_TUBES
 
 
 class ArchiveECMWF(Archive):
     """The specific class to handle Archive from ECMWF super-computers"""
 
     _default_tube = 'ectrans'
+
     _footprint = dict(
         info = 'Default archive description from ECMWF',
         attr = dict(
             tube = dict(
                 info     = "How to communicate with the archive?",
-                values   = ['ectrans', 'ecfs'],
+                values   = DEFAULT_ARCHIVE_TUBES + ['ectrans', 'ecfs'],
                 optional = True
             )
         ),
@@ -52,8 +53,8 @@ class ArchiveECMWF(Archive):
                                              storage=self.actual_storage)
         gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
                                                inifile=self.inifile)
-        return self.sh.ectransget(source=local,
-                                  target=item,
+        return self.sh.ectransget(source=item,
+                                  target=local,
                                   fmt=kwargs.get("fmt", "foo"),
                                   cpipeline=kwargs.get("compressionpipeline", None),
                                   gateway=gateway,
@@ -71,7 +72,8 @@ class ArchiveECMWF(Archive):
                                   fmt=kwargs.get("fmt", "foo"),
                                   cpipeline=kwargs.get("compressionpipeline", None),
                                   gateway=gateway,
-                                  remote=remote)
+                                  remote=remote,
+                                  sync=kwargs.get('enforcesync', False))
 
     def _ectransdelete(self, item, **kwargs):
         """Actual _delete using ectrans"""

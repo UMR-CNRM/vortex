@@ -3,9 +3,11 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
 import six
+import re
 
+from bronx.fancies import loggers
+from bronx.stdtypes import date
 import footprints
 
 from vortex.data.providers import Provider, Remote
@@ -14,12 +16,11 @@ from vortex.syntax.stdattrs import namespacefp, member, block, Namespace, a_suit
 from vortex.util.config import GenericConfigParser
 
 from common.tools.igastuff import archive_suffix, fuzzyname, arpcourt_vconf, IgakeyFactoryArchive
-from bronx.stdtypes import date
 
 #: Automatic export of the online provider Olive
 __all__ = ['Olive']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Olive(Provider):
@@ -208,7 +209,7 @@ class OpArchive(Provider):
                                 fuzzy = fuzzy.upper()
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
-                    if(self.vapp == 'mocage'):
+                    if self.vapp == 'mocage':
                         valid = (resource.date + resource.term).ymdh
                         fuzzy = '+' + valid
                     if keyattr == 'modelkey' and self.block == 'coupling_fc':

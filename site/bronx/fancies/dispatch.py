@@ -25,15 +25,16 @@ import io
 import cmd
 import pickle
 
-
 import footprints
 
 from bronx.stdtypes.history import PrivateHistory as Histo
+from bronx.fancies import loggers, dump
 from bronx.fancies.colors import termcolors
 from bronx.fancies.wrapcmd import WrapCmdLineArgs
 import bronx.fancies.multicfg  # @UnusedImport
+from bronx.syntax.decorators import secure_getattr
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class StdColorFilter(object):
@@ -54,6 +55,7 @@ class StdColorFilter(object):
             fgcolor = self.fgcolor
         self.stdpipe.write(termcolors.colored(text, fgcolor=fgcolor, setfont=self.setfont))
 
+    @secure_getattr
     def __getattr__(self, attr):
         return getattr(self.stdpipe, attr)
 
@@ -63,7 +65,8 @@ class CmdLiner(cmd.Cmd):
     Abstract class for dealing with shell-like options oriented command line tasks.
     """
 
-    def __init__(self, name='cmdliner', prompt=None, maxlen=999, logfile=None, fgcolor='lightyellow', fgshell='lightcyan'):
+    def __init__(self, name='cmdliner', prompt=None, maxlen=999, logfile=None,
+                 fgcolor='lightyellow', fgshell='lightcyan'):
         """
         It should be a good habit to give a significant name to the ``CmdLiner`` object
         so that history files are not mixed (read at initialisation).
@@ -116,8 +119,9 @@ class CmdLiner(cmd.Cmd):
         if len(self.history):
             if re.match('^!!', line):
                 line = re.sub('^!!', self.history.nice(self.history.last), line)
-            elif re.match('^!\d+', line):
-                line = re.sub('^!(\d+)', lambda m: self.history.nice(self.history.getbynumber(int(m.group(1)))), line)
+            elif re.match(r'^!\d+', line):
+                line = re.sub(r'^!(\d+)', lambda m: self.history.nice(self.history.getbynumber(int(m.group(
+                    1)))), line)
         if line:
             self.history.append(line)
             self.setprompt()
@@ -129,7 +133,9 @@ class CmdLiner(cmd.Cmd):
         if kw.get('raw', False):
             print(text)
         else:
-            print(termcolors.colored(text, fgcolor=kw.get('fgcolor', self.fgcolor), setfont=kw.get('setfont', 'bold')))
+            print(termcolors.colored(text,
+                                     fgcolor=kw.get('fgcolor', self.fgcolor),
+                                     setfont=kw.get('setfont', 'bold')))
         if self.logflag:
             self.report(termcolors.clean(text))
 
@@ -302,12 +308,12 @@ class ExtendedCmdLiner(CmdLiner):
     @WrapCmdLineArgs(addhelp=True)
     def do_cfginfo(self, **opts):
         """Display the parsed configuration file information."""
-        self.stdlog(footprints.dump.fulldump(self.cfg.info))
+        self.stdlog(dump.fulldump(self.cfg.info))
 
     @WrapCmdLineArgs(addhelp=True)
     def do_cfgdefaults(self, **opts):
         """Display defaults value extracted from the configuration file."""
-        self.stdlog(footprints.dump.fulldump(self.cfg.defaults))
+        self.stdlog(dump.fulldump(self.cfg.defaults))
 
     @WrapCmdLineArgs(addhelp=True)
     def do_cfgtmp(self, **opts):
@@ -315,7 +321,7 @@ class ExtendedCmdLiner(CmdLiner):
         Display internal temporary values stored while processing the
         configuration file.
         """
-        self.stdlog(footprints.dump.fulldump(self.cfg.tmp))
+        self.stdlog(dump.fulldump(self.cfg.tmp))
 
     @WrapCmdLineArgs('grep', 'discard', addhelp=True)
     def do_excluded(self, **opts):

@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
+from bronx.fancies import loggers
 
 from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import Namespace
@@ -14,7 +14,7 @@ from gco.syntax.stdattrs import GgetId, UgetId
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 _COMMON_GCO_FP = dict(
     gspool = dict(
@@ -109,6 +109,12 @@ class GEnv(GcoProvider):
                 alias = ('gco_cycle', 'gcocycle', 'cyclegco', 'gcycle'),
                 type = GgetId,
             ),
+            gautofill = dict(
+                type     = bool,
+                optional = True,
+                default  = False,
+                info     = 'Automatically register missing cycles',
+            )
         ),
         fastkeys = set(['genv']),
     )
@@ -133,9 +139,14 @@ class GEnv(GcoProvider):
         in relation to current resource ``gvar`` attribute.
         """
         gconf = genv.contents(cycle=self.genv)
+        if (not gconf) and self.gautofill:
+            logger.info('Auto-registering cycle ' + self.genv)
+            genv.autofill(cycle=self.genv)
+            gconf = genv.contents(cycle=self.genv)
         if not gconf:
             logger.error('Cycle not registered <%s>', self.genv)
             raise ValueError('Unknow cycle ' + self.genv)
+
         gkey = resource.basename(self.realkind)
         if gkey not in gconf:
             logger.error('Key <%s> unknown in cycle <%s>', gkey, self.genv)

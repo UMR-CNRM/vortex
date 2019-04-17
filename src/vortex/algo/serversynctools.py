@@ -4,19 +4,18 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
-import six
 import socket
 import sys
 
 import footprints
-
+from bronx.fancies import loggers
 from vortex import sessions
 from vortex.util import config
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ServerSyncTool(footprints.FootprintBase):
@@ -34,6 +33,11 @@ class ServerSyncTool(footprints.FootprintBase):
             ),
             medium = dict(
                 optional    = True,
+            ),
+            raiseonexit = dict(
+                type        = bool,
+                optional    = True,
+                default     = True
             ),
             checkinterval = dict(
                 type        = int,
@@ -98,14 +102,14 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         # Create the sockect
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((socket.getfqdn(), 0))
-        self._socket.listen(1)
         self._socket.settimeout(self.checkinterval)
+        self._socket.listen(1)
         # Current connection
         self._socket_conn = None
         # Create the script that will be called by the server
         t = sessions.current()
         tpl = config.load_template(t, self.tplname)
-        with io.open(self.medium, 'wb') as fd:
+        with io.open(self.medium, 'wt') as fd:
             fd.write(tpl.substitute(
                 python  = sys.executable,
                 address = self._socket.getsockname(),
@@ -113,25 +117,25 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         t.sh.chmod(self.medium, 0o555)
 
     def __del__(self):
+        self._socket.close()
         if self._socket_conn is not None:
-            self.trigger_stop()
+            logger.warning("The socket is still up... that's odd.")
         t = sessions.current()
         if t.sh.path.exists(self.medium):
             t.sh.remove(self.medium)
-        super(ServerSyncSimpleSocket, self).__del__()
 
     def _command(self, mess):
         """ Send a command (a string) to the server; wait for a response """
         if self._socket_conn is not None:
             logger.info('Sending "%s" to the server.', mess)
             # NB: For send/recv, the settimeout also applies...
-            self._socket_conn.send(six.binary_type(mess))
-            repl = str(self._socket_conn.recv(255))
-            logger.info('Server replied "%s".', repl)
-            if repl != 'OK':
-                raise ValueError(mess + ' failed')
+            self._socket_conn.send(mess.encode(encoding='utf-8'))
+            repl = self._socket_conn.recv(255).decode(encoding='utf-8')
+            logger.info('Server replied "%s" to %s.', repl, mess)
             self._socket_conn.close()
             self._socket_conn = None
+            if repl != 'OK':
+                raise ValueError(mess + ' failed')
             return True
         else:
             # This should not happen ! If we are sitting here, it's most likely
@@ -147,8 +151,13 @@ class ServerSyncSimpleSocket(ServerSyncTool):
                 logger.debug('Socket accept timed-out: checking for the server...')
                 self._socket_conn = None
         if self._socket_conn is None:
-            raise IOError('Apparently the server died.')
-        logger.info('The server is now waiting')
+            if self.raiseonexit:
+                raise IOError('Apparently the server died.')
+            else:
+                logger.info('The server stopped.')
+        else:
+            self._socket_conn.settimeout(self.checkinterval)
+            logger.info('The server is now waiting')
 
     def trigger_run(self):
         # Tell the server that everything is ready

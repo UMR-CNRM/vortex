@@ -3,8 +3,11 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import copy
 import json
 from unittest import TestCase, main
+
+from bronx.fancies import loggers
 
 from vortex.data import contents
 from vortex.data.containers import CONTAINER_INCORELIMIT, InCore
@@ -28,10 +31,15 @@ class _BaseDataContentTest(TestCase):
         for d in self.data:
             self.insample.append(InCore(actualfmt='foo',
                                         maxreadsize=self._container_limit))
-            incorefh = self.insample[-1].iodesc()
-            incorefh.write(d)
-            if self._temporize:
-                self.insample[-1].temporize()
+            with self.insample[-1].preferred_decoding(byte=False):
+                self.insample[-1].write(d)
+                if self._temporize:
+                    self.insample[-1].temporize()
+
+    def tearDown(self):
+        super(_BaseDataContentTest, self).tearDown()
+        for todo in self.insample:
+            todo.close()
 
 
 class UtDataContent(_BaseDataContentTest):
@@ -43,10 +51,15 @@ class UtDataContent(_BaseDataContentTest):
         self.assertEqual(ct.datafmt, None)
         self.assertEqual(ct.upper(), self.data[0].upper())
         self.assertEqual(len(ct.metadata), 0)
-        self.assertTrue(ct.metadata_check(object()))
+        with loggers.contextboundGlobalLevel('critical'):
+            self.assertTrue(ct.metadata_check(object()))
         self.assertEqual(ct.size, len(self.data[0]))
         self.assertEqual(ct.export_dict(), ('vortex.data.contents', 'DataContent') )
         self.assertEqual(ct.is_diffable(), False)
+        # Deepcopy
+        ctbis = copy.deepcopy(ct)
+        self.assertIsNot(ctbis, ct)
+        self.assertEqual(ctbis.data, ct.data)
 
 
 INDEXED_E = {'machin': ['bidule'], 'toto': ['1', '2', '3']}
@@ -84,7 +97,7 @@ class UtIndexedTable(_BaseDataContentTest):
         self.assertNotIn('other', ct)
 
 
-JSON_E = dict(a=1, b=1.5, c='toto', d=[1, 2, 3])
+JSON_E = dict(a=1, b=1.5, c='{{toto}}', d=[1, 2, 3])
 JSON_T = json.dumps(JSON_E)
 
 
@@ -97,6 +110,22 @@ class UtJsonContent(_BaseDataContentTest):
         ct = contents.JsonDictContent()
         ct.slurp(self.insample[0])
         self.assertEqual(ct.data, JSON_E)
+        self.assertEqual(ct.size, len(self.data[0]))
+        self.assertEqual(ct.is_diffable(), True)
+
+    def test_jsoncontent_templates(self):
+        ct = contents.JsonDictContent()
+        ct.slurp(self.insample[0])
+        ct.bronx_tpl_render(toto=1)
+        ref0 = JSON_E.copy()
+        ref0['c'] = 1
+        self.assertEqual(ct.data, ref0)
+        self.assertEqual(ct.size, len(self.data[0]))
+        self.assertEqual(ct.is_diffable(), True)
+        ct.bronx_tpl_render(toto='gruik')
+        ref0 = JSON_E.copy()
+        ref0['c'] = 'gruik'
+        self.assertEqual(ct.data, ref0)
         self.assertEqual(ct.size, len(self.data[0]))
         self.assertEqual(ct.is_diffable(), True)
 
@@ -160,9 +189,10 @@ class UtAlmostListContent(_BaseDataContentTest):
         self.assertEqual(ct.data, ALMOST_LIST_E + ALMOST_LIST_E1)
         # Should fail
         ct3 = contents.AlmostListContent()
-        ct3.slurp(self.insample[2])
-        with self.assertRaises(contents.DataContentError):
-            ct.merge(ct3, unique=True)
+        with loggers.contextboundGlobalLevel('critical'):
+            ct3.slurp(self.insample[2])
+            with self.assertRaises(contents.DataContentError):
+                ct.merge(ct3, unique=True)
 
 
 TEXT_E = [['1', 'blop', '3.5'], ['5', 'toto', '10.5']]

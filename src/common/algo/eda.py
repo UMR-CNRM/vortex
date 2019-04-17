@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 from operator import attrgetter
 
+from bronx.fancies import loggers
 from bronx.stdtypes.date import Month, Time
 import footprints
 
@@ -15,7 +16,7 @@ from common.algo.ifsroot import IFSParallel
 #: Automatic export off
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class IFSEdaAbstractAlgo(IFSParallel):
@@ -175,7 +176,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
     """Apply the inflation scheme on a given modelstate."""
 
     _RUNSTORE = 'RUNOUT'
-    _USELESS_MATCH = re.compile('^(?P<target>\w+)\+term\d+:\d+$')
+    _USELESS_MATCH = re.compile(r'^(?P<target>\w+)\+term\d+:\d+$')
 
     _footprint = dict(
         info='Operations around the background error covariance matrix',
@@ -242,7 +243,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         if eff_terms:
             for actualterm in eff_terms:
                 wastebasket = list()
-                self.system.title('Loop on term {0:s}'.format(actualterm))
+                self.system.title('Loop on term {0!s}'.format(actualterm))
                 self.system.subtitle('Solving the input files nightmare...')
                 # Ensemble Mean ?
                 mean_number = 2 if self.model == 'arome' else 0
@@ -395,12 +396,14 @@ class IFSCovB(IFSEdaEnsembleAbstractAlgo):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
             for filename in self.system.listdir(repname):
-                level = re.search('_L(\d+)$', filename)
+                level = re.search(r'_L(\d+)$', filename)
                 if level is not None:
-                    self.system.softlink(self.system.path.join(repname, filename), radical.format(num, level.group(1)))
+                    self.system.softlink(self.system.path.join(repname, filename),
+                                         radical.format(num, level.group(1)))
 
         for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'LaggedEnsemble'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')), start = 1):
+                                         key = attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start = 1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))

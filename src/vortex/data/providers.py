@@ -5,17 +5,18 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import os.path
 
+from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
-from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, member, block
+from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, scenario, member, block
 from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.tools import net, names
 
 #: No automatic export
 __all__ = ['Provider']
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class Provider(footprints.FootprintBase):
@@ -38,6 +39,12 @@ class Provider(footprints.FootprintBase):
                 optional    = True,
                 default     = '[glove::vconf]',
                 doc_zorder  = -10
+            ),
+            username = dict(
+                info     = "The username that will be used whenever necessary.",
+                optional = True,
+                default  = None,
+                alias    = ('user', 'logname')
             ),
         ),
         fastkeys = set(['namespace', ]),
@@ -65,6 +72,10 @@ class Provider(footprints.FootprintBase):
     def netloc(self, resource):
         """Abstract method."""
         pass
+
+    def netuser_name(self, resource):  # @UnusedVariable
+        """Abstract method."""
+        return self.username
 
     def pathname(self, resource):
         """Abstract method."""
@@ -95,17 +106,20 @@ class Provider(footprints.FootprintBase):
 
         The different operations of the algorithm can be redefined by subclasses.
         """
+        username = self.netuser_name(resource)
+        fullnetloc = ('{:s}@{:s}'.format(username, self.netloc(resource)) if username
+                      else self.netloc(resource))
         logger.debug(
             'scheme %s netloc %s normpath %s urlquery %s',
             self.scheme(resource),
-            self.netloc(resource),
+            fullnetloc,
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             self.urlquery(resource)
         )
 
         return net.uriunparse((
             self.scheme(resource),
-            self.netloc(resource),
+            fullnetloc,
             os.path.normpath(self.pathname(resource) + '/' + self.basename(resource)),
             None,
             self.urlquery(resource),
@@ -175,12 +189,6 @@ class Remote(Provider):
                 values   = ['scp', 'ftp', 'rcp', 'file', 'symlink'],
                 default  = 'file',
             ),
-            username = dict(
-                info     = "The username that will be used to connect to *hostname*.",
-                optional = True,
-                default  = None,
-                alias    = ('user', 'logname')
-            ),
             vapp = dict(
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
@@ -209,10 +217,7 @@ class Remote(Provider):
 
     def netloc(self, resource):
         """Fully qualified network location."""
-        if self.username:
-            return self.username + '@' + self.hostname
-        else:
-            return self.hostname
+        return self.hostname
 
     def pathname(self, resource):
         """OS dirname of the ``remote`` attribute."""
@@ -240,6 +245,7 @@ class Vortex(Provider):
     _footprint = [
         block,
         member,
+        scenario,
         namespacefp,
         xpid,
         dict(
@@ -325,6 +331,7 @@ class Vortex(Provider):
             experiment=self.experiment,
             block=self.block,
             member=self.member,
+            scenario=self.scenario,
         )
         return self.namebuilder.pack_pathname(rinfo)
 

@@ -9,19 +9,24 @@ import six
 import sys
 import functools
 
+import bronx.fancies.dump
+from bronx.fancies import loggers
+from bronx.patterns import observer
+from bronx.stdtypes.history import History
+
 import footprints
 
 from vortex import sessions
 
 from vortex.tools  import net
-from vortex.util   import config, structs
+from vortex.util   import config
 from vortex.layout import contexts, dataflow
 from vortex.data   import containers, resources, providers
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Resources-Handlers'
 
@@ -35,7 +40,53 @@ def observer_board(obsname=None):
     """Proxy to :func:`footprints.observers.get`."""
     if obsname is None:
         obsname = OBSERVER_TAG
-    return footprints.observers.get(tag=obsname)
+    return observer.get(tag=obsname)
+
+
+class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
+    """Dump a text representation of almost any footprint object..."""
+
+    indent_size = 2
+    max_depth = 2
+
+    def __init__(self):
+        self._indent_first = 4
+
+    def _get_indent_first(self):
+        return self._indent_first
+
+    def _set_indent_first(self, val):
+        self._indent_first = val
+
+    indent_first = property(_get_indent_first, _set_indent_first)
+
+    def dump_fpattrs(self, fpobj, level=0):
+        """Dump the attributes of a footprint based object."""
+        if level + 1 > self.max_depth:
+            return "%s{...}%s" % (
+                self._indent(level, self.break_before_dict_begin),
+                self._indent(level, self.break_after_dict_end)
+            )
+        else:
+            items = ["%s%s = %s%s," % (self._indent(level + 1, self.break_before_dict_key),
+                                       six.text_type(k),
+                                       self._indent(level + 2, self.break_before_dict_value),
+                                       self._recursive_dump(v, level + 1))
+                     for k, v in sorted(fpobj.footprint_as_shallow_dict().items())]
+            return ' '.join(items)
+
+    def dump_default(self, obj, level=0, nextline=True):
+        """Generic dump function. Concise view for GetByTag objects."""
+        if level + 1 > self.max_depth:
+            return " <%s...>" % type(obj).__class__
+        else:
+            if hasattr(obj, 'tag'):
+                return "{:s} obj: tag={:s}".format(type(obj).__name__, obj.tag)
+            else:
+                parent_dump = super(bronx.fancies.dump.TxtDumper, self).dump_default(obj, level,
+                                                                                     nextline and
+                                                                                     self.break_default)
+                return "{:s} obj: {!s}".format(type(obj).__name__, parent_dump)
 
 
 class Handler(object):
@@ -60,26 +111,19 @@ class Handler(object):
         self._mdcheck       = self._options.pop('metadatacheck', False)
         self._mddelta       = self._options.pop('metadatadelta', dict())
         self._ghost         = self._options.pop('ghost', False)
-        self._hooks         = {x[5:]: self._options.pop(x)
-                               for x in self._options.keys()
-                               if x.startswith('hook_')}
+        hook_names          = [x for x in self._options.keys()
+                               if x.startswith('hook_')]
+        self._hooks         = {x[5:]: self._options.pop(x) for x in hook_names}
         self._delayhooks    = self._options.pop('delayhooks', False)
 
-        self._history = structs.History(tag='data-handler')
+        self._history = History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
         self._observer.notify_new(self, dict(stage = 'load'))
         self._localpr_cache = None  # To cache the promise dictionary
+        self._latest_earlyget_id = None
+        self._latest_earlyget_opts = None
         logger.debug('New resource handler %s', self.__dict__)
-
-    def __del__(self):
-        try:
-            self._observer.notify_del(self, dict())
-        except TypeError:
-            try:
-                logger.debug('Too late to notify del of %s', self)
-            except AttributeError:
-                pass
 
     def __str__(self):
         return six.text_type(self.__dict__)
@@ -268,7 +312,7 @@ class Handler(object):
         if self.provider and self.resource:
             try:
                 self._lasturl = self.provider.uri(self.resource)
-            except StandardError as e:
+            except Exception as e:
                 if fatal:
                     raise
                 else:
@@ -289,25 +333,22 @@ class Handler(object):
             '{0}{0}Complete  : {2}',
             '{0}{0}Options   : {3}',
             '{0}{0}Location  : {4}'
-        )).format(
-            tab,
-            self, self.complete, self.options, self.location()
-        )
+        )).format(tab,
+                  self, self.complete, self.options, self.location())
+        if self.hooks:
+            card += '\n{0}{0}Hooks     : {1}'.format(tab, ','.join(list(self.hooks.keys())))
+        d = IdCardAttrDumper(tag='idcarddumper')
+        d.reset()
+        d.indent_first = 2 * len(tab)
         for subobj in ('resource', 'provider', 'container'):
             obj = getattr(self, subobj, None)
             if obj:
-                thisdoc = "\n".join((
-                    '{0}{1:s} {2!r}',
-                    '{0}{0}Realkind   : {3:s}',
-                    '{0}{0}Attributes : {4:s}'
-                )).format(
-                    tab,
-                    subobj.capitalize(),
-                    obj, obj.realkind, obj.footprint_as_shallow_dict()
-                )
+                thisdoc = '{0}{0}{1:s} {2!r}'.format(tab,
+                                                     subobj.capitalize(), obj)
+                thisdoc += d.dump_fpattrs(obj)
             else:
-                thisdoc = '{0}{1:s} undefined'.format(tab, subobj.capitalize())
-            card = card + "\n\n" + thisdoc
+                thisdoc = '{0}{0}{1:s} undefined'.format(tab, subobj.capitalize())
+            card = card + "\n" + thisdoc
         return card
 
     def quickview(self, nb=0, indent=0):
@@ -495,6 +536,36 @@ class Handler(object):
         """Apply the hooks before a put request (or verify that they were done)."""
         self._generic_apply_hooks(action='put', **extras)
 
+    def _postproc_get(self, store, rst, extras):
+        self.container.updfill(rst)
+        # Check metadata if sensible
+        if self._mdcheck and rst and not store.delayed:
+            rst = self.contents.metadata_check(self.resource,
+                                               delta = self._mddelta)
+            if not rst:
+                logger.info("We are now cleaning up the container and data content.")
+                self.reset_contents()
+                self.clear()
+        # For the record...
+        self.history.append(store.fullname(), 'get', rst)
+        if rst:
+            # This is an expected resource
+            if store.delayed:
+                self._updstage('expected')
+                logger.info('Resource <%s> is expected', self.container.iotarget())
+            # This is a "real" resource
+            else:
+                self._updstage('get')
+                if self.hooks:
+                    if not self.delayhooks:
+                        self.apply_get_hooks(**extras)
+                    else:
+                        logger.info("(get-)Hooks were delayed")
+        else:
+            # Always signal failures
+            self._updstage('void')
+        return rst
+
     def _actual_get(self, **extras):
         """Internal method in charge of the getting the resource.
 
@@ -507,38 +578,17 @@ class Handler(object):
             logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
             st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
             # Actual get
-            rst = store.get(
-                self.uridata,
-                self.container.iotarget(),
-                st_options,
-            )
-            self.container.updfill(rst)
-            # Check metadata if sensible
-            if self._mdcheck and rst and not store.delayed:
-                rst = self.contents.metadata_check(self.resource,
-                                                   delta = self._mddelta)
-                if not rst:
-                    logger.info("We are now cleaning up the container and data content.")
-                    self.reset_contents()
-                    self.clear()
-            # For the record...
-            self.history.append(store.fullname(), 'get', rst)
-            if rst:
-                # This is an expected resource
-                if store.delayed:
-                    self._updstage('expected')
-                    logger.info('Resource <%s> is expected', self.container.iotarget())
-                # This is a "real" resource
-                else:
-                    self._updstage('get')
-                    if self.hooks:
-                        if not self.delayhooks:
-                            self.apply_get_hooks(**extras)
-                        else:
-                            logger.info("(get-)Hooks were delayed")
-            else:
-                # Always signal failures
-                self._updstage('void')
+            try:
+                rst = store.get(
+                    self.uridata,
+                    self.container.iotarget(),
+                    st_options,
+                )
+            except Exception:
+                rst = False
+                raise
+            finally:
+                rst = self._postproc_get(store, rst, extras)
         else:
             logger.error('Could not find any store to get %s', self.lasturl)
 
@@ -547,18 +597,36 @@ class Handler(object):
 
         return rst
 
-    def get(self, alternate=False, **extras):
-        """Method to retrieve the resource through the provider and feed the current container.
+    def _actual_earlyget(self, **extras):
+        """Internal method in charge of requesting an earlyget on the resource.
 
-        The behaviour of this method depends on the insitu and alternate options:
+        :return: ``None`` if earlyget is unavailable (depending on the store's kind
+            and resource it can be perfetcly fine). ``True`` if the resource was
+            actually fetched (no need to call :meth:`finaliseget`). Some kind of
+            non-null identifier that will ne used to call :meth:`finaliseget`.
+        """
+        store = self.store
+        if store:
+            logger.debug('Early-Get resource %s at %s from %s', self, self.lasturl, store)
+            st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+            # Actual earlyget
+            try:
+                return store.earlyget(
+                    self.uridata,
+                    self.container.iotarget(),
+                    st_options,
+                )
+            except (IOError, OSError, RuntimeError):
+                logger.error("The store's earlyget method did not return : it should never append!")
+                return None
+        else:
+            logger.error('Could not find any store to get %s', self.lasturl)
+            return None
 
-        * When insitu is True, the :class:`~vortex.layout.dataflow.LocalTracker`
-          object associated with the active context is checked to determine
-          whether the resource has already been fetched or not. If not, another
-          try is made (but without using any non-cache store).
-        * When insitu is False, an attempt to get the resource is systematically
-          made except if "alternate" is defined and the local container already
-          exists.
+    def _get_proxy(self, callback, alternate=False, **extras):
+        """
+        Process the **insitu** and **alternate** option and launch the **callback**
+        callable if sensible.
         """
         rst = False
         if self.complete:
@@ -578,15 +646,29 @@ class Handler(object):
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
                         if alternate:
-                            logger.info("Alternate is on and the local file exists: ignoring the error.")
-                            rst = True
+                            if not self.container.is_virtual():
+                                lpath = self.container.localpath()
+                                for isec in self._cur_context.sequence.rinputs():
+                                    if (isec.stage in ('get' or 'expected') and
+                                            not isec.rh.container.is_virtual() and
+                                            isec.rh.container.localpath() == lpath):
+                                        rst = True
+                                        break
+                                if rst:
+                                    logger.info("Alternate is on and the local file exists.")
+                                else:
+                                    logger.info("Alternate is on but the local file is not yet matched.")
+                                    self._updstage('void', insitu=True)
+                            else:
+                                logger.info("Alternate is on. The local file exists. The container is virtual.")
+                                rst = True
                         else:
                             logger.info("The resource is already here but doesn't matches the RH description :-(")
                             cur_tracker[iotarget].match_rh('get', self, verbose=True)
                             self._updstage('void', insitu=True)
                 # Bloody hell, the localpath doesn't exist
                 else:
-                    rst = self._actual_get(**extras)  # This might be an expected resource...
+                    rst = callback(**extras)  # This might be an expected resource...
                     if rst:
                         logger.info("The resource was successfully fetched :-)")
                     else:
@@ -598,10 +680,128 @@ class Handler(object):
                 else:
                     if self.container.exists():
                         logger.warning('The resource is already here: That should not happen at this stage !')
-                    rst = self._actual_get(**extras)
+                    rst = callback(**extras)
         else:
             logger.error('Could not get an incomplete rh %s', self)
         return rst
+
+    def get(self, alternate=False, **extras):
+        """Method to retrieve the resource through the provider and feed the current container.
+
+        The behaviour of this method depends on the **insitu** and **alternate** options:
+
+        * When **insitu** is True, the :class:`~vortex.layout.dataflow.LocalTracker`
+          object associated with the active context is checked to determine
+          whether the resource has already been fetched or not. If not, another
+          try is made (but without using any non-cache store).
+        * When **insitu** is False, an attempt to get the resource is systematically
+          made except if **alternate** is defined and the local container already
+          exists.
+        """
+        return self._get_proxy(self._actual_get, alternate=alternate, **extras)
+
+    def earlyget(self, alternate=False, **extras):
+        """The earlyget feature is somehow a declaration of intent.
+
+        It records in the current context that, at some point in the future, we will
+        retrieve the present resource. It can be useful for some kind of stores
+        (and useless to other). For example, when using a store that targets a mass
+        archive system, this information can be used to ask for several files at
+        once which accelerate the overall process and optimise the tape's drivers
+        usage. On the other, for a cache based store, it does not make much sense
+        since the data is readily available on disk.
+
+        Return values can be:
+
+        * ``None`` if earlyget is unavailable (depending on the store's kind
+          and resource it can be perfectly fine).
+        * Some kind of non-null identifier that will be used later on to actually
+          retrieve the resource. It is returned to the user as a diagnostic but is
+          also stored internally within the :class:`Handler` object.
+        * ``True`` if the resource has actually been retrieved through the provider
+          and fed into the current container.
+
+        In any case, the :meth:`finaliseget` method should be called latter on
+        to actually retrieve the resource and feed the container. When ``True``
+        is returned by the :meth:`earlyget` method, the :meth:`finaliseget` call
+        can be made also it is useless.
+
+        Like with the :meth:`get` method, the behaviour of this method depends
+        on the **insitu** and **alternate** options:
+
+        * When **insitu** is True, the :class:`~vortex.layout.dataflow.LocalTracker`
+          object associated with the active context is checked to determine
+          whether the resource has already been fetched or not. If not, another
+          try is made (but without using any non-cache store).
+        * When **insitu** is False, an attempt to get the resource is systematically
+          made except if **alternate** is defined and the local container already
+          exists.
+        """
+        r_opts = extras.copy()
+        self._latest_earlyget_opts = r_opts
+        self._latest_earlyget_opts['alternate'] = alternate
+        self._latest_earlyget_id = self._get_proxy(self._actual_earlyget, alternate=alternate, **extras)
+        return self._latest_earlyget_id
+
+    def finaliseget(self):
+        """
+        When the :meth:`earlyget` method had previously been called, the
+        :meth:`finaliseget` can be called to finalise the ``get`` sequence.
+
+        When :meth:`finaliseget`, if the return code is non-zero, the resource
+        has been retrieved and fed into te container.
+
+        :raises HandlerError: if :meth:`earlyget` is not called prior to this
+                              method.
+        """
+        if self._latest_earlyget_id is None and self._latest_earlyget_opts is None:
+            raise HandlerError('earlyget was not called yet. Calling finaliseget is not Allowed !')
+        try:
+            if self._latest_earlyget_id is True:
+                # Nothing to be done...
+                return True
+            elif self._latest_earlyget_id is None:
+                # Delayed get not available... do the usual get !
+                e_opts = self._latest_earlyget_opts.copy()
+                e_opts['insitu'] = False
+                return self._get_proxy(self._actual_get, ** e_opts)
+            else:
+                alternate = self._latest_earlyget_opts.get('alternate', False)
+                if alternate and self.container.exists():
+                    # The container may have been filled be another finaliseget
+                    logger.info('Alternate <%s> exists', alternate)
+                    rst = True
+                else:
+                    rst = False
+                    store = self.store
+                    if store:
+                        logger.debug('Finalise-Get resource %s at %s from %s', self, self.lasturl, store)
+                        st_options = self.mkopts(dict(rhandler = self.as_dict()), self._latest_earlyget_opts)
+                        # Actual get
+                        rst = store.finaliseget(
+                            self._latest_earlyget_id,
+                            self.uridata,
+                            self.container.iotarget(),
+                            st_options,
+                        )
+                        if not rst:
+                            # Delayed get failed... attempt the usual get
+                            logger.warning('Delayed get failed ! Reverting to the usual get.')
+                            e_opts = self._latest_earlyget_opts.copy()
+                            e_opts['insitu'] = False
+                            return self._get_proxy(self._actual_get, ** e_opts)
+                        else:
+                            rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
+                    else:
+                        logger.error('Could not find any store to get %s', self.lasturl)
+
+                    # Reset the promise dictionary cache
+                    self._localpr_cache = None  # To cache the promise dictionary
+
+                return rst
+        finally:
+            self._latest_earlyget_id = None
+            self._latest_earlyget_opts = None
 
     def insitu_quickget(self, alternate=False, **extras):
         """This method attempts a straightforward insitu get.
@@ -704,6 +904,9 @@ class Handler(object):
             rst = self.container.clear()
             self.history.append(self.container.actualpath(), 'clear', rst)
             self._notifyclear()
+            stage_clear_mapping = dict(expected='checked', get='checked')
+            if self.stage in stage_clear_mapping:
+                self._updstage(stage_clear_mapping[self.stage])
         return rst
 
     def mkgetpr(self, pr_getter=None, tplfile=None, tplskip='@sync-skip.tpl',

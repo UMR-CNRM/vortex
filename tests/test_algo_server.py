@@ -8,6 +8,7 @@ import tempfile
 
 import footprints as fp
 
+from bronx.fancies import loggers
 from bronx.system import interrupt
 
 import unittest
@@ -16,8 +17,8 @@ import vortex
 from vortex import toolbox as tb
 from vortex.algo import components, serversynctools
 
-logger = fp.loggers.getLogger(__name__)
-lopi = fp.loggers.getLogger('bronx.system.interrupt')
+logger = loggers.getLogger(__name__)
+tloglevel = 9999  # Extremely quiet....
 
 
 class ServerSyncToolQuick(serversynctools.ServerSyncSimpleSocket):
@@ -75,15 +76,19 @@ class ExpressoServer(components.Expresso):
                 raise ValueError("Who knows what might happened ?")
             logger.info('Dealing with results of iteration number %d', i + 1)
 
+    def spawn_pre_dirlisting(self):
+        pass
 
+    def postfix_post_dirlisting(self):
+        pass
+
+
+@loggers.unittestGlobalLevel(tloglevel)
 class TestExpressoServer(unittest.TestCase):
 
     def setUp(self):
         self.t = vortex.sessions.current()
         self.sh = self.t.system()
-
-        self.oldlopiL = lopi.level
-        lopi.setLevel('WARNING')
 
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_expresso_server')
@@ -93,14 +98,13 @@ class TestExpressoServer(unittest.TestCase):
         self.rpath = self.sh.path.join(self.t.glove.siteroot,
                                        'tests', 'data', 'server_decoy.py')
         self.syncscript = './decoy_sync.py'
-
-        self.sh.signal_intercept_on()
+        self.shandler = interrupt.SignalInterruptHandler(emitlogs=False)
+        self.shandler.activate()
 
     def tearDown(self):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
-        self.sh.signal_intercept_off()
-        lopi.setLevel(self.oldlopiL)
+        self.shandler.deactivate()
 
     def _get_fake_server(self, *kargs, **kwargs):
         rhScript = tb.rh(language='python',
@@ -111,12 +115,14 @@ class TestExpressoServer(unittest.TestCase):
         return rhScript
 
     def _run_algo(self, rhScript, niter, *kargs, **kwargs):
-        algo = fp.proxy.component(engine='exec', interpreter='python',
+        algo = fp.proxy.component(engine='exec', interpreter='current',
                                   niter=niter, server_run=True,
                                   serversync_method='simple_socket',
                                   serversync_medium=self.syncscript,
                                   **kwargs)
-        algo.run(rhScript)
+        with self.sh.env.clone() as lenv:
+            del lenv['PYTHONPATH']
+            algo.run(rhScript)
 
     def test_server_fine(self):
         """When everything works as expected."""

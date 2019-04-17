@@ -8,15 +8,19 @@ i.e. some set of key/value pairs that attributes (possibly optional) could cover
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import six
+
 import os
 import re
 import copy
 import types
 import weakref
 import collections
-import six
 
-from . import access, collectors, config, doc, dump, loggers, observers
+from bronx.fancies import dump, loggers
+from bronx.patterns import observer
+
+from . import access, collectors, config, doc
 from . import priorities, proxies, reporting, util
 from .stdtypes import *
 
@@ -24,7 +28,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.4.0'
+__version__ = '1.6.1'
 
 __tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
 
@@ -166,7 +170,7 @@ class Footprint(object):
             if isinstance(a, dict) and bool(a):
                 logger.debug('Init Footprint updated with dict %s', a)
                 adict = util.list2dict(a, ('attr', 'only'))
-            if isinstance(a, Footprint) and bool(a.attr):
+            if isinstance(a, Footprint) and (bool(a.attr) or bool(a.only)):
                 logger.debug('Init Footprint updated with object %s', a)
                 adict = a.as_dict()
             if adict is not None:
@@ -222,6 +226,10 @@ class Footprint(object):
         self._firstguess_keys_internal = None
         self._resolve_keys_internal = None
 
+        # Instance docstring...
+        if setup.docstrings:
+            self.__doc__ = doc.format_docstring(self, setup.docstrings, abstractfpobj=True)
+
     @property
     def _fastkeys(self):
         return self._fp.get('fastkeys', set())
@@ -257,6 +265,11 @@ class Footprint(object):
 
     def __str__(self):
         return six.text_type(self.attr)
+
+    def __repr__(self):
+        """A condensed string representation of the present Footprint."""
+        return ('<{:s} object at {!s} | info="{:s}">'
+                .format(self.__class__.__name__, hex(id(self)), self.info))
 
     def allkeys(self):
         """Return a set of possible keys for the footprint's attributes."""
@@ -559,7 +572,8 @@ class Footprint(object):
             todokset.discard(k)
             kdef = attrs[k]
             nbpass += 1
-            if not self._replacement(nbpass, k, kfast, guess, extras, todok, todokfast, todokset) or guess[k] is None:
+            if (not self._replacement(nbpass, k, kfast, guess, extras, todok, todokfast, todokset) or
+                    guess[k] is None):
                 continue
 
             attr_seen.add(k)
@@ -808,7 +822,7 @@ class FootprintBaseMeta(type):
                                            report_style=setup.report_style)
             thiscollector.add(realcls, abstract=abstract)
             if not abstract and thiscollector.register:
-                observers.get(tag=realcls.fullname()).register(thiscollector)
+                observer.get(tag=realcls.fullname()).register(thiscollector)
                 logger.debug('Register class %s in collector %s (%s)', realcls, thiscollector, cname)
 
         # Docstring building
@@ -853,7 +867,7 @@ class FootprintBase(object):
             logger.debug('Resolve attributes at footprint init %s', object.__repr__(self))
             self._attributes, u_attr_input, u_attr_seen = self._footprint.resolve(self._attributes,  # @UnusedVariable
                                                                                   fatal=True)
-        self._observer = observers.get(tag=self.__class__.fullname())
+        self._observer = observer.get(tag=self.__class__.fullname())
         self.footprint_riseup()
 
     @classmethod
@@ -914,15 +928,9 @@ class FootprintBase(object):
         return d
 
     def __setstate__(self, state):
-        self._observer = observers.get(tag=self.__class__.fullname())
+        self._observer = observer.get(tag=self.__class__.fullname())
         self.__dict__.update(state)
         self.footprint_riseup()
-
-    def __del__(self):
-        try:
-            self._observer.notify_del(self, dict())
-        except (TypeError, AttributeError):
-            logger.warning('Too late for notify_del')
 
     def footprint_getattr(self, attr, auth=None):  # @UnusedVariable
         """Return actual attribute value in internal storage. Protected method."""

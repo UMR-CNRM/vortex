@@ -183,6 +183,12 @@ class JoVariable(object):
                 'jo/nref': 0 if (ref.n == 0) else ref.jo / ref.n,
                 'jo/nxp': 0 if (self.n == 0) else self.jo / self.n, }
 
+    def as_dict(self):
+        """as dict"""
+        return {'n': self.n,
+                'jo': self.jo,
+                'jon': 0 if (self.n == 0) else self.jo / self.n, }
+
     def _item_write(self, ref, out, bw, item, item_l, item_t=0, item_f='%15.6g'):
         _write_n(out,
                  ('    %-9s  Exp: ' + item_f + '  Ref: ' + item_f + '  Diff: ' + item_f +
@@ -254,6 +260,13 @@ class JoSensor(_JoMixinPlus):
             diff[v] = self[v].compute_diff(ref[v])
         return diff
 
+    def as_dict(self):
+        """as dict"""
+        dico = OrderedDict()
+        for v in self.keys():
+            dico[v] = self[v].as_dict()
+        return dico
+
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
         diff = self.compute_diff(ref)
@@ -274,7 +287,7 @@ class JoSensor(_JoMixinPlus):
         :param jothres: Alert threshold on the Jo
         :param bw: Black & White flag
         """
-        _write_n(out, '  %s' % (self.name))
+        _write_n(out, '  %s' % self.name)
         for vname in self._diff_superset(ref):
             self[vname].print_diff(ref[vname],
                                    bw=bw,
@@ -351,6 +364,16 @@ class JoObstype(_JoMixinPlus):
         for s in self._diff_superset(ref):
             diff[s] = self[s].compute_diff(ref[s])
         return diff
+
+    def as_dict(self):
+        """Compute difference and relative difference for n, jo, jo/n."""
+        dico = OrderedDict()
+        dico[self.name] = {'n': self.ntotal, 'jo': self.jo,
+                           'jon': 0 if (self.ntotal == 0) else self.jo / self.ntotal, }
+
+        for s in self.keys():
+            dico[s] = self[s].as_dict()
+        return dico
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
@@ -440,6 +463,13 @@ class JoTable(_JoMixinPlus):
             if len(self[o]) or len(ref[o]):
                 diff[o] = self[o].compute_diff(ref[o])
         return diff
+
+    def as_dict(self):
+        """as dict."""
+        dico = OrderedDict()
+        for o in self.keys():
+            dico[o] = self[o].as_dict()
+        return dico
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
@@ -558,6 +588,13 @@ class JoTables(_JoMixin):
         for t in self.keys():
             diff[t] = self[t].compute_diff(ref[t])
         return diff
+
+    def as_dict(self):
+        """As dict"""
+        dico = OrderedDict()
+        for t in self.keys():
+            dico[t] = self[t].as_dict()
+        return dico
 
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""

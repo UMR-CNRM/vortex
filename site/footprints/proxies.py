@@ -7,7 +7,11 @@ Proxy objects to footprints catalogs.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-from . import collectors, loggers, util
+from bronx.fancies import loggers
+from bronx.patterns import getbytag
+from bronx.syntax.decorators import secure_getattr
+
+from . import collectors
 
 #: No automatic export
 __all__ = []
@@ -39,7 +43,7 @@ def items():
 
 # Base class
 
-class FootprintProxy(util.GetByTag):
+class FootprintProxy(getbytag.GetByTag):
     """Access to alive footprint items."""
 
     def __call__(self):
@@ -84,6 +88,7 @@ class FootprintProxy(util.GetByTag):
         else:
             return value
 
+    @secure_getattr
     def __getattr__(self, attr):
         """Gateway to collector (plural noun) or load method (singular)."""
         if attr.startswith('_') or attr not in self:

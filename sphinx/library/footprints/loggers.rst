@@ -1,47 +1,9 @@
-:mod:`footprints.loggers` --- Logging definition
-================================================
+:mod:`footprints.loggers` --- Logging definition (obsolete)
+===========================================================
 
 .. automodule:: footprints.loggers
-   :synopsis: Definition of the default logging mechanism
+   :synopsis: Logging definition (obsolete)
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.9.5
-
-
-Data definition
----------------
-
-.. autodata:: __all__
-
-.. autodata:: roots
-
-.. autodata:: console
-
-
-Interface functions
--------------------
-
-.. autofunction:: getLogger
-
-.. autofunction:: setRootLogger
-
-.. autofunction:: setLogMethods
-
-.. autofunction:: setGlobalLevel
-
-.. autofunction:: getActualLevel
-
-
-Descriptors classes
--------------------
-
-.. autoclass:: LoggingFilter
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: SlurpHandler
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical

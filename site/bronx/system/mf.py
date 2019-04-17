@@ -13,10 +13,9 @@ import netrc
 import re
 import uuid
 
-import footprints.loggers
+from bronx.fancies import loggers
 
-
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 #: No automatic export
 __all__ = []
@@ -43,7 +42,7 @@ def prestage(resource_paths,
     """
     # build request
     if mail is not None:
-        if re.match('([a-zA-Z\-]+)\.([a-zA-Z\-]+)\@meteo.fr', mail):
+        if re.match(r'([a-zA-Z\-]+)\.([a-zA-Z\-]+)\@meteo.fr', mail):
             request = ["#MAIL=" + mail + '\n', ]
         else:
             logger.warning('invalid **mail** format: ' + mail)

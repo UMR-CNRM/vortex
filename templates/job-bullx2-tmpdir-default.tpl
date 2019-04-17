@@ -19,6 +19,14 @@
 import os, sys
 appbase = os.path.abspath('$appbase')
 vortexbase = os.path.join(appbase, 'vortex')
+# Alter path for extra packages
+for d in [os.path.join(appbase, p) for p in ($extrapythonpath)]:
+    if os.path.isdir(d):
+        sys.path.insert(0, d)
+    else:
+        sys.stderr.write("<< {:s} >> does not exists : it won't be pre-pended to sys.path\n"
+                         .format(d))
+# Alter path for current tasks + vortex (mandatory)
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 sys.path.insert(0, appbase)
@@ -27,6 +35,7 @@ import locale
 locale.setlocale(locale.LC_ALL, '$defaultencoding')
 
 import bronx.stdtypes.date
+from bronx.system.interrupt import SignalInterruptError
 import footprints
 import vortex
 import vortex.layout.jobs
@@ -43,15 +52,16 @@ rd_vconf    = '$vconf'
 rd_cutoff   = '$cutoff'
 if $rundate:
     rd_rundate  = bronx.stdtypes.date.Date($rundate)
-if '$rundates':
-    rd_rundates = bronx.stdtypes.date.daterangex('$rundates')
-rd_member   = $member
 rd_xpid     = '$xpid'
-rd_suitebg  = $suitebg
 rd_refill   = $refill
 rd_jobname  = '$name'
 rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase, 
                                                        rd_vapp, rd_vconf, '$taskconf')
+
+# Any options passed on the command line
+auto_options = dict(
+$auto_options
+)
 
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet(($loadedmods)),
@@ -62,23 +72,21 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
 ja.add_plugin('tmpdir')
 
 try:
-    t, e, sh = ja.setup(actual=locals())
+    t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
     sh.ftraw = True # To activate ftserv
 
-    opts = dict(jobassistant=ja, fullplay=True,
-                defaults=dict(gnamespace='gco.multi.fr'))
+    opts = dict(jobassistant=ja, fullplay=True)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()
 
     ja.complete()
 
-except Exception as trouble:
+except (Exception, SignalInterruptError, KeyboardInterrupt) as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
 
 finally:
     ja.finalise()
     ja.close()
-    print 'Bye bye research...'
-
+    sys.stdout.write('Bye bye research...\n')

@@ -40,6 +40,12 @@ def namebuilding_insert(targetkey, valuecb, none_discard=False, setdefault=False
 
         return cls
 
+    def _namebuilding_insert_stuff_as_dump():
+        return ("<class-decorator: replace/add the *{:s}* entry in the namebuilding_info dictionary>"
+                .format(targetkey))
+
+    _namebuilding_insert_stuff.as_dump = _namebuilding_insert_stuff_as_dump
+
     return _namebuilding_insert_stuff
 
 
@@ -64,20 +70,27 @@ def namebuilding_append(targetkey, valuecb, none_discard=False):
                     value = [value, ]
                 if none_discard:
                     value = [v for v in value if v is not None]
-                if targetkey in vinfo:
-                    some_stuff = vinfo[targetkey]
-                    if not isinstance(some_stuff, list):
-                        some_stuff = [some_stuff, ]
-                    some_stuff.extend(value)
-                else:
-                    some_stuff = value
-                vinfo[targetkey] = some_stuff
+                if not none_discard or value:
+                    if targetkey in vinfo:
+                        some_stuff = vinfo[targetkey]
+                        if not isinstance(some_stuff, list):
+                            some_stuff = [some_stuff, ]
+                        some_stuff.extend(value)
+                    else:
+                        some_stuff = value
+                    vinfo[targetkey] = some_stuff
                 return vinfo
 
             namebuilding_info.__doc__ = original_namebuilding_info.__doc__
             cls.namebuilding_info = namebuilding_info
 
         return cls
+
+    def _namebuilding_append_stuff_as_dump():
+        return ("<class-decorator: append things in the *{:s}* entry of the namebuilding_info dictionary>"
+                .format(targetkey))
+
+    _namebuilding_append_stuff.as_dump = _namebuilding_append_stuff_as_dump
 
     return _namebuilding_append_stuff
 
@@ -102,6 +115,12 @@ def namebuilding_delete(targetkey):
             cls.namebuilding_info = namebuilding_info
 
         return cls
+
+    def _namebuilding_delete_stuff_as_dump():
+        return ("<class-decorator: delete the *{:s}* entry of the namebuilding_info dictionary>"
+                .format(targetkey))
+
+    _namebuilding_delete_stuff.as_dump = _namebuilding_delete_stuff_as_dump
 
     return _namebuilding_delete_stuff
 
@@ -135,5 +154,11 @@ def generic_pathname_insert(targetkey, valuecb, none_discard=False, setdefault=F
             cls.generic_pathinfo = generic_pathinfo
 
         return cls
+
+    def _generic_pathinfo_insert_stuff_as_dump():
+        return ("<class-decorator: replace/add the *{:s}* entry in the generic_pathinfo dictionary>"
+                .format(targetkey))
+
+    _generic_pathinfo_insert_stuff.as_dump = _generic_pathinfo_insert_stuff_as_dump
 
     return _generic_pathinfo_insert_stuff

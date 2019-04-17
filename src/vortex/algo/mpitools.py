@@ -71,20 +71,21 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import collections
 import shlex
+
 import six
 
 import footprints
-
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
 from vortex.tools import env
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class MpiException(Exception):
@@ -166,7 +167,7 @@ class MpiTool(footprints.FootprintBase):
         """Import some current values such as system, env, target and context from provided ``obj``."""
         if attrs is None:
             attrs = self.basics
-        for k in [ x for x in attrs if x in self.basics and hasattr(obj, x) ]:
+        for k in [x for x in attrs if x in self.basics and hasattr(obj, x)]:
             setattr(self, '_' + k, getattr(obj, k))
         for bin_obj in self.binaries:
             bin_obj.import_basics(obj, attrs=None)
@@ -191,7 +192,7 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_binaries(self, value):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
-        if not (isinstance(value, collections.Iterable) and
+        if not (isinstance(value, collections_abc.Iterable) and
                 all([isinstance(b, MpiBinaryDescription) for b in value])):
             raise ValueError('This should be an Iterable of MpiBinaryDescription instances.')
         self._binaries = value
@@ -222,8 +223,8 @@ class MpiTool(footprints.FootprintBase):
 
         :param list[str] args: Command line arguments for each of the binaries.
         """
-        cmdl = [ self.launcher, ]
-        for k, v in self._reshaped_mpiopts().items():
+        cmdl = [self.launcher, ]
+        for k, v in sorted(self._reshaped_mpiopts().items()):
             cmdl.append(self.optprefix + six.text_type(k))
             if v is not None:
                 cmdl.append(six.text_type(v))
@@ -256,7 +257,8 @@ class MpiTool(footprints.FootprintBase):
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [ x.rh for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')) ]
+        namcandidates = [x.rh for x in
+                         self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
         if opts is not None and 'loop' in opts:
             namcandidates = [
                 x for x in namcandidates
@@ -357,7 +359,7 @@ class MpiBinaryDescription(footprints.FootprintBase):
         """Import some current values such as system, env, target and context from provided ``obj``."""
         if attrs is None:
             attrs = self.basics
-        for k in [ x for x in attrs if x in self.basics and hasattr(obj, x) ]:
+        for k in [x for x in attrs if x in self.basics and hasattr(obj, x)]:
             setattr(self, '_' + k, getattr(obj, k))
 
     def _get_options(self):
@@ -436,7 +438,7 @@ class MpiBinaryBasic(MpiBinaryDescription):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
-        if ('NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros()):
+        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
             logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
             namcontents.setmacro('NPROC', self.nprocs)
             namcontents.setmacro('NBPROC', self.nprocs)

@@ -3,24 +3,26 @@
 # pylint: disable=unused-argument
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import ast
 import collections
 import copy
 import hashlib
 import re
-import six
 
-import footprints
+from bronx.fancies import loggers
+
 from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
+from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser
 from gco.syntax.stdattrs import UgetId
 
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 GGET_DEFAULT_CONFIGFILE = '@gget-key-specific-conf.ini'
 
@@ -103,11 +105,12 @@ class GcoCentralStore(Store):
                 optional = True,
                 default  = None
             ),
-            ggetroot = dict(
+            ggetarchive = dict(
                 optional = True,
                 default  = None
             ),
-            ggetarchive = dict(
+            ggetcache = dict(
+                type     = bool,
                 optional = True,
                 default  = None
             ),
@@ -129,37 +132,67 @@ class GcoCentralStore(Store):
         """Default realkind is ``gstore``."""
         return 'gstore'
 
-    def _actualgget(self, rpath):
-        """Return actual (gtool, garchive, tampon, gname)."""
-        tg = self.system.default_target
-
-        lpath = rpath.lstrip('/').split('/')
-        gname = lpath.pop()
-
-        if 'GGET_TAMPON' in self.system.env:
-            tampon = self.system.env.GGET_TAMPON
-        else:
-            rootdir = self.ggetroot
-            if rootdir is None:
-                rootdir = tg.get('gco:rootdir', '')
-            tampon = rootdir + '/' + '/'.join(lpath)
-
-        gcmd = self.ggetcmd
-        if gcmd is None:
-            gcmd = tg.get('gco:ggetcmd', 'gget')
-
+    @property
+    def _actual_gpath(self):
         gpath = self.ggetpath
         if gpath is None:
             if 'GGET_PATH' in self.system.env:
                 gpath = self.system.env.GGET_PATH
             else:
-                gpath = tg.get('gco:ggetpath', '')
+                gpath = self.system.default_target.get('gco:ggetpath', '')
+        return gpath
 
+    @property
+    def _actual_gcmd(self):
+        gcmd = self.ggetcmd
+        if gcmd is None:
+            gcmd = self.system.default_target.get('gco:ggetcmd', 'gget')
+        return gcmd
+
+    @property
+    def _actual_garchive(self):
         garchive = self.ggetarchive
         if garchive is None:
-            garchive = tg.get('gco:ggetarchive', 'hendrix')
+            garchive = self.system.default_target.get('gco:ggetarchive', 'hendrix')
+        return garchive
 
-        return (self.system.path.join(gpath, gcmd), garchive, tampon, gname)
+    @property
+    def _actual_gcache(self):
+        gcache = self.ggetcache
+        if gcache is None:
+            gcache = self.system.default_target.get('gco:ggetcache', 'True')
+            gcache = bool(vartrue.match(gcache))
+        return gcache
+
+    def _actualgget(self, rpath):
+        """Return actual (gtool, garchive, tampon, gname)."""
+        lpath = rpath.lstrip('/').split('/')
+        gname = lpath.pop()
+        cmd = [self.system.path.join(self._actual_gpath, self._actual_gcmd),
+               '-host', self._actual_garchive]
+        if not self._actual_gcache:
+            cmd.append('-no-cache')
+        return (cmd, gname)
+
+    def _gspawn(self, cmd):
+        with self.system.env.clone() as lenv:
+            # Needed for gget to work with ectrans
+            if 'ectrans' in self.system.loaded_addons():
+                remote = self.system.ectrans_remote_init(storage=self._actual_garchive)
+                gateway = self.system.ectrans_gateway_init()
+                logger.debug('ectrans setup: gateway=%s remote=%s', gateway, remote)
+                lenv.ECTRANS_GATEWAY = gateway
+                lenv.ECTRANS_REMOTE = remote
+            # Gget needs the file to be readable to everyone (otherwise the
+            # "tampon" does not work
+            rc = False
+            p_umask = self.system.umask(0o0022)
+            try:
+                logger.debug('gget command: %s', ' '.join(cmd))
+                rc = self.system.spawn(cmd, output=True)
+            finally:
+                self.system.umask(p_umask)
+            return rc
 
     def ggetcheck(self, remote, options):
         """Verify disponibility in GCO's tampon using ``gget`` external tool."""
@@ -171,21 +204,17 @@ class GcoCentralStore(Store):
 
     def ggetlocate(self, remote, options):
         """Get location in GCO's tampon using ``gget`` external tool."""
-        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
-        sh = self.system
-        sh.env.GGET_TAMPON = tampon
-        gloc = sh.spawn([gtool, '-path', '-host', archive, gname], output=True)
-        if gloc and sh.path.exists(gloc[0]):
+        (gcmd, gname) = self._actualgget(remote['path'])
+        gloc = self._gspawn(gcmd + ['-path', gname])
+        if gloc and self.system.path.exists(gloc[0]):
             return gloc[0]
         else:
             return False
 
     def ggetget(self, remote, local, options):
         """System call to ``gget`` external tool."""
-        (gtool, archive, tampon, gname) = self._actualgget(remote['path'])
+        (gcmd, gname) = self._actualgget(remote['path'])
         sh = self.system
-        sh.env.GGET_TAMPON = tampon
-
         if options is None:
             options = dict()
         fmt = options.get('fmt', 'foo')
@@ -194,7 +223,7 @@ class GcoCentralStore(Store):
             logger.info("The resource was already fetched in a previous extract.")
             rc = True
         else:
-            rc = sh.spawn([gtool, '-host', archive, gname], output=False)
+            rc = self._gspawn(gcmd + [gname])
 
         if rc and sh.path.exists(gname):
             if extract:
@@ -205,7 +234,7 @@ class GcoCentralStore(Store):
                         logger.info("%s was already fetched in a previous extract.", destdir)
                     else:
                         untaropts = self.ggetconfig.key_untar_properties(gname)
-                        rc = len(sh.smartuntar(gname, destdir, output=False, **untaropts)) > 0
+                        rc = len(sh.smartuntar(gname, destdir, **untaropts)) > 0
                     gname = destdir
                 logger.info('GCO Central Store get %s', gname + '/' + extract[0])
                 rc = rc and sh.cp(gname + '/' + extract[0], local, fmt=fmt)
@@ -218,9 +247,10 @@ class GcoCentralStore(Store):
                 if not sh.path.isdir(local) and sh.is_tarname(local) and sh.is_tarfile(local):
                     destdir = sh.path.dirname(sh.path.realpath(local))
                     untaropts = self.ggetconfig.key_untar_properties(gname)
-                    sh.smartuntar(local, destdir, output=False, **untaropts)
+                    sh.smartuntar(local, destdir, **untaropts)
         else:
-            logger.warning('GCO Central Store get %s was not successful (%s)', gname, rc)
+            logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
+            rc = False
         return rc
 
     def ggetdelete(self, remote, options):
@@ -325,8 +355,19 @@ class GcoStore(MultiStore):
 class _UgetStoreMixin(object):
     """Some very useful methods needed by all Uget stores."""
 
-    def _actual_get(self, remote, local, options):
-        raise NotImplementedError('We really need _actual_get !')
+    def _actual_fancyget(self, remote, local, options):
+        raise NotImplementedError('We really need _actual_fancyget !')
+
+    def _local_auto_untar(self, local, uname):
+        """Automatic untar if needed...
+
+        (the local file needs to end with a tar extension).
+        """
+        if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
+                self.system.is_tarname(local) and self.system.is_tarfile(local)):
+            destdir = self.system.path.dirname(self.system.path.realpath(local))
+            untaropts = self.ugetconfig.key_untar_properties(uname)
+            self.system.smartuntar(local, destdir, **untaropts)
 
     def _fancy_get(self, remote, local, options):
         """Remap and ftpget sequence."""
@@ -339,29 +380,24 @@ class _UgetStoreMixin(object):
             logger.info("The Uget element was already fetched in a previous extract.")
             rc = True
         else:
-            rc = self._actual_get(remote, uname if extract else local, options)
+            rc = self._actual_fancyget(remote, uname if extract else local, options)
 
         if rc:
             if extract:
                 # The file to extract may be in a tar file...
-                if (self.system.is_tarname(uname) and self.system.is_tarfile(uname)):
+                if self.system.is_tarname(uname) and self.system.is_tarfile(uname):
                     destdir = self.system.tarname_radix(self.system.path.realpath(uname))
                     if self.system.path.exists(destdir):
                         logger.info("%s was already unpacked during a previous extract.", destdir)
                     else:
                         untaropts = self.ugetconfig.key_untar_properties(uname)
-                        rc = len(self.system.smartuntar(uname, destdir, output=False, **untaropts)) > 0
+                        rc = len(self.system.smartuntar(uname, destdir, **untaropts)) > 0
                 # Otherwise, assume that the file to extract is in a directory
                 else:
                     destdir = self.system.path.realpath(uname)
                 rc = rc and self.system.cp(destdir + '/' + extract[0], local, fmt=fmt)
             else:
-                # Automatic untar if needed... (the local file needs to end with a tar extension)
-                if (isinstance(local, six.string_types) and not self.system.path.isdir(local) and
-                        self.system.is_tarname(local) and self.system.is_tarfile(local)):
-                    destdir = self.system.path.dirname(self.system.path.realpath(local))
-                    untaropts = self.ugetconfig.key_untar_properties(uname)
-                    self.system.smartuntar(local, destdir, output=False, **untaropts)
+                self._local_auto_untar(local, uname)
         else:
             self._verbose_log(options, 'warning',
                               '%s get on %s was not successful (rc=%s)',
@@ -418,9 +454,11 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
 
     @classmethod
     def _hashdir(cls, eltid):
+        if six.PY2:
+            eltid = six.text_type(eltid)
         cleaned = cls._eltid_cleaner0.sub('', eltid)
         cleaned = cls._eltid_cleaner1.sub(r'\1\2', cleaned)
-        return hashlib.md5(cleaned).hexdigest()[0]
+        return hashlib.md5(cleaned.encode(encoding="utf-8")).hexdigest()[0]
 
     def _universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -437,7 +475,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
         """Reformulates the remote path to compatible vortex namespace."""
         rlist = []
         xpath = remote['path'].split('/')
-        if re.match('^@(\w+)$', xpath[2]):
+        if re.match(r'^@(\w+)$', xpath[2]):
             f_uuid = UgetId('uget:fake' + xpath[2])
             for h in range(16):
                 a_remote = copy.copy(remote)
@@ -473,19 +511,51 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _UgetStoreMixin):
                     stuff.update(rc)
                 elif rc is True:
                     return rc
-        return sorted([s for s in stuff if not (s.endswith('.' + self.storehash) and s[:-(len(self.storehash) + 1)] in stuff)])
+        return sorted([s for s in stuff
+                       if not (s.endswith('.' + self.storehash) and
+                               s[:-(len(self.storehash) + 1)] in stuff
+                               )
+                       ])
 
     def ugetprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
         return self.inarchiveprestageinfo(self._universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.inarchiveget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self._universal_remap(remote)
         return self._fancy_get(remote, local, options)
+
+    def ugetearlyget(self, remote, local, options):
+        """Remap and inarchiveearlyget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return None  # No early-get when extract=True
+        return self.inarchiveearlyget(remote, local, options)
+
+    def ugetfinaliseget(self, result_id, remote, local, options):
+        """Remap and inarchivefinaliseget sequence."""
+        # !!! Keep this method compatible with self._fancy_get !!!
+        remote = self._universal_remap(remote)
+        if options is None:
+            options = dict()
+        # Deal with extract !
+        extract = remote['query'].get('extract', None)
+        if extract:
+            return False  # No early-get when extract=True
+        # Actual finalise
+        rc = self.inarchivefinaliseget(result_id, remote, local, options)
+        # Automatic untar if needed...
+        self._local_auto_untar(local, self.system.path.basename(remote['path']))
+        return rc
 
     def ugetput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
@@ -529,7 +599,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         super(_UgetCacheStore, self).__init__(*args, **kw)
         del self.cache
 
-    def _universal_remap(self, remote):
+    def universal_remap(self, remote):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
@@ -541,7 +611,7 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        if re.match('^@(\w+)$', xpath[2]):
+        if re.match(r'^@(\w+)$', xpath[2]):
             f_uuid = UgetId('uget:fake' + xpath[2])
             remote['path'] = self.system.path.join(f_uuid.location, xpath[1])
         else:
@@ -551,11 +621,11 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
-        return self.incachecheck(self._universal_remap(remote), options)
+        return self.incachecheck(self.universal_remap(remote), options)
 
     def ugetlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
-        return self.incachelocate(self._universal_remap(remote), options)
+        return self.incachelocate(self.universal_remap(remote), options)
 
     def ugetlist(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
@@ -563,19 +633,19 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetprestageinfo(self, remote, options):
         """Proxy to :meth:`incacheprestageinfo`."""
-        return self.incacheprestageinfo(self._universal_remap(remote), options)
+        return self.incacheprestageinfo(self.universal_remap(remote), options)
 
-    def _actual_get(self, remote, local, options):
+    def _actual_fancyget(self, remote, local, options):
         return self.incacheget(remote, local, options)
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        remote = self._universal_remap(remote)
+        remote = self.universal_remap(remote)
         return self._fancy_get(remote, local, options)
 
     def ugetput(self, local, remote, options):
         """Proxy to :meth:`incacheputt`."""
-        remote = self._universal_remap(remote)
+        remote = self.universal_remap(remote)
         extract = remote['query'].get('extract', None)
         if extract:
             logger.warning('Skip cache put with extracted %s', extract)
@@ -585,23 +655,77 @@ class _UgetCacheStore(CacheStore, _UgetStoreMixin):
 
     def ugetdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
-        return self.incachedelete(self._universal_remap(remote), options)
+        return self.incachedelete(self.universal_remap(remote), options)
 
 
 class UgetMtCacheStore(_UgetCacheStore):
     """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
     _footprint = dict(
-        info = 'Uget cache access',
+        info = 'Uget MTOOL cache access',
         attr = dict(
             netloc = dict(
-                values  = ['uget.cache.fr'],
+                values  = ['uget.cache-mt.fr'],
             ),
             strategy = dict(
                 default = 'mtool',
             ),
         )
     )
+
+
+class UgetMarketCacheStore(_UgetCacheStore):
+    """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
+
+    _footprint = dict(
+        info = 'Uget Marketplace cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['uget.cache-market.fr'],
+            ),
+            strategy = dict(
+                default = 'marketplace',
+            ),
+        )
+    )
+
+
+class UgetCacheStore(MultiStore):
+
+    _footprint = dict(
+        info = 'Uget cache access',
+        attr = dict(
+            scheme = dict(
+                values  = ['uget'],
+            ),
+            netloc = dict(
+                values  = ['uget.cache.fr', ],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        for sto in self.openedstores[1:]:
+            r_remote = sto.universal_remap(remote)
+            if sto.cache.allow_reads(r_remote['path']):
+                ostores.append(sto)
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        ostores = [self.openedstores[0], ]
+        for sto in self.openedstores[1:]:
+            r_remote = sto.universal_remap(remote)
+            if sto.cache.allow_writes(r_remote['path']):
+                ostores.append(sto)
+        return ostores
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        return ['uget.cache-mt.fr', 'uget.cache-market.fr']
 
 
 class UgetHackCacheStore(_UgetCacheStore):

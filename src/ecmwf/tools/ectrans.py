@@ -5,7 +5,9 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+from bronx.fancies import loggers
 import footprints
+
 from vortex.tools import addons
 from vortex.tools.systems import fmtshcmd
 from .interfaces import ECtrans
@@ -14,11 +16,11 @@ from vortex.util.config import GenericConfigParser
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 def use_in_shell(sh, **kw):
-    """Extend current shell with the LFI interface defined by optional arguments."""
+    """Extend current shell with the ECtrans interface defined by optional arguments."""
     kw['shell'] = sh
     return footprints.proxy.addon(**kw)
 
@@ -74,8 +76,8 @@ class ECtransTools(addons.Addon):
         # Use the system's configuration file otherwise
         if actual_setting is None:
             actual_setting_key = self.sh.default_target.get('{:s}:{:s}'.format(section, option),
-                                                      None)
-            if actual_setting_key:
+                                                            None)
+            if actual_setting_key is not None:
                 actual_setting = self.sh.env[actual_setting_key]
         # Check if it worked ?
         if actual_setting is None:
@@ -90,7 +92,9 @@ class ECtransTools(addons.Addon):
         :param inifile: configuration file in which the gateway is read if provided
         :return: the gateway to be used by ECtrans
         """
-        return self._get_ectrans_setting('gateway', gateway, inifile)
+        return self._get_ectrans_setting(option='gateway',
+                                         guess=gateway,
+                                         inifile=inifile)
 
     def ectrans_remote_init(self, remote=None, inifile=None, storage="default"):
         """Initialize the remote attribute used by Ectrans.
@@ -101,39 +105,61 @@ class ECtransTools(addons.Addon):
         :return: the remote to be used by ECtrans
         """
         try:
-            return self._get_ectrans_setting('remote_{:s}'.format(storage), remote, inifile)
+            return self._get_ectrans_setting(option='remote_{:s}'.format(storage),
+                                             guess=remote,
+                                             inifile=inifile)
         except ECtransConfigurationError:
             if storage != 'default':
-                return self._get_ectrans_setting('remote_default', remote, inifile)
+                return self._get_ectrans_setting(option='remote_default',
+                                                 guess=remote,
+                                                 inifile=inifile)
             else:
                 raise
 
     @staticmethod
-    def ectrans_defaults_init():
+    def ectrans_defaults_init(** kwargs):
         """Initialise the default for ECtrans.
 
         :return: the different structures used by the ECtrans interface initialised
         """
+        sync = kwargs.pop('sync', True)
         list_args = list()
         dict_args = dict()
-        dict_args["delay"] = '120'
-        dict_args["priority"] = 60
-        dict_args["retryCnt"] = 0
-        list_options = ["verbose", "overwrite"]
+        list_options = list()
+        for k, v in kwargs.items():
+            if isinstance(v, bool) and v:
+                list_options.append(k)
+            else:
+                dict_args[k] = v
+        if sync:
+            dict_args.setdefault("priority", 80)
+            dict_args.setdefault("retryCnt", 0)
+        else:
+            dict_args.setdefault("priority", 30)
+            dict_args.setdefault("retryCnt", 72)  # Retry for 12 hours
+            dict_args.setdefault("retryFrq", 600)  # 10 minutes between tries
+        if 'verbose' not in kwargs:
+            list_options.append('verbose')
+        if 'overwrite' not in kwargs:
+            list_options.append('overwrite')
         return list_args, list_options, dict_args
 
-    def raw_ectransput(self, source, target, gateway=None, remote=None):
+    def raw_ectransput(self, source, target, gateway=None, remote=None,
+                       sync=False, ** kwargs):
         """Put a resource using ECtrans (default class).
 
         :param source: source file
         :param target: target file
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
+        :param bool sync: If False, allow asynchronous transfers.
         :return: return code and additional attributes used
         """
         ectrans = ECtrans(system=self.sh)
-        list_args, list_options, dict_args = self.ectrans_defaults_init()
-        list_options.append("put")
+        list_args, list_options, dict_args = self.ectrans_defaults_init(sync=sync,
+                                                                        ** kwargs)
+        if sync:
+            list_options.append("put")
         dict_args["gateway"] = gateway
         dict_args["remote"] = remote
         dict_args["source"] = source
@@ -148,7 +174,8 @@ class ECtransTools(addons.Addon):
         return rc, dict_args
 
     @fmtshcmd
-    def ectransput(self, source, target, gateway=None, remote=None, cpipeline=None):
+    def ectransput(self, source, target, gateway=None, remote=None,
+                   cpipeline=None, sync=False):
         """Put a resource using ECtrans.
 
         This class is not used if a particular method format_ectransput exists.
@@ -158,14 +185,16 @@ class ECtransTools(addons.Addon):
         :param gateway: gateway used by ECtrans
         :param remote: remote used by ECtrans
         :param cpipeline: compression pipeline used if provided
+        :param bool sync: If False, allow asynchronous transfers.
         :return: return code and additional attributes used
         """
-        if self.is_iofile(source):
+        if self.sh.is_iofile(source):
             if cpipeline is None:
                 rc, dict_args = self.raw_ectransput(source=source,
                                                     target=target,
                                                     gateway=gateway,
-                                                    remote=remote)
+                                                    remote=remote,
+                                                    sync=sync)
             else:
                 csource = source + self.sh.safe_filesuffix()
                 try:
@@ -174,7 +203,8 @@ class ECtransTools(addons.Addon):
                     rc, dict_args = self.raw_ectransput(source=csource,
                                                         target=target,
                                                         gateway=gateway,
-                                                        remote=remote)
+                                                        remote=remote,
+                                                        sync=sync)
                 finally:
                     self.sh.rm(csource)
         else:
@@ -220,7 +250,7 @@ class ECtransTools(addons.Addon):
         :return: return code and additional attributes used
         """
         if isinstance(target, six.string_types):
-            self.rm(target)
+            self.sh.rm(target)
         if cpipeline is None:
             rc, dict_args = self.raw_ectransget(source=source,
                                                 target=target,

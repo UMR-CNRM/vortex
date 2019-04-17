@@ -110,6 +110,17 @@ class TestStringDecoder(unittest.TestCase):
                              ['toto', None, 'tata'])
         self.assertListEqual(_my_vexpand('tot(o,tit)i,tata'),
                              ['tot(o,tit)i', 'tata'])
+        # Explicit list
+        self.assertListEqual(_my_vexpand('list(toto,titi,tata)'),
+                             ['toto', 'titi', 'tata'])
+        self.assertListEqual(_my_vexpand('list(toto,None,tata)'),
+                             ['toto', None, 'tata'])
+        self.assertListEqual(_my_vexpand('list(tot(o,tit)i,tata)'),
+                             ['tot(o,tit)i', 'tata'])
+        self.assertListEqual(_my_vexpand('list(toto)'),
+                             ['toto'])
+        self.assertListEqual(_my_vexpand('list()'),
+                             [])
         # Dictionnaries...
         self.assertDictEqual(_my_vexpand('dict(01:1 02:2)'),
                              {'01': '1', '02': '2'})
@@ -143,6 +154,18 @@ class TestStringDecoder(unittest.TestCase):
         self.assertEqual(_my_vexpand('${truc}', subs=dict(truc=1)), 1)
         self.assertEqual(_my_vexpand('dict(a:${truc})', subs=dict(truc=1)),
                          dict(a=1))
+        # Xbool
+        self.assertTrue(_my_vexpand('xbool(true)'))
+        self.assertTrue(_my_vexpand('xbool(1)'))
+        self.assertTrue(_my_vexpand('xbool(on)'))
+        self.assertTrue(_my_vexpand('xbool(yes)'))
+        self.assertTrue(_my_vexpand('xbool(ok)'))
+        self.assertFalse(_my_vexpand('xbool(false)'))
+        self.assertFalse(_my_vexpand('xbool(0)'))
+        self.assertFalse(_my_vexpand('xbool(no)'))
+        # Mix of dicts, lists and xbool
+        self.assertEqual(_my_vexpand('dict(01:1,xbool(no),25 02:2),xbool(1)'),
+                         [{'01': ['1', False, '25'], '02': '2'}, True])
 
     def test_decode(self):
         # Does nothing
@@ -158,6 +181,8 @@ class TestStringDecoder(unittest.TestCase):
         self.assertDictEqual(self.cd(tdict2), {'toto': 1, 'tata': 2})
         tlist2 = 'float(2.6,2.8)'
         self.assertListEqual(self.cd(tlist2), [2.6, 2.8])
+        tdict3 = 'xbool(dict(toto:1 tata:0 titi:ok))'
+        self.assertDictEqual(self.cd(tdict3), {'toto': True, 'tata': False, 'titi': True})
         # Strange case
         for sval in ('dict(toto:titi,tata tata:titi)',
                      "dict(toto:titi,tata \n\ntata:titi)",

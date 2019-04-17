@@ -10,13 +10,16 @@ a default Mail Service is provided.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from six.moves.configparser import NoOptionError, NoSectionError
+
 import hashlib
 import io
 import six
 from email import encoders
 from string import Template
 
+from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
 import footprints
 
@@ -26,7 +29,7 @@ from vortex.util.config import GenericConfigParser, load_template
 #: No automatic export
 __all__ = []
 
-logger = footprints.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 # See logging.handlers.SysLogHandler.priority_map
 criticals = ['debug', 'info', 'error', 'warning', 'critical']
@@ -143,6 +146,10 @@ class MailService(Service):
             smtpserver = dict(
                 optional = True,
                 default  = 'localhost',
+            ),
+            smtpport = dict(
+                type = int,
+                optional = True,
             ),
             altmailx = dict(
                 optional = True,
@@ -268,7 +275,10 @@ class MailService(Service):
             self.sh.remove(tmpmsgfile)
         else:
             import smtplib
-            smtp = smtplib.SMTP(self.smtpserver)
+            extras = dict()
+            if self.smtpport:
+                extras['port'] = self.smtpport
+            smtp = smtplib.SMTP(self.smtpserver, ** extras)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
@@ -516,7 +526,7 @@ class HideService(Service):
                 'HIDDEN',
                 date.now().strftime('%Y%m%d%H%M%S.%f'),
                 'P{0:06d}'.format(self.sh.getpid()),
-                hashlib.md5(self.sh.path.abspath(filename)).hexdigest()
+                hashlib.md5(self.sh.path.abspath(filename).encode(encoding='utf-8')).hexdigest()
             ))
         )
         self.sh.cp(filename, destination, intent='in', fmt=self.asfmt)
@@ -697,7 +707,7 @@ class TemplatedMailService(MailService):
 
     def substitution_dictionary(self, add_ons=None):
         """Dictionary used for template substitutions: env + add_ons."""
-        dico = footprints.util.UpperCaseDict(self.env)
+        dico = UpperCaseDict(self.env)
         if add_ons is not None:
             dico.update(add_ons)
         return dico
@@ -718,7 +728,7 @@ class TemplatedMailService(MailService):
                 result = tpl.substitute(tpldict)
             except KeyError as exc:
                 logger.error('Undefined key <%s> in template substitution level %d',
-                             exc.message, level + 1)
+                             str(exc), level + 1)
                 result = tpl.safe_substitute(tpldict)
             except ValueError as exc:
                 logger.error('Illegal syntax in template: %s', exc.message)

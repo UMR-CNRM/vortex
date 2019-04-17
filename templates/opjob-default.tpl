@@ -49,6 +49,7 @@ for d in pathdirs :
 import locale
 locale.setlocale(locale.LC_ALL, '$defaultencoding')
 
+from bronx.system.interrupt import SignalInterruptError
 import footprints
 import vortex
 import vortex.layout.jobs
@@ -77,7 +78,7 @@ try:
     driver.setup()
     driver.run()
     ja.complete()
-except Exception as trouble:
+except (Exception, SignalInterruptError, KeyboardInterrupt) as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
 finally:
