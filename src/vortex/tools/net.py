@@ -699,7 +699,7 @@ class AutoRetriesFtp(StdFtp):
         Wraps the *func* function in order to implement a retry on failure
         mechanism.
 
-        :param object func: Any callable that should be wrapped (usually a function)
+        :param callable func: Any callable that should be wrapped (usually a function)
         :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
         :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
         :param list exceptions_extras: Extra exceptions to be catch during the retry
@@ -1079,7 +1079,7 @@ class Ssh(object):
     def scpput(self, source, destination, scpopts=''):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
+        - ``source`` is a single file or a directory, not a pattern (no '*.grib').
         - ``destination`` is the remote name, unless it ends with '/', in
           which case it is the containing directory, and the remote name is
           the basename of ``source`` (like a real cp or scp):
@@ -1129,7 +1129,7 @@ class Ssh(object):
     def scpget(self, source, destination, scpopts='', isadir=False):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is the remote name, not a pattern (no '\*.grib').
+        - ``source`` is the remote name, not a pattern (no '*.grib').
         - ``destination`` is a single file or a directory, unless it ends with
           '/', in which case it is the containing directory, and the remote name
           is the basename of ``source`` (like a real cp or scp):
@@ -1297,7 +1297,7 @@ class ActiveSshTunnel(object):
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
-        :param int entraceport: Tunnel's entrance port.
+        :param int entranceport: Tunnel's entrance port.
         :param str finaldestination: Tunnel's final destination.
         :param int finalport: Tunnel's destination port.
 
