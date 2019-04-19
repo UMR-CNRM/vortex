@@ -1597,6 +1597,12 @@ class Time(_GetattrCalculatorMixin):
         """HHHH:MM formated string."""
         return self._formatted_str('{0:s}{1:04d}{2:02d}')
 
+    @property
+    def notnull(self):
+        if self.hour!=0 or self.minute!=0:
+            return 1
+        return 0
+
     def isoformat(self):
         """Almost ISO representation (HH:MM)."""
         return six.text_type(self)
