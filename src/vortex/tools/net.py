@@ -214,8 +214,9 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = True
         if not self.closed:
-            rc = self._ftplib.close()
+            rc = self._ftplib.close() or True
             self._closed = True
             self._deleted = datetime.now()
         return rc
