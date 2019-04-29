@@ -358,6 +358,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                                TestTask(tag='forecast1h', ticket=self.t, **opts)
                                            ], **opts),
                                     Family(tag='update2', ticket=self.t,
+                                           active_callback=lambda s: s.conf.member == 0,
                                            nodes=[
                                                TestTask(tag='forecast2h', ticket=self.t, **opts)
                                            ], **opts),
@@ -370,11 +371,9 @@ class TestHeavyNodesStuff(unittest.TestCase):
             alltasks = ['forecast1h+d2018010100+member0',
                         'forecast2h+d2018010100+member0',
                         'forecast1h+d2018010100+member1',
-                        'forecast2h+d2018010100+member1',
                         'forecast1h+d2018010112+member0',
                         'forecast2h+d2018010112+member0',
-                        'forecast1h+d2018010112+member1',
-                        'forecast2h+d2018010112+member1', ]
+                        'forecast1h+d2018010112+member1', ]
             self.assertListEqual(list(self.spy.steps.keys()), alltasks)
             for t in alltasks:
                 self.assertEqual(self.spy.conf[t]['cutoff'], 'assim')
@@ -387,18 +386,18 @@ class TestHeavyNodesStuff(unittest.TestCase):
             self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['rundate_prev'], None)
             self.assertEqual(self.spy.conf['forecast1h+d2018010112+member0']['rundate_prev'], Date('2018010100'))
 
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member'], 0)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member_prev'], None)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member_next'], 1)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic'], 100)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic_prev'], None)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic_next'], 101)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member'], 1)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member_prev'], 0)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member_next'], None)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic'], 101)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic_prev'], 100)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic_next'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member'], 0)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member_prev'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member_next'], 1)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic'], 100)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic_prev'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic_next'], 101)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member'], 1)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member_prev'], 0)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member_next'], None)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic'], 101)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic_prev'], 100)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic_next'], None)
 
             self.assertEqual(self.spy.conf['forecast1h+d2018010112+member0']['geometry'].tag, 'global1198')
             self.assertEqual(self.spy.conf['forecast2h+d2018010112+member0']['geometry'].tag, 'global798')

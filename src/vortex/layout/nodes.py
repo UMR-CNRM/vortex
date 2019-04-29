@@ -162,6 +162,12 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     :param str tag: The node's tag (must be unique !)
     :param Ticket ticket: The session's ticket that will be used
+    :param str config_tag: The configuration's file section name that will be used
+                           to setup this node (default: ``self.tag``)
+    :param active_callback: Some function or lambda that will be called with
+                            ``self`` as first argument in order to determine if
+                            the current not should be used (default: ``None``.
+                            i.e. The node is active).
     :param str special_prefix: The prefix of any environment variable that should
                                be exported into ``self.conf``
     :param str register_cycle_prefix: The callback function used to initialise
@@ -181,6 +187,9 @@ class Node(getbytag.GetByTag, NiceLayout):
         if self._ticket is None:
             raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
+        self._active_cb = kw.pop('active_callback', None)
+        if self._active_cb is not None and not callable(self._active_cb):
+            raise ValueError("If provided, active_callback must be a callable")
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
         self._subjobok  = kw.pop('subjob_allowed', True)
         self._subjobtag = kw.pop('subjob_tag', None)
@@ -191,15 +200,17 @@ class Node(getbytag.GetByTag, NiceLayout):
             self._cycle_cb = j_assist.register_cycle
             self._subjobok = j_assist.subjob_allowed
             self._subjobtag = j_assist.subjob_tag
-        self._conf      = None
-        self._contents  = list()
-        self._aborted   = False
+        self._conf       = None
+        self._activenode = None
+        self._contents   = list()
+        self._aborted    = False
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         """All the necessary arguments to build a copy of this object."""
         argsdict = dict(play=self.play,
                         ticket=self.ticket,
                         config_tag=self.config_tag,
+                        active_callback=self._active_cb,
                         special_prefix=self._locprefix,
                         register_cycle_prefix=self._cycle_cb,
                         subjob_tag=self._subjobtag,
@@ -238,6 +249,14 @@ class Node(getbytag.GetByTag, NiceLayout):
         return self._conf
 
     @property
+    def activenode(self):
+        if self._activenode is None:
+            if self.conf is None:
+                raise RuntimeError('Setup the configuration object befoe calling activenode !')
+            self._activenode = self._active_cb is None or self._active_cb(self)
+        return self._activenode
+
+    @property
     def sh(self):
         return self.ticket.sh
 
@@ -259,11 +278,12 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     def build_context(self):
         """Build the context and subcontexts of the current node."""
-        oldctx = self.ticket.context
-        ctx = self.ticket.context.newcontext(self.tag, focus=True)
-        ctx.cocoon()
-        self._setup_context(ctx)
-        oldctx.activate()
+        if self.activenode:
+            oldctx = self.ticket.context
+            ctx = self.ticket.context.newcontext(self.tag, focus=True)
+            ctx.cocoon()
+            self._setup_context(ctx)
+            oldctx.activate()
 
     def _setup_context(self, ctx):
         """Setup the newly created context."""
@@ -274,23 +294,26 @@ class Node(getbytag.GetByTag, NiceLayout):
         Enter a :keyword:`with` context, freezing the current env
         and joining a cocoon directory.
         """
-        self._oldctx = self.ticket.context
-        ctx = self.ticket.context.switch(self.tag)
-        ctx.cocoon()
-        logger.debug('Node context directory <%s>', self.sh.getcwd())
+        if self.activenode:
+            self._oldctx = self.ticket.context
+            ctx = self.ticket.context.switch(self.tag)
+            ctx.cocoon()
+            logger.debug('Node context directory <%s>', self.sh.getcwd())
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exit from :keyword:`with` context."""
-        logger.debug('Exit context directory <%s>', self.sh.getcwd())
-        self._oldctx.activate()
-        self.ticket.context.cocoon()
+        if self.activenode:
+            logger.debug('Exit context directory <%s>', self.sh.getcwd())
+            self._oldctx.activate()
+            self.ticket.context.cocoon()
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
 
         # The parent conf is the default configuration
         self._conf = ConfigSet()
+        self._active = None
         self._conf.update(conf_local)
 
         # This configuration is updated with any section with the current tag name
@@ -307,9 +330,12 @@ class Node(getbytag.GetByTag, NiceLayout):
                           titlecallback=self.subtitle, **self.options)
             self.conf.update(self.options)
 
-        # Then we broadcast the current configuration to the kids
-        for node in self.contents:
-            node.setconf(self.conf.copy(), conf_global)
+        if self.activenode:
+            # Then we broadcast the current configuration to the kids
+            for node in self.contents:
+                node.setconf(self.conf.copy(), conf_global)
+        else:
+            logger.info('Under present conditions/configuration, this node will not be activated.')
 
     def localenv(self):
         """Dump the actual env variables."""
@@ -462,9 +488,14 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Some cleaning and completion status."""
         self._aborted = aborted
 
-    def run(self, nbpass=0, activated=True):
+    def _actual_run(self, nbpass=0, sjob_activated=True):
         """Abstract method: the actual job to do."""
         pass
+
+    def run(self, nbpass=0, sjob_activated=True):
+        """Execution driver: setup, run, complete... (if needed)."""
+        if self.activenode:
+            self._actual_run(nbpass, sjob_activated)
 
     def filter_execution_error(self, exc):  # @UnusedVariable
         """
@@ -614,7 +645,7 @@ class Family(Node):
         """No parameters dump in families (it is enough to dump it in Tasks)."""
         pass
 
-    def run(self, nbpass=0, activated=True):
+    def _actual_run(self, nbpass=0, sjob_activated=True):
         """Execution driver: setup, run kids, complete."""
         if self._subjobok and self._subjobtag is None and 'paralleljobs_kind' in self.conf:
             # Subjob are allowed and I'am the main job (because self._subjobtag is None) :
@@ -643,14 +674,14 @@ class Family(Node):
             launchtool.waitall()
         else:
             # No subjobs configured or allowed: run the usual way...
-            activated = activated or self._subjobtag == self.tag
+            sjob_activated = sjob_activated or self._subjobtag == self.tag
             with subjob_output_markup(self._subjobtag == self.tag):
                 self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
                 self.setup()
                 self.summary()
                 for node in self.contents:
                     with node:
-                        node.run(activated=activated)
+                        node.run(sjob_activated=sjob_activated)
                 self.complete()
 
 
@@ -812,10 +843,10 @@ class Task(Node):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 
-    def run(self, nbpass=0, activated=True):
+    def _actual_run(self, nbpass=0, sjob_activated=True):
         """Execution driver: build, setup, refill, process, complete."""
-        activated = activated or self._subjobtag == self.tag
-        if activated:
+        sjob_activated = sjob_activated or self._subjobtag == self.tag
+        if sjob_activated:
             with subjob_output_markup(self._subjobtag == self.tag):
                 try:
                     self.build()
@@ -969,4 +1000,4 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._nbpass += 1
         for node in self.contents:
             with node:
-                node.run(nbpass=self.nbpass, activated=self._subjob_tag is None)
+                node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
