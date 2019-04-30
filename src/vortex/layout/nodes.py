@@ -9,6 +9,7 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
+from math import ceil
 import re
 import sys
 
@@ -153,7 +154,7 @@ class ConfigSet(collections_abc.MutableMapping):
 
     def copy(self):
         newobj = self.__class__()
-        newobj.update(**self)
+        newobj.update(**self._internal)
         return newobj
 
 
@@ -162,6 +163,12 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     :param str tag: The node's tag (must be unique !)
     :param Ticket ticket: The session's ticket that will be used
+    :param str config_tag: The configuration's file section name that will be used
+                           to setup this node (default: ``self.tag``)
+    :param active_callback: Some function or lambda that will be called with
+                            ``self`` as first argument in order to determine if
+                            the current not should be used (default: ``None``.
+                            i.e. The node is active).
     :param str special_prefix: The prefix of any environment variable that should
                                be exported into ``self.conf``
     :param str register_cycle_prefix: The callback function used to initialise
@@ -181,6 +188,9 @@ class Node(getbytag.GetByTag, NiceLayout):
         if self._ticket is None:
             raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
+        self._active_cb = kw.pop('active_callback', None)
+        if self._active_cb is not None and not callable(self._active_cb):
+            raise ValueError("If provided, active_callback must be a callable")
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
         self._subjobok  = kw.pop('subjob_allowed', True)
         self._subjobtag = kw.pop('subjob_tag', None)
@@ -191,15 +201,17 @@ class Node(getbytag.GetByTag, NiceLayout):
             self._cycle_cb = j_assist.register_cycle
             self._subjobok = j_assist.subjob_allowed
             self._subjobtag = j_assist.subjob_tag
-        self._conf      = None
-        self._contents  = list()
-        self._aborted   = False
+        self._conf       = None
+        self._activenode = None
+        self._contents   = list()
+        self._aborted    = False
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         """All the necessary arguments to build a copy of this object."""
         argsdict = dict(play=self.play,
                         ticket=self.ticket,
                         config_tag=self.config_tag,
+                        active_callback=self._active_cb,
                         special_prefix=self._locprefix,
                         register_cycle_prefix=self._cycle_cb,
                         subjob_tag=self._subjobtag,
@@ -238,6 +250,14 @@ class Node(getbytag.GetByTag, NiceLayout):
         return self._conf
 
     @property
+    def activenode(self):
+        if self._activenode is None:
+            if self.conf is None:
+                raise RuntimeError('Setup the configuration object befoe calling activenode !')
+            self._activenode = self._active_cb is None or self._active_cb(self)
+        return self._activenode
+
+    @property
     def sh(self):
         return self.ticket.sh
 
@@ -259,11 +279,12 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     def build_context(self):
         """Build the context and subcontexts of the current node."""
-        oldctx = self.ticket.context
-        ctx = self.ticket.context.newcontext(self.tag, focus=True)
-        ctx.cocoon()
-        self._setup_context(ctx)
-        oldctx.activate()
+        if self.activenode:
+            oldctx = self.ticket.context
+            ctx = self.ticket.context.newcontext(self.tag, focus=True)
+            ctx.cocoon()
+            self._setup_context(ctx)
+            oldctx.activate()
 
     def _setup_context(self, ctx):
         """Setup the newly created context."""
@@ -274,24 +295,30 @@ class Node(getbytag.GetByTag, NiceLayout):
         Enter a :keyword:`with` context, freezing the current env
         and joining a cocoon directory.
         """
-        self._oldctx = self.ticket.context
-        ctx = self.ticket.context.switch(self.tag)
-        ctx.cocoon()
-        logger.debug('Node context directory <%s>', self.sh.getcwd())
+        if self.activenode:
+            self._oldctx = self.ticket.context
+            ctx = self.ticket.context.switch(self.tag)
+            ctx.cocoon()
+            logger.debug('Node context directory <%s>', self.sh.getcwd())
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Exit from :keyword:`with` context."""
-        logger.debug('Exit context directory <%s>', self.sh.getcwd())
-        self._oldctx.activate()
-        self.ticket.context.cocoon()
+        if self.activenode:
+            logger.debug('Exit context directory <%s>', self.sh.getcwd())
+            self._oldctx.activate()
+            self.ticket.context.cocoon()
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
 
         # The parent conf is the default configuration
-        self._conf = ConfigSet()
-        self._conf.update(conf_local)
+        if isinstance(conf_local, ConfigSet):
+            self._conf = conf_local.copy()
+        else:
+            self._conf = ConfigSet()
+            self._conf.update(conf_local)
+        self._active = None
 
         # This configuration is updated with any section with the current tag name
         updconf = conf_global.get(self.config_tag, dict())
@@ -307,9 +334,12 @@ class Node(getbytag.GetByTag, NiceLayout):
                           titlecallback=self.subtitle, **self.options)
             self.conf.update(self.options)
 
-        # Then we broadcast the current configuration to the kids
-        for node in self.contents:
-            node.setconf(self.conf.copy(), conf_global)
+        if self.activenode:
+            # Then we broadcast the current configuration to the kids
+            for node in self.contents:
+                node.setconf(self.conf, conf_global)
+        else:
+            logger.info('Under present conditions/configuration, this node will not be activated.')
 
     def localenv(self):
         """Dump the actual env variables."""
@@ -462,9 +492,14 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Some cleaning and completion status."""
         self._aborted = aborted
 
-    def run(self, nbpass=0, activated=True):
+    def _actual_run(self, nbpass=0, sjob_activated=True):
         """Abstract method: the actual job to do."""
         pass
+
+    def run(self, nbpass=0, sjob_activated=True):
+        """Execution driver: setup, run, complete... (if needed)."""
+        if self.activenode:
+            self._actual_run(nbpass, sjob_activated)
 
     def filter_execution_error(self, exc):  # @UnusedVariable
         """
@@ -614,12 +649,13 @@ class Family(Node):
         """No parameters dump in families (it is enough to dump it in Tasks)."""
         pass
 
-    def run(self, nbpass=0, activated=True):
-        """Execution driver: setup, run kids, complete."""
+    @property
+    def _parallel_launchtool(self):
+        """Create a launchtool for parallel runs (if sensible only)."""
         if self._subjobok and self._subjobtag is None and 'paralleljobs_kind' in self.conf:
             # Subjob are allowed and I'am the main job (because self._subjobtag is None) :
             # => Run the family's content using subjobs
-            self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag, '(using subjobs)')))
+
             # Create the subjob launcher
             launcher_opts = {k[len('paralleljobs_'):]: self.conf[k]
                              for k in self.conf if k.startswith('paralleljobs_')}
@@ -628,6 +664,15 @@ class Family(Node):
             if launchtool is None:
                 raise RuntimeError('No subjob launcher could be found: check "paralleljobs_kind".')
             launchtool.ticket = self.ticket
+            return launchtool
+        else:
+            return None
+
+    def _actual_run(self, nbpass=0, sjob_activated=True):
+        """Execution driver: setup, run kids, complete."""
+        launchtool = self._parallel_launchtool
+        if launchtool:
+            self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag, '(using subjobs)')))
 
             def node_recurse(node):
                 """Recursively find tags."""
@@ -643,14 +688,14 @@ class Family(Node):
             launchtool.waitall()
         else:
             # No subjobs configured or allowed: run the usual way...
-            activated = activated or self._subjobtag == self.tag
+            sjob_activated = sjob_activated or self._subjobtag == self.tag
             with subjob_output_markup(self._subjobtag == self.tag):
                 self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
                 self.setup()
                 self.summary()
                 for node in self.contents:
                     with node:
-                        node.run(activated=activated)
+                        node.run(sjob_activated=sjob_activated)
                 self.complete()
 
 
@@ -673,8 +718,7 @@ class LoopFamily(Family):
     """
 
     def __init__(self, **kw):
-        logger.debug('Family init %s', repr(self))
-        super(LoopFamily, self).__init__(**kw)
+        logger.debug('LoopFamily init %s', repr(self))
         # On what should we iterate ?
         self._loopconf = kw.pop('loopconf', None)
         if not self._loopconf:
@@ -696,6 +740,8 @@ class LoopFamily(Family):
         # Prev/Next
         self._loopneedprev = kw.pop('loopneedprev', False)
         self._loopneednext = kw.pop('loopneednext', False)
+        # Generic init...
+        super(LoopFamily, self).__init__(**kw)
         # Initialisation stuff
         self._actual_content = None
 
@@ -723,6 +769,93 @@ class LoopFamily(Family):
                 suffix = self._loopsuffix.format(*cvars)
                 for node in self._contents:
                     self._actual_content.append(node.loopclone(suffix, extras))
+        return self._actual_content
+
+
+class WorkshareFamily(Family):
+    """
+    Loop on the Family's content according to a list taken from ``self.conf``.
+
+    The list taken from ``self.conf`` is sliced, and each iteration of the
+    loop works on its slice of the list. That's why it's called a workshare...
+
+    Compared to the usual :class:`Family` class, additional attributes are:
+
+    :param str workshareconf: The name of the ``self.conf`` entry to slice
+    :param str worksharename: The name of the slice control variable (that is
+                              automatically added to the childs' ``self.conf``).
+    :param int worksharesize: The minimum number of items in each workshare (default=1)
+    :param worksharesize: The maximum number of workshares (it might
+                          be an integer or a name referring to an entry
+                          ``in self.conf`` (default: None. e.g. no limit)
+    """
+
+    def __init__(self, **kw):
+        logger.debug('WorkshareFamily init %s', repr(self))
+        # On what should we build the workshare ?
+        self._workshareconf = kw.pop('workshareconf', None)
+        if not self._workshareconf:
+            raise ValueError('The "workshareconf" named argument must be given')
+        else:
+            self._workshareconf = self._workshareconf.split(',')
+        # Find the loop's variable names
+        self._worksharename = kw.pop('worksharename', None)
+        if not self._worksharename:
+            raise ValueError('The "worksharename" named argument must be given')
+        else:
+            self._worksharename = self._worksharename.split(',')
+            if len(self._worksharename) != len(self._workshareconf):
+                raise ValueError('Inconsistent size between workshareconf and worksharename')
+        # Minimum size for a workshare
+        self._worksharesize = int(kw.pop('worksharesize', 1))
+        # Maximum number of workshares
+        self._worksharelimit = kw.pop('worksharelimit', None)
+        # Generic init
+        super(WorkshareFamily, self).__init__(**kw)
+        # Initialisation stuff
+        self._actual_content = None
+
+    def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
+        baseargs = super(WorkshareFamily, self)._args_loopclone(tagsuffix, extras)
+        baseargs['workshareconf'] = ','.join(self._workshareconf)
+        baseargs['worksharename'] = ','.join(self._worksharename)
+        baseargs['worksharesize'] = self._worksharesize
+        baseargs['worksharelimit'] = self._worksharelimit
+        return baseargs
+
+    @property
+    def contents(self):
+        if self._actual_content is None:
+            # Find the population sizes and workshares size/number
+            populations = [self.conf.get(lc) for lc in self._workshareconf]
+            n_population = set([len(p) for p in populations])
+            if not(len(n_population) == 1):
+                raise RuntimeError('Inconsistent sizes in "workshareconf" lists')
+            n_population = n_population.pop()
+            # Number of workshares if worksharesize alone is considered
+            sb_ws_number = n_population // self._worksharesize
+            # Workshare limit
+            if isinstance(self._worksharelimit, six.string_types):
+                lb_ws_number = int(self.conf.get(self._worksharelimit))
+            else:
+                lb_ws_number = self._worksharelimit or sb_ws_number
+            # Final result
+            ws_number = min([sb_ws_number, lb_ws_number])
+            # Find out the workshares sizes
+            floorsize = n_population // ws_number
+            ws_sizes = [floorsize ] * ws_number
+            for i in range(n_population - ws_number * floorsize):
+                ws_sizes[i] += 1
+            # Build de family's content
+            self._actual_content = list()
+            ws_start = 0
+            for i, ws_size in enumerate(ws_sizes):
+                ws_slice = slice(ws_start, ws_start + ws_size)
+                extras = {v: x[ws_slice] for v, x in zip(self._worksharename, populations)}
+                ws_start += ws_size
+                ws_suffix = '_ws{:03d}'.format(i + 1)
+                for node in self._contents:
+                    self._actual_content.append(node.loopclone(ws_suffix, extras))
         return self._actual_content
 
 
@@ -812,10 +945,10 @@ class Task(Node):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 
-    def run(self, nbpass=0, activated=True):
+    def _actual_run(self, nbpass=0, sjob_activated=True):
         """Execution driver: build, setup, refill, process, complete."""
-        activated = activated or self._subjobtag == self.tag
-        if activated:
+        sjob_activated = sjob_activated or self._subjobtag == self.tag
+        if sjob_activated:
             with subjob_output_markup(self._subjobtag == self.tag):
                 try:
                     self.build()
@@ -961,7 +1094,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         if rundate is not None:
             self.conf.rundate = rundate
         for node in self.contents:
-            node.setconf(self.conf.copy(), self.jobconf)
+            node.setconf(self.conf, self.jobconf)
             node.build_context()
 
     def run(self):
@@ -969,4 +1102,4 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._nbpass += 1
         for node in self.contents:
             with node:
-                node.run(nbpass=self.nbpass, activated=self._subjob_tag is None)
+                node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)

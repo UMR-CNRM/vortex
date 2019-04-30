@@ -45,7 +45,7 @@ def subjob_output_markup(do_marking_up):
 
 
 class SubJobLauncherError(Exception):
-    """Raise whenever an error occured in at least on of the subjobs."""
+    """Raise whenever an error occurred in at least on of the subjobs."""
     pass
 
 
@@ -77,11 +77,12 @@ class AbstractSubJobLauncher(fp.FootprintBase):
                     self.kind, str(self.limit), self.scriptpath)
 
     @property
-    def _actual_limit(self):
+    def actual_limit(self):
+        """The maximum number of subjobs allowed in parallel."""
         return self.limit
 
     def _new_ticket_hook(self, t):
-        """Any additional actions to be performed when a nex session ticket is provided."""
+        """Any additional actions to be performed when a next session ticket is provided."""
         pass
 
     def _set_ticket(self, t):
@@ -98,9 +99,9 @@ class AbstractSubJobLauncher(fp.FootprintBase):
 
     def __call__(self, tag, subtags):
         """Launch the subjob that will be in charge of processing the **tag** node."""
-        if self._actual_limit is not None and self._watermark == self._actual_limit:
+        if self.actual_limit is not None and self._watermark == self.actual_limit:
             logger.info("The subjobs limit is reached (%d). Waiting for some subjobs to finish.",
-                        self._actual_limit)
+                        self.actual_limit)
             self.wait()
         self._running[tag] = subtags
         self._watermark += 1
@@ -196,7 +197,8 @@ class SpawnSubJobLauncher(AbstractSubJobLauncher):
         self._nvcores = None
 
     @property
-    def _actual_limit(self):
+    def actual_limit(self):
+        """The maximum number of subjobs allowed in parallel."""
         if self.limit is not None:
             return self.limit
         elif self.limit is None and self._nvcores is not None:
@@ -272,7 +274,8 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         self._processes = dict()
 
     @property
-    def _actual_limit(self):
+    def actual_limit(self):
+        """The maximum number of subjobs allowed in parallel."""
         if self.limit is None:
             return len(self.nodes)
         else:
