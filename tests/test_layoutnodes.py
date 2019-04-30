@@ -499,12 +499,12 @@ class TestHeavyNodesStuff(unittest.TestCase):
                 self.assertEqual(self.spy.conf[t]['anystuff'], 'truc')
 
             for n in ('forecast1h_h2+d2018010100', 'forecast2h_h2+d2018010100', 'forecast1h_h2+d2018010112'):
-                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], range(0, 4))
-                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], range(4, 7))
-                self.assertEqual(self.spy.conf[n + '_ws003']['members_share'], range(7, 10))
-                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], range(100, 104))
-                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], range(104, 107))
-                self.assertEqual(self.spy.conf[n + '_ws003']['physics_share'], range(107, 110))
+                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], list(range(0, 4)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], list(range(4, 7)))
+                self.assertEqual(self.spy.conf[n + '_ws003']['members_share'], list(range(7, 10)))
+                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], list(range(100, 104)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], list(range(104, 107)))
+                self.assertEqual(self.spy.conf[n + '_ws003']['physics_share'], list(range(107, 110)))
 
             self.assertEqual(self.spy.conf['forecast1h_h2+d2018010100_ws001']['geometry'].tag, 'global1198')
             self.assertEqual(self.spy.conf['forecast2h_h2+d2018010100_ws001']['geometry'].tag, 'global798')
@@ -556,10 +556,10 @@ class TestHeavyNodesStuff(unittest.TestCase):
                 self.assertEqual(self.spy.conf[t]['anystuff'], 'truc')
 
             for n in ('forecast1h_h3+d2018010100', 'forecast2h_h3+d2018010100', 'forecast1h_h3+d2018010112'):
-                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], range(0, 5))
-                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], range(5, 10))
-                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], range(100, 105))
-                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], range(105, 110))
+                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], list(range(0, 5)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], list(range(5, 10)))
+                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], list(range(100, 105)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], list(range(105, 110)))
 
 
 if __name__ == "__main__":
