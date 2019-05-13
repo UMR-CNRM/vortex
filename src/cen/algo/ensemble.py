@@ -1402,7 +1402,7 @@ class SurfexComponent(S2MComponent):
                                                   snow_parameters=snow_parameters))
 
             membersId = escroc.members  # Escroc members ids in case of rand selection for ex.
-       else:
+        else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
 
