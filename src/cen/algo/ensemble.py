@@ -7,7 +7,7 @@ import io
 from collections import defaultdict
 
 import six
-
+import os
 import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -17,6 +17,7 @@ from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
+
 
 logger = loggers.getLogger(__name__)
 
@@ -29,6 +30,7 @@ with echecker:
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+    from snowtools.tasks.vortex_kitchen import vortex_conf_file
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -704,7 +706,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'crampon'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -771,7 +773,7 @@ class SurfexWorker(_S2MWorker):
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
-        if self.kind == 'croco':  # in croco case, both PREP.nc and PREP_yyyymmddhh.nc exist in local dir as FILES
+        if self.kind == 'crampon':  # in crampon case, both PREP.nc and PREP_yyyymmddhh.nc exist in local dir as FILES
             pass
             # self.set_env(thisdir)
             # list_files_link_ifnotprovided.remove("PREP.nc")
@@ -816,7 +818,7 @@ class SurfexWorker(_S2MWorker):
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
                 elif sytron:
-                    # ensmeteo+sytron or croco: the forcing files are supposed to be in the subdirectories
+                    # ensmeteo+sytron or crampon: the forcing files are supposed to be in the subdirectories
                     # of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
                 else:
@@ -1331,7 +1333,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco', 'prepareforcing']
+                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'crampon', 'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1352,7 +1354,7 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-				values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes"],
+                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes"],
                 optional = True,
             ),
             geometry = dict(
@@ -1373,30 +1375,12 @@ class SurfexComponent(S2MComponent):
                 optional = True,
                 default = False,
                 values = [False]
-            )
-            confvapp = dict(
-                info = "vapp for conf file",
-                type = str,
-                optional = True,
-                default = None
             ),
-            confvconf = dict(
-                info = "vconf for conf file",
-                type = str,
-                optional = True,
-                default = None
-            ),
-            stopcount = dict(
-                info = 'counter for stop steps in the assim sequence',
+            startmbnode = dict(
+                info = 'first member rep of the node for example 1,41,81 etc.',
                 type = int,
                 optional = True,
                 default = 1,
-            ),
-            randomDraw = dict(
-                info = '(for crocO) True :activate a random draw of nmembers. Otherwise, "members" IDs are selected',
-                type = bool,
-                optional = True,
-                default = False,
             ),
         )
     )
@@ -1410,33 +1394,24 @@ class SurfexComponent(S2MComponent):
         subdirs = self.get_subdirs(rh, opts)
 
         if self.subensemble:
-            if self.randomDraw:  # only works with E1* ensembles
-                escroc = ESCROC_subensembles(self.subensemble, self.members, randomDraw = self.randomDraw)
-            else:
-                escroc = ESCROC_subensembles(self.subensemble, self.members)
+            escroc = ESCROC_subensembles(self.subensemble, self.members)
             physical_options = escroc.physical_options
             snow_parameters = escroc.snow_parameters
-            self._add_instructions(common_i, dict(subdir=subdirs, physical_options=physical_options, snow_parameters=snow_parameters))
+            self._add_instructions(common_i, dict(subdir=subdirs,
+                                                  physical_options=physical_options,
+                                                  snow_parameters=snow_parameters))
+
             membersId = escroc.members  # Escroc members ids in case of rand selection for ex.
-            # counter for stop (assim + pauses) steps in conf file previously copied to currdir
-            if self.stopcount == 1:
-                conffile = vortex_conf_file(self.confvapp + '_' + self.confvconf + '.ini', 'a')
-                conffile.fileobject.write('membersId' + ' = ')
-                for mbid in membersId:
-                    conffile.fileobject.write(str(mbid) + ',')
-                conffile.fileobject.write('\n')
-                # conffile.write_field('membersId_' + '{0:03d}'.format(self.stopcount), membersId)
-                conffile.close()
-        else:
+       else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
 
     def get_subdirs(self, rh, opts):
         if self.kind == "escroc":
-            return ['mb{0:04d}'.format(m) for m in self.members]
-		elif self.kind == 'croco':  # in croco case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
-            subdirs = ['mb{0:04d}'.format(m) for m in range(1, len(self.members) + 1)]
-		else:
+            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        elif self.kind == 'crampon':  # in crampon case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
+            subdirs = ['mb{0:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
+        else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
 
             if len(self.geometry) > 1:
@@ -1447,7 +1422,7 @@ class SurfexComponent(S2MComponent):
 
             if self.kind == "ensmeteo+sytron":
                 subdirs.append('mb036')
-            return subdirs
+        return subdirs
 
     def role_ref_namebuilder(self):
         return 'Forcing'
@@ -1507,7 +1482,7 @@ class SodaWorker(Parallel):
         # the following should be done only once on the first soda day
         if not os.path.islink('PGD.nc'):
             os.symlink('../PGD.nc', 'PGD.nc')
-            os.symlink('../mb0001/OPTIONS.nam', 'OPTIONS.nam')  # take the first member namelist since the root one NENS might not be properly updated by the user
+            os.symlink('../OPTIONS.nam', 'OPTIONS.nam')
             os.symlink('../ecoclimapI_covers_param.bin', 'ecoclimapI_covers_param.bin')
             os.symlink('../ecoclimapII_eu_covers_param.bin', 'ecoclimapII_eu_covers_param.bin')
             os.symlink('../drdt_bst_fit_60.nc', 'drdt_bst_fit_60.nc')
@@ -1529,10 +1504,11 @@ class SodaWorker(Parallel):
 
         for dirIt, mb in zip(self.mbdirs, memberslist):
             os.unlink('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(mb) + '.nc')
-            os.remove(dirIt + '/PREP.nc')
+            if os.path.exists(dirIt + '/PREP.nc'):  # old task/offline case
+                os.remove(dirIt + '/PREP.nc')
             self.system.mv(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + "_bg.nc")
             self.system.mv("SURFOUT" + str(mb) + ".nc", dirIt + "/PREP_" + self.dateassim.ymdh + ".nc")
-            os.symlink(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + '/PREP.nc')
+            os.symlink(dirIt + "/PREP_" + self.dateassim.ymdh + ".nc", dirIt + '/PREP.nc')  # useful only for old task/offline case
 
         # rename particle file
         if os.path.exists('PART'):
