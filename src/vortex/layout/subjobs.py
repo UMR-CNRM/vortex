@@ -397,7 +397,10 @@ class SlurmSshSubJobLauncher(AbstractSshSubJobLauncher):
                 nodeslist = [re1_m.group('radical') + n + re1_m.group('suffix')
                              for n in numbers]
             else:
-                raise RuntimeError('Malformed nodes list: "{:s}".'.format(nlist))
+                if ',' not in nlist:
+                    nodeslist = [nlist, ]
+                else:
+                    raise RuntimeError('Malformed nodes list: "{:s}".'.format(nlist))
         else:
             raise RuntimeError('The "SLURM_JOB_NODELIST" environment variable is not defined.')
         return nodeslist
