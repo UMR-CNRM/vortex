@@ -154,6 +154,9 @@ def olive_jobout_ectranssend(sh, env, output, mstep, localout):
         raise RuntimeError('The VORTEX_UPDSERVER_HOST variable needs to be defined')
     if 'VORTEX_UPDSERVER_PATH' not in env:
         raise RuntimeError('The VORTEX_UPDSERVER_PATH variable needs to be defined')
+    if 'VORTEX_OUTPUT_ID' not in env:
+        raise RuntimeError('The VORTEX_OUTPUT_ID variable needs to be defined')
+    _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
 
     stepfiles = localout.split(':')
     if mstep == 'on':
@@ -161,7 +164,7 @@ def olive_jobout_ectranssend(sh, env, output, mstep, localout):
     with tempfile.NamedTemporaryFile('wb', prefix='jobout_send.') as fhdir:
         # Create the directive file...
         fhdir.write((output + "\n").encode())
-        fhdir.write((env.VORTEX_UPDSERVER_HOST + "\n").encode())
+        fhdir.write(("{:s}:{:s}\n".format(swapp_host, swapp_port)).encode())
         fhdir.write("void_password\n".encode())
         for stepfile in stepfiles:
             with io.open(stepfile, 'rb') as fhstep:
