@@ -1400,8 +1400,6 @@ class SurfexComponent(S2MComponent):
             self._add_instructions(common_i, dict(subdir=subdirs,
                                                   physical_options=physical_options,
                                                   snow_parameters=snow_parameters))
-
-            membersId = escroc.members  # Escroc members ids in case of rand selection for ex.
         else:
             self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
@@ -1512,7 +1510,11 @@ class SodaWorker(Parallel):
 
         # rename particle file
         if os.path.exists('PART'):
-            self.system.cp('PART', 'PART_' + self.dateassim.ymdh + '.txt')
+            self.system.mv('PART', 'PART_' + self.dateassim.ymdh + '.txt')
+        if os.path.exists('BG_CORR'):
+            self.system.mv('BG_CORR', 'BG_CORR_' + self.dateassim.ymdh + '.txt')
+        if os.path.exists('IMASK'):
+            self.system.mv('IMASK', 'IMASK_' + self.dateassim.ymdh + '.txt')
         else:
             print('no part file')
         # adapt the following line whenever the ISBA_analysis is available

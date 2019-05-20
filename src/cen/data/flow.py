@@ -401,7 +401,7 @@ class Snowobs_1date(SnowObs):
             attr = dict(
                 part = dict(
                     info = "Description of the obs (var, sensor,location...)",
-                    values = ['MODIS', 'SENTINEL2', 'TERRAIN', 'SYNTH', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
+                    values = ['MODIS', 'SENTINEL2', "PLEIADES", 'TERRAIN', 'SYNTH', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
                     optional = False,
                 ),
                 stage = dict(
@@ -426,7 +426,7 @@ class Snowobs_1date(SnowObs):
 class PfSample(Resource):
     '''
     @author : B. Cluzet
-    (SODA): Class for PF sample text files (at each assim step)
+    (SODA): Class for Particle filter files text files (at each assim step)
     either distributed (bound to a geom) or semi-distrib (no point dependency)
     in any case, child of Resource makes it much more simple to handle
     '''
@@ -440,7 +440,7 @@ class PfSample(Resource):
                     optional = True
                 ),
                 model = dict(
-                    values = ['PART']
+                    values = ['PART', 'BG_CORR', 'IMASK']
                 ),
                 dateassim = dict(
                     info = "date of the analysis",
