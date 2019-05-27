@@ -640,8 +640,7 @@ def global_snames(resource, provider):
         elif resource.nativefmt == 'bufr':
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
         elif resource.nativefmt == 'netcdf':
-            if resource.part == 'sev000':
-                bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
+            bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
         elif resource.nativefmt == 'hdf5':
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
     if resource.realkind == 'refdata':
