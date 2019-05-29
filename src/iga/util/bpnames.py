@@ -243,7 +243,7 @@ def rawfields_bnames(resource, provider):
 
 def obsfire_bnames(resource, provider):
     """docstring for obsfirepack_bnames"""
-    return 'GFASfires_' + resource.date.ymd + '.tar.gz'
+    return 'GFASfires_H_fcst_' + resource.date.ymd + '.tar.gz'
 
 
 def geofields_bnames(resource, provider):
