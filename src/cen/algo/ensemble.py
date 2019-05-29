@@ -250,7 +250,10 @@ class _SafranWorker(_S2MWorker):
                 missing_files = True
         if missing_files:
             rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
-            outcome = False
+            # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
+            # a climatological guess that is corrected by the observations
+            if self.execution not in ['analysis', 'reanalysis']:
+                outcome = False
         return rdict, outcome
 
     def sapdat(self, thisdate, nech=5):
@@ -264,18 +267,17 @@ class _SafranWorker(_S2MWorker):
             d.write('0,0,0\n')
             d.write('3,1,3,3\n')
 
-    def get_guess(self, dates, fatal=False, dt=3):
+    def get_guess(self, dates, prefix='P', fatal=False, dt=3):
         """ Try to guess the corresponding input file"""
         # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
         for date in dates:
-            if date >= Date(2002, 8, 1) or self.execution == 'reforecast':
-                prefix = 'P'
-            else:
-                prefix = 'E'
-            p = '{0:s}{1:s}'.format(prefix, date.yymdh)
+            p = 'P{0:s}'.format(date.yymdh)
             if self.system.path.exists(p) and not self.system.path.islink(p):
+                actual_dates.append(date)
+            elif self.system.path.exists('{0:s}{1:s}'.format(prefix, date.ymdh)):
+                self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), p)
                 actual_dates.append(date)
             else:
                 if self.system.path.islink(p):
@@ -333,7 +335,11 @@ class _SafranWorker(_S2MWorker):
             # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, "
             #      "got {1:d}".format(dates[0].ymdh, len(actual_dates)))
             # In this case, actual_dates is filled with the mandatory dates
-            actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
+            if prefix == 'P':
+                actual_dates = self.get_guess(dates, prefix='E', fatal=False)
+            else:
+                logger.warning('No guess files found, SAFRAN will run with climatological guess')
+                actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
         elif 5 < len(actual_dates) < 9:
             # We must have either 5 or 9 dates, if not we only keep synoptic ones
             for date in actual_dates:
@@ -620,6 +626,17 @@ class SytistWorker(_SafranWorker):
         )
     )
 
+    def postfix(self):
+        self.mv_if_exists('FORCING_massif.nc',
+                          'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+        self.mv_if_exists('FORCING_postes.nc',
+                          'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
+
+        if self.execution in ['analysis', 'reanalysis']:
+            self.system.tar('liste_obs_{0:s}_{1:s}.tar'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+
+        super(SytistWorker, self).postfix()
+
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         self.system.remove('sapfich')
         print('Running task {0:s}'.format(self.kind))
@@ -628,13 +645,7 @@ class SytistWorker(_SafranWorker):
             self.sapdat(dates[-1], nech)
             rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
-        self.mv_if_exists('FORCING_massif.nc',
-                          'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
-        self.mv_if_exists('FORCING_postes.nc',
-                          'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
-
         self.postfix()
-
         return rdict
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):

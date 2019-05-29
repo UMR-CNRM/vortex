@@ -148,11 +148,11 @@ class SurfaceForcing(SurfaceIO):
                     values = ['safran', 'obs', 's2m', 'adamont'],
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', ],
+                    # values = ['arpege', 'arome', 'ifs', ],
                     optional = True
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
+                    # values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
                     optional = True
                 ),
             )
