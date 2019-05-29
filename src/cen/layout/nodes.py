@@ -189,19 +189,28 @@ class S2MTaskMixIn(object):
         else:
             return "safran", "massifs", [self.conf.geometry.area[0:3]]
 
+    def get_block_safran_from_geometry(self):
+        if self.conf.geometry.area == 'postes':
+            return 'postes'
+        else:
+            return 'massifs'
+
     def get_source_safran(self, meteo="safran"):
 
-        if meteo == "safran":
+        if hasattr(self.conf, 'blockin'):
+            if meteo == "safran":
+                return meteo, self.conf.blockin + '/' + self.get_block_safran_from_geometry()
+            else:
+                return meteo, self.conf.blockin
+
+        elif meteo == "safran":
             if not hasattr(self.conf, "previ"):
                 self.conf.previ = False
 
             if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
                 return "s2m", "meteo"
             else:
-                if self.conf.geometry.area == 'postes':
-                    return "safran", "postes"
-                else:
-                    return "safran", "massifs"
+                return "safran", self.get_block_safran_from_geometry()
         else:
             return meteo, "meteo"
 

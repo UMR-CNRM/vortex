@@ -1463,8 +1463,8 @@ class PrepareForcingComponent(TaylorRun):
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs,
-                                              datebegin=self.datebegin[0],
-                                              dateend=self.dateend[0]))
+                                              datebegin=self.datebegin,
+                                              dateend=self.dateend))
         self._default_post_execute(rh, opts)
 
     def postfix(self, rh, opts):
@@ -1473,7 +1473,8 @@ class PrepareForcingComponent(TaylorRun):
     def get_subdirs(self, rh, opts):
         print(type(self.datebegin))
         print(self.datebegin)
-        return [begin.year for begin in self.datebegin[0]]
+
+        return [begin.year for begin in self.datebegin]
 
     def role_ref_namebuilder(self):
         return 'Forcing'
