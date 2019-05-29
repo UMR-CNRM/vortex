@@ -355,13 +355,13 @@ class SafranObsRaw(ObsRaw):
 
 @namebuilding_append('cen_period', lambda self: [{'begindate': self.begindate},
                                                  {'enddate': self.enddate}])
-class SafranPackedObs(GeoFlowResource):
+class SafranPackedFiles(GeoFlowResource):
 
     _footprint = dict(
-        info = 'SAFRAN packed observations covering the given period',
+        info = 'SAFRAN packed files covering a given period',
         attr = dict(
             kind = dict(
-                values = ['packedobs'],
+                values = ['packedobs', 'listobs'],
             ),
             model = dict(
                 values  = ['safran'],
@@ -377,4 +377,4 @@ class SafranPackedObs(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'observations'
+        return self.kind
