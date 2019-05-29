@@ -228,6 +228,8 @@ class SopranoProvider(Provider):
             info['model'] = 'aromeaefr'
         elif self.vapp == 'mocage':
             info['model'] = 'macc'
+        elif self.vapp =='arpege' and resource.model =='ifs':
+            info['model'] = 'restart_cep'
         else:
             info['model'] = self.vapp
         if info['model'] in ATM_LIST_ONE:

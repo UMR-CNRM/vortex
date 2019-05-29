@@ -616,6 +616,20 @@ def global_snames(resource, provider):
             else:
                 bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
 
+    if resource.nativefmt == 'grib':
+        if resource.model == 'ifs':
+            if resource.filling == 'atm':
+                if resource.geometry.area == 'global256':
+                    bname = 'ALTI_glob.grb'
+                else:
+                    bname = 'ALTI_st511.grb'
+            elif resource.filling == 'surf':
+                bname = 'SOL_glob.grb'
+            elif resource.filling == 'soil':
+                bname = 'SSOL_glob.grb'
+            
+
+
     if resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':
             if resource.cutoff == 'production':
