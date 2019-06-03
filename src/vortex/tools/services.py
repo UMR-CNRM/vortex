@@ -9,13 +9,14 @@ a default Mail Service is provided.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
 from six.moves.configparser import NoOptionError, NoSectionError
 
 import hashlib
 import io
-import six
 from email import encoders
 from string import Template
+import sys
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -181,20 +182,12 @@ class MailService(Service):
         """Return True if any character in string is not ascii-7."""
         return not all(ord(c) < 128 for c in string)
 
-    def get_message_body(self):
-        """Returns the internal body contents as a MIMEText object."""
-        body = self.message
-        if self.filename:
-            with io.open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
-                body += tmp.read()
-        mimetext = self.get_mimemap().get('text')
-        if self.is_not_plain_ascii(body):
-            return mimetext(body.encode(self.charset), 'plain', self.charset)
-        else:
-            return mimetext(body, 'plain')
-
     def get_mimemap(self):
-        """Construct and return a map of MIME types."""
+        """Construct and return a map of MIME types.
+
+        Used only with Python2 (email.mime is deprecated).
+        """
+        assert six.PY2, "Python2 only method"
         try:
             self._mimemap
         except AttributeError:
@@ -209,8 +202,34 @@ class MailService(Service):
         finally:
             return self._mimemap
 
+    def get_message_body(self):
+        """Returns the internal body contents as a MIMEText object."""
+        body = self.message
+        if self.filename:
+            with io.open(self.filename, 'r', encoding=self.inputs_charset) as tmp:
+                body += tmp.read()
+        if six.PY2:
+            mimetext = self.get_mimemap().get('text')
+            if self.is_not_plain_ascii(body):
+                return mimetext(body.encode(self.charset), 'plain', self.charset)
+            else:
+                return mimetext(body, 'plain')
+        else:
+            from email.message import EmailMessage
+            msg = EmailMessage()
+            msg.set_content(body, subtype="plain",
+                            charset=(self.charset if self.is_not_plain_ascii(body) else 'us-ascii'))
+            return msg
+
     def as_multipart(self, msg):
         """Build a new multipart mail with default text contents and attachments."""
+        return self.as_multipart_py2(msg) if six.PY2 else self.as_multipart_py3(msg)
+
+    def as_multipart_py2(self, msg):
+        """Build a new multipart mail with default text contents and attachments.
+
+        Used only with Python2 (email.mime is deprecated).
+        """
         from email.mime.base import MIMEBase
         from email.mime.multipart import MIMEMultipart
         multi = MIMEMultipart()
@@ -240,18 +259,42 @@ class MailService(Service):
                 multi.attach(xmsg)
         return multi
 
+    def as_multipart_py3(self, msg):
+        """Build a new multipart mail with default text contents and attachments.
+
+        Used only with Python3.
+        """
+        from email.message import MIMEPart
+        for xtra in self.attachments:
+            if isinstance(xtra, MIMEPart):
+                msg.add_attachment(xtra)
+            elif self.sh.path.isfile(xtra):
+                import mimetypes
+                ctype, encoding = mimetypes.guess_type(xtra)
+                if ctype is None or encoding is not None:
+                    # No guess could be made, or the file is encoded
+                    # (compressed), so use a generic bag-of-bits type.
+                    ctype = 'application/octet-stream'
+                maintype, subtype = ctype.split('/', 1)
+                with io.open(xtra, 'rb') as fp:
+                    msg.add_attachment(fp.read(), maintype, subtype,
+                                       cte="base64", filename=xtra)
+        return msg
+
+    def _set_header(self, msg, header, value):
+        if self.is_not_plain_ascii(value) and six.PY2:
+            from email.header import Header
+            msg[header] = Header(value, self.charset, header_name=header)
+        else:
+            msg[header] = value
+
     def set_headers(self, msg):
         """Put on the current message the header items associated to footprint attributes."""
-        msg['From'] = self.sender
-        msg['To'] = self.commaspace.join(self.to.split())
-        if self.is_not_plain_ascii(self.subject):
-            from email.header import Header
-            msg['Subject'] = Header(self.subject, self.charset)
-        else:
-            msg['Subject'] = self.subject
-
+        self._set_header(msg, 'From', self.sender)
+        self._set_header(msg, 'To', self.commaspace.join(self.to.split()))
+        self._set_header(msg, 'Subject', self.subject)
         if self.replyto is not None:
-            msg['Reply-To'] = self.commaspace.join(self.replyto.split())
+            self._set_header(msg, 'Reply-To', self.commaspace.join(self.replyto.split()))
 
     def __call__(self):
         """Main action: pack the message body, add the attachments, and send via SMTP."""
