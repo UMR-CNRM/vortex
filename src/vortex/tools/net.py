@@ -1078,7 +1078,7 @@ class Ssh(object):
     def scpput(self, source, destination, scpopts=''):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
+        - ``source`` is a single file or a directory, not a pattern (no '*.grib').
         - ``destination`` is the remote name, unless it ends with '/', in
           which case it is the containing directory, and the remote name is
           the basename of ``source`` (like a real cp or scp):
@@ -1128,7 +1128,7 @@ class Ssh(object):
     def scpget(self, source, destination, scpopts='', isadir=False):
         """Send ``source`` to ``destination``.
 
-        - ``source`` is the remote name, not a pattern (no '\*.grib').
+        - ``source`` is the remote name, not a pattern (no '*.grib').
         - ``destination`` is a single file or a directory, unless it ends with
           '/', in which case it is the containing directory, and the remote name
           is the basename of ``source`` (like a real cp or scp):
