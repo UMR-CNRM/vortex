@@ -221,7 +221,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                         print('ok')
                         sh.ll(name + '*')
 
-                    if sh.is_tarname(name):
+                    if mdef is None and sh.is_tarname(name):
                         radix = sh.tarname_radix(name)
                         untaropts = ggetconfig.key_untar_properties(name)
                         if verbose:
