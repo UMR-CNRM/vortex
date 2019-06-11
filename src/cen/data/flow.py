@@ -400,8 +400,10 @@ class Snowobs_1date(SnowObs):
             info = 'snow observation',
             attr = dict(
                 part = dict(
-                    info = "Description of the obs (var, sensor,location...)",
-                    values = ['MODIS', 'SENTINEL2', "PLEIADES", 'TERRAIN', 'SYNTH', 'insitu', 'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman", "snowsweman", "tsurf", "albedo"],
+                    info = "Free description of the obs (var, sensor,location...)",
+                    # values = ['MODIS', 'SENTINEL2', "PLEIADES", 'TERRAIN', 'SYNTH', 'insitu',
+                    #          'SD', 'SWE', "snowdepth", "snowswe", "snowdepthman",
+                    #          "snowsweman", "tsurf", "albedo"],
                     optional = False,
                 ),
                 stage = dict(

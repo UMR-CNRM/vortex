@@ -17,7 +17,7 @@ from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
-
+import random
 
 logger = loggers.getLogger(__name__)
 
@@ -1496,11 +1496,11 @@ class SodaWorker(Parallel):
         # delete soda symbolic links
         os.unlink('PREP.nc')
 
-        # memberslistmix = self.members  # mixing deactivated for now (5/11/18)
+        # BC 11/06/19 : reactivating initial state mixing to prevent the truth from reappearing
+        memberslistmix = range(1, len(self.members) + 1)
+        random.shuffle(memberslistmix)
 
-        memberslist = range(1, len(self.members) + 1)
-
-        for dirIt, mb in zip(self.mbdirs, memberslist):
+        for dirIt, mb in zip(self.mbdirs, memberslistmix):
             os.unlink('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(mb) + '.nc')
             if os.path.exists(dirIt + '/PREP.nc'):  # old task/offline case
                 os.remove(dirIt + '/PREP.nc')
