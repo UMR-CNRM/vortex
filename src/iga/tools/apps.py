@@ -7,6 +7,8 @@ from bronx.fancies import loggers
 
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
+from vortex.algo.components import DelayedAlgoComponentError
+from common.algo.odbtools import Raw2OdbExecutionError
 
 #: No automatic export
 __all__ = []
@@ -36,6 +38,26 @@ class OpTask(Task):
         # Note: If an MTOOL like tool was to be used, this should be changed...
         self.ticket.context.clear_promises()
         super(OpTask, self).__exit__(exc_type, exc_value, traceback)
+
+
+class MissingObsMixin(object):
+
+    def missing_obs_filter_error(self, exc):
+    
+        if isinstance(exc, DelayedAlgoComponentError):
+            logger.warning('Exception caught: %s', str(exc))
+            return True, dict()
+        else:
+            return super(self.__class__, self).filter_execution_warning(exc)
+            
+    def missing_obs_report(self, exc):
+        
+        listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
+        outstr = "Les bases ODB suivantes ont rencontré des problèmes lors de l'exécution de la tâche {0:s}".format(self.tag) + "\n"
+        for i in range(len(exc._excs)):
+            outstr += "\n" + '-{0:2d}: {1:s}'.format(i+1, exc._excs[i].odb_database.upper())
+
+        ad.opmail(task=self.tag, id ='execution_nonfatal_error', msg=outstr, listing=listing)
 
 
 class OpTaskMPI(OpTask):
