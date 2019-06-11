@@ -63,7 +63,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SafranPackedObs
+.. autoclass:: SafranPackedFiles
    :show-inheritance:
    :members:
    :member-order: alphabetical
