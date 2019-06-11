@@ -31,12 +31,18 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
     elif cutoff == 'assim':
         reseau_suff = _reseau
     elif cutoff == 'production' and vconf == '4dvarfr':
-        reseau_prod = {'00': 'AM', '01': '01','02': '02','03': 'TR', '04':'04', '05':'05', '06': 'SX','07':'07', '08':'08', '09': 'NF','10':'10','11':'11',
-                       '12': 'PM', '13': '13','14': '14','15': 'QZ', '16':'16', '17':'17', '18': 'DH','19':'19', '20':'20', '21': 'VU','22':'22','23':'23' }
+        reseau_prod = {'00': 'AM', '01': '01', '02': '02', '03': 'TR', '04': '04',
+                       '05': '05', '06': 'SX', '07': '07', '08': '08', '09': 'NF',
+                       '10': '10', '11': '11', '12': 'PM', '13': '13', '14': '14',
+                       '15': 'QZ', '16': '16', '17': '17', '18': 'DH', '19': '19',
+                       '20': '20', '21': 'VU', '22': '22', '23': '23' }
         reseau_suff = reseau_prod[_reseau]
     elif cutoff == 'production' and vconf == 'pifrance':
-        reseau_prod = {'00': '00', '01': '01','02': '02','03': '03', '04':'04', '05':'05', '06': '06','07':'07', '08':'08', '09': '09','10':'10','11':'11',
-                       '12': '12', '13': '13','14': '14','15': '15', '16':'16', '17':'17', '18': '18','19':'19', '20':'20', '21': '21','22':'22','23':'23' }
+        reseau_prod = {'00': '00', '01': '01', '02': '02', '03': '03', '04': '04',
+                       '05': '05', '06': '06', '07': '07', '08': '08', '09': '09',
+                       '10': '10', '11': '11', '12': '12', '13': '13', '14': '14',
+                       '15': '15', '16': '16', '17': '17', '18': '18', '19': '19',
+                       '20': '20', '21': '21', '22': '22', '23': '23'}
         reseau_suff = reseau_prod[_reseau]
     else:
         logger.warning(
@@ -516,7 +522,7 @@ def refdata_bnames(resource, provider):
     """docstring for refdata_bnames."""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
-    u_prefix, suffix = gribNames(cutoff, reseau, model)
+    u_prefix, suffix = gribNames(cutoff, reseau, model)  # @UnusedVariable
     localname = 'refdata' + '.' + suffix
     return localname
 
@@ -544,7 +550,7 @@ def observations_bnames(resource, provider):
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     day = six.text_type(resource.date.day)
-    u_prefix, suffix = gribNames(cutoff, reseau, model)
+    u_prefix, suffix = gribNames(cutoff, reseau, model)  # @UnusedVariable
     dico_names = {
         'obsoul': 'obsoul' + '.' + part + '.' + suffix,
         'ecma': {
@@ -627,8 +633,6 @@ def global_snames(resource, provider):
                 bname = 'SOL_glob.grb'
             elif resource.filling == 'soil':
                 bname = 'SSOL_glob.grb'
-            
-
 
     if resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':
@@ -646,11 +650,11 @@ def global_snames(resource, provider):
                 bname = 'SEVIRI' + '.' + suff + '.grb'
         elif resource.nativefmt == 'obsoul':
             if resource.part == 'conv':
-                bname = 'OBSOUL1F' +   my_model + '.' + suff
+                bname = 'OBSOUL1F' + my_model + '.' + suff
             elif resource.part == 'prof':
                 bname = 'OBSOUL2F' + my_model + '.' + suff
             elif resource.part == 'surf':
-                bname = 'OBSOUL_SURFAN' +  my_model + '.' + suff
+                bname = 'OBSOUL_SURFAN' + my_model + '.' + suff
         elif resource.nativefmt == 'bufr':
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
         elif resource.nativefmt == 'netcdf':
@@ -673,15 +677,12 @@ def global_snames(resource, provider):
             scope = resource.scope[:4].lower()
         else:
             scope = resource.scope
-        #if vconf == 'aefrance':
         bname = 'bm' + my_model + '_' + scope + '.' + suff + '.' + resource.date.ymd
-        #else:    
-            #bname = 'bm_' + scope + '.' + suff + '.' + resource.date.ymd
     if resource.realkind == 'listing_ouloutput':
         if resource.scope == 'surf':
-            bname = 'OULOUTPUT_SURFAN'+ my_model + '.' + suff
+            bname = 'OULOUTPUT_SURFAN' + my_model + '.' + suff
         elif resource.scope == 'oulan':
-            bname = 'OULOUTPUT'+ my_model + '.' + suff
+            bname = 'OULOUTPUT' + my_model + '.' + suff
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + my_model + '.' + suff
     return bname

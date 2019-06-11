@@ -8,7 +8,6 @@ from bronx.fancies import loggers
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
 from vortex.algo.components import DelayedAlgoComponentError
-from common.algo.odbtools import Raw2OdbExecutionError
 
 #: No automatic export
 __all__ = []
@@ -41,21 +40,26 @@ class OpTask(Task):
 
 
 class MissingObsMixin(object):
+    """This mixin can be added to any bator-like task.
+
+    It provides functions to alter the componnent_runner behaviour when the
+    processing of one or several ODB fails
+    """
 
     def missing_obs_filter_error(self, exc):
-    
+        """Mask Bator failures (but prints something)."""
         if isinstance(exc, DelayedAlgoComponentError):
             logger.warning('Exception caught: %s', str(exc))
             return True, dict()
         else:
             return super(self.__class__, self).filter_execution_warning(exc)
-            
+
     def missing_obs_report(self, exc):
-        
+        """Report (e-mail) any Bator failure."""
         listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
-        outstr = "Les bases ODB suivantes ont rencontré des problèmes lors de l'exécution de la tâche {0:s}".format(self.tag) + "\n"
-        for i in range(len(exc._excs)):
-            outstr += "\n" + '-{0:2d}: {1:s}'.format(i+1, exc._excs[i].odb_database.upper())
+        outstr = "Les bases ODB suivantes ont rencontré des problèmes lors de l'exécution de la tâche {0:s}\n".format(self.tag)
+        for i, iexc in enumerate(exc._excs):
+            outstr += "\n-{0:2d}: {1:s}".format(i + 1, iexc.odb_database.upper())
 
         ad.opmail(task=self.tag, id ='execution_nonfatal_error', msg=outstr, listing=listing)
 
