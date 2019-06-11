@@ -505,9 +505,9 @@ class System(footprints.FootprintBase):
         finally:
             self.trace = oldtrace
 
-    def echo(self, args):
+    def echo(self, *args):
         """Joined **args** are echoed."""
-        print('>>>', ' '.join(args))
+        print('>>>', ' '.join([str(arg) for arg in args]))
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.

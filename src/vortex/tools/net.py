@@ -214,8 +214,9 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = True
         if not self.closed:
-            rc = self._ftplib.close()
+            rc = self._ftplib.close() or True
             self._closed = True
             self._deleted = datetime.now()
         return rc
@@ -698,7 +699,7 @@ class AutoRetriesFtp(StdFtp):
         Wraps the *func* function in order to implement a retry on failure
         mechanism.
 
-        :param object func: Any callable that should be wrapped (usually a function)
+        :param callable func: Any callable that should be wrapped (usually a function)
         :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
         :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
         :param list exceptions_extras: Extra exceptions to be catch during the retry
@@ -1310,7 +1311,7 @@ class ActiveSshTunnel(object):
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
-        :param int entraceport: Tunnel's entrance port.
+        :param int entranceport: Tunnel's entrance port.
         :param str finaldestination: Tunnel's final destination.
         :param int finalport: Tunnel's destination port.
 

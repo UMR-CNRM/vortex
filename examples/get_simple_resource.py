@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-This example get simple resources and put it at different places using the
-available providers.
+This example gets a simple resource and puts it at a different place
+in the cache by changing the provider.
 
 Ok 20180801 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 
-# Load useful packages for the examples
+# load the packages used in this example
 import common
 import vortex
 from bronx.stdtypes import date
@@ -21,26 +21,22 @@ from vortex import toolbox
 assert any([common, ])
 
 
-# #### Initializations
-
-# Initialize environment for examples
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
+
+# define the date
+rundate = date.yesterday() + date.Period("PT3H")
 
 
 # #### Getting a resource using the Vortex provider
 
-# Define the date
-rundate = date.yesterday() + date.Period("PT3H")
-
-# Define the resource
+# define the resource
 rh1 = toolbox.rload(
     # Ressource
     kind       = 'mbsample',
@@ -63,11 +59,11 @@ print(rh1.location())
 print(rh1.locate())
 print(rh1.idcard())
 
-# Get the resource
+# get the resource
 print(rh1.get())
 
 
-# Put the resource in the Olive tree of files
+# put the resource in the cache under another experiment id
 rh2 = toolbox.rload(
     # Ressource
     kind       = 'mbsample',

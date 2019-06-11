@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 
 """
-This example aims at sending an email to a specified user.
+This example shows how to send an email to a specified user.
 The variable 'my_email' must be changed for this example to work.
 
-The optional part shows how to add an Action responding to a 'mail' request
-in addition to the standard 'SendMail' installed by default in vortex.
-It simply posts the same mail, with 'DEBUG' prepended to the subject.
+The optional part (see 'add_an_action') defines an Action able to respond to
+'mail' requests, and adds it to the Actions handling mechanism. A subsequent
+mail request is handled both by the standard 'SendMail' installed by default
+in Vortex, and by this user-defined Action. In this simple example, the mail
+is just sent with 'DEBUG: ' prepended to the subject.
 
 Ok 20180802 - PL
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import vortex
 from vortex.tools.actions import actiond as ad
