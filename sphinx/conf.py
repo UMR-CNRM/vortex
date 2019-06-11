@@ -96,6 +96,9 @@ exclude_patterns = []
 # output. They are ignored by default.
 #show_authors = False
 
+# A list of warning types to suppress arbitrary warning messages.
+suppress_warnings= ['misc.highlighting_failure', ]
+
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 

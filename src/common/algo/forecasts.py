@@ -3,18 +3,21 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
 import re
 from collections import defaultdict
 
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Time, Month
+from bronx.stdtypes.date import Time, Month, Period
 import footprints
 
-from vortex.algo.components import AlgoComponentError
-
+from vortex.algo.components import AlgoComponentError, Parallel
+from vortex.layout.dataflow import intent
+from vortex.syntax.stdattrs import model
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
-from vortex.layout.dataflow import intent
+from common.tools.drhook import DrHookDecoMixin
+
 
 #: No automatic export
 __all__ = []
@@ -530,3 +533,87 @@ class FullPosBDAP(FullPos):
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
         super(FullPosBDAP, self).postfix(rh, opts)
+
+
+class OfflineSurfex(Parallel, DrHookDecoMixin):
+    """Run a forecast with the SURFEX's offline binary."""
+
+    _footprint = [
+        model,
+        dict(
+            info = "Run a forecast with the SURFEX's offline binary.",
+            attr = dict(
+                kind = dict(
+                    values      = ['offline_forecast', ],
+                ),
+                model = dict(
+                    values      = ['surfex', ],
+                ),
+                model_tstep = dict(
+                    info        = "The timestep of the model",
+                    type        = Period,
+                ),
+                diag_tstep = dict(
+                    info        = "The timestep for writing diagnostics outputs",
+                    type        = Period,
+                ),
+                fcterm = dict(
+                    info        = "The forecast's term",
+                    type        = Period,
+                ),
+                forcing_read_interval = dict(
+                    info        = "Read the forcing file every...",
+                    type        = Period,
+                    default     = Period('PT12H'),
+                    optional    = True,
+                )
+            )
+        )
+    ]
+
+    def valid_executable(self, rh):
+        """Check the executable's resource."""
+        bmodel = getattr(rh.resource, 'model', None)
+        rc = bmodel == 'surfex' and rh.resource.realkind == 'offline'
+        if not rc:
+            logger.error('Inapropriate binary provided')
+        return rc
+
+    @staticmethod
+    def _fix_nam_macro(sec, macro, value):
+        """Set a given namelist macro and issue a log message."""
+        sec.rh.contents.setmacro(macro, value)
+        logger.info('Setup %s macro to %s.', macro, str(value))
+
+    def prepare(self, rh, opts):
+        """Setup the appropriate namelist macros."""
+        self.system.subtitle("Offline SURFEX Settings.")
+        # Find the run/final date
+        ic = self.context.sequence.effective_inputs(
+            role = ('InitialConditions', 'ModelState', 'Analysis'))
+        if ic:
+            if len(ic) > 1:
+                logger.warning('Multiple initial conditions, using only the first one...')
+            rundate = ic[0].rh.resource.date
+            if hasattr(ic[0].rh.resource, 'term'):
+                rundate += ic[0].rh.resource.term
+            finaldate = rundate + self.fcterm
+            finaldate = [finaldate.year, finaldate.month, finaldate.day,
+                         finaldate.hour * 3600 + finaldate.minute * 60 + finaldate.second]
+            logger.info('The final date is : %s', str(finaldate))
+            nbreads = int(math.ceil((finaldate - rundate).length /
+                                    self.forcing_read_interval.length))
+        else:
+            logger.warning('No initial conditions were found. Hope you know what you are doing...')
+            finaldate = None
+        # Ok, let's find the namelist
+        namsecs = self.context.sequence.effective_inputs(role = ('Namelist', 'Namelistsurf'))
+        for namsec in namsecs:
+            logger.info("Processing: %s", namsec.rh.container.localpath())
+            self._fix_nam_macro(namsec, 'TSTEP', self.model_tstep.length)
+            self._fix_nam_macro(namsec, 'TSTEP_OUTPUTS', self.diag_tstep.length)
+            if finaldate:
+                self._fix_nam_macro(namsec, 'FINAL_STOP', finaldate)
+                self._fix_nam_macro(namsec, 'NB_READS', nbreads)
+            namsec.rh.save()
+            logger.info("Namelist dump: \n%s", namsec.rh.container.read())

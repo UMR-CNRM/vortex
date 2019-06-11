@@ -11,7 +11,8 @@ import footprints
 from footprints.util import rangex
 
 from common.tools.conftools import CouplingOffsetConfPrepareError, \
-    CouplingOffsetConfRefillError, CouplingOffsetConfError
+    CouplingOffsetConfRefillError, CouplingOffsetConfError, \
+    TimeSerieInputFinderError
 
 tloglevel = 'critical'
 
@@ -645,6 +646,96 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
                              sorted(['2016-12-30T12:00:00Z', '2016-12-31T00:00:00Z']))
         self.assertListEqual(sorted(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr')),
                              sorted([Month(12, year=2016), Month(1, year=2017)]))
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TimeSerieConfToolTest(unittest.TestCase):
+
+    def test_timeserie_basics(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D')
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate_i('2018120100', '2018120200')
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010400')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010406'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010700'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i('2019060100', '2019060200'),
+                         Date('2019053100'))
+
+        self.assertEqual(ctool.enddate_i('2019010100', '2019010200'),
+                         Date('2019010400'))
+        self.assertEqual(ctool.enddate_i('2019010100', '2019010406'),
+                         dict(begindate={Date('2019010100'): Date('2019010400'),
+                                         Date('2019010400'): Date('2019010700')}))
+        self.assertEqual(ctool.enddate_i('2019060100', '2019060200'),
+                         Date('2019060300'))
+
+        self.assertEqual(ctool.term_i('2019010100', '2019010200'), Time(72))
+        self.assertEqual(ctool.term_i('2019010100', '2019010406'), Time(72))
+
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate('2018120100', 'PT24H')
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'PT72H'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'P3DT6H'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019010100', 'P6D'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019060100', Time('PT24H')),
+                         Date('2019053100'))
+
+        self.assertEqual(ctool.enddate('2019010100', Time('PT24H')),
+                         Date('2019010400'))
+        self.assertEqual(ctool.enddate('2019010100', 'P3DT6H'),
+                         dict(begindate={Date('2019010100'): Date('2019010400'),
+                                         Date('2019010400'): Date('2019010700')}))
+        self.assertEqual(ctool.enddate('2019060100', 'PT24H'),
+                         Date('2019060300'))
+
+        self.assertEqual(ctool.term('2019010100', Time('P1D')), Time(72))
+        self.assertEqual(ctool.term('2019010100', 'P3DT6H'), Time(72))
+
+    def test_timeserie_no_upper(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D',
+                                          upperbound_included=False)
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010400')),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010500')),
+                         [Date('2019010100'), Date('2019010400')])
+
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'PT72H'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019010100', 'P3DT6H'),
+                         [Date('2019010100'), Date('2019010400')])
+
+    def test_timeserie_single(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D',
+                                          singlefile=True)
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate_i(Date('2019010100'), Date('2019010500'))
+
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate('2019010100', 'PT73H')
 
 
 if __name__ == "__main__":

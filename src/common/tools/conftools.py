@@ -14,6 +14,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 import collections
 import functools
+import math
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period, Month
@@ -583,3 +584,149 @@ class AggregatedCouplingOffsetConfTool(ConfTool):
                                         refill_cutoff=refill_cutoff, xpid=xpid))
         minmonth = Month(mindate)
         return [minmonth, minmonth + 1]
+
+
+class TimeSerieInputFinderError(Exception):
+    """Any exception raise by :class:`TimeSerieInputFinderConfTool` objects."""
+    pass
+
+
+class TimeSerieInputFinderConfTool(ConfTool):
+    """
+    A conf tool that find the appropriate begin/end date for an input resource
+    to be taken in a timeserie.
+
+    Let's consider a serie of 3 consecutive Surfex forcing files:
+
+      * The first file start on 2018/01/01 00UTC
+      * Each file covers a two days period
+
+    The conf tool will look like::
+
+      >>> ct = TimeSerieInputFinderConfTool(kind="timeserie",
+      ...                                   timeserie_begin="2018010100",
+      ...                                   timeserie_step="P2D")
+
+    To find the date/term of the forcing file encompassing a 6 hours forecast
+    starting on 2018/01/04 12UTC, use::
+
+      >>> ct.begindate('2018010412', 'PT6H')
+      Date(2018, 1, 3, 0, 0)
+      >>> ct.term('2018010312', '06:00')
+      Time(48, 0)
+
+    """
+
+    _footprint = dict(
+        info = 'Conf tool that find the appropriate begin/end date for an input resource.',
+        attr = dict(
+            kind = dict(
+                values      = ['timeserie', ],
+            ),
+            timeserie_begin = dict(
+                info        = "The date when the time serie starts",
+                type        = Date
+            ),
+            timeserie_step = dict(
+                info        = "The step between files of the time serie.",
+                type        = Period
+            ),
+            upperbound_included = dict(
+                type        = bool,
+                optional    = True,
+                default     = True
+            ),
+            singlefile = dict(
+                info        = "The period requested by a user should be contained in a single file.",
+                type        = bool,
+                optional    = True,
+                default     = False
+            )
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(TimeSerieInputFinderConfTool, self).__init__(*kargs, **kwargs)
+        self._begincache = dict()
+        self._steplength = self.timeserie_step.length
+
+    def _begin_lookup(self, begindate):
+        """Find the appropriate tiem serie's file date just before **begindate**."""
+        if begindate not in self._begincache:
+            if begindate < self.timeserie_begin:
+                raise TimeSerieInputFinderError("Request begin date is too soon !")
+            dt = begindate - self.timeserie_begin
+            nsteps = int(math.floor(dt.length / self._steplength))
+            self._begincache[begindate] = self.timeserie_begin + nsteps * self.timeserie_step
+        return self._begincache[begindate]
+
+    def _begindates_expansion(self, tdate, tlength):
+        """Generate a begin date or a list of begin dates."""
+        xperiods = tlength / self._steplength
+        nfiles = int(math.ceil(xperiods))
+        if xperiods == int(xperiods) and not self.upperbound_included:
+            nfiles += 1
+        if nfiles > 1:
+            if self.singlefile:
+                raise TimeSerieInputFinderError("Multiple files requested but singlefile=.T.")
+            return [tdate + i * self.timeserie_step for i in range(0, nfiles)]
+        else:
+            return tdate
+
+    def _enddates_expansion(self, tdates):
+        """Generate an end date or a dict of enddates."""
+        if isinstance(tdates, list):
+            return dict(begindate={d: d + self.timeserie_step for d in tdates})
+        else:
+            return tdates + self.timeserie_step
+
+    @staticmethod
+    def _dates_normalise(begindate, enddate):
+        """Convert **begin/enddate** to a proper Date object."""
+        if not isinstance(begindate, Date):
+            begindate = Date(begindate)
+        if not isinstance(enddate, Date):
+            enddate = Date(enddate)
+        return begindate, enddate
+
+    @staticmethod
+    def _date_term_normalise(begindate, term):
+        """Convert **begindate** and **term** to a proper Date/Time object."""
+        if not isinstance(begindate, Date):
+            begindate = Date(begindate)
+        if not isinstance(term, Time):
+            term = Time(term)
+        return begindate, term
+
+    def begindate_i(self, begindate, enddate):
+        """Find the file dates encompassing [**begindate**, **enddate**]."""
+        begindate, enddate = self._dates_normalise(begindate, enddate)
+        tdate = self._begin_lookup(begindate)
+        tlength = (enddate - begindate).length
+        return self._begindates_expansion(tdate, tlength)
+
+    def enddate_i(self, begindate, enddate):
+        """Find the file enddates encompassing [**begindate**, **enddate**]."""
+        return self._enddates_expansion(self.begindate_i(begindate, enddate))
+
+    def term_i(self, begindate, enddate):  # @UnusedVariable
+        """Find the term of the time serie files."""
+        return Time(self.timeserie_step)
+
+    def begindate(self, begindate, term):
+        """Find the file dates encompassing [**begindate**, **begindate** + **term**]."""
+        begindate, term = self._date_term_normalise(begindate, term)
+        return self._begindates_expansion(self._begin_lookup(begindate), int(term) * 60)
+
+    def enddate(self, begindate, term):
+        """Find the file enddates encompassing [**begindate**, **begindate** + **term**]."""
+        return self._enddates_expansion(self.begindate(begindate, term))
+
+    def term(self, begindate, term):  # @UnusedVariable
+        """Find the term of the time serie files."""
+        return Time(self.timeserie_step)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

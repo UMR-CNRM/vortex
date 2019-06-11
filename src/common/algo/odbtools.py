@@ -522,6 +522,9 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                           if (sh.path.isdir('ECMA.' + x.odb) and
                               sh.path.isdir('ECMA.' + x.odb + '/1'))]
 
+        # At least one non-empty database is needed...
+        self.algoassert(self.obsmapout, "At least one non-empty ODB database is expected")
+
         # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
@@ -696,6 +699,61 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         sh.mv(self.layout_new, self.layout_in + '.' + self.bingo.rh.resource.part)
 
         super(OdbAverage, self).postfix(rh, opts)
+
+
+class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
+    """Take a screening ODB ECMA database and create the compressed CCMA database."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['odbcompress'],
+            ),
+            ioassign = dict(),
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Find any ODB candidate in input files and fox ODB env accordingly."""
+
+        obsall = [x for x in self.lookupodb() if x.rh.resource.layout.lower() == 'ecma']
+        if len(obsall) > 1:
+            obsvirtual = [o for o in obsall if o.rh.resource.part == 'virtual']
+            if len(obsvirtual) != 1:
+                raise ValueError('One and only one virtual database must be provided')
+            ecma = obsvirtual[0]
+        elif len(obsall) == 1:
+            ecma = obsall[0]
+        else:
+            raise ValueError('No ECMA database provided')
+
+        # First create a fake CCMA
+        self.layout_new = 'ccma'
+        ccma_path = self.odb_create_db(self.layout_new)
+        self.odb.fix_db_path(self.layout_new, ccma_path)
+
+        self.layout_in = ecma.rh.resource.layout.upper()
+        ecma_path = self.system.path.abspath(ecma.rh.container.localpath())
+        self.odb.fix_db_path(self.layout_in, ecma_path)
+
+        self.odb.ioassign_gather(ecma_path, ccma_path)
+
+        self.odb.create_poolmask(self.layout_new, ccma_path)
+
+        self.odb_rw_or_overwrite_method(* obsall)
+
+        # Let ancesters handling most of the env setting
+        super(OdbCompress, self).prepare(rh, opts)
+
+    def spawn_command_options(self):
+        """Prepare command line options to binary."""
+        return dict(
+            dbin     = self.layout_in,
+            dbout    = self.layout_new,
+            npool    = self.npool,
+            nslot    = self.slots.nslot,
+            date     = self.date,
+        )
 
 
 class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
