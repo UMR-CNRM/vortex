@@ -25,3 +25,16 @@ Functions
 .. autofunction:: freeze_cycle
 
 .. autofunction:: unfreeze_cycle
+
+Utility Classes
+---------------
+
+.. autoclass:: MonthlyItem
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+ 
+.. autoclass:: MonthlyHandler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

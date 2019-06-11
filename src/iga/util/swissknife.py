@@ -64,11 +64,13 @@ class MonthlyItem(object):
 
     The real gget command includes a description of what genv values are monthly (concept
     extended to any family of loop-generated names), and how to generate all family names.
-    E.g. the line:
+    E.g. the line::
+
         /^clim_\w+\.[\w\-]+\.\b[0-9]+\b$/       .m{01..12}
-    means that a genv value matching the RE part r'clim_\w+\.[\w\-]+\.\b[0-9]+\b',
-    say 'clim_reunion.t127.01' would have the gget command get the 12 files named
-    clim_reunion.t127.01.m01 clim_reunion.t127.01.m02 .. clim_reunion.t127.01.m12.
+
+    means that a genv value matching the RE part ``r'clim_\w+\.[\w\-]+\.\b[0-9]+\b'``,
+    say ``'clim_reunion.t127.01'`` would have the gget command get the 12 files named
+    ``clim_reunion.t127.01.m01`` ``clim_reunion.t127.01.m02`` .. ``clim_reunion.t127.01.m12``.
     """
     LOOP_RE = re.compile(r'^(?P<before>.*){(?P<start>\d+)\.\.(?P<stop>\d+)}(?P<after>.*)$')
 
@@ -103,8 +105,10 @@ class MonthlyHandler(object):
     """
     Deal with gget monthly definitions (See also ``MonthlyItem``).
 
-    The configuration is directly taken from the gget command:
+    The configuration is directly taken from the gget command::
+
         ~martinezs/apps/gco_toolbox/default/conf/gget/extension.conf
+
     """
 
     def __init__(self, configuration):
