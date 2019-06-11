@@ -15,7 +15,7 @@ import footprints as fp
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import ConfigSet, Task, Driver, Family, LoopFamily
+from vortex.layout.nodes import ConfigSet, Task, Driver, Family, LoopFamily, WorkshareFamily
 from vortex.data import geometries
 
 
@@ -76,6 +76,52 @@ block              = update2
 [forecast1h]
 geometry           = geometry(global1198)
 
+"""
+
+_JOBCONF3 = """
+[DEFAULT]
+cycle              = cy42_peace-op2.21
+cutoff             = production
+geometry           = geometry(global798)
+nbruns             = 10
+members            = rangex(start:1 end:&{nbruns} shift:-1)
+physics            = rangex(start:1 end:&{nbruns} shift:99)
+
+[hard_demo]
+time               = 00:50:00
+ntasks             = 10
+proc               = 60
+nnodes             = 5
+openmp             = 8
+
+[dates_h2]
+cutoff             = assim
+
+[forecast1h_h2]
+geometry           = geometry(global1198)
+"""
+
+_JOBCONF4 = """
+[DEFAULT]
+cycle              = cy42_peace-op2.21
+cutoff             = production
+geometry           = geometry(global798)
+nbruns             = 10
+members            = rangex(start:1 end:&{nbruns} shift:-1)
+physics            = rangex(start:1 end:&{nbruns} shift:99)
+
+[hard_demo]
+time               = 00:50:00
+ntasks             = 10
+proc               = 60
+nnodes             = 2
+openmp             = 8
+
+[dates_h3]
+cutoff             = assim
+
+[forecast1h_h3]
+geometry           = geometry(global1198)
 """
 
 _GLOBAL_OBS = SecludedObserverBoard()
@@ -330,7 +376,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
     def test_nodes_bare(self):
         self._test_nodes_simple('bare')
 
-    def test_nodes_hard(self):
+    def test_nodes_hard1(self):
         self.dumpconfig(_JOBCONF2)
         with self.sh.env.clone() as lenv:
             lenv.rd_iniconf = self.jobconfig
@@ -341,7 +387,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
                         register_cycle_prefix=self._void_register,
                         play=True,
                         anystuff='truc')
-            dr = Driver(tag='job_demo_drv', ticket=self.t,
+            dr = Driver(tag='job_demo_drv_h1', ticket=self.t,
                         nodes = [[LoopFamily(
                             tag='dates',
                             ticket=self.t,
@@ -358,6 +404,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                                TestTask(tag='forecast1h', ticket=self.t, **opts)
                                            ], **opts),
                                     Family(tag='update2', ticket=self.t,
+                                           active_callback=lambda s: s.conf.member == 0,
                                            nodes=[
                                                TestTask(tag='forecast2h', ticket=self.t, **opts)
                                            ], **opts),
@@ -370,11 +417,9 @@ class TestHeavyNodesStuff(unittest.TestCase):
             alltasks = ['forecast1h+d2018010100+member0',
                         'forecast2h+d2018010100+member0',
                         'forecast1h+d2018010100+member1',
-                        'forecast2h+d2018010100+member1',
                         'forecast1h+d2018010112+member0',
                         'forecast2h+d2018010112+member0',
-                        'forecast1h+d2018010112+member1',
-                        'forecast2h+d2018010112+member1', ]
+                        'forecast1h+d2018010112+member1', ]
             self.assertListEqual(list(self.spy.steps.keys()), alltasks)
             for t in alltasks:
                 self.assertEqual(self.spy.conf[t]['cutoff'], 'assim')
@@ -387,23 +432,134 @@ class TestHeavyNodesStuff(unittest.TestCase):
             self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['rundate_prev'], None)
             self.assertEqual(self.spy.conf['forecast1h+d2018010112+member0']['rundate_prev'], Date('2018010100'))
 
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member'], 0)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member_prev'], None)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['member_next'], 1)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic'], 100)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic_prev'], None)
-            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member0']['physic_next'], 101)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member'], 1)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member_prev'], 0)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['member_next'], None)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic'], 101)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic_prev'], 100)
-            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member1']['physic_next'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member'], 0)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member_prev'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['member_next'], 1)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic'], 100)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic_prev'], None)
+            self.assertEqual(self.spy.conf['forecast2h+d2018010100+member0']['physic_next'], 101)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member'], 1)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member_prev'], 0)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['member_next'], None)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic'], 101)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic_prev'], 100)
+            self.assertEqual(self.spy.conf['forecast1h+d2018010100+member1']['physic_next'], None)
 
             self.assertEqual(self.spy.conf['forecast1h+d2018010112+member0']['geometry'].tag, 'global1198')
             self.assertEqual(self.spy.conf['forecast2h+d2018010112+member0']['geometry'].tag, 'global798')
             self.assertEqual(self.spy.conf['forecast1h+d2018010112+member0']['block'], 'update1')
             self.assertEqual(self.spy.conf['forecast2h+d2018010112+member0']['block'], 'update2')
+
+    def test_nodes_hard2(self):
+        self.dumpconfig(_JOBCONF3)
+        with self.sh.env.clone() as lenv:
+            lenv.rd_iniconf = self.jobconfig
+            lenv.rd_jobname = 'hard_demo'
+            lenv.rd_rundates = daterangex('2018010100-2018010112-PT12H')
+            lenv.rd_xpid = 'BLOP'
+            opts = dict(special_prefix='rd_',
+                        register_cycle_prefix=self._void_register,
+                        play=True,
+                        anystuff='truc')
+            dr = Driver(tag='job_demo_drv_h2', ticket=self.t,
+                        nodes = [[LoopFamily(
+                            tag='dates_h2',
+                            ticket=self.t,
+                            loopconf='rundates',
+                            loopsuffix='+d{.ymdh:s}',
+                            nodes = [WorkshareFamily(
+                                tag='members_h2',
+                                ticket=self.t,
+                                workshareconf='members,physics',
+                                worksharename='members_share,physics_share',
+                                worksharesize=3,
+                                nodes = [
+                                    TestTask(tag='forecast1h_h2', ticket=self.t, **opts),
+                                    TestTask(tag='forecast2h_h2', ticket=self.t,
+                                             active_callback=lambda s: s.conf.rundate == '2018010100',
+                                             **opts)
+                                ], **opts),
+                            ], **opts),
+                        ], ], options = opts)
+            dr.setup(verbose=False)
+            dr.run()
+            # Config
+            alltasks = ['forecast1h_h2+d2018010100_ws001',
+                        'forecast2h_h2+d2018010100_ws001',
+                        'forecast1h_h2+d2018010100_ws002',
+                        'forecast2h_h2+d2018010100_ws002',
+                        'forecast1h_h2+d2018010100_ws003',
+                        'forecast2h_h2+d2018010100_ws003',
+                        'forecast1h_h2+d2018010112_ws001',
+                        'forecast1h_h2+d2018010112_ws002',
+                        'forecast1h_h2+d2018010112_ws003', ]
+            self.assertListEqual(list(self.spy.steps.keys()), alltasks)
+            for t in alltasks:
+                self.assertEqual(self.spy.conf[t]['cutoff'], 'assim')
+                self.assertEqual(self.spy.conf[t]['anystuff'], 'truc')
+
+            for n in ('forecast1h_h2+d2018010100', 'forecast2h_h2+d2018010100', 'forecast1h_h2+d2018010112'):
+                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], list(range(0, 4)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], list(range(4, 7)))
+                self.assertEqual(self.spy.conf[n + '_ws003']['members_share'], list(range(7, 10)))
+                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], list(range(100, 104)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], list(range(104, 107)))
+                self.assertEqual(self.spy.conf[n + '_ws003']['physics_share'], list(range(107, 110)))
+
+            self.assertEqual(self.spy.conf['forecast1h_h2+d2018010100_ws001']['geometry'].tag, 'global1198')
+            self.assertEqual(self.spy.conf['forecast2h_h2+d2018010100_ws001']['geometry'].tag, 'global798')
+
+    def test_nodes_hard3(self):
+        self.dumpconfig(_JOBCONF4)
+        with self.sh.env.clone() as lenv:
+            lenv.rd_iniconf = self.jobconfig
+            lenv.rd_jobname = 'hard_demo'
+            lenv.rd_rundates = daterangex('2018010100-2018010112-PT12H')
+            lenv.rd_xpid = 'BLOP'
+            opts = dict(special_prefix='rd_',
+                        register_cycle_prefix=self._void_register,
+                        play=True,
+                        anystuff='truc')
+            dr = Driver(tag='job_demo_drv_h3', ticket=self.t,
+                        nodes = [[LoopFamily(
+                            tag='dates_h3',
+                            ticket=self.t,
+                            loopconf='rundates',
+                            loopsuffix='+d{.ymdh:s}',
+                            nodes = [WorkshareFamily(
+                                tag='members_h3',
+                                ticket=self.t,
+                                workshareconf='members,physics',
+                                worksharename='members_share,physics_share',
+                                worksharesize=3,
+                                worksharelimit='nnodes',
+                                nodes = [
+                                    TestTask(tag='forecast1h_h3', ticket=self.t, **opts),
+                                    TestTask(tag='forecast2h_h3', ticket=self.t,
+                                             active_callback=lambda s: s.conf.rundate == '2018010100',
+                                             **opts)
+                                ], **opts),
+                            ], **opts),
+                        ], ], options = opts)
+            dr.setup(verbose=False)
+            dr.run()
+            # Config
+            alltasks = ['forecast1h_h3+d2018010100_ws001',
+                        'forecast2h_h3+d2018010100_ws001',
+                        'forecast1h_h3+d2018010100_ws002',
+                        'forecast2h_h3+d2018010100_ws002',
+                        'forecast1h_h3+d2018010112_ws001',
+                        'forecast1h_h3+d2018010112_ws002', ]
+            self.assertListEqual(list(self.spy.steps.keys()), alltasks)
+            for t in alltasks:
+                self.assertEqual(self.spy.conf[t]['cutoff'], 'assim')
+                self.assertEqual(self.spy.conf[t]['anystuff'], 'truc')
+
+            for n in ('forecast1h_h3+d2018010100', 'forecast2h_h3+d2018010100', 'forecast1h_h3+d2018010112'):
+                self.assertEqual(self.spy.conf[n + '_ws001']['members_share'], list(range(0, 5)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['members_share'], list(range(5, 10)))
+                self.assertEqual(self.spy.conf[n + '_ws001']['physics_share'], list(range(100, 105)))
+                self.assertEqual(self.spy.conf[n + '_ws002']['physics_share'], list(range(105, 110)))
 
 
 if __name__ == "__main__":
