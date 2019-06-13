@@ -172,6 +172,15 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 optional = True,
                 type     = int,
             ),
+            dataid = dict(
+                info     = ("The ODB databases created by Bator contain an identifier " +
+                            "that is specified as a command-line argument. This " +
+                            "switch tweaks the way the command-line argument is " +
+                            "generated."),
+                values   = ['empty', 'hh'],
+                default  = 'hh',
+                optional = True
+            ),
             ntasks = dict(
                 info     = ("The maximum number of allowed concurrent task for "
                             "parallel execution."),
@@ -395,6 +404,13 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 nam.rh.contents.setmacro('MEMBER', self.member)
                 logger.info('Setup macro MEMBER=%s in %s', self.member, nam.rh.container.actualpath())
                 nam.rh.save()
+
+    def spawn_command_options(self):
+        """Any data useful to build the command line."""
+        opts_dict = super(Raw2ODBparallel, self).spawn_command_options()
+        opts_dict['dataid'] = self.dataid
+        opts_dict['date'] = self.date
+        return opts_dict
 
     def _default_pre_execute(self, rh, opts):
         """Change default initialisation to use LongerFirstScheduler"""
