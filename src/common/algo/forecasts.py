@@ -440,18 +440,19 @@ class FullPosBDAP(FullPos):
             kind = 'namselect',
         )]
 
-        initrh = [x.rh for x in self.context.sequence.effective_inputs(
+        initsec = [x for x in self.context.sequence.effective_inputs(
             role = ('InitialCondition', 'ModelState'),
             kind = 'historic',
         )]
-        initrh.sort(key=lambda rh: rh.resource.term)
+        initsec.sort(key=lambda sec: sec.rh.resource.term)
 
         do_fix_input_clim = self.do_climfile_fixer(rh, convkind='modelclim')
 
         ininc = self.naming_convention('ic', rh)
         infile = ininc()
 
-        for r in initrh:
+        for sec in initsec:
+            r = sec.rh
             sh.subtitle('Loop on {0:s}'.format(r.resource.term.fmthm))
 
             thisdate = r.resource.date + r.resource.term
@@ -498,6 +499,7 @@ class FullPosBDAP(FullPos):
 
             # Finally set the actual init file
             sh.remove(infile)
+            self.grab(sec, comment='Fullpos source (term={:s})'.format(r.resource.term.fmthm))
             sh.softlink(r.container.localpath(), infile)
 
             # Standard execution
@@ -507,11 +509,24 @@ class FullPosBDAP(FullPos):
             for posfile in [x for x in (sh.glob('PF{0:s}*+*'.format(self.xpname)) +
                                         sh.glob('GRIBPF{0:s}*+*'.format(self.xpname)))]:
                 rootpos = re.sub('0+$', '', posfile)
-                sh.move(
-                    posfile,
-                    sh.path.join(runstore, rootpos + r.resource.term.fmthm),
-                    fmt = 'grib' if posfile.startswith('GRIB') else 'lfi',
-                )
+                fmtpos = 'grib' if posfile.startswith('GRIB') else 'lfi'
+                targetfile = sh.path.join(runstore, rootpos + r.resource.term.fmthm)
+                targetbase = sh.path.basename(targetfile)
+
+                # Deal with potential promises
+                expected = [x for x in self.promises
+                            if x.rh.container.localpath() == targetbase]
+                if expected:
+                    logger.info("Start dealing with promises for: %s.",
+                                ", ".join([x.rh.container.localpath() for x in expected]))
+                    if posfile != targetbase:
+                        sh.move(posfile, targetbase, fmt=fmtpos)
+                        posfile = targetbase
+                for thispromise in expected:
+                    thispromise.put(incache=True)
+
+                sh.move(posfile, targetfile, fmt=fmtpos)
+
             for logfile in sh.glob('NODE.*', 'std*'):
                 sh.move(logfile, sh.path.join(runstore, logfile))
 
