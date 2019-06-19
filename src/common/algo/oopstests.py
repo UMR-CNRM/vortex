@@ -58,23 +58,58 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
         It will create it using a JSON "dump" of either:
 
             * The Algo Component's attribute ``expected_target``;
-            * The JSON resource of role "Expected Target".
+            * The JSON resource of role "Reference Summary".
+            * The JSON resource of role "Expected Target";  (deprecated)
 
         :note: If provided, the Algo Component's attribute '`select_expected_target'`
             is used to select inner trees from the expected target dictionary.
         """
+        # if attribute 'expected_target' is attribute and given to the algo, use it
+        target = self._set_expected_target_from_attribute()
+        # else, go find Reference summary in effective inputs
+        if target is None:
+            target = self._set_expected_target_from_reference_summary()
+        # else, go find ExpectedTargets in effective inputs
+        if target is None:
+            target = self._set_expected_target_from_expectedtargets()  # CLEANME: deprecated
+        # Else, default to be sure to pass any in-binary-test
+        if target is None:
+            target = self._set_expected_target_default()  # CLEANME: to be removed for CY47
+        # Then in the end, export variable
+        target = json.dumps(target)
+        logger.info("Expected Target for Test: " + target)
+        self.env.update(EXPECTED_RESULT=target)
+
+    def _set_expected_target_from_attribute(self):
+        """Read target in Algo attribute."""
+        if hasattr(self, 'expected_target'):
+            if self.expected_target is not None:
+                target = self.expected_target
+                logger.info('Set EXPECTED_RESULT from Reference summary')
+                return target
+
+    def _set_expected_target_from_reference_summary(self):
+        """Read target in ReferenceSummary effective input"""
+        target = None
+        ref_summary = [s for s in self.context.sequence.effective_inputs(role=('Reference',))
+                       if s.rh.resource.kind == 'taskinfo']
+        if len(ref_summary) > 0:
+            ref_summary = ref_summary[0].rh.contents.data
+            target = ref_summary.get('oops:' + self.test_type,
+                                     {}).get('as EXPECTED_RESULT', None)
+        if target is not None:
+            logger.info('Set EXPECTED_RESULT from Reference summary')
+        return target
+
+    def _set_expected_target_from_expectedtargets(self):  # CLEANME: deprecated
+        """Read target in ExpectedTargets effective input"""
         target = None
         select = None
-        # if attribute 'expected_target' is attribute and given to the algo, use it
-        if hasattr(self, 'expected_target'):
-            target = self.expected_target
-        # else, go find JSON in effective inputs
-        if target is None:
-            expected = self.context.sequence.effective_inputs(role=('ExpectedTargets',))
-            if len(expected) > 0:
-                expectedfile = expected[0].rh.container.localpath()
-                with io.open(expectedfile, 'r') as cf:
-                    target = json.load(cf)
+        expected = self.context.sequence.effective_inputs(role=('ExpectedTargets',))
+        if len(expected) > 0:
+            expectedfile = expected[0].rh.container.localpath()
+            with io.open(expectedfile, 'r') as cf:
+                target = json.load(cf)
         # now either we found it in input or in attribute, or no target is defined
         # if defined, filter it with keys of attribute 'select_expected_target'
         if hasattr(self, 'select_expected_target'):
@@ -83,12 +118,18 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
             if select is not None:
                 for k in select:
                     target = target[k]  # will raise an error if key not present in dict
-        # so in the end, if an expected result has been defined, export it
         if target is not None:
-            print("Expected Target for Test:", target)
-            self.env.update(EXPECTED_RESULT=json.dumps(target))
-        else:
-            self.env.update(EXPECTED_RESULT=json.dumps({'significant_digits': "10"}))
+            logger.info('Set EXPECTED_RESULT from ExpectedTargets')
+        return target
+
+    def _set_expected_target_default(self):  # CLEANME: to be removed for CY47
+        """Set default, for binary not to crash before CY47."""
+        target = {'significant_digits':'-9',
+                  'expected_Jo':'9999',
+                  'expected_variances':'9999',
+                  'expected_diff':'9999'}
+        logger.info('Set default EXPECTED_RESULT')
+        return target
 
     def _ooptest_exptarget_prepare_hook(self, rh, opts):
         """Call set_expected_target juste after prepare."""
