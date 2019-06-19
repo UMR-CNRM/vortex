@@ -438,10 +438,11 @@ class MpiBinaryBasic(MpiBinaryDescription):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
-        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
-            logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
-            namcontents.setmacro('NPROC', self.nprocs)
-            namcontents.setmacro('NBPROC', self.nprocs)
+        nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
+        if any([n in namcontents.macros() for n in nprocs_macros]):
+            for n in nprocs_macros:
+                logger.info('Setup macro %s=%s in %s', n, self.nprocs, namlocal)
+                namcontents.setmacro(n, self.nprocs)
             namw = True
         return namw
 
