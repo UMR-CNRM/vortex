@@ -2,17 +2,23 @@
 # -*- coding: utf-8 -*-
 
 """
-Example of BDPE extraction
+Example of BDPE extraction.
+
+The 'extract' function tries to extract a product for several dates, both with
+and without permission to access the archive version of the database. The result
+should be similar to what is produced by the shell version bdpe_extract_cdp.sh.
 """
 
-from __future__ import division, print_function, absolute_import, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+# load the packages used in this example
+import common.data
 import vortex
 from bronx.stdtypes import date
 from vortex import toolbox
 
-import common.data
-assert common.data  # avoid IDE too zealous formatting
+# prevent IDEs from removing seemingly unused imports
+assert common.data
 
 t = vortex.ticket()
 sh = t.sh

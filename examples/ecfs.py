@@ -5,8 +5,7 @@
 This module is an interface to call ECfs from Python using Vortex.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     ecfs = ECfs(sh)
     sys_list_args = sys.argv
     logger.info("You have launched the python ECfs interface by Vortex.\n\n"
-                "The command line of used for this interface has the following format:\n"
+                "The command line used for this interface has the following format:\n"
                 "ecfs.py command -attr1=val1[,val2] -attr2\n\n"
                 "You have launched the following command line:\n"
                 "{}\n\n".format(" ".join(sys_list_args)))

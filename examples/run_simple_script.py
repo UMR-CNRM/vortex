@@ -8,8 +8,7 @@ It should run everywhere.
 Ok 20180731 - GR
 """
 
-# Load useful packages for the examples
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import pprint
 
@@ -17,32 +16,25 @@ import common
 import vortex
 from vortex import toolbox
 
-# prevent IDEs from removing seemingly unused imports
+# Prevent IDEs from removing seemingly unused imports
 assert any([common, ])
 
 
-# Initialize environment for examples
+# Set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
-
-# Check what is in this directory and clean unused files and subdirectories
+# Change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 print("The current path is: {}".format(sh.pwd()))
-print("The content of the current directory is:")
-pprint.pprint(sh.dir())
-sh.rmall("*")
 
 # Create a simple script
 script = r"""#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import pprint
@@ -50,7 +42,7 @@ import pprint
 print("Hello world !")
 my_path = os.getcwd()
 print("The current path is {}".format(my_path))
-print("The repository contains:")
+print("The directory contains:")
 pprint.pprint(os.listdir(my_path))
 """
 
@@ -72,14 +64,11 @@ script_rh = toolbox.executable(
     kind     = "script",
     language = "python",
     local    = "script.py",
-    remote   = "/".join([workdirectory, script_name])
+    remote   = sh.path.join(working_directory, script_name)
 )[0]
 
-
 # Run the script in a temporary directory
-tmp_dir = "Test_Vortex"
-
-with sh.cdcontext(tmp_dir, create=True):
+with sh.cdcontext("running_directory", create=True):
     print("The current path is: {}".format(sh.pwd()))
     script_rh.get()
     print("The content of the current directory is:")
@@ -90,8 +79,6 @@ with sh.cdcontext(tmp_dir, create=True):
     )
     algo.run(script_rh)
 
-# Tidy the work directory
+# Tidy up: remove the working directory
 pprint.pprint(sh.dir())
-sh.rmall(tmp_dir + "/*")
-sh.rmdir(tmp_dir)
-sh.rmall("*")
+sh.rmall(working_directory)

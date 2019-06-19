@@ -6,9 +6,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import re
 
 from bronx.stdtypes import date
+import footprints
 from vortex.tools import env
-from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stddeco import namebuilding_insert
+from vortex.data.flow import GeoFlowResource, GeoPeriodFlowResource
+from vortex.syntax.stddeco import namebuilding_insert, overwrite_realkind
 from vortex.syntax.stdattrs import term_deco, a_cutoff
 from vortex.data.geometries import LonlatGeometry
 
@@ -146,3 +147,64 @@ class EnhancedLAMBoundary(_AbstractLAMBoundary):
     def _mysrc(self):
         return [self.source_app, self.source_conf,
                 {'cutoff': self.source_cutoff}]
+
+
+_abs_forcing_fp = footprints.DecorativeFootprint(
+    info = 'Coupling file for any offline model.',
+    attr = dict(
+        kind = dict(
+            values  = ['forcing', ],
+        ),
+        filling = dict(),
+        source_app = dict(),
+        source_conf = dict(),
+        source_cutoff = _a_source_cutoff,
+    ),
+    decorator = [namebuilding_insert('src', lambda s: [s.source_app, s.source_conf,
+                                                       {'cutoff': s.source_cutoff}]),
+                 overwrite_realkind('forcing'), ]
+)
+
+
+class _AbstractForcing(GeoFlowResource):
+    """Class for date-based coupling file for any offline model."""
+
+    _abstract = True
+    _footprint = [_abs_forcing_fp, term_deco]
+
+
+class _AbstractPeriodForcing(GeoPeriodFlowResource):
+    """Class for period-based coupling file for any offline model."""
+
+    _abstract = True
+    _footprint = [_abs_forcing_fp, ]
+
+
+_abs_surfex_forcing_fp = footprints.Footprint(
+    info = 'Coupling/Forcing file for Surfex.',
+    attr = dict(
+        model = dict(
+            values  = ['surfex', ],
+        ),
+        filling = dict(
+            values  = ['atm', ],
+            default = 'atm',
+        ),
+        nativefmt = dict(
+            values  = ['netcdf', 'ascii'],
+            default = 'netcdf',
+        ),
+    )
+)
+
+
+class SurfexForcing(_AbstractForcing):
+    """Class for date-based coupling file for Surfex."""
+
+    _footprint = [_abs_surfex_forcing_fp, ]
+
+
+class SurfexPeriodForcing(_AbstractPeriodForcing):
+    """Class for period-based coupling file for Surfex."""
+
+    _footprint = [_abs_surfex_forcing_fp, ]

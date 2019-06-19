@@ -73,7 +73,7 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         ]
 
         obssurf = [
-            x for x in self.self.lookupodb(fatal=False)
+            x for x in self.lookupodb(fatal=False)
             if x.rh.resource.stage.startswith('canari') and (x.rh.resource.part == 'surf' or
                                                              x.rh.resource.part == 'ground')
         ]

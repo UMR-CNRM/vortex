@@ -20,15 +20,16 @@ import traceback
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.decorators import nicedeco
 import footprints
 from footprints import proxy as fpx
 from footprints.stdtypes import FPSet
 
 import vortex
+from vortex.layout import subjobs
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
-from bronx.syntax.decorators import nicedeco
 
 #: Export nothing
 __all__ = []
@@ -414,6 +415,9 @@ class JobAssistant(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         super(JobAssistant, self).__init__(*args, **kw)
+        self.subjob_allowed = True
+        self.subjob_tag = None
+        self.subjob_fsid = None
         # By default, no error code is thrown away
         self.unix_exit_code = 0
         self._plugins = list()
@@ -533,12 +537,16 @@ class JobAssistant(footprints.FootprintBase):
         specials = kw.get('actual', dict())
         t.glove.vapp  = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
         t.glove.vconf = kw.get('vconf', specials.get(self.special_prefix + 'vconf', None))
+        # Ensure that the script's path is an absolute path
+        sys.argv[0] = t.sh.path.abspath(sys.argv[0])
         return t
 
     @_extendable
     def _extra_session_setup(self, t, **kw):
         """Additional setup for the session."""
-        pass
+        if self.subjob_tag is not None:
+            t.datastore.pickle_load(subjobs._DSTORE_IN.format(self.subjob_fsid))
+            print(('+ The datastore was read from disk: ' + subjobs._DSTORE_IN).format(self.subjob_fsid))
 
     @_extendable
     def _env_setup(self, t, **kw):
@@ -558,11 +566,19 @@ class JobAssistant(footprints.FootprintBase):
         """Setup the action dispatcher."""
         pass
 
+    def _subjob_detect(self, t):
+        if 'VORTEX_SUBJOB_ACTIVATED' in t.env:
+            tag, fsid = t.env['VORTEX_SUBJOB_ACTIVATED'].split(':', 1)
+            self.subjob_tag = tag
+            self.subjob_fsid = fsid
+
     def setup(self, **kw):
         """This is the main method. it setups everything in the session."""
         # We need the root session
         t = vortex.ticket()
         t.system().prompt = t.prompt
+        # Am I a subjob ?
+        self._subjob_detect(t)
         # But a new session can be created here:
         t = self._early_session_setup(t, **kw)
         # Then, go on with initialisations...
@@ -604,7 +620,11 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def complete(self):
         """Should be called when a job finishes successfully"""
-        pass
+        if self.subjob_tag is not None:
+            t = vortex.ticket()
+            t.datastore.pickle_dump(subjobs._DSTORE_OUT.format(self.subjob_fsid, self.subjob_tag))
+            print(('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT)
+                  .format(self.subjob_fsid, self.subjob_tag))
 
     @_extendable
     def fulltraceback(self, latest_error=None):
@@ -639,6 +659,9 @@ class JobAssistant(footprints.FootprintBase):
         if self.unix_exit_code:
             print('Something went wrong :-(')
             exit(self.unix_exit_code)
+        if self.subjob_tag:
+            print('Subjob fast exit :-)')
+            exit(0)
 
 
 class JobAssistantPlugin(footprints.FootprintBase):
@@ -731,7 +754,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         t.sh.cd(t.rundir)
         print('+ Current rundir <{:s}>'.format(t.rundir))
         # Load the session's data store
-        if self.step > 1:
+        if self.step > 1 and self.masterja.subjob_tag is None:
             t.datastore.pickle_load()
             print('+ The datastore was read from disk.')
         # Check that the log directory exists
@@ -741,6 +764,8 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
             if not t.sh.path.isdir(logdir):
                 t.sh.mkdir(logdir)
             print('+ Current logfile <{:s}>'.format(logfile))
+        # Only allow subjobs in compute steps
+        self.masterja.subjob_allowed = self.stepid == 'compute'
 
     def plugable_toolbox_setup(self, t, **kw):
         """Toolbox MTOOL setup."""
@@ -754,8 +779,9 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         """Should be called when a job finishes successfully"""
         t.sh.cd(t.env.MTOOL_STEP_SPOOL)
         # Dump the session datastore in the rundir
-        t.datastore.pickle_dump()
-        print('+ The datastore is dumped to disk')
+        if self.masterja.subjob_tag is None:
+            t.datastore.pickle_dump()
+            print('+ The datastore is dumped to disk')
 
     def plugable_rescue(self, t):
         """Called at the end of a job when something went wrong.
@@ -763,7 +789,8 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         It backups the session's rundir and clean promises.
         """
         t.sh.cd(t.env.MTOOL_STEP_SPOOL)
-        vortex.toolbox.rescue(bkupdir=t.env.MTOOL_STEP_ABORT)
+        if self.masterja.subjob_tag is None:
+            vortex.toolbox.rescue(bkupdir=t.env.MTOOL_STEP_ABORT)
 
 
 class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
@@ -824,45 +851,48 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
 
     def plugable_actions_setup(self, t, **kw):
         """Setup the flow action dispatcher."""
-        ad.add(FlowSchedulerGateway(service=self.backend))
+        if self.masterja.subjob_tag is None:
+            ad.add(FlowSchedulerGateway(service=self.backend))
 
-        # Configure the action
-        jid, rid = self._flow_sched_ids(t)
-        label = "{:s}".format(jid)
-        confdict = kw.get('flowscheduler', dict())
-        confdict.setdefault('ECF_RID', rid)
-        ad.flow_conf(confdict)
+            # Configure the action
+            jid, rid = self._flow_sched_ids(t)
+            label = "{:s}".format(jid)
+            confdict = kw.get('flowscheduler', dict())
+            confdict.setdefault('ECF_RID', rid)
+            ad.flow_conf(confdict)
 
-        t.sh.header('Flow Scheduler ({:s}) Settings'.format(self.backend))
-        ad.flow_info()
-        print('')
-        print('Flow scheduler client path: {:s}'.format(ad.flow_path()))
+            t.sh.header('Flow Scheduler ({:s}) Settings'.format(self.backend))
+            ad.flow_info()
+            print('')
+            print('Flow scheduler client path: {:s}'.format(ad.flow_path()))
 
-        # Initialise the flow scheduler
-        mtplug = self._flow_sched_mtool_plugin
-        if mtplug is None:
-            ad.flow_init(rid)
-        else:
-            if mtplug.step == 1:
+            # Initialise the flow scheduler
+            mtplug = self._flow_sched_mtool_plugin
+            if mtplug is None:
                 ad.flow_init(rid)
-            label = "{:s} (mtoolid={!s})".format(label, mtplug.mtoolid)
-            if self.mtoolmeters:
-                ad.flow_meter('work', 1 + (mtplug.step - 1) * 2)
-        if self.jobidlabels:
-            ad.flow_label('jobid', label)
+            else:
+                if mtplug.step == 1:
+                    ad.flow_init(rid)
+                label = "{:s} (mtoolid={!s})".format(label, mtplug.mtoolid)
+                if self.mtoolmeters:
+                    ad.flow_meter('work', 1 + (mtplug.step - 1) * 2)
+            if self.jobidlabels:
+                ad.flow_label('jobid', label)
 
     def plugable_complete(self, t):
         """Should be called when a job finishes successfully."""
-        mtplug = self._flow_sched_mtool_plugin
-        if mtplug is None:
-            ad.flow_complete()
-        else:
-            if self.mtoolmeters:
-                ad.flow_meter('work', 2 + (mtplug.step - 1) * 2)
-            # With MTOOL, complete only at the end of the last step...
-            if mtplug.stepid == mtplug.lastid:
+        if self.masterja.subjob_tag is None:
+            mtplug = self._flow_sched_mtool_plugin
+            if mtplug is None:
                 ad.flow_complete()
+            else:
+                if self.mtoolmeters:
+                    ad.flow_meter('work', 2 + (mtplug.step - 1) * 2)
+                # With MTOOL, complete only at the end of the last step...
+                if mtplug.stepid == mtplug.lastid:
+                    ad.flow_complete()
 
     def plugable_rescue(self, t):
         """Called at the end of a job when something went wrong."""
-        ad.flow_abort("An exception was caught")
+        if self.masterja.subjob_tag is None:
+            ad.flow_abort("An exception was caught")

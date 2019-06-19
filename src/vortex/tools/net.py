@@ -214,8 +214,9 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = True
         if not self.closed:
-            rc = self._ftplib.close()
+            rc = self._ftplib.close() or True
             self._closed = True
             self._deleted = datetime.now()
         return rc
@@ -698,7 +699,7 @@ class AutoRetriesFtp(StdFtp):
         Wraps the *func* function in order to implement a retry on failure
         mechanism.
 
-        :param object func: Any callable that should be wrapped (usually a function)
+        :param callable func: Any callable that should be wrapped (usually a function)
         :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
         :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
         :param list exceptions_extras: Extra exceptions to be catch during the retry
@@ -1024,6 +1025,20 @@ class Ssh(object):
                [myremote, ] + [remote_command, ])
         return self.sh.spawn(cmd, output=True, fatal=False)
 
+    def background_execute(self, remote_command, sshopts='', stdout=None, stderr=None):
+        """Execute the command remotely and return the object representing the ssh process.
+
+        Return a Popen object representing the ssh process. The user is reponsible
+        for calling pclose on this object and check the return code.
+        """
+        myremote = self.remote
+        if myremote is None:
+            return False
+        cmd = ([self._sshcmd, ] +
+               self._sshopts + sshopts.split() +
+               [myremote, ] + [remote_command, ])
+        return self.sh.popen(cmd, stdout=stdout, stderr=stderr)
+
     def cocoon(self, destination):
         """Create the remote directory to contain ``destination``.
            Return False on failure.
@@ -1296,7 +1311,7 @@ class ActiveSshTunnel(object):
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
-        :param int entraceport: Tunnel's entrance port.
+        :param int entranceport: Tunnel's entrance port.
         :param str finaldestination: Tunnel's final destination.
         :param int finalport: Tunnel's destination port.
 

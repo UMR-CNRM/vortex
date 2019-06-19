@@ -8,7 +8,7 @@
 #    --date             : "" to allow for $dat1 and $dat2 shell variable expansion
 #    --local and --term : '' to avoid brackets and parenthesis interpretation
 
-exp=DBLE
+expe=DBLE
 dat1=2018060206
 dat2=2018060406
 
@@ -23,7 +23,7 @@ vtxprestage.py \
 	--kind=historic \
 	--term='rangex(0-3-1)' \
 	--block=restart \
-	--experiment=$exp \
+	--experiment=$expe \
 	--geometry=globalsp2 \
 	--format=fa \
 	--local='toto_[date:ymd]_r[date:hh]+[term:fmth].[format]'

@@ -1,0 +1,28 @@
+default:
+    style: olive
+    sets:
+        # Surfex Offline
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: surfex
+            namespace: vortex.multi.fr
+            vapp: surfex
+            vconf: global
+todo:
+    # Boundary
+    -   commons:
+            kind: forcing
+            filling: atm
+            block: coupling
+            experiment: abcd
+            source_app: arpege
+            source_conf: 4dvarfr
+            source_cutoff: assim
+            namespace: vortex.multi.fr
+        tests:
+            - nativefmt: netcdf 
+              term: 72
+            - nativefmt: netcdf
+              begindate: '2018010100'
+              enddate: '2018010400'

@@ -19,3 +19,5 @@ Decorators
 .. autofunction:: namebuilding_delete
 
 .. autofunction:: generic_pathname_insert
+
+.. autofunction:: overwrite_realkind

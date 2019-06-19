@@ -112,7 +112,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
         info = 'A Soprano Development Server running CentOS 6',
         attr = dict(
             hostname = dict(
-                values = ['alose', 'pagre', 'rason', 'orphie'],
+                values = ['alose', 'pagre', 'rason', 'orphie', 'guppy'],
             ),
             inifile = dict(
                 optional=True,

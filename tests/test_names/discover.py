@@ -79,7 +79,7 @@ class DiscoveredTests(collections_abc.Mapping):
         from .core import TestDriver
         with io.open(tfile, 'r') as fhyaml:
             try:
-                tdata = yaml.load(fhyaml)
+                tdata = yaml.load(fhyaml, Loader=yaml.SafeLoader)
                 logger.info('%s YAML read in.', tfile)
             except yaml.YAMLError as e:
                 logger.error('Could not parse the YAML file: %s\n%s.', tfile, str(e))

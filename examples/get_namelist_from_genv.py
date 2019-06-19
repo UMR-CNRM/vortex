@@ -4,15 +4,16 @@
 """
 Get a namelist file from the Genv provider.
 
-Can be launched anywhere where Gget or a Gget light are available
+Can be launched anywhere where Gget or Gget light is available
 (on super-computer for instance).
 
 Ok 20180731 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-# Load useful packages for the examples
+
+# load the packages used in this example
 import common
 import olive
 import vortex
@@ -22,23 +23,19 @@ from vortex import toolbox
 assert any([common, olive])
 
 
-# #### Initializations
-
-# Initialize environment for examples
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 
 
 # #### Getting a resource using the Genv provider
 
-# Define the resource
+# define the resource
 rh = toolbox.rload(
     # Ressource
     kind   = "namelist",
@@ -55,5 +52,5 @@ print(rh.location())
 print(rh.locate())
 print(rh.idcard())
 
-# Get the resource
+# get the resource
 print(rh.get())

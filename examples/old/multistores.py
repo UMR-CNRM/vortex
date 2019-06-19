@@ -4,8 +4,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import vortex
+from bronx.stdtypes.date import Date
 from vortex.data import geometries
-from vortex.tools.date import Date
 
 import common.data
 import olive.data

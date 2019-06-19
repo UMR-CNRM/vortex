@@ -1,7 +1,7 @@
 #!/opt/softs/python/2.7.5/bin/python -u
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 #SBATCH --exclusive
 #SBATCH --verbose
@@ -18,16 +18,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 AVERTISSEMENT
 
 Cette tâche est un script `standalone` destiné à tourner tel quel, sans aucun prérequis
-ni fichier de paramétrisations, ne s'appuyant donc que sur les valeurs par défaut
-de la boîte à outils Vortex sur le supercalculateur prolix de Météo France.
+ni fichier de paramétrisations, ne s'appuyant donc que sur les valeurs par défaut de la
+boîte à outils Vortex sur le supercalculateur prolix de Météo France.
 
 Il a une portée essentiellement pédagogique.
 """
 
 # Afin de bénéficier des packages footprints et vortex, il convient de spécifier
 # à l'interpréteur python de nouveaux points de départ pour la recherche de modules ;
-# c'est traditionnelement le module sys qui permet cette spécification.
+# c'est traditionnellement le module sys qui permet cette spécification.
 import sys
+
 sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/site')
 sys.path.append('/home/gmap/mrpm/esevault/public/vortex-dev/src')
 
@@ -38,10 +39,15 @@ import footprints as fp
 # L'importation du package vortex... qui nous ouvre le saint des saints... ou presque !
 import vortex
 
+# Certains modules initialement développés pour vortex ont été externalisés
+# pour pouvoir être utilisés sans vortex. Ils vivent dans le dossier'site'.
+# Parmi les plus utilsés, on trouve les footprints et la gestion de dates.
+from bronx.stdtypes import date
+
 # Les commandes procédurales les plus importantes sont pilotées par un module dédié: toolbox.
 from vortex import toolbox, tools
 
-toolbox.justdoit  = True    # En activant ce drapeau, toutes les sections qui seront définies
+toolbox.justdoit = True     # En activant ce drapeau, toutes les sections qui seront définies
                             # par la suite essaieront de réaliser immédiatement leur action de base.
 
 toolbox.getinsitu = True    # Lors de la récupération d'une ressource (Input/get), l'activation de ce drapeau
@@ -61,7 +67,7 @@ t = vortex.ticket()         # Le ticket de session regroupe tous les éléments 
                             # l'interface avec le système, le contexte d'exécution,etc.
 
 e = t.env                   # L'environnement courant sous forme d'un pseudo-dictionnaire
-                            # aux fonctionalités étendues.
+                            # aux fonctionnalités étendues.
 
 sh = t.sh                   # Interface étendue avec le shell... même objet que vortex.sh() !
 
@@ -76,19 +82,19 @@ sh.setulimit('stack')
 
 # On étend le shell aux opérations spéciales lfi/fa
 import vortex.tools.lfi
+
 sh_lfi = fp.proxy.addon(kind='lfi',    shell=sh)
 sh_iop = fp.proxy.addon(kind='iopoll', shell=sh)
 
 # Répertoire d'exécution dédié... c'est une sécurité pour sortir de HOME.
-rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + tools.date.today().ymd)
+rundir = e.get('RUNDIR', e.WORKDIR + '/rundir/' + date.today().ymd)
 sh.cd(rundir, create=True)
 sh.subtitle('Rundir is ' + rundir)
 
 # Date de base récupérée comme date pivot dans l'environnement
 # ou comme la dernière heure synoptique d'il y a au moins 12 heures.
-# On utilisera pour cela le module tools.date
-strdate = e.get('DMT_DATE_PIVOT', tools.date.synop(delta='-PT12H').compact())
-rundate = tools.date.Date(strdate)
+strdate = e.get('DMT_DATE_PIVOT', date.synop(delta='-PT12H').compact())
+rundate = date.Date(strdate)
 
 sh.subtitle('Rundate is ' + rundate.isoformat())
 
@@ -102,7 +108,7 @@ t.glove.setenv(app='arpege', conf='france')
 
 # On définit le term final du forecast et les échéances de post-traitement a priori
 fc_term  = 3
-fc_terms = range(0, fc_term+1)
+fc_terms = range(0, fc_term + 1)
 fp_terms = fc_terms
 
 print('FC term =', fc_term, '/ FP terms =', fp_terms)
@@ -136,7 +142,8 @@ p_flux = vortex.proxy.provider(
 
 print('Provider interne :', p_flux)
 
-# Provider de ressources extérieures au flux de l'expérience en cours (ici, l'archive oper)
+# Provider de ressources extérieures au flux de l'expérience en cours
+# (ici, l'archive oper)
 import iga.data
 
 p_extern = vortex.proxy.provider(
@@ -157,7 +164,7 @@ from gco.tools import genv
 genv.genvcmd  = 'genvop'
 genv.genvpath = '/home/gmap/mrpm/esevault/public/op-tools'
 
-# On définit le répertoire de recherche de cycles prédéfis comme étant le répertoire de l'outil genv
+# On définit le répertoire de recherche de cycles prédéfinis comme étant le répertoire de l'outil genv
 sh.env.OPGENVROOT = genv.genvpath
 
 # Ainsi outillés, nous pouvons maintenant définir un cycle, par son nom gco,
@@ -176,7 +183,7 @@ print('Provider const :', p_const)
 # --------------------------------------------------------------------------------------------------
 
 # Tentative de détermination plus ou moins hasardeuse de l'étape en cours
-# Ce genre de chose est évident superflue dans un système intégré
+# Ce genre de chose est évidemment superflue dans un système intégré
 if sys.argv[-1] in ('3', 'backup'):
     npass = 3
 elif sys.argv[-1] in ('2', 'compute', 'run') or int(e.get('SLURM_NPROCS', 1)) > 1:
@@ -491,4 +498,3 @@ if npass == 3:
 # --------------------------------------------------------------------------------------------------
 
 sh.title('End of execution')
-

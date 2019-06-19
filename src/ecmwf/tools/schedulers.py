@@ -93,4 +93,4 @@ class EctransSMS(EcmwfLikeScheduler):
                                           target=self.sh.path.join(self._targetpath,
                                                                    'smsupd.' + uuid.uuid4().hex),
                                           gateway=self._gateway, remote=self._remote,
-                                          priority=99, retryCnt=15, retryFrq=120, sync=False)
+                                          priority=99, retryCnt=15, retryFrq=120, sync=True)
