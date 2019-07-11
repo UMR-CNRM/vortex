@@ -31,6 +31,7 @@ Extras
    :maxdepth: 1
 
    List of default geometries (from geometries.ini) <geometries>
+   List of default BDPE identifiers (from bdpe-map-resources.ini) <bdpe-map-resources>
    List of default pollutant elements (from pollutants-elements-std.ini) <pollutants-elements-std>
    List of default pollutant sites (from pollutants-sites-std.ini) <pollutants-sites-std>
    checkreport
