@@ -40,6 +40,12 @@ GEOLIST       = $(SOURCEDIR)/geometries.rst
 # Source configuration file to generate the geometries list
 GEOLIST_DEP   = ../conf/geometries.ini
 
+# Target file for the BDPE ids list
+BDPELIST       = $(SOURCEDIR)/bdpe-map-resources.rst
+# Source configuration file to generate the BDPE ids list
+BDPELIST_DEP   = ../conf/bdpe-map-resources.ini
+
+
 # Target file for the pollutants list
 POL_ELTS      = $(SOURCEDIR)/pollutants-elements-std.rst
 POL_SITES     = $(SOURCEDIR)/pollutants-sites-std.rst
@@ -99,6 +105,9 @@ $(CHECKREPORT):
 $(GEOLIST): $(GEOLIST_DEP)
 	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
 
+$(BDPELIST): $(BDPELIST_DEP)
+	$(PYTHON) $(GENEDOC) --default $(BDPELIST_DEP) $(BDPELIST)
+
 $(POL_ELTS): $(POL_ELTS_DEP)
 	$(PYTHON) $(GENEDOC) --configtable pollutants,elements,std,en,intairpol $(POL_ELTS)
 
@@ -127,7 +136,7 @@ footprints_libindex:
 	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
 
 # Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
