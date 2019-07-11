@@ -7,7 +7,7 @@ from bronx.fancies.loggers import unittestGlobalLevel
 import footprints
 
 import vortex
-from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 
 tloglevel = 'ERROR'
 
@@ -45,6 +45,7 @@ class BaseTestAlgoComponnentForMeta(AlgoComponent):
         return rv
 
 
+@algo_component_deco_mixin_autodoc
 class BaseTestMixin(AlgoComponentDecoMixin):
 
     def _prepare_hook(self, rh, opts):

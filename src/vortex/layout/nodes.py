@@ -557,8 +557,10 @@ class Node(getbytag.GetByTag, NiceLayout):
         # If some mpiopts are in the config file, use them...
         mpiopts = kwargs.pop('mpiopts', dict())
         mpiopts_map = dict(nnodes='nn', ntasks='nnp', nprocs='np', proc='np')
-        for stuff in [s for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
-                                  'prefixcommand') if s in mpiopts or s in self.conf]:
+        for stuff in [s
+                      for s in ('proc', 'nprocs', 'nnodes', 'ntasks', 'openmp',
+                                'prefixcommand', 'envelope')
+                      if s in mpiopts or s in self.conf]:
             mpiopts[mpiopts_map.get(stuff, stuff)] = mpiopts.pop(stuff, self.conf[stuff])
 
         # if the prefix command is missing in the configuration file, look in the input sequence

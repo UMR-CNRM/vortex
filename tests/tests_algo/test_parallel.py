@@ -1,12 +1,17 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import logging
+import sys
+import tempfile
 import unittest
 
 import footprints as fp
 import vortex
 from vortex.algo.mpitools import MpiException
-from vortex.algo.components import ParallelInconsistencyAlgoComponentError
+from vortex.algo.components import Parallel, ParallelIoServerMixin, ParallelOpenPalmMixin
+from vortex.algo.components import ParallelInconsistencyAlgoComponentError, AlgoComponentError
+from vortex.util import config
 import common.algo.mpitools  # @UnusedImport
 
 
@@ -33,6 +38,31 @@ class FakeBinaryRh(object):
         self.resource = FakeResource()
 
 
+class IoServerTestEngine(Parallel, ParallelIoServerMixin):
+
+    _footprint = dict(
+        attr = dict(
+            engine = dict(
+                values = ['test_parallel_ioengine', ]
+            ),
+        )
+    )
+
+
+class PalmedTestEngine(Parallel, ParallelOpenPalmMixin):
+
+    _footprint = dict(
+        attr = dict(
+            engine = dict(
+                values = ['test_parallel_palmed_engine', ]
+            ),
+            openpalm_driver = dict(
+                default = 'the_plam_driver.x',
+            ),
+        ),
+    )
+
+
 class TestParallel(unittest.TestCase):
 
     _mpiauto = 'mpiauto --init-timeout-restart 2 --verbose --wrap --wrap-stdeo --wrap-stdeo-pack'
@@ -49,8 +79,14 @@ class TestParallel(unittest.TestCase):
         fp.logger.setLevel(logging.ERROR)
         self._v_prev = vortex.logger.level
         vortex.logger.setLevel(logging.ERROR)
+        # Tmp directory
+        self._oldpwd = self.t.sh.pwd()
+        self._tmpdir = tempfile.mkdtemp(prefix='tmp_test_alog_para')
+        self.t.sh.cd(self._tmpdir)
 
     def tearDown(self):
+        self.t.sh.cd(self._oldpwd)
+        self.t.sh.rm(self._tmpdir)
         self.locenv.active(False)
         fp.logger.setLevel(self._fp_prev)
         vortex.logger.setLevel(self._v_prev)
@@ -68,6 +104,29 @@ class TestParallel(unittest.TestCase):
         return self.assertEqual(ref.format(pwd=self.t.sh.pwd(), **extras),
                                 ' '.join(new))
 
+    def assertWrapper(self, mpirankvar, binpaths,
+                      tplname='@mpitools/envelope_wrapper_default.tpl',
+                      binargs = ()):
+        with io.open('./global_envelope_wrapper.py') as fhw:
+            wrapper_new = fhw.read()
+        wtpl_ref = config.load_template(self.t, tplname, encoding='utf-8')
+        wrapper_ref = wtpl_ref.substitute(
+            python=sys.executable,
+            mpirankvariable=mpirankvar,
+            todolist=("\n".join(["  {:d}: ('{:s}', [{:s}]),".
+                                 format(i, what,
+                                        (binargs[i] if i < len(binargs)
+                                         else ', '.join(["'{:s}'".format(a) for a in ('-joke', 'yes')]))
+                                        )
+                                 for i, what in enumerate(binpaths)]))
+        )
+        try:
+            return self.assertEqual(wrapper_new, wrapper_ref)
+        except AssertionError:
+            print('REF:\n', wrapper_ref)
+            print('GOT:\n', wrapper_new)
+            raise
+
     def testOneBin(self):
         bin0 = FakeBinaryRh('fake')
         # MPI partitioning from explicit mpiopts
@@ -77,6 +136,12 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(envelope=dict(nn=2, nnp=4, openmp=10))))
+        self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 --prefix-command ./global_envelope_wrapper.py -- {pwd:s}/fake',
+                        args, base=self._mpiauto)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        self.assertWrapper('MPIAUTORANK', binpaths, tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, np=8, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
@@ -92,6 +157,10 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
                                                                   prefixcommand='toto')))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 --prefix-command toto -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        # envelope = auto requires variables...
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        with self.assertRaises(ValueError):
+            _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(envelope='auto')))
         # MPI partitioning from environment
         self.locenv.VORTEX_SUBMIT_NODES = 2
         self.locenv.VORTEX_SUBMIT_TASKS = 4
@@ -102,6 +171,11 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(envelope='auto')))
+        self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 --prefix-command ./global_envelope_wrapper.py -- {pwd:s}/fake',
+                        args, base=self._mpiauto)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        self.assertWrapper('MPIAUTORANK', binpaths, tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
         # Strange stuff: ask for a total of only 7 tasks (not recommended !)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(np=7)))
@@ -118,7 +192,9 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base='mpiauto_debug --init-timeout-restart 2')
         del self.locenv.VORTEX_MPI_OPTS
         del self.locenv.VORTEX_MPI_LAUNCHER
+
         # Let's go for an IO Server...
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='mpiauto'))
         self.locenv.VORTEX_IOSERVER_NODES = 1
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('{base:s} --nn 1 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes -- --nn 1 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes',
@@ -132,12 +208,12 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('{base:s} --nn 1 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes -- --nn 1 --nnp 8 --openmp 5 -- {pwd:s}/fake -joke yes',
                         args, base=self._mpiauto)
         # Send the IO server at the begining of the arguments list
-        algo = self._fix_algo(fp.proxy.component(engine='parallel', iolocation=0))
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', iolocation=0))
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('{base:s} --nn 1 --nnp 8 --openmp 5 -- {pwd:s}/fake -joke yes -- --nn 1 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes',
                         args, base=self._mpiauto)
         # Just check mpirun...
-        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun', iolocation=0))
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='mpirun', iolocation=0))
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('mpirun -npernode 8 -np 8 {pwd:s}/fake -joke yes : -npernode 4 -np 4 {pwd:s}/fake -joke yes', args)
         # Zero IO server nodes...
@@ -183,6 +259,16 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake0 -joke yes -- ' +
                         '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake1 -joke yes -- ' +
                         '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake2 -joke yes', args, base=self._mpiauto)
+        with self.assertRaises(AlgoComponentError):
+            _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(envelope='auto', np=[8, 8, 8])))
+        self.locenv.VORTEX_SUBMIT_NODES = 6
+        _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(envelope='auto', np=[8, 8, 8])))
+        self.assertCmdl('{base:s} --nn 6 --nnp 4 --openmp 10 --prefix-command ./global_envelope_wrapper.py -- {pwd:s}/fake0',
+                        args, base=self._mpiauto)
+        binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        self.assertWrapper('MPIAUTORANK', binpaths, tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
 
     def testFullManual(self):
         bin0 = FakeBinaryRh('fake0')
@@ -198,6 +284,134 @@ class TestParallel(unittest.TestCase):
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake0 -joke yes : ' +
                         '-npernode 8 -np 16 {pwd:s}/fake1 -joke yes : ' +
                         '-npernode 8 -np 8 {pwd:s}/fake2 -joke yes', args)
+
+        mpidescs = [fp.proxy.mpibinary(kind='basicsingle', nodes=2, tasks=4, openmp=10),
+                    fp.proxy.mpibinary(kind='basic', nodes=2, tasks=8, openmp=5),
+                    fp.proxy.mpibinary(kind='basic', nodes=1, tasks=8, openmp=5),
+                    ]
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun', binaries=mpidescs))
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4, openmp=10),
+                                                                      dict(nn=3, nnp=8, openmp=5), ])))
+        self.assertCmdl('mpirun -npernode 4 -np 8 ./global_envelope_wrapper.py : ' +
+                        '-npernode 8 -np 24 ./global_envelope_wrapper.py', args)
+
+        binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 16)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        self.assertWrapper('MPIRANK', binpaths)
+
+    def testPalmMixin(self):
+        self.t.sh.touch('the_plam_driver.x')
+        bin0 = FakeBinaryRh('fake0')
+        bin1 = FakeBinaryRh('fake1')
+        # MPI partitioning from explicit mpiopts: no envelope provided, overcommiting
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',))
+        with self.assertRaises(AlgoComponentError):
+            algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, np=12)))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4, openmp=10)))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 12)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4)))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        self.locenv.VORTEX_SUBMIT_NODES = 3
+        self.locenv.VORTEX_SUBMIT_TASKS = 4
+        self.locenv.VORTEX_SUBMIT_OPENMP = 10
+        _, args = algo._bootstrap_mpitool(bin0, dict())
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=1, nnp=4)))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py', args)
+        _, args = algo._bootstrap_mpitool([bin0, bin1],
+                                          dict(mpiopts=dict(nn=[3, 2], nnp=[4, 8], openmp=[10, 5])))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 12)
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 16)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        # MPI partitioning from explicit mpiopts: with envelope provided, overcommiting
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',))
+        _, args = algo._bootstrap_mpitool([bin0, bin1],
+                                          dict(mpiopts=dict(np=[8, 4], envelope='auto')))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 4)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4, openmp=10),
+                                                                      dict(nn=2, nnp=8, openmp=5)])))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 4 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 24)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4, openmp=10),
+                                                                      dict(nn=2, nnp=8, openmp=5)])))
+        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        # MPI partitioning from explicit mpiopts: no envelope provided, dedicated
+        self.locenv.VORTEX_SUBMIT_NODES = 4
+        self.locenv.VORTEX_SUBMIT_TASKS = 4
+        self.locenv.VORTEX_SUBMIT_OPENMP = 10
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',
+                                                 openpalm_overcommit=False))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4, openmp=10)))
+        self.assertCmdl('mpirun -npernode 1 -np 1 the_plam_driver.x : -npernode 4 -np 8 {pwd:s}/fake0 -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4)))
+        self.assertCmdl('mpirun -npernode 1 -np 1 the_plam_driver.x : -npernode 4 -np 8 {pwd:s}/fake0 -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict())
+        self.assertCmdl('mpirun -npernode 1 -np 1 the_plam_driver.x : -npernode 4 -np 12 {pwd:s}/fake0 -joke yes', args)
+        _, args = algo._bootstrap_mpitool([bin0, bin1],
+                                          dict(mpiopts=dict(nn=[3, 2], nnp=[4, 8], openmp=[10, 5])))
+        self.assertCmdl('mpirun -npernode 1 -np 1 the_plam_driver.x : -npernode 4 -np 12 {pwd:s}/fake0 -joke yes : -npernode 8 -np 16 {pwd:s}/fake1 -joke yes', args)
+        # MPI partitioning from explicit mpiopts: with envelope provided, dedicated
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',
+                                                 openpalm_overcommit=False))
+        _, args = algo._bootstrap_mpitool([bin0, bin1],
+                                          dict(mpiopts=dict(np=[11, 4], envelope='auto')))
+        self.assertCmdl('mpirun -npernode 4 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 11)
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 4)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4, openmp=10),
+                                                                      dict(nn=2, nnp=8, openmp=5)])))
+        self.assertCmdl('mpirun -npernode 4 -np 8 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 23)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4, openmp=10),
+                                                                      dict(nn=2, nnp=8, openmp=5)])))
+        self.assertCmdl('mpirun -npernode 4 -np 4 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 19)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ])
+        # Strange tweaking variables
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',))
+        self.locenv.VORTEX_OPENPALM_DRV_TASKS = 2
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4, openmp=10)))
+        self.assertCmdl('mpirun -npernode 6 -np 6 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 2
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 12)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', ''])
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=3, nnp=4, openmp=10), palmdrv_nnp=3))
+        self.assertCmdl('mpirun -npernode 7 -np 7 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 3
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 12)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', '', ''])
+        _, args = algo._bootstrap_mpitool([bin0, bin1],
+                                          dict(mpiopts=dict(nn=[3, 2], nnp=[4, 8], openmp=[10, 5])))
+        self.assertCmdl('mpirun -npernode 6 -np 6 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 2
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 12)
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 16)
+        self.assertWrapper('MPIRANK', binpaths, binargs=['', '', ])
 
 
 if __name__ == "__main__":
