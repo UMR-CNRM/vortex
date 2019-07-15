@@ -150,4 +150,4 @@ clean-%_libindex:
 # Clean the build directory and the automatically generated rst files. 
 clean: clean-$(NOTEBOOKS) $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
-	rm -f $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES)
+	rm -f $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES)
