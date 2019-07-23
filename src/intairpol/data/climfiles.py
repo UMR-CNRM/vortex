@@ -69,6 +69,44 @@ class MonthClimMisc(GenericClim):
     def realkind(self):
         return 'clim_misc'
 
+class DomainMonthClimMisc(GenericClim):
+    """
+     Monthly miscellaneous climatological files by domain
+    """
+    _footprint = [
+        month_deco,
+        dict(
+            info = 'Monthly climatological files, domain indexed',
+            attr = dict(
+                kind = dict(
+                    values  = ['generic_clim_misc'],
+                ),
+                geometry = dict(
+                    type = LonlatGeometry,
+                ),
+                gdomain = dict(
+                    type = GenvDomain,
+                    optional = True,
+                    default = '[geometry::area]'
+                ),
+                gvar = dict(
+                    default = 'clim_[model]_[source]_[geometry:area]'
+                ),
+                source = dict(
+                ),
+                model = dict(
+                    values  = ['mocage'],
+                    default = 'mocage',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'generic_clim_misc'
+
+    
 
 class Ch4SurfEmissions(GenericClim):
     """

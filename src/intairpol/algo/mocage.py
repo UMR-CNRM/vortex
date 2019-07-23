@@ -10,9 +10,11 @@ import re
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from pprint import pprint
+
 import footprints
 
-from vortex.algo.components import Parallel, BlindRun, Expresso
+from vortex.algo.components import Parallel, BlindRun, Expresso, ParallelOpenPalmMixin
 from vortex.syntax.stdattrs import a_date, model
 
 #: No automatic export
@@ -524,8 +526,10 @@ class Forecast(Parallel):
         namrh.save()
         namrh.container.cat()
 
+        
         super(Forecast, self).execute(rh, opts)
 
+        
 
 class MkStatsCams(Expresso):
 
@@ -737,3 +741,186 @@ class ControlGuess(Parallel):
             raise
 
         sh.cat('relance_clim', output=False)
+        
+class AssimilationOpenPalm(Parallel, ParallelOpenPalmMixin):
+    """Algo component for assimilation in mocage
+    Use of ParallelOpenPalmMixin by LF
+    Palm + 1 main_block1 on first node
+    """
+
+    _footprint = [
+        model,
+        dict(
+            info = 'Mocage assimilation test 3 ',
+            attr = dict(
+                kind = dict(
+                    values = ['assimilation3',],
+                ),
+                basedate = a_date,
+                fcterm = dict(
+                    info   = 'assimilation term',
+                    type   = date.Time,
+                ),
+                model = dict(
+                    values = ['mocage',]
+                ),
+                flyargs = dict(
+                    default = ('HM', ),
+                ),
+                flypoll = dict(
+                    default = 'iopoll_mocage',
+                ),
+                openmp=dict(
+                    type = int,
+                    optional = True,
+                    default = 0,
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'assimilation3'
+
+    def _fix_nam_macro(self, rh, macro, value):
+        """Set a given namelist macro and issue a log message."""
+        rh.contents.setmacro(macro, value)
+        logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
+
+    def prepare(self, rh, opts):
+        """ Prepare the synchronisation with next tasks"""
+        # to control synchronisation and promised files : use the script in iopoll method
+        # The script executed via iopoll method returns the list of promised files ready
+        if self.promises:
+            self.io_poll_kwargs = dict(vconf=rh.provider.vconf.upper())
+            self.flyput = True
+        else:
+            self.flyput = False
+
+        super(AssimilationOpenPalm, self).prepare(rh, opts)
+
+    def _sorted_inputs_terms(self, **kwargs):
+        """
+        Build a dictionnary that contains a list of sections for each geometry
+        :param kwargs: attributes that will be used to sort the input files
+        :return: a dictionnary like:
+        {'geometry1': [terms1, terms2, ...],
+         'geometry2': [terms1, terms2, ...]
+        }
+        """
+        # Find the input files
+        insec = self.context.sequence.effective_inputs(**kwargs)
+        # Initialize the output dictionnary
+        outdict = dict()
+        # Fill the dictionnary
+        for sec in insec:
+            geo = sec.rh.resource.geometry.area
+            if geo not in outdict:
+                outdict[geo] = list()
+            outdict[geo].append(int(sec.rh.resource.term.fmth))
+        for geo in outdict:
+            outdict[geo].sort()
+        return outdict
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+
+        sh = self.system
+
+        # First : Prepare namelist substitutions
+        
+        # Assimilation JSON settings
+        json = self.context.sequence.effective_inputs(
+            role='AssimilationSettings',
+            kind='json_config',)
+        if len(json) != 1:
+            message='There must be exactly one json config file for assimilation execution. Stop.'
+            logger.critical(message)
+            raise ValueError(message)
+        # mocage namelist
+        namrh = self.context.sequence.effective_inputs(
+            role='NamelistForecastSettings',
+            kind='namelist',)
+        if len(namrh) != 1:
+            logger.critical('There must be exactly one <input fcst> namelist for forecast execution. Stop.')
+            raise ValueError('There must be exactly one namelist for mocage execution. Stop.')
+
+        namrh = namrh[0].rh
+
+        # Build dictionnaries which contains the terms for each geometry of FM and SM files
+        smterms = self._sorted_inputs_terms(
+            role='SMCoupling',
+            kind='boundary'
+        )
+        fmterms = self._sorted_inputs_terms(
+            role='FMFiles',
+            kind='gridpoint'
+        )
+
+        # Control of the duration of the run depending on the the SM and FM terms available
+        # Min values indicates whether the resources are nominal or alternate resources
+        minsm = max([min(smterms[geo]) for geo in smterms.keys()])
+        maxsm = min([max(smterms[geo]) for geo in smterms.keys()])
+        # 1 SM file per day and per domain : term 0 is used for the coupling of a 24h run
+        maxsm = maxsm - minsm + 24
+
+        minfm = max([min(fmterms[geo]) for geo in fmterms.keys()])
+        maxfm = min([max(fmterms[geo]) for geo in fmterms.keys()])
+        maxfm = maxfm - minfm
+        
+        #realfcterm = maxsm
+        realfcterm = min(maxsm, maxfm,self.fcterm.hour)
+        logger.info('Min Max(fmterms) : %s %s ', minfm, maxfm)
+        logger.info('Min Max(smterms) : %s %s ', minsm, maxsm)
+        logger.info('Fcterm           : %s ', realfcterm)
+
+        first = self.basedate
+        deltastr = 'PT' + six.text_type(realfcterm) + 'H'
+        last = self.basedate + deltastr
+
+        if self.fcterm != six.text_type(realfcterm):
+            sh.title('Forecast final term modified : {0:d} '.format(realfcterm))
+
+        self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
+        self._fix_nam_macro(namrh, 'YYYY2', int(last.year))
+        self._fix_nam_macro(namrh, 'MM1', int(first.month))
+        self._fix_nam_macro(namrh, 'MM2', int(last.month))
+        self._fix_nam_macro(namrh, 'DD1', int(first.day))
+        self._fix_nam_macro(namrh, 'DD2', int(last.day))
+        self._fix_nam_macro(namrh, 'HH1', int(first.hour))
+        self._fix_nam_macro(namrh, 'HH2', int(last.hour))
+
+        namrh.save()
+        namrh.container.cat()
+
+        # Process JSON config file for assimilation
+        json_inputs = self.context.sequence.effective_inputs(
+            role='AssimilationSettings',
+            kind='json_config',)
+        if len(json_inputs) != 1:
+            logger.critical('There must be exactly one json assimilation namelist for mocage/assim execution. Stop.')
+            raise ValueError('There must be exactly one json assimilation namelist. Stop.')
+        json_rh = json_inputs[0].rh
+        json_rh.contents.data['Assimilation']['Cycling']['NbOfWindows']=realfcterm
+        json_rh.save()
+        json_rh.container.cat()
+        
+        # Environment variables needed by mocage/assim
+        e = self.env
+        e['MOCAGE_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
+        e['DAIMON_B_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
+        e['DAIMON_H_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
+        #e['DAIMON_H_DOME_MPI_PROCS'] = $NNODES_H_DOME
+        #e['DAIMON_H_DOME_OMP_NUM_THREADS'] = $NTHREADS_H_DOME
+        #e['DAIMON_H_RTTOV_MPI_PROCS'] = $NNODES_H_RTTOV
+        #e['DAIMON_H_RTTOV_OMP_NUM_THREADS'] = $NTHREADS_H_RTTOV
+        # Disable DR HOOK
+        #e['DR_HOOK'] = 'false'
+        #e['DR_HOOK_NOT_MPI'] = 'true'
+        self.export('drhook')
+        self.export('drhook_not_mpi')
+        super(AssimilationOpenPalm, self).execute(rh, opts)
+
+
+        

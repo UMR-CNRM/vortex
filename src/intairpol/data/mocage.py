@@ -164,6 +164,36 @@ class PostPeriodicStats(GeoFlowResource):
     def realkind(self):
         return 'ppstats'
 
+@namebuilding_delete('src')
+class AssimilatedObs(GeoFlowResource):
+    """ Observations for assimilations in Mocage """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'Observations for use in Mocage assimilation',
+            attr = dict(
+                nativefmt = dict(
+                    values = ['hdf5',],
+                ),
+                kind = dict(
+                    values = ['assim_obs',],
+                )
+            ),
+        )
+    ]
+    
+    @property
+    def realkind(self):
+        return 'assim_obs'
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        prefix = 'HDAT+'
+        actualdate = self.date
+        fmtremap = dict(hdf5='h5')
+        return prefix + actualdate.m + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
+
+    
 
 class RestartFlagContent(TextContent):
     """Specialisation of the TextContent"""
@@ -203,3 +233,5 @@ class RestartFlag(FlowResource):
     @property
     def realkind(self):
         return 'restart_flag'
+
+

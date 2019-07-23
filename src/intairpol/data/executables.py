@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import BlackBox, ChemistryModel
 from gco.syntax.stdattrs import gvar
 from bronx.stdtypes import date
-
+from vortex.syntax.stddeco import namebuilding_append
 #: No automatic export
 __all__ = []
 
@@ -31,8 +31,104 @@ class Mocage(ChemistryModel):
             )
         )
     ]
+@namebuilding_append('src',lambda s:s.subkind)
+class MocageAssim(ChemistryModel):
+    """Mocage Palm Component (assim version)"""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Palm coupler for assimilation in mocage',
+            attr = dict(
+                kind = dict(
+                    values = ['mocage_assim'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]_[subkind]',
+                ),
+                model = dict(
+                    values = ['mocage']
+                ),
+                subkind = dict(
+                    values = ['palm','main']
+                ),
+                tasks = dict(
+                    type = int,
+                    optional = True,
+                    default = 12,
+                ),
+                openmp = dict(
+                    type = int,
+                    optional = True,
+                    default = 20,
+                )
+             )
+        )
+    ]
+    def make_mpi_opts(self):
+        """ return mpi options to produce mpibinary 
+        """
+        return { 'kind' :'basic',
+                 'tasks': 1,
+                 'nodes' : self.tasks if self.subkind == 'main' else 1,
+                 'openmp': self.openmp,
+        }
+    
 
 
+    
+class MocageAssimPalm(ChemistryModel):
+    """Mocage Palm Component (assim version)"""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Palm coupler for assimilation in mocage',
+            attr = dict(
+                kind = dict(
+                    values = ['mocage_assim_palm'],
+                ),
+                gvar = dict(
+                    default = 'palm_[kind]',
+                ),
+                model = dict(
+                    values = ['mocage']
+                ),
+             )
+        )
+    ]
+
+class MocageAssimMainBlock(ChemistryModel):
+    """Mocage Main block (assim version)"""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Main block for assimilation in mocage',
+            attr = dict(
+                kind = dict(
+                    values = ['mocage_assim_main'],
+                ),
+                gvar = dict(
+                    optional = True,
+                    default = 'main_[kind]',
+                ),
+                model = dict(
+                    values = ['mocage']
+                ),
+                tasks = dict(
+                    type = int,
+                    optional = True,
+                    default = 12
+                )
+            )
+        )
+    ]
+
+
+    
+
+
+
+
+    
 class ExecCorromegasurf(BlackBox):
     """Compute corromegasurf."""
 

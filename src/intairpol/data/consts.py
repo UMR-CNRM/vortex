@@ -4,6 +4,8 @@
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 from common.data.consts import GenvModelResource
+from vortex.data.outflow import StaticResource
+from vortex.data.contents import JsonDictContent
 
 #: No automatic export
 __all__ = []
@@ -14,14 +16,15 @@ class StaticSurfaceEmissions(GenvModelResource):
     Emissions files collected by international community.
     """
     _footprint = dict(
-        info = 'Emissions files for sumo',
-        attr = dict(
-            kind = dict(
-                values  = ['emiss_cst'],
+        info='Emissions files for sumo',
+        attr=dict(
+            kind=dict(
+                values=['emiss_cst'],
             ),
-            gvar = dict(
-                default = 'surface_emissions_files'
+            gvar=dict(
+                default='surface_emissions_files'
             ),
+
         )
     )
 
@@ -126,7 +129,7 @@ class CfcScenario(GenvModelResource):
         info = 'Initial CFC concentration clim file',
         attr = dict(
             kind = dict(
-                values  = ['cfc_scenario'],
+                values = ['cfc_scenario'],
             ),
             gvar = dict(
                 default = 'scenario_cfc'
@@ -171,7 +174,7 @@ class HybridLevels(GenvModelResource):
                 values=['hybrid_levels'],
             ),
             gvar=dict(
-                default='lev_hybrid'
+                default = 'lev_hybrid'
             ),
         )
     )
@@ -200,3 +203,62 @@ class SurfaceEmissionsProfilesTable(GenvModelResource):
     @property
     def realkind(self):
         return 'emiss_table'
+
+
+class JsonConfig(GenvModelResource):
+    """
+    JSON Config File (used for assimilation in mocage)
+    """
+    _footprint = dict(
+        info='JSON config file',
+        attr=dict(
+            kind=dict(
+                values=['json_config'],
+            ),
+            gvar=dict(
+                default='assimilation_config',
+                optional=True,
+            ),
+            nativefmt=dict(
+                values=['json',],
+                default='json',
+                optional=True,
+            ),
+            clscontents=dict(
+                default=JsonDictContent,
+                optional=True,
+            )
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'assimilation_config'
+
+        
+class PalmConfig(GenvModelResource):
+    """
+    Compiled file for Open Palm coupler
+    """
+    _footprint = dict(
+        info='Compiled file for Open Palm coupler',
+        attr=dict(
+            kind=dict(
+                values=['palm_config'],
+            ),
+            gvar=dict(
+                default='palm_config',
+                optional=True,
+            ),
+            nativefmt=dict(
+                values=['ascii',],
+                default='ascii',
+                optional=True,
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return 'palm_config'
+            
