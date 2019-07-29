@@ -126,7 +126,7 @@ class MeteoSopranoDevRH6(MeteoSoprano):
         return 'soprano_dev_rh6'
 
 
-# Any kind of CNRM servor or workstation
+# Any kind of CNRM server or workstation
 
 class UmrCnrmTarget(Target):
     """Restrict the FQDN to cnrm.meteo.fr."""
@@ -201,7 +201,7 @@ class CnrmLinuxServer(UmrCnrmTarget):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r'sx\w+\d+(?:\.|$)')
+            hostname = footprints.FPRegex(r' [scv]x\w+(?:\.|$)')
         )
     )
 
