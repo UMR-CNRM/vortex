@@ -147,6 +147,7 @@ class AlgoComponentDecoMixin(object):
 
     _MIXIN_PREPARE_PREHOOKS = ()
     _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_FAIL_EXECUTE_HOOKS = ()
     _MIXIN_POSTFIX_PREHOOKS = ()
     _MIXIN_POSTFIX_HOOKS = ()
     _MIXIN_SPAWN_HOOKS = ()
@@ -213,6 +214,9 @@ class AlgoComponentDecoMixin(object):
         for targetmtd, hooks, prehooks, reenter in [('prepare',
                                                      cls._MIXIN_PREPARE_HOOKS,
                                                      cls._MIXIN_PREPARE_PREHOOKS,
+                                                     False),
+                                                    ('fail_execute',
+                                                     cls._MIXIN_FAIL_EXECUTE_HOOKS, (),
                                                      False),
                                                     ('postfix',
                                                      cls._MIXIN_POSTFIX_HOOKS,
@@ -833,6 +837,10 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         else:
             self.execute_single(rh, opts)
 
+    def fail_execute(self, e, rh, kw):
+        """This method is called if :meth:`execute` raise an exception."""
+        pass
+
     def execute_finalise(self, opts):
         """Abstract method.
 
@@ -907,8 +915,11 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             self.fsstamp(kw)                # 2
             try:
                 self.execute(rh, kw)        # 3
+            except Exception as e:
+                self.fail_execute(e, rh, kw)  # 3.1
+                raise
             finally:
-                self.execute_finalise(kw)   # 3.1
+                self.execute_finalise(kw)   # 3.2
             self.fscheck(kw)                # 4
             self.postfix(rh, kw)            # 5
             self.dumplog(kw)                # 6
