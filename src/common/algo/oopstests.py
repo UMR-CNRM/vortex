@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 AlgoComponents for OOPS elementary tests.
 """
-
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import io
 import json
 
 import footprints
 
 from vortex.algo.components import AlgoComponentDecoMixin
-from common.syntax.stdattrs import oops_test_type, oops_expected_target, oops_select_expected_target
+from common.syntax.stdattrs import oops_test_type, oops_expected_target
 from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMemberDetectDecoMixin
 
 #: No automatic export
@@ -44,13 +41,12 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
     """Extend OOPSParallel Algo Components with OOPS Tests verification features.
 
     This mixin class is intended to be used with AlgoComponnent classes. It will
-    automatically add the ``expected_target`` and ``select_expected_target``
-    footprints' attributes and use them to setup the associatied environement
-    variable (see :meth:`set_expected_target`
+    automatically add the ``expected_target`` footprints' attribute and use it
+    to setup the associated environment variable
+    (see :meth:`set_expected_target`).
     """
 
-    _MIXIN_EXTRA_FOOTPRINTS = (oops_expected_target,
-                               oops_select_expected_target)
+    _MIXIN_EXTRA_FOOTPRINTS = (oops_expected_target,)
 
     def set_expected_target(self):
         """Set env variable EXPECTED_CONFIG.
@@ -58,23 +54,19 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
         It will create it using a JSON "dump" of either:
 
             * The Algo Component's attribute ``expected_target``;
-            * The JSON resource of role "Reference Summary".
-            * The JSON resource of role "Expected Target";  (deprecated)
-
-        :note: If provided, the Algo Component's attribute '`select_expected_target'`
-            is used to select inner trees from the expected target dictionary.
+            * if attribute ``expected_target`` == {'from':'reference_summary'},
+              the oops:self.test_type 'as EXPECTED_RESULT' key of the JSON resource
+              of role "Reference Summary".
+            * a default value, enabling to pass test
         """
         # if attribute 'expected_target' is attribute and given to the algo, use it
         target = self._set_expected_target_from_attribute()
         # else, go find Reference summary in effective inputs
-        if target is None:
+        if target is not None and target.get('from') == 'reference_summary':
             target = self._set_expected_target_from_reference_summary()
-        # else, go find ExpectedTargets in effective inputs
-        if target is None:
-            target = self._set_expected_target_from_expectedtargets()  # CLEANME: deprecated
         # Else, default to be sure to pass any in-binary-test
         if target is None:
-            target = self._set_expected_target_default()  # CLEANME: to be removed for CY47
+            target = self._set_expected_target_default()  # CLEANME: to be removed after CY47 ?
         # Then in the end, export variable
         target = json.dumps(target)
         logger.info("Expected Target for Test: " + target)
@@ -85,7 +77,7 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
         if hasattr(self, 'expected_target'):
             if self.expected_target is not None:
                 target = self.expected_target
-                logger.info('Set EXPECTED_RESULT from Reference summary')
+                logger.info('Set EXPECTED_RESULT from Attribute')
                 return target
 
     def _set_expected_target_from_reference_summary(self):
@@ -101,28 +93,7 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
             logger.info('Set EXPECTED_RESULT from Reference summary')
         return target
 
-    def _set_expected_target_from_expectedtargets(self):  # CLEANME: deprecated
-        """Read target in ExpectedTargets effective input"""
-        target = None
-        select = None
-        expected = self.context.sequence.effective_inputs(role=('ExpectedTargets',))
-        if len(expected) > 0:
-            expectedfile = expected[0].rh.container.localpath()
-            with io.open(expectedfile, 'r') as cf:
-                target = json.load(cf)
-        # now either we found it in input or in attribute, or no target is defined
-        # if defined, filter it with keys of attribute 'select_expected_target'
-        if hasattr(self, 'select_expected_target'):
-            select = self.select_expected_target
-        if target is not None:
-            if select is not None:
-                for k in select:
-                    target = target[k]  # will raise an error if key not present in dict
-        if target is not None:
-            logger.info('Set EXPECTED_RESULT from ExpectedTargets')
-        return target
-
-    def _set_expected_target_default(self):  # CLEANME: to be removed for CY47
+    def _set_expected_target_default(self):  # CLEANME: to be removed after CY47 ?
         """Set default, for binary not to crash before CY47."""
         target = {'significant_digits':'-9',
                   'expected_Jo':'9999',

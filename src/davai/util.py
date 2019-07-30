@@ -27,7 +27,7 @@ class DavaiException(Exception):
 
 def block_from_olive_tree():
     """Get block from the Olive tree."""
-    return os.path.join(*os.environ['SMSNAME'].split(os.path.sep)[6:])
+    return os.path.join(*os.environ['SMSNAME'].split(os.path.sep)[4:])
 
 
 def default_experts():
@@ -38,10 +38,49 @@ def default_experts():
             ]
 
 
+def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
+                              fatal=True, **kwargs):
+    """
+    Send JSON data to DAVAI server.
+
+    :param xpid: experiment identifier
+    :param jsonData: data to be sent, formatted as output from json.dumps(...)
+    :param kind: kind of data, among 'xpinfo' or 'taskinfo'
+    :param fatal: raise errors (or log them and ignore)
+
+    Additional kwargs are passed to requests.post()
+    """
+    import requests
+    # data to be sent to api
+    data = {'jsonData':jsonData,
+            'xpid':xpid,
+            'type':kind}
+    # sending post request and saving response as response object
+    try:
+        r = requests.post(url=davai_server_post_url, data=data, **kwargs)
+    except requests.ConnectionError as e:
+        logger.error('Connection with remote server: {} failed: {}'.format(
+            davai_server_post_url,
+            str(e)))
+        if fatal:
+            raise
+    else:
+        # Check returnCode/message
+        resultDict = json.loads(r.text)
+        # success
+        if resultDict.get('returnCode') == 0:
+            logger.info(resultDict.get('message'))
+        # fail
+        else:
+            logger.error('The post failed: returnCode is {}'.format(
+                resultDict.get('returnCode')))
+            if fatal:
+                raise DavaiException(resultDict.get('message'))
+
+
 class SummariesStack(object):
 
     summaries_stack_dir = 'summaries_stack'
-    trolley = 'trolley.json'  # CLEANME: deprecated
     trolleytar = 'trolley.tar'
     xpinfo = 'xpinfo.json'
     # syntax: taskinfo.scope.json
@@ -71,24 +110,9 @@ class SummariesStack(object):
                             self.summaries_stack_dir)
 
     @property
-    def trolley_abspath(self):  # CLEANME: deprecated
-        """Get absolute path of trolley."""
-        return os.path.join(self.stackdir_abspath, self.trolley)
-
-    @property
     def trolleytar_abspath(self):
         """Get absolute path of trolley."""
         return os.path.join(self.stackdir_abspath, self.trolleytar)
-
-    def witness_trolley_obsolescence(self, t):  # CLEANME: deprecated
-        """Witness trolley obsolescence, by writing explicit message in it."""
-        # Note: we use temp file then move to ensure atomicity wrt other tasks or trolley loading
-        _fd, tmp = tempfile.mkstemp(dir=os.getcwd())
-        t.sh.close(_fd)
-        with open(tmp, 'a') as out:
-            json.dump({'Error':'A task has been ran AFTER last gathering of summaries ! Re-run gathering...'},
-                      out)
-        t.sh.mv(tmp, self.trolley_abspath)
 
     def witness_trolleytar_obsolescence(self, t):
         """Witness trolley obsolescence, by writing explicit message in it."""
@@ -121,48 +145,6 @@ class SummariesStack(object):
         else:
             # witness trolley obsolescence
             self.witness_trolleytar_obsolescence(t)
-
-    def slurp_json_from_stack(self, file_basename):  # CLEANME: deprecated
-        """Read json from file in stack."""
-        with open(os.path.join(self.stackdir_abspath, file_basename)) as sf:
-            summary = json.load(sf)
-        return summary
-
-    def load_trolley(self, t):  # CLEANME: deprecated
-        """Load summaries on trolley."""
-        t.sh.rm(self.trolley_abspath)
-        trolley_dict = {}
-        # browse files in stack
-        for f in t.sh.listdir(self.stackdir_abspath):
-            match = self._re_tasksummary.match(f)
-            # if a summary, load it in trolley
-            if match:
-                task = match.group('task').replace(self._task_junction, '/')
-                scope = match.group('scope')
-                if task not in trolley_dict.keys():
-                    trolley_dict[task] = {}
-                summary = self.slurp_json_from_stack(f)
-                trolley_dict[task][scope] = summary
-            elif f == self.xpinfo:
-                xpinfo = self.slurp_json_from_stack(f)
-                trolley_dict['xpinfo'] = xpinfo
-        # write trolley
-        with open(self.trolley, 'w') as out:
-            json.dump(trolley_dict, out)
-        # and move it to stack
-        # Note: we use temp file then move to ensure atomicity wrt other tasks
-        try:
-            os.remove(self.trolley_abspath)  # here we use os and not t.sh.rm, because we need to catch an error
-        except Exception as e:
-            # trolley should not be present, since we deleted it before gathering
-            if 'No such file or directory' not in str(e):
-                raise e
-        else:
-            # in which case, a task has produced new results in between: raise an error !
-            raise DavaiException("A task has been updated in between: re-run !")
-        t.sh.mv(self.trolley, self.trolley_abspath)
-        # and get it back for archiving
-        t.sh.cp(self.trolley_abspath, self.trolley)
 
     def load_trolleytar(self, t):
         """Load summaries on trolley."""

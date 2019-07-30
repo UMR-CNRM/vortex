@@ -9,7 +9,6 @@ import json
 
 from footprints import FPList, FPDict
 from bronx.fancies import loggers
-from bronx.stdtypes import date
 
 from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
                                     AlgoComponentError)
@@ -25,7 +24,7 @@ logger = loggers.getLogger(__name__)
 
 class XpidRegister(AlgoComponent):
     """
-    Save metadata about the experiment.
+    Register metadata about the experiment.
     """
 
     _footprint = dict(
@@ -40,56 +39,60 @@ class XpidRegister(AlgoComponent):
             ref_xpid = dict(
                 info = "Identifier of the Reference Experiment",
                 optional = True,
-                default = None
-            ),
-            cycle = dict(
-                info = "genv or uenv cycle used. Default tries to access from env variable CYCLE.",
-                optional = True,
                 default = None,
                 access = 'rwx'
+            ),
+            appenv = dict(
+                info = "genv or uenv used for app-specific consts.",
+            ),
+            commonenv = dict(
+                info = 'genv or uenv used for binaries and so - common consts.',
             ),
             input_store = dict(
                 info = "The store in which to pick initial resources"
             ),
             usecase = dict(
-                info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.
-                          Default tries to access from env variable USECASE.""",
-                optional = True,
-                default = None,
-                access = 'rwx'
+                info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.""",
             ),
         )
     )
 
     def prepare(self, rh, opts):  # @UnusedVariable
-        if self.usecase is None:
-            self.usecase = self.env.get('USECASE')
-        if self.cycle is None:
-            self.cycle = self.env.get('CYCLE')
         if self.ref_xpid == self.xpid:
             self.ref_xpid = None
 
     def execute(self, rh, kw):  # @UnusedVariable
-        metadata = {'initial_time_of_launch':date.utcnow().iso8601(),
-                    'xpid':self.xpid,
-                    'ref_xpid':self.ref_xpid,
-                    'cycle':self.cycle,
-                    'input_store':self.input_store,
-                    'cycle_detail':self._get_cycle_env(),
-                    'git_branch':self.env.get('GIT_BRANCH'),
-                    'usecase':self.usecase}
-        with open('xpinfo.json', 'w') as out:
-            json.dump(metadata, out, indent=4, sort_keys=True)
+        import davai_tbx  # @UnresolvedImport
+        davai_tbx.util.write_xpinfo(user=self.env['USER'],
+                                    xpid=self.xpid,
+                                    ref_xpid=self.ref_xpid,
+                                    appenv=self.appenv,
+                                    commonenv=self.commonenv,
+                                    input_store=self.input_store,
+                                    usecase=self.usecase,
+                                    appenv_details=self.appenv_details,
+                                    commonenv_details=self.commonenv_details)
 
-    def _get_cycle_env(self, linesep='<br>'):
-        if any([self.cycle.startswith(scheme) for scheme in ('uget:', 'uenv:')]):
-            details = uenv.nicedump(self.cycle,
+    @property
+    def appenv_details(self):
+        return self._get_env(self.appenv)
+
+    @property
+    def commonenv_details(self):
+        return self._get_env(self.commonenv)
+
+    @classmethod
+    def _get_env(cls, env):
+        if any([env.startswith(scheme) for scheme in ('uget:', 'uenv:')]):
+            # uenv
+            details = uenv.nicedump(env,
                                     scheme='uget',
                                     netloc='uget.multi.fr')
         else:
+            # genv
             details = ['%s="%s"' % (k,v)
-                       for (k,v) in genv.autofill(self.cycle).items()]
-        return linesep.join(details)
+                       for (k,v) in genv.autofill(env).items()]
+        return details
 
 
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
@@ -104,8 +107,10 @@ class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
                    if x.role == 'TaskSummary']
         if len(promise) == 1:
             if not self.system.path.exists(promise[0].rh.container.localpath()):
-                # if file has been written, means that the comparison failed
-                summary = {'Status':'Expertise failed',
+                # if file had been written, means that the comparison failed
+                summary = {'Status':{'symbol':'E!',
+                                     'short':'Ended ! Summary failed',
+                                     'text':'Task ended, but Expertise failed: no TaskSummary available !'},
                            'Exception':str(e)}
                 with open(promise[0].rh.container.localpath(), 'w') as out:
                     json.dump(summary, out)
@@ -154,6 +159,10 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
 
     def prepare(self, rh, opts):  # @UnusedVariable
         import davai_tbx  # @UnresolvedImport
+        # io_poll if needed
+        for p in ('ICMSH', 'PF', 'GRIBPF'):
+            if self.system.path.exists('io_poll.todo.{}'.format(p)):
+                self.system.io_poll(p)
         for e in self.experts:
             e.setdefault('fatal_exceptions', self.fatal_exceptions)
         self._inner = davai_tbx.expertise.ExpertBoard(self.experts,
@@ -166,7 +175,9 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
         else:
             ref_resources = self.context.sequence.effective_inputs(
                 role=('Reference', 'ContinuityReference', 'ConsistencyReference'))
+            # split
             consistency_resources, continuity_resources = self._split_ref_resources(ref_resources)
+            # prepare
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
         self._inner.process(consistency_resources, continuity_resources)
@@ -197,21 +208,20 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
         if len(resource_handlers) == 0:
             return []
         else:
-            xp = [r.provider.experiment for r in resource_handlers]
-            block = [r.provider.block for r in resource_handlers]
+            xp = [rh.provider.experiment for rh in resource_handlers]
+            block = [rh.provider.block for rh in resource_handlers]
             if len(set(xp)) > 1:
                 raise AlgoComponentError(refkind + " reference resources must all come from the same 'experiment'.")  # continuity
             if len(set(block)) > 1:
                 raise AlgoComponentError(refkind + " reference resources must all come from the same 'block'.")  # consistency
             if refkind == 'Continuity':
-                ref_is = {'Reference is':{'experiment':xp[0],
-                                          'task':'(same)'}}
+                ref_is = {'experiment':xp[0],
+                          'task':'(same)'}
             elif refkind == 'Consistency':
-                ref_is = {'Reference is':{'experiment':'(same)',
-                                          'task':block[0]}}
-        return [{'localpath':rh.container.localpath(),
-                 'kind':rh.resource.kind,
-                 'reference_info':ref_is}
+                ref_is = {'experiment':'(same)',
+                          'task':block[0]}
+        return [{'rh':rh,
+                 'ref_is':ref_is}
                 for rh in resource_handlers]
 
 

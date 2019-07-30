@@ -8,6 +8,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import json
 
 import footprints
+from bronx.stdtypes import date
 
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
@@ -51,10 +52,11 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             ref_summary = ref_summary[0].rh.contents.data  # slurp
             ref_status = ref_summary.get('Status')
             if ref_status['symbol'].startswith('X'):
-                status = ['X=R']
+                status = task_status['X=R']
         # then write summary in promise
         summary = {'Status':status,
-                   'Exception':str(e)}
+                   'Exception':str(e),
+                   'Updated':date.now().isoformat().split('.')[0]}
         promise = [x for x in self.promises
                    if x.role == 'TaskSummary']
         if len(promise) == 1:
