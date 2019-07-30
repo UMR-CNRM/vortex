@@ -201,7 +201,7 @@ class CnrmLinuxServer(UmrCnrmTarget):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r' [scv]x\w+(?:\.|$)')
+            hostname = footprints.FPRegex(r'[scv]x\w+(?:\.|$)')
         )
     )
 
