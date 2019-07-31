@@ -1495,12 +1495,15 @@ class SodaWorker(Parallel):
         # rename background preps
         # delete soda symbolic links
         os.unlink('PREP.nc')
+        # BC 31/07/19 : reremoving this noisy shuffling
+        # # BC 11/06/19 : reactivating initial state mixing to prevent the truth from reappearing
+        # memberslistmix = range(1, len(self.members) + 1)
+        # random.shuffle(memberslistmix)
 
-        # BC 11/06/19 : reactivating initial state mixing to prevent the truth from reappearing
-        memberslistmix = range(1, len(self.members) + 1)
-        random.shuffle(memberslistmix)
+        # for dirIt, mb in zip(self.mbdirs, memberslistmix):
+        memberslist = range(1, len(self.members) + 1)
 
-        for dirIt, mb in zip(self.mbdirs, memberslistmix):
+        for dirIt, mb in zip(self.mbdirs, memberslist):
             os.unlink('PREP_' + self.dateassim.ymdHh + '_PF_ENS' + str(mb) + '.nc')
             if os.path.exists(dirIt + '/PREP.nc'):  # old task/offline case
                 os.remove(dirIt + '/PREP.nc')
