@@ -119,6 +119,10 @@ class AlgoComponentDecoMixin(object):
               * :data:`_MIXIN_PREPARE_HOOKS`: Tuple of method that will be
                 executed after the original prepare method.
 
+              * :data:`_MIXIN_FAIL_EXECUTE_HOOKS`: Tuple of method that will
+                be executed if the execution fails (the original exception
+                will be re-raised afterwards)
+
               * :data:`_MIXIN_POSTFIX_PREHOOKS`: Tuple of method that will be
                 executed before the original postfix method.
 

@@ -26,11 +26,9 @@ class XPinfo(StaticResource):
         )
     )
 
-    def namebuilding_info(self):
-        """Base name on the scope."""
-        bdict = super(XPinfo, self).namebuilding_info()
-        bdict.update(radical=self.kind, )
-        return bdict
+    @property
+    def realkind(self):
+        return 'xpinfo'
 
 
 class TrolleyOfSummaries(StaticResource):
@@ -46,8 +44,6 @@ class TrolleyOfSummaries(StaticResource):
         )
     )
 
-    def namebuilding_info(self):
-        """Base name on the kind."""
-        bdict = super(TrolleyOfSummaries, self).namebuilding_info()
-        bdict.update(radical=self.kind, )
-        return bdict
+    @property
+    def realkind(self):
+        return 'trolley'

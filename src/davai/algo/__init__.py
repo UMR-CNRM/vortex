@@ -10,3 +10,5 @@ from . import reporting, mixins
 
 #: No automatic export
 __all__ = []
+
+__tocinfoline__ = 'The DAVAI AlgoComponents'

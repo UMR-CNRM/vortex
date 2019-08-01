@@ -1,23 +1,25 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """
-This modules implements constants and conversions used in thermodynamics
+This modules implements constants and conversions used in thermodynamics.
 
-For users with an account at the CNRM, a brief description of the equations
-can be found at /cnrm/mesonh/data1/riette/Public/thermo/thermo.pdf
+A brief description of the equations can be found in this document:
+`thermo.pdf <../../../_static/thermo.pdf>`_
 
-If you find mistakes in the document or in the script, please,
-send me an email: sebastien.riette@meteo.fr
+If you find mistakes in the above document or in this module, please,
+send an email to sebastien.riette@meteo.fr.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
 import numpy as np
-import logging
 
-from . import constants as csts
+from bronx.fancies import loggers
+from bronx.meteo import constants as csts
 
+
+logger = loggers.getLogger(__name__)
 
 _names = [('T', 'Temperature (K)'),
           ('Theta', 'Potential temperature (K)'),
@@ -81,20 +83,34 @@ class ThermoError(Exception):
 
 
 class Thermo(object):
-    """
-    This class aims at containing states parameter.
+    """This class aims at containing states parameter.
+
     Values are retrieved by special method which can compute derived parameters.
-    One can put anything inside this class but derived parameter computation uses defined name for some thermodynamic parameters.
-    These names are available in the thermo.N_* constants and comments are in C_*.
+    One can put anything inside this class but derived parameter computation uses
+    defined name for some thermodynamic parameters.
+    These names are available in the ``thermo.N_*`` constants and comments are in ``C_*``.
     Values must be all scalars or all numpy.arrays of the same shape.
 
-    Example:
-    import thermo
-    data = thermo.Thermo()
-    print(thermo.C_T) #will print 'Temperature (K)'
-    data.set(thermo.N_T, 280) #in K
-    data.set(thermo.N_P, 75000) #in Pa
-    print(data.get(N_Theta)) #will print 303.986861284
+    Example::
+
+        >>> data = Thermo()
+        >>> print(C_T)
+        Temperature (K)
+        >>> data.set(N_T, 280)   # in K
+        >>> data.set(N_P, 75000) # in Pa
+        >>> print('{:.2f}'.format(data.get(N_Theta)))
+        303.99
+
+        >>> import numpy as np
+        >>> data2 = Thermo(hydrometeors=['v', ])
+        >>> data2.set(N_T, np.array([280, 300]))       # in K
+        >>> data2.set(N_P, np.array([75000, 101300]))  # in Pa
+        >>> data2.set(N_rv, np.array([0.05, 0.1]))     # in kg/kg
+        >>> print(' '.join(['{:.2f}'.format(r) for r in data2.get(N_rt)]))
+        0.05 0.10
+        >>> print(' '.join(['{:.2f}'.format(t) for t in data2.get(N_ThetaV)]))
+        312.78 315.41
+
     """
 
     _known_liquid_hydrometeors = ['c', 'r']
@@ -102,18 +118,27 @@ class Thermo(object):
 
     def __init__(self, hydrometeors=None, data=None):
         """
-        Init method.
-        hydrometeors lists the hydrometeors to consider.
-          if None, only a subset of computations can be done
-          'v', 'c', 'r', 'i', 's', 'g' and 'h' are allowed
-        data can be a dictionnary.
+        :param hydrometeors: lists the hydrometeors to consider.
+            If None, only a subset of computations can be done.
+            'v', 'c', 'r', 'i', 's', 'g' and 'h' are allowed.
+        :param data: A dictionary. Alternatively, **data** can be omited and
+            the :meth:`set`` method can be used.
 
-        data = thermo.Thermo()
-        data.set(thermo.N_T, 280)
-        data.set(thermo.N_P, 75000)
+        Example::
 
-        is equivalent to
-        data=thermo.Thermo(data={thermo.N_T:280, thermo.N_P:75000})
+            >>> data = Thermo()
+            >>> data.set(N_T, 280)
+            >>> data.set(N_P, 75000)
+
+            # Is equivalent to...
+            >>> data2 = Thermo(data={N_T:280, N_P:75000})
+
+            # Let's check...
+            >>> data.get(N_T) == data2.get(N_T)
+            True
+            >>> data.get(N_P) == data2.get(N_P)
+            True
+
         """
         self._data = {}
         self._shape = None
@@ -122,12 +147,15 @@ class Thermo(object):
             for key in data:
                 self.set(key, data[key])
 
-        assert hydrometeors is None or isinstance(hydrometeors, list), "hydrometeors must be None or a list"
+        assert hydrometeors is None or isinstance(hydrometeors, list), \
+            "hydrometeors must be None or a list"
         self._hydrometeors = hydrometeors
         if self._hydrometeors is not None:
             for h in self._hydrometeors:
-                assert h in (['v'] + Thermo._known_liquid_hydrometeors + Thermo._known_solid_hydrometeors), "hydrometeors " + str(h) + " is not known."
-            assert len(set(self._hydrometeors)) == len(self._hydrometeors), "hydrometeors components must appear only once."
+                assert h in (['v'] + Thermo._known_liquid_hydrometeors + Thermo._known_solid_hydrometeors), \
+                    "hydrometeors " + str(h) + " is not known."
+            assert len(set(self._hydrometeors)) == len(self._hydrometeors), \
+                "hydrometeors components must appear only once."
 
         self._allKnownMethods = [(N_Theta,  [N_T, N_P],                    self.T_P2Theta),
                                  (N_T,      [N_Theta, N_P],                self.Theta_P2T),
@@ -161,7 +189,8 @@ class Thermo(object):
                                  (N_TV,     [N_qv, N_qliquid, N_qice, N_T],self.qv_qliquid_qice_T2TV),
                                  (N_Cp,     [N_qv, N_qliquid, N_qice],     self.qv_qliquid_qice2Cp),
                                  (N_Cph,    [N_rv, N_rliquid, N_rice],     self.rv_rliquid_rice2Cph),
-                                ]
+                                 ]
+
         if self._hydrometeors is not None:
             for h in self._hydrometeors + ['t']:
                 self._allKnownMethods.extend([('q' + h, ['r' + h, N_rt], self.rx_rt2qx),
@@ -179,13 +208,14 @@ class Thermo(object):
 
     def _compute_new_T(self, target, precision):
         """
-        This internal method computes the temperature obtained after exchanges with vapor
-        target is a dictionary containing mixing ratio after changes
-        method returns T
-        cf. evaporate for description of precision
+        This internal method computes the temperature obtained after exchanges
+        with vapour target is a dictionary containing mixing ratio after changes
+        method returns **T**.
+
+        see the :meth:`evaporate` method for a description of **precision**
         """
         T = self.get(N_T)
-        r = {s:self.get('r' + s) for s in self.hydrometeors}
+        r = {s: self.get('r' + s) for s in self.hydrometeors}
         for s in self.hydrometeors:
             if s != 'v' and s not in target:
                 raise ValueError(str(s) + "must be in target.")
@@ -201,7 +231,7 @@ class Thermo(object):
             else:
                 raise ValueError("Specie '" + str(s) + "' not known.")
             if i == 0 or precision == 'full':
-                L_before = L0 + (csts.Cpv - Cx) * (T - csts.Tt)
+                L_before = L0 + (csts.Cpv - Cx) * (T - csts.T0)
                 Cph_before = csts.Cpd + csts.Cpv * r['v']
                 Cph_after = csts.Cpd + csts.Cpv * (r['v'] + r[s] - target[s])
                 for k, v in r.iteritems():
@@ -222,13 +252,13 @@ class Thermo(object):
                     else:
                         raise ValueError("Specie '" + str(k) + "' not known.")
             elif precision != 'full':
-                L_before = L0 + (csts.Cpv - Cx) * (self.get(N_T) - csts.Tt)
+                L_before = L0 + (csts.Cpv - Cx) * (self.get(N_T) - csts.T0)
             if precision == 'standard':
                 # Explicit calcul, L and Cph are assumed to be constant during the transformation (they are taken equal to their initial values)
                 T = T + L_before * (target[s] - r[s]) / Cph_before
             elif precision == 'full':
                 # Cp dT = Lv dqv integrated on the transformation. We have L+/L-=Cp-/Cp+
-                T = Cph_before / Cph_after * (L0 / (csts.Cpv - Cx) - csts.Tt + T) + csts.Tt - L0 / (csts.Cpv - Cx)
+                T = Cph_before / Cph_after * (L0 / (csts.Cpv - Cx) - csts.T0 + T) + csts.T0 - L0 / (csts.Cpv - Cx)
             else:
                 raise ValueError("Value of precision not known: " + str(precision))
             r['v'] = r['v'] + r[s] - target[s]
@@ -237,19 +267,27 @@ class Thermo(object):
 
     def evaporate(self, species, extra_variables=[], precision='full'):
         """
-        This method returns a Thermo instance in which <species> are evaporated (others are kept untouched).
-        Only T and mixing ratios are set in the new object unless <extra_variables> is set.
-        <extra_variables> is a list of variables to get from the current object and to set in the new one.
-        If <extra_variables> contain thermodynamic variables, they can be in contradiction with the evaporated state;
-           this variable is only usefull for variables not impacted by evaporation (P, wind...)
-        <precision> can be:
-          - 'full': Cp and Lv values are evolving during the evaporation. Species are evaporated in the order
-                    given by <species>. Normally, the order does not matter.
-          - 'standard': Cp and Lv are computed from the initial state and kept constant during evaporation
-        """
+        This method returns a Thermo instance in which **species** are evaporated
+        (others are kept untouched).
 
+        Only T and mixing ratios are set in the new object unless
+        **extra_variables** is set. **extra_variables** is a list of variables
+        to get from the current object and to set in the new one. If
+        **extra_variables** contain thermodynamic variables, they can be in
+        contradiction with the evaporated state;
+        this variable is only useful for variables not impacted by evaporation
+        (P, wind...) **precision** can be:
+
+            * ``full``: Cp and Lv values are evolving during the evaporation. Species
+              are evaporated in the order given by **species**. Normally, the order
+              does not matter.
+            * ``standard``: Cp and Lv are computed from the initial state and kept
+              constant during evaporation
+
+        """
         result = self.__class__(hydrometeors=self.hydrometeors)
-        target = {s:self.get('r' + s) * (0. if s in species else 1.) for s in [k for k in self.hydrometeors if k != 'v']}
+        target = {s: self.get('r' + s) * (0. if s in species else 1.)
+                  for s in [k for k in self.hydrometeors if k != 'v']}
         T = self._compute_new_T(target, precision)
         rv = self.get(N_rt)
         for s in target:
@@ -265,23 +303,40 @@ class Thermo(object):
 
     def adjust(self, species, mix_rule=None, iteration=1, extra_variables=[], precision='full'):
         """
-        This method returns a Thermo instance in which <species> are adjusted with respect to water vapor (others are kept untouched).
-        species can only contain 'c' and/or 'i'.
-        if species == ['c'], we adjust with respect to liquid water (mix_rule must be None)
-        if species == ['i'], we adjust with respect to ice (mix_rule must be None)
-        if 'c' and 'i' are in species, mix_rule cannot be None, we have to choose an adjustment way:
-           - 'same', we keep the same partition between liquid and ice (entirely liquid if no previous cloud)
-           - '0T-20', we use a linear partition between liquid and ice according to temperature between 0 and -20
-        Liquid/ice fraction is used to compute a weight-averaged saturation mixing ratio.
-        Adjustement is an iterative process, iteration gives the number of iteration we must perform
-        Only T and mixing ratios are set in the new object unless <extra_variables> is set.
-        <extra_variables> is a list of variables to get from the current object and to set in the new one.
-        If <extra_variables> contain thermodynamic variables, they can be in contradiction with the adjusted state;
-           this variable is only usefull for variables not impacted by adjustement (P, wind...)
-        <precision> can be:
-          - 'full': Cp and Lv values are evolving during the evaporation. Species are evaporated in the order
-                    given by <species>. Normally, the order does not matter.
-          - 'standard': Cp and Lv are computed from the initial state and kept constant during evaporation
+        This method returns a :class:`Thermo` instance in which **species** are
+        adjusted with respect to water vapour (others are kept untouched).
+
+        **species** can only contain 'c' and/or 'i':
+
+            * if ``species == ['c']``, we adjust with respect to liquid water
+              (mix_rule must be None)
+            * if ``species == ['i']``, we adjust with respect to ice (mix_rule
+              must be None)
+            * if ``c`` and ``i`` are in **species**, mix_rule cannot be ``None``,
+              we have to choose an adjustment way:
+
+                * ``same``, we keep the same partition between liquid and ice
+                  (entirely liquid if no previous cloud)
+                * ``0T-20``, we use a linear partition between liquid and ice
+                  according to temperature between 0 and -20
+
+        Liquid/ice fraction is used to compute a weight-averaged saturation mixing
+        ratio. Adjustment is an iterative process, **iteration** gives the number of
+        iteration we must perform.
+
+        Only T and mixing ratios are set in the new object unless **extra_variables**
+        is set. **extra_variables** is a list of variables to get from the
+        current object and to set in the new one. If **extra_variables** contains
+        thermodynamic variables, they can be in contradiction with the adjusted state;
+        this variable is only useful for variables not impacted by adjustment (P, wind...)
+        **precision** can be:
+
+            * ``full``: Cp and Lv values are evolving during the evaporation. Species
+              are evaporated in the order given by **species**. Normally, the
+              order does not matter.
+            * ``standard``: Cp and Lv are computed from the initial state and kept
+              constant during evaporation
+
         """
 
         assert mix_rule in [None, 'same', '0T-20'], "mix_rule must be None, 'same' or '0T-20'"
@@ -311,7 +366,7 @@ class Thermo(object):
                 if mix_rule == 'same':
                     ice_fraction = np.where(tempo.get(N_rc) + tempo.get(N_ri) > 0., tempo.get(N_ri) / (tempo.get(N_rc) + tempo.get(N_ri)), 0.)
                 else:
-                    ice_fraction = (csts.Tt - tempo.get(N_T)) / 20.
+                    ice_fraction = (csts.T0 - tempo.get(N_T)) / 20.
                     ice_fraction = np.maximum(0., np.minimum(1, ice_fraction))
                 cond = tempo.get(N_rc) + tempo.get(N_ri)
                 rsat = ice_fraction * tempo.get(N_rsati) + (1. - ice_fraction) * tempo.get(N_rsatw)
@@ -321,7 +376,8 @@ class Thermo(object):
             diff = np.maximum(-cond, tempo.get(N_rv) - rsat)  # if rv>rsat, diff is the part of rv that we must condensate on cloud
             #                                                   if rv<rsat, diff is the content we must take to cloud to put it back to vapor (hence the maximum)
             cond = cond + 0.8 * diff  # Tuning factor to limit oscilations and non-convergence
-            target = {s:(tempo.get('r' + s) if s not in species else cond * (ice_fraction if s == 'i' else (1 - ice_fraction))) for s in [k for k in tempo.hydrometeors if k != 'v']}
+            target = {s: (tempo.get('r' + s)
+                          if s not in species else cond * (ice_fraction if s == 'i' else (1 - ice_fraction))) for s in [k for k in tempo.hydrometeors if k != 'v']}
             T = tempo._compute_new_T(target, precision)
 
             result = self.__class__(hydrometeors=self.hydrometeors)
@@ -340,15 +396,11 @@ class Thermo(object):
         return result
 
     def list(self):
-        """
-        List all already known parameters
-        """
+        """Iterator over all already known parameters"""
         return self._data.keys()
 
     def set(self, parameter, value):
-        """
-        Sets or update a value for parameter.
-        """
+        """Sets or updates a value for parameter."""
         valueShape = (1,) if not isinstance(value, np.ndarray) else value.shape
         if self._shape is None:
             self._shape = valueShape
@@ -356,9 +408,7 @@ class Thermo(object):
         self._data[parameter] = value
 
     def changeOrder(self, parameter, increasing=True):
-        """
-        Modify order of all parameters to sort according to parameter.
-        """
+        """Modify the order of all parameters to sort according to parameter."""
         p = self.get(parameter).argsort()
         if not increasing:
             p = p[::-1]
@@ -366,37 +416,35 @@ class Thermo(object):
             self.set(param, self.get(param)[p])
 
     def get(self, parameter, methods=None):
-        """
-        Gets or compute a value for parameter
-        """
+        """Gets or computes a value for parameter"""
         if parameter not in self._data:
             # To allow a better result, one must begin by the more accurate methods
-            listOfMethods = methods if methods is not None  else list(self._allKnownMethods)
-            for iMethod in range(len(listOfMethods)):
-                method = listOfMethods[iMethod]
+            listOfMethods = methods if methods is not None else self._allKnownMethods
+            for iMethod, method in enumerate(listOfMethods):
                 if parameter not in self._data and method[0] == parameter:
                     # We try to call this method.
                     # To prevent cyclic calls, we give it the remaining available methods (excluding recursively the current one)
                     m = list(listOfMethods)
                     m.pop(iMethod)
                     try:
-                        logging.debug("Trying to call " + method[2].__name__)
+                        logger.debug("Trying to call " + method[2].__name__)
                         args = []
                         for dep in method[1]:
-                            logging.debug("Trying to obtain " + dep + " for calling " + method[2].__name__)
+                            logger.debug("Trying to obtain " + dep + " for calling " + method[2].__name__)
                             args.append(self.get(dep, m))
-                            logging.debug(dep + " obtained for calling " + method[2].__name__)
-                        logging.debug(parameter + " is computed by " + method[2].__name__)
+                            logger.debug(dep + " obtained for calling " + method[2].__name__)
+                        logger.debug(parameter + " is computed by " + method[2].__name__)
                         self._data[parameter] = method[2](*list(args))
                     except ThermoError:
-                        logging.debug("Call to " + method[2].__name__ + " not possible")
+                        logger.debug("Call to " + method[2].__name__ + " not possible")
                         pass
         if parameter in self._data:
             return self._data[parameter]
         else:
             raise ThermoError("Parameter '" + parameter + "' is not set and cannot be computed.")
 
-# Thermodynamic functions ######################################################
+    # Thermodynamic functions ######################################################
+
     @staticmethod
     def Td2e(Td):
         """Computes e from Td"""
@@ -428,8 +476,9 @@ class Thermo(object):
         """
         Computes the water vapor pressure at saturation from T and phase.
         Phase is given by:
-          - 'L', 'E' or 'W' for liquid water
-          - 'S', 'G' or 'I' for ice
+
+            * 'L', 'E' or 'W' for liquid water
+            * 'S', 'G' or 'I' for ice
         """
         phase_liquid = ['L', 'W', 'E']
         phase_ice = ['S', 'I', 'G']
@@ -596,7 +645,6 @@ class Thermo(object):
         return csts.Cpd + csts.Cpv * rv + csts.Cl * rliquid + csts.Ci * rice
 
 
-if __name__ == "__main__":
-    for k, v in Thermo.__dict__.iteritems():
-        if type(v) == float:
-            print(str(k) + "=" + str(v))
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()

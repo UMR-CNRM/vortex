@@ -20,25 +20,24 @@ from common.algo.odbtools import (Raw2ODBparallel)
 __all__ = []
 
 
-cw_fp = footprints.Footprint(
-    info='The CrashWitness version of the Algo',
-    attr=dict(
-        crash_witness = dict(
-            type = bool,
-            optional = False,
-            values = [True,]
-        ),
-    )
-)
-
-
 class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Algo Components to catch exceptions in the binary execution,
     notify it into the job summary (witness), and push it.
     """
 
-    _MIXIN_EXTRA_FOOTPRINTS = (cw_fp,)
+    _MIXIN_EXTRA_FOOTPRINTS = (
+        footprints.Footprint(
+            info='The CrashWitness version of the Algo',
+            attr=dict(
+                crash_witness = dict(
+                    type = bool,
+                    optional = False,
+                    values = [True, ]
+                ),
+            )
+        ),
+    )
 
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
         from davai_tbx.expertise import task_status  # @UnresolvedImport
@@ -54,9 +53,9 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             if ref_status['symbol'].startswith('X'):
                 status = task_status['X=R']
         # then write summary in promise
-        summary = {'Status':status,
-                   'Exception':str(e),
-                   'Updated':date.now().isoformat().split('.')[0]}
+        summary = {'Status': status,
+                   'Exception': str(e),
+                   'Updated': date.now().isoformat().split('.')[0]}
         promise = [x for x in self.promises
                    if x.role == 'TaskSummary']
         if len(promise) == 1:

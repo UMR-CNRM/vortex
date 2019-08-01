@@ -95,10 +95,10 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
 
     def _set_expected_target_default(self):  # CLEANME: to be removed after CY47 ?
         """Set default, for binary not to crash before CY47."""
-        target = {'significant_digits':'-9',
-                  'expected_Jo':'9999',
-                  'expected_variances':'9999',
-                  'expected_diff':'9999'}
+        target = {'significant_digits': '-9',
+                  'expected_Jo': '9999',
+                  'expected_variances': '9999',
+                  'expected_diff': '9999'}
         logger.info('Set default EXPECTED_RESULT')
         return target
 

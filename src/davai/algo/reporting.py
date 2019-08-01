@@ -10,6 +10,7 @@ import json
 from footprints import FPList, FPDict
 from bronx.fancies import loggers
 
+from vortex.syntax import stdattrs
 from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
                                     AlgoComponentError)
 from gco.tools import uenv, genv
@@ -27,44 +28,48 @@ class XpidRegister(AlgoComponent):
     Register metadata about the experiment.
     """
 
-    _footprint = dict(
-        info = "Save characteristics of the testing experiment.",
-        attr = dict(
-            kind = dict(
-                values   = ['xpid_register'],
-            ),
-            xpid = dict(
-                info = "Identifier of the Experiment"
-            ),
-            ref_xpid = dict(
-                info = "Identifier of the Reference Experiment",
-                optional = True,
-                default = None,
-                access = 'rwx'
-            ),
-            appenv = dict(
-                info = "genv or uenv used for app-specific consts.",
-            ),
-            commonenv = dict(
-                info = 'genv or uenv used for binaries and so - common consts.',
-            ),
-            input_store = dict(
-                info = "The store in which to pick initial resources"
-            ),
-            usecase = dict(
-                info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.""",
-            ),
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the testing experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['xpid_register'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+                ref_xpid = dict(
+                    info = "Identifier of the Reference Experiment",
+                    type = stdattrs.XPid,
+                    optional = True,
+                    default = None,
+                    access = 'rwx'
+                ),
+                appenv = dict(
+                    info = "genv or uenv used for app-specific consts.",
+                ),
+                commonenv = dict(
+                    info = 'genv or uenv used for binaries and so - common consts.',
+                ),
+                input_store = dict(
+                    info = "The store in which to pick initial resources"
+                ),
+                usecase = dict(
+                    info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.""",
+                ),
+            )
         )
-    )
+    ]
 
     def prepare(self, rh, opts):  # @UnusedVariable
-        if self.ref_xpid == self.xpid:
+        if self.ref_xpid == self.experiment:
             self.ref_xpid = None
 
     def execute(self, rh, kw):  # @UnusedVariable
         import davai_tbx  # @UnresolvedImport
         davai_tbx.util.write_xpinfo(user=self.env['USER'],
-                                    xpid=self.xpid,
+                                    xpid=self.experiment,
                                     ref_xpid=self.ref_xpid,
                                     appenv=self.appenv,
                                     commonenv=self.commonenv,
@@ -90,8 +95,8 @@ class XpidRegister(AlgoComponent):
                                     netloc='uget.multi.fr')
         else:
             # genv
-            details = ['%s="%s"' % (k,v)
-                       for (k,v) in genv.autofill(env).items()]
+            details = ['%s="%s"' % (k, v)
+                       for (k, v) in genv.autofill(env).items()]
         return details
 
 
@@ -108,10 +113,10 @@ class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
         if len(promise) == 1:
             if not self.system.path.exists(promise[0].rh.container.localpath()):
                 # if file had been written, means that the comparison failed
-                summary = {'Status':{'symbol':'E!',
-                                     'short':'Ended ! Summary failed',
-                                     'text':'Task ended, but Expertise failed: no TaskSummary available !'},
-                           'Exception':str(e)}
+                summary = {'Status': {'symbol': 'E!',
+                                      'short': 'Ended ! Summary failed',
+                                      'text': 'Task ended, but Expertise failed: no TaskSummary available !'},
+                           'Exception': str(e)}
                 with open(promise[0].rh.container.localpath(), 'w') as out:
                     json.dump(summary, out)
             promise[0].put(incache=True)
@@ -126,36 +131,42 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
     Expertise an AlgoComponent, produces a summary of the task.
     """
 
-    _footprint = dict(
-        info = "Expertise Algo output and produce a summary of task, with eventual comparison to a reference.",
-        attr = dict(
-            kind = dict(
-                values   = ['expertise'],
-            ),
-            experts = dict(
-                type = FPList,
-                info = "The list of footprints of Experts to be used to evaluate the Algo execution.",
-            ),
-            ignore_reference = dict(
-                info = "Set to True if no comparison to be done.",
-                type = bool,
-                optional = True,
-                default = False,
-            ),
-            fatal_exceptions = dict(
-                info = "Raise parsing/summary/compare errors.",
-                type = bool,
-                optional = True,
-                default = False,
-            ),
-            lead_expert = dict(
-                info = "indicate whose Main metrics is to be selected from the experts panel",
-                type = FPDict,
-                optional = True,
-                default = None
-            ),
+    _footprint = [
+        stdattrs.block, stdattrs.xpid,
+        dict(
+            info = "Expertise Algo output and produce a summary of task, with eventual comparison to a reference.",
+            attr = dict(
+                kind = dict(
+                    values   = ['expertise'],
+                ),
+                experts = dict(
+                    type = FPList,
+                    info = "The list of footprints of Experts to be used to evaluate the Algo execution.",
+                ),
+                ignore_reference = dict(
+                    info = "Set to True if no comparison to be done.",
+                    type = bool,
+                    optional = True,
+                    default = False,
+                ),
+                fatal_exceptions = dict(
+                    info = "Raise parsing/summary/compare errors.",
+                    type = bool,
+                    optional = True,
+                    default = False,
+                ),
+                lead_expert = dict(
+                    info = "indicate whose Main metrics is to be selected from the experts panel",
+                    type = FPDict,
+                    optional = True,
+                    default = None
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+            )
         )
-    )
+    ]
 
     def prepare(self, rh, opts):  # @UnusedVariable
         import davai_tbx  # @UnresolvedImport
@@ -193,13 +204,13 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
         """Split resources in consistency_resources and continuity_resources."""
         consistency_resources = [s.rh for s in ref_resources
                                  if (s.role == 'ConsistencyReference' or  # explicitly mentioned as Consistency
-                                     (s.rh.provider.experiment == self.env.XPID and  # same XPID
-                                      s.rh.provider.block != util.block_from_olive_tree())  # different block
+                                     (s.rh.provider.experiment == self.experiment and  # same XPID
+                                      s.rh.provider.block != self.block)  # different block
                                      )]
         continuity_resources = [s.rh for s in ref_resources
                                 if (s.role == 'ContinuityReference' or  # explicitly mentioned as Continuity
-                                     (s.rh.provider.experiment != self.env.XPID or  # different XPID
-                                      s.rh.provider.block == util.block_from_olive_tree())  # and same block
+                                    (s.rh.provider.experiment != self.experiment or  # different XPID
+                                     s.rh.provider.block == self.block)  # and same block
                                     )]
         return consistency_resources, continuity_resources
 
@@ -215,13 +226,13 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             if len(set(block)) > 1:
                 raise AlgoComponentError(refkind + " reference resources must all come from the same 'block'.")  # consistency
             if refkind == 'Continuity':
-                ref_is = {'experiment':xp[0],
-                          'task':'(same)'}
+                ref_is = {'experiment': xp[0],
+                          'task': '(same)'}
             elif refkind == 'Consistency':
-                ref_is = {'experiment':'(same)',
-                          'task':block[0]}
-        return [{'rh':rh,
-                 'ref_is':ref_is}
+                ref_is = {'experiment': '(same)',
+                          'task': block[0]}
+        return [{'rh': rh,
+                 'ref_is': ref_is}
                 for rh in resource_handlers]
 
 
@@ -230,22 +241,27 @@ class LoadStackInTrolley(AlgoComponent):
     Gather all json of Stack into a single "trolley" tar file.
     """
 
-    _footprint = dict(
-        info = 'Gather all json of Stack into a single "trolley" tar file.',
-        attr = dict(
-            kind = dict(
-                values   = ['load_stack_in_trolley'],
-            ),
-            xpid = dict(),
-            vapp = dict(),
-            vconf = dict(),
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = 'Gather all json of Stack into a single "trolley" tar file.',
+            attr = dict(
+                kind = dict(
+                    values   = ['load_stack_in_trolley'],
+                ),
+                vapp = dict(),
+                vconf = dict(),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+            )
         )
-    )
+    ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        stack = util.SummariesStack(vapp=self.vapp,
+        stack = util.SummariesStack(ticket=self.ticket,
+                                    vapp=self.vapp,
                                     vconf=self.vconf,
-                                    xpid=self.xpid)
-        stack.load_trolleytar(self.ticket)
-        # and get it back for archiving
-        self.system.cp(stack.trolleytar_abspath, stack.trolleytar)
+                                    xpid=self.experiment)
+        if not (stack.load_trolleytar(fetch=True)):
+            raise AlgoComponentError("Could not get the trolley tar file")
