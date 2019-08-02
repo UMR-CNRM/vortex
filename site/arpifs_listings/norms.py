@@ -30,21 +30,32 @@ _re_comment = r'(?P<comment>(\s\w+)+)'
 _re_unit = r'(?P<unit>\d+)'
 _re_filename = r'(?P<filename>(\w|\+)+)'
 _re_nstep = r'(?P<nstep>\d+)'
-_re_stepo = r'(?P<subroutine>STEPO((TL)|(AD))*)'
+_re_stepo = r'(?P<subroutine>STEPO((TL)|(AD)|(_OOPS))*)'
 _re_scan2m = r'(?P<subroutine>SCAN2M((TL)|(AD))*)'
 _re_nsim4d = r'(?P<nsim4d>\d+)'
 _re_cdconf = r'(?P<cdconf>\w+)'
 _re_pcstep = r'(\((?P<pc_step>(PREDICTOR)|(CORRECTOR))\)\s+)?'
 _re_dfi = r'(?P<dfi>DFI STEP)'
 _re_dfistep = r'(?P<dfi_step>(\+|\-)\d+\/\s*\d+)'
+_re_model_init = r'(?P<subroutine>MODEL_INIT:(BEFORE)|(AFTER) TRANSDIRH_FROM_T0)'
+_re_fields_oops = r'(?P<subroutine>field:(copy (rhs)|(self))|(interp in))'
+_re_fields_oopsIFS = r'(?P<subroutine>FieldsIFS)'
+_re_ifs_propagate = r'(?P<subroutine>ifs_propagate_c)'
+_re_wrmlppa = r'(?P<subroutine>WRMLPPA)'
 CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
              'openfa': r'\s*' + _re_openfa + r':\s+' + _re_unit + r'\s+' + _re_filename + r'\s*$',
              'nstep_stepo': r'\s*NSTEP =\s+' + _re_nstep + r'\s+' + _re_stepo + r'\s+' + _re_cdconf + r'\s*$',
              'nstep_scan2m': r'\s*NSTEP =\s+' + _re_nstep + r'\s+' + _re_scan2m + r'\s+' + _re_cdconf + r'\s*$',
              'norms_at_nstep': r'\s*NORMS AT NSTEP\s+' + _re_cnt34 + r'\s+' + _re_pcstep + _re_nstep + r'\s*$',
+             'norms_at_nstep_oops': r'\s*NORMS AT NSTEP\s+' + _re_nstep + r'\s*$',
              'start_cnt4_nsim4d': r'\s*START\s+' + _re_cnt34 + r', NSIM4D=\s+' + _re_nsim4d + r'\s*$',
              'end_cnt3': r'\s*END\s+' + _re_cnt34 + r'\s*$',
              'dfi_step': r'\s*(\d|:)*\s+' + _re_dfi + r'\s+' + _re_dfistep + r'\s*\+CPU=.*\s*$',
+             'model_init':r'\s*' + _re_model_init + r'\s*$',
+             'fields_oops':r'\s*' + _re_fields_oops + r'\s*$',
+             'fields_oopsIFS':r'\s*' + _re_fields_oopsIFS + r'\s*$',
+             'ifs_propagate_oops':r'\s*' + _re_ifs_propagate + r'\s*1\s*$',
+             'wrmlppa':r'\s*' + _re_wrmlppa + r'\s+NSTEP=\s+' + _re_nstep + r'\s+CDCONF=' + _re_cdconf + r'\s*$',
              }
 CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
@@ -54,13 +65,21 @@ class NormsSet(object):
     Handling several Norm objects at different steps.
     """
 
-    def __init__(self, source):
+    def __init__(self, source=None, from_list=None):
         """
         :param source: may be either a filename or a list of lines.
+        :param from_list: to be passed to constructor :meth:`from_list()`
         """
         self.norms_at_each_step = []
         self.steps_linerecord = []
-        self._parse_listing(source)
+        if source is not None:
+            self._parse_listing(source)
+        elif from_list is not None:
+            self.from_list(from_list)
+    
+    def from_list(self, list_of_Norms):
+        """Initialize from a list of Norms object."""
+        self.norms_at_each_step = list_of_Norms
 
     def __getitem__(self, item):
         return self.norms_at_each_step[item]
@@ -111,11 +130,15 @@ class NormsSet(object):
                     break
         nsim4d = None
         nstep = None
+        subroutine = None
+        # fill missing values with those found before
         for s in steps:
             nsim4d = s.get('nsim4d', nsim4d)
             nstep = s.get('nstep', nstep)
+            subroutine = s.get('subroutine', subroutine)
             s['nsim4d'] = nsim4d
             s['nstep'] = nstep
+            s['subroutine'] = subroutine
 
         # look for norms at each step
         for i in range(len(steps)):
@@ -137,15 +160,31 @@ class Norms(object):
     Handling of fields norms at one moment/step.
     """
 
-    def __init__(self, step, lines):
+    def __init__(self, step, lines=None, from_dict=None):
         """
-        **step**: identification of the step of norms printing
+        :param step: identification of the step of norms printing
+        :param lines: list of lines from readlines() in which to parse
+        :param from_dict: passed to constructor :meth:`from_dict(**from_dict)`
         """
         self.step = step
         self.spnorms = {}
         self.gpnorms = {}
-        self._parse_norms(lines)
-
+        if lines is not None:
+            self._parse_norms(lines)
+        elif from_dict is not None:
+            self.from_dict(**from_dict)
+    
+    def from_dict(self, step, spnorms, gpnorms):
+        """Initialize from a series of dict for each attribute."""
+        self.step = step
+        self.spnorms = spnorms
+        self.gpnorms = gpnorms
+    
+    def as_dict(self):
+        return {'step':self.step,
+                'spnorms':self.spnorms,
+                'gpnorms':self.gpnorms}
+    
     @property
     def empty(self):
         """Return True if no norm has been found."""
@@ -192,7 +231,7 @@ class Norms(object):
             lines = lines[index:index + 5]
             for fld in ('LOG(PREHYDS)', 'OROGRAPHY', 'VORTICITY', 'DIVERGENCE',
                         'TEMPERATURE', 'KINETIC ENERGY', 'LOG(PRE/PREHYD)',
-                        'd4 = VERT DIV + X'):
+                        'd4 = VERT DIV + X', 'HUMIDITY'):
                 (idx, line) = find_line_containing(fld, lines)
                 if idx is not None:  # fld is found
                     line = line.split()
@@ -219,6 +258,7 @@ class Norms(object):
         """
         Parse gridpoint norms (syntax A) from the subset of lines of the
         listing.
+        Only first (AVE) line is parsed.
         <
          GPNORM INPRRTOT3D           AVERAGE               MINIMUM               MAXIMUM
          AVE   0.000000000000000E+00 0.000000000000000E+00 0.000000000000000E+00
@@ -242,15 +282,21 @@ class Norms(object):
             if idx is not None and line.split()[0] == patterns['gpnorms partA']:  # signature of part A
                 fld = line.split()[1]
                 if fld == 'OUTPUT':
-                    if idx <= 0:
-                        raise NotImplementedError()
-                    else:
-                        fld = sub_extract[idx - 1].strip()
-                vals = {'average': sub_extract[idx + 1].split()[1],
-                        'minimum': sub_extract[idx + 1].split()[2],
-                        'maximum': sub_extract[idx + 1].split()[3]}
-                start = idx + 1
-                self.gpnorms[fld] = vals
+                    fld = sub_extract[idx - 1].strip()
+                if fld == 'SOILB   3 FIELDS':  # dirty fix
+                    for ii in range(1, 4):
+                        fldii = fld + ' ({}/3)'.format(ii)
+                        vals = {'average': sub_extract[idx + 1 + (ii-1) * 3].split()[1],
+                                'minimum': sub_extract[idx + 1 + (ii-1) * 3].split()[2],
+                                'maximum': sub_extract[idx + 1 + (ii-1) * 3].split()[3]}
+                        start = idx + 1 + 6
+                        self.gpnorms[fldii] = vals
+                else:
+                    vals = {'average': sub_extract[idx + 1].split()[1],
+                            'minimum': sub_extract[idx + 1].split()[2],
+                            'maximum': sub_extract[idx + 1].split()[3]}
+                    start = idx + 1
+                    self.gpnorms[fld] = vals
             else:
                 break
 
@@ -362,6 +408,123 @@ class NormsComparison(object):
 ###################
 # INNER FUNCTIONS #############################################################
 ###################
+def compare_normsets(test, ref, mode,
+                     which='first_and_last_spectral',
+                     out=sys.stdout,
+                     onlymaxdiff=False,
+                     plot_out='norms_diff.png'):
+    """
+    Compare 2 Normset objects.
+
+    :param which: either 'all' to compare norms for all steps found in listings,
+                  or 'first_and_last_spectral' (default) for the first and last
+                  spectral norms only.
+    :param out: output open file or stdout
+    :param onlymaxdiff: only max difference is printed for each step.
+    :param mode: - if 'text', prints the comparison to file;
+                 - if 'get_worst_by_step', get worst (among fields) digits
+                   comparison for each step;
+                 - if 'get_worst' get worst of worst (among fields) digits
+                   comparison.
+                 - if 'plot', plot a graph of differences
+    :param plot_out: if mode == 'plot', name of the plot output file
+    """
+    if not test.steps_equal(ref):
+        st = set([n.format_step() for n in test])
+        sr = set([n.format_step() for n in ref])
+        stepset = st.intersection(sr)
+        test_rm = [i for i in range(len(test))
+                   if test[i].format_step() not in stepset]
+        for off, i in enumerate(test_rm):
+            test.pop(i - off)
+        ref_rm = [i for i in range(len(ref))
+                  if ref[i].format_step() not in stepset]
+        for off, i in enumerate(ref_rm):
+            ref.pop(i - off)
+        assert test.steps_equal(ref)
+    if which == 'first_and_last_spectral':
+        for i in range(len(test)):
+            if len(test[i].spnorms) > 0:
+                steps = (i, None)
+                break
+        for i in sorted(range(len(test)), reverse=True):
+            if len(test[i].spnorms) > 0:
+                steps = (steps[0], i)
+                break
+        if steps[0] == steps[1]:
+            steps = (steps[0],)
+    elif which == 'all':
+        steps = list(range(len(test)))
+
+    if 'get_worst' in mode:
+        worstdigits = []
+    elif mode == 'plot':
+        normsout = collections.OrderedDict()
+    for i in steps:
+        norm_comp = NormsComparison(test[i],
+                                    ref[i])
+        if mode == 'text':
+            out.write(test.norms_at_each_step[i].format_step() + '\n')
+            norm_comp.write(out, onlymaxdiff)
+            out.write('-' * 80 + '\n')
+        elif 'get_worst' in mode:
+            assert onlymaxdiff is True
+            worstdigits.append(norm_comp.get_worst('both'))
+        elif mode == 'plot':
+            norm_comp = NormsComparison(test.norms_at_each_step[i],
+                                        ref.norms_at_each_step[i],
+                                        only='spectral')
+            if len(norm_comp.sp_comp) > 0:
+                normsout[test[i].format_step()] = norm_comp.sp_comp
+    if mode == 'plot':
+        import matplotlib.pyplot as plt
+        fldset = []
+        for n in normsout.values():
+            fldset.extend(n.keys())
+        fldset = sorted(set(fldset))
+        tab_f = {f: [n.get(f, None) for n in normsout.values()] for f in fldset}
+        xlabels = [(i, f) for i, f in enumerate(normsout.keys())]
+        xlen = len(xlabels)
+        tn = 5
+        if xlen > tn:
+            xstep = xlen // tn
+            xlast = xlabels[-1]
+            xlabels = xlabels[::xstep]
+            if (xlast[0] - xlabels[-1][0]) < xstep / 2:
+                xlabels[-1] = xlast
+            else:
+                xlabels.append(xlast)
+        fig, axes = plt.subplots(len(fldset), 1, figsize=(12, 8))
+        for j, f in enumerate(fldset):
+            axes[j].plot(tab_f[f], color='DarkMagenta')
+            axes[j].scatter(0, tab_f[f][0], c='DarkMagenta', s=50, marker='o')
+            axes[j].set_xlim(0, xlen)
+            axes[j].scatter(xlen - 1, tab_f[f][xlen - 1], c='DarkMagenta', s=20, marker='o', edgecolors='face')
+            axes[j].set_xticks([x[0] for x in xlabels])
+            axes[j].set_xticklabels([])
+            axes[j].set_ylim(0, 15)
+            axes[j].set_yticks([0, 5, 10, 15])
+            axes[j].set_yticklabels([0, 5, 10, 15])
+            axes[j].set_ylabel(f, rotation=45., horizontalalignment='right')
+            axes[j].grid()
+        xlabels = [x[1].split() for x in xlabels]
+        for x in xlabels:
+            if len(x) > 2:
+                x.insert(2, '\n')
+        axes[-1].set_xticklabels([''.join(x) for x in xlabels],
+                                 rotation=45., horizontalalignment='right')
+        axes[0].set_title('Norms: number of # digits')
+        print('=> Output in: ' + plot_out)
+        fig.savefig(plot_out, bbox_inches='tight', dpi=300)
+
+    if mode == 'get_worst':
+        return get_worst(worstdigits)
+    elif mode == 'get_worst_by_step':
+        return worstdigits
+    else:
+        return None
+
+
 def compare_norms(test_norm, ref_norm, only=None):
     """Compare norms of two Norms objects.
 

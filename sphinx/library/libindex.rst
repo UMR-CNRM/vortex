@@ -16,6 +16,7 @@ List of modules.
    
    cen/index
    common/index
+   davai/index
    ecmwf/index
    gco/index
    iga/index

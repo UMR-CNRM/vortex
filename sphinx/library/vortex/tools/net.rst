@@ -25,6 +25,8 @@ Functions
 
 .. autofunction:: uriunparse
 
+.. autofunction:: http_post_data
+
 .. autofunction:: netrc_lookup
 
 Classes

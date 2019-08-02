@@ -152,7 +152,10 @@ class JoVariable(object):
         self.n = int(n)
         self.jo = float(jo)
         self.obserr = float(obserr)
-        self.bgerr = float(bgerr)
+        if bgerr == 'RMDI':
+            self.bgerr = 1 - 1e10
+        else:
+            self.bgerr = float(bgerr)
         self.dummy = dummy
 
     def __str__(self):
@@ -230,7 +233,7 @@ class JoSensor(_JoMixinPlus):
                            r'([\d.E+]+)\s+' +
                            r'[*\d.E+-]+\s+' +
                            r'([\d.E+-]+)\s+' +
-                           r'([\d.E+-]+)\s*$')
+                           r'([\d.E+-]+|RMDI)\s*$')
     _re_end = re.compile(r'^\s*(Obs|Code)type')
     _ChildClass = JoVariable
 
