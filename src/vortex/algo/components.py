@@ -1625,7 +1625,7 @@ class Parallel(xExecutableAlgoComponent):
         return mpi, args
 
     def execute_single(self, rh, opts):
-        """Run the specified resource handler through the `mitool` launcher
+        """Run the specified resource handler through the `mpitool` launcher
 
         An argument named `mpiopts` could be provided as a dictionary: it may
         contains indications on the number of nodes, tasks, ...
@@ -1776,6 +1776,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
         driver.options = {x[8:]: opts[x]
                           for x in opts.keys() if x.startswith('palmdrv_')}
         driver.master = self._actual_openpalm_driver
+        self.system.xperm(driver.master, force=True)
         bins.insert(0, driver)
         if not self.openpalm_overcommit and single_bin:
             # Tweak the number of tasks of the master program in order to accommodate

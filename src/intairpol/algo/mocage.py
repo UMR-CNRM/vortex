@@ -464,6 +464,19 @@ class Forecast(Parallel):
             outdict[geo].sort()
         return outdict
 
+    def _check_inputs(self, **kwargs):
+    
+    def _prepare_namelist(self, **kwargs):
+        """ check namelist count and process date substitution in mocage namelist """
+        namrh = self.context.sequence.effective_inputs(
+            role='NamelistForecastSettings',
+            kind='namelist',)
+        if len(namrh) != 1:
+            logger.critical('There must be exactly one <input fcst> namelist for forecast execution. Stop.')
+            raise ValueError('There must be exactly one namelist for mocage execution. Stop.')
+        namrh = namrh[0].rh
+        
+    
     def execute(self, rh, opts):
         """Standard execution."""
 
@@ -865,9 +878,10 @@ class AssimilationOpenPalm(Parallel, ParallelOpenPalmMixin):
         # 1 SM file per day and per domain : term 0 is used for the coupling of a 24h run
         maxsm = maxsm - minsm + 24
 
+        delta_coupling = 3 # TODO move in footprints attribute
         minfm = max([min(fmterms[geo]) for geo in fmterms.keys()])
         maxfm = min([max(fmterms[geo]) for geo in fmterms.keys()])
-        maxfm = maxfm - minfm
+        maxfm = maxfm - minfm + delta_coupling
         
         #realfcterm = maxsm
         realfcterm = min(maxsm, maxfm,self.fcterm.hour)
@@ -908,9 +922,9 @@ class AssimilationOpenPalm(Parallel, ParallelOpenPalmMixin):
         
         # Environment variables needed by mocage/assim
         e = self.env
-        e['MOCAGE_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
-        e['DAIMON_B_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
-        e['DAIMON_H_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["AUTO_PROFILE_OPENMP"]
+        e['MOCAGE_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["VORTEX_SUBMIT_OPENMP"]
+        e['DAIMON_B_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["VORTEX_SUBMIT_OPENMP"]
+        e['DAIMON_H_OMP_NUM_THREADS'] = self.openmp if self.openmp != 0 else e["VORTEX_SUBMIT_OPENMP"]
         #e['DAIMON_H_DOME_MPI_PROCS'] = $NNODES_H_DOME
         #e['DAIMON_H_DOME_OMP_NUM_THREADS'] = $NTHREADS_H_DOME
         #e['DAIMON_H_RTTOV_MPI_PROCS'] = $NNODES_H_RTTOV

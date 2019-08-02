@@ -51,28 +51,9 @@ class MocageAssim(ChemistryModel):
                 subkind = dict(
                     values = ['palm','main']
                 ),
-                tasks = dict(
-                    type = int,
-                    optional = True,
-                    default = 12,
-                ),
-                openmp = dict(
-                    type = int,
-                    optional = True,
-                    default = 20,
-                )
              )
         )
     ]
-    def make_mpi_opts(self):
-        """ return mpi options to produce mpibinary 
-        """
-        return { 'kind' :'basic',
-                 'tasks': 1,
-                 'nodes' : self.tasks if self.subkind == 'main' else 1,
-                 'openmp': self.openmp,
-        }
-    
 
 
     
