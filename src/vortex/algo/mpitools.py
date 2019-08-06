@@ -486,8 +486,8 @@ class MpiBinaryDescription(footprints.FootprintBase):
                 self._options['nn'] = self.nodes
             if self.tasks is not None:
                 self._options['nnp'] = self.tasks
-            if self.openmp is not None:
-                self._options['openmp'] = self.openmp
+        if self.openmp is not None:
+            self._options['openmp'] = self.openmp
         for k, v in value.items():
             self._options[k.lstrip('-').lower()] = v
 

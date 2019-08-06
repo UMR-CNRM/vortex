@@ -31,7 +31,9 @@ class Mocage(ChemistryModel):
             )
         )
     ]
-@namebuilding_append('src',lambda s:s.subkind)
+
+
+@namebuilding_append('src', lambda s: s.subkind)
 class MocageAssim(ChemistryModel):
     """Mocage Palm Component (assim version)"""
     _footprint = [
@@ -49,67 +51,13 @@ class MocageAssim(ChemistryModel):
                     values = ['mocage']
                 ),
                 subkind = dict(
-                    values = ['palm','main']
+                    values = ['palm', 'main']
                 ),
-             )
-        )
-    ]
-
-
-    
-class MocageAssimPalm(ChemistryModel):
-    """Mocage Palm Component (assim version)"""
-    _footprint = [
-        gvar,
-        dict(
-            info = 'Palm coupler for assimilation in mocage',
-            attr = dict(
-                kind = dict(
-                    values = ['mocage_assim_palm'],
-                ),
-                gvar = dict(
-                    default = 'palm_[kind]',
-                ),
-                model = dict(
-                    values = ['mocage']
-                ),
-             )
-        )
-    ]
-
-class MocageAssimMainBlock(ChemistryModel):
-    """Mocage Main block (assim version)"""
-    _footprint = [
-        gvar,
-        dict(
-            info = 'Main block for assimilation in mocage',
-            attr = dict(
-                kind = dict(
-                    values = ['mocage_assim_main'],
-                ),
-                gvar = dict(
-                    optional = True,
-                    default = 'main_[kind]',
-                ),
-                model = dict(
-                    values = ['mocage']
-                ),
-                tasks = dict(
-                    type = int,
-                    optional = True,
-                    default = 12
-                )
             )
         )
     ]
 
 
-    
-
-
-
-
-    
 class ExecCorromegasurf(BlackBox):
     """Compute corromegasurf."""
 

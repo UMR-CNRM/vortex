@@ -7,7 +7,7 @@ from vortex.syntax.stdattrs import month_deco
 from common.data.consts import GenvModelResource
 from common.data.climfiles import GenericClim
 from vortex.data.geometries import LonlatGeometry
-from gco.syntax.stdattrs import GenvDomain
+from gco.syntax.stdattrs import gdomain
 
 
 #: No automatic export
@@ -69,12 +69,14 @@ class MonthClimMisc(GenericClim):
     def realkind(self):
         return 'clim_misc'
 
+
 class DomainMonthClimMisc(GenericClim):
     """
      Monthly miscellaneous climatological files by domain
     """
     _footprint = [
         month_deco,
+        gdomain,
         dict(
             info = 'Monthly climatological files, domain indexed',
             attr = dict(
@@ -84,13 +86,8 @@ class DomainMonthClimMisc(GenericClim):
                 geometry = dict(
                     type = LonlatGeometry,
                 ),
-                gdomain = dict(
-                    type = GenvDomain,
-                    optional = True,
-                    default = '[geometry::area]'
-                ),
                 gvar = dict(
-                    default = 'clim_[model]_[source]_[geometry:area]'
+                    default = 'clim_[model]_[source]_[gdomain]'
                 ),
                 source = dict(
                 ),
@@ -106,7 +103,6 @@ class DomainMonthClimMisc(GenericClim):
     def realkind(self):
         return 'generic_clim_misc'
 
-    
 
 class Ch4SurfEmissions(GenericClim):
     """
@@ -115,6 +111,7 @@ class Ch4SurfEmissions(GenericClim):
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
+        gdomain,
         dict(
             info = 'Ch4 climatology',
             attr = dict(
@@ -123,11 +120,6 @@ class Ch4SurfEmissions(GenericClim):
                 ),
                 geometry = dict(
                     type = LonlatGeometry,
-                ),
-                gdomain = dict(
-                    type = GenvDomain,
-                    optional = True,
-                    default = '[geometry::area]'
                 ),
                 gvar = dict(
                     default = 'emis_surf_ch4_[gdomain]'
@@ -148,6 +140,7 @@ class SurfaceSpeciesConfig(GenericClim):
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
+        gdomain,
         dict(
             info = 'Surface species configuration',
             attr = dict(
@@ -156,11 +149,6 @@ class SurfaceSpeciesConfig(GenericClim):
                 ),
                 geometry = dict(
                     type = LonlatGeometry,
-                ),
-                gdomain = dict(
-                    type = GenvDomain,
-                    optional = True,
-                    default = '[geometry::area]'
                 ),
                 gvar = dict(
                     default = 'cfgfile_surface_[gdomain]'

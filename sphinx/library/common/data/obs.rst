@@ -34,6 +34,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ObsProcessed
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ObsODB
    :show-inheritance:
    :members:
