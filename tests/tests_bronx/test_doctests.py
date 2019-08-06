@@ -8,6 +8,7 @@ import unittest
 
 from bronx.datagrip import namelist
 from bronx.fancies import display, loggers
+from bronx.meteo import thermo
 from bronx.patterns import getbytag, observer
 from bronx.stdtypes import date, history, tracking, xtemplates
 from bronx.syntax import iterators, minieval
@@ -24,6 +25,7 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(namelist)
         self.assert_doctests(display)
         self.assert_doctests(loggers)
+        self.assert_doctests(thermo)
         self.assert_doctests(getbytag)
         self.assert_doctests(observer)
         self.assert_doctests(date)
