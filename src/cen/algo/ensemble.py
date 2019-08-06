@@ -85,7 +85,7 @@ class _S2MWorker(VortexWorkerBlindRun):
 
     def link_ifnotprovided(self, local, dest):
         """Link a file if the target does not already exist."""
-        if not self.system.path.islink(dest):
+        if not self.system.path.islink(dest) and not self.system.path.isfile(dest):
             if self.system.path.isfile(local):
                 self.system.symlink(local, dest)
 
@@ -1358,7 +1358,7 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus"],
+                values = ["E1", "E2", "Crocus", "E2open"],
                 optional = True,
             ),
             geometry = dict(
