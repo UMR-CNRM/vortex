@@ -433,6 +433,7 @@ class SafraneWorker(_SafranWorker):
                     # if self.execution in ['reanalysis', 'reforecast']:
                     #     self.system.remove(list_name)
                 except ExecutionError:
+                    self.system.remove('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
                     rdict['rc'] = S2MExecutionError(self.progname, self.deterministic,
                                                     self.subdir,
                                                     self.datebegin, self.dateend)
@@ -461,6 +462,7 @@ class SypluieWorker(_SafranWorker):
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
+            self.system.remove('SAPLUI5' + dates[-1].ymdh)
             rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
                                             self.datebegin, self.dateend)
         finally:
@@ -503,6 +505,7 @@ class SyrpluieWorker(_SafranWorker):
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
+            self.system.remove('SAPLUI5' + dates[-1].ymdh)
             rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
                                             self.datebegin, self.dateend)
         finally:
