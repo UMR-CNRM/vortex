@@ -203,6 +203,11 @@ class Surfex_Parallel(Parallel):
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
 
+            if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
+                save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
+            if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
+                save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
+
             if need_other_forcing:
                 # Remove the symbolic link for next iteration
                 self.system.remove("FORCING.nc")
