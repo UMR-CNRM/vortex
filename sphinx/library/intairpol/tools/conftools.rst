@@ -28,12 +28,25 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MocageDomainsConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CutoffHhMocageDomainsConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MocageMixedDomainsInfo
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MocageDomainsConfTool
+Utility Classes
+---------------
+
+.. autoclass:: HHDict
    :show-inheritance:
    :members:
    :member-order: alphabetical
