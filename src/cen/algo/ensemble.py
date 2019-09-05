@@ -751,6 +751,12 @@ class SurfexWorker(_S2MWorker):
                 optional = True,
                 default = False,
             ),
+            dailynamelist = dict(
+                info = "If daily is True, possibility to provide a list of namelists to change each day",
+                type = list,
+                optional = True,
+                default = [],
+            ),
         )
     )
 
@@ -778,7 +784,10 @@ class SurfexWorker(_S2MWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
-        list_files_copy = ["OPTIONS.nam"]
+        if len(self.dailynamelist) > 1:
+            list_files_copy = self.dailynamelist
+        else:
+            list_files_copy = ["OPTIONS.nam"]
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
@@ -810,6 +819,8 @@ class SurfexWorker(_S2MWorker):
         datebegin_this_run = self.datebegin
 
         sytron = self.kind == "ensmeteo+sytron" and self.subdir == "mb036"
+
+        changenamelistdaily = self.daily and (len(self.dailynamelist) > 1)
 
         while need_other_run:
 
@@ -898,6 +909,10 @@ class SurfexWorker(_S2MWorker):
                 else:
                     namelist_ready = True
 
+            if changenamelistdaily:
+                # Change the namelist
+                self.link_in(self.dailynamelist.pop(0), "OPTIONS.nam")
+
             # Run surfex offline
             list_name = self.system.path.join(thisdir, 'offline.out')
 
@@ -923,6 +938,8 @@ class SurfexWorker(_S2MWorker):
             # Post-process
             pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
             pro.massif_natural_risk()
+            pro.dataset.GlobalAttributes()
+            pro.dataset.add_standard_names()
             pro.close()
 
             # Rename outputs with the dates
@@ -1372,6 +1389,12 @@ class SurfexComponent(S2MComponent):
                 type = bool,
                 optional = True,
                 default = False,
+            ),
+            dailynamelist = dict(
+                info = "If daily is True, possibility to provide a list of namelists to change each day",
+                type = list,
+                optional = True,
+                default = [],
             ),
             multidates = dict(
                 info = "If True, several dates allowed",

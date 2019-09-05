@@ -18,6 +18,7 @@ with echecker:
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
     from snowtools.tools.initTG import generate_clim
+    from snowtools.tools.massif_diags import massif_simu
 
 
 @echecker.disabled_if_unavailable
@@ -201,6 +202,14 @@ class Surfex_Parallel(Parallel):
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
+
+            # Post-process
+            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
+            pro.massif_natural_risk()
+            pro.dataset.GlobalAttributes()
+            pro.dataset.add_standard_names()
+            pro.close()
+
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
 
             if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
