@@ -29,6 +29,7 @@ with echecker:
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+    from snowtools.utils import S2M_standard_file
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -249,7 +250,8 @@ class _SafranWorker(_S2MWorker):
             if not self.system.path.exists(filename):
                 missing_files = True
         if missing_files:
-            rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
+            if self.execution not in ['reforecast', ]:
+                rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
             # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
             # a climatological guess that is corrected by the observations
             if self.execution not in ['analysis', 'reanalysis']:
@@ -277,7 +279,7 @@ class _SafranWorker(_S2MWorker):
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
             elif self.system.path.exists('{0:s}{1:s}'.format(prefix, date.ymdh)):
-                self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), p)
+                self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), prefix + date.yymdh)
                 actual_dates.append(date)
             else:
                 if self.system.path.islink(p):
@@ -433,6 +435,7 @@ class SafraneWorker(_SafranWorker):
                     # if self.execution in ['reanalysis', 'reforecast']:
                     #     self.system.remove(list_name)
                 except ExecutionError:
+                    self.system.remove('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh))
                     rdict['rc'] = S2MExecutionError(self.progname, self.deterministic,
                                                     self.subdir,
                                                     self.datebegin, self.dateend)
@@ -461,6 +464,7 @@ class SypluieWorker(_SafranWorker):
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
+            self.system.remove('SAPLUI5' + dates[-1].ymdh)
             rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
                                             self.datebegin, self.dateend)
         finally:
@@ -497,15 +501,22 @@ class SyrpluieWorker(_SafranWorker):
         with io.open('sapfich', 'w') as f:
             f.write('SAPLUI5' + dates[-1].ymdh)
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
-        try:
-            self.local_spawn(list_name)
-            # Reanalysis : if the execution was allright we don't need the log file
-            # if self.execution in ['reanalysis', 'reforecast']:
-            #     self.system.remove(list_name)
-        except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
-                                            self.datebegin, self.dateend)
-        finally:
+        mandatory_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
+        rdict, go = self.check_mandatory_resources(rdict, ['P{0:s}'.format(d.yymdh)
+                                                           for d in mandatory_dates])
+        if go:
+            try:
+                self.local_spawn(list_name)
+                # Reanalysis : if the execution was allright we don't need the log file
+                # if self.execution in ['reanalysis', 'reforecast']:
+                #     self.system.remove(list_name)
+            except ExecutionError:
+                self.system.remove('SAPLUI5' + dates[-1].ymdh)
+                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                                self.datebegin, self.dateend)
+            finally:
+                return rdict  # Note than in the other case return rdict is at the end
+        else:
             return rdict  # Note than in the other case return rdict is at the end
 
     def sapdat(self, thisdate, nech=5):
@@ -623,10 +634,22 @@ class SytistWorker(_SafranWorker):
             kind = dict(
                 values = ['sytist']
             ),
+            metadata = dict(
+                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
+                optional = True,
+            ),
         )
     )
 
     def postfix(self):
+        if self.metadata:
+            for f in ['FORCING_massif.nc', 'FORCING_postes.nc']:
+                if self.system.path.isfile(f):
+                    forcing_to_modify = getattr(S2M_standard_file, self.metadata)(f, "a")
+                    forcing_to_modify.GlobalAttributes()
+                    forcing_to_modify.add_standard_names()
+                    forcing_to_modify.close()
+
         self.mv_if_exists('FORCING_massif.nc',
                           'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
         self.mv_if_exists('FORCING_postes.nc',
@@ -1164,7 +1187,11 @@ class S2MComponent(ParaBlindRun):
             execution = dict(
                 values   = ['analysis', 'forecast'],
                 optional = True,
-            )
+            ),
+            metadata = dict(
+                values   = ['StandardSAFRAN', 'StandardPROSNOW'],
+                optional = True,
+            ),
         )
     )
 
