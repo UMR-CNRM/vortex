@@ -395,6 +395,11 @@ class MocageDomainsConfTool(ConfTool):
             ...  {'geometry': {'GLOB01': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs'}})
             True
 
+        Likewise, to get the finalterm:
+
+            >>> mct00A.finalterm
+            Time(24, 0)
+
         """
         super(MocageDomainsConfTool, self).__init__(*kargs, **kwargs)
         if set(self.config.keys()) != set(('actives', 'domains', 'finalterms')):
@@ -697,11 +702,11 @@ class CutoffHhMocageDomainsConfTool(ConfTool):
         if name in self._cache:
             return self._cache[name]
         elif name in ('actives', 'active'):
-            a = self.parentconfs.actives[self.cutoff][self.hh]
+            a = self.parentconf.actives[self.cutoff][self.hh]
             self._cache.update({k: a for k in ('actives', 'active')})
             return a
         elif name in ('finalterms', 'finalterm'):
-            f = self.parentconfs.finalterms[self.cutoff][self.hh]
+            f = self.parentconf.finalterms[self.cutoff][self.hh]
             self._cache.update({k: f for k in ('finalterms', 'finalterm')})
             return f
         elif name == 'domains':
