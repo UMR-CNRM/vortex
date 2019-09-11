@@ -7,11 +7,12 @@ configuration file. This module defines conftools specific to IntAirPol applicat
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from six.moves import filter
 
 import collections
 import functools
 
-from bronx.fancies import loggers
+from bronx.fancies import language, loggers
 from bronx.stdtypes.date import Date, Time, Period, timerangex
 from footprints.stdtypes import FPDict
 
@@ -53,10 +54,14 @@ def _add_start_end_doc(func):
 # Code related to the Mocage domains configuration tools
 
 
-_MocageDomainInfoBase_keys = ('source_app', 'source_conf', 'source_cutoff', 'source_model',
+_MocageDomainInfoBase_keys = ('source_app', 'source_conf', 'source_cutoff',
+                              'source_model', 'source_geometry',
                               'atm_cpl_freq', 'surf_cpl_freq',
                               'atm_cpl_delta', 'surf_cpl_delta',
                               'post_steps')
+
+_PluralisedMocageDomainInfoBase_keys = [language.Pluralise('en_GB')(k)
+                                        for k in _MocageDomainInfoBase_keys]
 
 
 class MocageDomainInfo(collections.namedtuple('MocageDomainInfoBase', _MocageDomainInfoBase_keys)):
@@ -106,8 +111,8 @@ class MocageDomainsConfTool(ConfTool):
     ``finalterms`` entries:
 
         * The ``actives`` entry contains the list of active domains (i.e. the
-          one that will actualy be used for the Mocage forecast. Each of the
-          active domain muste be described in the ``domains`` entry (see below);
+          one that will actually be used for the Mocage forecast. Each of the
+          active domain must be described in the ``domains`` entry (see below);
         * The ``domains`` entry gives the description of each domain (that can
           be active or not). Consequently, it is itself a dictionary. More detail
           is given in the following example;
@@ -161,6 +166,7 @@ class MocageDomainsConfTool(ConfTool):
             ...                                                 source_conf='4dvarfr',
             ...                                                 source_cutoff='assim',
             ...                                                 source_model='arpege',
+            ...                                                 source_geometry='global1798',
             ...                                                 atm_cpl_freq='PT1H',
             ...                                                 surf_cpl_freq='PT3H',
             ...                                                 post_steps='0-12-3,18-finalterm-6'),
@@ -181,6 +187,7 @@ class MocageDomainsConfTool(ConfTool):
             source_conf     : 4dvarfr
             source_cutoff   : assim
             source_model    : arpege
+            source_geometry : global1798
             atm_cpl_freq    : PT3600S
             surf_cpl_freq   : PT10800S
             atm_cpl_delta   : PT0S
@@ -191,6 +198,7 @@ class MocageDomainsConfTool(ConfTool):
             source_conf     : determ
             source_cutoff   : production
             source_model    : ifs
+            source_geometry : None
             atm_cpl_freq    : PT10800S
             surf_cpl_freq   : PT10800S
             atm_cpl_delta   : PT43200S
@@ -201,6 +209,7 @@ class MocageDomainsConfTool(ConfTool):
             source_conf     : determ
             source_cutoff   : production
             source_model    : ifs
+            source_geometry : None
             atm_cpl_freq    : PT10800S
             surf_cpl_freq   : PT10800S
             atm_cpl_delta   : PT43200S
@@ -211,6 +220,8 @@ class MocageDomainsConfTool(ConfTool):
 
             * the ``source_cutoff`` entry may be omitted; in such a case it will
               defaults to 'production';
+            * the ``source_geometry`` entry may be omitted; in such a case it will
+              defaults to ``None``
             * the ``atm_cpl_delta`` entry may be omitted; in such a case it will
               defaults to 0;
             * the ``surf_cpl_freq`` and ``surf_cpl_delta`` entry (that describe
@@ -258,6 +269,12 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> (mct.source_models('assim', '00') ==
             ...  {'geometry': {'GLOB01': 'arpege', 'MACC01': 'ifs', 'GLOB22': 'ifs'}})
+            True
+
+        The dictionary that associates source_geometry and geometries::
+
+            >>> (mct.source_geometries('assim', '00') ==
+            ...  {'geometry': {'GLOB01': 'global1798', 'MACC01': None, 'GLOB22': None}})
             True
 
         The dictionaries that associates coupling data's date and geometries
@@ -383,6 +400,7 @@ class MocageDomainsConfTool(ConfTool):
             source_conf     : 4dvarfr
             source_cutoff   : assim
             source_model    : arpege
+            source_geometry : global1798
             atm_cpl_freq    : PT3600S
             surf_cpl_freq   : PT10800S
             atm_cpl_delta   : PT0S
@@ -513,12 +531,13 @@ class MocageDomainsConfTool(ConfTool):
             raise MocageDomainsConfError('A domain definition must be a dicitonary')
         # Set default values
         ddef.setdefault('source_cutoff', 'production')
+        ddef.setdefault('source_geometry', None)
         ddef.setdefault('atm_cpl_delta', 0)
         ddef.setdefault('surf_cpl_freq', ddef.get('atm_cpl_freq', 0))
         ddef.setdefault('surf_cpl_delta', ddef.get('atm_cpl_delta'))
         ddef.setdefault('post_steps', '')
         # Generic transform
-        for k in ('source_app', 'source_conf', 'source_cutoff', 'source_model'):
+        for k in ('source_app', 'source_conf', 'source_cutoff', 'source_model', 'source_geometry'):
             if k not in ddef:
                 raise MocageDomainsConfError('The {:s} key is missing in the {!s} domain definition'.format(k, dname))
             ddef[k] = self._item_transform(ddef[k])
@@ -569,9 +588,12 @@ class MocageDomainsConfTool(ConfTool):
         return dict(geometry={d: getattr(v, entry)[cutoff][hh] for d, v in self.domains.items()})
 
     def __getattr__(self, name):
-        if name.endswith('s') and name[:-1] in _MocageDomainInfoBase_keys:
+        if name in _PluralisedMocageDomainInfoBase_keys:
+            iname = _PluralisedMocageDomainInfoBase_keys.index(name)
+            sname = _MocageDomainInfoBase_keys[iname]
+
             def _attr_access(cutoff, hh):
-                return self._domain_dict_from_entry(cutoff, hh, name[:-1])
+                return self._domain_dict_from_entry(cutoff, hh, sname)
             return _attr_access
         else:
             raise AttributeError(name)
@@ -591,40 +613,50 @@ class MocageDomainsConfTool(ConfTool):
         """The geometry/surf_cpl_date :mod:`footprints`' substitution dictionary."""
         return self._domain_any_cpl_date(cutoff, hh, curdate, 'surf_cpl_delta')
 
-    def _domain_any_cpl_steps(self, cutoff, hh, entry, start, end, shift=False):
+    def _domain_any_cpl_steps(self, cutoff, hh, entry, start, end,
+                              shift=False, final=True):
         start = Time(start)
         if end is None:
             end = self.finalterms[cutoff][hh]
         else:
             end = Time(end)
         dentry = entry.replace('freq', 'delta')
-        return dict(geometry={d: timerangex(start=start, end=end, step=getattr(v, entry)[cutoff][hh],
-                                            shift=getattr(v, dentry)[cutoff][hh] if shift else 0)
-                              for d, v in self.domains.items()})
+        subdict = dict()
+        for d, v in self.domains.items():
+            dshift = getattr(v, dentry)[cutoff][hh] if shift else Time(0)
+            subdict[d] = list(filter(lambda t: (t - dshift >= start) and (final or t - dshift != end),
+                                     timerangex(start=0, end=end,
+                                                step=getattr(v, entry)[cutoff][hh],
+                                                shift=dshift)))
+        return dict(geometry=subdict)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def atm_cpl_steps(self, cutoff, hh, start=0, end=None):
+    def atm_cpl_steps(self, cutoff, hh, start=0, end=None, final=True):
         """The geometry/atm_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_steps(cutoff, hh, 'atm_cpl_freq', start, end)
+        return self._domain_any_cpl_steps(cutoff, hh, 'atm_cpl_freq', start, end,
+                                          final=final)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def surf_cpl_steps(self, cutoff, hh, start=0, end=None):
+    def surf_cpl_steps(self, cutoff, hh, start=0, end=None, final=True):
         """The geometry/surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_steps(cutoff, hh, 'surf_cpl_freq', start, end)
+        return self._domain_any_cpl_steps(cutoff, hh, 'surf_cpl_freq', start, end,
+                                          final=final)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def atm_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None):
+    def atm_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True):
         """The geometry/shifted atm_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_steps(cutoff, hh, 'atm_cpl_freq', start, end, shift=True)
+        return self._domain_any_cpl_steps(cutoff, hh, 'atm_cpl_freq', start, end,
+                                          shift=True, final=final)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def surf_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None):
+    def surf_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True):
         """The geometry/shifted surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_steps(cutoff, hh, 'surf_cpl_freq', start, end, shift=True)
+        return self._domain_any_cpl_steps(cutoff, hh, 'surf_cpl_freq', start, end,
+                                          shift=True, final=final)
 
     def _expand_post_steps(self, ddef, cutoff, hh):
         rangestr = ddef.post_steps[cutoff][hh]
@@ -752,35 +784,37 @@ class MocageMixedDomainsInfo(object):
         """The date of the surface coupling data (given the current date **curdate**)."""
         return Date(curdate) - self.surf_cpl_delta
 
-    def _domain_any_cpl_steps(self, entry, start, end, shift=False):
+    def _domain_any_cpl_steps(self, entry, start, end, shift=False, final=True):
         start = Time(start)
         if end is None:
             end = self.finalterm
         else:
             end = Time(end)
         dentry = entry.replace('freq', 'delta')
-        return timerangex(start=start, end=end, step=getattr(self, entry),
-                          shift=getattr(self, dentry) if shift else 0)
+        dshift = getattr(self, dentry) if shift else Time(0)
+        return list(filter(lambda t: (t - dshift >= start) and (final or t - dshift != end),
+                           timerangex(start=0, end=end, step=getattr(self, entry),
+                                      shift=dshift)))
 
     @_add_start_end_doc
-    def atm_cpl_steps(self, start=0, end=None):
+    def atm_cpl_steps(self, start=0, end=None, final=True):
         """The atm_cpl_steps of coupling data."""
-        return self._domain_any_cpl_steps('atm_cpl_freq', start, end)
+        return self._domain_any_cpl_steps('atm_cpl_freq', start, end, final=final)
 
     @_add_start_end_doc
-    def surf_cpl_steps(self, start=0, end=None):
+    def surf_cpl_steps(self, start=0, end=None, final=True):
         """The surf_cpl_steps of coupling data."""
-        return self._domain_any_cpl_steps('surf_cpl_freq', start, end)
+        return self._domain_any_cpl_steps('surf_cpl_freq', start, end, final=final)
 
     @_add_start_end_doc
-    def atm_cpl_shiftedsteps(self, start=0, end=None):
+    def atm_cpl_shiftedsteps(self, start=0, end=None, final=True):
         """The sifted surf_cpl_steps of coupling data."""
-        return self._domain_any_cpl_steps('atm_cpl_freq', start, end, shift=True)
+        return self._domain_any_cpl_steps('atm_cpl_freq', start, end, shift=True, final=final)
 
     @_add_start_end_doc
-    def surf_cpl_shiftedsteps(self, start=0, end=None):
+    def surf_cpl_shiftedsteps(self, start=0, end=None, final=True):
         """The geometry/shifted surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_steps('surf_cpl_freq', start, end, shift=True)
+        return self._domain_any_cpl_steps('surf_cpl_freq', start, end, shift=True, final=final)
 
 
 if __name__ == '__main__':
