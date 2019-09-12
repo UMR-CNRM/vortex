@@ -1620,7 +1620,7 @@ class AssistedSsh(Ssh):
                         break
             return self._chosen_target
         else:
-            return self._targets_iter.next()
+            return next(self._targets_iter)
 
 
 _ConnectionStatusAttrs = ('Family', 'LocalAddr', 'LocalPort', 'DestAddr', 'DestPort', 'Status')
