@@ -12,6 +12,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 from six.moves.configparser import NoOptionError, NoSectionError
 
+import contextlib
 import hashlib
 import io
 from email import encoders
@@ -151,10 +152,6 @@ class MailService(Service):
             smtpport = dict(
                 type = int,
                 optional = True,
-            ),
-            altmailx = dict(
-                optional = True,
-                default  = '/usr/sbin/sendmail',
             ),
             charset = dict(
                 info     = 'The encoding that should be used when sending the email',
@@ -296,6 +293,16 @@ class MailService(Service):
         if self.replyto is not None:
             self._set_header(msg, 'Reply-To', self.commaspace.join(self.replyto.split()))
 
+    @contextlib.contextmanager
+    def smtp_entrypoints(self):
+        if not self.sh.default_target.isnetworknode:
+            import smtplib
+            sshobj = self.sh.ssh('network', virtualnode=True)
+            with sshobj.tunnel(self.smtpserver, smtplib.SMTP_PORT) as tun:
+                yield('localhost', tun.entranceport)
+        else:
+            yield (self.smtpserver, self.smtpport)
+
     def __call__(self):
         """Main action: pack the message body, add the attachments, and send via SMTP."""
         msg = self.get_message_body()
@@ -303,25 +310,12 @@ class MailService(Service):
             msg = self.as_multipart(msg)
         self.set_headers(msg)
         msgcorpus = msg.as_string()
-        if not self.sh.default_target.isnetworknode:
-            import tempfile
-            count, tmpmsgfile = tempfile.mkstemp(prefix='mailx_')
-            with io.open(tmpmsgfile, 'wb') as fd:
-                fd.write(msgcorpus)
-            mailcmd = '{0:s} {1:s} < {2:s}'.format(
-                self.altmailx,
-                ' '.join(self.to.split()),
-                tmpmsgfile
-            )
-            sshobj = self.sh.ssh(hostname='network', virtualnode=True)
-            sshobj.execute(mailcmd)
-            self.sh.remove(tmpmsgfile)
-        else:
+        with self.smtp_entrypoints() as smtpspecs:
             import smtplib
             extras = dict()
-            if self.smtpport:
-                extras['port'] = self.smtpport
-            smtp = smtplib.SMTP(self.smtpserver, ** extras)
+            if smtpspecs[1]:
+                extras['port'] = smtpspecs[1]
+            smtp = smtplib.SMTP(smtpspecs[0], ** extras)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
