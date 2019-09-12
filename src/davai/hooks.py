@@ -67,7 +67,8 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
             if davai_server['port'] is None:
                 davai_server['port'] = 80
             # open tunnel
-            sshobj = t.sh.ssh('network', virtualnode=True, maxtries=1)
+            sshobj = t.sh.ssh('network', virtualnode=True, maxtries=1,
+                              mandatory_hostcheck=False)
             with sshobj.tunnel(davai_server['netloc'], int(davai_server['port'])) as tunnel:
                 proxies = {'http': 'http://127.0.0.1:{}'.format(tunnel.entranceport)}  # 127.0.0.1 == localhost == tunnel entrance
                 send_task_to_DAVAI_server(davai_server_url,

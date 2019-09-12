@@ -297,7 +297,7 @@ class MailService(Service):
     def smtp_entrypoints(self):
         if not self.sh.default_target.isnetworknode:
             import smtplib
-            sshobj = self.sh.ssh('network', virtualnode=True)
+            sshobj = self.sh.ssh('network', virtualnode=True, mandatory_hostcheck=False)
             with sshobj.tunnel(self.smtpserver, smtplib.SMTP_PORT) as tun:
                 yield('localhost', tun.entranceport)
         else:
@@ -425,7 +425,7 @@ class SSHProxy(Service):
         extra_sshopts = None if self.sshopts is None else ' '.join(self.sshopts)
         self._sshobj = self.sh.ssh(hostname, sshopts=extra_sshopts,
                                    maxtries=self.maxtries, virtualnode=virtualnode,
-                                   permut=self.permut)
+                                   permut=self.permut, mandatory_hostcheck=False)
 
     def _actual_hostname(self):
         """Build a list of candidate target hostnames."""
