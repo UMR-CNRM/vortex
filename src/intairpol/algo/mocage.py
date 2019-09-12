@@ -216,8 +216,9 @@ class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
         return 'assimilation'
 
     def prepare(self, rh, opts):
-        self.export('drhook')
-        self.export('drhook_not_mpi')
+#        self.export('drhook')
+#        self.export('drhook_not_mpi')
+        self.export('mocage-assim')
         super(AssimilationOpenPalm, self).prepare(rh, opts)
 
     def execute(self, rh, opts):
