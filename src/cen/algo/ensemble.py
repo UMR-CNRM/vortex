@@ -200,7 +200,7 @@ class _SafranWorker(_S2MWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
-                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE']
+                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'rsclim.don']
         for nam in _Safran_namelists:
             self.link_in(self.system.path.join(rundir, nam), nam)
 
@@ -333,6 +333,11 @@ class _SafranWorker(_S2MWorker):
                         actual_dates.append(date)
                     t = t + dt  # 3-hours check
 
+        if 5 < len(actual_dates) < 9:
+            # We must have either 5 or 9 dates, if not we only keep synoptic ones
+            for date in actual_dates:
+                if date.hour not in [0, 6, 12, 18]:
+                    actual_dates.remove(date)
         if len(actual_dates) < 5:
             # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, "
             #      "got {1:d}".format(dates[0].ymdh, len(actual_dates)))
@@ -342,11 +347,6 @@ class _SafranWorker(_S2MWorker):
             else:
                 logger.warning('No guess files found, SAFRAN will run with climatological guess')
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        elif 5 < len(actual_dates) < 9:
-            # We must have either 5 or 9 dates, if not we only keep synoptic ones
-            for date in actual_dates:
-                if date.hour not in [0, 6, 12, 18]:
-                    actual_dates.remove(date)
 
         return actual_dates
 
