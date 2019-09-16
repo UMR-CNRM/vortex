@@ -18,9 +18,9 @@ XMLEXPORT     = ../bin/tbinterface.py
 # Path to Sphinx build program
 SPHINXBUILD     = sphinx-build
 # Sphinx builder command line optios
-SPHINXOPTS      = 
+SPHINXOPTS      =
 # Preferred paper size for Sphinx +  paper size specific options
-PAPER           = a4 
+PAPER           = a4
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
 
@@ -126,6 +126,10 @@ $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
 	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
+# Clean a library index
+clean-%_libindex:
+	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+
 # Standard build for library indexes
 %_libindex:
 	$(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
@@ -149,14 +153,10 @@ html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIB
 clean-$(NOTEBOOKS):
 	rm -rf $(NOTEBOOKS)
 
-# Clean a library index
-clean-%_libindex:
-	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
-
 clean-auto_html_docs:
 	make -C $(AUTO_HTML_DOC) distclean
 
-# Clean the build directory and the automatically generated rst files. 
+# Clean the build directory and the automatically generated rst files.
 clean: clean-$(NOTEBOOKS) clean-auto_html_docs $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES)
