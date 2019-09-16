@@ -37,4 +37,10 @@ Session, Context and Environment concept
 ========================================
 
 * :ref:`Session, Context and Environment concept <nbook-03_SessionContextEnv>`
-  (:ref:`french version <nbook-03_SessionContextEnv_fr>`)  
+  (:ref:`french version <nbook-03_SessionContextEnv_fr>`)
+
+Algorithmic components
+======================
+
+* `Algorithmic components <../_static/auto_html_docs/algo.en_doc.html>`_
+  (`french version <../_static/auto_html_docs/algo.fr_doc.html>`_)
