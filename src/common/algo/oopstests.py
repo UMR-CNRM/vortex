@@ -9,7 +9,7 @@ import json
 
 import footprints
 
-from vortex.algo.components import AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from common.syntax.stdattrs import oops_test_type, oops_expected_target
 from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMemberDetectDecoMixin
 
@@ -19,6 +19,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+@algo_component_deco_mixin_autodoc
 class _OOPSTestDecoMixin(AlgoComponentDecoMixin):
     """Extend OOPSParallel Algo Components with OOPS Tests features.
 
@@ -37,6 +38,7 @@ class _OOPSTestDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_CLI_OPTS_EXTEND = (_ooptest_cli_opts_extend, )
 
 
+@algo_component_deco_mixin_autodoc
 class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
     """Extend OOPSParallel Algo Components with OOPS Tests verification features.
 

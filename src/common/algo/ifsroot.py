@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 import footprints
 
-from vortex.algo.components import Parallel, AlgoComponentError
+from vortex.algo.components import Parallel, ParallelIoServerMixin, AlgoComponentError
 from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
@@ -19,8 +19,8 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
-                  grib.EcGribDecoMixin):
+class IFSParallel(Parallel, ParallelIoServerMixin,
+                  satrad.SatRadDecoMixin, drhook.DrHookDecoMixin, grib.EcGribDecoMixin):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True

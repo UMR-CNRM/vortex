@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MocageAssim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TestRestart
    :show-inheritance:
    :members:

@@ -60,11 +60,25 @@ class Observations(GeoFlowResource):
         return 'observations'
 
 
+class ObsProcessed(Observations):
+    """Pre-Processed or Processed observations."""
+
+    _footprint = dict(
+        info = 'Pre-Processed observations.',
+        attr = dict(
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf', 'hdf5'],
+            ),
+            stage = dict(
+                values   = ['preprocessing', ],
+            ),
+        )
+    )
+
+
 @stddeco.namebuilding_insert('layout', lambda s: s.layout)
 class ObsODB(Observations):
-    """
-    TODO.
-    """
+    """Observations in ODB format associated to a given stage."""
 
     _footprint = dict(
         info = 'Packed observations (ODB, CCMA, etc.)',
@@ -72,8 +86,8 @@ class ObsODB(Observations):
             nativefmt = dict(
                 values   = ['odb', 'odb/split', 'odb/compressed'],
                 remap    = {
-                    'odb/split'      : 'odb',
-                    'odb/compressed' : 'odb'
+                    'odb/split': 'odb',
+                    'odb/compressed': 'odb'
                 },
             ),
             layout = dict(

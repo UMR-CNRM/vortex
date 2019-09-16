@@ -15,7 +15,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
 import footprints
 
-from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent
 
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
@@ -350,6 +350,7 @@ odbmix_attributes = footprints.Footprint(
     ))
 
 
+@algo_component_deco_mixin_autodoc
 class OdbComponentDecoMixin(AlgoComponentDecoMixin):
     """Handle ODB settings in AlgoComponnents.
 

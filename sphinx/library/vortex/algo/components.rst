@@ -60,6 +60,13 @@ Base Mixin class
    :show-inheritance:
    :members:
    :member-order: alphabetical
+ 
+.. autoclass:: AlgoComponentMpiDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autofunction:: algo_component_deco_mixin_autodoc
 
 Abstract classes with some refinements on binaries verification
 ***************************************************************
@@ -109,4 +116,16 @@ Base classes for AlgoComponents implementing task parallelism (using taylorism)
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
+Usefull generic mixins
+----------------------
+
+.. autoclass:: ParallelIoServerMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ParallelOpenPalmMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

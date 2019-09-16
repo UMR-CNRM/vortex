@@ -13,7 +13,7 @@ from bronx.fancies import loggers
 import footprints
 
 from . import addons
-from vortex.algo.components import AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: No automatic export
@@ -308,6 +308,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                       sync=sync)
 
 
+@algo_component_deco_mixin_autodoc
 class EcGribDecoMixin(AlgoComponentDecoMixin):
     """Extend Algo Components with EcCodes/GribApi features."
 
