@@ -66,6 +66,8 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.'), **kwar
                     candidates = [pre.match(f) for f in sh.listdir()]
                     lnew = list()
                     for candidate in filterfalse(lambda c: c is None, candidates):
+                        if candidate.group(0).endswith('.d'):
+                            continue
                         ctime = Time(candidate.group(1))
                         if ctime > fpoll_st.cursor[outputprefix] and ctime <= cursor:
                             lnew.append(candidate.group(0))
@@ -142,6 +144,12 @@ class FullPosServer(IFSParallel):
                 info     = "The list of possible output directories.",
                 type     = footprints.stdtypes.FPList,
                 default  = footprints.stdtypes.FPList(['.', ]),
+                optional = True,
+            ),
+            append_domain = dict(
+                info     = ("If defined, the output file for domain append_domain " +
+                            "will be made a copy of the input file (prior to the " +
+                            "server run"),
                 optional = True,
             ),
             xpname = dict(
@@ -276,7 +284,7 @@ class FullPosServer(IFSParallel):
         return inidata, tododata, namxxrh, anyexpected, outprefix, inputsminlen
 
     def _link_input(self, iprefix, irh, i, inputs_mapping, outputs_mapping,
-                    i_fmt, o_raw_re_fmt, o_grb_re_fmt, o_suffix, o_grb_suffix,
+                    i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt, o_suffix, o_grb_suffix,
                     outprefix):
         """Link an input file and update the mappings dictionaries."""
         sourcepath = irh.container.localpath()
@@ -294,6 +302,10 @@ class FullPosServer(IFSParallel):
         else:
             logger.info('%s copied as %s.',
                         sourcepath, inputs_mapping[sourcepath])
+        if self.append_domain:
+            outputpath = o_raw_fmt.format(self.append_domain, i)
+            self.system.cp(sourcepath, outputpath, intent='inout', fmt=irh.container.actualfmt)
+            logger.info('output file prepared: %s copied (rw) to %s.', sourcepath, outputpath)
 
     def _link_xxt(self, todorh, i, xxtmapping):
         """If necessary, link in the appropriate xxtNNNNNNMM file."""
@@ -451,6 +463,9 @@ class FullPosServer(IFSParallel):
         i_fmt = ('{:s}' + '{:s}+'.format(self.xpname) +
                  '{:0' + str(self._actual_suffixlen(tododata, inputsminlen)) +
                  'd}')
+        o_raw_fmt = ('{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) + '{:s}+' +
+                     '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
+                     'd}')
         o_raw_re_fmt = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
                         r'(?P<fpdom>\w+)\+' +
                         '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
@@ -578,7 +593,7 @@ class FullPosServer(IFSParallel):
                         for iprefix, isec in istuff.items():
                             self._link_input(iprefix, isec.rh, current_i,
                                              inputs_mapping, outputs_mapping,
-                                             i_fmt, o_raw_re_fmt, o_grb_re_fmt,
+                                             i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt,
                                              o_suffix, o_grb_suffix, outprefix)
                         self._link_xxt(istuff[self._MODELSIDE_INPUTPREFIX0 + outprefix].rh,
                                        current_i, namxx)
@@ -636,7 +651,7 @@ class FullPosServer(IFSParallel):
             for i, iinputs in enumerate(tododata):
                 for iprefix, isec in iinputs.items():
                     self._link_input(iprefix, isec.rh, i, inputs_mapping, outputs_mapping,
-                                     i_fmt, o_raw_re_fmt, o_grb_re_fmt,
+                                     i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt,
                                      o_suffix, o_grb_suffix, outprefix)
                 self._link_xxt(iinputs[self._MODELSIDE_INPUTPREFIX0 + outprefix].rh,
                                i, namxx)

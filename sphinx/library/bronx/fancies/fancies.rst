@@ -20,6 +20,7 @@ Sub-modules
 * :mod:`bronx.fancies.display`
 * :mod:`bronx.fancies.dump`
 * :mod:`bronx.fancies.fscrawler`
+* :mod:`bronx.fancies.language`
 * :mod:`bronx.fancies.loggers`
 * :mod:`bronx.fancies.multicfg`
 * :mod:`bronx.fancies.wrapcmd`

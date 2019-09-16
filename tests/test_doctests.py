@@ -10,6 +10,8 @@ from vortex import sessions
 from vortex.data import geometries
 from vortex.tools import delayedactions
 
+from intairpol.tools import conftools
+
 
 class utDocTests(unittest.TestCase):
 
@@ -28,6 +30,7 @@ class utDocTests(unittest.TestCase):
             a_hub = t.context.delayedactions_hub
             t.sh.rmtree(a_hub.stagedir)
             a_hub.clear()
+        self.assert_doctests(conftools)
 
 
 if __name__ == '__main__':
