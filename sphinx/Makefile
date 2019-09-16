@@ -62,6 +62,9 @@ CLEAN_LIBINDEXES = $(patsubst library/%, clean-%_libindex, $(AUTO_LIBINDEXES))
 # Target directory for footprint's XML exports
 XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
 
+# Auto html doc
+AUTO_HTML_DOC = _static/auto_html_docs
+
 # The following environment variable have to be provided in order to activate the
 # automatic documentation in classes derived from FootprintBase.
 FOOTPRINT_DOCSTRINGS	:= 2
@@ -75,11 +78,11 @@ export BRONX_FANCIES_RSTDOC
 # -------------
 # Build targets
 
-all: $(NOTEBOOKS) html  # HTML documentation is obviously the default
+all: $(NOTEBOOKS) auto_html_docs html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
-.PHONY: all full-check miss-check $(CHECKREPORT) html \
-        clean clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
+.PHONY: all full-check miss-check $(CHECKREPORT) html auto_html_docs \
+        clean clean-$(NOTEBOOKS) clean-auto_html_docs $(XMLEXPORTDIR)
 
 # Create rst files for new modules and check all of the aspects
 full-check:
@@ -126,7 +129,11 @@ taylorism_libindex:
 footprints_libindex:
 	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
 
-# Build the html documentation
+# Build the $(AUTO_HTML_DOC) directory
+auto_html_docs:
+	make -C $(AUTO_HTML_DOC) docs
+
+# Build the sphinx-html documentation
 html: $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
@@ -138,7 +145,10 @@ clean-$(NOTEBOOKS):
 clean-%_libindex:
 	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
 
+clean-auto_html_docs:
+	make -C $(AUTO_HTML_DOC) distclean
+
 # Clean the build directory and the automatically generated rst files. 
-clean: clean-$(NOTEBOOKS) $(CLEAN_LIBINDEXES)
+clean: clean-$(NOTEBOOKS) clean-auto_html_docs $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
 	rm -f $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES)

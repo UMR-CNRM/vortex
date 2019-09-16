@@ -1,4 +1,4 @@
-.. _overview-footprints:
+.. _footprints_doc_fr:
 
 *************************
 Le package « footprints »
@@ -391,7 +391,7 @@ c'est quelque chose que l'on peut aisément vérifier::
     <footprints.Footprint object at 0x7f9ef0bf19d0>
 
 La façon propre de récupérer l'objet footprint associé à une classe est d'utiliser
-la méthode de classe :meth:`~footprints.FootprintBase.footprint_retrive`::
+la méthode de classe :meth:`~footprints.FootprintBase.footprint_retrieve`::
 
     >>> fruits.Pomme.footprint_retrieve()
     <footprints.Footprint object at 0x7f9ef0bf19d0>
@@ -450,12 +450,8 @@ la carte des attributs possibles::
 
     >>> fp.proxy.fruits.show_attrmap()
      * calibre [optional]:
-         Fraise                 + fruits
-                                 | values = 1, 2, 3, 4, 5, 6
          GrannySmith            + verger
                                  | values = 3, 4, 5, 6, 7
-         Pomme                  + fruits
-                                 | values = 1, 2, 3, 4, 5, 6
 
      * couleur:
          Fraise                 + fruits
@@ -1219,17 +1215,6 @@ la doc généraliste...
 De nombreuses méthodes de classe ou méthodes objets renvoient des informations partielles, sur le footprint,
 les valeurs autorisées, etc. Voir la documentation en ligne de la classe :class:`~footprints.FootprintBase`.
 
-Formats de footprints
----------------------
-
-La plupart des exemples présentés, et l'usage courant de VORTEX en l'occurrence, se sert de simples dictionnaires
-pour définir les empreintes. On a vu aussi qu'il est possible d'utiliser en tout ou en partie
-des objets :class:`~footprints.Footprint` prédéfinis.
-
-Mais il sera également possible de spécifier une ressource extérieure sous la forme
-d'un fichier :file:`.ini` ou :file:`.json`., rendant le code encore plus indépendant des formes
-effectives que peuvent prendre les définitions d'empreintes ou leurs valeurs d'attributs.
-
 Méthodes des collecteurs
 ------------------------
 
@@ -1266,6 +1251,12 @@ que sont les :func:`list`, :func:`tuple`, :func:`set`, et dans une certaine mesu
 
 Mais c'est aussi le cas pour les chaînes de caractères contenant des "range", ou contenant des valeurs
 séparées par des virgules, et même contenant des indications de *globbing* !
+
+
+.. seealso::
+
+   Plus de détails sont données dans la documentaiton de la fonction
+   :func:`footprints.util.expand`.
 
 ==========
 Conclusion

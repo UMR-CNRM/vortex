@@ -1,3 +1,5 @@
+.. _${module}-autoindex:
+
 $packdoc_sep
 $packdoc
 $packdoc_sep

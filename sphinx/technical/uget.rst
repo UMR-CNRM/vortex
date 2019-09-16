@@ -1,8 +1,8 @@
 .. _uget-fr:
 
-**********************
-Uenv/Uget User’s Guide
-**********************
+***********************************************
+Documentation utilisateur Uenv/Uget (in French)
+***********************************************
 
 :Release: |version|
 :Author: Alexandre Mary et contributeurs.
