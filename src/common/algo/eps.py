@@ -393,8 +393,10 @@ class CombiBreeding(CombiPert):
 
 
 class SurfCombiIC(BlindRun):
-    """Combine the deterministic surface with the perturbed surface
-    to create the initial surface conditions."""
+    """
+    Combine the deterministic surface with the perturbed surface
+    to create the initial surface conditions.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -412,7 +414,8 @@ class SurfCombiIC(BlindRun):
         """Set some variables according to target definition."""
         super(SurfCombiIC, self).prepare(rh, opts)
 
-        icsec = self.setlink(initrole='SurfaceAnalysis', initkind='ic')
+        icsec = self.setlink(initrole=('SurfaceAnalysis', 'SurfaceInitialCondition'),
+                             initkind='ic')
         actualdate = icsec[0].rh.resource.date
         seed = int(actualdate.ymdh) + (actualdate.hour + 1) * (self.member + 1)
 

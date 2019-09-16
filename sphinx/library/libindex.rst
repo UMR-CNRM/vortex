@@ -52,6 +52,7 @@ Here is the expanded index for all of these packages:
    
    common/index
    cen/index
+   davai/index
    previmar/index
    intairpol/index
    sandbox/index

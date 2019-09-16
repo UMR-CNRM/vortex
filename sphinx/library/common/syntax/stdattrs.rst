@@ -20,8 +20,6 @@ Pre-defined attributes as abstract footprints
 
 .. autodata:: oops_expected_target
 
-.. autodata:: oops_select_expected_target
-
 .. autodata:: oops_members_terms_lists
 
 Pre-defined attributes as dictionaries
@@ -33,7 +31,6 @@ Pre-defined attributes as dictionaries
 
 .. autodata:: an_oops_expected_target
 
-.. autodata:: a_oops_select_expected_target
 
 Module Interface
 -----------------

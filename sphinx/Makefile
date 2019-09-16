@@ -40,6 +40,11 @@ GEOLIST       = $(SOURCEDIR)/geometries.rst
 # Source configuration file to generate the geometries list
 GEOLIST_DEP   = ../conf/geometries.ini
 
+# Target file for the BDPE ids list
+BDPELIST       = $(SOURCEDIR)/bdpe-map-resources.rst
+# Source configuration file to generate the BDPE ids list
+BDPELIST_DEP   = ../conf/bdpe-map-resources.ini
+
 # Target file for the pollutants list
 POL_ELTS      = $(SOURCEDIR)/pollutants-elements-std.rst
 POL_SITES     = $(SOURCEDIR)/pollutants-sites-std.rst
@@ -102,6 +107,9 @@ $(CHECKREPORT):
 $(GEOLIST): $(GEOLIST_DEP)
 	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
 
+$(BDPELIST): $(BDPELIST_DEP)
+	$(PYTHON) $(GENEDOC) --default $(BDPELIST_DEP) $(BDPELIST)
+
 $(POL_ELTS): $(POL_ELTS_DEP)
 	$(PYTHON) $(GENEDOC) --configtable pollutants,elements,std,en,intairpol $(POL_ELTS)
 
@@ -134,7 +142,7 @@ auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
 # Build the sphinx-html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
@@ -151,4 +159,4 @@ clean-auto_html_docs:
 # Clean the build directory and the automatically generated rst files. 
 clean: clean-$(NOTEBOOKS) clean-auto_html_docs $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
-	rm -f $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES)
+	rm -f $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES)

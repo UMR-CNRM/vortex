@@ -110,13 +110,15 @@ def olive_jobout(sh, env, output, localout=None, mode='socket'):
 
     if mode == 'socket':
         return olive_jobout_socketsend(sh, env, output, mstep, localout)
+    elif mode == 'fullsocket':
+        return olive_jobout_fullsocketsend(sh, env, output, mstep, localout)
     elif mode == 'ectrans':
         return olive_jobout_ectranssend(sh, env, output, mstep, localout)
     else:
         raise NotImplementedError('mode "{:s}" is not implemented'.format(mode))
 
 
-def olive_jobout_socketsend(sh, env, output, mstep, localout):
+def _olive_jobout_getsocket(sh, env):
     """Send the request to joboutd using a socket."""
     localhost = sh.default_target.inetname
     _, swapp_host, swapp_port = env.VORTEX_OUTPUT_ID.split(':')
@@ -131,18 +133,64 @@ def olive_jobout_socketsend(sh, env, output, mstep, localout):
         client_socket = socket.create_connection((str(swapp_host), str(swapp_port)), timeout)
     except socket.timeout:
         logger.critical('Got timeout after %s seconds.', timeout)
+        logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
         client_socket = None
 
+    return client_socket, user, localhost
+
+
+def olive_jobout_socketsend(sh, env, output, mstep, localout):
+    """Send the request to joboutd using a socket."""
+    client_socket, user, localhost = _olive_jobout_getsocket(sh, env)
+    rc = 0
     if client_socket:
         message = "user:{0:s}\nhost:{1:s}\nname:{2:s}\nfile:{3:s}\nlout:{4:s}\nstep:{5:s}\n".format(
             user, localhost, env.SMSNAME, output, localout, mstep
         ).encode('ascii', 'replace')
-        sh.stderr(['client_socket', 'send', message])
-        rc = client_socket.send(message)
+        sh.stderr(['client_socket', 'send', str(message)])
+        client_socket.sendall(message)
+        rc = 1
         client_socket.close()
-    else:
+    return rc
+
+
+def olive_jobout_fullsocketsend(sh, env, output, mstep, localout):
+    """Send the request to joboutd using a socket."""
+    # What are the output files ?
+    stepfiles = localout.split(':')
+    if mstep == 'on':
+        stepfiles = [s + '.out' for s in stepfiles]
+    stepfiles_fh = list()
+    stepfiles_size = 0
+    try:
+        # Open all file in read mode and accumulate their sizes
+        for stepfile in stepfiles:
+            stepfile_fh = io.open(stepfile, 'rb')
+            stepfiles_fh.append(stepfile_fh)
+            stepfiles_size += stepfile_fh.seek(0, io.SEEK_END)
+            stepfile_fh.seek(0, io.SEEK_SET)
+        # Create the socket
+        client_socket, user, localhost = _olive_jobout_getsocket(sh, env)
         rc = 0
-        logger.warning('Could not connect to remote jobout server %s', (swapp_host, swapp_port))
+        if client_socket:
+            # Send the header
+            message = "user:{0:s}\nhost:{1:s}\nname:{2:s}\nfile:{3:s}\nlout:{4:s}\nstep:{5:d}\n".format(
+                user, localhost, env.SMSNAME, output, 'socket', stepfiles_size
+            ).encode('ascii', 'replace')
+            sh.stderr(['client_socket', 'send', str(message)])
+            client_socket.sendall(message)
+            # Send data to the socket
+            chunksize = 64 * 1024  # 64Ko
+            for stepfile_fh in stepfiles_fh:
+                sdata = stepfile_fh.read(chunksize)
+                while sdata:
+                    client_socket.sendall(sdata)
+                    sdata = stepfile_fh.read(chunksize)
+            rc = 1
+            client_socket.close()
+    finally:
+        for stepfile_fh in stepfiles_fh:
+            stepfile_fh.close()
     return rc
 
 

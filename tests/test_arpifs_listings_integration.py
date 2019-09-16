@@ -29,8 +29,8 @@ Norms   check succeeded for steps:
   (NSIM4D=None, subroutine=OPENFA, NSTEP=60, FILENAME=ICMSHSCRESURF)
   (NSIM4D=0, subroutine=CNT4, NSTEP=0 (None))
 Norms   check FAILED    for steps:
-  (NSIM4D=None, subroutine=STEPO, NSTEP=30, CDCONF=AAAA0VDAA)
-  (NSIM4D=0, subroutine=STEPO, NSTEP=0, CDCONF=A00000000)
+  (NSIM4D=None, subroutine=WRMLPPA, NSTEP=30, CDCONF=A)
+  (NSIM4D=0, subroutine=WRMLPPA, NSTEP=0, CDCONF=A)
 JoTable check FAILED    for: SCREENING JOB    T1198 NCONF=     1 NSIM4D=     0 NUPTRA=     0
   > SYNOP, LAND STATIONS AND SHIPS   > FRENCH RADOME                    > U    : d_n=-1         d_jo=-1.000000
   > SYNOP, LAND STATIONS AND SHIPS   > FRENCH RADOME                    > U10  : d_n=-1         d_jo=-3.000000
@@ -66,6 +66,7 @@ class TestArpIfsIntegration(unittest.TestCase):
             self.assertRegexpMatches(text, regex, msg)
 
     def test_addons_diff(self):
+        self.maxDiff = None
         addon = listings.ArpIfsListingsTool(kind='arpifs_listings',
                                             sh=vortex.ticket().system())
         # Listings are equal
