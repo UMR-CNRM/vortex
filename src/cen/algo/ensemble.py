@@ -3,21 +3,23 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-from collections import defaultdict
-
-import six
-import os
-import footprints
+from bronx.datagrip.namelist import NamelistParser
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+from collections import defaultdict
+import io
+import os
+import random
+
+import footprints
+import six
 from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, Parallel
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
-import random
+
 
 logger = loggers.getLogger(__name__)
 
@@ -30,6 +32,7 @@ with echecker:
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
+    from snowtools.utils.dates import get_list_dates_files
     from snowtools.tasks.vortex_kitchen import vortex_conf_file
 
 
@@ -773,11 +776,19 @@ class SurfexWorker(_S2MWorker):
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
-        if self.kind == 'crampon':  # in crampon case, both PREP.nc and PREP_yyyymmddhh.nc exist in local dir as FILES
-            pass
-            # self.set_env(thisdir)
-            # list_files_link_ifnotprovided.remove("PREP.nc")
-            # self.link_in(self.system.path.join())
+        if self.kind == 'crampon':
+
+            # the forcings are in common :
+            forcdir = '../../../../common/'
+            # self.set_env(thisdir)  # BC 130919 : to reset ?
+            # need to build link/copy with the forcings in common:
+            date_begin_forc, date_end_forc, _, _ = \
+                get_list_dates_files(self.datebegin, self.dateend, 'yearly')  # each one of these items has only one item
+            date_begin_forc = date_begin_forc[0]
+            date_end_forc = date_end_forc[0]  # replace one-item list by item.
+            fforc = 'FORCING_' + date_begin_forc.strftime("%Y%m%d%H") + '_' + date_end_forc.strftime("%Y%m%d%H") + '.nc'
+            gg = forcdir + self.subdir + '/' + fforc
+            self.link_in(gg, fforc)
 
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)
