@@ -3,20 +3,20 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-from collections import defaultdict
-
-import six
-
-import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+from collections import defaultdict
+import footprints
+import io
 from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
+
+import six
+
 
 logger = loggers.getLogger(__name__)
 
@@ -587,7 +587,6 @@ class SyvafiWorker(_SafranWorker):
             self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         try:
-            self.local_spawn(list_name)
             self.local_spawn(list_name)
             self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
             # if self.execution in ['reanalysis', 'reforecast']:
