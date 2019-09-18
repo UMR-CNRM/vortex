@@ -269,9 +269,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
-        print('GRRRRRRRR', source)
         if self.is_xlfi(source):
-            print('EXPLODED', source)
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
             hostname = self.sh._fix_fthostname(hostname)
