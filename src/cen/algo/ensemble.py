@@ -562,8 +562,9 @@ class SyvaprWorker(_SafranWorker):
                     self.mv_if_exists('SAF4D_{0:s}'.format(suffix),
                                       'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
-                                                self.datebegin, self.dateend)
+                # rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                #                                self.datebegin, self.dateend)
+                rdict['rc'] = logger.warning('Something went wrong in syvapr, the execution will continue without 4DVAR')
 
         return rdict  # Note than in the other case return rdict is at the end
 
@@ -592,8 +593,9 @@ class SyvafiWorker(_SafranWorker):
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
-                                            self.datebegin, self.dateend)
+            #rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+            #                                self.datebegin, self.dateend)
+            rdict['rc'] = logger.warning('Something went wrong in syvafi, the execution will continue without 4DVAR')
 
         return rdict
 
