@@ -45,7 +45,7 @@ class _S2MWorker(VortexWorkerBlindRun):
             ),
             deterministic = dict(
                 type     = bool,
-                default  = False,
+                default  = True,
                 optional = True,
             ),
         )
@@ -543,6 +543,7 @@ class SyvaprWorker(_SafranWorker):
             kind = dict(
                 values = ['syvapr']
             ),
+
         )
     )
 
@@ -562,9 +563,8 @@ class SyvaprWorker(_SafranWorker):
                     self.mv_if_exists('SAF4D_{0:s}'.format(suffix),
                                       'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
-                # rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
-                #                                self.datebegin, self.dateend)
-                rdict['rc'] = logger.warning('Something went wrong in syvapr, the execution will continue without 4DVAR')
+                rdict['rc'] = S2MExecutionError(self.progname, False, self.subdir,
+                                                self.datebegin, self.dateend)
 
         return rdict  # Note than in the other case return rdict is at the end
 
@@ -575,6 +575,11 @@ class SyvafiWorker(_SafranWorker):
         attr = dict(
             kind = dict(
                 values = ['syvafi']
+            ),
+            deterministic = dict(
+                type     = bool,
+                default  = False,
+                optional = True,
             ),
         )
     )
@@ -593,9 +598,8 @@ class SyvafiWorker(_SafranWorker):
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
-            #rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
-            #                                self.datebegin, self.dateend)
-            rdict['rc'] = logger.warning('Something went wrong in syvafi, the execution will continue without 4DVAR')
+            rdict['rc'] = S2MExecutionError(self.progname, False, self.subdir,
+                                            self.datebegin, self.dateend)
 
         return rdict
 
@@ -1246,7 +1250,7 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                cpl_model.append(am.rh.provider.vconf == '4dvarfr')
+                cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
 
         return cpl_model
 
