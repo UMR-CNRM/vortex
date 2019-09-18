@@ -169,7 +169,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         rc = False
         if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
-                rc = fd.read(8) == 'LFI_ALTM'
+                rc = fd.read(8) == b'LFI_ALTM'
         return rc
 
     def _std_table(self, lfifile, **kw):
@@ -269,7 +269,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
+        print('GRRRRRRRR', source)
         if self.is_xlfi(source):
+            print('EXPLODED', source)
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
             hostname = self.sh._fix_fthostname(hostname)
