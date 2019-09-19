@@ -30,6 +30,7 @@ with echecker:
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils import S2M_standard_file
+    from snowtools.utils.FileException import TimeListException
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -886,7 +887,14 @@ class SurfexWorker(_S2MWorker):
                         forcinglist.append(forcingname)
 
                     print(forcinglist)
-                    forcinput_applymask(forcinglist, "FORCING.nc", )
+                    try:
+                        forcinput_applymask(forcinglist, "FORCING.nc")
+                    except TimeListException:
+                        deterministic = self.subdir == "mb035"
+                        rdict['rc'] = S2MExecutionError("merge of forcings", deterministic, self.subdir,
+                                                        dateforcbegin, dateforcend)
+                        return rdict  # Note than in the other case return rdict is at the end
+
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
