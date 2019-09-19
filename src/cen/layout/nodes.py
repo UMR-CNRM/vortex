@@ -37,7 +37,7 @@ class S2MTaskMixIn(object):
 
                 warning["deterministic"] = e.deterministic
 
-        accept_errors = not determinitic_error and nerrors < 5
+        accept_errors = not determinitic_error or nerrors < 5
 
         if accept_errors:
             print(self.warningmessage(nerrors, exc))
