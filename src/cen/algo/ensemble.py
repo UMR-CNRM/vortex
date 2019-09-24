@@ -1248,6 +1248,8 @@ class S2MComponent(ParaBlindRun):
 # reanalyse safran, surfex postes, etc
 #         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
+        # Crash if subdirs is an empty list (it means that there is not any input available)
+        self.algoassert(len(subdirs) > 1)
         return subdirs
 
     def get_origin(self, rh, opts):
