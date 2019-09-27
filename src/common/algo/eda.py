@@ -85,6 +85,11 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         return self._actual_nbe
 
     @property
+    def actual_totalnumber(self):
+        """The total number of members (=! actual_nbe for lagged ensembles. see below)."""
+        return self.actual_nbe
+
+    @property
     def actual_nbmin(self):
         """The minimum number of effective members that are mandatory to go one."""
         return self.nbmin
@@ -114,6 +119,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
             return False  # Ok, apparently the user knows what she/he is doing
         elif mlist and self.nbmember is None:
             innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                          totalnumber=self.actual_totalnumber,
                                           actualfmt=mformats.pop())
             checkfiles = [m for m in range(1, len(mlist) + 1)
                           if self.system.path.exists(innc(number=m))]
@@ -141,6 +147,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         """Actualy rename the effective inputs."""
         eff_format = mlist[0].rh.container.actualfmt
         innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                      totalnumber=self.actual_totalnumber,
                                       actualfmt=eff_format)
         for i, s in enumerate(mlist, start=1):
             logger.info("Soft-Linking %s to %s",
@@ -210,6 +217,11 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
         return self._actual_nresx
 
     @property
+    def actual_totalnumber(self):
+        """The total number of members."""
+        return self.actual_nbe * self.actual_nresx if self.padding else self.actual_nbe
+
+    @property
     def actual_nbmin(self):
         """The minimum number of effective members that are mandatory to go one."""
         return self.nbmin * self.actual_nresx if self.padding else self.nbmin
@@ -275,6 +287,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
         if self.padding:
             eff_format = mlist[0].rh.container.actualfmt
             innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                          totalnumber=self.actual_totalnumber,
                                           actualfmt=eff_format)
             all_sections  = self._members_all_inputs()
             paddingstuff = self.context.sequence.effective_inputs(role = self._PADDING_ROLE)
@@ -560,6 +573,12 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
 
     _HYBRID_CLIM_ROLE = 'ClimatologicalModelState'
 
+    @property
+    def actual_totalnumber(self):
+        """The total number of members (times 2 if hybrid...)."""
+        parent_totalnumber = super(IFSCovB, self).actual_totalnumber
+        return parent_totalnumber * 2 if self.hybrid else parent_totalnumber
+
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
         super(IFSCovB, self).prepare(rh, opts)
@@ -588,6 +607,7 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
             totalnumber = self.actual_nbe * self.actual_nresx if self.padding else self.actual_nbe
             for i, tnum in enumerate(range(totalnumber + 1, 2 * totalnumber + 1)):
                 innc = self.naming_convention(kind='edainput', variant=self.kind,
+                                              totalnumber=self.actual_totalnumber,
                                               rh=rh, actualfmt=hybformat)
                 logger.info("Soft-Linking %s to %s",
                             hybstuff[i].rh.container.localpath(), innc(number=tnum))
