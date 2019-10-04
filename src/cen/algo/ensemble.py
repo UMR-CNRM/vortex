@@ -1529,6 +1529,8 @@ class SodaWorker(Parallel):
             self.system.mv('BG_CORR', 'BG_CORR_' + self.dateassim.ymdh + '.txt')
         if os.path.exists('IMASK'):
             self.system.mv('IMASK', 'IMASK_' + self.dateassim.ymdh + '.txt')
+        if os.path.exists('ALPHA'):
+            self.system.mv('ALPHA', 'ALPHA_' + self.dateassim.ymdh + '.txt')
         else:
             print('no part file')
         # adapt the following line whenever the ISBA_analysis is available

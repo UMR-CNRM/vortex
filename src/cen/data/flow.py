@@ -442,7 +442,7 @@ class PfSample(Resource):
                     optional = True
                 ),
                 model = dict(
-                    values = ['PART', 'BG_CORR', 'IMASK']
+                    values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
                 ),
                 dateassim = dict(
                     info = "date of the analysis",
