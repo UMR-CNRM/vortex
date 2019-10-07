@@ -44,7 +44,8 @@ def mocage_omplist_binarydeco(omp_variables):
 
 @mocage_omplist_binarydeco(('MOCAGE_OMP_NUM_THREADS',
                             'DAIMON_B_OMP_NUM_THREADS',
-                            'DAIMON_H_OMP_NUM_THREADS'))
+                            'DAIMON_H_OMP_NUM_THREADS',
+                            'MKL_NUM_THREADS'))
 class MpiMocagePalm(mpitools.MpiBinaryBasic):
     """The kind of binaries used in Mocage's Palm assimilation."""
 
