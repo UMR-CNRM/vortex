@@ -632,16 +632,22 @@ class Handler(object):
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
                 cur_tracker = self._cur_context.localtracker
+                cur_seq = self._cur_context.sequence
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
                 if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
                     # Am I consistent with the ResourceHandler recorded in the tracker ?
                     if cur_tracker[iotarget].match_rh('get', self):
                         rst = True
-                        self.container.updfill(True)
-                        self._updstage('get', insitu=True)
-                        logger.info('The <%s> resource is already here and matches the RH description :-)',
-                                    self.container.iotarget())
+                        # There is the tricky usecase where we are dealing with an alternate
+                        # that was already dealt with (yes, sometimes the nominal case and
+                        # the alternate is the same !)
+                        if not (alternate and iotarget in [s.rh.container.iotarget()
+                                                           for s in cur_seq.effective_inputs()]):
+                            self.container.updfill(True)
+                            self._updstage('get', insitu=True)
+                            logger.info('The <%s> resource is already here and matches the RH description :-)',
+                                        self.container.iotarget())
                     else:
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
@@ -813,14 +819,20 @@ class Handler(object):
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
                 cur_tracker = self._cur_context.localtracker
+                cur_seq = self._cur_context.sequence
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
                 if (self.container.exists() and
                         cur_tracker.is_tracked_input(iotarget)):
                     if cur_tracker[iotarget].match_rh('get', self):
                         rst = True
-                        self.container.updfill(True)
-                        self._updstage('get', insitu=True)
+                        # There is the tricky usecase where we are dealing with an alternate
+                        # that was already dealt with (yes, sometimes the nominal case and
+                        # the alternate is the same !)
+                        if not (alternate and iotarget in [s.rh.container.iotarget()
+                                                           for s in cur_seq.effective_inputs()]):
+                            self.container.updfill(True)
+                            self._updstage('get', insitu=True)
                     elif alternate:
                         # Alternate is on and the local file exists: ignoring the error.
                         rst = True

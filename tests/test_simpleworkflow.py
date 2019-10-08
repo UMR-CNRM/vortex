@@ -11,6 +11,7 @@ Vortex features are working correctly.
 When debugging, fix other tests first and only then look at this one !
 """
 
+import os
 import tempfile
 from unittest import TestCase, main
 
@@ -22,6 +23,8 @@ from vortex.data.providers import VortexStd
 from vortex.data.stores import _VortexCacheBaseStore, _CACHE_GET_INTENT_DEFAULT
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
 from vortex.tools.storage import FixedEntryCache
+
+MYPYFILE = os.path.abspath(__file__)
 
 
 # The test cache Storage Object
@@ -44,7 +47,7 @@ class TestDataCache(FixedEntryCache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        testsdir = self.sh.path.dirname(__file__)
+        testsdir = self.sh.path.dirname(MYPYFILE)
         return self.sh.path.join(testsdir, 'data', 'testcache', self.actual_headdir)
 
     def _actual_earlyretrieve(self, item, local, **kwargs):
@@ -399,6 +402,9 @@ class UtSimpleWorkflow(TestCase):
             desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='arpege')
             rhs1 = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertIntegrity(rhs1[0])
+            rhs1bis = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs1bis)
+            self.assertFalse(rhs1bis[0].container.filled)
             desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='safran')
             rhs2 = toolbox.input(alternate=therole, now=True, fatal=True, verbose=False, batch=batch, **desc)
             self.assertTrue(rhs2)
@@ -412,7 +418,39 @@ class UtSimpleWorkflow(TestCase):
             a_missing = a_report.missing_resources()
             self.assertEqual(a_missing['utestM_get{:d}'.format(i)].container.filename,
                              'utestM_get{:d}'.format(i))
-            # Cleaning...
+        self.cursession.context.localtracker.json_dump()
+        # Now test the insitu stuff
+        self.cursession.context.newcontext('insitutest', focus=True)
+        self.cursession.context.cocoon()
+        for i in range(0, 2):
+            self.sh.mv('../utest1_get{:d}'.format(i), './utest1_get{:d}'.format(i))
+        self.sh.mv('../local-tracker-state.json', 'local-tracker-state.json')
+        self.cursession.context.localtracker.json_load()
+        for i, batch in enumerate([True, False]):
+            therole = 'Toto{:d}'.format(i)
+            # Missing
+            descM = self.default_fp_stuff
+            descM.update(kind='utest1', local = 'utestM_get{:d}'.format(i), model='mocage')
+            rhsM = toolbox.input(role=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **descM)
+            self.assertFalse(rhsM)
+            # Alternate
+            desc = self.default_fp_stuff
+            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='arome')
+            rhs0 = toolbox.input(role=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertFalse(rhs0)
+            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='arpege')
+            rhs1 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertIntegrity(rhs1[0])
+            rhs1bis = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs1bis)
+            self.assertFalse(rhs1bis[0].container.filled)
+            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='safran')
+            rhs2 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=True, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs2)
+            efftoto = self.sequence.effective_inputs(role=therole)
+            self.assertEqual(len(efftoto), 1)
+            self.assertEqual(efftoto[0].rh.resource.model, 'arpege')
+            # nettoyage
             rhs1[0].clear()
 
     def test_coherentget(self):
