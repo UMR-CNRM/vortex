@@ -15,6 +15,8 @@ from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
 from common.algo.assim import (Screening, Minim)
 from common.algo.odbtools import (Raw2ODBparallel)
+from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
+                                   FullPosBDAP, FullPosGeo)
 
 #: No automatic export
 __all__ = []
@@ -97,4 +99,24 @@ class Minim_CrashWitness(Minim, _CrashWitnessDecoMixin):
 
 
 class Raw2ODBparallel_CrashWitness(Raw2ODBparallel, _CrashWitnessDecoMixin):
+    pass
+
+
+class Forecast_CrashWitness(Forecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class LAMForecast_CrashWitness(LAMForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class DFIForecast_CrashWitness(DFIForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
     pass
