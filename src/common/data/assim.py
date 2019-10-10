@@ -127,6 +127,29 @@ class BackgroundStdError(_BackgroundErrorInfo):
         return '.m{:02d}'.format(self.date.month)
 
 
+class SplitBackgroundStdError(BackgroundStdError):
+    """Background error standard deviation, split by variable."""
+    _footprint = [
+        dict(
+            info='Background error standard deviation',
+            attr=dict(
+                variable=dict(
+                    info = "Variable concerned by stderr.",
+                ),
+                gvar = dict(
+                    default = 'errgrib_vor_[variable]_monthly'
+                ),
+            ),
+        )
+    ]
+
+    def namebuilding_info(self):
+        """Generic information for names fabric, with radical = ``bcor``."""
+        infos = super(SplitBackgroundStdError, self).namebuilding_info()
+        infos['src'].append(self.variable)
+        return infos
+
+
 class BackgroundErrorNorm(_BackgroundErrorInfo):
     """
     Background error normalisation data for wavelet covariances.
