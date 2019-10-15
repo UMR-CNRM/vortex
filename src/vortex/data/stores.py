@@ -282,6 +282,11 @@ class Store(footprints.FootprintBase):
                 self._cpipeline = None
         return self._cpipeline
 
+    @property
+    def tracking_extraargs(self):
+        """When tracking get/put request: extra args that will be added to the URI query."""
+        return dict()
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
@@ -1135,6 +1140,13 @@ class ArchiveStore(Store):
     @property
     def realkind(self):
         return 'archivestore'
+
+    @property
+    def tracking_extraargs(self):
+        tea = super(ArchiveStore, self).tracking_extraargs
+        if self.storage:
+            tea['storage'] = self.storage
+        return tea
 
     def _str_more(self):
         return 'archive={!r}'.format(self.archive)
