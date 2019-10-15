@@ -205,6 +205,11 @@ class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
                 optional    = True,
                 default     = date.Period(hours=1),
             ),
+            setup = dict(
+                info        = "Some additive settings (environment variables)",
+                optional    = True,
+                default     = None,
+            ),
             binarysingle = dict(
                 default     = 'mocagepalm',  # Will set OpenMP environment variables
             ),
@@ -219,6 +224,8 @@ class AssimilationOpenPalm(AbstractMocageRoot, ParallelOpenPalmMixin):
 #        self.export('drhook')
 #        self.export('drhook_not_mpi')
         self.export('mocage-assim')
+        if self.setup:
+            self.export(self.setup)
         super(AssimilationOpenPalm, self).prepare(rh, opts)
 
     def execute(self, rh, opts):
