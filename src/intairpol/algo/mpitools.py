@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
@@ -30,8 +30,11 @@ def mocage_omplist_binarydeco(omp_variables):
         def setup_environment(self, opts):
             orig_setup_env(self, opts)
             for omp_variable in omp_variables:
-                self.env[omp_variable] = self.options.get('openmp', 1)
-                logger.info("OpenMP settings: %s=%d", omp_variable, self.env[omp_variable])
+                if omp_variable not in self.env:
+                    self.env[omp_variable] = self.options.get('openmp', 1)
+                    logger.info("OpenMP settings: %s=%d", omp_variable, self.env[omp_variable])
+                else:
+                    logger.info("Variable %d already set : %d", omp_variable, self.env[omp_variable])
 
         if hasattr(orig_setup_env, '__doc__'):
             setup_environment.__doc__ = orig_setup_env.__doc__
@@ -44,8 +47,7 @@ def mocage_omplist_binarydeco(omp_variables):
 
 @mocage_omplist_binarydeco(('MOCAGE_OMP_NUM_THREADS',
                             'DAIMON_B_OMP_NUM_THREADS',
-                            'DAIMON_H_OMP_NUM_THREADS',
-                            'MKL_NUM_THREADS'))
+                            'DAIMON_H_OMP_NUM_THREADS'))
 class MpiMocagePalm(mpitools.MpiBinaryBasic):
     """The kind of binaries used in Mocage's Palm assimilation."""
 
