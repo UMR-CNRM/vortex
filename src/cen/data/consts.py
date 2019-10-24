@@ -24,10 +24,10 @@ class List(GenvModelGeoResource):
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
                               'carpost', 'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist',
-                              'metadata', 'NORELo', 'NORELm'],
+                              'metadata', 'NORELo', 'NORELm', 'shapefile'],
                 ),
                 nativefmt = dict(
-                    values  = ['ascii'],
+                    values  = ['ascii', 'shp'],
                     default = 'ascii',
                 ),
                 gvar = dict(

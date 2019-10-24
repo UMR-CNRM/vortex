@@ -649,7 +649,7 @@ class SytistWorker(_SafranWorker):
         )
     )
 
-    def postfix(self):
+    def postfix(self, rdict):
         if self.metadata:
             for f in ['FORCING_massif.nc', 'FORCING_postes.nc']:
                 if self.system.path.isfile(f):
@@ -657,6 +657,10 @@ class SytistWorker(_SafranWorker):
                     forcing_to_modify.GlobalAttributes()
                     forcing_to_modify.add_standard_names()
                     forcing_to_modify.close()
+
+        if 'rc' in rdict.keys() and isinstance(rdict['rc'], S2MExecutionError):
+            self.system.remove('FORCING_massif.nc')
+            self.system.remove('FORCING_postes.nc')
 
         self.mv_if_exists('FORCING_massif.nc',
                           'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
@@ -676,7 +680,7 @@ class SytistWorker(_SafranWorker):
             self.sapdat(dates[-1], nech)
             rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
-        self.postfix()
+        self.postfix(rdict)
         return rdict
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
