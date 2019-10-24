@@ -82,7 +82,7 @@ class S2MTaskMixIn(object):
                     year = self.conf.rundate.year - 1
                 else:
                     year = self.conf.rundate.year
-                datebegin = Date(year, 7, 31, 6)
+                datebegin = Date(year, 8, 1, 6)
             else:
                 # The daytime runs perform a 1 day analysis
                 datebegin = dateend - Period(days=1)
