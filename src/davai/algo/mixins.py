@@ -13,6 +13,7 @@ from bronx.stdtypes import date
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
+from common.algo.oopsroot import OOPSMinim
 from common.algo.assim import (Screening, Minim)
 from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
@@ -86,6 +87,10 @@ class OOPSTestEnsBuild_CrashWitness(OOPSTestEnsBuild, _CrashWitnessDecoMixin):
 
 
 class OOPSTest_CrashWitness(OOPSTest, _CrashWitnessDecoMixin):
+    pass
+
+
+class OOPSMinim_CrashWitness(OOPSMinim, _CrashWitnessDecoMixin):
     pass
 
 

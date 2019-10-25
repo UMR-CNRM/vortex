@@ -9,6 +9,7 @@ from bronx.stdtypes.date import Time
 
 from vortex.data.flow       import FlowResource, GeoFlowResource
 from vortex.data.contents   import JsonDictContent
+from vortex.data.executables import Script
 from vortex.syntax.stddeco  import namebuilding_append, namebuilding_insert
 from vortex.syntax.stdattrs import FmtInt, term_deco
 from gco.syntax.stdattrs    import gvar
@@ -388,3 +389,29 @@ class Precev(FlowResource):
     @property
     def realkind(self):
         return 'precev'
+
+
+class IOassignScript(Script):
+    """Scripts for IOASSIGN."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Script for IOASSIGN',
+            attr = dict(
+                kind = dict(
+                    values = ['ioassign_script']
+                ),
+                gvar = dict(
+                    default = 'ioassign_script_[purpose]'
+                ),
+                purpose=dict(
+                    info = "The purpose of the script"
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ioassign_script'
