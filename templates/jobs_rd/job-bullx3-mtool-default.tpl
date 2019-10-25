@@ -18,6 +18,7 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+#MTOOL set host=${target}
 #MTOOL setconf files=targets.[this:host]
 #MTOOL set logtarget=[this:frontend]
 #MTOOL set fetch=[this:frontend]
@@ -82,20 +83,11 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='rd_',
                                    )
+ja.add_plugin('epygram_setup')
 ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]', lastid='backup', mtoolid='[this:count]')
-ja.add_plugin('flow', backend='ecflow', jobidlabels=True, mtoolmeters=True)
-
-flowscheduler = dict(
-    ECF_TRYNO=int('%ECF_TRYNO%'),
-    ECF_HOST='%ECF_FQDN%',
-    ECF_PORT='%ECF_PORT%',
-    ECF_VERSION='%ECF_VERSION%',
-    ECF_PASS='%ECF_PASS%',
-    ECF_NAME='%ECF_NAME%',
-)
 
 try:
-    t, e, sh = ja.setup(actual=locals(), auto_options=auto_options, flowscheduler=flowscheduler)
+    t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
     sh.ftraw = True # To activate ftserv
 
     opts = dict(jobassistant=ja, steps=ja.mtool_steps)
@@ -114,9 +106,6 @@ except (Exception, SignalInterruptError, KeyboardInterrupt) as trouble:
         pass
 
 finally:
-    if ja.subjob_tag is None:
-        #MTOOL include files=epilog.clean.step
-        pass
     ja.finalise()
     ja.close()
     sys.stdout.write('Bye bye research...\n')
