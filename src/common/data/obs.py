@@ -19,6 +19,7 @@ from vortex.data.flow     import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax        import stdattrs, stddeco
 
+
 from gco.syntax.stdattrs  import gvar, GenvKey
 
 #: Automatic export of Observations class
@@ -274,8 +275,11 @@ class VarBCContent(AlmostListContent):
     _diffable = False
     # Do a delayed init to avoid crashes on big VarBC files
     _delayed_slurp = True
-
-    def slurp(self, container):
+    
+    _parsed=False
+    fullData=None
+    
+    def slurp(self, container,parse=False):
         """Get data from the ``container`` and find the metadata."""
         super(VarBCContent, self).slurp(container)
         tmpdata = container.head(2)
@@ -291,6 +295,10 @@ class VarBCContent(AlmostListContent):
                                                          int(mobj.group(2))))
                 # The metadata are updated only if both version and data are here
                 self._metadata = ReadOnlyDict(mdata)
+        if parse:
+            from vortex.tools import varbc
+            self.fullData=varbc.ObsVarbcFileContent(asciiDatas=container.readlines())
+            self._parsed=True        
 
 
 @stddeco.namebuilding_append('src', lambda s: [s.stage, ])

@@ -64,9 +64,9 @@ class UtVarBCContent(_BaseDataContentTest):
 
     def test_indexedtable_basic2(self):
         ct = obs.VarBCContent()
-        ct.slurp(self.insample[0])
+        ct.slurp(self.insample[0],True)
         self.assertEqual(len(ct), 13)  # This time _container_limit is big enough
-
+        self.assertTrue(len(ct.fullData.datalist[0].params),8)
 
 REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT
 acar BUFR acar 20170410 00
