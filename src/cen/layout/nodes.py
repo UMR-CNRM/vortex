@@ -61,7 +61,9 @@ class S2MTaskMixIn(object):
 
     def get_period(self):
 
-        if self.conf.rundate.hour == self.nightruntime.hour:
+        if self.conf.rundate.hour == self.monthly_analysis_time.hour:
+            dateendanalysis = self.conf.rundate.replace(hour=6) - Period(days=4)
+        elif self.conf.rundate.hour == self.nightruntime.hour:
             dateendanalysis = yesterday(self.conf.rundate.replace(hour=6))
         else:
             dateendanalysis = self.conf.rundate.replace(hour=6)
