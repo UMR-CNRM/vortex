@@ -18,6 +18,7 @@ from common.algo.assim import (Screening, Minim)
 from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
+from common.algo.clim import (BuildPGD, BuildPGD_MPI)
 
 #: No automatic export
 __all__ = []
@@ -125,3 +126,12 @@ class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
 
 class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
     pass
+
+
+class BuildPGD_CrashWitness(BuildPGD, _CrashWitnessDecoMixin):
+    pass
+
+
+class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
+    pass
+
