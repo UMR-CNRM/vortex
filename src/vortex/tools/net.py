@@ -94,6 +94,13 @@ def http_post_data(url, data, ok_statuses=(), proxies=None):
     req = urlrequest.Request(url=url, data=data)
     try:
         req_f = opener.open(req)
+    except Exception as e:
+        try:
+            req_f.close()
+        except UnboundLocalError: # req_f has not been created
+            pass
+        raise e
+    try:
         req_rc = req_f.getcode()
         req_info = req_f.info()
         req_data = req_f.read().decode('utf-8')
