@@ -17,10 +17,11 @@ from unittest import TestCase, main
 
 import vortex
 from vortex import sessions, toolbox
+from vortex.data.abstractstores import _CACHE_GET_INTENT_DEFAULT
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource
 from vortex.data.providers import VortexStd
-from vortex.data.stores import _VortexCacheBaseStore, _CACHE_GET_INTENT_DEFAULT
+from vortex.data.stores import _VortexCacheBaseStore
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
 from vortex.tools.storage import FixedEntryCache
 

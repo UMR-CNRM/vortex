@@ -152,6 +152,10 @@ class Binary(Executable):
     def realkind(self):
         return 'binary'
 
+    def guess_binary_sources(self, provider):  # @UnusedVariable
+        """A list of path that contains source files (for debugging purposes)."""
+        return []
+
 
 class BlackBox(Binary):
     """Binary resource with explicit command line options."""
