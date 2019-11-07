@@ -14,6 +14,7 @@ from bronx.fancies.dump import lightdump, fulldump
 from bronx.stdtypes.date import Date, Time
 
 from vortex.algo.components import AlgoComponentError, AlgoComponentDecoMixin, Parallel
+from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.tools import grib
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
 from common.syntax.stdattrs import oops_members_terms_lists
@@ -25,6 +26,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+@algo_component_deco_mixin_autodoc
 class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
     """Tries to detect a members/terms list using the sequence's inputs
 
@@ -189,6 +191,7 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_PREPARE_HOOKS = (_membersd_setup, )
 
 
+@algo_component_deco_mixin_autodoc
 class OOPSMembersTermsDecoMixin(AlgoComponentDecoMixin):
     """Adds members/terms footprints' attributes and use them in configuration files.
 

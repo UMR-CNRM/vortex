@@ -13,6 +13,7 @@ import collections
 import ftplib
 import functools
 import io
+import itertools
 import operator
 import random
 import re
@@ -24,7 +25,9 @@ from collections import namedtuple
 from datetime import datetime
 
 import six
+from six.moves.urllib import request as urlrequest
 from six.moves.urllib import parse as urlparse
+
 
 from bronx.fancies import loggers
 from bronx.net.netrc import netrc
@@ -77,6 +80,29 @@ def uriparse(uristring):
 def uriunparse(uridesc):
     """Delegates to :mod:`urlparse` the job to unparse the given description (as a dictionary)."""
     return urlparse.urlunparse(uridesc)
+
+
+def http_post_data(url, data, ok_statuses=(), proxies=None):
+    if not isinstance(data, bytes if six.PY3 else str):
+        data = urlparse.urlencode(data)
+    handlers = []
+    if isinstance(proxies, dict):
+        handlers.append(urlrequest.ProxyHandler(proxies))
+    if isinstance(proxies, (list, tuple)):
+        handlers.append(urlrequest.ProxyHandler({'http': proxies}))
+    opener = urlrequest.build_opener(* handlers)
+    req = urlrequest.Request(url=url, data=data)
+    try:
+        req_f = opener.open(req)
+        req_rc = req_f.getcode()
+        req_info = req_f.info()
+        req_data = req_f.read().decode('utf-8')
+        if ok_statuses:
+            return req_rc in ok_statuses, req_rc, req_info, req_data
+        else:
+            return 200 <= req_rc < 400, req_rc, req_info, req_data
+    finally:
+        req_f.close()
 
 
 def netrc_lookup(logname, hostname, nrcfile=None):
@@ -214,8 +240,9 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = True
         if not self.closed:
-            rc = self._ftplib.close()
+            rc = self._ftplib.close() or True
             self._closed = True
             self._deleted = datetime.now()
         return rc
@@ -698,7 +725,7 @@ class AutoRetriesFtp(StdFtp):
         Wraps the *func* function in order to implement a retry on failure
         mechanism.
 
-        :param object func: Any callable that should be wrapped (usually a function)
+        :param callable func: Any callable that should be wrapped (usually a function)
         :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
         :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
         :param list exceptions_extras: Extra exceptions to be catch during the retry
@@ -1024,6 +1051,20 @@ class Ssh(object):
                [myremote, ] + [remote_command, ])
         return self.sh.spawn(cmd, output=True, fatal=False)
 
+    def background_execute(self, remote_command, sshopts='', stdout=None, stderr=None):
+        """Execute the command remotely and return the object representing the ssh process.
+
+        Return a Popen object representing the ssh process. The user is reponsible
+        for calling pclose on this object and check the return code.
+        """
+        myremote = self.remote
+        if myremote is None:
+            return False
+        cmd = ([self._sshcmd, ] +
+               self._sshopts + sshopts.split() +
+               [myremote, ] + [remote_command, ])
+        return self.sh.popen(cmd, stdout=stdout, stderr=stderr)
+
     def cocoon(self, destination):
         """Create the remote directory to contain ``destination``.
            Return False on failure.
@@ -1296,7 +1337,7 @@ class ActiveSshTunnel(object):
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
-        :param int entraceport: Tunnel's entrance port.
+        :param int entranceport: Tunnel's entrance port.
         :param str finaldestination: Tunnel's final destination.
         :param int finalport: Tunnel's destination port.
 
@@ -1495,7 +1536,7 @@ class AssistedSsh(Ssh):
 
     def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None,
                  maxtries=1, triesdelay=1, virtualnode=False, permut=True,
-                 fatal=False, mandatory_hostcheck=False):
+                 fatal=False, mandatory_hostcheck=True):
         """
         :param System sh: The :class:`System` object that is to be used.
         :param hostname: The target hostname(s).
@@ -1516,7 +1557,6 @@ class AssistedSsh(Ssh):
                                     prior to being used for the real Ssh command.
         """
         super(AssistedSsh, self).__init__(sh, hostname, logname, sshopts, scpopts)
-        self._maxtries = maxtries
         self._triesdelay = triesdelay
         self._virtualnode = virtualnode
         self._permut = permut
@@ -1529,6 +1569,12 @@ class AssistedSsh(Ssh):
         self._fatal_in_progress = False
         self._retries = 0
         self._targets = self._setup_targets()
+        self._targets_iter = itertools.cycle(self._targets)
+        if not self._mandatory_hostcheck:
+            # Try at least one time with each of the possible targets
+            self._maxtries = maxtries + len(self._targets) - 1
+        else:
+            self._maxtries = maxtries
         self._chosen_target = None
 
     def _setup_targets(self):
@@ -1561,20 +1607,20 @@ class AssistedSsh(Ssh):
     @_tryagain
     def remote(self):
         """hostname to use for this kind of remote execution."""
-        if len(self.targets) == 1 and not self._mandatory_hostcheck:
-            # This is simple enough, do not bother testing...
-            self._chosen_target = self.targets[0]
-        if self._chosen_target is None:
-            for guess in self.targets:
-                cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
-                try:
-                    self.sh.spawn(cmd, output=False, silent=True)
-                except Exception:
-                    pass
-                else:
-                    self._chosen_target = guess
-                    break
-        return self._chosen_target
+        if self._mandatory_hostcheck:
+            if self._chosen_target is None:
+                for guess in self.targets:
+                    cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
+                    try:
+                        self.sh.spawn(cmd, output=False, silent=True)
+                    except Exception:
+                        pass
+                    else:
+                        self._chosen_target = guess
+                        break
+            return self._chosen_target
+        else:
+            return next(self._targets_iter)
 
 
 _ConnectionStatusAttrs = ('Family', 'LocalAddr', 'LocalPort', 'DestAddr', 'DestPort', 'Status')

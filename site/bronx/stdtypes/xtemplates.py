@@ -183,7 +183,7 @@ class DefaultTemplate(object):
         if '__body__' not in tpl:
             raise TemplateLoopRenderingError('The __body__ key is required')
         literator = self._sls(tpl['__loopiterator__'], ** subs)
-        lvariables = re.split('\s*,\s*', tpl['__loopvariables__'])
+        lvariables = re.split(r'\s*,\s*', tpl['__loopvariables__'])
         lbody = tpl['__body__']
         lbodyfirst = tpl.get('__body_first__', lbody)
         lbodylast = tpl.get('__body_last__', lbody)

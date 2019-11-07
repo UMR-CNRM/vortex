@@ -73,14 +73,16 @@ Note: Namelists and environment changes are orchestrated as follows:
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import io
 import shlex
-
 import six
+import sys
 
 import footprints
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.tools import env
+from vortex.util import config
 
 #: No automatic export
 __all__ = []
@@ -137,10 +139,15 @@ class MpiTool(footprints.FootprintBase):
             basics = dict(
                 type     = footprints.FPList,
                 optional = True,
-                default  = footprints.FPList(['system', 'env', 'target', 'context'])
+                default  = footprints.FPList(['system', 'env', 'target', 'context', 'ticket', ])
             ),
         )
     )
+
+    _envelope_bit_kind = 'basicenvelopebit'
+    _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_default.tpl'
+    _envelope_wrapper_name = './global_envelope_wrapper.py'
+    _envelope_rank_var = 'MPIRANK'
 
     def __init__(self, *args, **kw):
         """After parent initialization, set master, options and basics to undefined."""
@@ -149,6 +156,7 @@ class MpiTool(footprints.FootprintBase):
         thisenv = env.current()
         self._launcher = thisenv.VORTEX_MPI_LAUNCHER or self.mpiname
         self._binaries = []
+        self._envelope = []
         for k in self.basics:
             self.__dict__['_' + k] = None
 
@@ -186,6 +194,29 @@ class MpiTool(footprints.FootprintBase):
 
     launcher = property(_get_launcher, _set_launcher)
 
+    def _get_envelope(self):
+        """Returns the envelope description."""
+        return self._envelope
+
+    def _valid_envelope(self, value):
+        """Tweak the envelope ddescription values."""
+        pass
+
+    def _set_envelope(self, value):
+        """Set the envelope description."""
+        if not (isinstance(value, collections_abc.Iterable) and
+                all([isinstance(b, dict) and all([bk in ('nn', 'nnp', 'openmp') for bk in b.keys()])
+                     for b in value])):
+            raise ValueError('This should be an Iterable of dictionaries.')
+        self._valid_envelope(value)
+        self._envelope = list()
+        for e in value:
+            e_bit = footprints.proxy.mpibinary(kind=self._envelope_bit_kind)
+            self._envelope_fix_envelope_bit(e_bit, e)
+            self._envelope.append(e_bit)
+
+    envelope = property(_get_envelope, _set_envelope)
+
     def _get_binaries(self):
         """Returns the list of :class:`MpiBinaryDescription` objects associated with this instance."""
         return self._binaries
@@ -218,18 +249,13 @@ class MpiTool(footprints.FootprintBase):
         """A nasty hook to modify binaries' mpiopts on the fly."""
         return options
 
-    def mkcmdline(self, args):
-        """Builds the MPI command line.
+    def _simple_mkcmdline(self, cmdl):
+        """Builds the MPI command line when no envelope is used.
 
-        :param list[str] args: Command line arguments for each of the binaries.
+        :param list[str] args: the command line as a list
         """
-        cmdl = [self.launcher, ]
-        for k, v in sorted(self._reshaped_mpiopts().items()):
-            cmdl.append(self.optprefix + six.text_type(k))
-            if v is not None:
-                cmdl.append(six.text_type(v))
         effective = 0
-        for i, bin_obj in enumerate(self.binaries):
+        for bin_obj in self.binaries:
             if bin_obj.master is None:
                 raise MpiException('No master defined before launching MPI')
             # If there are no options, do not bother...
@@ -245,8 +271,79 @@ class MpiTool(footprints.FootprintBase):
                 if self.optsep:
                     cmdl.append(self.optsep)
                 cmdl.append(bin_obj.master)
-                cmdl.extend(args[i])
+                cmdl.extend(bin_obj.arguments)
                 effective += 1
+
+    def _envelope_fix_envelope_bit(self, e_bit, e_desc):
+        """Set the envelope fake binary options."""
+        e_bit.options = e_desc
+        e_bit.master = self._envelope_wrapper_name
+
+    def _envelope_mkcmdline(self, cmdl):
+        """Builds the MPI command line when an envelope is used.
+
+        :param list[str] args: the command line as a list
+        :param list[str] args: Command line arguments for each of the binaries.
+        """
+
+        # Generate the dictionary that associate rank numbers and programs
+        ranksidx = 0
+        todostack = {}
+        for bin_obj in self.binaries:
+            if bin_obj.master is None:
+                raise MpiException('No master defined before launching MPI')
+            # If there are no options, do not bother...
+            if bin_obj.options:
+                if not bin_obj.nprocs:
+                    raise ValueError('nranks must be provided when using envelopes')
+                for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
+                    todostack[mpirank] = (bin_obj.master, bin_obj.arguments)
+                ranksidx += bin_obj.nprocs
+
+        # Create the launchwrapper
+        wtpl = config.load_template(self.ticket,
+                                    self._envelope_wrapper_tpl,
+                                    encoding='utf-8')
+        with io.open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
+            fhw.write(
+                wtpl.substitute(
+                    python=sys.executable,
+                    mpirankvariable=self._envelope_rank_var,
+                    todolist=("\n".join(["  {:d}: ('{:s}', [{:s}]),".format(
+                                         mpi_r, what[0],
+                                         ', '.join(["'{:s}'".format(a) for a in what[1]]))
+                                         for mpi_r, what in sorted(todostack.items())]))
+                )
+            )
+        self.system.xperm(self._envelope_wrapper_name, force=True)
+
+        for effective, e_bit in enumerate(self.envelope):
+            if effective > 0 and self.binsep:
+                cmdl.append(self.binsep)
+            e_options = self._hook_binary_mpiopts(e_bit.expanded_options())
+            for k in sorted(e_options.keys()):
+                if k in self.optmap:
+                    cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
+                    if e_options[k] is not None:
+                        cmdl.append(six.text_type(e_options[k]))
+            if self.optsep:
+                cmdl.append(self.optsep)
+            cmdl.append(e_bit.master)
+
+    def mkcmdline(self):
+        """Builds the MPI command line.
+
+        :param list[str] args: Command line arguments for each of the binaries.
+        """
+        cmdl = [self.launcher, ]
+        for k, v in sorted(self._reshaped_mpiopts().items()):
+            cmdl.append(self.optprefix + six.text_type(k))
+            if v is not None:
+                cmdl.append(six.text_type(v))
+        if self.envelope:
+            self._envelope_mkcmdline(cmdl)
+        else:
+            self._simple_mkcmdline(cmdl)
         return cmdl
 
     def clean(self, opts=None):
@@ -333,6 +430,12 @@ class MpiBinaryDescription(footprints.FootprintBase):
                 optional = True,
                 access   = 'rwx'
             ),
+            ranks = dict(
+                info     = "The number of MPI ranks to use (only when working in an envelop)",
+                type     = int,
+                optional = True,
+                access   = 'rwx'
+            ),
             basics = dict(
                 type     = footprints.FPList,
                 optional = True,
@@ -346,6 +449,7 @@ class MpiBinaryDescription(footprints.FootprintBase):
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiBinaryDescription, self).__init__(*args, **kw)
         self._master = None
+        self._arguments = ()
         self._options = None
 
     def __getattr__(self, key):
@@ -373,10 +477,15 @@ class MpiBinaryDescription(footprints.FootprintBase):
         self._options = dict()
         if value is None:
             value = dict()
-        if self.nodes is not None:
-            self._options['nn'] = self.nodes
-        if self.tasks is not None:
-            self._options['nnp'] = self.tasks
+        if self.ranks is not None:
+            self._options['np'] = self.ranks
+            if self.nodes is not None or self.tasks is not None:
+                raise ValueError('Incompatible options provided.')
+        else:
+            if self.nodes is not None:
+                self._options['nn'] = self.nodes
+            if self.tasks is not None:
+                self._options['nnp'] = self.tasks
         if self.openmp is not None:
             self._options['openmp'] = self.openmp
         for k, v in value.items():
@@ -385,7 +494,7 @@ class MpiBinaryDescription(footprints.FootprintBase):
     options = property(_get_options, _set_options)
 
     def expanded_options(self):
-        """The MPI options actualy used by the :class:`MpiTool` object to generate the command line."""
+        """The MPI options actually used by the :class:`MpiTool` object to generate the command line."""
         options = self.options.copy()
         options.setdefault('np', self.nprocs)
         return options
@@ -411,6 +520,21 @@ class MpiBinaryDescription(footprints.FootprintBase):
 
     master = property(_get_master, _set_master)
 
+    def _get_arguments(self):
+        """Retrieve the master's arguments list."""
+        return self._arguments
+
+    def _set_arguments(self, args):
+        """Keep a copy of the master binary pathname."""
+        if isinstance(args, six.string_types):
+            self._arguments = args.split()
+        elif isinstance(args, collections_abc.Iterable):
+            self._arguments = [six.text_type(a) for a in args]
+        else:
+            raise ValueError('Improper *args* argument provided.')
+
+    arguments = property(_get_arguments, _set_arguments)
+
     def clean(self, opts=None):
         """Abstract method for post-execution cleaning."""
         pass
@@ -422,6 +546,18 @@ class MpiBinaryDescription(footprints.FootprintBase):
     def setup_environment(self, opts):
         """Abstract MPI environment setup."""
         pass
+
+
+class MpiEnvelopeBit(MpiBinaryDescription):
+    """Set NPROC and NBPROC in namelists given the MPI distribution."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['basicenvelopebit', ],
+            ),
+        )
+    )
 
 
 class MpiBinaryBasic(MpiBinaryDescription):
@@ -438,10 +574,11 @@ class MpiBinaryBasic(MpiBinaryDescription):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
-        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
-            logger.info('Setup NBPROC=%s in %s', self.nprocs, namlocal)
-            namcontents.setmacro('NPROC', self.nprocs)
-            namcontents.setmacro('NBPROC', self.nprocs)
+        nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
+        if any([n in namcontents.macros() for n in nprocs_macros]):
+            for n in nprocs_macros:
+                logger.info('Setup macro %s=%s in %s', n, self.nprocs, namlocal)
+                namcontents.setmacro(n, self.nprocs)
             namw = True
         return namw
 
@@ -462,6 +599,8 @@ class MpiBinaryIOServer(MpiBinaryDescription):
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiBinaryIOServer, self).__init__(*args, **kw)
         thisenv = env.current()
+        if self.ranks is None:
+            self.ranks = thisenv.VORTEX_IOSERVER_RANKS
         if self.nodes is None:
             self.nodes = thisenv.VORTEX_IOSERVER_NODES
         if self.tasks is None:
@@ -471,7 +610,7 @@ class MpiBinaryIOServer(MpiBinaryDescription):
 
     def expanded_options(self):
         """The number of IO nodes may be 0: accoutn for that."""
-        if self.options['nn'] == 0:
+        if self.nprocs == 0:
             return dict()
         else:
             return super(MpiBinaryIOServer, self).expanded_options()

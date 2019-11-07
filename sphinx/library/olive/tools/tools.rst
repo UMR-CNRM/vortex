@@ -16,5 +16,7 @@ Package
 Included Modules
 ----------------
 
+* :mod:`olive.tools.actions`
 * :mod:`olive.tools.addons`
+* :mod:`olive.tools.services`
 * :mod:`olive.tools.swapp`

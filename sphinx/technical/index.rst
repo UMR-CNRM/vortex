@@ -1,25 +1,44 @@
 
-.. _userguide-index:
+.. _extratech-index:
 
-##################################
-The VORTEX Technical Documentation
-##################################
+#############################
+Extra Technical Documentation
+#############################
 
 :Release: |version|
 :Date: |today|
 
-This will contain instructions for end users of the toolbox.
+Detailed documentation on some technical aspects:
+
+* :ref:`footprints_doc` (french version: :ref:`footprints_doc_fr`)
+* :ref:`fortran-usage`
+* :ref:`env-interface`
+* :ref:`actions-usage`
+* :ref:`nbook-Uget`
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
 
+   footprints
+   footprints_fr
    fortran
    environment
    actions
-   ../notebooks/providers_and_stores/Uget
 
-   
+Some quasi-philosophical considerations on the Vortex toolbox (in french):
+  
 .. toctree::
-   :hidden:
+   :maxdepth: 1
 
-   shell
+   philo
+   data
+
+Some user oriented documentation:
+
+.. toctree::
+   :maxdepth: 1
+
+   uget
+   

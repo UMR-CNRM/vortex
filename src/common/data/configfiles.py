@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
-from vortex.data.contents import JsonDictContent
+from vortex.data.contents import JsonDictContent, DataRaw
 
 #: No automatic export
 __all__ = []
@@ -34,7 +34,7 @@ class GenericConfig(StaticResource):
                     info = "The configuration pack purpose"
                 ),
                 source = dict(
-                    info        = 'The config name within the config pack.',
+                    info = 'The config name within the config pack.',
                 ),
             )
         )
@@ -47,6 +47,21 @@ class GenericConfig(StaticResource):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.source
+
+
+class AsciiConfig(GenericConfig):
+    """Generic class to access a pack of ASCII configuration files."""
+    _footprint = dict(
+        info = 'ASCII Configuration file from a pack',
+        attr = dict(
+            nativefmt = dict(
+                values = ['ascii', ]
+            ),
+            clscontents = dict(
+                default  = DataRaw
+            ),
+        )
+    )
 
 
 class JsonConfig(GenericConfig):

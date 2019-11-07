@@ -53,7 +53,8 @@ class TestListingNorms(unittest.TestCase):
                               u'DIVERGENCE': u'0.963028513994313E-05',
                               u'LOG(PREHYDS)': u'0.127233694092756E-03',
                               u'TEMPERATURE': u'0.183611192189494E+00',
-                              u'KINETIC ENERGY': u'0.197980105386348E+00'})
+                              u'KINETIC ENERGY': u'0.197980105386348E+00',
+                              u'HUMIDITY': '0.707998843816537E-04',})
         norm = l1_n[6]
         self.assertEqual(len(norm.gpnorms), 562)
         skeys = set([re.sub(r'^S\d+', '', k) for k in norm.gpnorms.keys()])

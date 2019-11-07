@@ -39,7 +39,7 @@ models = set([
 #: Possible values for the most common binaries.
 binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                  'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
-                 'ifs', 'oops'])
+                 'ifs', 'oops', 'assistance', 'arpifs'])
 #: Possible values for the most common utility programs.
 utilities = set(['batodb'])
 

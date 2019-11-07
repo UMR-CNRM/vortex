@@ -34,6 +34,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MpiEnvelopeBit
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiBinaryBasic
    :show-inheritance:
    :members:

@@ -344,6 +344,13 @@ class Batodb(BlackBox):
     def realkind(self):
         return 'batodb'
 
+    def command_line(self, dataid=None, date=None):
+        """Build the command-line."""
+        cmdstuff = list()
+        if dataid == 'hh' and date is not None:
+            cmdstuff.append('{0.hh:s}'.format(date))
+        return ' '.join(cmdstuff)
+
 
 class Odbtools(BlackBox):
     """A tool for shuffle operations in ODB format."""

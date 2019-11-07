@@ -55,7 +55,7 @@ class TestTntTemplate(unittest.TestCase):
         # Read the yaml file
         import yaml
         with io.open(os.path.join(tpl_path, 'tntstack-directive.tpl.yaml')) as fhy:
-            dirdict = yaml.load(fhy)
+            dirdict = yaml.load(fhy, Loader=yaml.SafeLoader)
         # Process it
         tplyaml = tnt.config.TntStackDirective(basedir=tpl_path, **dirdict)
         self.assertListEqual(tplyaml.todolist, tntstack_todo_ref)

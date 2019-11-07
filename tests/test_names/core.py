@@ -207,7 +207,7 @@ class TestDriver(object):
         for tstack in self._todo:
             stackdump.append(sorted(tstack, key=lambda t: t.desc))
         with io.open(self._resultfile, 'w') as fhyaml:
-            yaml.dump(stackdump, fhyaml, default_flow_style=False)
+            yaml.dump(stackdump, fhyaml, Dumper=TestYamlDumper, default_flow_style=False)
 
     def load_references(self):
         """Read reference data from file."""
@@ -215,7 +215,7 @@ class TestDriver(object):
         if not os.path.isfile(self._resultfile):
             raise TestNamesMissingReferenceError('The {:s} file is missing'.format(self._resultfile))
         with io.open(self._resultfile, 'r') as fhyaml:
-            stackdump = yaml.load(fhyaml)
+            stackdump = yaml.load(fhyaml, Loader=TestYamlLoader)
         for tstack in stackdump:
             self._refs.append(TestsStack(items=tstack))
 
@@ -441,15 +441,19 @@ class TestParameters(collections_abc.Hashable):
 # ------------------------------------------------------------------------------
 # PyYAML package configuration
 
-yaml.add_representer(SingleTest, SingleTest.to_yaml)
-yaml.add_representer(TestParameters, TestParameters.to_yaml)
-yaml.add_representer(TestResults, TestResults.to_yaml)
-yaml.add_representer(YamlOrderedDict,
-                     lambda self, data: self.represent_mapping('tag:yaml.org,2002:map',
-                                                               data.items()))
-if six.PY2:
-    yaml.add_representer(unicode, lambda self, data: self.represent_str(str(data)))
+TestYamlDumper = yaml.dumper.SafeDumper
+TestYamlDumper.add_representer(SingleTest, SingleTest.to_yaml)
+TestYamlDumper.add_representer(TestParameters, TestParameters.to_yaml)
+TestYamlDumper.add_representer(TestResults, TestResults.to_yaml)
+TestYamlDumper.add_representer(
+    YamlOrderedDict,
+    lambda self, data: self.represent_mapping('tag:yaml.org,2002:map',
+                                              data.items()))
 
-yaml.add_constructor('!test_names.core.SingleTest', SingleTest.from_yaml)
-yaml.add_constructor('!test_names.core.TestParameters', TestParameters.from_yaml)
-yaml.add_constructor('!test_names.core.TestResults', TestResults.from_yaml)
+TestYamlLoader = yaml.loader.SafeLoader
+if six.PY2:
+    TestYamlLoader.add_constructor(unicode, lambda self, data: self.represent_str(str(data)))
+
+TestYamlLoader.add_constructor('!test_names.core.SingleTest', SingleTest.from_yaml)
+TestYamlLoader.add_constructor('!test_names.core.TestParameters', TestParameters.from_yaml)
+TestYamlLoader.add_constructor('!test_names.core.TestResults', TestResults.from_yaml)

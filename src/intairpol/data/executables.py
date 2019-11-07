@@ -1,12 +1,12 @@
 #!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import BlackBox, ChemistryModel
 from gco.syntax.stdattrs import gvar
 from bronx.stdtypes import date
-
+from vortex.syntax.stddeco import namebuilding_append
 #: No automatic export
 __all__ = []
 
@@ -28,6 +28,31 @@ class Mocage(ChemistryModel):
                 model = dict(
                     values = ['mocage']
                 )
+            )
+        )
+    ]
+
+
+@namebuilding_append('src', lambda s: s.subkind)
+class MocageAssim(ChemistryModel):
+    """Mocage Palm Component (assim version)"""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Palm coupler for assimilation in mocage',
+            attr = dict(
+                kind = dict(
+                    values = ['mocage_assim'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]_[subkind]',
+                ),
+                model = dict(
+                    values = ['mocage']
+                ),
+                subkind = dict(
+                    values = ['palm', 'main']
+                ),
             )
         )
     ]

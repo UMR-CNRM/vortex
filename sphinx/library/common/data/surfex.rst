@@ -46,6 +46,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PGDWithGeo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ClayDB
    :show-inheritance:
    :members:

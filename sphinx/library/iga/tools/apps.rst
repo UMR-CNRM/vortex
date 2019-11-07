@@ -13,6 +13,15 @@ Package
 
 .. autodata:: __all__
 
+
+Mixin Classes
+-------------
+
+.. autoclass:: MissingObsMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 

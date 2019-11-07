@@ -21,6 +21,7 @@ from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
+import footprints
 from footprints.util import mktuple
 
 from vortex.util.roles import setrole
@@ -56,13 +57,46 @@ section_args = [ 'role', 'alternate', 'intent', 'fatal', 'coherentgroup' ]
 
 def stripargs_section(**kw):
     """
-    Utility function to separate the named arguments in two parts: the one that describe section options
-    and any other ones. Return a tuple with ( section_options, other_options ).
+    Utility function to separate the named arguments in two parts: the one that
+    describe section options and any other ones. Return a tuple with
+    ( section_options, other_options ).
     """
     opts = dict()
     for opt in [ x for x in section_args if x in kw ]:
         opts[opt] = kw.pop(opt)
     return (opts, kw)
+
+
+class _ReplaceSectionArgs(object):
+    """
+    Trigger the footprint's replacement mechanism on some of the section arguments.
+    """
+
+    _REPL_TODO = ('coherentgroup', )
+
+    def __init__(self):
+        self._fptmp = footprints.Footprint(attr={k: dict(optional=True)
+                                                 for k in self._REPL_TODO})
+
+    def __call__(self, rh, opts):
+        if any({footprints.replattr.search(opts[k])
+                for k in self._REPL_TODO if k in opts}):
+            # The "description"
+            desc = opts.copy()
+            if rh is not None:
+                desc.update(rh.options)
+                desc['container'] = rh.container
+                desc['provider'] = rh.provider
+                desc['resource'] = rh.resource
+            # Resolve
+            resolved, _, _ = self._fptmp.resolve(desc, fatal=False, fast=False)
+            # ok, let's use the resolved values
+            for k in self._REPL_TODO:
+                if resolved[k] is not None:
+                    opts[k] = resolved[k]
+
+
+_default_replace_section_args = _ReplaceSectionArgs()
 
 
 class Section(object):
@@ -73,18 +107,22 @@ class Section(object):
         self.kind = ixo.INPUT
         self.intent = intent.INOUT
         self.fatal = True
+        # Fetch the ResourceHandler
+        self._rh = kw.pop('rh', None)
+        # We realy need a ResourceHandler...
+        if self.rh is None:
+            raise AttributeError("A proper rh attribute have to be provided")
+        # Call the footprint's replacement mechanism if needed
+        _default_replace_section_args(self._rh, kw)
+        # Process the remaining options
         self._role = setrole(kw.pop('role', 'anonymous'))
         self._alternate = setrole(kw.pop('alternate', None))
         self._coherentgroups = kw.pop('coherentgroup', None)
         self._coherentgroups = set(self._coherentgroups.split(',')
                                    if self._coherentgroups else [])
         self._coherentgroups_opened = {g: True for g in self._coherentgroups}
-        self._rh = kw.pop('rh', None)
         self.stages = [ kw.pop('stage', 'load') ]
         self.__dict__.update(kw)
-        # We realy need a ResourceHandler...
-        if self.rh is None:
-            raise AttributeError("A proper rh attribute have to be provided")
         # If alternate is specified role have to be removed
         if self._alternate:
             self._role = None

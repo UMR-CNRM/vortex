@@ -39,6 +39,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: OdbCompress
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: OdbMatchup
    :show-inheritance:
    :members:

@@ -13,7 +13,7 @@ from bronx.fancies import loggers
 import footprints
 
 from . import addons
-from vortex.algo.components import AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: No automatic export
@@ -308,6 +308,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
                                       sync=sync)
 
 
+@algo_component_deco_mixin_autodoc
 class EcGribDecoMixin(AlgoComponentDecoMixin):
     """Extend Algo Components with EcCodes/GribApi features."
 
@@ -322,14 +323,28 @@ class EcGribDecoMixin(AlgoComponentDecoMixin):
 
     def _ecgrib_libs_detext(self, rh):
         """Run ldd and tries to find ecCodes or grib_api libraries locations."""
-        libs = self.system.ldd(rh.container.localpath()) if rh is not None else {}
         eccodes_lib = None
         gribapi_lib = None
-        for lib, path in libs.items():
-            if re.match(r'^libeccodes(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
-                eccodes_lib = path
-            if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
-                gribapi_lib = path
+        if rh is not None:
+            if not isinstance(rh, (list, tuple)):
+                rh = [rh, ]
+            for a_rh in rh:
+                libs = self.system.ldd(a_rh.container.localpath())
+                a_eccodes_lib = None
+                a_gribapi_lib = None
+                for lib, path in libs.items():
+                    if re.match(r'^libeccodes(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
+                        a_eccodes_lib = path
+                    if re.match(r'^libgrib_api(?:-[.0-9]+)?\.so(?:\.[.0-9]+)?$', lib):
+                        a_gribapi_lib = path
+                if a_eccodes_lib:
+                    self.algoassert(eccodes_lib is None or (eccodes_lib == a_eccodes_lib),
+                                    "ecCodes library inconsistency (rh: {!s})".format(a_rh))
+                    eccodes_lib = a_eccodes_lib
+                if a_gribapi_lib:
+                    self.algoassert(gribapi_lib is None or (gribapi_lib == a_gribapi_lib),
+                                    "grib_api library inconsistency (rh: {!s})".format(a_rh))
+                    gribapi_lib = a_gribapi_lib
         return eccodes_lib, gribapi_lib
 
     def _ecgrib_additional_config(self, a_role, a_var):

@@ -10,7 +10,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import footprints
 from bronx.fancies import loggers
 
-from vortex.algo.components import AlgoComponentDecoMixin, Parallel
+from vortex.algo.components import AlgoComponentDecoMixin, Parallel, algo_component_deco_mixin_autodoc
 
 #: No automatic export
 __all__ = []
@@ -18,6 +18,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
+@algo_component_deco_mixin_autodoc
 class DrHookDecoMixin(AlgoComponentDecoMixin):
     """Handle DrHook settings in AlgoComponnents.
 

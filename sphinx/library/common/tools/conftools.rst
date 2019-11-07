@@ -37,6 +37,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TimeSerieInputFinderConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Exceptions
 ----------
 
@@ -51,6 +56,11 @@ Exceptions
    :member-order: alphabetical
 
 .. autoclass:: CouplingOffsetConfRefillError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TimeSerieInputFinderError
    :show-inheritance:
    :members:
    :member-order: alphabetical

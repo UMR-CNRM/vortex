@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="46cm" height="20cm" viewBox="19 -1 901 392" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #ffffff" x="440" y="0" width="153.5" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="440" y="0" width="153.5" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="516.75" y="19">AlgoComponent</text>
+    <rect style="fill: #ffffff" x="440" y="28" width="153.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="440" y="28" width="153.5" height="8"/>
+    <rect style="fill: #ffffff" x="440" y="36" width="153.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="440" y="36" width="153.5" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="100" y="80" width="252.75" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="80" width="252.75" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="226.375" y="99">ExecutableAlgoComponent</text>
+    <rect style="fill: #ffffff" x="100" y="108" width="252.75" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="108" width="252.75" height="8"/>
+    <rect style="fill: #ffffff" x="100" y="116" width="252.75" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="116" width="252.75" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="680" y="80" width="99.1" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="680" y="80" width="99.1" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="729.55" y="99">TaylorRun</text>
+    <rect style="fill: #ffffff" x="680" y="108" width="99.1" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="680" y="108" width="99.1" height="8"/>
+    <rect style="fill: #ffffff" x="680" y="116" width="99.1" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="680" y="116" width="99.1" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="20" y="180" width="91.45" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="20" y="180" width="91.45" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="65.725" y="199">Expresso</text>
+    <rect style="fill: #ffffff" x="20" y="208" width="91.45" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="20" y="208" width="91.45" height="8"/>
+    <rect style="fill: #ffffff" x="20" y="216" width="91.45" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="20" y="216" width="91.45" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="180" y="180" width="263.05" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="180" width="263.05" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="311.525" y="199">xExecutableAlgoComponent</text>
+    <rect style="fill: #ffffff" x="180" y="208" width="263.05" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="208" width="263.05" height="8"/>
+    <rect style="fill: #ffffff" x="180" y="216" width="263.05" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="216" width="263.05" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="180" y="280" width="91.15" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="280" width="91.15" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="225.575" y="299">BlindRun</text>
+    <rect style="fill: #ffffff" x="180" y="308" width="91.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="308" width="91.15" height="8"/>
+    <rect style="fill: #ffffff" x="180" y="316" width="91.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="180" y="316" width="91.15" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="360" y="280" width="78.15" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="280" width="78.15" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="399.075" y="299">Parallel</text>
+    <rect style="fill: #ffffff" x="360" y="308" width="78.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="308" width="78.15" height="8"/>
+    <rect style="fill: #ffffff" x="360" y="316" width="78.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="316" width="78.15" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="560" y="180" width="127.55" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="180" width="127.55" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="623.775" y="199">ParaBlindrun</text>
+    <rect style="fill: #ffffff" x="560" y="208" width="127.55" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="208" width="127.55" height="8"/>
+    <rect style="fill: #ffffff" x="560" y="216" width="127.55" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="216" width="127.55" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="760" y="180" width="132.25" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="760" y="180" width="132.25" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="826.125" y="199">ParaExpresso</text>
+    <rect style="fill: #ffffff" x="760" y="208" width="132.25" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="760" y="208" width="132.25" height="8"/>
+    <rect style="fill: #ffffff" x="760" y="216" width="132.25" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="760" y="216" width="132.25" height="8"/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="420.754,22 388.374,22 388.374,102 353.758,102 "/>
+    <polygon style="fill: #ffffff" points="420.754,30 436.754,22 420.754,14 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="420.754,30 436.754,22 420.754,14 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="612.746,22 644.752,22 644.752,102 678.994,102 "/>
+    <polygon style="fill: #ffffff" points="612.746,14 596.746,22 612.746,30 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="612.746,14 596.746,22 612.746,30 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="226.375,143.242 226.375,160 65.725,160 65.725,178.994 "/>
+    <polygon style="fill: #ffffff" points="234.375,143.242 226.375,127.242 218.375,143.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="234.375,143.242 226.375,127.242 218.375,143.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="226.375,143.242 226.375,160 311.525,160 311.525,178.994 "/>
+    <polygon style="fill: #ffffff" points="234.375,143.242 226.375,127.242 218.375,143.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="234.375,143.242 226.375,127.242 218.375,143.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="729.55,143.242 729.55,160 623.775,160 623.775,178.994 "/>
+    <polygon style="fill: #ffffff" points="737.55,143.242 729.55,127.242 721.55,143.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="737.55,143.242 729.55,127.242 721.55,143.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="729.55,143.242 729.55,160 826.125,160 826.125,178.994 "/>
+    <polygon style="fill: #ffffff" points="737.55,143.242 729.55,127.242 721.55,143.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="737.55,143.242 729.55,127.242 721.55,143.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="311.525,243.242 311.525,260 225.575,260 225.575,278.994 "/>
+    <polygon style="fill: #ffffff" points="319.525,243.242 311.525,227.242 303.525,243.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="319.525,243.242 311.525,227.242 303.525,243.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="311.525,243.242 311.525,260 399.075,260 399.075,278.994 "/>
+    <polygon style="fill: #ffffff" points="319.525,243.242 311.525,227.242 303.525,243.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="319.525,243.242 311.525,227.242 303.525,243.242 "/>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="180,340 247.6,340 259.6,352 259.6,390 180,390 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="180,340 247.6,340 259.6,352 259.6,390 180,390 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="247.6,340 247.6,352 259.6,352 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="187" y="364.9">
+      <tspan x="187" y="364.9">"Simple"</tspan>
+      <tspan x="187" y="380.9">binary</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="360,340 419.9,340 431.9,352 431.9,390 360,390 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="360,340 419.9,340 431.9,352 431.9,390 360,390 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="419.9,340 419.9,352 431.9,352 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="367" y="364.9">
+      <tspan x="367" y="364.9">MPI</tspan>
+      <tspan x="367" y="380.9">Program</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="395.95" y="365">
+    <tspan x="395.95" y="365"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="219.8" y="365">
+    <tspan x="219.8" y="365"></tspan>
+  </text>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="219.8" y="365">
+    <tspan x="219.8" y="365"></tspan>
+  </text>
+  <g>
+    <polygon style="fill: #ffffff" points="20,240 87.6,240 99.6,252 99.6,290 20,290 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="20,240 87.6,240 99.6,252 99.6,290 20,290 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="87.6,240 87.6,252 99.6,252 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="27" y="264.9">
+      <tspan x="27" y="264.9">"Simple"</tspan>
+      <tspan x="27" y="280.9">Script</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="360" y="280">
+    <tspan x="360" y="280"></tspan>
+  </text>
+  <g>
+    <polygon style="fill: #ffffff" points="560,240 681.5,240 693.5,252 693.5,290 560,290 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="560,240 681.5,240 693.5,252 693.5,290 560,290 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="681.5,240 681.5,252 693.5,252 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="567" y="264.9">
+      <tspan x="567" y="264.9">"Simple" binary</tspan>
+      <tspan x="567" y="280.9">launched in //</tspan>
+    </text>
+  </g>
+  <g>
+    <polygon style="fill: #ffffff" points="760,240 881.5,240 893.5,252 893.5,290 760,290 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="760,240 881.5,240 893.5,252 893.5,290 760,290 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="881.5,240 881.5,252 893.5,252 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="767" y="264.9">
+      <tspan x="767" y="264.9">"Simple" script</tspan>
+      <tspan x="767" y="280.9">launched in //</tspan>
+    </text>
+  </g>
+  <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:sans-serif;font-style:normal;font-weight:normal" x="826.75" y="265">
+    <tspan x="826.75" y="265"></tspan>
+  </text>
+  <g>
+    <polygon style="fill: #ffffff" points="800,80 906.1,80 918.1,92 918.1,130 800,130 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="800,80 906.1,80 918.1,92 918.1,130 800,130 "/>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 1; stroke: #000000" points="906.1,80 906.1,92 918.1,92 "/>
+    <text font-size="12.8" style="fill: #000000;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="807" y="104.9">
+      <tspan x="807" y="104.9">Some parallel</tspan>
+      <tspan x="807" y="120.9">processing</tspan>
+    </text>
+  </g>
+</svg>

@@ -143,4 +143,4 @@ _formating_styles = {1: _formating_basic,
 
 def format_docstring(fp, formating_style, abstractfpobj=False):
     """Call the appropriate formatting function given *formating_style*."""
-    return _formating_styles.get(formating_style, 1)(fp, abstractfpobj)
+    return _formating_styles.get(formating_style, _formating_basic)(fp, abstractfpobj)

@@ -7,15 +7,12 @@ import six
 
 import collections
 from string import Template
-import copy
-import re
 
 from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 from bronx.stdtypes.xtemplates import DefaultTemplate
 from bronx.syntax.decorators import secure_getattr
-from bronx.stdtypes.date import Date
 
 from vortex import sessions
 
