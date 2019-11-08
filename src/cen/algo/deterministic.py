@@ -272,3 +272,29 @@ class Surfex_Parallel(Parallel):
             prep.close()
         else:
             print("DO NOT CHANGE THE PREP FILE.")
+
+
+class Interpol_Forcing(Parallel):
+    """This algo component is designed to interpolate SAFRAN forcings on regular grid
+    with MPI parallelization."""
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains '
+               'with MPI parallelization.',
+        attr = dict(
+            binary = dict(
+                values = ['INTERPOL'],
+            ),
+
+        )
+    )
+
+    def execute(self, rh, opts):
+
+        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(kind='forcing')]
+
+        for forcing in list_forcings:
+            self.system.mv(forcing.rh.container.filename, 'input.nc')
+            super(Interpol_Forcing, self).execute(rh, opts)
+            self.system.mv('output.nc', forcing.rh.container.filename)
+
