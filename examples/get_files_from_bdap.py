@@ -2,34 +2,35 @@
 # -*- coding: utf-8 -*-
 
 """
+Example of BDAP access.
+
 This script can only run on Soprano servers (alose, rason, orphie, pagre).
 
-The environment must be set before the launch:
+The environment must be set prior to running this script:
 - python2 (2.7 or higher)
 - Vortex must be in the path
-The following lines can be used to do so in the .bash_profile:
-export PATH=/opt/rh/python27/root/usr/bin:$PATH
-export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64:$LD_LIBRARY_PATH
-export MTOOLDIR=$HOME
-vortexpath="/soprano/home/marp999/vortex/vortex-olive"
-export PYTHONPATH=$PYTHONPATH:$vortexpath/site:$vortexpath/src:$vortexpath/project
 
-This script aims at doing a BDAP extract.
-In Vortex, it is done using an AlgoComponent which uses dap3.
-The request file must be provided.
-This script can be used with multiple query files, provided they
-do not have the same local name.
-For each query file, each date and each term, the extraction creates
-a directory named query_date_term (where query is the local name of
-the query file), to receive all the extracted files.
+Please consider executing or adding these lines to your .bash_profile to do so:
+   export PATH=/opt/rh/python27/root/usr/bin:$PATH
+   export LD_LIBRARY_PATH=/opt/rh/python27/root/usr/lib64:$LD_LIBRARY_PATH
+   export MTOOLDIR=$HOME
+   vortexpath="/soprano/home/marp999/vortex/vortex-olive"
+   export PYTHONPATH=$PYTHONPATH:$vortexpath/site:$vortexpath/src:$vortexpath/project
+
+In Vortex, BDAP extractions are handled by an AlgoComponent wrapping the dap3 utility.
+The request (or query) file must be provided.
+This script can be used with multiple query files, provided they have different names.
+For each query file, each date and each term, the extraction creates a directory for
+the extracted files, named `query_date_term` (where query is the local name of the
+query file).
 
 Ok 20180801 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 
-# Load useful packages for the examples
+# load the packages used in this example
 import common
 import gco
 import vortex
@@ -40,27 +41,22 @@ from vortex import toolbox
 assert any([common, gco])
 
 
-# #### Initializations
-
-# Initialize environment for examples
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 
-# Define the rundate
+# define the rundate
 rundate = date.yesterday()
 
 
 # #### Get the request file from the Genv
 
-# To use a remote path, replace this first ResourceHandler
-# by the next one (which is at present commented)
+# to use a remote path, comment out this ResourceHandler and uncomment the following one
 rh_input_1 = toolbox.input(
     role   = "Query",
     # Resource
@@ -72,6 +68,7 @@ rh_input_1 = toolbox.input(
     format = "ascii",
     local  = "bdapquery.1"
 )
+
 # rh_input_1 = toolbox.input(
 #     role     = "Query #1",
 #     # Resource
@@ -84,43 +81,47 @@ rh_input_1 = toolbox.input(
 #     format   = "ascii",
 #     local    = "bdapquery.1"
 # )
+
 for rh in rh_input_1:
     rh.get()
 
-# Define and run the BDAP AlgoComponent
+# define and run the BDAP AlgoComponent
+# the Component submits to 'dap3' the queries it finds by filtering
+# the effective_inputs for role='Query' and kind='bdap_query'.
 algo = toolbox.algo(
     command = "dap3",
-    date = rundate,
-    engine = "algo",
-    kind = "get_bdap",
-    term = "0"
+    date    = rundate,
+    engine  = "algo",
+    kind    = "get_bdap",
+    term    = "0"
 )
 algo.run()
 
-# Archive the different elements
+# archive the extracted elements
 rh_output_1 = toolbox.output(
-    role = "Output #1",
+    role       = "Output #1",
     # Resource
-    kind = "observations",
-    geometry = "globalsp2",
-    model = "arpege",
-    part = "sst",
-    stage = "extract",
-    date=rundate,
-    cutoff="assim",
+    kind       = "observations",
+    geometry   = "globalsp2",
+    model      = "arpege",
+    part       = "sst",
+    stage      = "extract",
+    date       = rundate,
+    cutoff     = "assim",
     # Provider
-    block = "observations",
-    vapp = "arpege",
-    vconf = "4dvarfr",
+    block      = "observations",
+    vapp       = "arpege",
+    vconf      = "4dvarfr",
     experiment = "my_experiment@{}".format(e.USER),
-    namespace = "vortex.archive.fr",
+    namespace  = "vortex.archive.fr",
     # Container
-    format = "grib",
-    local = "{query}_{date}_{term}/fic_AUSA".format(
-        query="bdapquery.1",
-        date=rundate.ymdhms,
-        term=date.Time(0).fmtraw
+    format     = "grib",
+    local      = "{query}_{date}_{term}/fic_AUSA".format(
+             query = "bdapquery.1",
+             date  = rundate.ymdhms,
+             term  = date.Time(0).fmtraw
     )
 )
+
 for rh in rh_output_1:
     rh.put()

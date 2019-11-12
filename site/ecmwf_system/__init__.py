@@ -10,6 +10,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 #: No automatic export
 __all__ = []
 
-__version__ = '1.5.0'
+__version__ = '1.6.2'
 
 __tocinfoline__ = 'ECMWF installations features'

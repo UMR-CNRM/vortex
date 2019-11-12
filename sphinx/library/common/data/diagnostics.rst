@@ -30,3 +30,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SurfexDiagnostics
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfexPeriodDiagnostics
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

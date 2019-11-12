@@ -613,3 +613,159 @@
       location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/ddh.arome-zonal.franmg-01km30.ddhpack
     - default: *id004
       location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/ddh.arpege-zonal.tl1198-c22.ddhpack
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      begindate: '2019010100'
+      block: forecast
+      enddate: '2019010300'
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: flake
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-flake.franmg-01km30.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-flake.tl1198-c22.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-flake.franmg-01km30.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-flake.tl1198-c22.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      begindate: '2019010100'
+      block: forecast
+      enddate: '2019010300'
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: isba
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-isba.franmg-01km30.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-isba.tl1198-c22.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-isba.franmg-01km30.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-isba.tl1198-c22.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      begindate: '2019010100'
+      block: forecast
+      enddate: '2019010300'
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      scope: flake
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-flake.franmg-01km30.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-flake.tl1198-c22.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-flake.franmg-01km30.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-flake.tl1198-c22.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      begindate: '2019010100'
+      block: forecast
+      enddate: '2019010300'
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      scope: isba
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-isba.franmg-01km30.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000A-20190103T0000/forecast/diagnostics.surfex-isba.tl1198-c22.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-isba.franmg-01km30.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20190101T0000P-20190103T0000/forecast/diagnostics.surfex-isba.tl1198-c22.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: flake
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-flake.franmg-01km30+0024:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-flake.tl1198-c22+0024:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-flake.franmg-01km30+0024:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-flake.tl1198-c22+0024:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: null
+      scope: isba
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-isba.franmg-01km30+0024:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-isba.tl1198-c22+0024:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-isba.franmg-01km30+0024:00.netcdf
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-isba.tl1198-c22+0024:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      scope: flake
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-flake.franmg-01km30+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-flake.tl1198-c22+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-flake.franmg-01km30+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-flake.tl1198-c22+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: diagnostics
+      model: surfex
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      scope: isba
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-isba.franmg-01km30+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/diagnostics.surfex-isba.tl1198-c22+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-isba.franmg-01km30+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/diagnostics.surfex-isba.tl1198-c22+0024:00.grib

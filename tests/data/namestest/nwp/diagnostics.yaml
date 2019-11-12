@@ -66,3 +66,20 @@ todo:
                 namespace:
                     - olive.multi.fr
                     - vortex.multi.fr
+     # Surfex diagnostics
+    -   commons:
+            kind: diagnostics
+            model: surfex
+            scope:
+              - isba
+              - flake
+            nativefmt:
+              - null
+              - grib  
+            experiment: abcd
+            block: forecast
+            namespace: vortex.multi.fr
+        tests:
+            - term: 24
+            - begindate: '2019010100'
+              enddate: '2019010300'

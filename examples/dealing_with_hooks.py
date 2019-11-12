@@ -2,59 +2,58 @@
 # -*- coding: utf-8 -*-
 
 """
-This example show how to use a hook on a file get.
+This example shows how to use a hook on a file get.
 
+Ok 20190527 - PL
 Ok 20180801 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-# Load useful packages for the examples
+# load the packages used in this example
+import sys
 
-from bronx.stdtypes import date
-import footprints as fp
-
-import vortex
-from vortex import toolbox
 import common
+import footprints as fp
+import vortex
+from bronx.stdtypes import date
+from vortex import toolbox
 
 # prevent IDEs from removing seemingly unused imports
 assert any([common, ])
 
+# cleanly mix stdout and stderr
+sys.stdout = sys.stderr
 
-# #### Initializations
 
-# Initialize environment for examples
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 
-
-# #### Getting a resource using the Vortex provider
-
-# Define the date
+# the date for this experiment
 rundate = date.yesterday() + date.Period("PT3H")
 
 
-# Define a hook which will print the size of the file
+# define a function which will print the size of the file
 def my_hook(t, rh):
     # This is a very simple example. Of course, one can achieve many things
-    # working with **t** (the current session) and **rh** (the "hooked" 
+    # working with **t** (the current session) and **rh** (the "hooked"
     # ResourceHandler object)...
     dname = rh.container.localpath()
-    print("The size of the file get is: {}".format(t.sh.size(dname)))
+    print("The size of the file is: {}".format(t.sh.size(dname)))
 
 
-# Define the resource handler
-print('Example #1')
+# #### 1 - explicitely calling the hook function ###
+sh.title('Example #1')
+
+# let rh be the first resource handler returned by rload
 rh = toolbox.rload(
-    # Ressource
+    # Resource
     kind       = 'mbsample',
     nbsample   = 12,
     date       = rundate,
@@ -70,26 +69,26 @@ rh = toolbox.rload(
     local      = "test1.json"
 )[0]
 
+# print some information
 print('Complete ?', rh.complete)
 print('Location :', rh.location())
 print('Locate :  ', rh.locate())
 print('IdCard:')
 print(rh.idcard())
 
-# Get the resource
+# get the resource
 print('Get ?', rh.get())
 
-# Use the hook defined above
-print('MyHook Test:')
+# apply the hook defined above
 my_hook(t, rh)
 
-# The other way, define the resource handler and automatically call the hook
 
-# Define the resource handler
-print()
-print('Example #2')
+# #### 2 - the rload method automatically calls the hook  ###
+sh.title('Example #2')
+
+# the same rload call, except for the "hook" part (and the "local" name, obviously)
 rh = toolbox.rload(
-    # Ressource
+    # Resource
     kind       = 'mbsample',
     nbsample   = 12,
     date       = rundate,
@@ -104,24 +103,21 @@ rh = toolbox.rload(
     # Container
     local      = "test2.json",
     # Hooks
-    hook_size  = fp.FPTuple([my_hook, ()])  # No extra arguments provided
+    hook_size  = fp.FPTuple([my_hook, ()]),  # No extra arguments provided
 )[0]
 
 print('IdCard (with hook):')
 print(rh.idcard())
 
-# Get the resource
+# getting the resource automatically calls the hook
 print('Get (with hook) ?', rh.get())
-# The Hook was automatically called during get
 
-# Using toolbox.input + now =True, the syntax is simpler
 
-# Define the resource handler
-print()
-print('Example #3')
-print('Using toolbox.input')
+# #### 3 - Simpler syntax using toolbox.input and now = True
+sh.title('Example #3')
+
 rh = toolbox.input(
-    # Ressource
+    # Resource
     kind       = 'mbsample',
     nbsample   = 12,
     date       = rundate,

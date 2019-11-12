@@ -13,5 +13,7 @@
 Included Modules
 ----------------
 
+* :mod:`intairpol.algo.forcing`
 * :mod:`intairpol.algo.mocage`
-
+* :mod:`intairpol.algo.mpitools`
+* :mod:`intairpol.algo.postproc`

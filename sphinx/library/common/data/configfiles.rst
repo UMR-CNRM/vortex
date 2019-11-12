@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AsciiConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: JsonConfig
    :show-inheritance:
    :members:

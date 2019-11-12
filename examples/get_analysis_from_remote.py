@@ -3,25 +3,28 @@
 
 """
 Get an analysis using the remote provider.
+
 This example gets an analysis from Hendrix using its explicit path.
-The different attributes used are:
+The specific attributes are:
 - remote: the path on the target server
 - hostname: the name of the target server, if it is not the current one
-- tube: the tube used to get the resource (ftp, scp...)
+- tube: the protocol to use to get the resource (ftp, scp...)
 
-To get a resource from the current server using its explicit path, the only
-attribute needed is `remote`.
+To get a resource from the current server, using its explicit path,
+the only attribute needed is `remote`.
 
-The namespace used is [suite].archive.fr, only this one is available for everyone.
+The namespace used is [suite].archive.fr, the only one available to everyone.
 
 Can be launched anywhere provided that ftget/ftput (via the .netrc)
-or ftserv on super-computers (via ftmotpass) are configured).
+or ftserv on super-computers (via ftmotpass) are configured.
 
 Ok 20180731 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+
+# load the packages used in this example
 import common
 import vortex
 from bronx.stdtypes import date
@@ -30,25 +33,21 @@ from vortex import toolbox
 # prevent IDEs from removing seemingly unused imports
 assert any([common, ])
 
-# #### Initializations
 
-# Initialize environment for examples
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 
-# #### Getting a resource using the Vortex provider
 
-# Define the date
+# define the date
 rundate = date.Date("201801010000")
 
-# Define the resource
+# define the resource
 rh = toolbox.rload(
     # Ressource
     kind     = 'analysis',
@@ -69,5 +68,5 @@ print(rh.location())
 print(rh.locate())
 print(rh.idcard())
 
-# Get the resource
+# get the resource
 print(rh.get())

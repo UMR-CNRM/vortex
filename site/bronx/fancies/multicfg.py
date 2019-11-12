@@ -133,7 +133,7 @@ class MultiFileCfg(footprints.FootprintBase):
             self._cfginfo, self._cfgraw, self._cfgexcluded, self._cfgdefaults = self._cfgload[self._cfgfile]
         else:
             with io.open(self._cfgfile, 'rb') as fd:
-                self._cfginfo = self.cfgclean(yaml.load(fd))
+                self._cfginfo = self.cfgclean(yaml.load(fd, Loader=yaml.SafeLoader))
                 fd.seek(0, os.SEEK_SET)
                 self._cfgraw = fd.read()
             self._cfgexcluded = set(self._cfginfo.pop('excluded', list()))

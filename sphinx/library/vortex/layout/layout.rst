@@ -21,4 +21,4 @@ Included Modules
 * :mod:`vortex.layout.jobs`
 * :mod:`vortex.layout.monitor`
 * :mod:`vortex.layout.nodes`
-
+* :mod:`vortex.layout.subjobs`

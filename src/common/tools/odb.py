@@ -15,7 +15,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date as bdate
 import footprints
 
-from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent
 
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
@@ -350,6 +350,7 @@ odbmix_attributes = footprints.Footprint(
     ))
 
 
+@algo_component_deco_mixin_autodoc
 class OdbComponentDecoMixin(AlgoComponentDecoMixin):
     """Handle ODB settings in AlgoComponnents.
 
@@ -434,7 +435,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         :return: The path to the ODB database (the virtual database if a merge is
                  performed).
         """
-        if len(odbsections) > 1:
+        if len(odbsections) > 1 or self.virtualdb.lower() == 'ecma':
             logger.info('ODB: merge for: %s.', self.virtualdb)
             virtualdb_path = self.odb.ioassign_merge(
                 layout   = self.virtualdb,

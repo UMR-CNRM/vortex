@@ -505,9 +505,9 @@ class System(footprints.FootprintBase):
         finally:
             self.trace = oldtrace
 
-    def echo(self, args):
+    def echo(self, *args):
         """Joined **args** are echoed."""
-        print('>>>', ' '.join(args))
+        print('>>>', ' '.join([str(arg) for arg in args]))
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
@@ -1579,9 +1579,13 @@ class OSExtended(System):
                     extras.extend(['-u', logname])
                 if specialshell:
                     extras.extend(['-s', specialshell])
+                # Remove ~/ and ~logname/ from the destinations' path
+                actual_dest = re.sub('^~/+', '', destination)
+                if logname:
+                    actual_dest = re.sub('^~{:s}/+'.format(logname), '', actual_dest)
                 rc = self.spawn([ftcmd,
                                  '-o', 'mkdir', ] +  # Automatically create subdirectories
-                                extras + [source, destination], output=False)
+                                extras + [source, actual_dest], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:

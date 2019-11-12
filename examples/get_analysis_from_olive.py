@@ -4,48 +4,48 @@
 """
 Get an analysis using the Olive provider.
 
-The namespace used is olive.multi.fr,
-i.e. if the resource is not in the cache,
-it will be looked for in the archive and a copy will be put in the cache.
+The namespace used here is olive.multi.fr, associated to a multistore: if the
+resource is not found in the cache, it will be retrieved from the archive and
+a copy will be cached to speed up later access.
 
 Can be launched anywhere provided that ftget/ftput (via the .netrc)
-or ftserv on super-computers (via ftmotpass) are configured).
+or ftserv on super-computers (via ftmotpass) are configured.
 
-The experiment chosen does not always exists and should be change in order to have an existing resource.
+The experiment chosen does not always exists and should be changed in order
+to describe an existing resource.
+
 
 Ok 20180731 - GR
 """
 
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 
-# #### Initializations
-
-# Load useful packages for the examples
-import vortex
+# load the packages used in this example
 import common
 import olive
-from vortex import toolbox
+import vortex
 from bronx.stdtypes import date
+from vortex import toolbox
 
-# Initialize environment for examples
+# prevent IDEs from removing seemingly unused imports
+assert any([common, olive])
+
+
+# set up the Vortex environment
 t = vortex.ticket()
 sh = t.sh
 e = t.env
 
-# Change the work directory
-workdirectory = '/'.join([e.HOME, "tmp", "Vortex"])
-if not sh.path.isdir(workdirectory):
-    sh.mkdir(workdirectory)
-sh.chdir(workdirectory)
+# change the working directory
+working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
+sh.cd(working_directory, create=True)
 
 
-# #### Getting a resource using the Vortex provider
-
-# Define the date
+# define the date
 rundate = date.yesterday()
 
-# Define the resource
+# define the resource
 rh = toolbox.rload(
     # Ressource
     kind       = 'analysis',
@@ -68,5 +68,5 @@ print(rh.location())
 print(rh.locate())
 print(rh.idcard())
 
-# Get the resource
+# get the resource
 print(rh.get())
