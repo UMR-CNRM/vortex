@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # encoding: utf-8
 """
 Automatically convert notebooks to a set of RST files.
@@ -44,6 +44,8 @@ logger = logging.getLogger(__name__)
 _NBOOKS_EXT = ".ipynb"
 _DIR_DISCARD = ('.ipynb_checkpoints', )
 _INDEX_TOP_HEAD = '''
+.. _notebooks_sum:
+
 #################
 Notebooks Summary
 #################
@@ -106,11 +108,24 @@ class DefaultExporter(object):
                      '\n\n')
         return (statement + rst + statement)
 
+    def _fix_intralinks(self, rst, a_file):
+        """Fix hyperlinks."""
+        radix = os.path.split(a_file)[0]
+        nback = 1
+        while radix:
+            nback += 1 if radix != '.' else 0
+            radix = os.path.split(radix)[0]
+        pathradix = '../' * nback
+        newrst = re.sub(r'http://intra.cnrm.meteo.fr/algopy/sphinx/vortex/current/?([^\s]*)',
+                        r'`\1 <' + pathradix + r'\1>`_', rst, count=0)
+        return newrst
+
     def _rst_alter(self, rst, resources, a_file):
         """Control the way the exports are altered."""
         myname = resources['unique_key']
         rst = self._add_automatic_ref(rst, myname)
         rst = self._add_download(rst, a_file)
+        rst = self._fix_intralinks(rst, a_file)
         rst, resources = self._packager(rst, resources)
         return rst, resources
 

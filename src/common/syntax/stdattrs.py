@@ -45,18 +45,6 @@ an_oops_expected_target = dict(
 oops_expected_target = footprints.Footprint(attr = dict(expected_target = an_oops_expected_target))
 
 
-#: Usual definition of the ``select_expected_target`` attribute.
-a_oops_select_expected_target = dict(
-    info = ("Ordered keys to select expected target for the test " +
-            "success, within the dict from 'expected_target' or " +
-            "resource Role: Expected Target"),
-    type = footprints.FPList,
-    optional = True,
-    default = None
-)
-#: Usual Footprint of the ``select_expected_target`` attribute.
-oops_select_expected_target = footprints.Footprint(attr = dict(select_expected_target = a_oops_select_expected_target))
-
 #: Usual Footprint of a combined lists of members and terms
 oops_members_terms_lists = footprints.Footprint(
     info = "Abstract footprint for a members/terms list.",

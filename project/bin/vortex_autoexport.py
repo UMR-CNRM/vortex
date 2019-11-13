@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # encoding: utf-8
 
 """
@@ -16,7 +16,6 @@ For now, only the SSH export service is implemented.
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
-import six
 
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import logging

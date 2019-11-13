@@ -26,7 +26,7 @@ from vortex.layout.dataflow import intent
 from bronx.stdtypes.date import Time
 
 #from vortex.tools.fortran import NamelistBlock
-from vortex.util.structs import FootprintCopier
+import vortex.util.structs
 from common.tools.grib import GRIBFilter
 from common.data.namelists import NamelistContent
 from common.algo.stdpost import parallel_grib_filter, StandaloneGRIBFilter
@@ -39,7 +39,7 @@ from vortex.tools.systems     import ExecutionError
 from vortex.layout.monitor    import BasicInputMonitor
 
   
-class mfwam(Parallel, grib.GribApiComponent):
+class mfwam(Parallel, grib.EcGribDecoMixin):
     """."""
     _abstract = True
     _footprint = dict(
@@ -109,7 +109,6 @@ class mfwam(Parallel, grib.GribApiComponent):
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
         super(mfwam, self).prepare(rh, opts)
-        self.gribapi_setup(rh[0] if isinstance(rh, (list,tuple)) else rh, opts)
         ### setup MPI compatibilite
         self.env.update(
             I_MPI_COMPATIBILITY = 4,
@@ -225,6 +224,7 @@ class mfwam(Parallel, grib.GribApiComponent):
         else:
             self.flyput = False
 
+        logger.info("zorg")
 
 class MfwamFilter(BlindRun):
   
@@ -374,7 +374,7 @@ class MfwamGribingOp(BlindRun):
 
 
    
-class MfwamPosDEB(VortexWorkerBlindRun, grib.GribApiComponent):
+class MfwamPosDEB(VortexWorkerBlindRun, grib.EcGribDecoMixin):
   
     _footprint = dict(
         attr = dict(
@@ -623,78 +623,166 @@ class MfwamGauss2Gribpara(TaylorMfwamProcess):
             print(r)
 
   
-  
-class MfwamGauss2Gribbis(BlindRun):
+class MfwamGauss2Grib2(ParaBlindRun):
     """."""
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values  = ['mfwamgauss2grib'],
+                values  = ['mfwamgauss2grib2'],
             ),
             fortinput = dict(
                 optional = True,
                 default = 'input',
             ),
-            grillecoord = dict(
-                type    = dict,
-                default = "-90000 90000 0 359500 500",
+            grille = dict(
+                type     = list,
+                default = "glob02",
             ),
-            #grille = dict(
-                #default = "glob05",
-            #),
+            refreshtime = dict(
+                type = int,
+                optional = True,
+                default = 20,
+            ),
+            timeout = dict(
+                type = int,
+                optional = True,
+                default = 600,
+            ),
+            flyargs = dict(
+                default = ('regMPP', 'regAPP',),
+            ),
+            flypoll = dict(
+                default = 'iopoll_marine',
+            ),
         )
     )
 
 
+    def prepare(self, rh, opts):
+
+        if self.promises:
+            self.io_poll_sleep = 20
+            self.io_poll_kwargs = dict(model=rh.resource.model)
+            self.flyput = True
+        else:
+            self.flyput = False
+
+
     def execute(self, rh, opts):
         """"""
-        gpsec = self.context.sequence.effective_inputs(role=('GridParameters'))
-        gpsec.sort(key=lambda s: s.rh.resource.term)
-        logger.info("gpsec %s", gpsec)
+        gpexe = self.context.sequence.effective_inputs(role=('master'))
+        logger.info("gpexe %s", gpexe)
+        rhexe = gpexe[1].rh
+        logger.info("yo %s",rhexe.container.localpath())
+        self._default_pre_execute(rh, opts)
+
+        common_i = self._default_common_instructions(rh, opts)
+        # Update the common instructions
+#        common_i.update(dict(fortinput=45))
 
         sh = self.system.sh
         thisoutput = 'output'
+        tmout=False
 
-        for sec in gpsec:
-            r = sec.rh
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
+                               role='GridParameters', kind='gridpoint')
+        
+        with bm:
+            while not bm.all_done or len(bm.available) > 0:
+                while bm.available:
+                    gpsec = bm.pop_available().section
+                    r = gpsec.rh
+                    file_in=r.container.localpath()
+                    self._add_instructions(common_i,dict(file_in=[file_in,]))
+                        
+                if not (bm.all_done or len(bm.available) > 0):
+                    # Timeout ?
+                    tmout = bm.is_timedout(self.timeout)
+                if tmout:
+                    break
+                # Wait a little bit :-)
+                time.sleep(1)
+                bm.health_check(interval=30)            
+        
+        self._default_post_execute(rh, opts)
+        
+        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
+            logger.error("We were unable to fetch the following file: %s", failed_file)
+            if self.fatal:
+                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),traceback=False)
 
-            # Some preventive cleaning
-            self.system.remove(self.fortinput)
-            self.system.remove(thisoutput)
-            self.system.remove('fort.2')
+        if tmout:
+            raise IOError("The waiting loop timed out")
+ 
+class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
+    """."""
 
-            self.system.title('Loop on files: {:s}'.format(r.container.localpath()))
-            self.system.softlink(r.container.localpath(), self.fortinput)
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values  = ['mfwamgauss2grib2'],
+            ),
+            fortinput = dict(
+                optional = True,
+                default = 'input',
+            ),
+            # Input/Output data
+            file_in = dict(),
+#            file_out = dict(),
+#            member = dict(
+#                type = FmtInt,
+#                optional = True,
+#            )
+        )
+    )
 
-            ### recup self.grillecoord prevoir une boucle ici
+
+    def vortex_task(self, **kwargs):
+        """"""
+        logger.info("Starting the post-processing")
+
+        sh = self.system.sh
+        thisoutput = 'output'
+        logger.info("num : %d", self.num)
+        logger.info("la difference : %s",self.file_in)
+        
+        #Prepare the working directory
+        cwd=sh.pwd()
+        tmpwd=sh.path.join(cwd,self.file_in+'.process.d')
+        sh.mkdir(tmpwd)
+        sh.softlink(sh.path.join(cwd,self.file_in),sh.path.joint(tmpwd,self.fortinput))
+#        sh.cp(sh.path.join(cwd,self.file_in),sh.path.join(tmpwd,self.file_in))
+        sh.cd(tmpwd)
+        time.sleep(30)
+        
 
 
+#        for dom in self.grille:
+#                        self.system.title('domain : {:s}'.format(dom))
+        
+#                        self.system.cp(dom+".nam",'fort.2')
 
-            grid = self.grillecoord['grille']
-            for key, value in grid.items():
+                        
+#                        r = gpsec.rh
 
-                logger.info("grillecoord %s", key)
-                coord_lonlat = value.rsplit()
-                logger.info("coord_lonlat %s", coord_lonlat) ## les rentrer dans le nb
-                # Build the local namelist block
-                nb = NamelistBlock(name='NALINE')
-                nb.IDELLA = int(coord_lonlat[4])
-                nb['ISOUTH'] = int(coord_lonlat[0])
-                nb['INORTH'] = int(coord_lonlat[1])
-                nb['IWEST'] = int(coord_lonlat[2])
-                nb['IEAST'] = int(coord_lonlat[3])
-                logger.info("nb %s", nb)
-                with io.open('fort.2', 'w') as namfd:
-                    namfd.write(nb.dumps())
+                        # Some preventive cleaning
+#                        self.system.remove(self.fortinput)
+#                        self.system.remove(thisoutput)
 
-                self.system.header('{0:s} : local namelist {1:s} dump'.format(self.realkind, 'fort.2'))
-                self.system.cat('fort.2', output=False)
-                super(MfwamGauss2Grib, self).execute(rh, opts)
+#                        self.system.title('Loop on files: {:s}'.format(r.container.localpath()))
+#                        self.system.softlink(r.container.localpath(), self.fortinput)
 
-                ### copie output
-                self.system.cp(thisoutput, "regular_{0:s}_{1:s}".format(key, r.container.localpath()), fmt = 'grib')            
 
+#                        super(MfwamGauss2Grib, self).execute(rh, opts)
+
+                        ### copie output
+#                        self.system.cp(thisoutput, "reg{0:s}_{1:s}".format(r.container.localpath(),dom), fmt = 'grib')
+                        
+
+        
+        
 
 class MfwamGauss2Grib(BlindRun):
     """."""
@@ -730,6 +818,16 @@ class MfwamGauss2Grib(BlindRun):
             ),
         )
     )
+
+
+    def prepare(self, rh, opts):
+
+        if self.promises:
+            self.io_poll_sleep = 20
+            self.io_poll_kwargs = dict(model=rh.resource.model)
+            self.flyput = True
+        else:
+            self.flyput = False
 
 
     def execute(self, rh, opts):
@@ -787,9 +885,6 @@ class MfwamGauss2Grib(BlindRun):
 
         if tmout:
             raise IOError("The waiting loop timed out")
-
-
-
 
 
 

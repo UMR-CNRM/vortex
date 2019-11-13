@@ -16,3 +16,8 @@ Modules
 
 * :mod:`intairpol.tools.addons`
 * :mod:`intairpol.tools.polling`
+
+Included modules
+----------------
+
+* :mod:`intairpol.tools.conftools`

@@ -18,11 +18,7 @@ XMLEXPORT     = ../bin/tbinterface.py
 # Path to Sphinx build program
 SPHINXBUILD     = sphinx-build
 # Sphinx builder command line optios
-SPHINXOPTS      = 
-# Preferred paper size for Sphinx +  paper size specific options
-PAPER           = a4 
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
+SPHINXOPTS      =
 
 # Build directory for the documentation
 BUILDDIR      = build
@@ -30,7 +26,7 @@ BUILDDIR      = build
 SOURCEDIR     = .
 
 # The final list of Sphinx options
-ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
+ALLSPHINXOPTS   = $(SPHINXOPTS) $(SOURCEDIR)
 
 # Target file for the documentation's checker report
 CHECKREPORT   = $(SOURCEDIR)/checkreport.rst
@@ -39,6 +35,11 @@ CHECKREPORT   = $(SOURCEDIR)/checkreport.rst
 GEOLIST       = $(SOURCEDIR)/geometries.rst
 # Source configuration file to generate the geometries list
 GEOLIST_DEP   = ../conf/geometries.ini
+
+# Target file for the BDPE ids list
+BDPELIST       = $(SOURCEDIR)/bdpe-map-resources.rst
+# Source configuration file to generate the BDPE ids list
+BDPELIST_DEP   = ../conf/bdpe-map-resources.ini
 
 # Target file for the pollutants list
 POL_ELTS      = $(SOURCEDIR)/pollutants-elements-std.rst
@@ -62,6 +63,9 @@ CLEAN_LIBINDEXES = $(patsubst library/%, clean-%_libindex, $(AUTO_LIBINDEXES))
 # Target directory for footprint's XML exports
 XMLEXPORTDIR  = $(SOURCEDIR)/_static/vortex-help/_ExportXML
 
+# Auto html doc
+AUTO_HTML_DOC = _static/auto_html_docs
+
 # The following environment variable have to be provided in order to activate the
 # automatic documentation in classes derived from FootprintBase.
 FOOTPRINT_DOCSTRINGS	:= 2
@@ -75,11 +79,11 @@ export BRONX_FANCIES_RSTDOC
 # -------------
 # Build targets
 
-all: $(NOTEBOOKS) html  # HTML documentation is obviously the default
+all: $(NOTEBOOKS) auto_html_docs html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
-.PHONY: all full-check miss-check $(CHECKREPORT) html \
-        clean clean-$(NOTEBOOKS) $(XMLEXPORTDIR)
+.PHONY: all full-check miss-check $(CHECKREPORT) html auto_html_docs \
+        clean clean-$(NOTEBOOKS) clean-auto_html_docs $(XMLEXPORTDIR)
 
 # Create rst files for new modules and check all of the aspects
 full-check:
@@ -99,6 +103,9 @@ $(CHECKREPORT):
 $(GEOLIST): $(GEOLIST_DEP)
 	$(PYTHON) $(GENEDOC) --geometry $(GEOLIST)
 
+$(BDPELIST): $(BDPELIST_DEP)
+	$(PYTHON) $(GENEDOC) --default $(BDPELIST_DEP) $(BDPELIST)
+
 $(POL_ELTS): $(POL_ELTS_DEP)
 	$(PYTHON) $(GENEDOC) --configtable pollutants,elements,std,en,intairpol $(POL_ELTS)
 
@@ -115,6 +122,10 @@ $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
 	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
+# Clean a library index
+clean-%_libindex:
+	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+
 # Standard build for library indexes
 %_libindex:
 	$(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
@@ -126,19 +137,22 @@ taylorism_libindex:
 footprints_libindex:
 	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
 
-# Build the html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+# Build the $(AUTO_HTML_DOC) directory
+auto_html_docs:
+	make -C $(AUTO_HTML_DOC) docs
+
+# Build the sphinx-html documentation
+html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
 clean-$(NOTEBOOKS):
 	rm -rf $(NOTEBOOKS)
 
-# Clean a library index
-clean-%_libindex:
-	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+clean-auto_html_docs:
+	make -C $(AUTO_HTML_DOC) distclean
 
-# Clean the build directory and the automatically generated rst files. 
-clean: clean-$(NOTEBOOKS) $(CLEAN_LIBINDEXES)
+# Clean the build directory and the automatically generated rst files.
+clean: clean-$(NOTEBOOKS) clean-auto_html_docs $(CLEAN_LIBINDEXES)
 	rm -rf $(BUILDDIR) $(XMLEXPORTDIR)
-	rm -f $(CHECKREPORT) $(GEOLIST) $(POL_ELTS) $(POL_SITES)
+	rm -f $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -153,6 +153,7 @@ class RstIndexEntry(object):
                 version_id=versionid,
                 depth=self.tocdepth,
                 me=self.my_doclink,
+                module=self.my_module,
                 modules=('\n' + ' ' * _TOCINDENT).join(self.mod_doclink),
                 packages=('\n' + ' ' * _TOCINDENT).join(self.pac_doclink), )
             )

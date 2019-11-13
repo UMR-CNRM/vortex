@@ -1,0 +1,370 @@
+# This file is supposed to be encoded with UTF-8
+
+head_title=Vortex: AlgoComponents
+head_description=Vortex: AlgoComponents (Algorithmic Components)
+head_author=Louis-François Meunier - vortex.support@meteo.fr
+
+{% macro run_core_description(text) -%}
+<div class="row" style="display:flex; flex-flow:row nowrap;">
+    <div class="column" style="flex:0 0 16.5em;">
+        <pre style="width: 25em; margin: 0 0 0 0;"><code class="language-python hljs"># A cloned environment will be bound 
+# to the OS
+self.env = self.context.env.clone()
+with self.env:
+
+    # The actual "run" recipe
+    self.prepare(rh, kw)            #1
+    self.fsstamp(kw)                #2
+    try:
+        self.execute(rh, kw)        #3
+    finally:
+        self.execute_finalise(kw)   #3.1
+    self.fscheck(kw)                #4
+    self.postfix(rh, kw)            #5
+    self.dumplog(kw)                #6
+    self.delayed_exceptions(kw)     #7  
+</code></pre>
+
+    </div>
+    <div class="column" style="flex:1 1 auto;">
+        {{ text|indent(width=8) }}
+    </div>
+</div>
+{%- endmacro -%}
+
+# The document/presentation starts here... This is the last comment !
+--md slide
+
+# Vortex: AlgoComponents
+
+**Algorithmic components**
+
+Louis-François Meunier
+
+[vortex.support@meteo.fr](mailto:vortex.support@meteo.fr)
+
+--md slide
+
+## Algorithmic components purpose
+
+To launch a program, call an external Python module, ...
+
+  * The main idea behind algorithmic components is to perform some kind of
+    action(s) on input data;
+  * To do so, it is often necessary to launch an external executable (but
+    other options exist);
+  * Sometime the executable launch is simple; but things might become complicated, e.g.
+    with an executable parallelised using MPI. The algorithmic component
+    should deal with that.
+
+Handle all application-related settings:
+
+  * Setup some environment variables;
+  * Update/Tweak some configuration files (e.g. namelists);
+  * Add command line arguments when the binary is launched;
+  * Launch the executable several times in a row (e.g. loop on terms, members, ...)
+
+--md subslide data-transition="zoom"
+
+### Usage example
+
+From the user point of view, it is very easy to use an **AlgoComponent** object.
+Here is the example of an Arpège forecast launch:
+
+```python
+# Retrieval of the executable
+tbexec = toolbox.executable(kind='ifsmodel', model='arpege')
+
+# Creation of the AlgoComponent object
+tbalgo = toolbox.algo(kind='forecast', engine='parallel',
+                      fcterm=102, timescheme='sli', timestep=360)
+#   - fcterm, timescheme, timestep => specific to Arpège/IFS
+#   - engine => how to launch the binary ?
+
+# The actual launch...
+tbalgo.run(tbexec[0], mpiopts=dict(nn=30, nnp=8, openmp=5))
+#   - It is possible to specify some options related to the execution
+#     itself (e.g. for MPI programs, the number of computes nodes, ...)
+```
+
+* The ``run`` method:
+
+> It is the entry point of any **AlgoComponent** object; later on, we will
+> look deeper into this method.
+
+--md slide
+
+## Let's dive into the abstract class...
+
+The previously mentioned ``run`` method is defined in the
+``vortex.algo.components.AlgoComponent`` abstract class (whose all
+class playing the algorithmic component role inherit from).
+
+Beware:
+
+> This is a very generic method that should never be overwritten.
+
+However, there are a lot of way to customise an algorithmic component just by
+extending a few of the abstract class' methods. Let's have a look at the ``run``
+method's code:
+
+--md subslide
+
+### The ``run`` method
+
+```python
+def run(self, rh=None, **kw):
+    """Sequence for execution : prepare / execute / postfix."""
+    self._status = True
+
+    # Get instance shorcuts to context and system objects
+    self.ticket  = vortex.sessions.current()
+    self.context = self.ticket.context
+    self.system  = self.context.system
+    self.target  = kw.pop('target', None)
+    if self.target is None:
+        self.target = self.system.default_target
+
+    # Before trying to do anything, check the executable
+    if not self.valid_executable(rh):
+        logger.warning('Resource %s is not a valid executable', rh.resource)
+        return False
+
+    # A cloned environment will be bound to the OS
+    self.env = self.context.env.clone()
+    with self.env:
+
+        # The actual "run" recipe
+        self.prepare(rh, kw)            #1
+        self.fsstamp(kw)                #2
+        try:
+            self.execute(rh, kw)        #3
+        finally:
+            self.execute_finalise(kw)   #3.1
+        self.fscheck(kw)                #4
+        self.postfix(rh, kw)            #5
+        self.dumplog(kw)                #6
+        self.delayed_exceptions(kw)     #7  
+
+    # Free local references
+    self.env = None
+    self.system = None
+
+    return self._status
+```
+
+Note:
+Several code blocs can be identified, we will describe each of them...
+
+--md subslide
+
+##### The ``run`` method: the shortcuts
+
+```python
+def run(self, rh=None, **kw):
+    """Sequence for execution : prepare / execute / postfix."""
+    self._status = True
+
+    # Get instance shorcuts to context and system objects
+    self.ticket  = vortex.sessions.current()
+    self.context = self.ticket.context
+    self.system  = self.context.system
+    self.target  = kw.pop('target', None)
+    if self.target is None:
+        self.target = self.system.default_target
+```
+
+The ``run`` method provides a few shortcuts that will be usable in your own
+developments (which makes things easier). It corresponds to the active
+``Ticket``, ``Context`` and ``System`` objects.
+
+--md subslide
+
+##### The ``run`` method: checking the executable
+
+```python
+    # Before trying to do anything, check the executable
+    if not self.valid_executable(rh):
+        logger.warning('Resource %s is not a valid executable', rh.resource)
+        return False
+```
+
+The ``valid_executable`` method is called to check whether the ``rh``
+attribute, provided by the user when calling ``run``, is compatible with
+the current **AlgoComponent**. This method might be extended if one
+needs to perform tighter checks...
+
+--ht subslide
+
+<h5> The <code>run</code> method: Creating a private environment</h5>
+
+{% macro prv_content() -%}
+<ul>
+    <li>
+        A clone of the environment is created (<strong>clone</strong>
+method) and activated when the execution sequence starts (because of the
+use of the <em>context manager</em>): Changes made in the environment will
+therefore be temporary and reverted back when the execution sequence
+finishes.</li>
+    <li>
+        The execution sequence starts... <aside class="notes">It looks
+like a cooking recipe where several sub-methods are called in a sequential
+way.</aside>
+    </li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(prv_content()) }}
+
+--ht subslide
+
+<h5> The <code>run</code> method: The most interesting (extendable) methods</h5>
+
+{% macro mtd1_content() -%}
+<ul>
+    <li>
+        <code>prepare</code>: export variables, prepare namelist, create
+symlinks to files, check for consistency, ...</li>
+    <li>
+        <code>execute</code>: the actual processing takes place here (e.g we could 
+find here a loop on several terms, members, ...)</li>
+    <aside class="notes"><li>
+        <code>execute_finalise</code>: this method is unconditionally launched
+when the execution finishes which allows for some cleaning, reporting, ...</li></aside>
+    <li>
+        <code>postfix</code>: create some diagnostic files, check that the execution
+worked as expected, ...</li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(mtd1_content()) }}
+
+--ht subslide
+
+<h5> The <code>run</code> method: Other methods</h5>
+
+{% macro mtd2_content() -%}
+<ul>
+    <li><code>fsstamp</code>, <code>fscheck</code>, <code>dumplog</code>: The files
+are inspected before and after the execution. Therefore, created, modified and
+deleted files are listed (see the <code>fslog</code> <em>property</em> that allows
+to retrieve this information).</li>
+    <li><code>delayed_exceptions</code>: Sometimes, Python's <em>exceptions</em> are
+caught and put aside during the execution. If so, they will be raised again by
+this method.</li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(mtd2_content()) }}
+
+--md subslide
+
+### How to create a new AlgoComponent class?
+
+Creating a new AlgoComponent is usually quite simple and consists in:
+
+* Inheriting from an existing AlgoComponent class;
+* Adding new footprints' attributes (or modifying existing ones);
+* Adding utility methods to carry out application specific tasks;
+* Extending the ``prepare``, ``execute`` and ``postfix`` methods.
+
+***Extend*** is a very important word in this document: when customising
+``prepare``, ``execute`` or ``postfix``, at some point, it is required to
+call the parent method. Regarding, the ``execute`` method, an exception can
+be made if there is no external binary or script to run.
+
+--md slide
+
+## Hierarchy of base AlgoComponent classes
+
+Here are the classes available in the **vortex.algo.components** module:
+
+![Heritage1](images_auto/HeritageAlgo1en.svg)
+
+Notes:
+
+* To create a new algorithmic component the least to do is to inherit from
+  **AlgoComponent**. Inheriting directly from **AlgoComponent** is quite uncommon
+but if one wants to use an external Python package or launch some kind of
+system command, it makes sense.
+* **Expresso** allows for the execution of scripts in various languages
+(therefore one must provide the name of the *interpreter* that will be used).
+* **BlindRun** allows for the execution of a "simple" binary.
+* **Parallel** allows to run a parallel MPI application. In itself, this
+AlgoComponent doesn't do much: It processes the arguments given to the
+``run`` method and delegate the actual work of generating the MPI command
+to the classes defined in the **vortex.algo.mpitools** module (which is
+well documented).
+* **TaylorRun** allows to run several elementary tasks in parallel (on a
+single compute node). It is based on the **taylorism** site package (that
+itself relies on the standard **multiprocessing** package). If the elementary
+task consists in launching a script or binary, **ParaExpresso** or
+  **ParaBlindRun** should be used.
+
+--md slide
+
+## Application specific class hierarchy
+
+Class hierarchy for Arpège (NWP code) related stuff (partial view):
+
+![HeritageArpege](images_auto/HeritageAlgo2.svg)
+
+Notes:
+
+* In the previous section, we saw how inheritance allows to deal with
+various launch methods. Therefore, it seems natural to use a similar
+method to deal with application specific behaviours.
+* The previous diagram is a partial view of what is currently
+implemented to work with the Arpège code. Of course, it is not readily
+reusable for other applications. Instead, an adhoc class hierarchy should
+be built.
+* In this example:
+
+    * All the very generic stuff that applies to each and every Arpège run
+      are gathered in **IFSParallel** (abstract class).
+    * The **IFSODB** branch allows to work with observational databases (in
+      *ODB* format). This is the base class for several algorithmic components
+      related to observations data assimilation.
+    * **FullPosServer** is used to perform post processing.
+    * **Forecast** has a pretty explicit name... It has a declination called
+      **LAMForecast** that specifically deals with limited area forecasts (where
+      lateral boundary condition files should be managed).
+    * The **IFSEdaAbstractAlgo** branch gathers all the ensemble data assimilation
+      (EDA) specific behaviours. The **IFSEdaEnsembleAbstractAlgo** class is a
+      specific case where several members are processed at once (e.g. to compute
+      the ensemble mean).
+
+--md slide
+
+## "Template" of a new algo component
+
+
+```python
+class MyAlgoComponent(ParentAlgoComponent):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['my_beloved_processing', ]),
+            # Do not hesitate to add your own attributes...
+        )
+    )
+
+    def _my_utilitary_method_(self, foo):
+        pass
+
+    def prepare(self, rh, opts):
+        super(ParentAlgoComponent, self).prepare(rh, opts)  # Parent method
+        # Here goes your own code...
+        # - Playing with the environment -> self.env
+        # - Interacting with the underlying system -> self.system
+        # - Inspect the input data -> self.context.sequence
+
+    def execute(self, rh, opts):
+        # It is possible to launch an executable several times
+        for i in a_list:
+            # Prepare some last minute stuff
+            super(parentAlgoComponent, self).execute(rh, opts)  # Parent method
+
+    def postfix(self, rh, opts):
+        super(ParentAlgoComponent, self).postfix(rh, opts)  # Parent method
+        # Here goes your own code...
+```
+<!-- .element: class="bigpre" -->
+

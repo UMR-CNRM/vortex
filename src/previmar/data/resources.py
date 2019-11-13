@@ -10,7 +10,7 @@ from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition, Historic
 from common.data.gridfiles import GridPoint
-from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from .contents import AltidataContent
 
 #: No automatic export
@@ -326,6 +326,7 @@ class TarResult(GeoFlowResource):
         )
 
 
+@namebuilding_append('src', lambda s: s.fields)
 class InitWave(Historic):
     """Class of"""
     _footprint = dict(
@@ -367,7 +368,6 @@ class InitWave(Historic):
             return '(icmshfix:modelkey)'
 	else:
 	    return '(histfix:modelkey)'
-
 
 class OutputWave(GridPoint):
     """Class of"""

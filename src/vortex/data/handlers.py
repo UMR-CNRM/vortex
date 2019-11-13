@@ -616,7 +616,7 @@ class Handler(object):
                     self.container.iotarget(),
                     st_options,
                 )
-            except (IOError, OSError, RuntimeError):
+            except Exception:
                 logger.error("The store's earlyget method did not return : it should never append!")
                 return None
         else:

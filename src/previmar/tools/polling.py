@@ -38,9 +38,9 @@ class IO_Poll_Marine(addons.Addon):
         logger.info("Execution IOPOLL Marine")
         cmd = ['--prefix', prefix]
         if model is not None:
-            cmd.extend = ['--model', model]
+            cmd.extend(['--model', model])
         if forcage is not None:
-            cmd.extend = ['--forcage', forcage]
+            cmd.extend(['--forcage', forcage])
         logger.info("cmd: %s", cmd)
 
         # Catch the processed file

@@ -17,7 +17,7 @@ import footprints
 from taylorism import Boss
 
 from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
-from vortex.algo.components   import AlgoComponentDecoMixin, AlgoComponentError
+from vortex.algo.components   import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
 from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel
 from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
 from vortex.tools.grib        import EcGribDecoMixin
@@ -815,6 +815,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
                     bm.health_check(interval=30)
 
 
+@algo_component_deco_mixin_autodoc
 class _DiagPIDecoMixin(AlgoComponentDecoMixin):
     """Class variables and methods usefull for DiagPI."""
 

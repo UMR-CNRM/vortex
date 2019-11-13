@@ -46,11 +46,20 @@ class MpiAuto(mpitools.MpiTool):
         )
     )
 
+    _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_mpiauto.tpl'
+    _envelope_rank_var = 'MPIAUTORANK'
+
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
         options['init-timeout-restart'] = self.timeoutrestart
         return options
+
+    def _envelope_fix_envelope_bit(self, e_bit, e_desc):
+        """Set the envelope fake binary options."""
+        e_bit.options = e_desc
+        e_bit.options['prefixcommand'] = self._envelope_wrapper_name
+        e_bit.master = self.binaries[0].master
 
     def _hook_binary_mpiopts(self, options):
         tuned = options.copy()
@@ -74,6 +83,8 @@ class MpiAuto(mpitools.MpiTool):
         super(MpiAuto, self).setup(opts)
         for bin_obj in self.binaries:
             prefix_c = bin_obj.options.get('prefixcommand', None)
+            if self.envelope and prefix_c:
+                raise ValueError('It is not allowed to specify a prefixcommand when an envelope is used.')
             if prefix_c is not None:
                 if self.system.path.exists(prefix_c):
                     self.system.xperm(prefix_c, force=True)

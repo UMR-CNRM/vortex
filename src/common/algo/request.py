@@ -14,6 +14,7 @@ from bronx.stdtypes.date import Time
 import footprints
 
 from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, Expresso, BlindRun
+from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
@@ -253,6 +254,7 @@ class GetBDCPResource(AlgoComponent):
         return rc_all
 
 
+@algo_component_deco_mixin_autodoc
 class _GetBDMDecoMixin(AlgoComponentDecoMixin):
     """Class variables and methods usefull for BDM extractions."""
 

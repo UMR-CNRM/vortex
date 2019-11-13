@@ -169,7 +169,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         rc = False
         if source and isinstance(source, six.string_types) and self.sh.path.exists(source):
             with io.open(source, 'rb') as fd:
-                rc = fd.read(8) == 'LFI_ALTM'
+                rc = fd.read(8) == b'LFI_ALTM'
         return rc
 
     def _std_table(self, lfifile, **kw):
