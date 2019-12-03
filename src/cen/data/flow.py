@@ -5,19 +5,16 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies           import loggers
 from bronx.stdtypes.date     import Date, Time
-
-import footprints
-from footprints.util import rangex
-
-from vortex.data.flow        import GeoFlowResource
-from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
-from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
-
+from cen.syntax.stdattrs     import cendateperiod_deco
 from common.data.modelstates import InitialCondition
 from common.data.obs         import ObsRaw
-
+import footprints
+from footprints.util import rangex
+from vortex.data.flow        import GeoFlowResource
+from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
 from vortex.syntax.stdattrs import a_date
-from cen.syntax.stdattrs     import cendateperiod_deco
+from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
+
 
 #: No automatic export
 __all__ = []
@@ -359,7 +356,7 @@ class SafranPackedFiles(GeoFlowResource):
         info = 'SAFRAN packed files covering a given period',
         attr = dict(
             kind = dict(
-                values = ['packedobs', 'listobs'],
+                values = ['packedobs', 'listobs', 'packedguess'],
             ),
             model = dict(
                 values  = ['safran'],
