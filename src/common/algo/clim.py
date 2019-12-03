@@ -305,9 +305,7 @@ class MakeLAMDomain(AlgoComponent):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -323,7 +321,6 @@ class MakeLAMDomain(AlgoComponent):
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _check_geometry(self):
         if self.mode == 'center_dims':
@@ -469,9 +466,7 @@ class MakeGaussGeometry(Parallel):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -484,7 +479,6 @@ class MakeGaussGeometry(Parallel):
                         " is needed here")
         self._complete_dimensions()
         self._unit = 4
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _complete_dimensions(self):
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
@@ -643,9 +637,7 @@ class MakeBDAPDomain(AlgoComponent):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -670,7 +662,6 @@ class MakeBDAPDomain(AlgoComponent):
             self.algoassert(self.sh.path.exists(self.model_clim))
             if self.boundaries is not None:
                 logger.info('attribute *boundaries* ignored')
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -727,7 +718,7 @@ class AddPolesToGLOB(TaylorRun):
                         " is needed here")
 
     def execute(self, rh, opts):  # @UnusedVariable
-        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        """Add poles to a GLOB* regular FA Lon/Lat file that do not contain them."""
         self._default_pre_execute(rh, opts)
         common_i = self._default_common_instructions(rh, opts)
         clims = self.context.sequence.effective_inputs(role=('Clim',))
