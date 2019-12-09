@@ -74,10 +74,10 @@ class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     def _analysis_cp(self, nb, msg):
         # Copy the analysis
         initsec = self.setlink(initkind='analysis')
+        radical = re.sub(r'^(.*?)\d+$', r'\1', initsec[0].rh.container.localpath())
         for num in footprints.util.rangex(1, nb):
             self.system.cp(initsec[0].rh.container.localpath(),
-                           re.sub('[0-9]*$', '{:03d}'.format(num),
-                                  initsec[0].rh.container.localpath()),
+                           radical + '{:03d}'.format(num),
                            fmt=initsec[0].rh.container.actualfmt, intent=intent.INOUT)
         logger.info("Copy the analysis for the %d %s.", nb, msg)
 
@@ -372,9 +372,9 @@ class CombiBreeding(CombiPert):
         # Consistent naming with the Fortran execution
         hst_sections = self.context.sequence.effective_inputs(kind = ('pert', 'historic'))
         for num, hst in enumerate(hst_sections):
-            self.system.softlink(hst.rh.container.localpath(), re.sub('[0-9]*$',
-                                                                      '{:03d}'.format(num + 1),
-                                                                      hst.rh.container.localpath()) + '.grb')
+            self.system.softlink(hst.rh.container.localpath(),
+                                 re.sub(r'^(.*?)\d+$', r'\1', hst.rh.container.localpath()) +
+                                 '{:03d}.grb'.format(num + 1))
             logger.info("Rename the %d grib files consecutively.", num)
 
         # Tweak the namelist
