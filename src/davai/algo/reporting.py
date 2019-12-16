@@ -191,6 +191,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             # prepare
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
+        self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 
     def postfix(self, rh, opts):  # @UnusedVariable
