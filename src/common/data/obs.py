@@ -280,7 +280,12 @@ class VarBCContent(AlmostListContent):
     fullData=None
     
     def slurp(self, container,parse=False):
-        """Get data from the ``container`` and find the metadata."""
+        """Get data from the ``container`` and find the metadata.
+        By default parse=False in this case only the metadata of the file is read.
+        If slurp is called with parse=True, the varbc file is entirely parsed
+        and stored in an :class:`ObsVarbcFileContent` object available in the 
+        :attr:`fullData` attribute.
+        """
         super(VarBCContent, self).slurp(container)
         tmpdata = container.head(2)
         mdata = {}

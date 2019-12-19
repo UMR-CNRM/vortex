@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Utility classes to read write and convert VarBC FILES"""
+"""
+Utility classes to read, write and convert VarBC FILES
+(Inspired by LF Meunier MyMetTools)
+"""
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 import numpy as np
@@ -15,6 +18,9 @@ __all__ = []
 _MyMatchElement = namedtuple('_MyMatchElement', ('element', 'regex'))
 
 class _MyMatchList(object):
+    """
+    Object that uses regular expressions to parse varbc entry 
+    """
     def __init__(self, matches):
         self._matches = matches
         self._reset()
@@ -55,7 +61,7 @@ class _MyMatchList(object):
             
 class _ObsVarbcEntry(object):
     '''
-    One entry of a VarBC file
+    One entry of a VarBC file, each information of varbc entry is stored in this class
     '''
     def __init__(self):
         self.type = ''
@@ -129,7 +135,13 @@ class _ObsVarbcEntry(object):
         
         
 class ObsVarbcFileContent(object):      
-        
+    """
+    Class to handle a full VarbcFileContent.
+    Can be initialized with full ascii data, or a filepath.
+    It provides then two simple methods to access to elements :class:`_ObsVarbcEntry`, one with ix ( :meth:`getIx` ), 
+    the other with varbc 'key' ( :meth:`getKey` ).
+    All the _ObsVarbcEntry are stored in datalist
+    """
     def __init__(self,asciiDatas=None,filepath=None):
         self.metadata = {}
         self.datalist=[] #datalist[i] for entry ix=i+1
@@ -144,9 +156,6 @@ class ObsVarbcFileContent(object):
             print("ascii data is given")
         else:
             raise Exception("only one argument between asciiDatas or filepath must be provided. Stop")
-        
-            
-        
         mobj = re.match(r'\w+\.version(\d+)', asciiDatas[0])
         if mobj:
             self.metadata['version'] = int(mobj.group(1))
@@ -155,7 +164,6 @@ class ObsVarbcFileContent(object):
             if mobj:
                 self.metadata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
                                                          int(mobj.group(2))))
-                         
         mymatchlist = _MyMatchList([
             _MyMatchElement('ix', re.compile('^ix=0*(\d+)$')),
             _MyMatchElement('type', re.compile('^class=(\w+)$')),
@@ -181,7 +189,15 @@ class ObsVarbcFileContent(object):
                         self.keyToIx[myentry.key]=int(myentry.ix)
         
     def getIx(self,ix):
+        """
+        Gives the 'ix' element of the varbc file
+        """
         return self.datalist[ix-1]
 
     def getKey(self,key):
+        """
+        Get the varbc element from its 'key'
+        example  myobj.getKey(\'4 3 7\'), myobj.getKey(\'3 16 2213\'),...
+
+        """
         return self.getIx(self.keyToIx[key])       
