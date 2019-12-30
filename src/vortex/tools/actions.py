@@ -224,7 +224,8 @@ class FlowSchedulerGateway(Action):
         rc = None
         service = self.get_active_service(**kw)
         if service and self._schedcmd is not None:
-            rc = getattr(service, self._schedcmd)(*args)
+            kwbis = {k: v for k, v in kw.items() if k in ('critical', )}
+            rc = getattr(service, self._schedcmd)(*args, **kwbis)
         self._schedcmd = None
         return rc
 
