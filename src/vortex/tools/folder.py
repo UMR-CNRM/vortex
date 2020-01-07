@@ -143,11 +143,13 @@ class FolderShell(addons.FtrawEnableAddon):
                 if (len(unpacked) == 1 and
                         self.sh.path.isdir(self.sh.path.join(unpacked[-1]))):
                     # This is the most usual case... (ODB, DDH packs produced by Vortex)
+                    self.sh.wpermtree(unpacked[-1], force=True)
                     self.sh.mv(unpacked[-1], destination)
                 else:
                     # Old-style DDH packs (produced by Olive)
                     self.sh.mkdir(destination)
                     for item in unpacked:
+                        self.sh.wpermtree(item, force=True)
                         self.sh.mv(item, self.sh.path.join(destination, item))
             else:
                 logger.error('Nothing to unpack')
