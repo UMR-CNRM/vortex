@@ -162,6 +162,23 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             self.sh.pclose(p)
             return True
 
+    def _std_forcepack(self, source, destination=None):
+        """Returned a path to a packed data."""
+        if self.is_xgrib(source):
+            destination = (destination if destination else
+                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+            if not self.sh.path.exists(destination):
+                if self.xgrib_pack(source, destination):
+                    return destination
+                else:
+                    raise IOError('XGrib packing failed')
+            else:
+                return destination
+        else:
+            return source
+
+    grib_forcepack = _std_forcepack
+
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""

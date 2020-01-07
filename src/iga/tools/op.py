@@ -382,8 +382,9 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
     def hook_route(t, rh):
         kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
-                      filename=rh.container.abspath, soprano_target=soprano_target,
-                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      filename=rh.container.abspath, filefmt=rh.container.actualfmt,
+                      soprano_target=soprano_target, routingkey=routingkey,
+                      targetname=targetname, transmet=transmet,
                       header_infile=header_infile, **kw)
 
         if selkeyproductid:

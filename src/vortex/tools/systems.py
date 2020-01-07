@@ -2515,6 +2515,16 @@ class OSExtended(System):
         ext = objname.replace(radix, '')
         return (radix, ext)
 
+    @fmtshcmd
+    def forcepack(self, source, destination=None):  # @UnusedVariable
+        """Return the path to a "packed" data (i.e. a ready to send single file)."""
+        return source
+
+    @fmtshcmd
+    def forceunpack(self, source):  # @UnusedVariable
+        """Unpack the data "inplace" (if needed, depending on the format)."""
+        return True
+
     def blind_dump(self, gateway, obj, destination, bytesdump=False, **opts):
         """
         Use **gateway** for a blind dump of the **obj** in file **destination**,
