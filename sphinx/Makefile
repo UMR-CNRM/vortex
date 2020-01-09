@@ -19,10 +19,6 @@ XMLEXPORT     = ../bin/tbinterface.py
 SPHINXBUILD     = sphinx-build
 # Sphinx builder command line optios
 SPHINXOPTS      =
-# Preferred paper size for Sphinx +  paper size specific options
-PAPER           = a4
-PAPEROPT_a4     = -D latex_paper_size=a4
-PAPEROPT_letter = -D latex_paper_size=letter
 
 # Build directory for the documentation
 BUILDDIR      = build
@@ -30,7 +26,7 @@ BUILDDIR      = build
 SOURCEDIR     = .
 
 # The final list of Sphinx options
-ALLSPHINXOPTS   = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) $(SOURCEDIR)
+ALLSPHINXOPTS   = $(SPHINXOPTS) $(SOURCEDIR)
 
 # Target file for the documentation's checker report
 CHECKREPORT   = $(SOURCEDIR)/checkreport.rst

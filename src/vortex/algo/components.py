@@ -1547,6 +1547,9 @@ class Parallel(xExecutableAlgoComponent):
         # Find out the command line
         bargs = self.spawn_command_line(rh)
 
+        # Potential Source files
+        sources = []
+
         # The usual case: no indications, 1 binary + a potential ioserver
         if len(rh) == 1 and not self.binaries:
 
@@ -1564,6 +1567,9 @@ class Parallel(xExecutableAlgoComponent):
             master.master = self.absexcutable(rh[0].container.localpath())
             master.arguments = bargs[0]
             bins = [master, ]
+            # Source files ?
+            if hasattr(rh[0].resource, 'guess_binary_sources'):
+                sources.extend(rh[0].resource.guess_binary_sources(rh[0].provider))
 
         # Multiple binaries are to be launched: no IO server support here.
         elif len(rh) > 1 and not self.binaries:
@@ -1604,6 +1610,9 @@ class Parallel(xExecutableAlgoComponent):
                 bins[i].options = {k: v[i] for k, v in mpi_opts.items()}
                 bins[i].master = self.absexcutable(r.container.localpath())
                 bins[i].arguments = bargs[i]
+                # Source files ?
+                if hasattr(r.resource, 'guess_binary_sources'):
+                    sources.extend(r.resource.guess_binary_sources(r.provider))
 
         # Nothing to do: binary descriptions are provided by the user
         else:
@@ -1616,6 +1625,9 @@ class Parallel(xExecutableAlgoComponent):
 
         # The binaries description
         mpi.binaries = self._bootstrap_mpibins_hack(bins, rh, opts, use_envelope)
+
+        # The source files
+        mpi.sources = sources
 
         envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
         if envelope:

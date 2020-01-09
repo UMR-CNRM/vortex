@@ -1,10 +1,11 @@
 <html>
 	<head>
         {%- block head -%}
-        <meta charset="utf-8">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta charset="utf-8" />
         <title>{{head_title}}</title>
-        <meta name="description" content="{{head_description}}">
-        <meta name="author" content="{{head_author}}">
+        <meta name="description" content="{{head_description}}" />
+        <meta name="author" content="{{head_author}}" />
         {%- endblock head %}
 	</head>
 

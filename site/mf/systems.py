@@ -86,6 +86,23 @@ class Prolix(MeteoBull):
     )
 
 
+class Epona(MeteoBull):
+    """Epona Computer at Meteo-France."""
+
+    _footprint = dict(
+        info = 'Bull Epona porting system at Meteo France',
+        attr = dict(
+            inetname = dict(
+                default = 'epona',
+                values  = ['epona']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'epona(?:login)?\d+(?:\.|$)')
+        )
+    )
+
+
 # Any kind of DSI's Soprano servers
 
 class MeteoSoprano(Target):

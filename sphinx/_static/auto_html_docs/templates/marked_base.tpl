@@ -2,7 +2,7 @@
 {%- block head %}
         {{ super() }}
 
-		<link rel="stylesheet" href="css/marked_custom.css">
+		<link rel="stylesheet" href="css/marked_custom.css" />
 
         <script src="{{cdn}}/highlight.min.js"></script>
         {%- for lang in hljlang %}
@@ -10,7 +10,7 @@
         {%- endfor %}
         
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css">
+		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css" />
 
 {%- endblock head %}
 
@@ -18,7 +18,7 @@
         {%- block slides %}
         {%- endblock slides %}
 
-        <!-- Javascript libraries configuration and initialisation --!>
+        <!-- Javascript libraries configuration and initialisation -->
 
         <script>
             // Highlighting of every raw code blocks

@@ -4,13 +4,16 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import six
+
 import copy
 import hashlib
 import re
 
 from bronx.fancies import loggers
 
-from vortex.data.stores import StoreGlue, IniStoreGlue, ArchiveStore, CacheStore, MultiStore
+from vortex.data.abstractstores import ArchiveStore, CacheStore, MultiStore
+from vortex.util import config
 
 #: No automatic export
 __all__ = []
@@ -18,7 +21,131 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 rextract = re.compile('^extract=(.*)$')
-oparchivemap = IniStoreGlue('@oparchive-glue.ini')
+
+
+class StoreGlue(object):
+    """Defines a way to glue stored objects together."""
+
+    def __init__(self, gluemap=None):
+        logger.debug('Abstract glue init %s', self.__class__)
+        if gluemap is None:
+            self._gluemap = dict()
+        else:
+            self._gluemap = gluemap
+        self._asdict = None
+        self._cross = dict()
+
+    @property
+    def gluemap(self):
+        """Property that returns internal glue-map object."""
+        return self._gluemap
+
+    def as_dump(self):
+        """Return a nicely formated class name for dump in footprint."""
+        return six.text_type(self.gluemap)
+
+    def sections(self):
+        """Returns a list of available glue section names. Mostly file archive names."""
+        return self.gluemap.sections()
+
+    def glueretrieve(self, section, option):
+        """Generic function to retrieve the associated value to ``option`` in the specified ``section``."""
+        if self.gluemap.has_option(section, option):
+            return self.gluemap.get(section, option)
+        else:
+            logger.warning('No such section <%s> or option <%s> in %s', section, option, self)
+            return None
+
+    def gluetype(self, section):
+        """Shortcut to retrieve option ``objtype``."""
+        return self.glueretrieve(section, 'objtype')
+
+    def gluename(self, section):
+        """Shortcut to retrieve option ``objname``."""
+        return self.glueretrieve(section, 'objname')
+
+    def gluelist(self, section):
+        """returns the list of options in the specified ``section``."""
+        if self.gluemap.has_section(section):
+            return [x for x in self.gluemap.options(section) if not x.startswith('obj')]
+        else:
+            logger.warning('No such section <%s> in %s', section, self)
+            return []
+
+    def as_dict(self):
+        """Return the current internal gluemap as a pure dictionary."""
+        if not self._asdict:
+            self._asdict = dict()
+            for section in self.gluemap.sections():
+                self._asdict[section] = dict()
+                for (opt, value) in self.gluemap.items(section):
+                    lopt = re.split('[ :]', value)
+                    self._asdict[section][opt] = dict(zip(lopt[::2], lopt[1::2]))
+        return self._asdict
+
+    def crossitem(self, item):
+        """
+        Possibly builds and then returns a reverse dictionary
+        of founded options with the specified ``item`` defined.
+        """
+        if item not in self._cross:
+            self._cross[item] = dict()
+            for section, contents in six.iteritems(self.as_dict()):
+                for option, desc in six.iteritems(contents):
+                    if item in desc:
+                        if desc[item] not in self._cross[item]:
+                            self._cross[item][desc[item]] = list()
+                        localdesc = dict(section=section, option=option)
+                        localdesc.update(desc)
+                        self._cross[item][desc[item]].append(localdesc)
+        return self._cross[item]
+
+    def contains(self, checktype, checkvalue):
+        """Generic boolean function to check if the specified ``value`` exists for this ``type``."""
+        return checkvalue in self.crossitem(checktype)
+
+    def containsfile(self, filename):
+        """Shortcut to contains for a specified file."""
+        return self.contains('file', filename)
+
+    def containsformat(self, aformat):
+        """Shortcut to contains for a specified format."""
+        return self.contains('format', aformat)
+
+    def getitem(self, itemtype, itemname):
+        """Generic function to obtain the associated description of the item specified by type and name."""
+        if self.contains(itemtype, itemname):
+            return self.crossitem(itemtype).get(itemname)
+        else:
+            return None
+
+    def getfile(self, filename):
+        """Shortcut to get an item for a specified file."""
+        return self.getitem('file', filename)
+
+    def getformat(self, aformat):
+        """Shortcut to get an item for a specified format."""
+        return self.getitem('format', aformat)
+
+    def filemap(self, system, dirname, basename):
+        """Reformulates the actual physical path for the file requested."""
+        gluedesc = self.getfile(basename)
+        if len(gluedesc) > 1:
+            logger.error('Multiple glue entries %s', gluedesc)
+            cleanpath, targetpath = (None, None)
+        else:
+            gluedesc = gluedesc[0]
+            targetpath = self.gluename(gluedesc['section']) + '.' + self.gluetype(gluedesc['section'])
+            cleanpath = system.path.join(dirname, targetpath)
+        return (cleanpath, targetpath)
+
+
+class IniStoreGlue(StoreGlue):
+    """Initialised StoreGlue with a delayed ini file."""
+
+    def __init__(self, inifile=None):
+        logger.debug('IniStoreGlue init %s', self.__class__)
+        super(IniStoreGlue, self).__init__(config.DelayedConfigParser(inifile))
 
 
 class OliveArchiveStore(ArchiveStore):
@@ -204,7 +331,7 @@ class OpArchiveStore(ArchiveStore):
             glue = dict(
                 type     = StoreGlue,
                 optional = True,
-                default  = oparchivemap,
+                default  = IniStoreGlue('@oparchive-glue.ini'),
             ),
             readonly = dict(
                 default  = True,

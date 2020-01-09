@@ -2,16 +2,16 @@
 {%- block head %}
         {{ super() }}
 
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-		<link rel="stylesheet" href="{{revealjs}}/css/reset.css">
-		<link rel="stylesheet" href="{{revealjs}}/css/reveal.css">
-		<link rel="stylesheet" href="{{revealjs}}/css/theme/white.css" id="theme">
-		<link rel="stylesheet" href="css/reveal_custom.css">
+		<link rel="stylesheet" href="{{revealjs}}/css/reset.css" />
+		<link rel="stylesheet" href="{{revealjs}}/css/reveal.css" />
+		<link rel="stylesheet" href="{{revealjs}}/css/theme/white.css" id="theme" />
+		<link rel="stylesheet" href="css/reveal_custom.css" />
 
         
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css">
+		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css" />
 
 		<!-- Printing and PDF exports -->
 		<script>
@@ -31,7 +31,7 @@
 			</div>
 		</div>
 
-        <!-- Javascript libraries configuration and initialisation --!>
+        <!-- Javascript libraries configuration and initialisation -->
 
 		<script src="{{revealjs}}/js/reveal.js"></script>
 		<script>

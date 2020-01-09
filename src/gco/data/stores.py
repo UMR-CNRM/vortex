@@ -13,7 +13,7 @@ import re
 
 from bronx.fancies import loggers
 
-from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
+from vortex.data.abstractstores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
 from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser

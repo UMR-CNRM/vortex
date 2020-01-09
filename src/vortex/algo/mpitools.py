@@ -157,6 +157,7 @@ class MpiTool(footprints.FootprintBase):
         self._launcher = thisenv.VORTEX_MPI_LAUNCHER or self.mpiname
         self._binaries = []
         self._envelope = []
+        self._sources = []
         for k in self.basics:
             self.__dict__['_' + k] = None
 
@@ -230,11 +231,27 @@ class MpiTool(footprints.FootprintBase):
 
     binaries = property(_get_binaries, _set_binaries)
 
+    def _get_sources(self):
+        """Returns a list of directories that may contain source files."""
+        return self._sources
+
+    def _set_sources(self, value):
+        """Set the list of of directories taht may contain source files."""
+        if not isinstance(value, collections_abc.Iterable):
+            raise ValueError('This should be an Iterable.')
+        self._sources = value
+
+    sources = property(_get_sources, _set_sources)
+
+    def _actual_mpiopts(self):
+        """The mpiopts string."""
+        return self.mpiopts
+
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         klast = None
         options = dict()
-        for optdef in shlex.split(self.mpiopts):
+        for optdef in shlex.split(self._actual_mpiopts()):
             if optdef.startswith('-'):
                 optdef = optdef.lstrip('-')
                 options[optdef] = None
