@@ -158,12 +158,6 @@ class S2MTaskMixIn(object):
 
         return rundate_prep, alternates
 
-    def get_oper_member_prep(self):
-        if self.conf.geometry.area == "postes":
-            return 35
-        else:
-            return [35, 36]
-
     def get_list_members(self):
         if not self.conf.nmembers:
             raise ValueError
