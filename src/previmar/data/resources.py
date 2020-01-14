@@ -369,6 +369,7 @@ class InitWave(Historic):
 	else:
 	    return '(histfix:modelkey)'
 
+
 class OutputWave(GridPoint):
     """Class of"""
     _footprint = dict(
@@ -439,7 +440,7 @@ class AltidataWave(FlowResource):
             satellite = dict(
                 values = ['jason2','cryosat2','saral','allsat',
                           'altidata', 'obs_alti', 'sentinel3',
-                          'S3al3'],
+                          'S3al3','cfosat'],
                 optional = True,
                 default = 'allsat',
                 remap = {
@@ -459,6 +460,40 @@ class AltidataWave(FlowResource):
     @property
     def realkind(self):
         return 'AltidataWave'
+
+    def basename_info(self):
+        return dict(
+            fmt     = self.nativefmt,
+            radical = self.realkind + '_' + self.satellite,
+            src     = self.model,
+        )
+
+class SARdataWave(FlowResource):
+
+    _footprint = dict(
+        info = 'Spectral data file',
+        attr = dict(
+            nativefmt = dict(
+                default = 'ascii',
+            ),
+#            scope = dict(
+#                optional = True,
+#                default = 'assim',
+#            ),
+            satellite = dict(
+                values = ['sentinel1','cfosat','allsat'],
+                optional = True,
+                default = 'allsat',
+            ),
+            kind = dict(
+                values = ['SARdataWave'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'SARdataWave'
 
     def basename_info(self):
         return dict(
@@ -491,6 +526,9 @@ class WaveCurrent(FlowResource):
         attr = dict(
             kind = dict(
                 values = ['WaveCurrent'],
+            ),
+            nativefmt = dict(
+                default = 'grib',
             ),
         )
     )

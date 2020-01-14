@@ -230,57 +230,6 @@ class CouplingGridOasis(GenvUsageModelResource):
         return 'CouplingGridOasis'
 
 
-class WamInfo(GenvModelResource):
-
-    _footprint = dict(
-        info = '',
-        attr = dict(
-            nativefmt = dict(
-                default = 'foo',
-            ),
-            kind = dict(
-                values = ['wam_info'],
-            ),
-            gvar = dict(
-                default = '[model]_[fields]',
-            ),
-            fields = dict(
-                values = ['nested_info', 'nested_grids_info',
-                          'grid_tables', 'boundary_info', 'boundary_grid_info'],
-                remap = {
-                    'nested_info': 'nested_grids_info',
-                    'boundary_info': 'boundary_grid_info',
-                    }
-            )
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'waminfo'
-
-
-class WamSubGrid(GenvModelResource):
-
-    _footprint = dict(
-        info = '',
-        attr = dict(
-            nativefmt = dict(
-                default = 'foo',
-            ),
-            kind = dict(
-                values = ['wam_subgrid'],
-            ),
-            gvar = dict(
-                default = '[model]_subgrid_tgz',
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'wamsubgrid'
-
 
 class AltimetriePreproc(GenvModelResource):
 
@@ -355,45 +304,3 @@ class WamGridPost(GenvModelResource):
         return 'wampreproc'
 
 
-#class FortAltimetrie(GenvModelResource):
-
-    #_footprint = dict(
-        #info = '',
-        #attr = dict(
-            #nativefmt = dict(
-                #default = 'ascii',
-            #),
-            #kind = dict(
-                #values = ['filtrevalue'],
-            #),
-            #gvar = dict(
-                #default = '[model]_fort_alti',
-            #),
-        #)
-    #)
-
-    #@property
-    #def realkind(self):
-        #return 'fortalti'
-
-
-#class Cstalti(GenvModelResource):
-
-    #_footprint = dict(
-        #info = '',
-        #attr = dict(
-            #nativefmt = dict(
-                #default = 'ascii',
-            #),
-            #kind = dict(
-                #values = ['bathyref'],
-            #),
-            #gvar = dict(
-                #default = '[model]_cst_alti',
-            #),
-        #)
-    #)
-
-    #@property
-    #def realkind(self):
-        #return 'cstalti'
