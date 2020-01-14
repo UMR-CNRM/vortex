@@ -56,3 +56,7 @@ _ExportXML
 
 # Pascal unwanted files
 playground
+
+# Matthieu unwanted files
+tag
+oper_tag
