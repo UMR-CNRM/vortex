@@ -7,6 +7,7 @@ Get a namelist file from the Genv provider.
 Can be launched anywhere where Gget or Gget light is available
 (on super-computer for instance).
 
+Ok 20200109 - PL + NM - added autofill and gautofill
 Ok 20180731 - GR
 """
 
@@ -17,6 +18,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import common
 import olive
 import vortex
+from gco.tools import genv
 from vortex import toolbox
 
 # prevent IDEs from removing seemingly unused imports
@@ -31,20 +33,26 @@ e = t.env
 # change the working directory
 working_directory = sh.path.join(e.HOME, "tmp", "vortex_examples_tmpdir")
 sh.cd(working_directory, create=True)
-
+print('working directory:', sh.pwd())
 
 # #### Getting a resource using the Genv provider
+cycle = "cy43t2_op3.09"
+
+# Explicitely load the genv definitions in Vortex.
+# Alternatively, use the "gautofill=True" property of the genv provider.
+genv.autofill(cycle=cycle)
 
 # define the resource
 rh = toolbox.rload(
-    # Ressource
-    kind   = "namelist",
-    model  = "arpege",
-    source = "namelistfc",
-    # Provider
-    genv   = "cy42_op2.68",
-    # Container
-    local  = "namelistfc"
+    # -- Ressource
+    kind      = "namelist",
+    model     = "arpege",
+    source    = "namelistfc",
+    # -- Provider
+    genv      = cycle,
+    # gautofill = False,  # (default)
+    # -- Container
+    local     = "namelistfc",
 )[0]
 
 print(rh.complete)
