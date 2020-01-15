@@ -9,11 +9,14 @@ AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 
 import six
 import io
+import re
 
+from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+import footprints
 
-from vortex.algo.components import Parallel, ParallelOpenPalmMixin
+from vortex.algo.components import Parallel, ParallelOpenPalmMixin, BlindRun, Expresso
 from vortex.syntax.stdattrs import a_date, model
 
 #: No automatic export
@@ -37,6 +40,11 @@ class AbstractMocageRoot(Parallel):
                 fcterm = dict(
                     info     = 'Forecast term',
                     type     = date.Time,
+                ),
+                nhcy = dict(
+                    info     = ' meteo coupling frequency',
+                    optional = True,
+                    default  = '3',
                 ),
                 cpldelta = dict(
                     info     = 'Default delta for coupling based on FM files',
@@ -146,6 +154,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Min Max (smterms) : %04d %d', minsm, maxsm)
         logger.info('self.fcterm.hour  :      %d', self.fcterm.hour)
         logger.info('Fcterm            :      %d', realfcterm)
+        logger.info('NHCY              :      %d', self.nhcy)
 
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
@@ -161,6 +170,7 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'DD2', int(last.day))
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
+        self._fix_nam_macro(namrh, 'NHCY', int(self.nhcy))
 
         namrh.save()
         namrh.container.cat()
