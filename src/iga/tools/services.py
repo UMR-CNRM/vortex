@@ -641,8 +641,8 @@ class BdpeService(RoutingService):
             logger.info(msg)
             return None
 
-        default = '{0.productid}{0.term.fmtraw}'.format(self)
-        return self.iniparser.get(self.soprano_target, self.routingkey.lower(), default)
+        actual_key = self.iniparser.get(self.soprano_target, self.routingkey.lower(), raw=True)
+        return actual_key.format(self)
 
     def __call__(self):
         """The actual call to the service."""
