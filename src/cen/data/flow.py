@@ -359,7 +359,7 @@ class SafranPackedFiles(GeoFlowResource):
         info = 'SAFRAN packed files covering a given period',
         attr = dict(
             kind = dict(
-                values = ['packedobs', 'listobs'],
+                values = ['packedobs', 'listobs','packedguess'],
             ),
             model = dict(
                 values  = ['safran'],
