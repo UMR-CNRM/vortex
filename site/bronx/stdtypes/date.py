@@ -1573,10 +1573,22 @@ class Time(_GetattrCalculatorMixin):
         return self.__mul__(other)
 
     @property
-    def fmtdh(self):
-        """DDHHMMSS formated string."""
-        me = int(self)//1440*1000000+(int(self)%1440)//60*10000+(int(self)%1440)%60*100
-        return '{0:08d}'.format(me)
+    def dhm(self):
+        """Return a tuple with the number of (days, hours, minutes)."""
+        totalminutes = int(self)
+        sign = -1 if totalminutes < 0 else 1
+        totalminutes = abs(totalminutes)
+        days = totalminutes // 1440
+        hours = (totalminutes % 1440) // 60
+        minutes = (totalminutes % 60)
+        return (sign * days, sign * hours, sign * minutes)
+
+    @property
+    def fmtdhm(self):
+        """DDHHMM formated string."""
+        (days, hours, minutes) = self.dhm
+        sign = '-' if int(self) < 0 else ''
+        return '{0:s}{1:02d}{2:02d}{3:02d}'.format(sign, abs(days), abs(hours), abs(minutes))
 
     @property
     def fmth(self):
@@ -1600,13 +1612,13 @@ class Time(_GetattrCalculatorMixin):
 
     @property
     def fmtraw(self):
-        """HHHH:MM formated string."""
+        """HHHHMM formated string."""
         return self._formatted_str('{0:s}{1:04d}{2:02d}')
 
     @property
     def fmtraw2(self):
-        """HHHH:MM formated string."""
-        return self._formatted_str('{0:s}{1:08d}{2:04d}')
+        """HHHHHHHHMM formated string."""
+        return self._formatted_str('{0:s}{1:08d}{2:02d}')
 
     @property
     def notnull(self):
