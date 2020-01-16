@@ -1,45 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
+
 #: No automatic export
 __all__ = []
 
-from collections import defaultdict
-
-import footprints
-logger = footprints.loggers.getLogger(__name__)
-from tnt.namadapter import BronxNamelistAdapter
-import collections
-import re, os, io
-import glob
-import copy
+import io
+import re
 import time
-import six
+
+from bronx.datagrip import namelist as bnamelist
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Time, Period
+from footprints.stdtypes import FPList
 
 from vortex.algo.components import BlindRun, Parallel, ParaBlindRun
-from common.algo.ifsroot import IFSParallel
-from common.algo.eps import CombiPert
 from vortex.tools import grib
-from vortex.util.structs import ShellEncoder
-from vortex.layout.dataflow import intent
 
-from bronx.stdtypes.date import Time
+from vortex.tools.parallelism import VortexWorkerBlindRun
+from vortex.layout.monitor import BasicInputMonitor
 
-#from vortex.tools.fortran import NamelistBlock
-import vortex.util.structs
-from common.tools.grib import GRIBFilter
-from common.data.namelists import NamelistContent
-from common.algo.stdpost import parallel_grib_filter, StandaloneGRIBFilter
-from footprints.stdtypes import FPTuple
-from taylorism import Boss
-from taylorism.schedulers import MaxThreadsScheduler
-from bronx.datagrip.namelist  import NamelistBlock, NamelistSet
-from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
-from vortex.tools.systems     import ExecutionError
-from vortex.layout.monitor    import BasicInputMonitor
+logger = loggers.getLogger(__name__)
 
-  
-class mfwam(Parallel, grib.EcGribDecoMixin):
+
+# LFM: docstring + info ?
+# LFM: date_cura ne sert a rien -> virer ?
+class Mfwam(Parallel, grib.EcGribDecoMixin):
     """."""
     _footprint = dict(
         attr = dict(
@@ -47,9 +36,9 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
                 values = ['MFWAM'],
             ),
             list_guess = dict(
-                type     = list,
+                type     = FPList,
                 optional = True,
-                default  = range(0,13,6),
+                default  = list(range(0, 13, 6)),
             ),
             twowinds = dict(
                 optional = True,
@@ -57,14 +46,16 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
                 default  = True,
             ),
             anabegin = dict(
+                type     = Period,
                 optional = True,
-                default  = 6,
+                default  = Period('PT6H'),
             ),
             currentbegin = dict(
+                type     = Period,
                 optional = True,
-                default  = 6,
+                default  = Period('PT6H'),
             ),
-            current_coupling = dict(  
+            current_coupling = dict(
                 optional = True,
                 default = False,
             ),
@@ -79,7 +70,7 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
                 default = 40,
             ),
             fcterm = dict(
-                type = int,
+                type = Time,
                 optional = True,
             ),
             isana = dict(
@@ -88,16 +79,16 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
                 default = True,
             ),
             deltabegin = dict(
-                type = int,
+                type     = Period,
                 optional = True,
-                default = 0,
-            ),            
-            assim = dict(  
+                default  = Period('PT0H'),
+            ),
+            assim = dict(
                 type = bool,
                 optional = True,
                 default = False,
             ),
-            date_cura = dict(  
+            date_cura = dict(
                 optional = True,
                 default = False,
             ),
@@ -110,27 +101,35 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
         )
     )
 
-
     def spawn_hook(self):
         """"""
-        super(mfwam, self).spawn_hook()
+        super(Mfwam, self).spawn_hook()
         if self.system.path.exists('fort.3'):
             self.system.subtitle('{0:s} : dump namelist <fort.3>'.format(self.realkind))
             self.system.cat('fort.3', output=False)
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
-        super(mfwam, self).prepare(rh, opts)
-        ### setup MPI compatibilite
+        super(Mfwam, self).prepare(rh, opts)
+
+        # setup MPI compatibilite
         self.env.update(
             I_MPI_COMPATIBILITY = 4,
         )
 
-# Is there a analysis wind forcing ?
+        fcterm = self.fcterm
+
+        # Is there a analysis wind forcing ?
+        # LFM: Y a t'il vraiement besoin de ce truc. Pourquoi ne pas le detecter
+        #      en regardant quels sont les gribs présents.
+        # LFM: Pourrait il y en avoir plus que deux ? Ne vaudrait il pas mieux en
+        #      traiter un ou plus (en les triant par date de validité par exemple) ?
         if self.twowinds:
             # Check for input grib files to concatenate
+            # LFM: Mauvais usage du role. role = Forcing ? WindForcing ?
             gpsec = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('Gribin'),
-                                                              kind = 'gridpoint') ]
+                                                                           kind = 'gridpoint') ]
+            # LFM: Et si il y a plus de deux gribs en entrée ???
             # Check for input grib files to concatenate
             for i, val in enumerate(gpsec):
                 if val.resource.origin in ['ana', 'analyse']:
@@ -138,97 +137,122 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
                 elif val.resource.origin in ['fcst', 'forecast']:
                     gpsec2 = i
 
-            tmpout='sfcwindin'
+            # LFM: Si sfcwindin existe déjà, on fait quoi ?
+            # Privilégier l'usage de python et non self.system
+            tmpout = 'sfcwindin'
             self.system.cp(gpsec[gpsec1].container.localpath(), tmpout, intent='inout', fmt='grib')
             self.system.cat(gpsec[gpsec2].container.localpath(), output=tmpout)
             rhgrib = gpsec[gpsec1]
-            ## recuperation fcterm
-            if self.fcterm:
-                fcterm = self.fcterm
-            else:
+
+            # recuperation fcterm
+            if fcterm is None:
                 fcterm = gpsec[gpsec2].resource.term
                 logger.info('fcterm %s', fcterm)
-            
-             ## Tweak Namelist parameters
-            namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),kind=('namelist'))
-            namcontents = namcandidate[0].rh.contents
 
-            datefin = (rhgrib.resource.date + Time(fcterm) + Time(self.deltabegin)).compact()
-            datedebana = rhgrib.resource.date - Time(self.anabegin) + Time(self.deltabegin)
-            namcontents.setmacro('CBPLTDT', datedebana.compact()) # debut analyse 
-            namcontents.setmacro('CDATEF', (rhgrib.resource.date).compact() ) # fin echeance analyse ici T0
-            namcontents.setmacro('CEPLTDT', datefin)   # fin echeance prevision
+            datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
+            datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
+            datefinana = rhgrib.resource.date
 
-        
         else:
-            rhgrib=self.context.sequence.effective_inputs(role = re.compile('Gribin'),
-                                                              kind = 'gridpoint')[0].rh
-            self.system.cp(rhgrib.container.localpath(),'sfcwindin',intent='inout',fmt='grib')
-            ## recuperation fcterm
-            if self.fcterm:
-                fcterm = self.fcterm
-            else:
+            rhgrib = self.context.sequence.effective_inputs(role = re.compile('Gribin'),
+                                                            kind = 'gridpoint')[0].rh
+            # LFM: Et si il y a plusieurs gribs en entrée ???
+            # LFM: Si sfcwindin existe déjà, on fait quoi ?
+            # LFM: Pourquoi une copie en intent=inout ?
+            self.system.cp(rhgrib.container.localpath(), 'sfcwindin', intent='inout', fmt='grib')
+
+            # recuperation fcterm
+            if fcterm is None:
                 fcterm = rhgrib.resource.term
-                logger.info('fcterm %s', fcterm) 
-            ## Tweak Namelist parameters
-            namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),kind=('namelist'))
-            namcontents = namcandidate[0].rh.contents
+                logger.info('fcterm %s', fcterm)
 
-            datefin = (rhgrib.resource.date + Time(fcterm)+ Time(self.deltabegin)).compact()
+            datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
             if self.isana:
-                datedebana = rhgrib.resource.date - Time(self.anabegin)
-                datefinana = rhgrib.resource.date 
+                # LFM: pourquoi pas : datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin ?
+                # LFM: en fonction de la réponce précédente: pourquoi ne pas sortir
+                #      ce truc du bloc if/else ?
+                datedebana = rhgrib.resource.date - self.anabegin
+                datefinana = rhgrib.resource.date
             else:
-                datedebana = rhgrib.resource.date + Time(self.deltabegin)
-                datefinana = rhgrib.resource.date + Time(self.deltabegin) 
-            namcontents.setmacro('CBPLTDT', datedebana.compact()) # debut analyse 
-            namcontents.setmacro('CDATEF', datefinana.compact() ) # fin echeance analyse ici T0
-            namcontents.setmacro('CEPLTDT', datefin)   # fin echeance prevision
-        
+                datedebana = rhgrib.resource.date + self.deltabegin
+                datefinana = datedebana
 
-        ## sort altidata file
+        # Tweak Namelist parameters
+        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'), kind=('namelist'))
+        # LFM: Et si il y a plusieurs namelists. Faire une verification ?
+        namcontents = namcandidate[0].rh.contents
+
+        namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
+        namcontents.setmacro('CDATEF', datefinana.compact() )  # fin echeance analyse ici T0
+        namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
+
+        # sort altidata file
+        # LFM: Quelle est la subtile différence entre isana et assim ?
+        # LFM: Pourquoi ajouter un switch de plus ? On regarde si il y a des obs en entrée :
+        #      Si il y en a on fait de l'assimilatiob sinon c'est que ce n'est pas de l'assim
+        # LFM: Et les autres types de données genre SAR. Pourquoi pas jouer sur
+        #      le role avec un truc à peu près claire du genre Observations ?
         if self.assim:
+            # LFM: role = Altidata ne garantie pas que la ressource soit réellement des
+            #      données altimetrique. Mauvais usage du role
             for altisec in self.context.sequence.effective_inputs(role = re.compile('Altidata'),
-                                                              kind = 'altidata'):
+                                                                  kind = 'altidata'):
 
                 r = altisec.rh
-                paramct = r.contents
-                paramct.sort()
+                r.contents.sort()
                 r.save()
                 self.system.subtitle('{0:s} file sorted'.format(r.container.localpath()))
-            namcontents.setmacro('IASSI',1)
+            namcontents.setmacro('IASSI', 1)
         else:
-            namcontents.setmacro('IASSI',0)
+            namcontents.setmacro('IASSI', 0)
 
+        if self.current_coupling:
+            namcontents.setmacro('CDATECURA', (datedebana - self.currentbegin).compact())
 
-       
-        if self.current_coupling: 
-            namcontents.setmacro('CDATECURA', (datedebana - Time(self.currentbegin)).compact() )
-            
         namcontents.setmacro('NUMOD', self.numod)
 
         if self.soce:
             namcontents.setmacro('SOCE', self.soce)
 
         for i in ['PATH', 'CPATH']:
-          # namcontents.setmacro(i, namcandidate[0].rh.container.absdir) 
-           namcontents.setmacro(i, '.')
+            namcontents.setmacro(i, '.')
 
         namcandidate[0].rh.save()
 
-        tmpout = 'fort.3'
-        ## Tweak Namelist guess dates
-        dt = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
-        outstr0 = [ " &NAOS \n   CLSOUT='{0:s}', \n / \n".format(x) for x in dt ]
-        outstr = ''.join(outstr0)
-        
-        filenam = open(tmpout, 'w')
-        with filenam as nam:
-            nam.write(outstr)   
-        filenam.close()
-                
-        self.system.cat(namcandidate[0].rh.container.localpath(), output=tmpout, outmode='a')    
-            
+        # Tweak Namelist guess dates
+        nblock1 = bnamelist.NamelistBlock('NAOS')
+        nblock1['CLSOUT'] = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
+        logger.info('Guess date namelist block:\n%s', nblock1.dumps())
+        with io.open('fort.3') as fhnam:
+            fhnam.write(nblock1.dumps())
+        # Ici, cela donne :
+        # &NAOS
+        #   CLSOUT='2020010100', '2020010106', '2020010112',
+        # /
+
+        # LFM: La formulation original ne peut pas marcher non ? Cela donne
+        # &NAOS
+        #   CLSOUT='2020010100',
+        # /
+        # &NAOS
+        #   CLSOUT='2020010106',
+        # /
+        # &NAOS
+        #   CLSOUT='2020010112',
+        # /
+        # Comment fortran comprend ce truc
+        # tmpout = 'fort.3'
+        # dt = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
+        # outstr0 = [ " &NAOS \n   CLSOUT='{0:s}', \n / \n".format(x) for x in dt ]
+        # outstr = ''.join(outstr0)
+        #
+        # filenam = open(tmpout, 'w')
+        # with filenam as nam:
+        #     nam.write(outstr)
+        # filenam.close()
+        #
+        # self.system.cat(namcandidate[0].rh.container.localpath(), output=tmpout, outmode='a')
+
         if self.promises:
             self.io_poll_sleep = 20
             self.io_poll_kwargs = dict(model='mfwam')
@@ -236,59 +260,55 @@ class mfwam(Parallel, grib.EcGribDecoMixin):
         else:
             self.flyput = False
 
-        logger.info("zorg")
 
+# LFM: Docstring + info ?
 class MfwamFilter(BlindRun):
-  
+
     _footprint = dict(
-        attr = dict( 
+        attr = dict(
             kind = dict(
-                values = ['MfwamAlti'],  
+                values = ['MfwamAlti'],
             ),
             val_alti = dict(
-                default = 'jason2',
-                type    = list,
+                default = ['jason2'],
+                type    = FPList,
             ),
         )
     )
 
-
     def postfix(self, rh, opts):
         """Set some variables according to target definition."""
-        filename_out='obs_alti'
-        if not os.path.exists(filename_out):
+        super(MfwamFilter, self).postfix(rh, opts)
+        filename_out = 'obs_alti'
+        if not self.system.path.exists(filename_out):
             raise IOError(filename_out + " must exists.")
 
         r_alti = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('Altidata'),
-                                                              kind = 'altidata') ]
+                                                                        kind = 'altidata') ]
 
-        ultimate_alti = [ val.resource.satellite for i, val in enumerate(r_alti)
-                             if val.resource.satellite not in self.val_alti ]
-  
+        ultimate_alti = [ val.resource.satellite for val in r_alti
+                          if val.resource.satellite not in self.val_alti ]
+
         ind = [ i for i, val in enumerate(r_alti)
-                  if val.resource.satellite in ultimate_alti ]
+                if val.resource.satellite in ultimate_alti ]
 
-        ## existence 3 fichier rejet* par satellite ??
-        file_rejet = glob.glob('rejet_*')
+        # existence 3 fichier rejet* par satellite ??
+        file_rejet = self.system.glob('rejet_*')
         filename_out_sorted = 'altidata'
         if len(self.val_alti) == len(file_rejet):
-            if ultimate_alti:  
+            if ultimate_alti:
                 logger.info("new sat %s concat treatment", ultimate_alti)
+                # LFM: le faire directement en python, eviter l'appel systeme
                 for ind0 in ind:
                     self.system.cat(r_alti[ind0].container.localpath(), output=filename_out, outmode='a')
-            self.system.sort('-k1', filename_out,  output=filename_out_sorted) 
-            if not os.path.exists(filename_out_sorted):
+            # LFM: Idem. Du coup pas besoin d'ajouter sort dans l'objet system
+            self.system.sort('-k1', filename_out, output=filename_out_sorted)
+            if not self.system.path.exists(filename_out_sorted):
                 raise IOError(filename_out_sorted + " must exists.")
 
 
-
-
-
-
-
-
-
-  
+# LFM: docstring + info ?
+# LFM: grille -> grid
 class MfwamGauss2Grib(ParaBlindRun):
     """."""
 
@@ -301,9 +321,13 @@ class MfwamGauss2Grib(ParaBlindRun):
                 optional = True,
                 default = 'input',
             ),
+            fortoutput = dict(
+                optional = True,
+                default = 'output',
+            ),
             grille = dict(
-                type     = list,
-                default = "glob02",
+                type = FPList,
+                default = FPList(["glob02", ])
             ),
             refreshtime = dict(
                 type = int,
@@ -324,8 +348,8 @@ class MfwamGauss2Grib(ParaBlindRun):
         )
     )
 
-
-    def prepare(self, rh, opts):
+    # LFM: docstring ?
+    def prepare(self, rh, opts):  # @UnusedVariable
 
         if self.promises:
             self.io_poll_sleep = 20
@@ -334,35 +358,29 @@ class MfwamGauss2Grib(ParaBlindRun):
         else:
             self.flyput = False
 
-
+    # LFM: docstring
     def execute(self, rh, opts):
         """"""
-        gpexe = self.context.sequence.effective_inputs(role=('master'))
-#        logger.info("gpexe %s", gpexe)
-#        rhexe = gpexe[1].rh
-#        logger.info("yo %s",rhexe.container.localpath())
         self._default_pre_execute(rh, opts)
 
         common_i = self._default_common_instructions(rh, opts)
-        # Update the common instructions
-#        common_i.update(dict(fortinput=45))
-
-        sh = self.system.sh
-        thisoutput = 'output'
-        tmout=False
+        common_i.update(dict(fortinput=self.fortinput, fortoutput=self.fortoutput))
+        tmout = False
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
                                role='GridParameters', kind='gridpoint')
-        
+
         with bm:
             while not bm.all_done or len(bm.available) > 0:
                 while bm.available:
                     gpsec = bm.pop_available().section
-                    r = gpsec.rh
-                    file_in=r.container.localpath()
-                    self._add_instructions(common_i,dict(file_in=[file_in,],grille=[self.grille,],file_out=[r.container.localpath(),]))
-                        
+                    file_in = gpsec.rh.container.localpath()
+                    self._add_instructions(common_i,
+                                           dict(file_in=[file_in, ],
+                                                grille=[self.grille, ],
+                                                file_out=[file_in, ]))
+
                 if not (bm.all_done or len(bm.available) > 0):
                     # Timeout ?
                     tmout = bm.is_timedout(self.timeout)
@@ -370,18 +388,25 @@ class MfwamGauss2Grib(ParaBlindRun):
                     break
                 # Wait a little bit :-)
                 time.sleep(1)
-                bm.health_check(interval=30)            
-        
+                bm.health_check(interval=30)
+
         self._default_post_execute(rh, opts)
-        
+
         for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
             logger.error("We were unable to fetch the following file: %s", failed_file)
             if self.fatal:
-                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),traceback=False)
+                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),
+                                           traceback=False)
 
         if tmout:
             raise IOError("The waiting loop timed out")
- 
+
+
+# LFM: docstring
+# LFM: grille -> grid ?
+# LFM: file_exe supprimé -> normalement ne sert à rien !
+# LFM: On fait le présuposé que "../" + dom + ".nam" existe : il faudrait au moins le vérifier
+#      dans l'algocomponent
 class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
     """."""
 
@@ -390,157 +415,38 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             kind = dict(
                 values  = ['mfwamgauss2grib'],
             ),
-            fortinput = dict(
-                optional = True,
-                default = 'input',
-            ),
+            fortinput = dict(),
+            fortoutput = dict(),
             # Input/Output data
             file_in = dict(),
-            file_exe = dict(
-                optional = True,
-                default = 'transfo_grib.exe',
-                ),
             grille = dict(
-                type = list,
-                default ="glob02",
-                ),
+                type = FPList,
+            ),
             file_out = dict(),
         )
     )
 
-
-    def vortex_task(self, **kwargs):
+    # LFM: docstring
+    def vortex_task(self, **kwargs):  # @UnusedVariable
         """"""
         logger.info("Starting the post-processing")
 
         sh = self.system.sh
-        thisoutput = 'output'
-        logger.info("Post-processing of %s",self.file_in)
-        
-        #Prepare the working directory
-        cwd=sh.pwd()
-        tmpwd=sh.path.join(cwd,self.file_in+'.process.d')
+        logger.info("Post-processing of %s", self.file_in)
+
+        # Prepare the working directory
+        cwd = sh.pwd()
+        tmpwd = sh.path.join(cwd, self.file_in + '.process.d')
         sh.mkdir(tmpwd)
-        sh.softlink(sh.path.join(cwd,self.file_in),sh.path.join(tmpwd,self.fortinput))
-        sh.cp(sh.path.join(cwd,self.file_exe),sh.path.join(tmpwd,self.file_exe))
+        sh.softlink(sh.path.join(cwd, self.file_in), sh.path.join(tmpwd, self.fortinput))
         sh.cd(tmpwd)
 
-
         for dom in self.grille:
-            self.system.title('domain : {:s}'.format(dom))
-            ### copy of namelist
-            self.system.cp("../"+dom+".nam",'fort.2')
-            ### execution
+            sh.title('domain : {:s}'.format(dom))
+            # copy of namelist
+            sh.cp(sh.path.join(cwd, dom + ".nam", 'fort.2'))
+            # execution
             self.local_spawn("output.log")
-            ### copie output
-            sh.mv(thisoutput, "../reg{0:s}_{1:s}".format(self.file_out,dom), fmt = 'grib')
-                        
-
-        
-        
-
-class MfwamGauss2GribSEQ(BlindRun):
-    """."""
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values  = ['mfwamgauss2gribSEQ'],
-            ),
-            fortinput = dict(
-                optional = True,
-                default = 'input',
-            ),
-            grille = dict(
-                type     = list,
-                default = "glob02",
-            ),
-            refreshtime = dict(
-                type = int,
-                optional = True,
-                default = 20,
-            ),
-            timeout = dict(
-                type = int,
-                optional = True,
-                default = 600,
-            ),
-            flyargs = dict(
-                default = ('regMPP', 'regAPP',),
-            ),
-            flypoll = dict(
-                default = 'iopoll_marine',
-            ),
-        )
-    )
-
-
-    def prepare(self, rh, opts):
-
-        if self.promises:
-            self.io_poll_sleep = 20
-            self.io_poll_kwargs = dict(model=rh.resource.model)
-            self.flyput = True
-        else:
-            self.flyput = False
-
-
-    def execute(self, rh, opts):
-        """"""
-#        gpsec = self.context.sequence.effective_inputs(role=('GridParameters'))
-#        gpsec.sort(key=lambda s: s.rh.resource.term)
-#        logger.info("gpsec %s", gpsec)
-
-        sh = self.system.sh
-        thisoutput = 'output'
-        tmout=False
-
-        # Monitor for the input files
-        bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
-                               role='GridParameters', kind='gridpoint')
-        
-        with bm:
-            while not bm.all_done or len(bm.available) > 0:
-                while bm.available:
-                    gpsec = bm.pop_available().section
-                    for dom in self.grille:
-                        self.system.title('domain : {:s}'.format(dom))
-        
-                        self.system.cp(dom+".nam",'fort.2')
-
-                        
-                        r = gpsec.rh
-
-                        # Some preventive cleaning
-                        self.system.remove(self.fortinput)
-                        self.system.remove(thisoutput)
-
-                        self.system.title('Loop on files: {:s}'.format(r.container.localpath()))
-                        self.system.softlink(r.container.localpath(), self.fortinput)
-
-
-                        super(MfwamGauss2Grib, self).execute(rh, opts)
-
-                        ### copie output
-                        self.system.cp(thisoutput, "reg{0:s}_{1:s}".format(r.container.localpath(),dom), fmt = 'grib')
-                        
-                if not (bm.all_done or len(bm.available) > 0):
-                    # Timeout ?
-                    tmout = bm.is_timedout(self.timeout)
-                if tmout:
-                    break
-                # Wait a little bit :-)
-                time.sleep(1)
-                bm.health_check(interval=30)            
-
-        for failed_file in [e.section.rh.container.localpath() for e in six.itervalues(bm.failed)]:
-            logger.error("We were unable to fetch the following file: %s", failed_file)
-            if self.fatal:
-                self.delayed_exception_add(IOError("Unable to fetch {:s}".format(failed_file)),traceback=False)
-
-        if tmout:
-            raise IOError("The waiting loop timed out")
-
-
-
-
+            # copie output
+            sh.mv(self.fortoutput,
+                  sh.path.join(cwd, "reg{0:s}_{1:s}".format(self.file_out, dom)), fmt = 'grib')

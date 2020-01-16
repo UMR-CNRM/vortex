@@ -1,13 +1,12 @@
 default:
     style: olive
     sets:
-        # Arpege world
+        # Hycom world
         -   geometry: hycomatl2
             cutoff:
                 - assim
                 - production
             model: hycom
-            namespace: vortex.multi.fr
             cycle: cy42_op2.67
             gnamespace: 'gco.multi.fr'
             vapp: hycom

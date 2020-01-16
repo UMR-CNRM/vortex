@@ -548,7 +548,6 @@ class IrregularGeometry(HorizontalGeometry):
 
     _tag_topcls = False
 
-
     def __init__(self, **kw):
         """
         :param str tag: The geometry's name (if no **tag** attributes is provided,
@@ -574,10 +573,6 @@ class IrregularGeometry(HorizontalGeometry):
         else:
             fmts = 'kind={0:s}, r={1:s}, global, nlon={3!s}, nlat={4!s}'
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
-
-
-class MassifGeometry(UnstructuredGeometry):
-    """Grid describing the partition of a mountain range in massifs."""
 
 
 # Pre-defined footprint attribute for any HorizontalGeometry

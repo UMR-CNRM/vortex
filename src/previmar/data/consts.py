@@ -230,14 +230,15 @@ class CouplingGridOasis(GenvUsageModelResource):
         return 'CouplingGridOasis'
 
 
-
+# LFM: Docstring + Info
+# LFM: et en anglais ?
 class AltimetriePreproc(GenvModelResource):
 
     _footprint = dict(
         info = '',
         attr = dict(
             nativefmt = dict(
-                values = ['ascii','foo', 'unknown'],
+                values = ['ascii', 'foo', 'unknown'],
             ),
             kind = dict(
                 values = ['preprocalti'],
@@ -246,7 +247,7 @@ class AltimetriePreproc(GenvModelResource):
                 default = '[model]_[fields]',
             ),
             fields = dict(
-                values = ['filtrevalue','bathyref','fort_alti','cst_alti'],
+                values = ['filtrevalue', 'bathyref', 'fort_alti', 'cst_alti'],
                 remap = {
                     'filtrevalue': 'fort_alti',
                     'bathyref': 'cst_alti',
@@ -260,6 +261,7 @@ class AltimetriePreproc(GenvModelResource):
         return 'preprocalti'
 
 
+# LFM: Docstring + Info
 class WamPreproc(GenvModelResource):
 
     _footprint = dict(
@@ -282,6 +284,7 @@ class WamPreproc(GenvModelResource):
         return 'wampreproc'
 
 
+# LFM: Docstring + Info
 class WamGridPost(GenvModelResource):
 
     _footprint = dict(
@@ -302,5 +305,3 @@ class WamGridPost(GenvModelResource):
     @property
     def realkind(self):
         return 'wampreproc'
-
-

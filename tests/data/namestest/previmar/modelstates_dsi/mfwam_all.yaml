@@ -1,0 +1,50 @@
+default:
+    style: olive
+    sets:
+        # Mfwam world
+        -   geometry: globalirr02
+            cutoff: assim
+            model: mfwam
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: mfwam
+            vconf: globalarp02 
+            namespace:
+                - '[suite].inline.fr'
+                - '[suite].archive.fr'
+            date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt: grib
+            suite: oper
+            filling: surf
+        tests:
+            -   cutoff:
+                - assim
+                - production
+    # Historic
+    -   commons:
+            kind:
+                - historic
+                - InitWave
+            fields:
+                - LAW
+                - BLS
+            term:
+                - 0
+                - 24
+                - 43
+            nativefmt: grib
+            suite: oper
+            filling: surf
+        tests:
+            -   cutoff:
+                - assim
+                - production

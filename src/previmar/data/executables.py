@@ -200,6 +200,7 @@ class FiltrageGrib(Script):
         return 'filteringGrib'
 
 
+# LFM: Le remap sur le gvar ça sert à quoi ?
 class FiltrageGribWave(FiltrageGrib):
     """Base class."""
     _footprint = [
@@ -331,6 +332,7 @@ class SurScriptSurges(BlackBox):
         return 'SurScriptBinary'
 
 
+# LFM: docstring
 class MasterWaves(OceanographicModel):
     """."""
     _footprint = [
@@ -356,6 +358,10 @@ class MasterWaves(OceanographicModel):
         return 'WaveChief'
 
 
+# LFM: docstring + info
+# LFM: datedeb, datefin: en anglais ?
+# LFM: binopts est déjà une chaîne de caractères... pas la peine de le redire.
+# LFM: liste des satellite en dur. pourquoi ?
 class Filteralti(BlackBox):
     """."""
     _footprint = [
@@ -370,7 +376,7 @@ class Filteralti(BlackBox):
                     default  = 'master_[model]_filter_alti_[satellite]',
                 ),
                 satellite = dict(
-                    values = ['jason2','saral','cryosat2'],
+                    values = ['jason2', 'saral', 'cryosat2'],
                 ),
                 datedeb = dict(
                     type     = Date,
@@ -378,9 +384,6 @@ class Filteralti(BlackBox):
                 datefin = dict(
                     type     = Date,
                 ),
-                binopts = dict(
-                    type     = str,
-                )
             )
         )
     ]
@@ -390,6 +393,7 @@ class Filteralti(BlackBox):
         return 'Filteralti'
 
 
+# LFM: docstring + info ?
 class InterpWave(BlackBox):
     """."""
     _footprint = [

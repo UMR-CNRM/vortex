@@ -187,17 +187,8 @@ class OpArchive(Provider):
                 if entry == 'histfix':
                     if self.block == 'coupling_fc' and resource.model == 'arome':
                         fuzzy = self.block
-                    elif resource.model == 'hycom':
-                        fuzzy = (fuzzyname('prefix', 'historic', 'hycom_gss') +
-                                 '.'.join((config, resource.date.ymdh[4:],
-                                           fuzzyname('suffix', 'historic', 'hycom_gss'))))
-                    elif resource.model == 'mfwam':
-                        rr = archive_suffix(resource.model, resource.cutoff,
-                                            resource.date, vconf=self.vconf)
-                        fuzzy = (fuzzyname('prefix', 'historic', 'mfwam_gss') +
-                                 '_'.join((rr + '00',resource.term.fmtraw2)))
                     else:
-                        igakey = getattr(self, keyattr)
+                        igakey = getattr(self, keyattr, '')
                         if igakey in ('pearp', 'arpege', 'arp_court', 'aearp'):
                             keyattr = igakey
                         else:
@@ -207,16 +198,19 @@ class OpArchive(Provider):
                     if keyattr == 'modelkey':
                         if self.block == 'coupling_fc' and resource.model == 'arome':
                             fuzzy = 'guess_'
-                        elif resource.model == 'mfwam':
-                            rr = archive_suffix(resource.model, resource.cutoff,
-                                            resource.date, vconf=self.vconf)
-                            fuzzy = (fuzzyname('prefix', 'historic', 'mfwam_spc') +
-                                 '_'.join((rr + '00',resource.term.fmtraw2)))
                         else:
                             fuzzy = 'icmsh'
                             modelkey = resource.model + '_' + self.vapp
                             if modelkey in ('arome_arome', 'surfex_arome', 'aladin_aladin', 'surfex_aladin'):
                                 fuzzy = fuzzy.upper()
+                elif entry == 'prefix':
+                    if keyattr == 'fieldskey':
+                        keyattr = resource.model + '_' + resource.fields
+                    else:
+                        keyattr = resource.model
+                    fuzzy = fuzzyname(entry, resource.realkind, keyattr)
+                    if resource.model == 'hycom':
+                        fuzzy += config + '.'
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
                     if self.vapp == 'mocage':
@@ -224,6 +218,12 @@ class OpArchive(Provider):
                         fuzzy = '+' + valid
                     if keyattr == 'modelkey' and self.block == 'coupling_fc':
                         fuzzy = ''
+                    if resource.model == 'mfwam':
+                        rr = archive_suffix(resource.model, resource.cutoff,
+                                            resource.date, vconf=self.vconf)
+                        fuzzy = rr + '00_' + resource.term.fmtraw2 + '00'
+                    if resource.model == 'hycom':
+                        fuzzy = (resource.date + resource.term).ymdh[4:]
                 elif entry == 'suffix':
                     if keyattr == 'modelkey':
                         fuzzy = fuzzyname('suffix', resource.realkind, resource.model + '_' + self.igakey, default='')
@@ -233,8 +233,6 @@ class OpArchive(Provider):
                         if (self.vapp == 'arpege' and self.vconf == 'aearp' and
                                 self.block == 'forecast_infl' and resource.model == 'surfex'):
                             fuzzy += '_infl'
-                    elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
-                        fuzzy = resource.fields + '_' + config
                 elif entry == 'gribfix':
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)

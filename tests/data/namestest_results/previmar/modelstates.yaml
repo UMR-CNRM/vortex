@@ -1,0 +1,140 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: vortex.multi.fr
+        vapp: hycom
+        vconf: atl@fcarp
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000A/minim/analysis.surf-hycom.atl.fa
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: vortex.multi.fr
+        vapp: mfwam
+        vconf: globalarp02
+      location: vortex://vortex.multi.fr/mfwam/globalarp02/ABCD/20180101T0000P/minim/analysis.surf-mfwam.global.fa
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: vortex.multi.fr
+        vapp: hycom
+        vconf: atl@fcarp
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000P/minim/analysis.surf-hycom.atl.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: abcd
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000A/minim/analysis.surf-hycom.atl.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/mfwam/globalarp02/ABCD/20180101T0000P/minim/analysis.surf-mfwam.global.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000P/minim/analysis.surf-hycom.atl.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: oper
+      kind: analysis
+      nativefmt: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000A/minim/analysis.full-hycom.atl.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/mfwam/globalarp02/OPER/20180101T0000P/minim/analysis.full-mfwam.global.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000P/minim/analysis.full-hycom.atl.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: minim
+      experiment: oper
+      kind: analysis
+      nativefmt: grib
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000A/minim/analysis.full-hycom.atl.grib
+    - default: *id002
+      location: vortex://vsop.multi.fr/mfwam/globalarp02/OPER/20180101T0000P/minim/analysis.full-mfwam.global.grib
+    - default: *id003
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000P/minim/analysis.full-hycom.atl.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      nativefmt: null
+      scenario: RCP6.0
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000A/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.fa
+    - default: *id002
+      location: vortex://vortex.multi.fr/mfwam/globalarp02/ABCD/20180101T0000P/sRCP6.0/forecast/historic.mfwam.global+0000:00.fa
+    - default: *id003
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000P/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      nativefmt: grib
+      scenario: RCP6.0
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000A/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/mfwam/globalarp02/ABCD/20180101T0000P/sRCP6.0/forecast/historic.mfwam.global+0000:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000P/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      kind: historic
+      nativefmt: nc
+      scenario: RCP6.0
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000A/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.netcdf
+    - default: *id002
+      location: vortex://vortex.multi.fr/mfwam/globalarp02/ABCD/20180101T0000P/sRCP6.0/forecast/historic.mfwam.global+0000:00.netcdf
+    - default: *id003
+      location: vortex://vortex.multi.fr/hycom/atl@fcarp/ABCD/20180101T0000P/sRCP6.0/forecast/historic.hycom.atl-00dg000+0000:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: oper
+      kind: historic
+      nativefmt: fa
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000A/forecast/historic.hycom.atl-00dg000+0024:00.fa
+    - default: *id002
+      location: vortex://vsop.multi.fr/mfwam/globalarp02/OPER/20180101T0000P/forecast/historic.mfwam.global+0024:00.fa
+    - default: *id003
+      location: vortex://vsop.multi.fr/hycom/atl@fcarp/OPER/20180101T0000P/forecast/historic.hycom.atl-00dg000+0024:00.fa

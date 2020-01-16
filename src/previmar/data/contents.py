@@ -32,18 +32,16 @@ class SurgeTemplate(AlmostListContent):
 
 class AltidataContent(AlmostListContent):
     """Multi-columns files with altimetric measurement by positions."""
-    def sort(self, **sort_opts):
+
+    # LFM: C'est quoi l'idée ? Virer les doublons et trier ? Cela mériterait d'être
+    #      dans la docstring !
+    # LFM: Tu ajoutes les lignes triées à la fin de l'existant : c'est normal ???
+    def sort(self, ** sort_opts):
         """Sort the current object."""
-       # logger.info("data %s", self._data)
-       # self._data.sort(**sort_opts)
         lines = {}
         for line in self.data:
-            tokens = line.strip().split(' ')
-            key = (tokens[0], tokens[1], tokens[2], tokens[3])
+            key = tuple(line.strip().split(' ')[4:])
             lines[key] = line
 
-        lines = lines.values()
-        lines.sort()
-        for line in lines:
+        for line in sorted(lines.values()):
             self._data.append(line)
-        #logger.info("data %s", self._data)

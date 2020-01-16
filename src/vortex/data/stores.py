@@ -576,7 +576,6 @@ class MultiStore(footprints.FootprintBase):
 
     def use_cache(self):
         """Boolean function to check if any included store use a local cache."""
-        logger.info("self.openedstores %s", self.openedstores)
         return any([x.use_cache() for x in self.openedstores])
 
     def has_fast_check(self):
@@ -1033,8 +1032,6 @@ class Finder(Store):
         """Delegates to ``system`` the file transfer of ``remote`` to ``local``."""
         rpath = self.fullpath(remote)
         logger.info('ftpget on ftp://%s/%s (to: %s)', self.hostname(), rpath, local)
-       # logger.info("remote user %s", remote['username'])
-       # remote["username"]='moce001'
         rc = self.system.smartftget(
             rpath,
             local,

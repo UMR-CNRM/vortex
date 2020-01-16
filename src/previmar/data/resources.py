@@ -55,7 +55,10 @@ class SolutionPoint(FlowResource):
         return 'pts'
 
 
-class SolutionPointIMB(SolutionPoint):
+# LFM: Faire de l'anglais...
+# LFM: basename_info ne sert à rien !
+@namebuilding_insert('radical', lambda s: s.fields + '.' + s.nested_grid)
+class SolutionPointWithNestedGrid(SolutionPoint):
     """Class for port solutions of the HYCOM model i.e s*pts (ascii file)."""
     _footprint = dict(
         info = 'Surges model point solution',
@@ -64,22 +67,17 @@ class SolutionPointIMB(SolutionPoint):
                 values = ['PtsImb'],
             ),
             fields = dict(
-	      values = ['s_pts'],
+                values = ['s_pts'],
             ),
-	    modele_imbrique = dict(
-	      values = ['reunion','mayotte'],
-	    ),
+            nested_grid = dict(
+                values = ['reunion', 'mayotte'],
+            ),
         )
     )
 
     @property
     def realkind(self):
         return 'pts'
-
-    def basename_info(self):
-        return dict(
-            radical = self.fields + '.' + self.modele_imbrique,
-        )
 
 
 @namebuilding_insert('radical', lambda s: s.fields)
@@ -317,15 +315,10 @@ class TarResult(GeoFlowResource):
     def realkind(self):
         return 'surges_tarfile'
 
-    def basename_info(self):
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = [self.geometry.area, self.geometry.rnice],
-            radical = self.realkind,
-            src     = self.model,
-        )
 
-
+# LFM: Pourquoi pas WaveInit ???
+# LFM: realkind = historic. Pourquoi pas, mais dans ce cas pourquoi les
+#      fichiers de sorties (classe suivante ont un realkind modifié ?
 @namebuilding_append('src', lambda s: s.fields)
 class InitWave(Historic):
     """Class of"""
@@ -352,24 +345,13 @@ class InitWave(Historic):
     def realkind(self):
         return 'historic'
 
-    def basename_info(self):
-        lgeo = [self.geometry.area, self.geometry.rnice]
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = lgeo,
-            radical = self.realkind + '.' + self.fields,
-            src     = self.model,
-            term    = self.term.fmthm,
-        )
-
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.fields == 'BLS':
-            return '(icmshfix:modelkey)'
-	else:
-	    return '(histfix:modelkey)'
+        return '(prefix:fieldskey)(termfix:modelkey)(suffix:modelkey)'
 
 
+# LFM: Pourquoi pas WaveOutput ???
+# LFM: Je ne vois pas le rapport entre grille irréguliére et format
 class OutputWave(GridPoint):
     """Class of"""
     _footprint = dict(
@@ -385,7 +367,7 @@ class OutputWave(GridPoint):
                 },
             ),
             nativefmt = dict(
-                default = 'unknown' # grille irreguliere
+                default = 'unknown'  # grille irreguliere
             ),
         )
     )
@@ -395,6 +377,10 @@ class OutputWave(GridPoint):
         return 'WaveOutput'
 
 
+# LFM: Les nom de classe doivent être en camelcase -> regle de codage
+# LFM: WamIni ??? kind à mettre en cohérence ?
+# LFM: Le nom laisse penser qu'il s'agit de GRIB, si c'est le cas pourquoi pas
+#      utiliser la classe GridPoint
 class INITWAM(GeoFlowResource):
 
     _footprint = dict(
@@ -410,21 +396,11 @@ class INITWAM(GeoFlowResource):
     )
 
 
-#class WAMGRIDINFO(GeoFlowResource):
-
-    #_footprint = dict(
-        #info = 'file for Extraction grb',
-        #attr = dict(
-            #nativefmt = dict(
-                #default = ['foo'],
-            #),
-            #kind = dict(
-                #values = ['WAM', 'wam_info'],
-            #),
-        #)
-    #)
-
-
+# LFM: docstring ?
+# LFM: Pourquoi pas WaveAltidata ?
+# LFM: pourquoi deux kind ?
+# LFM: Pourquoi mettre en dur la liste des satellites
+# LFM: basename_info : ne sert à rien ! C'est quoi le but ?
 class AltidataWave(FlowResource):
 
     _footprint = dict(
@@ -433,14 +409,10 @@ class AltidataWave(FlowResource):
             nativefmt = dict(
                 default = 'ascii',
             ),
-#            scope = dict(
-#                optional = True,
-#                default = 'assim',
-#            ),
             satellite = dict(
-                values = ['jason2','cryosat2','saral','allsat',
+                values = ['jason2', 'cryosat2', 'saral', 'allsat',
                           'altidata', 'obs_alti', 'sentinel3',
-                          'S3al3','cfosat'],
+                          'S3al3', 'cfosat'],
                 optional = True,
                 default = 'allsat',
                 remap = {
@@ -449,10 +421,10 @@ class AltidataWave(FlowResource):
                 },
             ),
             kind = dict(
-                values = ['AltidataWave','altidata'],
+                values = ['AltidataWave', 'altidata'],
             ),
-            clscontents=dict(
-                    default = AltidataContent
+            clscontents = dict(
+                default = AltidataContent
             ),
         )
     )
@@ -468,6 +440,10 @@ class AltidataWave(FlowResource):
             src     = self.model,
         )
 
+
+# LFM: Meme remarque que précédement
+# LFM: C'est typiquement le cas où il faut faire de l'héritage car il y a trop
+#      de ressemblance avec la classe précédente
 class SARdataWave(FlowResource):
 
     _footprint = dict(
@@ -476,12 +452,8 @@ class SARdataWave(FlowResource):
             nativefmt = dict(
                 default = 'ascii',
             ),
-#            scope = dict(
-#                optional = True,
-#                default = 'assim',
-#            ),
             satellite = dict(
-                values = ['sentinel1','cfosat','allsat'],
+                values = ['sentinel1', 'cfosat', 'allsat'],
                 optional = True,
                 default = 'allsat',
             ),
@@ -503,6 +475,8 @@ class SARdataWave(FlowResource):
         )
 
 
+# LFM: docstring
+# LFM: WaveAltidataDiagnostic ?
 class DiagAlti(AltidataWave):
 
     _footprint = dict(
@@ -519,6 +493,8 @@ class DiagAlti(AltidataWave):
         return 'diagalti'
 
 
+# LFM: docstring
+# LFM: En quoi est-ce différent de ce que contient OutputWave ?
 class WaveCurrent(FlowResource):
 
     _footprint = dict(

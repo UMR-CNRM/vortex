@@ -200,8 +200,7 @@ def global_pnames(provider, resource):
     if 'model' not in info:
         info['model'] = getattr(provider, 'model', getattr(provider, 'vapp'))
     # In the inline cache, Hycom data are stored in the "vagues" directory
-    info['model'] = dict(hycom='vagues').get(info['model'], info['model'])
-    info['model'] = dict(mfwam='vagues').get(info['model'], info['model'])
+    info['model'] = dict(hycom='vagues', mfwam='vagues').get(info['model'], info['model'])
     # The suite may not e consistent between the vortex cache and the inline cache
     info['suite'] = suite_map.get(info['suite'], info['suite'])
     return info
@@ -327,9 +326,13 @@ def historic_bnames(resource, provider):
             else:
                 suffix = '.{0:03d}'.format(resource.term.hour)
         return '{0:s}_{1:s}.{2:s}{3:s}'.format(prefix, config, date_val, suffix)
+
     if resource.model == 'mfwam':
-        prefix = resource.fields.upper()
-        return prefix + resource.date.ymdhms + '_' + resource.term.fmtraw2
+        if hasattr(resource, 'fields'):
+            prefix = resource.fields.upper()
+            return prefix + resource.date.ymdhms + '_' + resource.term.fmtraw2
+        else:
+            return resource.date.ymdhms + '_' + resource.term.fmtraw2
 
     if provider.vconf == 'camsfcst':
         return 'HM' + resource.geometry.area + '+' + resource.term
@@ -403,15 +406,6 @@ def WaveCurrent_bnames(resource, provider):
     """docstring for"""
     if resource.model == 'mfwam':
         return 'currents_{0:s}'.format(resource.date.ymdhm)
-
-
-#def WaveWindandice_bnames(resource, provider):
-    #"""docstring"""
-    #if resource.model == 'mfwam':
-        #if provider.vconf == 'glocep01': ## dictinction job1 et job2
-            #return 'sfcwindin{0:s}_{1:s}'.format( '1', resource.date.ymdhm)
-        #else:
-            #return 'windandice_{0:s}'.format(resource.date.ymdhm)
 
 
 def AltidataWave_bnames(resource, provider):

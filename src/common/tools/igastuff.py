@@ -20,11 +20,14 @@ fuzzystr = dict(
     prefix = dict(
         # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
         gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE', hycom_grb='vent' ),
-        historic = dict( hycom_gss='s_init0_', mfwam_gss='LAW_', mfwam_spc='BLS_' ),
+        historic = dict( hycom='s_init0_', mfwam='BLS_', mfwam_BLS='BLS_', mfwam_LAW='LAW_' ),
+        analysis = dict( hycom='s_init0_', mfwam='LAW_')
     ),
     suffix = dict(
         bgstderr = dict( input = 'in', output = 'out' ),
-        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx', hycom_gss = 'gz' ),
+        analysis = dict( hycom_hycom = '.gz', hycom_surcotes = '.gz', hycom_surcotes_oi = '.gz'),
+        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx',
+                       hycom_hycom = '.gz', hycom_surcotes = '.gz', hycom_surcotes_oi = '.gz'),
         gridpoint=dict( hycom_grb= 'grb' ),
     ),
     term0003 = dict(
@@ -214,11 +217,11 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                          'med@anaro': 'surcotes',
                          'atl@fcaro': 'surcotes',
                          'med@fcaro': 'surcotes',
-                         'atl@red'  : 'surcotes',
-                         'med@red'  : 'surcotes',
+                         'atl@red': 'surcotes',
+                         'med@red': 'surcotes',
                          'oin@ancep': 'surcotes_oi',
                          'oin@fcaro': 'surcotes_oi',
-                         'oin@red'  : 'surcotes_oi', },
+                         'oin@red': 'surcotes_oi', },
                'mfwam': {'globalcep02': 'mfwamglocep02',
                          'globalcep01': 'mfwamglocep01',
                          'globalarp02': 'mfwamgloarp02',

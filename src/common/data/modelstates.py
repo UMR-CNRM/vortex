@@ -74,8 +74,8 @@ class Analysis(GeoFlowResource):
                 ananame = 'analyse_surf'
             elif self.model == 'surfex':
                 ananame = 'analyse'
-            elif self.model == 'hycom' or self.model == 'mfwam':
-                ananame = '(histfix:igakey)'
+            elif self.model in ('hycom', 'mfwam'):
+                ananame = '(prefix:modelkey)(termfix:modelkey)(suffix:modelkey)'
             else:
                 ananame = 'analyse_surface1'
 
@@ -99,24 +99,6 @@ class Analysis(GeoFlowResource):
                 olivename_map = { k: x + '.sfx' for k, x in olivename_map.items() }
         return olivename_map[self.filling]
 
-    def _geo2basename_info(self, add_stretching=True):
-        """Return an array describing the geometry for the Vortex's name builder."""
-        if isinstance(self.geometry, CurvlinearGeometry) and self.model == 'hycom':
-            # return the old naming convention for surges restart files
-            lgeo = [self.geometry.area, self.geometry.rnice]
-            return lgeo
-        else:
-            return super(Analysis, self)._geo2basename_info(add_stretching=add_stretching)
-
-    def basename_info(self):
-        """Generic information, radical = ``analysis``."""
-        return dict(
-            fmt     = self.nativefmt,
-            geo     = self._geo2basename_info(),
-            radical = self.realkind,
-            src     = [self.filling, self.model],
-        )
-
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         if self.model == 'arome':
@@ -129,7 +111,7 @@ class Analysis(GeoFlowResource):
                 directory = 'workdir/analyse'
             else:
                 directory = 'autres'
-        elif self.model == 'hycom' or self.model == 'mfwam':
+        elif self.model in ('hycom', 'mfwam'):
             if self.filling == 'surf':
                 directory = 'guess'
         elif self.model == 'surfex':
@@ -210,13 +192,12 @@ class Historic(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        if self.model == 'mfwam':
-            return '(icmshfix:modelkey)'
-        if self.model == 'hycom':
-            return '(histfix:modelkey)'
-
-        prefix = '(icmshfix:modelkey)'
-        midfix = '(histfix:igakey)'
+        if self.model in ('mfwam', 'hycom'):
+            prefix = '(prefix:modelkey)'
+            midfix = ''
+        else:
+            prefix = '(icmshfix:modelkey)'
+            midfix = '(histfix:igakey)'
         termfix = '(termfix:modelkey)'
         suffix = '(suffix:modelkey)'
 

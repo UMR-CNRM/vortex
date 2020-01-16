@@ -84,8 +84,6 @@ class IgaFinder(Finder):
         super(IgaFinder, self).__init__(*args, **kw)
 
     def fullpath(self, remote):
-        logger.info('remote %s',remote['path'])
-        logger.info('rootdir %s',self.rootdir)
         if remote['query'].get('relative', False):
             return remote['path'].lstrip('/')
         else:
