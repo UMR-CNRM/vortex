@@ -31,6 +31,11 @@ Bull Targets
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Epona
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 CNRM Targets
 ------------
 

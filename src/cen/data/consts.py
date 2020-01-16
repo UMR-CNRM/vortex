@@ -99,3 +99,28 @@ class climTG(GenvModelGeoResource):
             # With the standard provider, the usual keys will be used.
         )
         return nbi
+
+
+class GridTarget(GenvModelGeoResource):
+    """
+    Resource describing a grid for interpolation of data based on massifs geometry
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ["interpolgrid"],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf', 'nc'],
+                default = 'netcdf',
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return self.kind

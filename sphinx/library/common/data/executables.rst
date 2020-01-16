@@ -13,6 +13,10 @@ Package
 
 .. autodata:: __all__
 
+Binary Decorator
+----------------
+
+.. autofunction:: gmkpack_bin_deco
 
 Classes
 -------

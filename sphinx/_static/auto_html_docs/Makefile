@@ -103,7 +103,7 @@ $(REP_IMAGES_AUTO)%.png: $(REP_IMAGES_SRC)%.svg
 %$(MD_SLIDEEXT): %.$(MD_BASEEXT) $(REVEAL.JS) $(COMDEP)
 	$(PROCESSOR_DEF) --style=$(HIGHLIGHT.STYLE_S) --content2slides $< $@
 
-%$(MD_DOCEXT): %.$(MD_BASEEXT) $(MARKED.JS) $(HIGHLIGHT.JS) $(COMDEP)
+%$(MD_DOCEXT): %.$(MD_BASEEXT) $(REVEAL.JS) $(MARKED.JS) $(HIGHLIGHT.JS) $(COMDEP)
 	$(PROCESSOR_DEF) --style=$(HIGHLIGHT.STYLE_D) --content2html $< $@
 
 # House keeping

@@ -10,7 +10,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints
 
-from vortex.data.stores import Store
+from vortex.data.abstractstores import Store
 from vortex.syntax.stdattrs import compressionpipeline
 
 #: No automatic export

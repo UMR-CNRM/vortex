@@ -17,6 +17,16 @@ Package
 Classes
 -------
  
+.. autoclass:: StoreGlue
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IniStoreGlue
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: OliveArchiveStore
    :show-inheritance:
    :members:
