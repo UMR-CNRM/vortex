@@ -1,0 +1,52 @@
+checkconfigs:
+   pystd:
+      label: code
+      checkers:
+         - type: pycodestyle
+           max_line_length: 120
+           ignore: [E401, E402, W504]
+   pylong:
+      label: code
+      checkers:
+         - type: pycodestyle
+           max_line_length: 200
+           ignore: [E401, E402, W504]
+   docweak:
+      label: docs
+      checkers:
+         - type: pydocstyle
+           convention: pep257
+           # Idealy, D202, D204, D205 and D400 should be checked but there is a lot
+           # of work !
+           ignore: [D102, D103, D105, D107, D200, D202, D204, D205, D400, D401]
+   docstrict:
+      label: docs
+      checkers:
+         - type: pydocstyle
+           convention: pep257
+           ignore: [D105, D107, D200, D401]
+
+places:
+   site:
+      path: site
+      footprints_detect: true
+      checkconfigs:
+         - pystd
+         - docstrict
+   weaksite:
+      path: site/bronx/fancies
+      footprints_detect: true
+      checkconfigs:
+         - pystd
+         - docweak
+   src:
+      path: src
+      footprints_detect: true
+      checkconfigs:
+         - pystd
+         - docweak
+   test:
+      path: src
+      footprints_detect: true
+      checkconfigs:
+         - pylong
