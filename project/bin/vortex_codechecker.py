@@ -7,6 +7,7 @@ Run various code checkers on the Vortex' repository.
 
 import abc
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
+import concurrent.futures
 import logging
 import os
 import re
@@ -143,7 +144,7 @@ def _property_auto_add(* what):
     return _property_auto_add_deco
 
 
-@_property_auto_add('path', 'shortpath', 'code', 'fplines', 'expanded_fplines')
+@_property_auto_add('path', 'shortpath', 'fpdetect')
 class VortexPythonCode(object):
     """The content of a Vortex' Python code file."""
 
@@ -152,22 +153,55 @@ class VortexPythonCode(object):
         self._path = path
         self._shortpath = shortpath
         self._fpdetect = fpdetect
-        with open(self._path) as fhcode:
-            self._code = fhcode.read()
+        self._code = None
+        self._p_astroid = None
+        self._fplines = None
+        self._expanded_fplines = None
+
+    @property
+    def code(self):
+        """Read the source file and returns it as a string."""
+        if self._code is None:
+            with open(self._path) as fhcode:
+                self._code = fhcode.read()
+        return self._code
+
+    @property
+    def p_astroid(self):
+        """Return the code parsed by astroid."""
+        if self._p_astroid is None:
+            try:
+                self._p_astroid = astroid.parse(self.code)
+            except astroid.exceptions.AstroidError:
+                logger.error('There is probably a syntax error in %s. Check your code !', self.path)
+                raise
+        return self._p_astroid
+
+    @property
+    def fplines(self):
+        """The list of line ranges that encompasses footprint definitions."""
+        if self._fplines is None:
+            self._do_fpinit()
+        return self._fplines
+
+    @property
+    def expanded_fplines(self):
+        """The set of lines that encompasses footprint definitions."""
+        if self._expanded_fplines is None:
+            self._do_fpinit()
+        return self._expanded_fplines
+
+    def _do_fpinit(self):
+        """Initialise the _fplines and _expanded_fplines data."""
         self._fplines = list()
+        self._expanded_fplines = set()
         if self._fpdetect:
             self._do_fpdetect()
 
     def _do_fpdetect(self):
         """Actualy detect footprints using astroid."""
-        try:
-            astp = astroid.parse(self._code)
-        except astroid.exceptions.AstroidError:
-            logger.error('There is probably a syntax error in %s. Check your code !', self.path)
-            raise
         fpstarts = None
-
-        for node in astp.values():
+        for node in self.p_astroid.values():
             if fpstarts is not None:
                 self._fplines.append((fpstarts, node.lineno - 1))
                 fpstarts = None
@@ -188,7 +222,6 @@ class VortexPythonCode(object):
             logger.debug('Found footprint defs in %s: %s', self.path,
                          ", ".join(['({:d}, {:d})'.format(fpl[0], fpl[1]) for fpl in self._fplines]))
 
-        self._expanded_fplines = set()
         for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
             self._expanded_fplines.update(fplines)
 
@@ -223,7 +256,7 @@ class _AnyConfigEntry(object):
 class VortexPlace(_AnyConfigEntry):
     """Handle a given place entry of the configuration file."""
 
-    _MANDATORY_ENTRIES = {'path', 'checkconfigs' }
+    _MANDATORY_ENTRIES = {'path', 'checkconfigs', }
     _ALLOWED_ENTRIES = {'footprints_detect', }
     _CLASS_LABEL = 'place'
 
@@ -256,6 +289,23 @@ class VortexPlace(_AnyConfigEntry):
         :class:`VortexPythonCode` objects.
         """
         return self._pycode_crawl(self.path, self.shortpath, places_paths)
+
+    def check_pycode(self, vpc):
+        """Check a given code file (represented as a VortexPythonCode object)."""
+        logger.info('Dealing with the %s file.', vpc.path)
+        errors = list()
+        for checkconfig in self.checkconfigs:
+            for checker in checkconfig.checkers:
+                errors.extend(checker(vpc, checkconfig.label))
+        return errors
+
+    def summarize_pycode(self, vpc_name, errors):
+        """Print the errors summary."""
+        if errors:
+            print('=== ' + vpc_name + ' ===')
+            for errordesc in sorted(errors):
+                print('    ' + errordesc[1])
+        return len(errors)
 
 
 @_property_auto_add('checkers', 'label')
@@ -367,6 +417,9 @@ def main():
                         help="test only the following places... (all if omitted).")
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         default=0, help="Set verbosity level [default: %(default)s]")
+    parser.add_argument("-n", "--nprocs", dest="nprocs", action="store", type=int,
+                        help=("The number of processes to use during the check "
+                              "(by default the number of CPUs on the machine)"))
     parser.add_argument("-c", "--config", dest="config", action="store",
                         default='@vortex_codechecker.yaml',
                         help="Configuration file location [default: %(default)s]")
@@ -393,17 +446,11 @@ def main():
         if args.places and placename not in args.places:
             continue
         logger.info('Crawling into: %s. path=%s.', placename, place.path)
-        for vpc in place.iter_pycode(confdata.places_paths):
-            logger.info('Dealing with the %s file.', vpc.path)
-            errors = list()
-            for checkconfig in place.checkconfigs:
-                for checker in checkconfig.checkers:
-                    errors.extend(checker(vpc, checkconfig.label))
-            total_errors += len(errors)
-            if errors:
-                print('=== ' + vpc.shortpath + ' ===')
-                for errordesc in sorted(errors):
-                    print('    ' + errordesc[1])
+        with concurrent.futures.ProcessPoolExecutor(max_workers=args.nprocs) as executor:
+            c_checkers = {vpc.shortpath: executor.submit(place.check_pycode, vpc)
+                          for vpc in place.iter_pycode(confdata.places_paths)}
+            total_errors += sum([place.summarize_pycode(vpc_name, checker.result())
+                                 for vpc_name, checker in c_checkers.items()])
 
     if total_errors:
         logger.error('Total number of errors: %d', total_errors)
