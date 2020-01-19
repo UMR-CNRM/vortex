@@ -1,18 +1,18 @@
 checkconfigs:
    pystd:
-      label: code
+      label: "code "
       checkers:
          - type: pycodestyle
            max_line_length: 120
            ignore: [E401, E402, W504]
    pylong:
-      label: code
+      label: "code "
       checkers:
          - type: pycodestyle
-           max_line_length: 200
+           max_line_length: 400
            ignore: [E401, E402, W504]
    docweak:
-      label: docs
+      label: "doc  "
       checkers:
          - type: pydocstyle
            convention: pep257
@@ -20,33 +20,74 @@ checkconfigs:
            # of work !
            ignore: [D102, D103, D105, D107, D200, D202, D204, D205, D400, D401]
    docstrict:
-      label: docs
+      label: "doc  "
       checkers:
          - type: pydocstyle
            convention: pep257
            ignore: [D105, D107, D200, D401]
+   astroimport:
+      label: "astro"
+      checkers:
+         - type: astroidimport
+           overall_whitelist:
+            - bronx.fancies.arguments
+            - bronx.fancies.multicfg
+            - vortex.tools.addons
+            - vortex.tools.folder
+            - vortex.tools.lfi
+            - vortex.tools.grib
+            - vortex.tools.listings
+            - vortex.tools.surfex
+            - common.tools.gribdiff
+            - common.tools.addons
+            - common.util.usepygram
+            - gco.tools.diggers
+            - iga.tools.actions
+            - iga.tools.services
+            - intairpol.tools.addons
+           local_whitelist:
+            site/footprints/loggers.py: [logging, ]
+            src/common/algo/ifsroot.py: [common.algo.ifsnaming, ]
+            src/vortex/sessions.py: [vortex.gloves, ]
 
 places:
    site:
       path: site
       footprints_detect: true
       checkconfigs:
+         - astroimport
          - pystd
          - docstrict
    weaksite:
       path: site/bronx/fancies
       footprints_detect: true
       checkconfigs:
+         - astroimport
          - pystd
          - docweak
    src:
       path: src
       footprints_detect: true
       checkconfigs:
+         - astroimport
          - pystd
          - docweak
-   test:
-      path: src
+   tests:
+      path: tests
       footprints_detect: true
       checkconfigs:
          - pylong
+   bin:
+      path: bin
+      footprints_detect: true
+      checkconfigs:
+         - astroimport
+         - pylong
+         - docweak
+   project:
+      path: project
+      checkconfigs:
+         - astroimport
+         - pylong
+         - docweak
+ 
