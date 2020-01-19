@@ -28,9 +28,17 @@ _VTXBASE = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
                   os.path.dirname(os.path.realpath(__file__)))
 _CONF_DIR = os.path.join(_VTXBASE, 'project', 'conf')
 
+# The packages available in Vortex' src
+_VTXPACKAGES = {sditem.name
+                for sditem in os.scandir(os.path.join(_VTXBASE, 'src'))
+                if (sditem.is_dir() and
+                    os.path.exists(os.path.join(_VTXBASE, 'src', sditem.name, '__init__.py')))}
+
+
+# DEFINITON OF CHECKER CLASSES -----------------------------------------------
 
 class MyPycodestyleReporter(pycodestyle.BaseReport):
-    """Store the pycodestyle messages for latter use..."""
+    """Store the pycodestyle messages for later use..."""
 
     def init_file(self, filename, lines, expected, line_offset):
         """Signal a new file."""
@@ -87,7 +95,7 @@ class PycodestyleChecker(object):
 
 
 class PydocstyleChecker(object):
-    """Check the source code using pycodestyle."""
+    """Check the source code using pydocstyle."""
 
     _RESFMT = '{:s}-{:4s}  l.{:4d}    : {!s}: {!s}'
 
@@ -118,11 +126,104 @@ class PydocstyleChecker(object):
         return errors
 
 
+class AstroidImportChecker(object):
+    """Check the source code for unused imports using astroid."""
+
+    _RESFMT = '{:s}-imp   l.{:4d}    : {!s}'
+
+    def __init__(self, overall_whitelist=None, local_whitelist=None):
+        self._o_whitelist = set(overall_whitelist) if overall_whitelist else set()
+        self._l_whitelist = dict(local_whitelist) if local_whitelist else dict()
+
+    def _astroid_imports_tree_recurse(self, tree, imports, l_whitelist):
+        """Identify all the import statements in a given source tree.
+
+        Whitelisted imports are not taken into account.
+        """
+
+        def filter_imports(node):
+            """Deal with any Import/ImportFrom astroid node."""
+            what = dict()
+            for name in node.names:
+                origname = name[0]
+                if isinstance(node, astroid.ImportFrom):
+                    origname = node.modname + '.' + origname
+                targetname = name[1] or name[0]
+                if (name[0] == '*' or origname in _VTXPACKAGES or
+                        origname in self._o_whitelist or
+                        origname in l_whitelist):
+                    continue
+                what[targetname] = (node.lineno, origname)
+            return what
+
+        # Explore the whale source tree recursively
+        for node in tree.get_children():
+            if isinstance(node, astroid.nodes.Import):
+                imports.update(filter_imports(node))
+            elif (isinstance(node, astroid.nodes.ImportFrom) and
+                  node.modname not in ('__future__')):
+                imports.update(filter_imports(node))
+            else:
+                self._astroid_imports_tree_recurse(node, imports, l_whitelist)
+
+    def _astroid_attr_recurse(self, attr):
+        """Parse recursively any Attribute astroid node.
+
+        This may fail and return ``None``
+        """
+        if isinstance(attr.expr, astroid.Attribute):
+            base = self._astroid_attr_recurse(attr.expr)
+            return (base if base is None else
+                    '{:s}.{:s}'.format(base, attr.attrname))
+        elif isinstance(attr.expr, astroid.Name):
+            return '{:s}.{:s}'.format(attr.expr.name, attr.attrname)
+        else:
+            return None
+
+    def _astroid_names_tree_recurse(self, tree, names):
+        """
+        Parse recursively the whole source tree looking for names that are
+        actualy used.
+        """
+        for node in tree.get_children():
+            if isinstance(node, (astroid.Import, astroid.ImportFrom)):
+                continue
+            elif isinstance(node, (astroid.AssignAttr, astroid.Attribute)):
+                attr = self._astroid_attr_recurse(node)
+                if attr:
+                    names.add(attr)
+            elif isinstance(node, (astroid.AssignName, astroid.Name)):
+                names.add(node.name)
+            self._astroid_names_tree_recurse(node, names)
+
+    def __call__(self, vpycode, label):
+        """Run the check on **vpycode**."""
+        astp = vpycode.p_astroid
+        errors = []
+        # import whitelist for this specific code file
+        l_whitelist = set(self._l_whitelist.get(vpycode.shortpath, ()))
+        # Check for unused imports (ignore __init__.py files)
+        if os.path.basename(vpycode.path) != '__init__.py':
+            imports = dict()
+            names = set()
+            self._astroid_imports_tree_recurse(astp, imports, l_whitelist)
+            self._astroid_names_tree_recurse(astp, names)
+            errors.extend([(imports[imp][0],
+                            self._RESFMT.format(label, imports[imp][0],
+                                                'Unused import "{:s}" (as "{:s}").'
+                                                .format(imports[imp][1], imp)))
+                           for imp in set(imports.keys()) - names])
+        return errors
+
+
 _AVAILABLE_CHECKERS = dict(
     pycodestyle=PycodestyleChecker,
     pydocstyle=PydocstyleChecker,
+    astroidimport=AstroidImportChecker,
 )
 
+
+# DEFINITON OF UTILITY CLASSES TO PARSE THE CONFIG FILE AND CRAWL INTO FILES --
 
 def _property_auto_add(* what):
     """Automatically add property to expose read only attributes."""
@@ -200,30 +301,25 @@ class VortexPythonCode(object):
 
     def _do_fpdetect(self):
         """Actualy detect footprints using astroid."""
-        fpstarts = None
         for node in self.p_astroid.values():
-            if fpstarts is not None:
-                self._fplines.append((fpstarts, node.lineno - 1))
-                fpstarts = None
+            # Look only for Class definition
             if isinstance(node, astroid.nodes.ClassDef):
-                # This class may contain a footprint definition...
-                for cnode_name, cnode in node.items():
-                    if cnode_name == '_footprint' and isinstance(cnode, astroid.nodes.AssignName):
-                        fpstarts = cnode.lineno
-                        next_s = cnode.next_sibling()
-                        if next_s:
-                            self._fplines.append((fpstarts, next_s.lineno - 1))
-                            fpstarts = None
-        if fpstarts is not None:
-            self._fplines.append((fpstarts, len("\n".split(self._codestr))))
-            fpstarts = None
+                # Crawl into the class content
+                for cnode in node.body:
+                    # We are only interested in assignments
+                    if isinstance(cnode, astroid.Assign):
+                        # Look for an assignment target named "_footprint"
+                        for target in [tnode for tnode in cnode.targets
+                                       if isinstance(tnode, astroid.AssignName)]:
+                            if target.name == '_footprint':
+                                self._fplines.append((cnode.lineno, cnode.tolineno))
 
         if self._fplines:
             logger.debug('Found footprint defs in %s: %s', self.path,
                          ", ".join(['({:d}, {:d})'.format(fpl[0], fpl[1]) for fpl in self._fplines]))
-
-        for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
-            self._expanded_fplines.update(fplines)
+            # Expand the _footprint definition line numbers
+            for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
+                self._expanded_fplines.update(fplines)
 
 
 class _AnyConfigEntry(object):
@@ -254,7 +350,7 @@ class _AnyConfigEntry(object):
 
 @_property_auto_add('path', 'shortpath', 'fpdetect', 'checkconfigs')
 class VortexPlace(_AnyConfigEntry):
-    """Handle a given place entry of the configuration file."""
+    """Handle a given **place** entry of the configuration file."""
 
     _MANDATORY_ENTRIES = {'path', 'checkconfigs', }
     _ALLOWED_ENTRIES = {'footprints_detect', }
@@ -310,7 +406,7 @@ class VortexPlace(_AnyConfigEntry):
 
 @_property_auto_add('checkers', 'label')
 class CheckConfig(_AnyConfigEntry):
-    """Holds information on a given checkerconfig entry."""
+    """Holds information on a given **checkconfigs** entry."""
 
     _MANDATORY_ENTRIES = {'checkers', 'label'}
     _CLASS_LABEL = 'checkconfig'
@@ -323,7 +419,7 @@ class CheckConfig(_AnyConfigEntry):
         self._checkers = list()
         for checker in description['checkers']:
             if checker.get('type', None) not in _AVAILABLE_CHECKERS:
-                raise ValueError('The {:s} checker is unavailable'.format(checker))
+                raise ValueError('The {!s} checker is unavailable'.format(checker))
             checker_args = checker.copy()
             del checker_args['type']
             try:
@@ -335,7 +431,7 @@ class CheckConfig(_AnyConfigEntry):
 
 
 class CheckerConfig(object):
-    """Gives access to the checker config file."""
+    """Gives access to this checker config file."""
 
     def __init__(self, configfile, vortexpath, configdir=None):
         """Load the checker config file.
@@ -402,6 +498,8 @@ class CheckerConfig(object):
             self._places_paths = {p.path for p in self.places.values()}
         return self._places_paths
 
+
+# DEAL WITH THE COMMAND LINE AND RUN THE TESTS --------------------------------
 
 def main():
     """Process command line options."""
