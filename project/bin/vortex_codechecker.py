@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # encoding: utf-8
+# python >= 3.5 required
 
 """
 Run various code checkers on the Vortex' repository.
@@ -12,6 +13,7 @@ import logging
 import os
 import re
 import sys
+import typing
 
 import astroid
 import pycodestyle
@@ -19,14 +21,16 @@ import pydocstyle
 import yaml
 
 
-argparse_epilog = ""
-
 logging.basicConfig()
 logger = logging.getLogger()
 
+# The present Vortex code repository location
 _VTXBASE = re.sub('{0:}project{0:}bin$'.format(os.path.sep), '',
                   os.path.dirname(os.path.realpath(__file__)))
+
+# Default configuration file location
 _CONF_DIR = os.path.join(_VTXBASE, 'project', 'conf')
+_CONF_DEFAULT = 'vortex_codechecker.yaml'
 
 # The packages available in Vortex' src
 _VTXPACKAGES = {sditem.name
@@ -35,10 +39,125 @@ _VTXPACKAGES = {sditem.name
                     os.path.exists(os.path.join(_VTXBASE, 'src', sditem.name, '__init__.py')))}
 
 
+# VERY GENERIC UTILITY METHODS -----------------------------------------------
+
+def _property_auto_add(* what):
+    """Automatically add property to expose read only attributes listed in **what."""
+
+    class RoAttrDescriptor(object):
+        """Abstract accessor class to read-only attributes."""
+
+        def __init__(self, attr, doc=None):
+            self._attr = attr
+            self.__doc__ = doc if doc else 'The {:s} attribute'.format(self._attr)
+
+        def __get__(self, obj, objtype=None):  # @UnusedVariable
+            return getattr(obj, '_' + self._attr)
+
+    def _property_auto_add_deco(cls):
+        for item in what:
+            setattr(cls, item, RoAttrDescriptor(item))
+        return cls
+    return _property_auto_add_deco
+
+
+# UTILITY CLASS REPRESENTING A PYTHON CODE THAT SHOULD BE ANALYSED -----------
+
+@_property_auto_add('path', 'shortpath', 'fpdetect')
+class VortexPythonCode(object):
+    """The content of a Vortex' Python code file."""
+
+    def __init__(self, path: str, shortpath: str, fpdetect: bool):
+        """Ingest the code and detect footprint definitions if need be.
+
+        :param path: The absolute path to a code file
+        :param shortpath: Path relative to the vortex repository root
+        :param fpdetect: Try to detect footprints declarations
+        """
+        self._path = path
+        self._shortpath = shortpath
+        self._fpdetect = fpdetect
+        self._code = None
+        self._p_astroid = None
+        self._fplines = None
+        self._expanded_fplines = None
+
+    @property
+    def code(self):
+        """Read the source file and returns it as a string."""
+        if self._code is None:
+            with open(self._path) as fhcode:
+                self._code = fhcode.read()
+        return self._code
+
+    @property
+    def p_astroid(self):
+        """Return the code parsed by astroid."""
+        if self._p_astroid is None:
+            try:
+                self._p_astroid = astroid.parse(self.code)
+            except astroid.AstroidError:
+                logger.error('There is probably a syntax error in %s. Check your code !', self.path)
+                raise
+        return self._p_astroid
+
+    @property
+    def fplines(self):
+        """The list of line ranges that encompasses footprint definitions."""
+        if self._fplines is None:
+            self._do_fpinit()
+        return self._fplines
+
+    @property
+    def expanded_fplines(self):
+        """The set of lines that encompasses footprint definitions."""
+        if self._expanded_fplines is None:
+            self._do_fpinit()
+        return self._expanded_fplines
+
+    def _do_fpinit(self):
+        """Initialise the _fplines and _expanded_fplines data."""
+        self._fplines = list()
+        self._expanded_fplines = set()
+        if self._fpdetect:
+            self._do_fpdetect()
+
+    def _do_fpdetect(self):
+        """Actualy detect footprints using astroid."""
+        for node in self.p_astroid.values():
+            # Look only for Class definition
+            if isinstance(node, astroid.ClassDef):
+                # Crawl into the class content
+                for cnode in node.body:
+                    # We are only interested in assignments
+                    if isinstance(cnode, astroid.Assign):
+                        # Look for an assignment target named "_footprint"
+                        for target in [tnode for tnode in cnode.targets
+                                       if isinstance(tnode, astroid.AssignName)]:
+                            if target.name == '_footprint':
+                                self._fplines.append((cnode.lineno, cnode.tolineno))
+
+        if self._fplines:
+            logger.debug('Found footprint defs in %s: %s', self.path,
+                         ", ".join(['({:d}, {:d})'.format(fpl[0], fpl[1])
+                                    for fpl in self._fplines]))
+            # Expand the _footprint definition line numbers
+            for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
+                self._expanded_fplines.update(fplines)
+
+
 # DEFINITON OF CHECKER CLASSES -----------------------------------------------
 
+# Any checker's __call__ method should return a list of errors represented by
+# a tuple that contains (line number, error_message).
+CheckerErrorsList = typing.List[typing.Tuple[int, str]]
+
+
 class MyPycodestyleReporter(pycodestyle.BaseReport):
-    """Store the pycodestyle messages for later use..."""
+    """Store the pycodestyle messages for later use...
+
+    Internal use by the :class:`PycodestyleChecker` class.
+    """
 
     def init_file(self, filename, lines, expected, line_offset):
         """Signal a new file."""
@@ -70,7 +189,8 @@ class PycodestyleChecker(object):
         """Keep track of pycodechecker arguments."""
         self._pcs_style_args = kwargs
 
-    def _parse_results(self, vpycode, label, result):
+    def _parse_results(self, vpycode: VortexPythonCode, label: str,
+                       result: MyPycodestyleReporter) -> CheckerErrorsList:
         """Print the error messages but filter footprint related messages first."""
         errors = list()
         for message in result.rawmessages:
@@ -81,7 +201,7 @@ class PycodestyleChecker(object):
                                                                message[3],)))
         return errors
 
-    def __call__(self, vpycode, label):
+    def __call__(self, vpycode: VortexPythonCode, label: str) -> CheckerErrorsList:
         """Run the check on **vpycode**."""
         pcs_options = self._pcs_style_args.copy()
         try:
@@ -110,7 +230,7 @@ class PydocstyleChecker(object):
             ignore_set = set(self._checkopts.pop('ignore', {}))
             self._checkopts['select'] = self._checkopts['select'] - ignore_set
 
-    def __call__(self, vpycode, label):
+    def __call__(self, vpycode: VortexPythonCode, label: str) -> CheckerErrorsList:
         """Run the check on **vpycode**."""
         errors = list()
         try:
@@ -126,6 +246,10 @@ class PydocstyleChecker(object):
         return errors
 
 
+DictOfImports = typing.Dict[str, typing.Tuple[int, str]]
+SetOfNames = typing.Set[str]
+
+
 class AstroidImportChecker(object):
     """Check the source code for unused imports using astroid."""
 
@@ -135,13 +259,16 @@ class AstroidImportChecker(object):
         self._o_whitelist = set(overall_whitelist) if overall_whitelist else set()
         self._l_whitelist = dict(local_whitelist) if local_whitelist else dict()
 
-    def _astroid_imports_tree_recurse(self, tree, imports, l_whitelist):
+    def _astroid_imports_tree_recurse(self,
+                                      tree: typing.Union[astroid.ALL_NODE_CLASSES],
+                                      imports: DictOfImports,
+                                      l_whitelist: typing.Set[str]):
         """Identify all the import statements in a given source tree.
 
         Whitelisted imports are not taken into account.
         """
 
-        def filter_imports(node):
+        def filter_imports(node: typing.Union[astroid.Import, astroid.ImportFrom]):
             """Deal with any Import/ImportFrom astroid node."""
             what = dict()
             for name in node.names:
@@ -158,15 +285,15 @@ class AstroidImportChecker(object):
 
         # Explore the whale source tree recursively
         for node in tree.get_children():
-            if isinstance(node, astroid.nodes.Import):
+            if isinstance(node, astroid.Import):
                 imports.update(filter_imports(node))
-            elif (isinstance(node, astroid.nodes.ImportFrom) and
+            elif (isinstance(node, astroid.ImportFrom) and
                   node.modname not in ('__future__')):
                 imports.update(filter_imports(node))
             else:
                 self._astroid_imports_tree_recurse(node, imports, l_whitelist)
 
-    def _astroid_attr_recurse(self, attr):
+    def _astroid_attr_recurse(self, attr: typing.Union[astroid.ALL_NODE_CLASSES]) -> str:
         """Parse recursively any Attribute astroid node.
 
         This may fail and return ``None``
@@ -180,7 +307,9 @@ class AstroidImportChecker(object):
         else:
             return None
 
-    def _astroid_names_tree_recurse(self, tree, names):
+    def _astroid_names_tree_recurse(self,
+                                    tree: typing.Union[astroid.ALL_NODE_CLASSES],
+                                    names: SetOfNames):
         """
         Parse recursively the whole source tree looking for names that are
         actualy used.
@@ -196,7 +325,7 @@ class AstroidImportChecker(object):
                 names.add(node.name)
             self._astroid_names_tree_recurse(node, names)
 
-    def __call__(self, vpycode, label):
+    def __call__(self, vpycode: VortexPythonCode, label: str) -> CheckerErrorsList:
         """Run the check on **vpycode**."""
         astp = vpycode.p_astroid
         errors = []
@@ -204,8 +333,8 @@ class AstroidImportChecker(object):
         l_whitelist = set(self._l_whitelist.get(vpycode.shortpath, ()))
         # Check for unused imports (ignore __init__.py files)
         if os.path.basename(vpycode.path) != '__init__.py':
-            imports = dict()
-            names = set()
+            imports: DictOfImports = dict()
+            names: SetOfNames = set()
             self._astroid_imports_tree_recurse(astp, imports, l_whitelist)
             self._astroid_names_tree_recurse(astp, names)
             errors.extend([(imports[imp][0],
@@ -222,104 +351,26 @@ _AVAILABLE_CHECKERS = dict(
     astroidimport=AstroidImportChecker,
 )
 
+_ARGPARSE_EPILOG = """
+Various checker are available:
+{:s}
+
+The default configuration file is:
+  {:s}
+Take a look inside it to see how and where the various checkers are used.
+
+New checker can easily be created by creating a dedicated class that:
+- accepts keyword options (that may be specified in the configuration file in
+  its checkconfig sections) through the __init__ method;
+- defines a __call__ method that accepts a *vpycode* argument that is a
+  VortexPythonCode object representing the file to be analysed and a *label*
+  argument that will be used when generating error messages.
+""".format("\n".join(['- {:s}: {:s}'.format(k, v.__doc__.split("\n")[0])
+                      for k, v in _AVAILABLE_CHECKERS.items()]),
+           os.path.join(_CONF_DIR, _CONF_DEFAULT))
+
 
 # DEFINITON OF UTILITY CLASSES TO PARSE THE CONFIG FILE AND CRAWL INTO FILES --
-
-def _property_auto_add(* what):
-    """Automatically add property to expose read only attributes."""
-
-    class RoAttrDescriptor(object):
-        """Abstract accessor class to read-only attributes."""
-
-        def __init__(self, attr, doc=None):
-            self._attr = attr
-            self.__doc__ = doc if doc else 'The {:s} attribute'.format(self._attr)
-
-        def __get__(self, obj, objtype=None):  # @UnusedVariable
-            return getattr(obj, '_' + self._attr)
-
-    def _property_auto_add_deco(cls):
-        for item in what:
-            setattr(cls, item, RoAttrDescriptor(item))
-        return cls
-    return _property_auto_add_deco
-
-
-@_property_auto_add('path', 'shortpath', 'fpdetect')
-class VortexPythonCode(object):
-    """The content of a Vortex' Python code file."""
-
-    def __init__(self, path, shortpath, fpdetect):
-        """Ingest the code and detect footprint definitions if need be."""
-        self._path = path
-        self._shortpath = shortpath
-        self._fpdetect = fpdetect
-        self._code = None
-        self._p_astroid = None
-        self._fplines = None
-        self._expanded_fplines = None
-
-    @property
-    def code(self):
-        """Read the source file and returns it as a string."""
-        if self._code is None:
-            with open(self._path) as fhcode:
-                self._code = fhcode.read()
-        return self._code
-
-    @property
-    def p_astroid(self):
-        """Return the code parsed by astroid."""
-        if self._p_astroid is None:
-            try:
-                self._p_astroid = astroid.parse(self.code)
-            except astroid.exceptions.AstroidError:
-                logger.error('There is probably a syntax error in %s. Check your code !', self.path)
-                raise
-        return self._p_astroid
-
-    @property
-    def fplines(self):
-        """The list of line ranges that encompasses footprint definitions."""
-        if self._fplines is None:
-            self._do_fpinit()
-        return self._fplines
-
-    @property
-    def expanded_fplines(self):
-        """The set of lines that encompasses footprint definitions."""
-        if self._expanded_fplines is None:
-            self._do_fpinit()
-        return self._expanded_fplines
-
-    def _do_fpinit(self):
-        """Initialise the _fplines and _expanded_fplines data."""
-        self._fplines = list()
-        self._expanded_fplines = set()
-        if self._fpdetect:
-            self._do_fpdetect()
-
-    def _do_fpdetect(self):
-        """Actualy detect footprints using astroid."""
-        for node in self.p_astroid.values():
-            # Look only for Class definition
-            if isinstance(node, astroid.nodes.ClassDef):
-                # Crawl into the class content
-                for cnode in node.body:
-                    # We are only interested in assignments
-                    if isinstance(cnode, astroid.Assign):
-                        # Look for an assignment target named "_footprint"
-                        for target in [tnode for tnode in cnode.targets
-                                       if isinstance(tnode, astroid.AssignName)]:
-                            if target.name == '_footprint':
-                                self._fplines.append((cnode.lineno, cnode.tolineno))
-
-        if self._fplines:
-            logger.debug('Found footprint defs in %s: %s', self.path,
-                         ", ".join(['({:d}, {:d})'.format(fpl[0], fpl[1]) for fpl in self._fplines]))
-            # Expand the _footprint definition line numbers
-            for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
-                self._expanded_fplines.update(fplines)
 
 
 class _AnyConfigEntry(object):
@@ -327,12 +378,12 @@ class _AnyConfigEntry(object):
 
     __metaclass__ = abc.ABCMeta
 
-    _MANDATORY_ENTRIES = set()
-    _ALLOWED_ENTRIES = set()
+    _MANDATORY_ENTRIES: typing.Set[str] = set()
+    _ALLOWED_ENTRIES: typing.Set[str] = set()
     _CLASS_LABEL = 'to_be_changed'
 
     @abc.abstractmethod
-    def __init__(self, name, description):
+    def __init__(self, name: str, description: dict):
         """Check the description dictionary content."""
         if not isinstance(description, dict):
             raise ValueError('The {:s} {:s} description must be a dictionary'
@@ -348,62 +399,6 @@ class _AnyConfigEntry(object):
         logger.debug('New %s creation: %s -> %s', self._CLASS_LABEL, name, description)
 
 
-@_property_auto_add('path', 'shortpath', 'fpdetect', 'checkconfigs')
-class VortexPlace(_AnyConfigEntry):
-    """Handle a given **place** entry of the configuration file."""
-
-    _MANDATORY_ENTRIES = {'path', 'checkconfigs', }
-    _ALLOWED_ENTRIES = {'footprints_detect', }
-    _CLASS_LABEL = 'place'
-
-    def __init__(self, name, description, checkconfigs, vortexpath):
-        """Parse the **decription** read in the YAML configuration file."""
-        super(VortexPlace, self).__init__(name, description)
-        self._path = os.path.join(vortexpath, description['path'])
-        self._shortpath = description['path']
-        self._fpdetect = bool(description.get('footprints_detect', False))
-        self._checkconfigs = list()
-        for checkconfig in description['checkconfigs']:
-            if checkconfig not in checkconfigs:
-                raise ValueError('Improper {:s} checker value'.format(description['checkconfig']))
-            self._checkconfigs.append(checkconfigs[checkconfig])
-
-    def _pycode_crawl(self, path, shortpath, places_paths):
-        """Actualy iterate over **path**."""
-        for item in os.scandir(path):
-            fullpath = os.path.join(path, item.name)
-            new_shortpath = os.path.join(shortpath, item.name)
-            if item.name.endswith('.py') and item.is_file():
-                yield VortexPythonCode(fullpath, new_shortpath, self.fpdetect)
-            elif item.name != '__pycache__' and item.is_dir():
-                if fullpath not in places_paths:
-                    yield from self._pycode_crawl(fullpath, new_shortpath, places_paths)
-
-    def iter_pycode(self, places_paths):
-        """
-        Iterate through all the python's files of the place and returns
-        :class:`VortexPythonCode` objects.
-        """
-        return self._pycode_crawl(self.path, self.shortpath, places_paths)
-
-    def check_pycode(self, vpc):
-        """Check a given code file (represented as a VortexPythonCode object)."""
-        logger.info('Dealing with the %s file.', vpc.path)
-        errors = list()
-        for checkconfig in self.checkconfigs:
-            for checker in checkconfig.checkers:
-                errors.extend(checker(vpc, checkconfig.label))
-        return errors
-
-    def summarize_pycode(self, vpc_name, errors):
-        """Print the errors summary."""
-        if errors:
-            print('=== ' + vpc_name + ' ===')
-            for errordesc in sorted(errors):
-                print('    ' + errordesc[1])
-        return len(errors)
-
-
 @_property_auto_add('checkers', 'label')
 class CheckConfig(_AnyConfigEntry):
     """Holds information on a given **checkconfigs** entry."""
@@ -411,7 +406,7 @@ class CheckConfig(_AnyConfigEntry):
     _MANDATORY_ENTRIES = {'checkers', 'label'}
     _CLASS_LABEL = 'checkconfig'
 
-    def __init__(self, name, description):
+    def __init__(self, name: str, description: dict):
         """Create the configuration object starting form its **description**."""
         super(CheckConfig, self).__init__(name, description)
         # Process the definition
@@ -430,10 +425,80 @@ class CheckConfig(_AnyConfigEntry):
                 raise
 
 
+DictOfCheckConfigs = typing.Dict[str, CheckConfig]
+
+SetOfPlacesLocations = typing.Set[str]
+
+
+@_property_auto_add('path', 'shortpath', 'fpdetect', 'checkconfigs')
+class VortexPlace(_AnyConfigEntry):
+    """Handle a given **place** entry of the configuration file."""
+
+    _MANDATORY_ENTRIES = {'path', 'checkconfigs', }
+    _ALLOWED_ENTRIES = {'footprints_detect', }
+    _CLASS_LABEL = 'place'
+
+    def __init__(self, name: str, description: dict,
+                 checkconfigs: DictOfCheckConfigs, vortexpath: str):
+        """Parse the **decription** read in the YAML configuration file."""
+        super(VortexPlace, self).__init__(name, description)
+        self._path = os.path.join(vortexpath, description['path'])
+        self._shortpath = description['path']
+        self._fpdetect = bool(description.get('footprints_detect', False))
+        self._checkconfigs: typing.List[CheckConfig] = list()
+        for checkconfig in description['checkconfigs']:
+            if checkconfig not in checkconfigs:
+                raise ValueError('Improper {:s} checker value'.format(description['checkconfig']))
+            self._checkconfigs.append(checkconfigs[checkconfig])
+
+    def _pycode_crawl(self, path: str, shortpath: str, places_paths: SetOfPlacesLocations
+                      ) -> typing.Iterator[VortexPythonCode]:
+        """Actualy iterate over **path**."""
+        for item in os.scandir(path):
+            fullpath = os.path.join(path, item.name)
+            new_shortpath = os.path.join(shortpath, item.name)
+            if item.name.endswith('.py') and item.is_file():
+                yield VortexPythonCode(fullpath, new_shortpath, self.fpdetect)
+            elif item.name != '__pycache__' and item.is_dir():
+                if fullpath not in places_paths:
+                    yield from self._pycode_crawl(fullpath, new_shortpath, places_paths)
+
+    def iter_pycode(self, places_paths: SetOfPlacesLocations
+                    ) -> typing.Iterator[VortexPythonCode]:
+        """
+        Iterate through all the python's files of the place and returns
+        :class:`VortexPythonCode` objects.
+        """
+        return self._pycode_crawl(self.path, self.shortpath, places_paths)
+
+    def check_pycode(self, vpc: VortexPythonCode) -> CheckerErrorsList:
+        """Check a given code file (represented as a VortexPythonCode object)."""
+        logger.info('Dealing with the %s file.', vpc.path)
+        errors: CheckerErrorsList = list()
+        for checkconfig in self.checkconfigs:
+            for checker in checkconfig.checkers:
+                errors.extend(checker(vpc, checkconfig.label))
+        return errors
+
+    def summarize_pycode(self, vpc_name: str, errors: CheckerErrorsList) -> int:
+        """Print the errors summary.
+
+        :return: The number of errors
+        """
+        if errors:
+            print('=== ' + vpc_name + ' ===')
+            for errordesc in sorted(errors):
+                print('    ' + errordesc[1])
+        return len(errors)
+
+
+DictOfPlaces = typing.Dict[str, VortexPlace]
+
+
 class CheckerConfig(object):
     """Gives access to this checker config file."""
 
-    def __init__(self, configfile, vortexpath, configdir=None):
+    def __init__(self, configfile: str, vortexpath: str, configdir: str = None):
         """Load the checker config file.
 
         :param configfile: The configuration file path
@@ -466,33 +531,33 @@ class CheckerConfig(object):
             raise ValueError('Configuration must have exactly the following entries: {:s}'
                              .format(','.join(conf_l1_entries)))
         # Cache
-        self._places = None
-        self._places_paths = None
-        self._checkconfigs = None
+        self._places: typing.Union[None, DictOfPlaces] = None
+        self._places_paths: typing.Union[None, SetOfPlacesLocations] = None
+        self._checkconfigs: typing.Union[None, DictOfCheckConfigs] = None
 
     @property
-    def vortexpath(self):
+    def vortexpath(self) -> str:
         """The place where the vortex directory lies."""
         return self._vortexpath
 
     @property
-    def checkconfigs(self):
-        """The list of available check configurations."""
+    def checkconfigs(self) -> DictOfCheckConfigs:
+        """The dict of available check configurations."""
         if self._checkconfigs is None:
             self._checkconfigs = {n: CheckConfig(n, c)
                                   for n, c in self._confdata['checkconfigs'].items()}
         return self._checkconfigs
 
     @property
-    def places(self):
-        """The list of places where to run the code check."""
+    def places(self) -> DictOfPlaces:
+        """The dict of places where to run the code check."""
         if self._places is None:
             self._places = {n: VortexPlace(n, p, self.checkconfigs, self.vortexpath)
                             for n, p in self._confdata['places'].items()}
         return self._places
 
     @property
-    def places_paths(self):
+    def places_paths(self) -> SetOfPlacesLocations:
         """The list of code directories that will be checked."""
         if self._places_paths is None:
             self._places_paths = {p.path for p in self.places.values()}
@@ -509,7 +574,7 @@ def main():
     program_desc = program_shortdesc
 
     # Setup argument parser
-    parser = ArgumentParser(description=program_desc, epilog=argparse_epilog,
+    parser = ArgumentParser(description=program_desc, epilog=_ARGPARSE_EPILOG,
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("places", nargs='*',
                         help="test only the following places... (all if omitted).")
@@ -519,7 +584,7 @@ def main():
                         help=("The number of processes to use during the check "
                               "(by default the number of CPUs on the machine)"))
     parser.add_argument("-c", "--config", dest="config", action="store",
-                        default='@vortex_codechecker.yaml',
+                        default='@' + _CONF_DEFAULT,
                         help="Configuration file location [default: %(default)s]")
     parser.add_argument("-p", "--vortexpath", dest="vortexpath", action="store",
                         default=_VTXBASE,
@@ -537,6 +602,11 @@ def main():
 
     # Configuration data
     confdata = CheckerConfig(args.config, args.vortexpath)
+    if args.places:
+        for a_place in args.places:
+            if a_place not in confdata.places:
+                raise ValueError('The "{:s}" place is not setup in the configuration file.'
+                                 .format(a_place))
 
     # Loop on the various places
     total_errors = 0

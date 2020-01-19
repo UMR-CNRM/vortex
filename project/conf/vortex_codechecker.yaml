@@ -1,7 +1,9 @@
 checkconfigs:
-   pystd:
-      label: "code "
-      checkers:
+   pystd:  # The checkerconfig name
+      label: "code "  # A label that is used when printing error messages
+      checkers:  # A list of checker classes to use : the 'type' entry identifies
+                 # the checker class to use, other dictionary entry are passed to
+                 # the checker class as keyword arguments
          - type: pycodestyle
            max_line_length: 120
            ignore: [E401, E402, W504]
@@ -51,10 +53,10 @@ checkconfigs:
             src/vortex/sessions.py: [vortex.gloves, ]
 
 places:
-   site:
-      path: site
-      footprints_detect: true
-      checkconfigs:
+   site:  # The place nickname
+      path: site  # The path to the place (relative to the vortex repository root)
+      footprints_detect: true  # Do we need to look for footprint definitions ?
+      checkconfigs:  # List of checkconfig (see above) to apply on this place
          - astroimport
          - pystd
          - docstrict
