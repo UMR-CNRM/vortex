@@ -231,8 +231,7 @@ class CouplingGridOasis(GenvUsageModelResource):
 
 
 # LFM: Docstring + Info
-# LFM: et en anglais ?
-class AltimetriePreproc(GenvModelResource):
+class AltimetryPreproc(GenvModelResource):
 
     _footprint = dict(
         info = '',

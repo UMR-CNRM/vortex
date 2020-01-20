@@ -140,7 +140,6 @@ class SurgesCouplingForecasts(Parallel):
         # Promises should be nicely managed by a co-process
         if self.promises:
             self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage)
-            self.io_poll_sleep = 10
             self.flyput = True
         else:
             self.flyput = False

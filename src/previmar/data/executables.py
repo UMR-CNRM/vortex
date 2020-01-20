@@ -200,7 +200,6 @@ class FiltrageGrib(Script):
         return 'filteringGrib'
 
 
-# LFM: Le remap sur le gvar ça sert à quoi ?
 class FiltrageGribWave(FiltrageGrib):
     """Base class."""
     _footprint = [
@@ -214,7 +213,6 @@ class FiltrageGribWave(FiltrageGrib):
                 gvar = dict(
                     default  = 'filtrage_grib',
                     values   = ['wave_filtrage_grib', 'filtrage_grib'],
-                    remap    = {'filtrage_grib': 'wave_filtrage_grib' },
                 ),
             )
         )
@@ -359,9 +357,6 @@ class MasterWaves(OceanographicModel):
 
 
 # LFM: docstring + info
-# LFM: datedeb, datefin: en anglais ?
-# LFM: binopts est déjà une chaîne de caractères... pas la peine de le redire.
-# LFM: liste des satellite en dur. pourquoi ?
 class Filteralti(BlackBox):
     """."""
     _footprint = [
@@ -378,12 +373,6 @@ class Filteralti(BlackBox):
                 satellite = dict(
                     values = ['jason2', 'saral', 'cryosat2'],
                 ),
-                datedeb = dict(
-                    type     = Date,
-                ),
-                datefin = dict(
-                    type     = Date,
-                ),
             )
         )
     ]
@@ -391,6 +380,10 @@ class Filteralti(BlackBox):
     @property
     def realkind(self):
         return 'Filteralti'
+
+    def command_line(self, begindate, enddate):
+        """Build command line for execution as a single string."""
+        return ' '.join([begindate.ymdhms, enddate.ymdhms])
 
 
 # LFM: docstring + info ?

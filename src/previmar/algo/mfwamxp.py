@@ -14,7 +14,7 @@ import time
 
 from bronx.datagrip import namelist as bnamelist
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Time, Period
+from bronx.stdtypes.date import Date, Time, Period
 from footprints.stdtypes import FPList
 
 from vortex.algo.components import BlindRun, Parallel, ParaBlindRun
@@ -158,8 +158,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                                                             kind = 'gridpoint')[0].rh
             # LFM: Et si il y a plusieurs gribs en entrée ???
             # LFM: Si sfcwindin existe déjà, on fait quoi ?
-            # LFM: Pourquoi une copie en intent=inout ?
-            self.system.cp(rhgrib.container.localpath(), 'sfcwindin', intent='inout', fmt='grib')
+            self.system.cp(rhgrib.container.localpath(), 'sfcwindin', intent='in', fmt='grib')
 
             # recuperation fcterm
             if fcterm is None:
@@ -269,12 +268,25 @@ class MfwamFilter(BlindRun):
             kind = dict(
                 values = ['MfwamAlti'],
             ),
+            begindate = dict(
+                type     = Date,
+            ),
+            enddate = dict(
+                type     = Date,
+            ),
             val_alti = dict(
                 default = ['jason2'],
                 type    = FPList,
             ),
         )
     )
+
+    def spawn_command_options(self):
+        """Dictionary provided for command line factory."""
+        return dict(
+            begindate=self.begindate,
+            enddate=self.enddate,
+        )
 
     def postfix(self, rh, opts):
         """Set some variables according to target definition."""
@@ -285,6 +297,8 @@ class MfwamFilter(BlindRun):
 
         r_alti = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('Altidata'),
                                                                         kind = 'altidata') ]
+
+        rh.resource.satellite
 
         ultimate_alti = [ val.resource.satellite for val in r_alti
                           if val.resource.satellite not in self.val_alti ]
