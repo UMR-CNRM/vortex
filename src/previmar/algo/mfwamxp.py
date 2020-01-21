@@ -450,17 +450,25 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
 
         # Prepare the working directory
         cwd = sh.pwd()
-        tmpwd = sh.path.join(cwd, self.file_in + '.process.d')
-        sh.mkdir(tmpwd)
-        sh.softlink(sh.path.join(cwd, self.file_in), sh.path.join(tmpwd, self.fortinput))
-        sh.cd(tmpwd)
+        output_files = set()
+        with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
 
-        for dom in self.grille:
-            sh.title('domain : {:s}'.format(dom))
-            # copy of namelist
-            sh.cp(sh.path.join(cwd, dom + ".nam", 'fort.2'))
-            # execution
-            self.local_spawn("output.log")
-            # copie output
-            sh.mv(self.fortoutput,
-                  sh.path.join(cwd, "reg{0:s}_{1:s}".format(self.file_out, dom)), fmt = 'grib')
+            sh.softlink(sh.path.join(cwd, self.file_in), self.fortinput)
+
+            for dom in self.grille:
+                sh.title('domain : {:s}'.format(dom))
+                # copy of namelist
+                sh.cp(sh.path.join(cwd, dom + ".nam", 'fort.2'))
+                # execution
+                self.local_spawn("output.{:s}.log".format(dom))
+                # copie output
+                output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
+                sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt = 'grib')
+                output_files.add(output_file)
+
+        # Deal with promised resources
+        expected = [x for x in self.context.sequence.outputs()
+                    if (x.rh.provider.expected and
+                        x.rh.container.localpath() in output_files)]
+        for thispromise in expected:
+            thispromise.put(incache=True)
