@@ -43,6 +43,11 @@ Mixed AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: OOPSMinim_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Screening_CrashWitness
    :show-inheritance:
    :members:

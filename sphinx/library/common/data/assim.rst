@@ -56,7 +56,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SplitBackgroundStdError
+.. autoclass:: SplitedBackgroundStdError
    :show-inheritance:
    :members:
    :member-order: alphabetical

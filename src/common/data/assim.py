@@ -7,12 +7,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
 
-from vortex.data.flow       import FlowResource, GeoFlowResource
-from vortex.data.contents   import JsonDictContent
+from vortex.data.flow import FlowResource, GeoFlowResource
+from vortex.data.contents import JsonDictContent
 from vortex.data.executables import Script
-from vortex.syntax.stddeco  import namebuilding_append, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
 from vortex.syntax.stdattrs import FmtInt, term_deco
-from gco.syntax.stdattrs    import gvar
+from gco.syntax.stdattrs import gvar
 
 #: Automatic export off
 __all__ = []
@@ -67,35 +67,33 @@ class BackgroundStdError(_BackgroundErrorInfo):
 
     """
 
-    _footprint = [
-        dict(
-            info='Background error standard deviation',
-            attr=dict(
-                kind=dict(
-                    values=['bgstderr', 'bg_stderr', 'bgerrstd'],
-                    remap=dict(autoremap='first'),
-                ),
-                stage=dict(
-                    optional=True,
-                    default='unbal',
-                    values=['scr', 'vor', 'full', 'unbal', 'profile'],
-                    remap=dict(vor='unbal'),
-                ),
-                origin=dict(
-                    optional=True,
-                    values=['ens', 'diag'],
-                    default = 'ens',
-                ),
-                gvar = dict(
-                    default = 'errgrib_vor_monthly'
-                ),
-                nativefmt=dict(
-                    values=['grib', 'ascii'],
-                    default='grib',
-                ),
+    _footprint = dict(
+        info='Background error standard deviation',
+        attr=dict(
+            kind=dict(
+                values=['bgstderr', 'bg_stderr', 'bgerrstd'],
+                remap=dict(autoremap='first'),
             ),
-        )
-    ]
+            stage=dict(
+                optional=True,
+                default='unbal',
+                values=['scr', 'vor', 'full', 'unbal', 'profile'],
+                remap=dict(vor='unbal'),
+            ),
+            origin=dict(
+                optional=True,
+                values=['ens', 'diag'],
+                default = 'ens',
+            ),
+            gvar = dict(
+                default = 'errgrib_vor_monthly'
+            ),
+            nativefmt=dict(
+                values=['grib', 'ascii'],
+                default='grib',
+            ),
+        ),
+    )
 
     @property
     def realkind(self):
@@ -128,33 +126,25 @@ class BackgroundStdError(_BackgroundErrorInfo):
         return '.m{:02d}'.format(self.date.month)
 
 
-class SplitBackgroundStdError(BackgroundStdError):
-    """Background error standard deviation, split by variable."""
-    _footprint = [
-        dict(
-            info='Background error standard deviation',
-            attr=dict(
-                variable=dict(
-                    info = "Variable concerned by stderr.",
-                ),
-                gvar = dict(
-                    default = 'errgrib_vor_[variable]_monthly'
-                ),
-            ),
-        )
-    ]
+@namebuilding_append('src', lambda s: s.variable)
+class SplitedBackgroundStdError(BackgroundStdError):
+    """Background error standard deviation, for a given variable."""
 
-    def namebuilding_info(self):
-        """Generic information for names fabric, with radical = ``bcor``."""
-        infos = super(SplitBackgroundStdError, self).namebuilding_info()
-        infos['src'].append(self.variable)
-        return infos
+    _footprint = dict(
+        info='Background error standard deviation',
+        attr=dict(
+            variable=dict(
+                info = "Variable contained in this resource.",
+            ),
+            gvar = dict(
+                default = 'errgrib_vor_[variable]_monthly'
+            ),
+        ),
+    )
 
 
 class BackgroundErrorNorm(_BackgroundErrorInfo):
-    """
-    Background error normalisation data for wavelet covariances.
-    """
+    """Background error normalisation data for wavelet covariances."""
 
     _footprint = [
         dict(
@@ -196,9 +186,7 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class Wavelet(GeoFlowResource):
-    """
-    Background error wavelet covariances.
-    """
+    """Background error wavelet covariances."""
 
     _footprint = [
         term_deco,
@@ -246,9 +234,7 @@ class Wavelet(GeoFlowResource):
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class RawControlVector(GeoFlowResource):
-    """
-    Raw Control Vector as issued by minimisation, playing the role of an Increment.
-    """
+    """Raw Control Vector as issued by minimisation, playing the role of an Increment."""
 
     _footprint = dict(
         info = 'Raw Control Vector',
@@ -271,9 +257,7 @@ class RawControlVector(GeoFlowResource):
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
 class InternalMinim(GeoFlowResource):
-    """
-    Generic class for resources internal to minimisation.
-    """
+    """Generic class for resources internal to minimisation."""
 
     _abstract = True
     _footprint = dict(
@@ -296,9 +280,7 @@ class InternalMinim(GeoFlowResource):
 
 
 class StartingPointMinim(InternalMinim):
-    """
-    Guess as reprocessed by the minimisation.
-    """
+    """Guess as reprocessed by the minimisation."""
 
     _footprint = dict(
         info = 'Starting Point Output Minim',
@@ -319,9 +301,7 @@ class StartingPointMinim(InternalMinim):
 
 
 class AnalysedStateMinim(InternalMinim):
-    """
-    Analysed state as produced by the minimisation.
-    """
+    """Analysed state as produced by the minimisation."""
 
     _footprint = dict(
         info = 'Analysed Output Minim',
@@ -342,9 +322,7 @@ class AnalysedStateMinim(InternalMinim):
 
 
 class PrecevMap(FlowResource):
-    """
-    Map of the precondionning eigenvectors as produced by minimisation.
-    """
+    """Map of the precondionning eigenvectors as produced by minimisation."""
 
     _footprint = dict(
         info = 'Prec EV Map',
@@ -369,9 +347,7 @@ class PrecevMap(FlowResource):
 
 @namebuilding_append('src', lambda s: str(s.evnum))
 class Precev(FlowResource):
-    """
-    Precondionning eigenvectors as produced by minimisation.
-    """
+    """Precondionning eigenvectors as produced by minimisation."""
 
     _footprint = dict(
         info = 'Starting Point Output Minim',
@@ -406,7 +382,8 @@ class IOassignScript(Script):
                     default = 'ioassign_script_[purpose]'
                 ),
                 purpose=dict(
-                    info = "The purpose of the script"
+                    info = "The purpose of the script",
+                    values = ['merge', 'create']
                 ),
             )
         )

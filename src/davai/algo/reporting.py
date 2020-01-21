@@ -106,7 +106,7 @@ class XPsetup(AlgoComponent):
     _footprint = [
         stdattrs.xpid,
         dict(
-            info = "Save characteristics of the testing experiment.",
+            info = "Save characteristics of the tested experiment.",
             attr = dict(
                 kind = dict(
                     values   = ['xpsetup'],
