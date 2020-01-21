@@ -100,6 +100,30 @@ class XpidRegister(AlgoComponent):
         return details
 
 
+class XPsetup(AlgoComponent):
+    """Collect metadata about the experiment."""
+
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the testing experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['xpsetup'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        import davai_tbx  # @UnresolvedImport
+        xpm = davai_tbx.util.XPMetadata(self.experiment)
+        xpm.write()
+
+
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Expertise algo to catch exceptions in the parsing/summary/comparison,
