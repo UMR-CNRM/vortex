@@ -106,20 +106,23 @@ class GridTarget(GenvModelGeoResource):
     Resource describing a grid for interpolation of data based on massifs geometry
     """
 
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ["interpolgrid"],
-            ),
-            nativefmt = dict(
-                values  = ['netcdf', 'nc'],
-                default = 'netcdf',
-            ),
-            gvar = dict(
-                default = '[kind]',
-            ),
+    _footprint = [
+        gdomain,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values = ["interpolgrid"],
+                ),
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                ),
+                gvar = dict(
+                    default = '[kind]_[gdomain]',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

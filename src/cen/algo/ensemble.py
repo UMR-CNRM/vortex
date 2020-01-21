@@ -544,7 +544,6 @@ class SyvaprWorker(_SafranWorker):
             kind = dict(
                 values = ['syvapr']
             ),
-
         )
     )
 
@@ -578,9 +577,7 @@ class SyvafiWorker(_SafranWorker):
                 values = ['syvafi']
             ),
             deterministic = dict(
-                type     = bool,
                 default  = False,
-                optional = True,
             ),
         )
     )

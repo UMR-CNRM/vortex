@@ -275,11 +275,13 @@ class Surfex_Parallel(Parallel):
 
 
 class Interpol_Forcing(Parallel):
-    """This algo component is designed to interpolate SAFRAN forcings on regular grid
-    with MPI parallelization."""
+    """
+    This algo component is designed to interpolate SAFRAN forcings on regular grid
+    with MPI parallelization.
+    """
 
     _footprint = dict(
-        info = 'AlgoComponent designed to run SURFEX experiments over large domains '
+        info = 'AlgoComponent designed to interpolate SAFRAN forcings on regular grid '
                'with MPI parallelization.',
         attr = dict(
             binary = dict(
@@ -297,4 +299,3 @@ class Interpol_Forcing(Parallel):
             self.system.mv(forcing.rh.container.filename, 'input.nc')
             super(Interpol_Forcing, self).execute(rh, opts)
             self.system.mv('output.nc', forcing.rh.container.filename)
-
