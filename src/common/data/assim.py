@@ -127,7 +127,7 @@ class BackgroundStdError(_BackgroundErrorInfo):
 
 
 @namebuilding_append('src', lambda s: s.variable)
-class SplitedBackgroundStdError(BackgroundStdError):
+class SplitBackgroundStdError(BackgroundStdError):
     """Background error standard deviation, for a given variable."""
 
     _footprint = dict(
