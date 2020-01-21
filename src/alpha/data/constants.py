@@ -3,9 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import re
-
 from bronx.fancies import loggers
+
+from gco.syntax.stdattrs import gdomain
 
 from common.data.consts import GenvModelResource
 
@@ -15,23 +15,24 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class Relief(GenvModelResource):
-    """
+class AlphaElevation(GenvModelResource):
+    """Some kind of elevation data for ALPHA.
+
     A Genvkey can be given.
     """
     _footprint = [
-        #gdomain,
+        gdomain,
         dict(
-            info = 'My comment about this resource...',
+            info = 'Some kind of elevation data for ALPHA.',
             attr = dict(
                 kind = dict(
-                    values  = ['relief']
+                    values  = ['elevation']
                 ),
                 format = dict(
                     values = ['grib']
                 ),
                 gvar = dict(
-                    default = 'ALPHA_RELIEF_CONSTANT_[geometry]',
+                    default = 'ALPHA_RELIEF_CONSTANT_[gdomain]',
                 ),
                 model = dict(
                     values = ['alpha']
@@ -44,14 +45,15 @@ class Relief(GenvModelResource):
     def realkind(self):
         return 'relief'
 
-class Directive(GenvModelResource):
-    """
+
+class AlphaConfig(GenvModelResource):
+    """Some kind configuration file for ALPHA.
+
     A Genvkey can be given.
     """
     _footprint = [
-        #gdomain,
         dict(
-            info = 'My comment about this resource...',
+            info = 'Some kind configuration file for ALPHA.',
             attr = dict(
                 kind = dict(
                     values  = ['config']

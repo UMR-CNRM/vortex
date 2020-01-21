@@ -6,7 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from vortex.tools.addons import AddonGroup
 
 # Load the proper Addon modules...
-from . import polling 
+from . import polling  # @UnusedImport
 
 #: No automatic export
 __all__ = []
@@ -24,4 +24,4 @@ class AlphaAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_alpha',) # IO polling                    
+    _addonslist = ('iopoll_alpha',)  # IO polling

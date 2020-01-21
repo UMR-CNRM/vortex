@@ -14,9 +14,7 @@ logger = loggers.getLogger(__name__)
 
 
 class IO_Poll_Alpha(addons.Addon):
-    """
-    Scpecific script for polling files. 
-    """
+    """Specific script for polling files produce by an Alpha script/executable."""
     _footprint = dict(
         info = 'Default io_poll alpha system interface',
         attr = dict(
@@ -24,7 +22,7 @@ class IO_Poll_Alpha(addons.Addon):
                 values  = ['iopoll_alpha'],
             ),
             interpreter = dict(
-                values  = ['bash', 'sh','ksh'],
+                values  = ['bash', 'sh', 'ksh'],
                 default = 'sh',
                 optional = True,
             ),
@@ -36,9 +34,8 @@ class IO_Poll_Alpha(addons.Addon):
 
     def iopoll_alpha(self, vconf):  # @UnusedVariable
         """Do the actual job of polling files prefixed by ``prefix``."""
-        logger.info("Execution IOPOLL Alpha")
-        cmd = [vconf]
+        logger.info("IOPOLL Alpha execution")
         # Catch the processed files in the stdout flux of the script
-        rawout = self._spawn(cmd)
+        rawout = self._spawn([vconf])
         # Cumulative results
         return rawout

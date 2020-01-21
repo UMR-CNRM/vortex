@@ -254,7 +254,7 @@ def obsfire_bnames(resource, provider):
 
 def chemical_bc_bnames(resource, provider):
     """docstring for chemical_bc_bnames"""
-    return  resource.real_name
+    return 'bc22_{0.ymdh:s}.nc'.format(resource.date + resource.term)
 
 
 def geofields_bnames(resource, provider):
@@ -639,7 +639,7 @@ def global_snames(resource, provider):
             elif resource.filling == 'soil':
                 bname = 'SSOL_glob.grb'
         elif resource.vapp_origin == 'pg1':
-            if resource.vconf_origin in ['pagrex','parome']:
+            if resource.vconf_origin in ['pagrex', 'parome']:
                 bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
             if resource.vconf_origin == 'pa':
                 bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'

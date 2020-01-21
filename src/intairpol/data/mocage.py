@@ -33,9 +33,6 @@ class ChemicalBoundaryConditions(GeoFlowResource):
                     default  = 'netcdf',
                     optional = True
                 ),
-                real_name = dict(
-                    optional = True
-                ),
             )
         )
     ]

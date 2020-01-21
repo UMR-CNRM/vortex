@@ -24,6 +24,7 @@ from collections import namedtuple
 from datetime import datetime
 
 import six
+from six.moves.urllib import request as urlrequest
 from six.moves.urllib import parse as urlparse
 
 from bronx.fancies import loggers
@@ -77,6 +78,29 @@ def uriparse(uristring):
 def uriunparse(uridesc):
     """Delegates to :mod:`urlparse` the job to unparse the given description (as a dictionary)."""
     return urlparse.urlunparse(uridesc)
+
+
+def http_post_data(url, data, ok_statuses=(), proxies=None):
+    if not isinstance(data, bytes if six.PY3 else str):
+        data = urlparse.urlencode(data)
+    handlers = []
+    if isinstance(proxies, dict):
+        handlers.append(urlrequest.ProxyHandler(proxies))
+    if isinstance(proxies, (list, tuple)):
+        handlers.append(urlrequest.ProxyHandler({'http': proxies}))
+    opener = urlrequest.build_opener(* handlers)
+    req = urlrequest.Request(url=url, data=data)
+    try:
+        req_f = opener.open(req)
+        req_rc = req_f.getcode()
+        req_info = req_f.info()
+        req_data = req_f.read().decode('utf-8')
+        if ok_statuses:
+            return req_rc in ok_statuses, req_rc, req_info, req_data
+        else:
+            return 200 <= req_rc < 400, req_rc, req_info, req_data
+    finally:
+        req_f.close()
 
 
 def netrc_lookup(logname, hostname, nrcfile=None):
@@ -599,7 +623,7 @@ class StdFtp(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
         self.close()
 
 
@@ -1349,7 +1373,7 @@ class ActiveSshTunnel(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
         self.close()
 
 
