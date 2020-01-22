@@ -330,9 +330,8 @@ class SurScriptSurges(BlackBox):
         return 'SurScriptBinary'
 
 
-# LFM: docstring
 class MasterWaves(OceanographicModel):
-    """."""
+    """ Master MFWAM exe """
     _footprint = [
         gvar,
         dict(
@@ -356,13 +355,12 @@ class MasterWaves(OceanographicModel):
         return 'WaveChief'
 
 
-# LFM: docstring + info
 class Filteralti(BlackBox):
-    """."""
+    """ Altimeter data filtering."""
     _footprint = [
         gvar,
         dict(
-            info = 'SurScript Surges',
+            info = 'Altimeter data filtering',
             attr = dict(
                 kind = dict(
                     values = ['Filteralti'],
@@ -386,13 +384,12 @@ class Filteralti(BlackBox):
         return ' '.join([begindate.ymdhms, enddate.ymdhms])
 
 
-# LFM: docstring + info ?
 class InterpWave(BlackBox):
-    """."""
+    """ MFWAM output post-processing."""
     _footprint = [
         gvar,
         dict(
-            info = '',
+            info = 'MFWAM output post-processing',
             attr = dict(
                 kind = dict(
                     values = ['InterpWave'],

@@ -124,10 +124,13 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         #      en regardant quels sont les gribs présents.
         # LFM: Pourrait il y en avoir plus que deux ? Ne vaudrait il pas mieux en
         #      traiter un ou plus (en les triant par date de validité par exemple) ?
-        if self.twowinds:
+        windcandidate = [x.rh for x in self.context.sequence.effective_inputs(role=re.compile('wind'),
+                                                                              kind = 'gridpoint')]
+        if len(windcandidate)==2:
+#        if self.twowinds:
             # Check for input grib files to concatenate
             # LFM: Mauvais usage du role. role = Forcing ? WindForcing ?
-            gpsec = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('Gribin'),
+            gpsec = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('wind'),
                                                                            kind = 'gridpoint') ]
             # LFM: Et si il y a plus de deux gribs en entrée ???
             # Check for input grib files to concatenate
@@ -153,8 +156,8 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             datefinana = rhgrib.resource.date
 
-        else:
-            rhgrib = self.context.sequence.effective_inputs(role = re.compile('Gribin'),
+        elif len(windcandidate)==1:
+            rhgrib = self.context.sequence.effective_inputs(role = re.compile('wind'),
                                                             kind = 'gridpoint')[0].rh
             # LFM: Et si il y a plusieurs gribs en entrée ???
             # LFM: Si sfcwindin existe déjà, on fait quoi ?
@@ -166,15 +169,13 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 logger.info('fcterm %s', fcterm)
 
             datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
+            datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             if self.isana:
-                # LFM: pourquoi pas : datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin ?
-                # LFM: en fonction de la réponce précédente: pourquoi ne pas sortir
-                #      ce truc du bloc if/else ?
-                datedebana = rhgrib.resource.date - self.anabegin
                 datefinana = rhgrib.resource.date
             else:
-                datedebana = rhgrib.resource.date + self.deltabegin
                 datefinana = datedebana
+        else:
+            raise ValueError("No winds or too much")
 
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'), kind=('namelist'))
@@ -192,10 +193,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         # LFM: Et les autres types de données genre SAR. Pourquoi pas jouer sur
         #      le role avec un truc à peu près claire du genre Observations ?
         if self.assim:
-            # LFM: role = Altidata ne garantie pas que la ressource soit réellement des
-            #      données altimetrique. Mauvais usage du role
-            for altisec in self.context.sequence.effective_inputs(role = re.compile('Altidata'),
-                                                                  kind = 'altidata'):
+            for altisec in self.context.sequence.effective_inputs(kind = 'altidata'):
 
                 r = altisec.rh
                 r.contents.sort()
@@ -219,38 +217,14 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcandidate[0].rh.save()
 
         # Tweak Namelist guess dates
-        nblock1 = bnamelist.NamelistBlock('NAOS')
-        nblock1['CLSOUT'] = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
-        logger.info('Guess date namelist block:\n%s', nblock1.dumps())
-        with io.open('fort.3') as fhnam:
-            fhnam.write(nblock1.dumps())
-        # Ici, cela donne :
-        # &NAOS
-        #   CLSOUT='2020010100', '2020010106', '2020010112',
-        # /
+ 
+        dt = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
+        outstr0 = [ " &NAOS \n   CLSOUT='{0:s}', \n / \n".format(x) for x in dt ]
+        outstr = ''.join(outstr0)
+        with io.open('fort.3','w') as fhnam:
+            fhnam.write(outstr)
 
-        # LFM: La formulation original ne peut pas marcher non ? Cela donne
-        # &NAOS
-        #   CLSOUT='2020010100',
-        # /
-        # &NAOS
-        #   CLSOUT='2020010106',
-        # /
-        # &NAOS
-        #   CLSOUT='2020010112',
-        # /
-        # Comment fortran comprend ce truc
-        # tmpout = 'fort.3'
-        # dt = [ (rhgrib.resource.date + Time(x)).compact() for x in self.list_guess ]
-        # outstr0 = [ " &NAOS \n   CLSOUT='{0:s}', \n / \n".format(x) for x in dt ]
-        # outstr = ''.join(outstr0)
-        #
-        # filenam = open(tmpout, 'w')
-        # with filenam as nam:
-        #     nam.write(outstr)
-        # filenam.close()
-        #
-        # self.system.cat(namcandidate[0].rh.container.localpath(), output=tmpout, outmode='a')
+        self.system.cat(namcandidate[0].rh.container.localpath(), output='fort.3', outmode='a')
 
         if self.promises:
             self.io_poll_sleep = 20
@@ -353,24 +327,9 @@ class MfwamGauss2Grib(ParaBlindRun):
                 optional = True,
                 default = 600,
             ),
-            flyargs = dict(
-                default = ('regMPP', 'regAPP',),
-            ),
-            flypoll = dict(
-                default = 'iopoll_marine',
-            ),
         )
     )
 
-    # LFM: docstring ?
-    def prepare(self, rh, opts):  # @UnusedVariable
-
-        if self.promises:
-            self.io_poll_sleep = 20
-            self.io_poll_kwargs = dict(model=rh.resource.model)
-            self.flyput = True
-        else:
-            self.flyput = False
 
     # LFM: docstring
     def execute(self, rh, opts):
@@ -421,6 +380,7 @@ class MfwamGauss2Grib(ParaBlindRun):
 # LFM: file_exe supprimé -> normalement ne sert à rien !
 # LFM: On fait le présuposé que "../" + dom + ".nam" existe : il faudrait au moins le vérifier
 #      dans l'algocomponent
+#AD : j'ai remis file_exe pour citer le nom de l'exécutable lors de sa copie.
 class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
     """."""
 
@@ -437,6 +397,10 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 type = FPList,
             ),
             file_out = dict(),
+            file_exe = dict(
+                optional = True,
+                default  = 'transfo_grib.exe',
+            )
         )
     )
 
@@ -454,17 +418,18 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
 
             sh.softlink(sh.path.join(cwd, self.file_in), self.fortinput)
+            sh.cp(sh.path.join(cwd,self.file_exe),self.file_exe)
 
             for dom in self.grille:
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
-                sh.cp(sh.path.join(cwd, dom + ".nam", 'fort.2'))
+                sh.cp(sh.path.join(cwd, dom + ".nam"), 'fort.2')
                 # execution
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output
                 output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
                 sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt = 'grib')
-                output_files.add(output_file)
+                output_files.add(sh.path.join(cwd,output_file))
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()

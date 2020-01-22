@@ -291,6 +291,7 @@ class TarResult(GeoFlowResource):
         return 'surges_tarfile'
 
 
+
 @namebuilding_append('src', lambda s: s.fields)
 class WaveInit(Historic):
     """Class of"""
@@ -312,49 +313,12 @@ class WaveInit(Historic):
             ),
         )
     )
+    
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return '(prefix:fieldskey)(termfix:modelkey)(suffix:modelkey)'
 
-
-# LFM: Pourquoi pas grib directement ?
-class WaveOutput(GridPoint):
-    """Class of"""
-    _footprint = dict(
-        info = 'forecast output MPP and analyse next assimilation APP',
-        attr = dict(
-            kind = dict(
-                values = ['WaveOutput'],
-            ),
-            origin = dict(
-                values = ['fcst', 'ana', 'assim'],
-                remap = {
-                    'assim': 'ana',
-                },
-            ),
-            nativefmt = dict(
-                default = 'grib'
-            ),
-        )
-    )
-
-
-# LFM: Le nom laisse penser qu'il s'agit de GRIB, si c'est le cas pourquoi pas
-#      utiliser la classe GridPoint
-class WamInit(GeoFlowResource):
-
-    _footprint = dict(
-        info = 'file for Extraction grb',
-        attr = dict(
-            nativefmt = dict(
-                default = 'foo',
-            ),
-            kind = dict(
-                values = ['WamInit'],
-            ),
-        )
-    )
 
 
 @namebuilding_append('src', lambda s: s.satellite)
@@ -376,9 +340,9 @@ class GenericWaveSatelliteData(FlowResource):
     )
 
 
-# LFM: docstring
 class WaveAltidata(GenericWaveSatelliteData):
-
+    """Altimetry data for wave models."""
+    
     _footprint = dict(
         info = 'Altimetric data file',
         attr = dict(
@@ -396,9 +360,9 @@ class WaveAltidata(GenericWaveSatelliteData):
         return 'AltidataWave'
 
 
-# LFM: Meme remarque que précédement
 class SARdataWave(GenericWaveSatelliteData):
-
+    """Satellite spectral data for wave models."""
+    
     _footprint = dict(
         info = 'Spectral data file',
         attr = dict(
@@ -413,9 +377,10 @@ class SARdataWave(GenericWaveSatelliteData):
         return 'SARdataWave'
 
 
-# LFM: docstring
-class WaveAltidataDiagnostic(WaveAltidata):
 
+class WaveAltidataDiagnostic(WaveAltidata):
+    """diagnostic file next altimetric filtering"""
+    
     _footprint = dict(
         info = 'diagnostic file next altimetric filtering',
         attr = dict(
@@ -429,23 +394,3 @@ class WaveAltidataDiagnostic(WaveAltidata):
     def realkind(self):
         return 'diagalti'
 
-
-# LFM: docstring
-# Similitude avec le vent ?
-class WaveCurrent(GeoFlowResource):
-
-    _footprint = dict(
-        info = '',
-        attr = dict(
-            kind = dict(
-                values = ['WaveCurrent'],
-            ),
-            nativefmt = dict(
-                default = 'grib',
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'WaveCurrent'

@@ -230,11 +230,11 @@ class CouplingGridOasis(GenvUsageModelResource):
         return 'CouplingGridOasis'
 
 
-# LFM: Docstring + Info
-class AltimetryPreproc(GenvModelResource):
 
+class AltimetryPreproc(GenvModelResource):
+    """ Thresholds for altimeter preprocessing. """
     _footprint = dict(
-        info = '',
+        info = 'Thresholds for altimeter preprocessing',
         attr = dict(
             nativefmt = dict(
                 values = ['ascii', 'foo', 'unknown'],
@@ -260,11 +260,10 @@ class AltimetryPreproc(GenvModelResource):
         return 'preprocalti'
 
 
-# LFM: Docstring + Info
 class WamPreproc(GenvModelResource):
-
+    """ Constant files for MFWAM """
     _footprint = dict(
-        info = '',
+        info = 'Constant files for MFWAM',
         attr = dict(
             nativefmt = dict(
                 default = 'foo',
@@ -283,11 +282,10 @@ class WamPreproc(GenvModelResource):
         return 'wampreproc'
 
 
-# LFM: Docstring + Info
 class WamGridPost(GenvModelResource):
-
+    """ Information on a grid for MFWAM post-processing"""
     _footprint = dict(
-        info = '',
+        info = 'Grid information for MFWAM post-processing',
         attr = dict(
             nativefmt = dict(
                 default = 'foo',
