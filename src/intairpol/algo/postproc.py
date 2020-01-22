@@ -7,17 +7,14 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 AlgoComponents for MOCAGE post-processing.
 """
 
-import six
-import io
 import re
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
-from bronx.stdtypes import date
 import footprints
 
 from vortex.algo.components import Parallel, BlindRun, Expresso
-from vortex.syntax.stdattrs import a_date, model
+from vortex.syntax.stdattrs import model
 
 #: No automatic export
 __all__ = []
@@ -202,44 +199,37 @@ class PPprevairBDAP(Parallel):
     @property
     def realkind(self):
         return 'ppprevairbdap'
- 
+
     def _fix_nam_macro(self, rh, macro, value):
         """Set a given namelist macro and issue a log message."""
         rh.contents.setmacro(macro, value)
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
-
     def execute(self, rh, opts):
         """Standard execution."""
-
         sh = self.system
-        logger.info('DANS ppprevairbdap***********' )
 
         # Namelist
         namrh = self.context.sequence.effective_inputs(
             role='Namelist',
             kind='namelist',)
-        logger.info('apres copie namelist ***********' )
         if len(namrh) != 1:
             logger.critical('There must be exactly one namelist for hmsplit_grib2 execution. Stop.')
             raise ValueError('There must be exactly one namelist for hmsplit_grib2 execution. Stop.')
 
-        ###logger.info('avant namelist ***********' )
         namrh = namrh[0].rh
-        ###logger.info('apres namelist *********** %s ',namrh )
         if not namrh.container.is_virtual() and sh.path.basename(namrh.container.localpath()) == self.namelist_name:
             logger.critical('The namelist cannot be named "%s".', self.namelist_name)
             raise ValueError()
 
         # save the parametrized namelist
-	##sh.cp( namrh , 'PREVIBASE_param.nam')
-        sh.cp( 'PREVIBASE.nam' , 'PREVIBASE_param.nam')
+        sh.cp('PREVIBASE.nam', 'PREVIBASE_param.nam')
 
         # HM files from forecast
         hmrh = self.context.sequence.effective_inputs(
             role='HMFiles',
             kind='GridPoint' )
-        logger.info('Number of HMFilesFA %d ',  len(hmrh))
+        logger.info('Number of HMFilesFA %d ', len(hmrh))
 
         if len(hmrh) == 0:
             logger.critical('There must be HM files to be opened by hmsplit_grib execution. Stop.')
@@ -257,33 +247,28 @@ class PPprevairBDAP(Parallel):
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
                                                                   r.resource.term.fmthm))
             actualdate = r.resource.date + r.resource.term
-            #logger.info('date %s ',  str(r.resource.date))
-            #logger.info('term %s ',  str(r.resource.term))
-            #logger.info('actualdate %s ',  str(actualdate))
 
-            # Get a new parametrized namelist 
-            sh.cp('PREVIBASE_param.nam', 'PREVIBASE.nam')
+            # Get a new parametrized namelist
+            sh.cp('PREVIBASE_param.nam', 'PREVIBASE.nam', intent='in')
+            sh.cat('PREVIBASE.nam', output=False)
 
             self._fix_nam_macro(namrh, 'YYYY', int(r.resource.date.year))
             self._fix_nam_macro(namrh, 'MM', int(r.resource.date.month))
             self._fix_nam_macro(namrh, 'DD', int(r.resource.date.day))
             self._fix_nam_macro(namrh, 'HH', int(r.resource.term))
-            self._fix_nam_macro(namrh, 'DATEECH',int(actualdate.ymdh))
+            self._fix_nam_macro(namrh, 'DATEECH', int(actualdate.ymdh))
 
-            #namrh.save()
+            namrh.save()
             namrh.container.cat()
 
             # Execute
-            sh.cat('PREVIBASE.nam', output=False)
             super(PPprevairBDAP, self).execute(rh, opts)
 
-
             actualname = 'GRIB_BDAP_' + actualdate.ymdh
-
-            # The grib2 output may be promised for BDAP transferts : put method applied to these outputs
-            # put these outputs in the cache ; IGA will perform the following actions.
+            # The grib2 output may be promised for BDAP transferts : put method
+            # applied to these outputs. put these outputs in the cache ; IGA
+            # will perform the following actions.
             expected = [x for x in self.promises
                         if (re.match(actualname, x.rh.container.localpath()) ) ]
             for thispromise in expected:
                 thispromise.put(incache=True)
-

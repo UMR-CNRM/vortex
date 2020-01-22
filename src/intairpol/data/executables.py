@@ -177,6 +177,7 @@ class TestRestart(BlackBox):
         )
     ]
 
+
 class HMSPLITGRIB2(BlackBox):
     """Convert fields to BDAP grib inputs."""
 
@@ -194,4 +195,3 @@ class HMSPLITGRIB2(BlackBox):
             )
         )
     ]
-

@@ -23,12 +23,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: StaticSurfaceEmissionsPrevair
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ChemicalSurfaceScheme
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: GribTemplate
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GribTemplatePrevair
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -54,6 +64,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: HybridLevels
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ListIdGrib2
    :show-inheritance:
    :members:
    :member-order: alphabetical

@@ -9,14 +9,11 @@ AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 
 import six
 import io
-import re
 
-from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
 
-from vortex.algo.components import Parallel, ParallelOpenPalmMixin, BlindRun, Expresso
+from vortex.algo.components import Parallel, ParallelOpenPalmMixin
 from vortex.syntax.stdattrs import a_date, model
 
 #: No automatic export
@@ -42,9 +39,10 @@ class AbstractMocageRoot(Parallel):
                     type     = date.Time,
                 ),
                 nhcy = dict(
-                    info     = ' meteo coupling frequency',
+                    info     = 'Meteo coupling frequency',
+                    type     = date.Period,
                     optional = True,
-                    default  = '3',
+                    default  = date.Period('PT3H'),
                 ),
                 cpldelta = dict(
                     info     = 'Default delta for coupling based on FM files',
@@ -154,7 +152,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Min Max (smterms) : %04d %d', minsm, maxsm)
         logger.info('self.fcterm.hour  :      %d', self.fcterm.hour)
         logger.info('Fcterm            :      %d', realfcterm)
-        logger.info('NHCY              :      %d', self.nhcy)
+        logger.info('NHCY              :      %s', str(self.nhcy))
 
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
@@ -170,7 +168,8 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'DD2', int(last.day))
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
-        self._fix_nam_macro(namrh, 'NHCY', int(self.nhcy))
+        # NHCY is expressed in hours...
+        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600.)
 
         namrh.save()
         namrh.container.cat()

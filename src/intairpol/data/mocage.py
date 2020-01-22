@@ -33,8 +33,8 @@ class ChemicalBoundaryConditions(GeoFlowResource):
                     default  = 'netcdf',
                     optional = True
                 ),
-                prefix = dict(
-                    default = 'bc22',
+                oparchive_prefix = dict(
+                    default = 'bc22_',
                     optional = True
                 ),
             )
@@ -47,10 +47,9 @@ class ChemicalBoundaryConditions(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        #prefix = 'bc11_'
         actualdate = self.date + self.term
         fmtremap = dict(netcdf='nc')
-        return self.prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
+        return self.oparchive_prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
 
 
 @namebuilding_delete('src')

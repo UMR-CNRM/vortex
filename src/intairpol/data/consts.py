@@ -29,6 +29,7 @@ class StaticSurfaceEmissions(GenvModelResource):
     def realkind(self):
         return 'emiss_cst'
 
+
 class StaticSurfaceEmissionsPrevair(GenvModelResource):
     """
     Emissions files collected by international community.
@@ -37,7 +38,7 @@ class StaticSurfaceEmissionsPrevair(GenvModelResource):
         info = 'Emissions files for sumo',
         attr = dict(
             kind = dict(
-                values  = ['emis_sumo02','mocage_emis_sumo02'],
+                values  = ['emis_sumo02', 'mocage_emis_sumo02'],
             ),
             gvar = dict(
                 default = 'mocage_emis_sumo02'
@@ -221,6 +222,7 @@ class SurfaceEmissionsProfilesTable(GenvModelResource):
     def realkind(self):
         return 'emiss_table'
 
+
 class ListIdGrib2(GenvModelResource):
     """
      List of grib2 idents.
@@ -265,4 +267,3 @@ class GribTemplatePrevair(GenvModelResource):
     @property
     def realkind(self):
         return 'mocage_template_grilles'
-
