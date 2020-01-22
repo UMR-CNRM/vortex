@@ -802,7 +802,7 @@ class IntairpolMDomainConfToolTest(unittest.TestCase):
                          dict(assim=HHDict({Time(0): 'toto', 'default': 'titi'}),
                               production=HHDict({'default': 'TOTO'})))
         # _post_steps_validation
-        psv = MocageDomainsConfTool._post_steps_validation  # (value)
+        psv = MocageDomainsConfTool._any_steps_validation  # (value)
         self.assertTrue(psv('0'))
         self.assertTrue(psv('finalterm'))
         self.assertTrue(psv('0-15-1'))

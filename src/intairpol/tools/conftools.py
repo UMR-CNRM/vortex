@@ -33,8 +33,8 @@ def _add_cutoff_hh_doc(func):
     """Document cutoff and hh arguments."""
     func.__doc__ += """
 
-        :param cutoff: 'assim' or 'production'
-        :param hh: The current simulation basetime
+        :param str cutoff: 'assim' or 'production'
+        :param int hh: The current simulation basetime
         """
     return func
 
@@ -43,9 +43,11 @@ def _add_start_end_doc(func):
     """Document start and end arguments."""
     func.__doc__ += """
 
-        :param start: the series of coupling steps starts at...
-        :param end: the series of coupling steps ends at...
-                    (by default ``self.finalterm`` is used)
+        :param bronx.stdtypes.date.Time start: the series of steps starts at...
+        :param bronx.stdtypes.date.Time end: the series of steps ends at...
+                                             (by default ``self.finalterm`` is used)
+        :param bool first: Return the first element of the steps list
+        :param bool final: Return the last element of the steps list
         """
     return func
 
@@ -56,9 +58,9 @@ def _add_start_end_doc(func):
 
 _MocageDomainInfoBase_keys = ('source_app', 'source_conf', 'source_cutoff',
                               'source_model', 'source_geometry',
-                              'atm_cpl_delta', 'surf_cpl_delta', 'chem_cpl_delta',
-                              'post_steps','restart_steps', 'stats_steps',
-                              'atm_cpl_steps', 'surf_cpl_steps', 'chem_cpl_steps' )
+                              'atm_cpl_delta', 'chem_cpl_delta', 'surf_cpl_delta',
+                              'atm_cpl_steps', 'chem_cpl_steps', 'surf_cpl_steps',
+                              'post_steps', 'restart_steps', 'stats_steps')
 
 _PluralisedMocageDomainInfoBase_keys = [language.Pluralise('en_GB')(k)
                                         for k in _MocageDomainInfoBase_keys]
@@ -167,24 +169,24 @@ class MocageDomainsConfTool(ConfTool):
             ...                                                 source_cutoff='assim',
             ...                                                 source_model='arpege',
             ...                                                 source_geometry='global1798',
-            ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 post_steps='0-12-3,18-finalterm-6',
-            ...                                                 stats_steps='0-finalterm-24',
             ...                                                 atm_cpl_steps='0-finalterm-1',
-            ...                                                 surf_cpl_steps='0-finalterm-24',
-            ...                                                 chem_cpl_steps='0-finalterm-3'),
+            ...                                                 chem_cpl_steps='0-finalterm-3',
+            ...                                                 surf_cpl_steps='0-finalterm-3',
+            ...                                                 post_steps='0-12-3,18-finalterm-6',
+            ...                                                 restart_steps='0-finalterm-24',
+            ...                                                 stats_steps='0-finalterm-24', ),
             ...                                     MACC01=dict(source_app='ifs',
             ...                                                 source_conf='determ',
             ...                                                 source_model='ifs',
             ...                                                 atm_cpl_delta=dict(production='PT24H',
             ...                                                                    assim='PT12H'),
             ...                                                 surf_cpl_delta='PT24H',
+            ...                                                 atm_cpl_steps='0-finalterm-3',
+            ...                                                 surf_cpl_steps='0-finalterm-3',
+            ...                                                 chem_cpl_steps='0-finalterm-3',
+            ...                                                 post_steps='',
             ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 post_steps='0-12-3,18-finalterm-6',
-            ...                                                 stats_steps='0-finalterm-24',
-            ...                                                 atm_cpl_steps='0-finalterm-1',
-            ...                                                 surf_cpl_steps='0-finalterm-24',
-            ...                                                 chem_cpl_steps='0-finalterm-3'),
+            ...                                                 stats_steps='0-finalterm-24', ),
             ...                                     GLOB22=dict(is_like='MACC01'), ),
             ...                                 finalterms=dict(production={'00':72, 'default':48},
             ...                                                 assim=24), )
@@ -196,13 +198,14 @@ class MocageDomainsConfTool(ConfTool):
             source_model    : arpege
             source_geometry : global1798
             atm_cpl_delta   : PT0S
+            chem_cpl_delta  : PT0S
             surf_cpl_delta  : PT0S
-            post_steps      : 0-12-3,18-finalterm-6
-            restart_steps     : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
-            atm_cpl_steps  : 0-finalterm-1
-            surf_cpl_steps : 0-finalterm-24
+            atm_cpl_steps   : 0-finalterm-1
             chem_cpl_steps  : 0-finalterm-3
+            surf_cpl_steps  : 0-finalterm-3
+            post_steps      : 0-12-3,18-finalterm-6
+            restart_steps   : 0-finalterm-24
+            stats_steps     : 0-finalterm-24
             >>> print(mct.ontime_domains('assim', 0)['MACC01'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : ifs
             source_conf     : determ
@@ -210,13 +213,14 @@ class MocageDomainsConfTool(ConfTool):
             source_model    : ifs
             source_geometry : None
             atm_cpl_delta   : PT43200S
+            chem_cpl_delta  : PT43200S
             surf_cpl_delta  : P1DT0S
-            post_steps      : 0-12-3,18-finalterm-6
-            restart_steps     : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
-            atm_cpl_steps  : 0-finalterm-1
-            surf_cpl_steps : 0-finalterm-24
+            atm_cpl_steps   : 0-finalterm-3
             chem_cpl_steps  : 0-finalterm-3
+            surf_cpl_steps  : 0-finalterm-3
+            post_steps      :
+            restart_steps   : 0-finalterm-24
+            stats_steps     : 0-finalterm-24
             >>> print(mct.ontime_domains('assim', 0)['GLOB22'])  # doctest: +NORMALIZE_WHITESPACE
             source_app      : ifs
             source_conf     : determ
@@ -224,13 +228,14 @@ class MocageDomainsConfTool(ConfTool):
             source_model    : ifs
             source_geometry : None
             atm_cpl_delta   : PT43200S
+            chem_cpl_delta  : PT43200S
             surf_cpl_delta  : P1DT0S
-            post_steps      : 0-12-3,18-finalterm-6
-            restart_steps     : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
-            Uatm_cpl_steps  : 0-finalterm-1
-            Usurf_cpl_steps : 0-finalterm-24
+            atm_cpl_steps   : 0-finalterm-3
             chem_cpl_steps  : 0-finalterm-3
+            surf_cpl_steps  : 0-finalterm-3
+            post_steps      :
+            restart_steps   : 0-finalterm-24
+            stats_steps     : 0-finalterm-24
 
         In **domains** definitions:
 
@@ -240,11 +245,15 @@ class MocageDomainsConfTool(ConfTool):
               defaults to ``None``
             * the ``atm_cpl_delta`` entry may be omitted; in such a case it will
               defaults to 0;
-              the surface coupling), can be omitted; in such a case they will be
-              atmospheric counterparts;
-            * in the ``post_steps`` entry, the 'finalterm' string can appear in
-              the time range definition. It will be substituted by the value
-              specified in the **finalterms** attribute.
+            * the ``chem_cpl_delta`` entry may be omitted; in such a case it will
+              defaults to `atm_cpl_delta``;
+            * the ``surf_cpl_delta`` entry may be omitted; in such a case it will
+              defaults to `atm_cpl_delta``;
+            * in the ``atm_cpl_steps``, ``chem_cpl_steps``, ``surf_cpl_steps``,
+              ``post_steps``, ``restart_steps`` and ``stats_cpl_steps`` entry,
+              the 'finalterm' string can appear in the time range definition. It
+              will be substituted by the value specified in the **finalterms**
+              attribute.
             * if two domains share identical settings, it is possible to specify
               only an ``is_like`` entry
 
@@ -292,9 +301,13 @@ class MocageDomainsConfTool(ConfTool):
             True
 
         The dictionaries that associates coupling data's date and geometries
-        (this takes into account the ``(atm|surf)_cpl_delta`` entry)::
+        (this takes into account the ``(atm|chem|surf)_cpl_delta`` entry)::
 
             >>> (mct.atm_cpl_dates('assim', '00', '2019080700') ==
+            ...  {'geometry': {'GLOB11': Date('2019080700'),
+            ...                'MACC01': Date('2019080612'), 'GLOB22': Date('2019080612')}})
+            True
+            >>> (mct.chem_cpl_dates('assim', '00', '2019080700') ==
             ...  {'geometry': {'GLOB11': Date('2019080700'),
             ...                'MACC01': Date('2019080612'), 'GLOB22': Date('2019080612')}})
             True
@@ -305,7 +318,12 @@ class MocageDomainsConfTool(ConfTool):
 
         Because of our configuration, the result is different depending on the
         *cutoff* and basetime (because ``atm_cpl_delta`` varies)::
+
             >>> (mct.atm_cpl_dates('production', '00', '2019080700') ==
+            ...  {'geometry': {'GLOB11': Date('2019080700'),
+            ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
+            True
+            >>> (mct.chem_cpl_dates('production', '00', '2019080700') ==
             ...  {'geometry': {'GLOB11': Date('2019080700'),
             ...                'MACC01': Date('2019080600'), 'GLOB22': Date('2019080600')}})
             True
@@ -320,27 +338,54 @@ class MocageDomainsConfTool(ConfTool):
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
             ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
             True
+            >>> (mct.chem_cpl_steps('assim', '00') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
+            ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
+            True
             >>> (mct.surf_cpl_steps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
             ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
             True
 
-        By default, the coupling data's term starts at 0 and ends at ``self.finalterm``
-        but this can be overwritten::
+        A simple way to exclude the first/and last values of the steps list is provided::
+
+            >>> (mct.atm_cpl_steps('assim', '00', first=False) ==
+            ...  {'geometry': {'GLOB11': timerangex('1-24-1'),
+            ...                'MACC01': timerangex('3-24-3'), 'GLOB22': timerangex('3-24-3')}})
+            True
+            >>> (mct.atm_cpl_steps('assim', '00', final=False) ==
+            ...  {'geometry': {'GLOB11': timerangex('0-23-1'),
+            ...                'MACC01': timerangex('0-21-3'), 'GLOB22': timerangex('0-21-3')}})
+            True
+            >>> (mct.atm_cpl_steps('assim', '00', first=False, final=False) ==
+            ...  {'geometry': {'GLOB11': timerangex('1-23-1'),
+            ...                'MACC01': timerangex('3-21-3'), 'GLOB22': timerangex('3-21-3')}})
+            True
+
+        By default, the coupling data's term starts at the first term listed in the settings
+        and ends at ``self.finalterm`` but this can be overwritten::
 
             >>> (mct.atm_cpl_steps('assim', 0, 12, 18) ==
             ...  {'geometry': {'GLOB11': timerangex('12-18-1'),
             ...                'MACC01': timerangex('12-18-3'), 'GLOB22': timerangex('12-18-3')}})
             True
-            >>> (mct.atm_cpl_steps('assim', 0, 12) ==
-            ...  {'geometry': {'GLOB11': timerangex('12-24-1'),
+            >>> (mct.chem_cpl_steps('assim', 0, 12, 18) ==
+            ...  {'geometry': {'GLOB11': timerangex('12-18-3'),
+            ...                'MACC01': timerangex('12-18-3'), 'GLOB22': timerangex('12-18-3')}})
+            True
+            >>> (mct.surf_cpl_steps('assim', 0, 12) ==
+            ...  {'geometry': {'GLOB11': timerangex('12-24-3'),
             ...                'MACC01': timerangex('12-24-3'), 'GLOB22': timerangex('12-24-3')}})
             True
 
-        There are equivalent methods that return values shifted by the ``(atm|surf)_cpl_delta`` entry::
+        There are equivalent methods that return values shifted by the ``(atm|chem|surf)_cpl_delta`` entry::
 
             >>> (mct.atm_cpl_shiftedsteps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
+            ...                'MACC01': timerangex('12-36-3'), 'GLOB22': timerangex('12-36-3')}})
+            True
+            >>> (mct.chem_cpl_shiftedsteps('assim', '00') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
             ...                'MACC01': timerangex('12-36-3'), 'GLOB22': timerangex('12-36-3')}})
             True
             >>> (mct.surf_cpl_shiftedsteps('assim', '00') ==
@@ -354,31 +399,42 @@ class MocageDomainsConfTool(ConfTool):
             >>> (mct.atm_cpl_steps('production', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
             ...                'MACC01': timerangex('0-72-3'), 'GLOB22': timerangex('0-72-3')}})
-            False
+            True
             >>> (mct.atm_cpl_shiftedsteps('production', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
             ...                'MACC01': timerangex('24-96-3'), 'GLOB22': timerangex('24-96-3')}})
-            False
+            True
             >>> (mct.atm_cpl_steps('production', '12') ==
             ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
             ...                'MACC01': timerangex('0-48-3'), 'GLOB22': timerangex('0-48-3')}})
-            False
+            True
             >>> (mct.atm_cpl_shiftedsteps('production', '12') ==
             ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
             ...                'MACC01': timerangex('24-72-3'), 'GLOB22': timerangex('24-72-3')}})
-            False
+            True
 
-        The dictionary that associates post-processing terms and geometries::
+        The dictionary that associates post-processing terms and geometries work the same way::
 
-            #>>> (mct.post_steps('production', '12') ==
-            #...  {'geometry': {'GLOB11': timerangex('0-12-3,18-48-6'), 'MACC01':[], 'GLOB22':[]}})
-#            True
-#          >>> (mct.post_steps('production', '00') ==
-#           ...  {'geometry': {'GLOB11': timerangex('0-12-3,18-72-6'), 'MACC01':[], 'GLOB22':[]}})           True
-#           True
-#           >>> (mct.post_steps('production', '00', 6, 24) ==
-#           ...  {'geometry': {'GLOB11': timerangex('6-12-3,18-24-6'), 'MACC01':[], 'GLOB22':[]}})
-#           True
+            >>> (mct.post_steps('production', '12') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-12-3,18-48-6'), 'MACC01':[], 'GLOB22':[]}})
+            True
+            >>> (mct.post_steps('production', '00') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-12-3,18-72-6'), 'MACC01':[], 'GLOB22':[]}})
+            True
+            >>> (mct.post_steps('production', '00', 6, 24) ==
+            ...  {'geometry': {'GLOB11': timerangex('6-12-3,18-24-6'), 'MACC01':[], 'GLOB22':[]}})
+            True
+
+        Conversely, the dictionary that associates restart/stats terms and geometries::
+
+            >>> (mct.restart_steps('production', '12') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-48-24'), 'MACC01':timerangex('0-48-24'),
+            ...                'GLOB22':timerangex('0-48-24')}})
+            True
+            >>> (mct.stats_steps('production', '12') ==
+            ...  {'geometry': {'GLOB11': timerangex('0-48-24'), 'MACC01':timerangex('0-48-24'),
+            ...                'GLOB22':timerangex('0-48-24')}})
+            True
 
         Domains can be grouped together and used jointly (if they share the same configuration)::
 
@@ -415,13 +471,14 @@ class MocageDomainsConfTool(ConfTool):
             source_model    : arpege
             source_geometry : global1798
             atm_cpl_delta   : PT0S
+            chem_cpl_delta  : PT0S
             surf_cpl_delta  : PT0S
-            post_steps      : 0-12-3,18-finalterm-6
-            restart_steps     : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
-            atm_cpl_steps  : 0-finalterm-1
-            surf_cpl_steps : 0-finalterm-24
+            atm_cpl_steps   : 0-finalterm-1
             chem_cpl_steps  : 0-finalterm-3
+            surf_cpl_steps  : 0-finalterm-3
+            post_steps      : 0-12-3,18-finalterm-6
+            restart_steps   : 0-finalterm-24
+            stats_steps     : 0-finalterm-24
 
         For example, to get the source_app mapping:
 
@@ -531,43 +588,34 @@ class MocageDomainsConfTool(ConfTool):
 
     @staticmethod
     def _any_steps_validation(value):
-        logger.info('any_steps-validation %s value ', value)
         if value:
             # Use a fake finalterm just to test that the expression is valid...
             # The actual expansion will be done latter
-            # newvalue = value.replace('finalterm', '480:00')
-            # if the init in Mocage-domains setup is 1-12-1,15-24-3 , OLIVE gives a list [1-12-1,15-24-3]
-            # replace method and rangex method wait for a string 
-            # transform a list type to a string if necessary 
-            if isinstance(value,list):
-                newvalue = ','.join(value)
-            else:
-                newvalue = value
-            newvalue = newvalue.replace('finalterm', '480:00')
-            print('any_steps_validation newvalue=',newvalue)
-            try:
-                value = timerangex(newvalue)
-            except (ValueError, TypeError):
-                return False
+            if not isinstance(value, list):
+                value = [value, ]
+            for a_value in value:
+                newvalue = a_value.replace('finalterm', '480:00')
+                try:
+                    value = timerangex(newvalue)
+                except (ValueError, TypeError):
+                    return False
         return True
-
 
     def _add_domain_def(self, dname, ddef):
         """Adds a domain in _domainsdefs given its name and definition dictionary."""
-
         if not isinstance(ddef, dict):
             raise MocageDomainsConfError('A domain definition must be a dictionary')
         # Set default values
         ddef.setdefault('source_cutoff', 'production')
         ddef.setdefault('source_geometry', None)
         ddef.setdefault('atm_cpl_delta', 0)
-        ddef.setdefault('chem_cpl_delta', 0)
+        ddef.setdefault('chem_cpl_delta', ddef.get('atm_cpl_delta'))
         ddef.setdefault('surf_cpl_delta', ddef.get('atm_cpl_delta'))
-        ddef.setdefault('post_steps', '')
-        ddef.setdefault('restart_steps', '')
+        ddef.setdefault('atm_cpl_steps', '')
         ddef.setdefault('chem_cpl_steps', '')
         ddef.setdefault('surf_cpl_steps', '')
-        ddef.setdefault('atm_cpl_steps', '')
+        ddef.setdefault('post_steps', '')
+        ddef.setdefault('restart_steps', '')
         ddef.setdefault('stats_steps', '')
         # Generic transform
         for k in ('source_app', 'source_conf', 'source_cutoff', 'source_model', 'source_geometry'):
@@ -575,21 +623,20 @@ class MocageDomainsConfTool(ConfTool):
                 raise MocageDomainsConfError('The {:s} key is missing in the {!s} domain definition'.format(k, dname))
             ddef[k] = self._item_transform(ddef[k])
         # Generic transform + Period cast
-        for k in ('atm_cpl_delta', 'surf_cpl_delta', 'chem_cpl_delta'):
+        for k in ('atm_cpl_delta', 'chem_cpl_delta', 'surf_cpl_delta'):
             ddef[k] = self._item_transform(ddef[k], cast=Period)
         # Deal with any steps
-        for k in ('post_steps','restart_steps', 'stats_steps','atm_cpl_steps', 'surf_cpl_steps', 'chem_cpl_steps' ):
+        for k in ('post_steps', 'restart_steps', 'stats_steps', 'atm_cpl_steps',
+                  'surf_cpl_steps', 'chem_cpl_steps' ):
             ddef[k] = self._item_transform(ddef[k],
                                            validcb=self._any_steps_validation,
                                            validmsg='any_steps should be parsable by timerangex')
         try:
             ddef_tuple = MocageDomainInfo(** ddef)
         except TypeError:
-            raise MocageDomainsConfError("Unable to create the domain's configuration object in deal with any steps" +
-                                             "(some data are probably missing or misspelled).")
+            raise MocageDomainsConfError("Unable to create the domain's configuration object " +
+                                         "(some data are probably missing or misspelled).")
         self.domains[dname] = ddef_tuple
-        print (ddef['atm_cpl_steps'])
-
 
     @_add_cutoff_hh_doc
     def all_active(self, cutoff, hh):
@@ -600,7 +647,6 @@ class MocageDomainsConfTool(ConfTool):
     def first_active(self, cutoff, hh):
         """The first active domain."""
         return self.actives[cutoff][hh][0]
-
 
     @_add_cutoff_hh_doc
     def grep_active(self, cutoff, hh, *candidates):
@@ -651,163 +697,115 @@ class MocageDomainsConfTool(ConfTool):
         return self._domain_any_cpl_date(cutoff, hh, curdate, 'atm_cpl_delta')
 
     @_add_cutoff_hh_doc
-    def surf_cpl_dates(self, cutoff, hh, curdate):
-        """The geometry/surf_cpl_date :mod:`footprints`' substitution dictionary."""
-        return self._domain_any_cpl_date(cutoff, hh, curdate, 'surf_cpl_delta')
-
-    @_add_cutoff_hh_doc
     def chem_cpl_dates(self, cutoff, hh, curdate):
         """The geometry/chem_cpl_date :mod:`footprints`' substitution dictionary."""
         return self._domain_any_cpl_date(cutoff, hh, curdate, 'chem_cpl_delta')
 
-    def _domain_any_cpl_steps(self, cutoff, hh, entry, start, end,
-                              shift=False, final=True , first=True):
-        logger.info('  new domain_any_cpl_steps entry= %s ', entry )
-        print('self=',self)
-        print ('start=',start,'end=',end)
-        if start is None:
-            start = Time(0)
+    @_add_cutoff_hh_doc
+    def surf_cpl_dates(self, cutoff, hh, curdate):
+        """The geometry/surf_cpl_date :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_cpl_date(cutoff, hh, curdate, 'surf_cpl_delta')
+
+    def _expand_any_steps(self, ddef, entry, cutoff, hh, shift):
+        rangestr = getattr(ddef, entry)[cutoff][hh]
+        if rangestr:
+            if not isinstance(rangestr, list):
+                rangestr = [rangestr, ]
+            actual_finalterm_str = str(self.finalterms[cutoff][hh])
+            return timerangex(",".join([rs.replace('finalterm',
+                                                   actual_finalterm_str) for rs in rangestr]),
+                              shift=shift)
         else:
-            start = Time(start)
+            return []
+
+    def _domain_any_steps(self, cutoff, hh, entry, start, end,
+                          shift=False, final=True, first=True):
+        start = Time(start)
         if end is None:
             end = self.finalterms[cutoff][hh]
         else:
             end = Time(end)
-        dentry = entry
+        dentry = entry.replace('steps', 'delta')
         subdict = dict()
         for d, v in self.domains.items():
-            dshift = getattr(v, dentry)[cutoff][hh] if shift else Time(0)
-            logger.info('  dom= %s ', d  )
-            ##print('  valsteps= ', v  )
-            subdict[d] = list(filter(lambda t: ((t - dshift > start) and (t -dshift < end) ) or (final and t - dshift == end) or ( first and t - dshift == start) ,
-                                     timerangex(getattr(v, entry)[cutoff][hh],
-                                                shift=dshift)))
+            dshift = getattr(v, dentry, Time(0))[cutoff][hh] if shift else Time(0)
+            subdict[d] = list(filter(lambda t: ((t - dshift > start) and (t - dshift < end)) or
+                                               (final and t - dshift == end) or
+                                               (first and t - dshift == start),
+                                     self._expand_any_steps(v, entry, cutoff, hh, dshift)))
         return dict(geometry=subdict)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def freq_nhcy_run(self, cutoff, hh, start):
+    def freq_nhcy_run(self, cutoff, hh, start=0):
         """nhcy used by mocage algo"""
-        cpl_steps = self._any_steps(cutoff, hh, 'atm_cpl_steps', start, end=None, final=True, first=True)['geometry'][self.first_active(cutoff, hh)]
-        value = (cpl_steps[1]-cpl_steps[0]).hour
-        print('domain : {} - start : {} -> nhcy : {}'.format(self.first_active(cutoff, hh),start,value))
-        return value
+        cpl_steps = self.atm_cpl_steps(cutoff, hh, start, final=True, first=True)
+        cpl_steps = cpl_steps['geometry'][self.first_active(cutoff, hh)]
+        return (cpl_steps[1] - cpl_steps[0]).hour
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def atm_cpl_steps(self, cutoff, hh,  start, end, final, first):
+    def atm_cpl_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/atm_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._any_steps( cutoff, hh, 'atm_cpl_steps' , start, end, final, first)
+        return self._domain_any_steps(cutoff, hh, 'atm_cpl_steps', start, end,
+                                      final=final, first=first)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def surf_cpl_steps(self, cutoff, hh, start, end, final , first):
+    def surf_cpl_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._any_steps( cutoff, hh, 'surf_cpl_steps' , start, end, final, first)
+        return self._domain_any_steps(cutoff, hh, 'surf_cpl_steps', start, end,
+                                      final=final, first=first)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def chem_cpl_steps(self, cutoff, hh, start, end, final, first):
-           """The list of time for chem_cpl_steps :mod:`footprints`' substitution dictionary."""
-           return self._any_steps(cutoff, hh,'chem_cpl_steps' , start, end,  final, first)
-
+    def chem_cpl_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The list of time for chem_cpl_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'chem_cpl_steps', start, end,
+                                      final=final, first=first)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def atm_cpl_shiftedsteps(self, cutoff, hh,  start, end, final, first, shift=True):
+    def atm_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/shifted atm_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._any_steps( cutoff, hh, 'atm_cpl_steps' , start, end, final, first, shift=True )
-        #return self._domain_any_cpl_steps(cutoff, hh, 'atm_cpl_delta', start, end,
-        #                                 shift=True, final=final, first=first)
+        return self._domain_any_steps(cutoff, hh, 'atm_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def surf_cpl_shiftedsteps(self, cutoff, hh, start, end, final, first, shift=True):
+    def surf_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/shifted surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._any_steps( cutoff, hh, 'surf_cpl_steps' , start, end,  final, first, shift=True)
-        #return self._domain_any_cpl_steps(cutoff, hh, 'surf_cpl_delta', start, end,
-        #                                 shift=True, final=final, first=first)
+        return self._domain_any_steps(cutoff, hh, 'surf_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def chem_cpl_shiftedsteps(self, cutoff, hh, start, end, final, first, shift=True):
+    def chem_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/shifted chem_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._any_steps( cutoff, hh, 'chem_cpl_steps' , start, end,  final, first, shift=True)
-        #return self._domain_any_cpl_steps(cutoff, hh, 'chem_cpl_delta', start, end,
-        #                                 shift=True, final=final, first=first)
+        return self._domain_any_steps(cutoff, hh, 'chem_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
-
-
-    def post_steps(self, cutoff, hh, start, end,  final, first):
-           """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
-           return self._any_steps(cutoff, hh, 'post_steps' , start, end, final, first)
-
-    def restart_steps(self, cutoff, hh, start, end,  final, first):
-           """The list of time for restart_steps :mod:`footprints`' substitution dictionary."""
-           return self._any_steps(cutoff, hh, 'restart_steps' , start, end, final, first)
-
-    def stats_steps(self, cutoff, hh, start, end,  final, first):
-           """The list of time for stats_steps :mod:`footprints`' substitution dictionary."""
-           return self._any_steps(cutoff, hh, 'stats_steps' , start, end, final, first)
-
-
-
-
-# Deal with any steps       
-
-    def _expand_any_steps(self, ddef, cutoff, hh, entry, dshift ):
-        rangestr = getattr(ddef,entry)[cutoff][hh]
-        if isinstance(rangestr,list):
-                newvalue = ','.join(rangestr)
-        else:
-                newvalue = rangestr
-        print (' expand any_steps entry=',entry)
-        dentry = entry.replace('steps', 'delta')
-        print ('dentry=',dentry)
-        print ('dshift=',dshift)
-        ##print ('ddef=',ddef)
-        ##print ('expand_any_steps newvalue=',newvalue.replace('finalterm', str(self.finalterms[cutoff][hh])))
-        print (  timerangex(newvalue.replace('finalterm',
-                                               str(self.finalterms[cutoff][hh])), shift=dshift))
-        if rangestr: 
-            return timerangex(newvalue.replace('finalterm',
-                                               str(self.finalterms[cutoff][hh])), shift=dshift)
-        else:
-            return []
-
-
+    @_add_start_end_doc
     @_add_cutoff_hh_doc
-    def _any_steps(self, cutoff, hh, entry, start, end,  final, first , shift=False):
-        """The geometry/any_steps :mod:`footprints`' substitution dictionary.
-        :param start: the series of post-processing steps starts at...
-        :param end: the series of post-processing steps ends at...
-                (by default ``self.finalterm`` is used)
-         """
-        logger.info(' any_steps entry= %s  ', entry)
-        print ('start=',start ,'end=',end ,'final=',final, 'first=',first,'shift=',shift)
+    def post_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'post_steps', start, end,
+                                      final=final, first=first)
 
-        if start is not None:
-            start = Time(start)
-        else:
-            start = Time(0)
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
+    def restart_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The list of time for restart_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'restart_steps', start, end,
+                                      final=final, first=first)
 
-        if end is not None:
-            end = Time(end)
-        else:
-            end = Time(self.finalterms[cutoff][hh])
-         
-        dentry = entry.replace('steps', 'delta')
-        ##print ('dentry=',dentry)
-        subdict = dict()
-        for d, v in self.domains.items():
-            dshift = getattr(v, dentry)[cutoff][hh] if shift else Time(0)
-            print ('dshift=',dshift , 'v=',v)
-            subdict[d] = list(filter(lambda t: ((t - dshift > start) and (t -dshift < end) ) or (final and t - dshift == end) or ( first and t - dshift == start) ,
-                                     self._expand_any_steps(v, cutoff, hh, entry , dshift )))
-        print (dict(geometry=subdict))
-        return dict(geometry=subdict)
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
+    def stats_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The list of time for stats_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'stats_steps', start, end,
+                                      final=final, first=first)
 
-   
 
 class CutoffHhMocageDomainsConfTool(ConfTool):
     """
@@ -894,16 +892,16 @@ class MocageMixedDomainsInfo(object):
         """
         self._subdomains = subdomains
         self.finalterm = finalterm
-        
+
     def __getattr__(self, name):
-        return self._get_domain_attr(name)
-    
-    def _get_domain_attr(self,name):
+        return self._get_mixeddomains_attr(name)
+
+    def _get_mixeddomains_attr(self, name):
         stuff = set([getattr(subdomain, name) for subdomain in self._subdomains])
         if len(stuff) > 1:
             raise AttributeError('Inconsistent {:s} values among subdomains'.format(name))
         return stuff.pop()
-    
+
     def atm_cpl_date(self, curdate):
         """The date of the atmospheric coupling data (given the current date **curdate**)."""
         return Date(curdate) - self.atm_cpl_delta
@@ -916,81 +914,80 @@ class MocageMixedDomainsInfo(object):
         """The date of the surface coupling data (given the current date **curdate**)."""
         return Date(curdate) - self.chem_cpl_delta
 
-    def _domain_any_steps(self, entry, start, end, final, first, shift=False):
-
-        logger.info(' domain any step entry= %s  ', entry)
-        print ('start=',start ,'end=',end ,'final=',final, 'first=',first,'shift=',shift)
-
-        if start is not None:
-            start = Time(start)
+    def _expand_any_steps(self, entry, shift):
+        rangestr = self._get_mixeddomains_attr(entry)
+        if rangestr:
+            if not isinstance(rangestr, list):
+                rangestr = [rangestr, ]
+            return timerangex(",".join([rs.replace('finalterm',
+                                                   str(self.finalterm)) for rs in rangestr]),
+                              shift=shift)
         else:
-            start = Time(0)
+            return []
 
-        if end is not None:
-            end = Time(end)
-        else:
-            end = Time(self.finalterm)
-        rangestr = self._get_domain_attr(entry)
-        dshift=getattr(self, entry.replace('steps', 'delta')) if shift else Time(0)
-        
-        print ('rangestr : {} - type : {}'.format(rangestr,type(rangestr)))
-        print ('dshift : {} - type : {}'.format(dshift,type(dshift)))
-        if isinstance(rangestr,list):
-                newvalue = ','.join(value)
-        else:
-                newvalue = rangestr
-        print ('domain_any_steps newvalue=',newvalue.replace('finalterm', str(self.finalterm)))
-        ##sortie =  list(filter(lambda t: ((t - dshift > start) and (t -dshift < end) ) or (final and t - dshift == end) or ( first and t - dshift == start) ,
-        ###                   timerangex(newvalue.replace('finalterm',
-        ###                                       str(self.finalterm)), shift=dshift) if newvalue else []))
-        ##print ('sortie=',sortie)
-        return list(filter(lambda t: ((t - dshift > start) and (t -dshift < end) ) or (final and t - dshift == end) or ( first and t - dshift == start) ,
-                           timerangex(newvalue.replace('finalterm',
-                                               str(self.finalterm)), shift=dshift) if newvalue else []))
-    
-    
+    def _domain_any_steps(self, entry, start, end, shift=False, final=True, first=True):
+        start = Time(start)
+        end = Time(self.finalterm) if end is None else Time(end)
+        dentry = entry.replace('steps', 'delta')
+        dshift = getattr(self, dentry, Time(0)) if shift else Time(0)
+        return list(filter(lambda t: (((t - dshift > start) and (t - dshift < end)) or
+                                      (final and t - dshift == end) or
+                                      (first and t - dshift == start)),
+                           self._expand_any_steps(entry, dshift)))
+
     @_add_start_end_doc
-    def atm_cpl_steps(self, start, end, final, first):
+    def atm_cpl_steps(self, start=0, end=None, final=True, first=True):
         """The atm_cpl_steps of coupling data."""
-        return  self._domain_any_steps( 'atm_cpl_steps' , start, end, final, first)
+        return self._domain_any_steps('atm_cpl_steps', start, end,
+                                      final=final, first=first)
 
     @_add_start_end_doc
-    def surf_cpl_steps(self, start, end, final, first):
+    def surf_cpl_steps(self, start=0, end=None, final=True, first=True):
         """The surf_cpl_steps of coupling data."""
-        return  self._domain_any_steps( 'surf_cpl_steps' , start, end, final, first)
+        return self._domain_any_steps('surf_cpl_steps', start, end,
+                                      final=final, first=first)
 
     @_add_start_end_doc
-    def chem_cpl_steps(self, start, end, final, first ):
+    def chem_cpl_steps(self, start=0, end=None, final=True, first=True):
         """The surf_cpl_steps of coupling data."""
-        return  self._domain_any_steps( 'chem_cpl_steps' , start, end, final, first)
-    
+        return self._domain_any_steps('chem_cpl_steps', start, end,
+                                      final=final, first=first)
+
     @_add_start_end_doc
-    def atm_cpl_shiftedsteps(self, start, end, final, first ,shift=True):
+    def atm_cpl_shiftedsteps(self, start=0, end=None, final=True, first=True):
         """The sifted surf_cpl_steps of coupling data."""
-        return  self._domain_any_steps( 'atm_cpl_steps' , start, end,  final, first, shift=True)
+        return self._domain_any_steps('atm_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
-        
     @_add_start_end_doc
-    def surf_cpl_shiftedsteps(self, start, end, final, first ,shift=True):
+    def surf_cpl_shiftedsteps(self, start=0, end=None, final=True, first=True):
         """The geometry/shifted surf_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._domain_any_steps( 'surf_cpl_steps' , start, end, final, first, shift=True )
+        return self._domain_any_steps('surf_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
     @_add_start_end_doc
-    def chem_cpl_shiftedsteps(self, start, end, final, first  ,shift=True):
+    def chem_cpl_shiftedsteps(self, start=0, end=None, final=True, first=True):
         """The geometry/shifted chem_cpl_steps :mod:`footprints`' substitution dictionary."""
-        return  self._domain_any_steps( 'chem_cpl_steps' , start, end, final, first, shift=True )
+        return self._domain_any_steps('chem_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
 
-    def post_steps(self,  start, end, final, first):
-           """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
-           return self._domain_any_steps( 'post_steps' , start, end, final, first)
+    @_add_start_end_doc
+    def post_steps(self, start=0, end=None, final=True, first=True):
+        """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps('post_steps', start, end,
+                                      final=final, first=first)
 
-    def restart_steps(self, start, end, final, first):
-           """The list of time for restart_steps :mod:`footprints`' substitution dictionary."""
-           return self._domain_any_steps( 'restart_steps' , start, end, final, first)
+    @_add_start_end_doc
+    def restart_steps(self, start=0, end=None, final=True, first=True):
+        """The list of time for restart_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps('restart_steps', start, end,
+                                      final=final, first=first)
 
-    def stats_steps(self,  start, end, final, first):
-           """The list of time for stats_steps :mod:`footprints`' substitution dictionary."""
-           return self._domain_any_steps( 'stats_steps' , start, end, final, first)
+    @_add_start_end_doc
+    def stats_steps(self, start=0, end=None, final=True, first=True):
+        """The list of time for stats_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps('stats_steps', start, end,
+                                      final=final, first=first)
 
 
 if __name__ == '__main__':
