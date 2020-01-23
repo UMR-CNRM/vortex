@@ -378,19 +378,3 @@ class SARdataWave(GenericWaveSatelliteData):
 
 
 
-class WaveAltidataDiagnostic(WaveAltidata):
-    """diagnostic file next altimetric filtering"""
-    
-    _footprint = dict(
-        info = 'diagnostic file next altimetric filtering',
-        attr = dict(
-            kind = dict(
-                values = ['DiagAlti'],
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'diagalti'
-

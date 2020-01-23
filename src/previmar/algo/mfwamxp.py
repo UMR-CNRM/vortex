@@ -26,11 +26,10 @@ from vortex.layout.monitor import BasicInputMonitor
 logger = loggers.getLogger(__name__)
 
 
-# LFM: docstring + info ?
-# LFM: date_cura ne sert a rien -> virer ?
 class Mfwam(Parallel, grib.EcGribDecoMixin):
-    """."""
+    """Algocomponent for MFWAM."""
     _footprint = dict(
+        info='Algo for MFWAM',
         attr = dict(
             kind = dict(
                 values = ['MFWAM'],
@@ -39,11 +38,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 type     = FPList,
                 optional = True,
                 default  = list(range(0, 13, 6)),
-            ),
-            twowinds = dict(
-                optional = True,
-                type     = bool,
-                default  = True,
             ),
             anabegin = dict(
                 type     = Period,
@@ -88,10 +82,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 optional = True,
                 default = False,
             ),
-            date_cura = dict(
-                optional = True,
-                default = False,
-            ),
             flyargs = dict(
                 default = ('MPP', 'APP',),
             ),
@@ -119,37 +109,36 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         fcterm = self.fcterm
 
-        # Is there a analysis wind forcing ?
-        # LFM: Y a t'il vraiement besoin de ce truc. Pourquoi ne pas le detecter
-        #      en regardant quels sont les gribs présents.
-        # LFM: Pourrait il y en avoir plus que deux ? Ne vaudrait il pas mieux en
-        #      traiter un ou plus (en les triant par date de validité par exemple) ?
+        
         windcandidate = [x.rh for x in self.context.sequence.effective_inputs(role=re.compile('wind'),
                                                                               kind = 'gridpoint')]
+        
+        # Is there a analysis wind forcing ?                                                                      
         if len(windcandidate)==2:
-#        if self.twowinds:
+
+
             # Check for input grib files to concatenate
-            # LFM: Mauvais usage du role. role = Forcing ? WindForcing ?
-            gpsec = [ x.rh for x in self.context.sequence.effective_inputs(role = re.compile('wind'),
-                                                                           kind = 'gridpoint') ]
-            # LFM: Et si il y a plus de deux gribs en entrée ???
-            # Check for input grib files to concatenate
-            for i, val in enumerate(gpsec):
+            for i, val in enumerate(windcandidate):
                 if val.resource.origin in ['ana', 'analyse']:
                     gpsec1 = i
                 elif val.resource.origin in ['fcst', 'forecast']:
                     gpsec2 = i
 
-            # LFM: Si sfcwindin existe déjà, on fait quoi ?
-            # Privilégier l'usage de python et non self.system
-            tmpout = 'sfcwindin'
-            self.system.cp(gpsec[gpsec1].container.localpath(), tmpout, intent='inout', fmt='grib')
-            self.system.cat(gpsec[gpsec2].container.localpath(), output=tmpout)
-            rhgrib = gpsec[gpsec1]
+            # Check sfwindin
+            tmpout='sfcwindin'
+            if self.system.path.exists(tmpout):
+                self.system.rm(tmpout)
+
+            with open (tmpout,'w') as outfile:
+                for fname in [x.container.localpath() for x in windcandidate]:
+                    with open(fname) as infile:
+                        outfile.write(infile.read())
+
+            rhgrib = windcandidate[gpsec1]
 
             # recuperation fcterm
             if fcterm is None:
-                fcterm = gpsec[gpsec2].resource.term
+                fcterm = windcandidate[gpsec2].resource.term
                 logger.info('fcterm %s', fcterm)
 
             datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
@@ -157,11 +146,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             datefinana = rhgrib.resource.date
 
         elif len(windcandidate)==1:
-            rhgrib = self.context.sequence.effective_inputs(role = re.compile('wind'),
-                                                            kind = 'gridpoint')[0].rh
-            # LFM: Et si il y a plusieurs gribs en entrée ???
-            # LFM: Si sfcwindin existe déjà, on fait quoi ?
-            self.system.cp(rhgrib.container.localpath(), 'sfcwindin', intent='in', fmt='grib')
+            rhgrib = windcandidate[0]
+
+            if not self.system.path.exists('sfcwindin'):
+                self.system.cp(rhgrib.container.localpath(), 'sfcwindin', intent='in', fmt='grib')
 
             # recuperation fcterm
             if fcterm is None:
@@ -178,8 +166,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             raise ValueError("No winds or too much")
 
         # Tweak Namelist parameters
-        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'), kind=('namelist'))
-        # LFM: Et si il y a plusieurs namelists. Faire une verification ?
+        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),kind=('namelist'))
+
+        if len(namcandidate)!=1:
+            raise IOError("No or too much namelists for MFWAM")
         namcontents = namcandidate[0].rh.contents
 
         namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
@@ -187,14 +177,15 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
 
         # sort altidata file
-        # LFM: Quelle est la subtile différence entre isana et assim ?
         # LFM: Pourquoi ajouter un switch de plus ? On regarde si il y a des obs en entrée :
         #      Si il y en a on fait de l'assimilatiob sinon c'est que ce n'est pas de l'assim
         # LFM: Et les autres types de données genre SAR. Pourquoi pas jouer sur
-        #      le role avec un truc à peu près claire du genre Observations ?
+        # AD : je ne suis pas arrivée à récupérer la liste des effective_inputs ayant 
+        # 'observation' pour rôle. Ma liste est toujours vide.
         if self.assim:
-            for altisec in self.context.sequence.effective_inputs(kind = 'altidata'):
-
+        # AD : par exemple la récupération ci-dessous d'altidata ne marche pas
+        # le programme ne rentre pas dans la boucle
+            for altisec in self.context.sequence.effective_inputs(sort='observation',kind = 'altidata'):
                 r = altisec.rh
                 r.contents.sort()
                 r.save()
@@ -234,10 +225,11 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             self.flyput = False
 
 
-# LFM: Docstring + info ?
-class MfwamFilter(BlindRun):
 
+class MfwamFilter(BlindRun):
+    """ Filtering of altimeter data"""
     _footprint = dict(
+        info = 'Filtering of altimeter data',
         attr = dict(
             kind = dict(
                 values = ['MfwamAlti'],
@@ -264,7 +256,10 @@ class MfwamFilter(BlindRun):
 
     def postfix(self, rh, opts):
         """Set some variables according to target definition."""
+        #AD : J'ai vérifié et la tâche rentre 3 fois ici, mais ne traite qu'un sat à la fois
+        # ce qui me va bien.
         super(MfwamFilter, self).postfix(rh, opts)
+
         filename_out = 'obs_alti'
         if not self.system.path.exists(filename_out):
             raise IOError(filename_out + " must exists.")
@@ -280,27 +275,26 @@ class MfwamFilter(BlindRun):
         ind = [ i for i, val in enumerate(r_alti)
                 if val.resource.satellite in ultimate_alti ]
 
-        # existence 3 fichier rejet* par satellite ??
-        file_rejet = self.system.glob('rejet_*')
+        # AD : j'ai temporairement commenté la vieille solution pour trier,
+        # tant que le hook_sort ne marche pas dans la tâche. Je supprimerai après.
+#        file_rejet = self.system.glob('rejet_*')
         filename_out_sorted = 'altidata'
-        if len(self.val_alti) == len(file_rejet):
-            if ultimate_alti:
-                logger.info("new sat %s concat treatment", ultimate_alti)
-                # LFM: le faire directement en python, eviter l'appel systeme
-                for ind0 in ind:
-                    self.system.cat(r_alti[ind0].container.localpath(), output=filename_out, outmode='a')
-            # LFM: Idem. Du coup pas besoin d'ajouter sort dans l'objet system
-            self.system.sort('-k1', filename_out, output=filename_out_sorted)
-            if not self.system.path.exists(filename_out_sorted):
-                raise IOError(filename_out_sorted + " must exists.")
+        self.system.cp(filename_out,filename_out_sorted)
+        # all the satellites have been filtered
+#         if len(self.val_alti) == len(file_rejet):
+#             logger.info("YAYA %s",self.val_alti)
+#             # LFM: Idem. Du coup pas besoin d'ajouter sort dans l'objet system
+#             self.system.sort('-k1', filename_out, output=filename_out_sorted)
+#             if not self.system.path.exists(filename_out_sorted):
+#                 raise IOError(filename_out_sorted + " must exists.")
 
 
-# LFM: docstring + info ?
-# LFM: grille -> grid
+
 class MfwamGauss2Grib(ParaBlindRun):
-    """."""
+    """ Post-processing of MFWAM output gribs"""
 
     _footprint = dict(
+        info ="Post-processing of MFWAM output gribs",       
         attr = dict(
             kind = dict(
                 values  = ['mfwamgauss2grib'],
@@ -313,7 +307,7 @@ class MfwamGauss2Grib(ParaBlindRun):
                 optional = True,
                 default = 'output',
             ),
-            grille = dict(
+            grid = dict(
                 type = FPList,
                 default = FPList(["glob02", ])
             ),
@@ -331,15 +325,19 @@ class MfwamGauss2Grib(ParaBlindRun):
     )
 
 
-    # LFM: docstring
     def execute(self, rh, opts):
-        """"""
+        """ The algo component launchs a worker per output file """
         self._default_pre_execute(rh, opts)
 
         common_i = self._default_common_instructions(rh, opts)
         common_i.update(dict(fortinput=self.fortinput, fortoutput=self.fortoutput))
         tmout = False
-
+        
+        # verification of the namelists
+        for dom in self.grid:
+            if not self.system.path.exists(dom + ".nam"):
+                raise IOError(dom + ".nam must exist.")
+            
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
                                role='GridParameters', kind='gridpoint')
@@ -351,7 +349,7 @@ class MfwamGauss2Grib(ParaBlindRun):
                     file_in = gpsec.rh.container.localpath()
                     self._add_instructions(common_i,
                                            dict(file_in=[file_in, ],
-                                                grille=[self.grille, ],
+                                                grid=[self.grid, ],
                                                 file_out=[file_in, ]))
 
                 if not (bm.all_done or len(bm.available) > 0):
@@ -375,16 +373,13 @@ class MfwamGauss2Grib(ParaBlindRun):
             raise IOError("The waiting loop timed out")
 
 
-# LFM: docstring
-# LFM: grille -> grid ?
 # LFM: file_exe supprimé -> normalement ne sert à rien !
-# LFM: On fait le présuposé que "../" + dom + ".nam" existe : il faudrait au moins le vérifier
-#      dans l'algocomponent
 #AD : j'ai remis file_exe pour citer le nom de l'exécutable lors de sa copie.
 class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
-    """."""
+    """ Worker of the post-processing for MFWAM"""
 
     _footprint = dict(
+        info = "Worker of the post-processing for MFWAM",        
         attr = dict(
             kind = dict(
                 values  = ['mfwamgauss2grib'],
@@ -393,7 +388,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             fortoutput = dict(),
             # Input/Output data
             file_in = dict(),
-            grille = dict(
+            grid = dict(
                 type = FPList,
             ),
             file_out = dict(),
@@ -404,9 +399,8 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         )
     )
 
-    # LFM: docstring
     def vortex_task(self, **kwargs):  # @UnusedVariable
-        """"""
+        """Post-processing of a single output grib"""
         logger.info("Starting the post-processing")
 
         sh = self.system.sh
@@ -420,7 +414,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             sh.softlink(sh.path.join(cwd, self.file_in), self.fortinput)
             sh.cp(sh.path.join(cwd,self.file_exe),self.file_exe)
 
-            for dom in self.grille:
+            for dom in self.grid:
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
                 sh.cp(sh.path.join(cwd, dom + ".nam"), 'fort.2')
