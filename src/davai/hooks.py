@@ -6,7 +6,6 @@ Hooks for special DAVAI processings.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
-import re
 
 from bronx.fancies import loggers
 
@@ -76,13 +75,15 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
                                           json.dumps(jsonData),
                                           kind=rh.resource.kind,
                                           fatal=fatal,
-                                          proxies=proxies)
+                                          proxies=proxies,
+                                          headers={'Host': davai_server['netloc']})
         else:
             send_task_to_DAVAI_server(davai_server_url,
                                       rh.provider.experiment,
                                       json.dumps(jsonData),
                                       kind=rh.resource.kind,
-                                      fatal=fatal)
+                                      fatal=fatal,
+                                      headers={'Host': davai_server['netloc']})
     except Exception as e:
         if fatal:
             raise

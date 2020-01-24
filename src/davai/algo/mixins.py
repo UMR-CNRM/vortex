@@ -13,8 +13,13 @@ from bronx.stdtypes import date
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
+from common.algo.oopsroot import OOPSMinim
 from common.algo.assim import (Screening, Minim)
 from common.algo.odbtools import (Raw2ODBparallel)
+from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
+                                   FullPosBDAP, FullPosGeo)
+from common.algo.clim import (BuildPGD, BuildPGD_MPI)
+from common.algo.coupling import Prep
 
 #: No automatic export
 __all__ = []
@@ -87,6 +92,10 @@ class OOPSTest_CrashWitness(OOPSTest, _CrashWitnessDecoMixin):
     pass
 
 
+class OOPSMinim_CrashWitness(OOPSMinim, _CrashWitnessDecoMixin):
+    pass
+
+
 # Legacy algos
 class Screening_CrashWitness(Screening, _CrashWitnessDecoMixin):
     pass
@@ -97,4 +106,36 @@ class Minim_CrashWitness(Minim, _CrashWitnessDecoMixin):
 
 
 class Raw2ODBparallel_CrashWitness(Raw2ODBparallel, _CrashWitnessDecoMixin):
+    pass
+
+
+class Forecast_CrashWitness(Forecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class LAMForecast_CrashWitness(LAMForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class DFIForecast_CrashWitness(DFIForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
+    pass
+
+
+class BuildPGD_CrashWitness(BuildPGD, _CrashWitnessDecoMixin):
+    pass
+
+
+class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
+    pass
+
+
+class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
     pass

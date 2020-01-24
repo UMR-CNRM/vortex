@@ -193,31 +193,57 @@ class OdbDriver(object):
         env['ODB_SRCPATH_{:s}'.format(layout)] = dbpath
         env['ODB_DATAPATH_{:s}'.format(layout)] = dbpath
 
-    def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma', dbpath=None):
-        """Build IO-Assign table."""
-        layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
+    @property
+    def _default_iotools_path(self):
+        """The location to the default odb-tools utilities."""
         iopath   = self.target.get('odbtools:rootdir', self.env.TMPDIR)
         iovers   = self.target.get('odbtools:odbcycle', 'oper')
-        iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
-        iocmd    = self.env.get('ODB_IOCREATE_COMMAND', self.sh.path.join(iopath, iovers, iocreate))
+        return self.sh.path.join(iopath, iovers)
+
+    @property
+    def _default_iocreate_path(self):
+        """The location to the default create_ioassign utility."""
+        return self.env.get('ODB_IOCREATE_COMMAND',
+                            self.sh.path.join(self._default_iotools_path,
+                                              self.target.get('odbtools:iocreate',
+                                                              'create_ioassign')))
+
+    @property
+    def _default_iomerge_path(self):
+        """The location to the default merge_ioassign utility."""
+        return self.env.get('ODB_IOMERGE_COMMAND',
+                            self.sh.path.join(self._default_iotools_path,
+                                              self.target.get('odbtools:iomerge',
+                                                              'merge_ioassign')))
+
+    def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma',
+                        dbpath=None, iocreate_path=None):
+        """Build IO-Assign table."""
+        layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
+        if iocreate_path is None:
+            iocreate_path = self._default_iocreate_path
         ioassign = self.sh.path.abspath(ioassign)
         self.sh.xperm(ioassign, force=True)
         self.sh.mkdir(dbpath)
         with self.env.clone() as lenv:
             lenv['ODB_IOASSIGN_BINARY']  = ioassign
             self.fix_db_path(layout, dbpath, env=lenv)
-            self.sh.spawn([iocmd, '-d' + dbpath, '-l' + layout, '-n' + six.text_type(npool)],
+            self.sh.spawn([iocreate_path,
+                           '-d' + dbpath,
+                           '-l' + layout,
+                           '-n' + six.text_type(npool)],
                           output=False)
         return dbpath
 
-    def ioassign_merge(self, ioassign='ioassign.x', layout='ecma', odbnames=None, dbpath=None):
+    def ioassign_merge(self, ioassign='ioassign.x', layout='ecma', odbnames=None,
+                       dbpath=None, iomerge_path=None, iocreate_path=None):
         """Build IO-Assign table."""
         layout, dbpath, thispwd = self._process_layout_dbpath(layout, dbpath)
-        iopath   = self.target.get('odbtools:rootdir', self.env.TMPDIR)
-        iovers   = self.target.get('odbtools:odbcycle', 'oper')
-        iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
-        iomerge  = self.target.get('odbtools:iomerge', 'create_ioassign')
-        iocmd    = [self.env.get('ODB_IOMERGE_COMMAND', self.sh.path.join(iopath, iovers, iomerge))]
+        if iomerge_path is None:
+            iomerge_path = self._default_iomerge_path
+        if iocreate_path is None:
+            iocreate_path = self._default_iocreate_path
+        iocmd = [iomerge_path]
         ioassign = self.sh.path.abspath(ioassign)
         self.sh.xperm(ioassign, force=True)
         with self.sh.cdcontext(dbpath, create=True):
@@ -227,7 +253,7 @@ class OdbDriver(object):
             with self.env.clone() as lenv:
                 lenv['ODB_IOASSIGN_BINARY']  = ioassign
                 if 'ODB_IOCREATE_COMMAND' not in lenv:
-                    lenv['ODB_IOCREATE_COMMAND'] = self.sh.path.join(iopath, iovers, iocreate)
+                    lenv['ODB_IOCREATE_COMMAND'] = iocreate_path
                 self.fix_db_path(layout, dbpath, env=lenv)
                 self.sh.spawn(iocmd, output=False)
         return dbpath
@@ -427,6 +453,18 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         logger.info('ODB: Detected from ODB database(s). self.date=%s, self.virtualdb=%s.',
                     self.date.stdvortex, self.virtualdb)
 
+    def _odb_find_ioassign_script(self, purpose):
+        """Look for ioassign script of *purpose" attribute, return path."""
+        scripts = [x.rh.container.abspath
+                   for x in self.context.sequence.effective_inputs(kind='ioassign_script')
+                   if x.rh.resource.purpose == purpose]
+        if len(scripts) > 1:
+            raise AlgoComponentError("More than one purpose={} ioassign_script found in resources.")
+        elif len(scripts) == 1:
+            return scripts[0]
+        else:
+            return None
+
     def odb_merge_if_needed(self, odbsections):
         """
         If multiple ODB databases are listed in the **odsections** section list,
@@ -441,6 +479,8 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
                 layout   = self.virtualdb,
                 ioassign = self.ioassign,
                 odbnames = [x.rh.resource.part for x in odbsections],
+                iomerge_path = self._odb_find_ioassign_script('merge'),
+                iocreate_path = self._odb_find_ioassign_script('create')
             )
         else:
             virtualdb_path = self.system.path.abspath(odbsections[0].rh.container.localpath())
@@ -457,7 +497,8 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
             layout   = layout,
             npool    = self.npool,
             ioassign = self.ioassign,
-            dbpath   = dbpath
+            dbpath   = dbpath,
+            iocreate_path = self._odb_find_ioassign_script('create')
         )
         logger.info('ODB: database created: %s (layout=%s).', dbout, layout)
         return dbout

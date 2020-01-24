@@ -100,6 +100,30 @@ class XpidRegister(AlgoComponent):
         return details
 
 
+class XPsetup(AlgoComponent):
+    """Collect metadata about the experiment."""
+
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the tested experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['xpsetup'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        import davai_tbx  # @UnresolvedImport
+        xpm = davai_tbx.util.XPMetadata(self.experiment)
+        xpm.write()
+
+
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Expertise algo to catch exceptions in the parsing/summary/comparison,
@@ -191,6 +215,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             # prepare
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
+        self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 
     def postfix(self, rh, opts):  # @UnusedVariable

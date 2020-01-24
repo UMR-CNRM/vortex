@@ -56,6 +56,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SplitBackgroundStdError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BackgroundErrorNorm
    :show-inheritance:
    :members:
@@ -65,4 +70,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+  
+.. autoclass:: IOassignScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

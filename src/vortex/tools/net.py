@@ -82,27 +82,35 @@ def uriunparse(uridesc):
     return urlparse.urlunparse(uridesc)
 
 
-def http_post_data(url, data, ok_statuses=(), proxies=None):
+def http_post_data(url, data, ok_statuses=(), proxies=None, headers={}):
+    """Make a http POST request, encoding **data**."""
     if not isinstance(data, bytes if six.PY3 else str):
-        data = urlparse.urlencode(data)
+        data = urlparse.urlencode(data).encode('utf-8')
     handlers = []
     if isinstance(proxies, dict):
         handlers.append(urlrequest.ProxyHandler(proxies))
     if isinstance(proxies, (list, tuple)):
         handlers.append(urlrequest.ProxyHandler({'http': proxies}))
     opener = urlrequest.build_opener(* handlers)
-    req = urlrequest.Request(url=url, data=data)
+    req = urlrequest.Request(url=url, data=data, headers=headers)
     try:
         req_f = opener.open(req)
-        req_rc = req_f.getcode()
-        req_info = req_f.info()
-        req_data = req_f.read().decode('utf-8')
-        if ok_statuses:
-            return req_rc in ok_statuses, req_rc, req_info, req_data
-        else:
-            return 200 <= req_rc < 400, req_rc, req_info, req_data
-    finally:
-        req_f.close()
+    except Exception as e:
+        try:  # ignore UnboundLocalError if req_f has not been created yet
+            req_f.close()
+        finally:
+            raise e
+    else:
+        try:
+            req_rc = req_f.getcode()
+            req_info = req_f.info()
+            req_data = req_f.read().decode('utf-8')
+            if ok_statuses:
+                return req_rc in ok_statuses, req_rc, req_info, req_data
+            else:
+                return 200 <= req_rc < 400, req_rc, req_info, req_data
+        finally:
+            req_f.close()
 
 
 def netrc_lookup(logname, hostname, nrcfile=None):
