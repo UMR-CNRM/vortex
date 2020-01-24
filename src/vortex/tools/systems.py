@@ -152,6 +152,11 @@ class ExecutionError(RuntimeError):
     pass
 
 
+class CopyTreeError(OSError):
+    """An error raised during the recursive copy of a directory."""
+    pass
+
+
 class CdContext(object):
     """
     Context manager for temporarily changing the working directory.
@@ -1938,6 +1943,38 @@ class OSExtended(System):
         return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
+    def _copydatatree(self, src, dst):
+        """Recursively copy a directory tree using copyfile.
+
+        This is a variant of shutil's copytree. But, unlike with copytree,
+        only data are copied (the permissions, access times, ... are ignored).
+
+        The destination directory must not already exist.
+        """
+        self.stderr('_copydatatree', src, dst)
+        with self.mute_stderr():
+            names = self._os.listdir(src)
+            self._os.makedirs(dst)
+            errors = []
+            for name in names:
+                srcname = self._os.path.join(src, name)
+                dstname = self._os.path.join(dst, name)
+                try:
+                    if self.path.isdir(srcname):
+                        self._copydatatree(srcname, dstname)
+                    else:
+                        # Will raise a SpecialFileError for unsupported file types
+                        self._sh.copyfile(srcname, dstname)
+                # catch the Error from the recursive copytree so that we can
+                # continue with other files
+                except CopyTreeError as err:
+                    errors.extend(err.args[0])
+                except OSError as why:
+                    errors.append((srcname, dstname, str(why)))
+            if errors:
+                raise CopyTreeError(errors)
+        return dst
+
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
 
@@ -1949,7 +1986,7 @@ class OSExtended(System):
         self.stderr('rawcp', source, destination)
         tmp = destination + self.safe_filesuffix()
         if self.path.isdir(source):
-            self.copytree(source, tmp)
+            self._copydatatree(source, tmp)
             # Warning: Not an atomic portion of code (sorry)
             do_cleanup = self.path.exists(destination)
             if do_cleanup:

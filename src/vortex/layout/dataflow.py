@@ -1035,8 +1035,12 @@ class LocalTracker(defaultdict):
         :param filename: Path to the JSON file.
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
-        with io.open(filename, 'w', encoding='utf-8') as fpout:
-            json.dump(outdict, fpout, indent=2, sort_keys=True)
+        if six.PY2:
+            with io.open(filename, 'wb') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
+        else:
+            with io.open(filename, 'w', encoding='utf-8') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
         """Restore the object using a JSON file.

@@ -69,6 +69,12 @@ class EcmwfLikeScheduler(Scheduler):
             env_pattern = dict(
                 info = 'Scheduler configuration variables start with...',
             ),
+            non_critical_timeout = dict(
+                info = 'Timeout in seconds for non-critical commands',
+                type = int,
+                default = 5,
+                optional = True,
+            ),
         )
     )
 
@@ -109,7 +115,7 @@ class EcmwfLikeScheduler(Scheduler):
         """Restore execution state as before :meth:`wrap_in`."""
         pass
 
-    def child(self, cmd, *options):
+    def child(self, cmd, *options, **kwoptions):
         """Miscellaneous sms/ecflow child sub-command."""
         rc  = None
         cmd = self.cmd_rename(cmd)
@@ -117,21 +123,22 @@ class EcmwfLikeScheduler(Scheduler):
             logger.warning('%s mute command [%s]', self.kind, cmd)
         else:
             if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
-                rc = self.wrap_in()
-                if rc:
-                    try:
-                        rc = self._actual_child(cmd, options)
-                    finally:
-                        self.wrap_out()
-                        getattr(self, 'close_' + cmd, self.close_default)(*options)
-                else:
-                    logger.warning('Actual [%s %s] command wrap_in failed', self.kind, cmd)
+                with self.env.clone():
+                    rc = self.wrap_in()
+                    if rc:
+                        try:
+                            rc = self._actual_child(cmd, options, ** kwoptions)
+                        finally:
+                            self.wrap_out()
+                            getattr(self, 'close_' + cmd, self.close_default)(*options)
+                    else:
+                        logger.warning('Actual [%s %s] command wrap_in failed', self.kind, cmd)
             else:
                 logger.warning('Actual [%s %s] command skipped due to setup action',
                                self.kind, cmd)
         return rc
 
-    def _actual_child(self, cmd, options):
+    def _actual_child(self, cmd, options, critical=True):
         """The actual child command implementation."""
         raise NotImplementedError("This an abstract method.")
 
@@ -214,16 +221,15 @@ class SMS(EcmwfLikeScheduler):
         self.env.SMSACTUALPATH = self._actual_rootdir
         return rc
 
-    def wrap_out(self):
-        """Restaure execution state as before :meth:`wrap_in`."""
-        del self.env.SMSACTUALPATH
-        super(SMS, self).wrap_out()
-
-    def _actual_child(self, cmd, options):
+    def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous smschild subcommand."""
         args = [self.cmdpath(cmd)]
         args.extend(options)
-        return self.sh.spawn(args, output=False)
+        if not critical:
+            self.env.SMSDENIED = 1
+            if self.non_critical_timeout:
+                self.env.SMSTIMEOUT = self.non_critical_timeout
+        return self.sh.spawn(args, output=False, fatal=critical)
 
 
 class SMSColor(SMS):
@@ -318,7 +324,7 @@ class EcFlow(EcmwfLikeScheduler):
                 else:
                     newvars = {'{:s}HOST'.format(self.env_pattern): 'localhost',
                                '{:s}PORT'.format(self.env_pattern): self._tunnel.entranceport}
-                    self.env.delta(** newvars)
+                    self.env.update(** newvars)
                     rc = True
         return rc
 
@@ -327,11 +333,14 @@ class EcFlow(EcmwfLikeScheduler):
         if self._tunnel:
             self._tunnel.close()
             self._tunnel = None
-            self.env.rewind()
         super(EcFlow, self).wrap_out()
 
-    def _actual_child(self, cmd, options):
+    def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous ecFlow sub-command."""
+        if not critical:
+            self.env['{:s}DENIED'.format(self.env_pattern)] = 1
+            if self.non_critical_timeout:
+                self.env['{:s}TIMEOUT'.format(self.env_pattern)] = self.non_critical_timeout
         args = [self.path(), ]
         if options:
             args.append('--{:s}={!s}'.format(cmd, options[0]))
@@ -341,7 +350,7 @@ class EcFlow(EcmwfLikeScheduler):
             args.append('--{:s}'.format(cmd))
         args = [six.text_type(a) for a in args]
         logger.info('Issuing the ecFlow command: %s', ' '.join(args[1:]))
-        return self.sh.spawn(args, output=False)
+        return self.sh.spawn(args, output=False, fatal=critical)
 
     def abort(self, *opts):
         """Gateway to :meth:`child` abort method."""

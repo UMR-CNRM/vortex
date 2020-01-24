@@ -1,18 +1,16 @@
 #MTOOL set jobname=$name
 #MTOOL set jobtag=[this:jobname]
 #MTOOL profile target=${target}cn
-# PBSPROPREFIX -l EC_hyperthreads=$hyperthreading
-# PBSPROPREFIX -l EC_memory_per_task=$mem
-# PBSPROPREFIX -l EC_nodes=$nnodes
-# PBSPROPREFIX -l EC_tasks_per_node=$ntasks
-# PBSPROPREFIX -l EC_threads_per_task=$openmp
-# PBSPROPREFIX -l EC_total_tasks=
-# PBSPROPREFIX -l EC_billing_account=
-# PBSPROPREFIX -N [this:jobname]
-# PBSPROPREFIX -S /bin/ksh
-# PBSPROPREFIX -j oe
-# PBSPROPREFIX -q ns
-# PBSPROPREFIX -l walltime=$time
+#SBATCH --cpus-per-task=$openmp
+#SBATCH --export=NONE
+#SBATCH --job-name=[this:jobname]
+#SBATCH --mem=$mem
+#SBATCH --nodes=$nnodes
+#SBATCH --ntasks-per-node=$ntasks
+#SBATCH --partition=$partition
+#SBATCH --time=$time
+#SBATCH --$exclusive
+#SBATCH --$verbose
 #MTOOL end
 
 # Build time: $create
@@ -20,11 +18,12 @@
 # Build host: $mkhost
 # Build opts: $mkopts
 
+#MTOOL set host=${target}
 #MTOOL setconf files=targets.[this:host]
 #MTOOL set logtarget=[this:frontend]
 #MTOOL set fetch=[this:frontend]
 #MTOOL set compute=[this:cpunodes]
-#MTOOL set backup=[this:frontend]
+#MTOOL set backup=[this:frontend] 
 
 #MTOOL set bangline=${python}_$pyopts
 #MTOOL configure submitcmd=$submitcmd
@@ -43,6 +42,9 @@ for d in [os.path.join(appbase, p) for p in ($extrapythonpath)]:
 sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 sys.path.insert(0, appbase)
+
+import locale
+locale.setlocale(locale.LC_ALL, '$defaultencoding')
 
 import bronx.stdtypes.date
 from bronx.system.interrupt import SignalInterruptError
@@ -67,7 +69,7 @@ if $rundate:
 rd_xpid     = '$xpid'
 rd_refill   = $refill
 rd_jobname  = '$name'
-rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase,
+rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase, 
                                                        rd_vapp, rd_vconf, '$taskconf')
 
 # Any options passed on the command line
@@ -82,9 +84,20 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]', lastid='backup', mtoolid='[this:count]')
+ja.add_plugin('flow', backend='ecflow', jobidlabels=True, mtoolmeters=True)
+
+flowscheduler = dict(
+    ECF_TRYNO=int('%ECF_TRYNO%'),
+    ECF_HOST='%ECF_FQDN%',
+    ECF_PORT='%ECF_PORT%',
+    ECF_VERSION='%ECF_VERSION%',
+    ECF_PASS='%ECF_PASS%',
+    ECF_NAME='%ECF_NAME%',
+)
 
 try:
-    t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
+    t, e, sh = ja.setup(actual=locals(), auto_options=auto_options, flowscheduler=flowscheduler)
+    sh.ftraw = True # To activate ftserv
 
     opts = dict(jobassistant=ja, steps=ja.mtool_steps)
     driver = todo.setup(t, **opts)

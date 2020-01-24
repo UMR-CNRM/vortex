@@ -936,7 +936,7 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
                     mblock = nam.contents.newblock('NAM_PARAMPE')
                     mblock['NMEMBER'] = int(r.provider.member)
                 # Now, update the model number for the GRIB files
-                if 'NAM_DIAG' in x.rh.contents:
+                if 'NAM_DIAG' in nam.contents:
                     nmod = self.numod
                     logger.info("Substitute the model number (%d) to namelist entry", nmod)
                     for namk in ('CONV', 'BR', 'HIV', 'ECHOT', 'ICA', 'PSN'):

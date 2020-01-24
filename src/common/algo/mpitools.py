@@ -7,9 +7,11 @@ import re
 
 from bronx.fancies import loggers
 import footprints
+import io
 
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.util import config
 
 #: No automatic export
 __all__ = []
@@ -26,7 +28,7 @@ class MpiAuto(mpitools.MpiTool):
                 values = [ 'mpiauto' ],
             ),
             mpiopts = dict(
-                default = '--wrap --wrap-stdeo --wrap-stdeo-pack --verbose',
+                default = None
             ),
             optprefix = dict(
                 default = '--'
@@ -48,6 +50,36 @@ class MpiAuto(mpitools.MpiTool):
 
     _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_mpiauto.tpl'
     _envelope_rank_var = 'MPIAUTORANK'
+    _conf_suffix = ''
+
+    @property
+    def mpiauto_conf(self):
+        """Return the mpiauto configuration."""
+        if self.target.config.has_section('mpiauto'):
+            return dict(self.target.config.items('mpiauto'))
+        else:
+            dict()
+
+    def _actual_mpiopts(self):
+        """Possibly read the mpiopts in the config file."""
+        if self.mpiopts is None:
+            return self.mpiauto_conf.get('mpiopts' + self._conf_suffix, '')
+        else:
+            return self.mpiopts
+
+    def _actual_mpiextraenv(self):
+        """Possibly read the mpi extra environment variables in the config file."""
+        new_envvar = dict()
+        for kv in self.mpiauto_conf.get('mpiextraenv' + self._conf_suffix, '').split(','):
+            if kv:
+                skv = kv.split('%', maxsplit=1)
+                if len(skv) == 2:
+                    new_envvar[skv[0]] = skv[1]
+        return new_envvar
+
+    def _actual_mpidelenv(self):
+        """Possibly read the mpi extra environment variables in the config file."""
+        return [v for v in self.mpiauto_conf.get('mpidelenv' + self._conf_suffix, '').split(',')]
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
@@ -78,6 +110,16 @@ class MpiAuto(mpitools.MpiTool):
             raise mpitools.MpiException(msg)
         return tuned
 
+    def setup_environment(self, opts):
+        """Last minute fixups."""
+        super(MpiAuto, self).setup_environment(opts)
+        for k, v in self._actual_mpiextraenv().items():
+            logger.info('Setting the "%s" environement variable to "%s"', k.upper(), v)
+            self.env[k] = v
+        for k in self._actual_mpidelenv():
+            logger.info('Deleting the "%s" environement variable', k.upper())
+            del self.env[k]
+
     def setup(self, opts=None):
         """Ensure that the prefixcommand has the execution rights."""
         super(MpiAuto, self).setup(opts)
@@ -90,6 +132,51 @@ class MpiAuto(mpitools.MpiTool):
                     self.system.xperm(prefix_c, force=True)
                 else:
                     raise IOError('The prefixcommand do not exists.')
+
+
+class MpiAutoDDT(MpiAuto):
+
+    _footprint = dict(
+        attr = dict(
+            mpiname = dict(
+                values = [ 'mpiauto-ddt' ],
+            ),
+        )
+    )
+
+    _conf_suffix = '-ddt'
+    _ddt_session_file_name = 'armforge-vortex-session-file.ddt'
+
+    def _dump_ddt_session(self):
+        bin_directory = self.system.path.dirname(self.binaries[0].master)
+        tpl = config.load_template(self.ticket, '@armforge-session-conf.tpl', encoding='utf-8')
+        sconf = tpl.substitute(sourcedirs='\n'.join(['        <directory>{:s}</directory>'.format(d)
+                                                     for d in self.sources]))
+        sfile = self.system.path.join(bin_directory, 'armforge-vortex-session-file.ddt')
+        with io.open(sfile, 'w') as fhs:
+            fhs.write(sconf)
+        return sfile
+
+    def _reshaped_mpiopts(self):
+        options = super(MpiAutoDDT, self)._reshaped_mpiopts()
+        if 'prefix-mpirun' in options:
+            raise mpitools.MpiException('It is not allowed to start DDT with another ' +
+                                        'prefix_mpirun command defined: "{:s}"'
+                                        .format(options))
+        ddtpath = self.env.get('VORTEX_ARM_DDT_PATH', None)
+        if ddtpath is None:
+            forgepath = self.env.get('VORTEX_ARM_FORGE_DIR', None)
+            if forgepath is None and self.target.config.has_option('armtools', 'forgedir'):
+                forgepath = self.target.config.get('armtools', 'forgedir')
+            else:
+                raise mpitools.MpiException('DDT requested but the DDT path is not configured.')
+            ddtpath = self.system.path.join(forgepath, 'bin', 'ddt')
+        if self.sources:
+            options['prefix-mpirun'] = '{:s} --session={:s} --connect'.format(ddtpath,
+                                                                              self._dump_ddt_session())
+        else:
+            options['prefix-mpirun'] = '{:s} --connect'.format(ddtpath)
+        return options
 
 
 def arpifs_commons_binarydeco(cls):

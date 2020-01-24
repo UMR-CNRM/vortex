@@ -896,3 +896,37 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
         """Called at the end of a job when something went wrong."""
         if self.masterja.subjob_tag is None:
             ad.flow_abort("An exception was caught")
+
+
+class JobAssistantEpygramPlugin(JobAssistantPlugin):
+
+    _footprint = dict(
+        info = 'JobAssistant Plugin to perform the epygram setup',
+        attr = dict(
+            kind = dict(
+                values      = ['epygram_setup', ]
+            ),
+        ),
+    )
+
+    def plugable_env_setup(self, t, **kw):  # @UnusedVariable
+        # Is epygram here ?
+        epygram_re = re.compile(r'.*epygram$')
+        epygram_path = [bool(epygram_re.match(p)) for p in sys.path]
+        if any(epygram_path):
+            # Add eccodes and site subdirectories if necessary
+            i_epygram = epygram_path.index(True)
+            logger.info('Epygram package found in path: %s', sys.path[i_epygram])
+            for spath in ('eccodes_python', 'site'):
+                full_spath = t.sh.path.join(sys.path[i_epygram], spath)
+                if full_spath not in sys.path:
+                    logger.info('Extending python path with: %s', full_spath)
+                    sys.path.insert(i_epygram + 1, full_spath)
+            # Python3, ECCODES_DIR is needed
+            if sys.version_info.major == 3:
+                edir_path = t.sh.path.join(sys.path[i_epygram], 'eccodes_dir')
+                if t.sh.path.exists(edir_path):
+                    logger.info('ECCODES_DIR environment variable setup to %s', edir_path)
+                    t.env.ECCODES_DIR = edir_path
+                else:
+                    logger.info('ECCODES_DIR environment variable left unconfigured')

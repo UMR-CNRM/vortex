@@ -21,6 +21,9 @@ Exceptions
 .. autoclass:: ExecutionError
    :show-inheritance:
 
+.. autoclass:: CopyTreeError
+   :show-inheritance:
+
 
 Classes
 -------

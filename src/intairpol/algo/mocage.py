@@ -44,6 +44,11 @@ class AbstractMocageRoot(Parallel):
                     optional = True,
                     default  = 0
                 ),
+                extrasetup = dict(
+                    info        = "Some additive settings (environment variables)",
+                    optional    = True,
+                    default     = None,
+                ),
                 model = dict(
                     values   = ['mocage', ]
                 ),
@@ -75,7 +80,8 @@ class AbstractMocageRoot(Parallel):
             self.flyput = True
         else:
             self.flyput = False
-
+        if self.extrasetup:
+            self.export(self.extrasetup)
         super(AbstractMocageRoot, self).prepare(rh, opts)
 
     def _sorted_inputs_terms(self, **kwargs):

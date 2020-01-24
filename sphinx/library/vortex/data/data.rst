@@ -16,6 +16,7 @@ Package
 Included Modules
 ----------------
 
+* :mod:`vortex.data.abstractstores`
 * :mod:`vortex.data.containers`
 * :mod:`vortex.data.contents`
 * :mod:`vortex.data.executables`

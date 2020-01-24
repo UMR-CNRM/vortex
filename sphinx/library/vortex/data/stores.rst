@@ -16,37 +16,10 @@ Package
 Functions
 ---------
 
-.. autofunction:: observer_board
-
 Classes
 -------
 
-.. autoclass:: StoreGlue
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: IniStoreGlue
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Store
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: MultiStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: MagicPlace
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: FunctionStoreCallbackError
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -57,16 +30,6 @@ Classes
    :member-order: alphabetical
    
 .. autoclass:: Finder
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ArchiveStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ConfigurableArchiveStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -87,11 +50,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: VortexFreeStdArchiveStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: CacheStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -136,12 +94,15 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: PromiseStore
+.. autoclass:: VortexPromiseStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: VortexPromiseStore
+Exeptions
+---------
+
+.. autoclass:: FunctionStoreCallbackError
    :show-inheritance:
    :members:
    :member-order: alphabetical

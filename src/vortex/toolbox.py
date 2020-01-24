@@ -325,7 +325,7 @@ def add_section(section, args, kw):
         # If insitu and now, try a quiet get...
         do_quick_insitu = section in ('input', 'executable') and insitu and now
         if do_quick_insitu:
-            quickget = [sec.rh.insitu_quickget(**cmdopts) for sec in newsections]
+            quickget = [sec.rh.insitu_quickget(alternate=sec.alternate, **cmdopts) for sec in newsections]
             if all(quickget):
                 if len(quickget) > 1:
                     logger.info("The insitu get succeeded for all of the %d resource handlers.",
