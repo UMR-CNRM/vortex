@@ -1,57 +1,49 @@
-:mod:`common.algo.mpitools` --- Usual MPI interfaces
-====================================================
+:mod:`vortex.data.abstractstores` --- Abstract Resource Data Store
+==================================================================
 
-.. automodule:: common.algo.mpitools
-   :synopsis: Usual MPI interfaces
+.. automodule:: vortex.data.abstractstores
+   :synopsis: Abstract Resource Data Store
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.3
-
-
-Package
--------
+.. versionadded:: 1.6.4
 
 .. autodata:: __all__
 
+Functions
+---------
+
+.. autofunction:: observer_board
 
 Classes
 -------
 
-.. autoclass:: MpiAuto
+.. autoclass:: Store
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiAutoDDT
+.. autoclass:: MultiStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiObsort
+.. autoclass:: ArchiveStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiNWP
+.. autoclass:: ConfigurableArchiveStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiNWPObsort
+.. autoclass:: CacheStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiNWPIO
+.. autoclass:: PromiseStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
-
-
-Decorators
-----------
-
-.. autofunction:: arpifs_commons_binarydeco
-
-.. autofunction:: arpifs_obsort_nprocab_binarydeco

@@ -7,7 +7,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 import footprints
 
-from vortex.data.stores     import Store, Finder
+from vortex.data.abstractstores import Store
+from vortex.data.stores import Finder
 from vortex.syntax.stdattrs import DelayedEnvValue, hashalgo_avail_list
 
 from gco.data.stores import GcoCacheStore
