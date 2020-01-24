@@ -55,3 +55,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AltimetryPreproc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WamGridPost
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WamPreproc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

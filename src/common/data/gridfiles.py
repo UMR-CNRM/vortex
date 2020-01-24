@@ -81,7 +81,7 @@ class GridPoint(GeoFlowResource):
                 source = 'forecast'
             else:
                 source = 'sumo'
-        elif self.model == 'hycom':
+        elif self.model in ('hycom', 'mfwam'):
             if self.origin == 'ana':
                 source = 'analysis'
             else:

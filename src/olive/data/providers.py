@@ -187,12 +187,8 @@ class OpArchive(Provider):
                 if entry == 'histfix':
                     if self.block == 'coupling_fc' and resource.model == 'arome':
                         fuzzy = self.block
-                    elif resource.model == 'hycom':
-                        fuzzy = (fuzzyname('prefix', 'historic', 'hycom_gss') +
-                                 '.'.join((config, resource.date.ymdh[4:],
-                                           fuzzyname('suffix', 'historic', 'hycom_gss'))))
                     else:
-                        igakey = getattr(self, keyattr)
+                        igakey = getattr(self, keyattr, '')
                         if igakey in ('pearp', 'arpege', 'arp_court', 'aearp'):
                             keyattr = igakey
                         else:
@@ -207,6 +203,14 @@ class OpArchive(Provider):
                             modelkey = resource.model + '_' + self.vapp
                             if modelkey in ('arome_arome', 'surfex_arome', 'aladin_aladin', 'surfex_aladin'):
                                 fuzzy = fuzzy.upper()
+                elif entry == 'prefix':
+                    if keyattr == 'fieldskey':
+                        keyattr = resource.model + '_' + resource.fields
+                    else:
+                        keyattr = resource.model
+                    fuzzy = fuzzyname(entry, resource.realkind, keyattr)
+                    if resource.model == 'hycom':
+                        fuzzy += config + '.'
                 elif entry == 'termfix':
                     fuzzy = '+' + resource.term.fmthour
                     if self.vapp == 'mocage':
@@ -214,6 +218,12 @@ class OpArchive(Provider):
                         fuzzy = '+' + valid
                     if keyattr == 'modelkey' and self.block == 'coupling_fc':
                         fuzzy = ''
+                    if resource.model == 'mfwam':
+                        rr = archive_suffix(resource.model, resource.cutoff,
+                                            resource.date, vconf=self.vconf)
+                        fuzzy = rr + '00_' + resource.term.fmtraw2 + '00'
+                    if resource.model == 'hycom':
+                        fuzzy = (resource.date + resource.term).ymdh[4:]
                 elif entry == 'suffix':
                     if keyattr == 'modelkey':
                         fuzzy = fuzzyname('suffix', resource.realkind, resource.model + '_' + self.igakey, default='')
@@ -223,8 +233,6 @@ class OpArchive(Provider):
                         if (self.vapp == 'arpege' and self.vconf == 'aearp' and
                                 self.block == 'forecast_infl' and resource.model == 'surfex'):
                             fuzzy += '_infl'
-                    elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
-                        fuzzy = resource.fields + '_' + config
                 elif entry == 'gribfix':
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
@@ -295,6 +303,8 @@ class OpArchive(Provider):
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], dd))
                 elif re.match(r'surcotes|surcotes_oi', self.igakey):
                     return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
+                elif re.match(r'mfwam|vagues', self.igakey):
+                    return '/'.join(('vagues', suite, self.igakey, dd )).rstrip('/')
                 else:
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
 

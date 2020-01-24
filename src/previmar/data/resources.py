@@ -8,8 +8,9 @@ from bronx.stdtypes.date import Date, Time, Period
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
-from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
-from common.data.modelstates import InitialCondition
+from common.data.modelstates import InitialCondition, Historic
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
+from .contents import AltidataContent
 
 #: No automatic export
 __all__ = []
@@ -234,9 +235,9 @@ class TideOnlyOut(InitialCondition):
 
 
 class ConfigData(Resource):
-    """Class of a simple file that contains configuration data for HYCOM."""
+    """Class of a simple file that contains configuration data for HYCOM/MFWAM."""
     _footprint = dict(
-        info = 'Configuration data for HYCOM',
+        info = 'Configuration data for HYCOM/MFWAM',
         attr = dict(
             nativefmt = dict(
                 default = 'ascii',
@@ -287,3 +288,86 @@ class TarResult(GeoFlowResource):
     @property
     def realkind(self):
         return 'surges_tarfile'
+
+
+@namebuilding_append('src', lambda s: s.fields)
+class WaveInit(Historic):
+    """Class of"""
+    _footprint = dict(
+        info = 'WaveInitialCondition LAW and Spectrum data BLS on native grid',
+        attr = dict(
+            kind = dict(
+                values = ['WaveInit'],
+            ),
+            fields = dict(
+                values = ['LAW', 'guess', 'BLS', 'spectre'],
+                remap = {
+                    'guess': 'LAW',
+                    'spectre': 'BLS',
+                },
+            ),
+            nativefmt = dict(
+                default = 'unknown',
+            ),
+        )
+    )
+
+    def archive_basename(self):
+        """OP ARCHIVE specific naming convention."""
+        return '(prefix:fieldskey)(termfix:modelkey)(suffix:modelkey)'
+
+
+@namebuilding_append('src', lambda s: s.satellite)
+class GenericWaveSatelliteData(FlowResource):
+    """Any kind of satellite data for wave models."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Wave satellite data file',
+        attr = dict(
+            nativefmt = dict(
+                default = 'ascii',
+            ),
+            satellite = dict(
+                optional = True,
+                default = 'allsat',
+            ),
+        )
+    )
+
+
+class WaveAltidata(GenericWaveSatelliteData):
+    """Altimetry data for wave models."""
+
+    _footprint = dict(
+        info = 'Altimetric data file',
+        attr = dict(
+            kind = dict(
+                values = ['altidata'],
+            ),
+            clscontents = dict(
+                default = AltidataContent
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'AltidataWave'
+
+
+class SARdataWave(GenericWaveSatelliteData):
+    """Satellite spectral data for wave models."""
+
+    _footprint = dict(
+        info = 'Spectral data file',
+        attr = dict(
+            kind = dict(
+                values = ['SARdataWave'],
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'SARdataWave'

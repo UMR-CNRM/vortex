@@ -33,13 +33,13 @@ __all__ = [
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
-    'safran', 'ifs', 'aroifs', 'cifs'
+    'safran', 'ifs', 'aroifs', 'cifs', 'mfwam'
 ])
 
 #: Possible values for the most common binaries.
 binaries  = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                  'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
-                 'ifs', 'oops', 'assistance', 'arpifs'])
+                 'ifs', 'oops', 'assistance', 'arpifs', 'mfwam'])
 #: Possible values for the most common utility programs.
 utilities = set(['batodb'])
 

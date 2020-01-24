@@ -630,6 +630,41 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         """Map output to another filename."""
         return item
 
+    def _flyput_job_internal_search(self, io_poll_method, io_poll_args, io_poll_kwargs):
+        data = list()
+        for arg in io_poll_args:
+            logger.info('Polling check arg %s', arg)
+            rc = io_poll_method(arg, **io_poll_kwargs)
+            try:
+                data.extend(rc.result)
+            except AttributeError:
+                data.extend(rc)
+            data = [x for x in data if x]
+            logger.info('Polling retrieved data %s', str(data))
+        return data
+
+    def _flyput_job_internal_put(self, data):
+        for thisdata in data:
+            if self.flymapping:
+                mappeddata = self.flyput_outputmapping(thisdata)
+                if not mappeddata:
+                    raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
+            else:
+                mappeddata = thisdata
+            candidates = [x for x in self.promises
+                          if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
+            if candidates:
+                logger.info('Polled data is promised <%s>', thisdata)
+                bingo = candidates.pop()
+                if thisdata != mappeddata:
+                    logger.info('Linking <%s> to <%s> (fmt=%s) before put',
+                                thisdata, mappeddata, bingo.rh.container.actualfmt)
+                    self.system.cp(thisdata, mappeddata, intent='in',
+                                   fmt=bingo.rh.container.actualfmt)
+                bingo.put(incache=True)
+            else:
+                logger.warning('Polled data not promised <%s>', thisdata)
+
     def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
                    event_complete, event_free, queue_context):
         """Poll new data resources."""
@@ -644,37 +679,10 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
         while redo and not event_complete.is_set():
             event_free.clear()
-            data = list()
             try:
-                for arg in io_poll_args:
-                    logger.info('Polling check arg %s', arg)
-                    rc = io_poll_method(arg, **io_poll_kwargs)
-                    try:
-                        data.extend(rc.result)
-                    except AttributeError:
-                        data.extend(rc)
-                data = [x for x in data if x]
-                logger.info('Polling retrieved data %s', str(data))
-                for thisdata in data:
-                    if self.flymapping:
-                        mappeddata = self.flyput_outputmapping(thisdata)
-                        if not mappeddata:
-                            raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
-                    else:
-                        mappeddata = thisdata
-                    candidates = [x for x in self.promises
-                                  if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
-                    if candidates:
-                        logger.info('Polled data is promised <%s>', thisdata)
-                        bingo = candidates.pop()
-                        if thisdata != mappeddata:
-                            logger.info('Linking <%s> to <%s> (fmt=%s) before put',
-                                        thisdata, mappeddata, bingo.rh.container.actualfmt)
-                            self.system.cp(thisdata, mappeddata, intent='in',
-                                           fmt=bingo.rh.container.actualfmt)
-                        bingo.put(incache=True)
-                    else:
-                        logger.warning('Polled data not promised <%s>', thisdata)
+                data = self._flyput_job_internal_search(io_poll_method,
+                                                        io_poll_args, io_poll_kwargs)
+                self._flyput_job_internal_put(data)
             except Exception as trouble:
                 logger.error('Polling trouble: %s', str(trouble))
                 redo = False
@@ -741,28 +749,25 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         return (p_io, event_stop, event_free, queue_ctx)
 
     def manual_flypolling(self):
+        """Call the flyput method and returns the list of newly available files."""
         # Find out a polling method
         io_poll_method = self.flyput_method()
         if not io_poll_method:
             raise AlgoComponentError('Unable to find an io_poll_method')
         # Find out some polling prefixes
-        io_poll_args = self.flyput_args()
+        io_poll_args = self.flyput_check()
         if not io_poll_args:
             raise AlgoComponentError('Unable to find an io_poll_args')
         # Additional named attributes
         io_poll_kwargs = self.flyput_kwargs()
         # Starting polling each of the prefixes
-        data = list()
-        for arg in io_poll_args:
-            logger.info('Polling check arg %s', arg)
-            rc = io_poll_method(arg, **io_poll_kwargs)
-            try:
-                data.extend(rc.result)
-            except AttributeError:
-                data.extend(rc)
-            data = [x for x in data if x]
-            logger.info('Polling retrieved data %s', str(data))
-        return data
+        return self._flyput_job_internal_search(io_poll_method,
+                                                io_poll_args, io_poll_kwargs)
+
+    def manual_flypolling_job(self):
+        """Call the flyput method and deal with promised files."""
+        data = self.manual_flypolling()
+        self._flyput_job_internal_put(data)
 
     def flyput_end(self, p_io, e_complete, e_free, queue_ctx):
         """Wait for the co-process in charge of promises."""

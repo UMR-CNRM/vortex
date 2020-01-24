@@ -516,7 +516,9 @@ class utTime(TestCase):
         self.assertEqual(t.fmth, '0018')
         self.assertEqual(t.fmthm, '0018:30')
         self.assertEqual(t.fmthhmm, '1830')
+        self.assertEqual(t.fmtdhm, '001830')
         self.assertEqual(t.fmtraw, '001830')
+        self.assertEqual(t.fmtraw2, '0000001830')
 
         t = date.Time(-18, -30)
         self.assertEqual(t.isoformat(), '-18:30')
@@ -524,7 +526,12 @@ class utTime(TestCase):
         self.assertEqual(t.fmth, '-0018')
         self.assertEqual(t.fmthm, '-0018:30')
         self.assertEqual(t.fmthhmm, '-1830')
+        self.assertEqual(t.fmtdhm, '-001830')
         self.assertEqual(t.fmtraw, '-001830')
+        self.assertEqual(t.fmtraw2, '-0000001830')
+
+        t = date.Time(-66, -30)
+        self.assertEqual(t.fmtdhm, '-021830')
 
         a = date.Time(48, 0)
         b = date.Time( 0, 48 * 60)

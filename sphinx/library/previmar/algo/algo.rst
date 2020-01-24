@@ -16,4 +16,5 @@ Package
 Included Modules
 ----------------
 
-* :mod:`previmar.algo.forecast`
+* :mod:`previmar.algo.forecasts`
+* :mod:`previmar.algo.mfwamxp`

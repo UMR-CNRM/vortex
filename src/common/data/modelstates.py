@@ -74,8 +74,8 @@ class Analysis(GeoFlowResource):
                 ananame = 'analyse_surf'
             elif self.model == 'surfex':
                 ananame = 'analyse'
-            elif self.model == 'hycom':
-                ananame = '(histfix:igakey)'
+            elif self.model in ('hycom', 'mfwam'):
+                ananame = '(prefix:modelkey)(termfix:modelkey)(suffix:modelkey)'
             else:
                 ananame = 'analyse_surface1'
 
@@ -111,7 +111,7 @@ class Analysis(GeoFlowResource):
                 directory = 'workdir/analyse'
             else:
                 directory = 'autres'
-        elif self.model == 'hycom':
+        elif self.model in ('hycom', 'mfwam'):
             if self.filling == 'surf':
                 directory = 'guess'
         elif self.model == 'surfex':
@@ -192,8 +192,12 @@ class Historic(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        prefix = '(icmshfix:modelkey)'
-        midfix = '(histfix:igakey)'
+        if self.model in ('mfwam', 'hycom'):
+            prefix = '(prefix:modelkey)'
+            midfix = ''
+        else:
+            prefix = '(icmshfix:modelkey)'
+            midfix = '(histfix:igakey)'
         termfix = '(termfix:modelkey)'
         suffix = '(suffix:modelkey)'
 

@@ -199,10 +199,12 @@ class HorizontalGeometry(Geometry):
             gridtype = None,
             area = None,
             nlon = None,
+            nlonmax = None,
             nlat = None,
             ni = None,
             nj = None,
             resolution = 0.,
+            expected_resolution = 0.,
             runit = None,
             truncation = None,
             truncationtype = None,
@@ -543,6 +545,49 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
+class RedgridGeometry(HorizontalGeometry):
+    """
+    Spherical or LAM reduced grid (the number of longitude decreases toward the
+    pole).
+    """
+
+    _tag_topcls = False
+
+    def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+        the first positional attribute is considered to be the tag name)
+        :param str info: A free description of the geometry
+        :param int nlonmax: Maximum number of longitude points in the grid
+        :param int nlat: Number of latitude points in the grid
+        :param int expected_resolution: the real resolution for
+                                        longitudes = expected_resolution * cos(lat)
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
+        kw.setdefault('runit', 'dg')
+        kw.setdefault('lam', False)
+        super(RedgridGeometry, self).__init__(**kw)
+        self.kind = 'redgrid'
+
+    def _check_attributes(self):
+        if self.nlonmax is None or self.nlat is None or self.resolution is None:
+            raise AttributeError("Some mandatory arguments are missing")
+        super(RedgridGeometry, self)._check_attributes()
+        if self.lam is False:
+            self.area = 'global'
+
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s} area=\'{1:s}\' r=\'{2:s}\'>'.format(self.strheader(),
+                                                           self.area,
+                                                           self.rnice)
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        fmts = 'kind={0:s}, r={1:s}, area={2:s}, nlonmax={3!s}, nlat={4!s}'
+        return fmts.format(self.kind, self.rnice, self.area, self.nlonmax, self.nlat)
+
+
 # Pre-defined footprint attribute for any HorizontalGeometry
 
 #: Usual definition of the ``geometry`` attribute.
@@ -563,7 +608,7 @@ def _add_geo2basename_info(cls):
                                     self.geometry.short_gridtype)}, ]
             if add_stretching:
                 lgeo.append({'stretching': self.geometry.stretching})
-        elif isinstance(self.geometry, ProjectedGeometry):
+        elif isinstance(self.geometry, (ProjectedGeometry, RedgridGeometry)):
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = self.geometry.area  # Default: always defined

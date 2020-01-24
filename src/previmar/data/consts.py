@@ -228,3 +228,76 @@ class CouplingGridOasis(GenvUsageModelResource):
     @property
     def realkind(self):
         return 'CouplingGridOasis'
+
+
+class AltimetryPreproc(GenvModelResource):
+    """ Thresholds for altimeter preprocessing. """
+    _footprint = dict(
+        info = 'Thresholds for altimeter preprocessing',
+        attr = dict(
+            nativefmt = dict(
+                values = ['ascii', 'foo', 'unknown'],
+            ),
+            kind = dict(
+                values = ['preprocalti'],
+            ),
+            gvar = dict(
+                default = '[model]_[fields]',
+            ),
+            fields = dict(
+                values = ['filtrevalue', 'bathyref', 'fort_alti', 'cst_alti'],
+                remap = {
+                    'filtrevalue': 'fort_alti',
+                    'bathyref': 'cst_alti',
+                },
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'preprocalti'
+
+
+class WamPreproc(GenvModelResource):
+    """ Constant files for MFWAM """
+    _footprint = dict(
+        info = 'Constant files for MFWAM',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_preproc'],
+            ),
+            gvar = dict(
+                default = '[model]_preproc_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'
+
+
+class WamGridPost(GenvModelResource):
+    """ Information on a grid for MFWAM post-processing"""
+    _footprint = dict(
+        info = 'Grid information for MFWAM post-processing',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_grid_post'],
+            ),
+            gvar = dict(
+                default = '[model]_interpWave',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'

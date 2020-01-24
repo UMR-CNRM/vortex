@@ -527,6 +527,7 @@ class FullPosServer(IFSParallel):
         if self.flypoll == 'internal':
             self.io_poll_method = functools.partial(fullpos_server_flypoll, sh)
             self.io_poll_kwargs['termfile'] = sh.path.basename(self._MODELSIDE_TERMFILE)
+        self.flymapping = True
         self._flyput_mapping_d = outputs_mapping
 
         if anyexpected:
@@ -659,7 +660,6 @@ class FullPosServer(IFSParallel):
             # On the fly ?
             if self.promises:
                 self.flyput = True
-                self.flymapping = True
 
             # Let's roll !
             super(FullPosServer, self).execute(rh, opts)

@@ -1,0 +1,57 @@
+default:
+    style: olive
+    sets:
+        # Hycom world
+        -   geometry: hycomatl2
+            cutoff:
+                - assim
+                - production
+            model: hycom
+            namespace: vortex.multi.fr
+            date: 2018010100
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: hycom
+            vconf: atl@fcarp
+        # Mfwam world
+        -   geometry: globalirr02
+            cutoff: production
+            model: mfwam
+            namespace: vortex.multi.fr
+            date: 2018010100
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: mfwam
+            vconf: globalarp02
+        
+
+todo:
+    # Analysis
+    -   commons:
+            kind: analysis
+            nativefmt:
+                - null
+                - grib
+            block: minim
+            experiment: abcd
+            
+        tests:
+            - filling: surf
+            - experiment: oper
+
+    # Historic
+    -   commons:
+            kind: historic
+            nativefmt:
+                - null
+                - grib
+                - nc
+            block: forecast
+            experiment: abcd
+            term: 24
+        tests:
+            - nativefmt: fa
+              experiment: oper
+            - term: 0
+              scenario: RCP6.0
+    
