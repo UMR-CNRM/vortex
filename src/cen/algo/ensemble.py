@@ -203,7 +203,7 @@ class _SafranWorker(_S2MWorker):
         _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
                              'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'rsclim.don']
         for nam in _Safran_namelists:
-            self.link_in(self.system.path.join(rundir, nam), nam)
+            self.link_ifnotprovided(self.system.path.join(rundir, nam), nam)
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         _OP_files_common = ['OPlisteo', 'OPlysteo', 'OPlistem', 'Oplystem', 'OPlisteml', 'OPlysteml',
@@ -221,12 +221,12 @@ class _SafranWorker(_S2MWorker):
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
                 with io.open(op_file, 'w') as f:
-                    f.write(rundir + '@\n')
+                    f.write(rundir.rstrip('/') + '@\n')
 
         for op_file in _OP_files_individual:
             if not self.system.path.isfile(op_file):
                 with io.open(op_file, 'w') as f:
-                    f.write(thisdir + '@\n')
+                    f.write(thisdir.rstrip('/') + '@\n')
 
         self.system.remove('sapfich')
 
@@ -1264,7 +1264,11 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
+                if 'source_conf' in dir(am.rh.resource):
+                    cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
+                else:
+                    # If the origin of the guess is not given the execution is in 'deterministic' mode (monthly reanalysis)
+                    cpl_model.append(True)
 
         return cpl_model
 
