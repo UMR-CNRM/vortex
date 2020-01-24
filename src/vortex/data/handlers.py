@@ -848,6 +848,7 @@ class Handler(object):
                     mytracker = self._cur_context.localtracker[iotarget]
                     # Execute the hooks only if the local file exists
                     if self.container.exists():
+                        self.container.updfill(True)
                         if self.hooks:
                             if not self.delayhooks:
                                 self.apply_put_hooks(mytracker=mytracker, **extras)
