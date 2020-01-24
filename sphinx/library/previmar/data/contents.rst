@@ -17,6 +17,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AltidataContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 .. hints
 .. .. autodata:: XXX
