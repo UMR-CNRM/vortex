@@ -230,7 +230,6 @@ class CouplingGridOasis(GenvUsageModelResource):
         return 'CouplingGridOasis'
 
 
-
 class AltimetryPreproc(GenvModelResource):
     """ Thresholds for altimeter preprocessing. """
     _footprint = dict(

@@ -2409,13 +2409,6 @@ class OSExtended(System):
         cmd.extend(args[1:])
         return self.spawn(cmd, **kw)
 
-    @_kw2spawn
-    def sort(self,  *args, **kw):
-        """sort on globbed files."""
-        cmd = ['sort', args[0]]
-        cmd.extend(self.glob(*args[1:]))
-        return self.spawn(cmd, **kw)
-
     def is_tarfile(self, filename):
         """Return a boolean according to the tar status of the **filename**."""
         return tarfile.is_tarfile(self.path.expanduser(filename))

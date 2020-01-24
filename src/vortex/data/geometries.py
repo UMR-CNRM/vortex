@@ -545,7 +545,7 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
-class ReducedGridGeometry(HorizontalGeometry):
+class RedgridGeometry(HorizontalGeometry):
     """
     Spherical or LAM reduced grid (the number of longitude decreases toward the
     pole).
@@ -566,13 +566,13 @@ class ReducedGridGeometry(HorizontalGeometry):
         """
         kw.setdefault('runit', 'dg')
         kw.setdefault('lam', False)
-        super(ReducedGridGeometry, self).__init__(**kw)
+        super(RedgridGeometry, self).__init__(**kw)
         self.kind = 'redgrid'
 
     def _check_attributes(self):
-        if self.nlonmax is None or self.nlat is None or self.expected_resolution is None:
+        if self.nlonmax is None or self.nlat is None or self.resolution is None:
             raise AttributeError("Some mandatory arguments are missing")
-        super(ReducedGridGeometry, self)._check_attributes()
+        super(RedgridGeometry, self)._check_attributes()
         if self.lam is False:
             self.area = 'global'
 
@@ -608,7 +608,7 @@ def _add_geo2basename_info(cls):
                                     self.geometry.short_gridtype)}, ]
             if add_stretching:
                 lgeo.append({'stretching': self.geometry.stretching})
-        elif isinstance(self.geometry, (ProjectedGeometry, ReducedGridGeometry)):
+        elif isinstance(self.geometry, (ProjectedGeometry, RedgridGeometry)):
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = self.geometry.area  # Default: always defined

@@ -33,7 +33,7 @@ todo:
     -   commons:
             kind:
                 - historic
-                - InitWave
+                - WaveInit
             fields:
                 - LAW
                 - BLS

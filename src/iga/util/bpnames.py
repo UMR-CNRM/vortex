@@ -402,12 +402,6 @@ def SurgesWw3coupling_bnames(resource, provider):
         return resource.fields + config_new + '.gz'
 
 
-def WaveCurrent_bnames(resource, provider):
-    """docstring for"""
-    if resource.model == 'mfwam':
-        return 'currents_{0:s}'.format(resource.date.ymdhm)
-
-
 def AltidataWave_bnames(resource, provider):
     """docstring"""
     if resource.model == 'mfwam':
@@ -490,7 +484,7 @@ def gridpoint_bnames(resource, provider):
         elif resource.model == 'mfwam':
             logger.info("resourceterm %s", resource.term.hour)
             if provider.vconf == 'globalcep01':
-                if six.text_type(resource.term.hour) == '24': ## dictinction job1 et job2
+                if six.text_type(resource.term.hour) == '24':
                     return 'windandice{0:s}_{1:s}'.format('1', resource.date.ymdhm)
                 else:
                     return 'windandice{0:s}_{1:s}'.format('2', resource.date.ymdhm)

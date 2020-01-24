@@ -9,7 +9,6 @@ from bronx.stdtypes.date import Date, Time, Period
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition, Historic
-from common.data.gridfiles import GridPoint
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from .contents import AltidataContent
 
@@ -291,7 +290,6 @@ class TarResult(GeoFlowResource):
         return 'surges_tarfile'
 
 
-
 @namebuilding_append('src', lambda s: s.fields)
 class WaveInit(Historic):
     """Class of"""
@@ -313,12 +311,10 @@ class WaveInit(Historic):
             ),
         )
     )
-    
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
         return '(prefix:fieldskey)(termfix:modelkey)(suffix:modelkey)'
-
 
 
 @namebuilding_append('src', lambda s: s.satellite)
@@ -342,7 +338,7 @@ class GenericWaveSatelliteData(FlowResource):
 
 class WaveAltidata(GenericWaveSatelliteData):
     """Altimetry data for wave models."""
-    
+
     _footprint = dict(
         info = 'Altimetric data file',
         attr = dict(
@@ -362,7 +358,7 @@ class WaveAltidata(GenericWaveSatelliteData):
 
 class SARdataWave(GenericWaveSatelliteData):
     """Satellite spectral data for wave models."""
-    
+
     _footprint = dict(
         info = 'Spectral data file',
         attr = dict(
@@ -375,6 +371,3 @@ class SARdataWave(GenericWaveSatelliteData):
     @property
     def realkind(self):
         return 'SARdataWave'
-
-
-
