@@ -19,7 +19,6 @@ from bronx.fancies import loggers
 from twisted.protocols.ftp import FTP, FTPFactory, FTPRealm, AUTH_FAILURE
 from twisted.cred.portal import Portal
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
-from twisted.internet import reactor
 
 if __name__ == '__main__':
     sys.path.insert(0, os.path.realpath(os.path.join(os.path.dirname(__file__), '..')))
@@ -39,7 +38,7 @@ class TwistedBrokenFTP(FTP):
 
     def ftp_PASS(self, password):
         what = next(self.pass_ticker)
-        logger.info('ftp_PASS: ticker returned %s.', what)
+        logger.info('ServerSide: ftp_PASS: ticker returned %s.', what)
         if what is True:
             return super(TwistedBrokenFTP, self).ftp_PASS(password)
         else:
@@ -47,7 +46,7 @@ class TwistedBrokenFTP(FTP):
 
     def ftp_RETR(self, path):
         what = next(self.retr_ticker)
-        logger.info('ftp_RETR: ticker returned %s.', what)
+        logger.info('ServerSide: ftp_RETR: ticker returned %s.', what)
         if what is True:
             return super(TwistedBrokenFTP, self).ftp_RETR(path)
         else:
@@ -55,7 +54,7 @@ class TwistedBrokenFTP(FTP):
 
     def ftp_STOR(self, path):
         what = next(self.stor_ticker)
-        logger.info('ftp_STOR: ticker returned %s.', what)
+        logger.info('ServerSide: ftp_STOR: ticker returned %s.', what)
         if what is True:
             return super(TwistedBrokenFTP, self).ftp_STOR(path)
         else:
@@ -105,28 +104,35 @@ class TestFTPServer(object):
                  pass_seq = (), retr_seq = (), stor_seq = ()):
         self.port = port
         self.serverroot = serverroot
+        self.user = user
+        self.password = password
         self.pass_seq = pass_seq
         self.retr_seq = retr_seq
         self.stor_seq = stor_seq
 
-        userdb = InMemoryUsernamePasswordDatabaseDontUse()
-        userdb.addUser(user, password)
-        self.portal = Portal(FTPRealm(os.path.realpath(serverroot),
-                                      userHome=os.path.realpath(serverroot)),
-                             [userdb, ])
-
     def _server_task(self):
+        from twisted.internet import reactor
 
-        def nicestop(signum, frame):
-            reactor.stop()
+        userdb = InMemoryUsernamePasswordDatabaseDontUse()
+        userdb.addUser(self.user, self.password)
+        portal = Portal(FTPRealm(os.path.realpath(self.serverroot),
+                                 userHome=os.path.realpath(self.serverroot)),
+                        [userdb, ])
 
-        f = TwistedBrokenFTPFactory(self.portal)
+        f = TwistedBrokenFTPFactory(portal)
         f.pass_seq = self.pass_seq
         f.retr_seq = self.retr_seq
         f.stor_seq = self.stor_seq
-        signal.signal(signal.SIGTERM, nicestop)
+        logger.debug('ServerSide: FTP factory was build %s.', str(f))
+        reactor.addSystemEventTrigger('before', 'shutdown',
+                                      lambda: logger.debug("ServerSide: before shtudown"))
+        reactor.addSystemEventTrigger('after', 'shutdown',
+                                      lambda: logger.debug("ServerSide: after shtudown"))
         reactor.listenTCP(self.port, f)
+        logger.info("ServerSide: Factory %s registered with port %d",
+                    str(f), self.port)
         reactor.run()
+        logger.info("ServerSide: Reactor's run returned")
         return True
 
     def check_port(self):
@@ -136,13 +142,22 @@ class TestFTPServer(object):
     def __call__(self):
         p = mproc.Process(target=self._server_task)
         p.start()
+        logger.debug("ClientSide: subprocess started")
         try:
             self.check_port()
-            logger.info('The test FTP server is ready on port: %d', self.port)
+            logger.info('ClientSide: The test FTP server is ready on port: %d', self.port)
             yield
         finally:
+            logger.info("ClientSide: firing terminate")
             p.terminate()
-            p.join()
+            logger.debug("ClientSide: terminate called")
+            p.join(timeout=5)
+            if p.exitcode is None:
+                # The join command timed out...
+                logger.info("ClientSide: first join timed out... force kill !")
+                os.kill(p.pid, signal.SIGKILL)
+                p.join()
+            logger.debug("ClientSide: join done")
 
 
 if __name__ == '__main__':
