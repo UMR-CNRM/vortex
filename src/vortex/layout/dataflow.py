@@ -732,11 +732,14 @@ def _str2unicode(jsencode):
 
 def _fast_clean_uri(store, remote):
     """Clean a URI so that it can be compared with a JSON load version."""
+    qsl = remote['query'].copy()
+    qsl.update({'storearg_{:s}'.format(k): v
+                for k, v in store.tracking_extraargs.items()})
     return _str2unicode({u'scheme': six.text_type(store.scheme),
                          u'netloc': six.text_type(store.netloc),
                          u'path': six.text_type(remote['path']),
                          u'params': six.text_type(remote['params']),
-                         u'query': remote['query'],
+                         u'query': qsl,
                          u'fragment': six.text_type(remote['fragment'])})
 
 
@@ -792,7 +795,7 @@ class LocalTrackerEntry(object):
                 # We are using as_dict since this may be written to a JSON file
                 self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
 
-    def update_store(self, info, uri):
+    def _update_store(self, info, uri):
         """Update the entry based on data received from the observer board.
 
         This method is to be called with data originated from the
@@ -861,7 +864,7 @@ class LocalTrackerEntry(object):
         else:
             return False
 
-    def check_uri_remote_delete(self, uri):
+    def _check_uri_remote_delete(self, uri):
         """Called when a :class:`~vortex.data.stores.Store` object notifies a delete.
 
         The URIs stored for the "put" action are checked against the delete
@@ -996,11 +999,11 @@ class LocalTracker(defaultdict):
                 clean_uri = _fast_clean_uri(store, info['remote'])
                 huri = self._hashable_uri(clean_uri)
                 for atracker in list(self._uri_map['put'][huri]):
-                    atracker.check_uri_remote_delete(clean_uri)
+                    atracker._check_uri_remote_delete(clean_uri)
         else:
             if isinstance(lpath, six.string_types):
                 clean_uri = _fast_clean_uri(store, info['remote'])
-                self[lpath].update_store(info, clean_uri)
+                self[lpath]._update_store(info, clean_uri)
             else:
                 logger.debug("The iotarget isn't a six.text_type: It will be skipped in %s",
                              self.__class__)
