@@ -271,22 +271,12 @@ class AlmostListContent(DataContent):
 
     # The very simple diff method form DataContent should do the job.
     _diffable = True
-    # Delayed slurp
-    _delayed_slurp = False
 
     def __init__(self, **kw):
         self._maxprint = kw.pop('maxprint', 20)
         super(AlmostListContent, self).__init__(**kw)
-        self._do_delayed_slurp = None
         if self._data is None:
             self._data = list()
-
-    @property
-    def data(self):
-        """The internal data encapsulated."""
-        if self._do_delayed_slurp is not None:
-            self._actual_slurp(self._do_delayed_slurp)
-        return self._data
 
     def __delitem__(self, idx):
         del(self.data[idx])
@@ -334,20 +324,12 @@ class AlmostListContent(DataContent):
     def clear(self):
         """Clear all internal data contents."""
         self._data[:] = []
-        self._do_delayed_slurp = None
-
-    def _actual_slurp(self, container):
-        with container.preferred_decoding(byte=False):
-            self._data.extend(container.readlines())
-            self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     def slurp(self, container):
         """Get data from the ``container``."""
-        if self._delayed_slurp:
-            self._do_delayed_slurp = container
-        else:
-            self._actual_slurp(container)
+        with container.preferred_decoding(byte=False):
+            self._data.extend(container.readlines())
+            self._size = container.totalsize
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
@@ -395,11 +377,10 @@ class TextContent(AlmostListContent):
             catlist = self[:]
         return '\n'.join([six.text_type(x) for x in catlist])
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             self._data.extend([x.split() for x in container if not x.startswith('#')])
             self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
@@ -427,7 +408,7 @@ class DataRaw(AlmostListContent):
             data = collections.deque(maxlen=window)
         super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             container.rewind()
             end = False
@@ -436,7 +417,6 @@ class DataRaw(AlmostListContent):
                 self._data.append(data)
                 if self._window and len(self._data) >= self._window:
                     end = True
-        self._do_delayed_slurp = None
 
 
 class DataTemplate(DataContent):

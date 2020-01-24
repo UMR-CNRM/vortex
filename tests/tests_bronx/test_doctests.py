@@ -6,7 +6,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import doctest
 import unittest
 
-from bronx.datagrip import namelist
+from bronx.datagrip import namelist, varbcheaders
 from bronx.fancies import display, language, loggers
 from bronx.meteo import thermo
 from bronx.patterns import getbytag, observer
@@ -23,6 +23,7 @@ class utDocTests(unittest.TestCase):
 
     def test_doctests(self):
         self.assert_doctests(namelist)
+        self.assert_doctests(varbcheaders)
         self.assert_doctests(display)
         self.assert_doctests(language)
         self.assert_doctests(loggers)
