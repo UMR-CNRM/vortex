@@ -176,3 +176,22 @@ class TestRestart(BlackBox):
             )
         )
     ]
+
+
+class HMSPLITGRIB2(BlackBox):
+    """Convert fields to BDAP grib inputs."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Convert fields to BDAP grib inputs',
+            attr = dict(
+                kind = dict(
+                    values  = ['hmsplit_grib2'],
+                ),
+                gvar = dict(
+                    default = 'master_[kind]',
+                )
+            )
+        )
+    ]

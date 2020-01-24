@@ -11,6 +11,19 @@
 .. autodata:: __all__
 
 
+Abstract classes
+----------------
+
+.. autoclass:: AbstractSumoForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AbstractSumoForcingWithMeteo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 
@@ -20,6 +33,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: Surface
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfaceArp
    :show-inheritance:
    :members:
    :member-order: alphabetical

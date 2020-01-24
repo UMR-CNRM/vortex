@@ -38,6 +38,12 @@ class AbstractMocageRoot(Parallel):
                     info     = 'Forecast term',
                     type     = date.Time,
                 ),
+                nhcy = dict(
+                    info     = 'Meteo coupling frequency',
+                    type     = date.Period,
+                    optional = True,
+                    default  = date.Period('PT3H'),
+                ),
                 cpldelta = dict(
                     info     = 'Default delta for coupling based on FM files',
                     type     = date.Period,
@@ -146,6 +152,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Min Max (smterms) : %04d %d', minsm, maxsm)
         logger.info('self.fcterm.hour  :      %d', self.fcterm.hour)
         logger.info('Fcterm            :      %d', realfcterm)
+        logger.info('NHCY              :      %s', str(self.nhcy))
 
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
@@ -161,6 +168,8 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'DD2', int(last.day))
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
+        # NHCY is expressed in hours...
+        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600.)
 
         namrh.save()
         namrh.container.cat()

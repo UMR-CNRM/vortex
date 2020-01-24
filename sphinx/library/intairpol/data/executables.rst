@@ -53,3 +53,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: HMSPLITGRIB2
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
