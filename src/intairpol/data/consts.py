@@ -30,27 +30,6 @@ class StaticSurfaceEmissions(GenvModelResource):
         return 'emiss_cst'
 
 
-class StaticSurfaceEmissionsPrevair(GenvModelResource):
-    """
-    Emissions files collected by international community.
-    """
-    _footprint = dict(
-        info = 'Emissions files for sumo',
-        attr = dict(
-            kind = dict(
-                values  = ['emis_sumo02', 'mocage_emis_sumo02'],
-            ),
-            gvar = dict(
-                default = 'mocage_emis_sumo02'
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'emis_sumo02'
-
-
 class Regrid(GenvModelResource):
     """
     Parameters for mocage grid transformation from 0.2 to 0.1 degree.
@@ -221,49 +200,3 @@ class SurfaceEmissionsProfilesTable(GenvModelResource):
     @property
     def realkind(self):
         return 'emiss_table'
-
-
-class ListIdGrib2(GenvModelResource):
-    """
-     List of grib2 idents.
-    """
-    _footprint = dict(
-        info = 'List of grib2 idents',
-        attr = dict(
-            kind = dict(
-                values  = ['mocage_liste_param_idgrib2'],
-            ),
-            gvar=dict(
-                default = 'mocage_liste_param_idGrib2'
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'liste_param_idgrib2'
-
-
-class GribTemplatePrevair(GenvModelResource):
-    """
-    File constant for prevair/mocage post.
-    """
-    _footprint = dict(
-        info = 'Grib template for mocage postprevair bdap',
-        attr = dict(
-            kind = dict(
-                values   = ['mocage_template_grilles'],
-            ),
-            edition = dict(
-                optional = True,
-                default  = 2,
-            ),
-            gvar = dict(
-                default  = 'mocage_template_grilles'
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'mocage_template_grilles'
