@@ -223,6 +223,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             self.flyput = True
         else:
             self.flyput = False
+    
+    def postfix(self,rh,opts):
+        self.ticket.context.clear_promises()
+        super(Mfwam,self).postfix(rh,opts)
 
 
 
