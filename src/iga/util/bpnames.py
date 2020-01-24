@@ -37,7 +37,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
                        '15': 'QZ', '16': '16', '17': '17', '18': 'DH', '19': '19',
                        '20': '20', '21': 'VU', '22': '22', '23': '23' }
         reseau_suff = reseau_prod[_reseau]
-    elif cutoff == 'production' and vconf == 'pifrance':
+    elif cutoff == 'production' and vconf == 'pifrance' or vconf == 'france_jj1':
         reseau_prod = {'00': '00', '01': '01', '02': '02', '03': '03', '04': '04',
                        '05': '05', '06': '06', '07': '07', '08': '08', '09': '09',
                        '10': '10', '11': '11', '12': '12', '13': '13', '14': '14',
@@ -252,6 +252,11 @@ def rawfields_bnames(resource, provider):
 def obsfire_bnames(resource, provider):
     """docstring for obsfirepack_bnames"""
     return 'GFASfires_H_fcst_' + resource.date.ymd + '.tar.gz'
+
+
+def chemical_bc_bnames(resource, provider):
+    """docstring for chemical_bc_bnames"""
+    return 'bc22_{0.ymdh:s}.nc'.format(resource.date + resource.term)
 
 
 def geofields_bnames(resource, provider):
@@ -648,7 +653,7 @@ def global_snames(resource, provider):
     if resource.nativefmt == 'grib':
         if resource.model == 'ifs':
             if resource.filling == 'atm':
-                if resource.geometry.area == 'global256':
+                if resource.geometry.tag == 'global256':
                     bname = 'ALTI_glob.grb'
                 else:
                     bname = 'ALTI_st511.grb'
@@ -656,6 +661,11 @@ def global_snames(resource, provider):
                 bname = 'SOL_glob.grb'
             elif resource.filling == 'soil':
                 bname = 'SSOL_glob.grb'
+        elif resource.vapp_origin == 'pg1':
+            if resource.vconf_origin in ['pagrex', 'parome']:
+                bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+            if resource.vconf_origin == 'pa':
+                bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
 
     if resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':
@@ -663,10 +673,12 @@ def global_snames(resource, provider):
                 bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
             else:
                 bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh  + '.nc'
+
     if vconf == 'aefrance' or vconf == 'pifrance':
         my_model = '_' + resource.model.upper()
     else:
         my_model = ''
+
     if resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
             if resource.part == 'sev':
@@ -684,6 +696,7 @@ def global_snames(resource, provider):
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
         elif resource.nativefmt == 'hdf5':
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
+
     if resource.realkind == 'refdata':
         if resource.part == 'prof':
             bname = 'RD_2' + my_model + '.' + suff
@@ -693,14 +706,17 @@ def global_snames(resource, provider):
             bname = 'RD_SURFAN' + my_model + '.' + suff
         else:
             bname = 'rd_' + resource.part + my_model + '.' + suff
+
     if resource.realkind == 'historic':
         bname = 'toto'
+
     if resource.realkind == 'obsmap':
         if resource.scope.startswith('surf'):
             scope = resource.scope[:4].lower()
         else:
             scope = resource.scope
         bname = 'bm' + my_model + '_' + scope + '.' + suff + '.' + resource.date.ymd
+
     if resource.realkind == 'listing_ouloutput':
         if resource.scope == 'surf':
             bname = 'OULOUTPUT_SURFAN' + my_model + '.' + suff

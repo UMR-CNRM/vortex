@@ -228,10 +228,17 @@ class SopranoProvider(Provider):
             info['model'] = 'aromeaefr'
         elif self.vapp == 'mocage':
             info['model'] = 'macc'
-        elif self.vapp =='arpege' and resource.model =='ifs':
+        elif self.vapp == 'arpege' and resource.model == 'ifs':
             info['model'] = 'restart_cep'
+        elif self.vapp == 'pprod':
+            info['level_one']   = 'previ'
+            info['level_two']   = 'previ_amont'
+            info['level_three'] = 'alpha'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
         else:
             info['model'] = self.vapp
+
         if info['model'] in ATM_LIST_ONE:
             info['level_one']   = 'modele'
             info['level_two']   = suite_map.get(self.suite, self.suite)

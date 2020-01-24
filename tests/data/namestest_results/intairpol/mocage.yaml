@@ -29,6 +29,26 @@
     description: !test_names.core.TestParameters
       block: chemical
       kind: chemical_bc
+      namespace: '[suite].inline.fr'
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vortex/bc_camsfcst/bc22_2018010100.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: chemical_bc
+      namespace: '[suite].inline.fr'
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vortex/bc_camsfcst/bc22_2018010200.nc
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: chemical
+      kind: chemical_bc
       namespace: '[suite].multi.fr'
       suite: oper
       term: 0

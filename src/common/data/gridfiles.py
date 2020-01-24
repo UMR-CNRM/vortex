@@ -3,11 +3,18 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+"""
+Resources associated with the handling of gridded data.
+"""
+
 import re
+
+from bronx.stdtypes.date import Time
+import footprints
 
 from vortex.data.contents import JsonDictContent
 from vortex.data.flow import GeoFlowResource, FlowResource
-from vortex.syntax.stdattrs import term_deco
+from vortex.syntax.stdattrs import term_deco, timeperiod_deco
 from vortex.syntax.stddeco import namebuilding_insert
 from vortex.tools import env
 
@@ -15,51 +22,60 @@ from vortex.tools import env
 __all__ = []
 
 
-class GridPoint(GeoFlowResource):
-    """
-    Class for gridpoint model files calculated in a post-treatment task. Possible formats are 'grib' and 'fa'.
-    A gridpoint file can be calculated for files from different sources given by the "origin" attribute.
+_ORIGIN_INFO = """Describes where the data originaly comes from. The most common
+values are: ``ana`` (that stands for analysis), ``fcst`` (that stands for
+forecast), ``hst`` (that stands for Historic file. i.e a file that contains a
+full model state variable), ``stat_ad`` (that stands for statistical adapatation)."""
+
+
+class AbstractGridpoint(GeoFlowResource):
+    """Gridpoint file calculated in a post-processing task or module.
+
+    * Possible formats are 'grib', 'fa' or 'netcdf'.
+    * A gridpoint file can be calculated for files from different sources given
+      by the "origin" attribute.
     """
 
     _abstract = True
-    _footprint = [
-        term_deco,
-        dict(
-            info = 'GridPoint Fields',
-            attr = dict(
-                origin = dict(
-                    values = [
-                        'analyse', 'ana', 'guess', 'gss', 'arpege', 'arp', 'arome', 'aro',
-                        'aladin', 'ald', 'historic', 'hst', 'forecast', 'fcst', 'era40', 'e40',
-                        'era15', 'e15', 'interp', 'sumo', 'filter'
-                    ],
-                    remap = dict(
-                        analyse = 'ana',
-                        guess = 'gss',
-                        arpege = 'arp',
-                        aladin = 'ald',
-                        arome = 'aro',
-                        historic = 'hst',
-                        forecast = 'fcst',
-                        era40 = 'e40',
-                        era15 = 'e15'
-                    )
-                ),
-                kind = dict(
-                    values = [ 'gridpoint', 'gribfile', 'fullpos' ],
-                    remap = dict(
-                        fullpos = 'gridpoint'
-                    )
-                ),
-                filtername = dict(
-                    # Dummy argument but avoid priority related messages with footprints
-                    info = 'With GridPoint files, leave filtername empty...',
-                    optional = True,
-                    values = [None, ],
-                ),
-            )
+    _footprint = dict(
+        info = 'Any kind of GridPoint file.',
+        attr = dict(
+            origin = dict(
+                info = _ORIGIN_INFO,
+                values = [
+                    'analyse', 'ana', 'guess', 'gss', 'arpege', 'arp', 'arome', 'aro',
+                    'aladin', 'ald', 'historic', 'hst', 'forecast', 'fcst', 'era40', 'e40',
+                    'era15', 'e15', 'interp', 'sumo', 'filter', 'stat_ad',
+                ],
+                remap = dict(
+                    analyse = 'ana',
+                    guess = 'gss',
+                    arpege = 'arp',
+                    aladin = 'ald',
+                    arome = 'aro',
+                    historic = 'hst',
+                    forecast = 'fcst',
+                    era40 = 'e40',
+                    era15 = 'e15'
+                )
+            ),
+            kind = dict(
+                values = [ 'gridpoint', 'gribfile', 'fullpos' ],
+                remap = dict(
+                    fullpos = 'gridpoint'
+                )
+            ),
+            nativefmt   = dict(
+                values  = ['grib', 'grib1', 'grib2', 'netcdf', 'fa'],
+            ),
+            filtername = dict(
+                # Dummy argument but avoid priority related messages with footprints
+                info = 'With GridPoint files, leave filtername empty...',
+                optional = True,
+                values = [None, ],
+            ),
         )
-    ]
+    )
 
     @property
     def realkind(self):
@@ -75,19 +91,24 @@ class GridPoint(GeoFlowResource):
 
     def namebuilding_info(self):
         """Generic information, radical = ``grid``."""
-        ninfo = super(GridPoint, self).namebuilding_info()
-        if self.model == 'mocage':
-            if self.origin == 'hst':
-                source = 'forecast'
-            else:
-                source = 'sumo'
-        elif self.model in ('hycom', 'mfwam'):
-            if self.origin == 'ana':
-                source = 'analysis'
-            else:
-                source = 'forecast'
+        ninfo = super(AbstractGridpoint, self).namebuilding_info()
+        if self.origin in ('stat_ad', ):
+            # For new ``origin`` please use this code path... Please, no more
+            # weird logic like the one hard-coded in the else statement !
+            source = self.origin
         else:
-            source = 'forecast'
+            if self.model == 'mocage':
+                if self.origin == 'hst':
+                    source = 'forecast'
+                else:
+                    source = 'sumo'
+            elif self.model == ('hycom', 'mfwam'):
+                if self.origin == 'ana':
+                    source = 'analysis'
+                else:
+                    source = 'forecast'
+            else:
+                source = 'forecast'
         ninfo.update(
             radical = 'grid',
             src     = [self.model, source],
@@ -107,10 +128,58 @@ class GridPoint(GeoFlowResource):
         )
 
 
+class GridPoint(AbstractGridpoint):
+    """
+    Gridpoint files calculated in a post-processing task or module for
+    a single-term.
+    """
+
+    _abstract = True
+    _footprint = [ term_deco, ]
+
+
+class TimePeriodGridPoint(AbstractGridpoint):
+    """
+    Gridpoint files calculated in a post-processing task or module for
+    a given time period.
+    """
+
+    _abstract = True
+    _footprint = [
+        timeperiod_deco,
+        dict(
+            attr = dict(
+                begintime = dict(
+                    optional = True,
+                    default = Time(0),
+                )
+            )
+        )
+    ]
+
+
+# A bunch of generic footprint declaration to ease with class creation
+_NATIVEFMT_FULLPOS_FP = footprints.Footprint(
+    info='Abstract nativefmt for fullpos files.',
+    attr=dict(nativefmt=dict(values=['fa'],
+                             default='fa', ))
+)
+_NATIVEFMT_GENERIC_FP = footprints.Footprint(
+    info='Abstract nativefmt for any other gridpoint files.',
+    attr=dict(nativefmt=dict(values=['grib', 'grib1', 'grib2', 'netcdf'],
+                             default='grib'))
+)
+_FILTERNAME_AWARE_FPDECO = footprints.DecorativeFootprint(
+    footprints.Footprint(
+        info='Abstract filtering attribute (used when the filtername attribute is allowed).',
+        attr=dict(filtername=dict(info="The filter used to obtain this data.",
+                                  optional=False, values=[],))),
+    decorator=[namebuilding_insert('filtername', lambda s: s.filtername), ]
+)
+
+
 class GridPointMap(FlowResource):
-    """
-    Map of the gridpoint files as produced by fullpos
-    """
+    """Map of the gridpoint files as produced by fullpos."""
 
     _footprint = dict(
         info = 'Gridpoint Files Map',
@@ -135,16 +204,12 @@ class GridPointMap(FlowResource):
 
 
 class GridPointFullPos(GridPoint):
+    """Gridpoint file produced by FullPos in ``fa`` format."""
 
-    _footprint = dict(
-        info = 'GridPoint fields as produced by Fullpos',
-        attr = dict(
-            nativefmt = dict(
-                values  = ['fa'],
-                default = 'fa',
-            ),
-        )
-    )
+    _footprint = [
+        _NATIVEFMT_FULLPOS_FP,
+        dict(info='GridPoint file produced by Fullpos (with a single term)'),
+    ]
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -196,16 +261,12 @@ class GridPointFullPos(GridPoint):
 
 
 class GridPointExport(GridPoint):
+    """Generic single term gridpoint file using a standard format."""
 
-    _footprint = dict(
-        info = 'GridPoint fields as exported for dissemination',
-        attr = dict(
-            nativefmt = dict(
-                values  = ['grib', 'grib1', 'grib2', 'netcdf'],
-                default = 'grib',
-            ),
-        )
-    )
+    _footprint = [
+        _NATIVEFMT_GENERIC_FP,
+        dict(info='Generic gridpoint file (with a single term)'),
+    ]
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
@@ -235,16 +296,16 @@ class GridPointExport(GridPoint):
         return name
 
 
-@namebuilding_insert('filtername', lambda s: s.filtername)
 class FilteredGridPointExport(GridPointExport):
+    """Generic single term gridpoint file using a standard format."""
+    _footprint = [_FILTERNAME_AWARE_FPDECO, ]
 
-    _footprint = dict(
-        info = 'GridPoint fields as exported and filtered for dissemination',
-        attr = dict(
-            filtername = dict(
-                info = "The filter used to obtain this data.",
-                optional = False,
-                values = [],
-            ),
-        )
-    )
+
+class TimePeriodGridPointExport(TimePeriodGridPoint):
+    """Generic multi term gridpoint file using a standard format."""
+    _footprint = [_NATIVEFMT_GENERIC_FP, ]
+
+
+class FilteredTimePeriodGridPointExport(TimePeriodGridPointExport):
+    """Generic multi term gridpoint file using a standard format."""
+    _footprint = [_FILTERNAME_AWARE_FPDECO, ]

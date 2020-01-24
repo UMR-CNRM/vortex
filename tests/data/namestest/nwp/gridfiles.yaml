@@ -35,7 +35,9 @@ todo:
             block: forecast
             experiment: abcd
         tests:
-            -   origin: hst
+            -   origin: 
+                    - hst
+                    - stat_ad
                 experiment:
                     - oper
                     - abcd
@@ -61,7 +63,7 @@ todo:
                 namespace: "[suite].multi.fr"
                 origin: hst
                 model: ifs
-    # GRIB/Gridpoints
+    # GRIB/Gridpoints with a term
     -   commons:
             kind: gridpoint
             nativefmt: grib
@@ -69,7 +71,9 @@ todo:
             block: forecast
             experiment: abcd
         tests:
-            -   origin: hst
+            -   origin:
+                    - hst
+                    - stat_ad
                 filtername:
                     - null
                     - synopsis
@@ -89,6 +93,27 @@ todo:
                 namespace: "[suite].multi.fr"
                 origin: hst
                 model: ifs
+    # GRIB/Gridpoints with a period
+    -   commons:
+            kind: gridpoint
+            nativefmt: grib
+            endtime: 48
+            block: forecast
+            experiment: abcd
+        tests:
+            -   origin:
+                    - fcst
+                    - hst
+                    - stat_ad
+                filtername:
+                    - null
+                    - synopsis
+                experiment:
+                    - oper
+                    - abcd
+            -   begintime: "12:15"
+                origin: hst
+                scenario: RCP2.6
     # GridPointMap
     -   tests:
             - kind: gridpointmap
