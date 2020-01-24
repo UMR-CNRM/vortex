@@ -17,6 +17,8 @@ Sub-modules
 * :mod:`bronx.datagrip.misc`: Miscellaneous I/O tools.
 * :mod:`bronx.datagrip.namelist`: Support for fortran literals and namelists
 * :mod:`bronx.datagrip.pyexttiff`: Aims at reading tiff with private IFDs.
+* :mod:`bronx.datagrip.varbc`: Read and parse the content of a VarBC file.
+* :mod:`bronx.datagrip.varbcheaders`: Read and parse the header lines of a VarBC file.
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

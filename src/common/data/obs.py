@@ -11,15 +11,14 @@ from collections import namedtuple
 
 
 import footprints
-from bronx.fancies               import loggers
-from bronx.stdtypes.date         import Date
-from bronx.stdtypes.dictionaries import ReadOnlyDict
+from bronx.datagrip.varbcheaders import VarbcHeadersFile
+from bronx.fancies import loggers
 
-from vortex.data.flow     import GeoFlowResource, FlowResource
-from vortex.data.contents import TextContent, AlmostListContent
-from vortex.syntax        import stdattrs, stddeco
+from vortex.data.flow import GeoFlowResource, FlowResource
+from vortex.data.contents import TextContent, DataContent
+from vortex.syntax import stdattrs, stddeco
 
-from gco.syntax.stdattrs  import gvar, GenvKey
+from gco.syntax.stdattrs import gvar, GenvKey
 
 #: Automatic export of Observations class
 __all__ = [ 'Observations' ]
@@ -268,29 +267,39 @@ class ObsFlags(FlowResource):
         return 'BDM_CQ'
 
 
-class VarBCContent(AlmostListContent):
+class VarBCContent(DataContent):
 
     # The VarBC file is too big: revert to the good old diff
     _diffable = False
-    # Do a delayed init to avoid crashes on big VarBC files
-    _delayed_slurp = True
+
+    def __init__(self, **kw):
+        super(VarBCContent, self).__init__(**kw)
+        self._do_delayed_slurp = None
+
+    @property
+    def data(self):
+        """The internal data encapsulated."""
+        if self._do_delayed_slurp is not None:
+            self._actual_slurp(self._do_delayed_slurp)
+        return self._data
+
+    def _actual_slurp(self, container):
+        # May fail if Numpy is not installed...
+        from bronx.datagrip.varbc import VarbcFile
+        with container.preferred_decoding(byte=False):
+            self._data = VarbcFile(container.readlines())
+        self._do_delayed_slurp = None
 
     def slurp(self, container):
-        """Get data from the ``container`` and find the metadata."""
+        """Get data from the ``container``."""
+        self._do_delayed_slurp = container
         super(VarBCContent, self).slurp(container)
-        tmpdata = container.head(2)
-        mdata = {}
-        # First we look for the version of the VarBC file
-        mobj = re.match(r'\w+\.version(\d+)', tmpdata[0])
-        if mobj:
-            mdata['version'] = int(mobj.group(1))
-            # Then we fetch the date of the file
-            mobj = re.match(r'\s*\w+\s+(\d{8})\s+(\d+)', tmpdata[1])
-            if mobj:
-                mdata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
-                                                         int(mobj.group(2))))
-                # The metadata are updated only if both version and data are here
-                self._metadata = ReadOnlyDict(mdata)
+        self._metadata = VarbcHeadersFile(container)
+
+    @property
+    def size(self):
+        """The actual size of the contents."""
+        return len(self.data) if self.data else self._size
 
 
 @stddeco.namebuilding_append('src', lambda s: [s.stage, ])
@@ -429,11 +438,10 @@ class ObsRefContent(TextContent):
         """Append the specified ``item`` to internal data contents."""
         self.data.append(ObsRefItem(*item))
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             self._data.extend([ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#')])
             self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     @classmethod
     def formatted_data(self, item):
@@ -515,8 +523,6 @@ class ObsMapContent(TextContent):
       with *te* or *ta* that would usualy be inserted in the *conv* database.
     * ``only=FPSet(('conv',))`` -> Only *conv* ODB database will be used.
     """
-
-    _delayed_slurp = False
 
     def __init__(self, **kw):
         kw.setdefault('discarded', set())
