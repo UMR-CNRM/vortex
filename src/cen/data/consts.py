@@ -24,10 +24,10 @@ class List(GenvModelGeoResource):
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
                               'carpost', 'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist',
-                              'metadata', 'NORELo', 'NORELm'],
+                              'metadata', 'NORELo', 'NORELm', 'shapefile'],
                 ),
                 nativefmt = dict(
-                    values  = ['ascii'],
+                    values  = ['ascii', 'shp'],
                     default = 'ascii',
                 ),
                 gvar = dict(
@@ -99,3 +99,31 @@ class climTG(GenvModelGeoResource):
             # With the standard provider, the usual keys will be used.
         )
         return nbi
+
+
+class GridTarget(GenvModelGeoResource):
+    """
+    Resource describing a grid for interpolation of data based on massifs geometry
+    """
+
+    _footprint = [
+        gdomain,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values = ["interpolgrid"],
+                ),
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                ),
+                gvar = dict(
+                    default = '[kind]_[gdomain]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return self.kind

@@ -3,20 +3,20 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import io
-from collections import defaultdict
-
-import six
-
-import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+from collections import defaultdict
+import footprints
+import io
 from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
+
+import six
+
 
 logger = loggers.getLogger(__name__)
 
@@ -30,6 +30,7 @@ with echecker:
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils import S2M_standard_file
+    from snowtools.utils.FileException import TimeListException
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -45,7 +46,7 @@ class _S2MWorker(VortexWorkerBlindRun):
             ),
             deterministic = dict(
                 type     = bool,
-                default  = False,
+                default  = True,
                 optional = True,
             ),
         )
@@ -200,7 +201,7 @@ class _SafranWorker(_S2MWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
         _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
-                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE']
+                             'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'rsclim.don']
         for nam in _Safran_namelists:
             self.link_in(self.system.path.join(rundir, nam), nam)
 
@@ -333,6 +334,11 @@ class _SafranWorker(_S2MWorker):
                         actual_dates.append(date)
                     t = t + dt  # 3-hours check
 
+        if 5 < len(actual_dates) < 9:
+            # We must have either 5 or 9 dates, if not we only keep synoptic ones
+            for date in actual_dates:
+                if date.hour not in [0, 6, 12, 18]:
+                    actual_dates.remove(date)
         if len(actual_dates) < 5:
             # print("WARNING : Not enough guess for date {0:s}, expecting at least 5, "
             #      "got {1:d}".format(dates[0].ymdh, len(actual_dates)))
@@ -342,11 +348,6 @@ class _SafranWorker(_S2MWorker):
             else:
                 logger.warning('No guess files found, SAFRAN will run with climatological guess')
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
-        elif 5 < len(actual_dates) < 9:
-            # We must have either 5 or 9 dates, if not we only keep synoptic ones
-            for date in actual_dates:
-                if date.hour not in [0, 6, 12, 18]:
-                    actual_dates.remove(date)
 
         return actual_dates
 
@@ -478,7 +479,8 @@ class SypluieWorker(_SafranWorker):
         with io.open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
-            if self.execution == 'reanalysis':
+            # Except for more recent years for which ARPEGE rr guess are available
+            if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
                 d.write('0,0,1\n')
             else:
                 d.write('0,0,3\n')
@@ -527,7 +529,8 @@ class SyrpluieWorker(_SafranWorker):
         with io.open('sapdat', 'w') as d:
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
-            if self.execution == 'reanalysis':
+            # Except for more recent years for which ARPEGE rr guess are available
+            if self.execution == 'reanalysis'and self.datebegin < Date(2017, 8, 1, 0):
                 d.write('0,0,1\n')
             else:
                 d.write('0,0,3\n')
@@ -560,7 +563,7 @@ class SyvaprWorker(_SafranWorker):
                     self.mv_if_exists('SAF4D_{0:s}'.format(suffix),
                                       'SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh))
             except ExecutionError:
-                rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                rdict['rc'] = S2MExecutionError(self.progname, False, self.subdir,
                                                 self.datebegin, self.dateend)
 
         return rdict  # Note than in the other case return rdict is at the end
@@ -572,6 +575,9 @@ class SyvafiWorker(_SafranWorker):
         attr = dict(
             kind = dict(
                 values = ['syvafi']
+            ),
+            deterministic = dict(
+                default  = False,
             ),
         )
     )
@@ -586,12 +592,11 @@ class SyvafiWorker(_SafranWorker):
         list_name = self.system.path.join(thisdir, self.kind + dates[-1].ymd + '.out')
         try:
             self.local_spawn(list_name)
-            self.local_spawn(list_name)
             self.mv_if_exists('fort.90', 'TAL' + dates[-1].ymdh)
             # if self.execution in ['reanalysis', 'reforecast']:
             #     self.system.remove(list_name)
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+            rdict['rc'] = S2MExecutionError(self.progname, False, self.subdir,
                                             self.datebegin, self.dateend)
 
         return rdict
@@ -641,7 +646,7 @@ class SytistWorker(_SafranWorker):
         )
     )
 
-    def postfix(self):
+    def postfix(self, rdict):
         if self.metadata:
             for f in ['FORCING_massif.nc', 'FORCING_postes.nc']:
                 if self.system.path.isfile(f):
@@ -649,6 +654,10 @@ class SytistWorker(_SafranWorker):
                     forcing_to_modify.GlobalAttributes()
                     forcing_to_modify.add_standard_names()
                     forcing_to_modify.close()
+
+        if 'rc' in rdict.keys() and isinstance(rdict['rc'], S2MExecutionError):
+            self.system.remove('FORCING_massif.nc')
+            self.system.remove('FORCING_postes.nc')
 
         self.mv_if_exists('FORCING_massif.nc',
                           'FORCING_massif_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
@@ -668,7 +677,7 @@ class SytistWorker(_SafranWorker):
             self.sapdat(dates[-1], nech)
             rdict = self._safran_task(rundir, thisdir, day, dates, rdict)
 
-        self.postfix()
+        self.postfix(rdict)
         return rdict
 
     def _safran_task(self, rundir, thisdir, day, dates, rdict):
@@ -879,7 +888,14 @@ class SurfexWorker(_S2MWorker):
                         forcinglist.append(forcingname)
 
                     print(forcinglist)
-                    forcinput_applymask(forcinglist, "FORCING.nc", )
+                    try:
+                        forcinput_applymask(forcinglist, "FORCING.nc")
+                    except TimeListException:
+                        deterministic = self.subdir == "mb035"
+                        rdict['rc'] = S2MExecutionError("merge of forcings", deterministic, self.subdir,
+                                                        dateforcbegin, dateforcend)
+                        return rdict  # Note than in the other case return rdict is at the end
+
                     need_save_forcing = True
                 else:
                     # Get the first file covering part of the whole simulation period
@@ -1233,6 +1249,8 @@ class S2MComponent(ParaBlindRun):
 # reanalyse safran, surfex postes, etc
 #         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
+        # Crash if subdirs is an empty list (it means that there is not any input available)
+        self.algoassert(len(subdirs) >= 1)
         return subdirs
 
     def get_origin(self, rh, opts):
@@ -1243,7 +1261,7 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                cpl_model.append(am.rh.provider.vconf == '4dvarfr')
+                cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
 
         return cpl_model
 

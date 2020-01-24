@@ -61,7 +61,9 @@ class S2MTaskMixIn(object):
 
     def get_period(self):
 
-        if self.conf.rundate.hour == self.nightruntime.hour:
+        if self.conf.rundate.hour == self.monthly_analysis_time.hour:
+            dateendanalysis = self.conf.rundate.replace(hour=6) - Period(days=4)
+        elif self.conf.rundate.hour == self.nightruntime.hour:
             dateendanalysis = yesterday(self.conf.rundate.replace(hour=6))
         else:
             dateendanalysis = self.conf.rundate.replace(hour=6)
@@ -82,7 +84,7 @@ class S2MTaskMixIn(object):
                     year = self.conf.rundate.year - 1
                 else:
                     year = self.conf.rundate.year
-                datebegin = Date(year, 7, 31, 6)
+                datebegin = Date(year, 8, 1, 6)
             else:
                 # The daytime runs perform a 1 day analysis
                 datebegin = dateend - Period(days=1)
@@ -168,20 +170,30 @@ class S2MTaskMixIn(object):
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
+    def split_geo_interpol(self):
+        geoin, geoout = self.conf.geometry.list.split(":")
+        return geoin, geoout
+
     def get_list_geometry(self, meteo="safran"):
 
-        source_safran, block_safran = self.get_source_safran(meteo=meteo)
+        if not hasattr(self.conf, "interpol"):
+            self.conf.interpol = False
 
-        list_suffix = ['_allslopes', '_flat']
-        if source_safran == "safran":
-            if self.conf.geometry.area == "postes":
-                return self.conf.geometry.list.split(",")
-            else:
-                for suffix in list_suffix:
-                    if suffix in self.conf.geometry.area:
-                        return [self.conf.geometry.area.replace(suffix, '')]
+        if self.conf.interpol:
+            return [self.conf.geoin]
         else:
-            return [self.conf.geometry.area]
+            source_safran, block_safran = self.get_source_safran(meteo=meteo)
+
+            list_suffix = ['_allslopes', '_flat']
+            if source_safran == "safran":
+                if self.conf.geometry.area == "postes":
+                    return self.conf.geometry.list.split(",")
+                else:
+                    for suffix in list_suffix:
+                        if suffix in self.conf.geometry.area:
+                            return [self.conf.geometry.area.replace(suffix, '')]
+            else:
+                return [self.conf.geometry.area]
 
     def get_alternate_safran(self):
         if self.conf.geometry.area == 'postes':
