@@ -546,22 +546,20 @@ class CurvlinearGeometry(UnstructuredGeometry):
 
 
 class RedgridGeometry(HorizontalGeometry):
-    """
-    Spherical or LAM reduced grid (the number of longitude decreases toward the
-    pole).
-    """
+    """Spherical or LAM reduced grid (the number of longitude decreases toward the pole)."""
 
     _tag_topcls = False
 
     def __init__(self, **kw):
         """
         :param str tag: The geometry's name (if no **tag** attributes is provided,
-        the first positional attribute is considered to be the tag name)
+                        the first positional attribute is considered to be the tag
+                        name)
         :param str info: A free description of the geometry
         :param int nlonmax: Maximum number of longitude points in the grid
         :param int nlat: Number of latitude points in the grid
         :param int expected_resolution: the real resolution for
-                                        longitudes = expected_resolution * cos(lat)
+                                        ``longitudes = expected_resolution * cos(lat)``
         :param str area: The grid location (needed if **lam** is *True*)
         """
         kw.setdefault('runit', 'dg')

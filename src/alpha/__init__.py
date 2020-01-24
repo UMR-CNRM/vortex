@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-The CEN VORTEX extension package.
+The Alpha VORTEX extension package.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -14,4 +14,4 @@ from . import algo
 #: No automatic export
 __all__ = []
 
-__tocinfoline__ = 'The CEN VORTEX extension'
+__tocinfoline__ = 'The Alpha VORTEX extension'

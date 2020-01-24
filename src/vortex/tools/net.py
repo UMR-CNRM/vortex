@@ -13,6 +13,7 @@ import collections
 import ftplib
 import functools
 import io
+import itertools
 import operator
 import random
 import re
@@ -26,6 +27,7 @@ from datetime import datetime
 import six
 from six.moves.urllib import request as urlrequest
 from six.moves.urllib import parse as urlparse
+
 
 from bronx.fancies import loggers
 from bronx.net.netrc import netrc
@@ -1542,7 +1544,7 @@ class AssistedSsh(Ssh):
 
     def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None,
                  maxtries=1, triesdelay=1, virtualnode=False, permut=True,
-                 fatal=False, mandatory_hostcheck=False):
+                 fatal=False, mandatory_hostcheck=True):
         """
         :param System sh: The :class:`System` object that is to be used.
         :param hostname: The target hostname(s).
@@ -1559,11 +1561,13 @@ class AssistedSsh(Ssh):
                             being used.
         :param bool fatal: If True, a RuntimeError exception is raised whenever
                            something fails.
-        :param mandatory_hostcheck: If True, the hostname is always checked
-                                    prior to being used for the real Ssh command.
+        :param mandatory_hostcheck: If True and several host names are provided,
+                                    the hostname is always checked prior to being
+                                    used for the real Ssh command. When a single
+                                    host name is provided, such a check is never
+                                    performed.
         """
         super(AssistedSsh, self).__init__(sh, hostname, logname, sshopts, scpopts)
-        self._maxtries = maxtries
         self._triesdelay = triesdelay
         self._virtualnode = virtualnode
         self._permut = permut
@@ -1576,6 +1580,12 @@ class AssistedSsh(Ssh):
         self._fatal_in_progress = False
         self._retries = 0
         self._targets = self._setup_targets()
+        self._targets_iter = itertools.cycle(self._targets)
+        if not self._mandatory_hostcheck and len(self._targets) > 1:
+            # Try at least one time with each of the possible targets
+            self._maxtries = maxtries + len(self._targets) - 1
+        else:
+            self._maxtries = maxtries
         self._chosen_target = None
 
     def _setup_targets(self):
@@ -1608,20 +1618,24 @@ class AssistedSsh(Ssh):
     @_tryagain
     def remote(self):
         """hostname to use for this kind of remote execution."""
-        if len(self.targets) == 1 and not self._mandatory_hostcheck:
+        if len(self.targets) == 1:
             # This is simple enough, do not bother testing...
             self._chosen_target = self.targets[0]
-        if self._chosen_target is None:
-            for guess in self.targets:
-                cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
-                try:
-                    self.sh.spawn(cmd, output=False, silent=True)
-                except Exception:
-                    pass
-                else:
-                    self._chosen_target = guess
-                    break
-        return self._chosen_target
+        # Ok, let's take self._mandatory_hostcheck into account
+        if self._mandatory_hostcheck:
+            if self._chosen_target is None:
+                for guess in self.targets:
+                    cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
+                    try:
+                        self.sh.spawn(cmd, output=False, silent=True)
+                    except Exception:
+                        pass
+                    else:
+                        self._chosen_target = guess
+                        break
+            return self._chosen_target
+        else:
+            return next(self._targets_iter)
 
 
 _ConnectionStatusAttrs = ('Family', 'LocalAddr', 'LocalPort', 'DestAddr', 'DestPort', 'Status')

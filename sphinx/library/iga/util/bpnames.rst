@@ -63,3 +63,5 @@ Functions
 .. autofunction:: bufr_bnames
 
 .. autofunction:: obsfire_bnames
+
+.. autofunction:: chemical_bc_bnames

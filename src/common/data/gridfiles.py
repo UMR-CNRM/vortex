@@ -23,17 +23,19 @@ __all__ = []
 
 
 _ORIGIN_INFO = """Describes where the data originaly comes from. The most common
-values are: ``ana`` (that stands for analysis), ``fcst`` (that stands for
-forecast), ``hst`` (that stands for Historic file. i.e a file that contains a
-full model state variable), ``stat_ad`` (that stands for statistical adapatation)."""
+values are: ana (that stands for analysis), fcst (that stands for
+forecast), hst (that stands for Historic file. i.e a file that contains a
+full model state variable), stat_ad (that stands for statistical adapatation)."""
+_ORIGIN_INFO = _ORIGIN_INFO.replace('\n', ' ')
 
 
 class AbstractGridpoint(GeoFlowResource):
     """Gridpoint file calculated in a post-processing task or module.
 
-    * Possible formats are 'grib', 'fa' or 'netcdf'.
-    * A gridpoint file can be calculated for files from different sources given
-      by the "origin" attribute.
+        * Possible formats are 'grib', 'fa' or 'netcdf'.
+        * A gridpoint file can be calculated for files from different sources given
+          by the "origin" attribute.
+
     """
 
     _abstract = True
@@ -102,7 +104,7 @@ class AbstractGridpoint(GeoFlowResource):
                     source = 'forecast'
                 else:
                     source = 'sumo'
-            elif self.model == ('hycom', 'mfwam'):
+            elif self.model in ('hycom', 'mfwam'):
                 if self.origin == 'ana':
                     source = 'analysis'
                 else:
