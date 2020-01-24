@@ -665,6 +665,7 @@ class ArchiveStore(Store):
 
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
+        self._archive = None
         super(ArchiveStore, self).__init__(*args, **kw)
         del self.archive
 
