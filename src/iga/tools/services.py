@@ -355,6 +355,10 @@ class RoutingService(Service):
         attr = dict(
             filename = dict(
             ),
+            filefmt = dict(
+                optional = True,
+                default  = None
+            ),
             targetname = dict(
                 optional = True,
                 default  = None
@@ -385,6 +389,8 @@ class RoutingService(Service):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
         self._actual_filename = self.sh.path.abspath(self.filename)
+        self._actual_filename = self.sh.forcepack(self._actual_filename,
+                                                  fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""

@@ -26,7 +26,7 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
-_folder_exposed_methods = set(['cp', 'mv',
+_folder_exposed_methods = set(['cp', 'mv', 'forcepack', 'forceunpack',
                                'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
                                'scpget', 'scpput',
                                'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
@@ -50,6 +50,8 @@ class FolderShell(addons.FtrawEnableAddon):
     """
     This abstract class defines methods to manipulate folders.
     """
+
+    _COMPRESSED = 'gz'
 
     _abstract = True
     _footprint = dict(
@@ -101,10 +103,32 @@ class FolderShell(addons.FtrawEnableAddon):
                 rc, source, destination = self.tarfix_in(source, destination)
         return rc
 
+    def _folder_forcepack(self, source, destination=None):
+        """Returned a path to a packed data."""
+        if not self.sh.is_tarname(source):
+            destination = (destination if destination else
+                           '{:s}{:s}.{:s}'.format(source, self.sh.safe_filesuffix(), self.tarfix_extension))
+            if not self.sh.path.exists(destination):
+                absdestination = self.sh.path.abspath(destination)
+                with self.sh.cdcontext(self.sh.path.dirname(source)):
+                    self.sh.tar(absdestination, self.sh.path.basename(source))
+            return destination
+        else:
+            return source
+
+    def _folder_forceunpack(self, source):
+        """Unpack the data "inplace"."""
+        fakesource = '{:s}{:s}.{:s}'.format(source, self.sh.safe_filesuffix(), self.tarfix_extension)
+        rc, _, _ = self.tarfix_in(fakesource, source)
+        return rc
+
     def _folder_pack_stream(self, source, stdout=True):
         source_name = self.sh.path.basename(source)
         source_dirname = self.sh.path.dirname(source)
-        cmd = ['tar', '--directory', source_dirname, '-cz', source_name]
+        compression_map = {'gz': 'z', 'bz2': 'j'}
+        compression_opt = compression_map.get(self._COMPRESSED, '')
+        cmd = ['tar', '--directory', source_dirname,
+               '-c' + compression_opt, source_name]
         return self.sh.popen(cmd, stdout=stdout, bufsize=8192)
 
     def _folder_unpack_stream(self, stdin=True, options='xvf'):
@@ -129,8 +153,8 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_preftget(self, source, destination):
         """Prepare source and destination"""
-        if not (source.endswith('.tgz') or source.endswith('.tar.gz') or source.endswith('.tar')):
-            source += '.tgz'
+        if not self.sh.is_tarname(source):
+            source += '.{:s}'.format(self.tarfix_extension)
         destination = self.sh.path.abspath(self.sh.path.expanduser(destination))
         self.sh.rm(destination)
         return source, destination
@@ -264,8 +288,8 @@ class FolderShell(addons.FtrawEnableAddon):
             raise IOError("It's not allowed to compress folder like data.")
         hostname = self.sh._fix_fthostname(hostname)
 
-        if not destination.endswith('.tgz'):
-            destination += '.tgz'
+        if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
+            destination += '.{:s}'.format(self.tarfix_extension)
 
         source = self.sh.path.abspath(source)
 
@@ -287,8 +311,8 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         if self.sh.ftraw and self.rawftshell is not None:
-            if not destination.endswith('.tgz'):
-                destination += '.tgz'
+            if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
+                destination += '.{:s}'.format(self.tarfix_extension)
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
@@ -319,7 +343,7 @@ class FolderShell(addons.FtrawEnableAddon):
         loctmp = tempfile.mkdtemp(prefix='folder_', dir=loccwd)
         self.sh.cd(loctmp)
         try:
-            p = self._folder_unpack_stream(options='xvzf')
+            p = self._folder_unpack_stream()
             rc = ssh.scpget_stream(source, p.stdin)
             self.sh.pclose(p)
         finally:
@@ -331,8 +355,8 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
 
-        if not destination.endswith('.tgz'):
-            destination += '.tgz'
+        if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
+            destination += '.{:s}'.format(self.tarfix_extension)
 
         source = self.sh.path.abspath(source)
         logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
@@ -355,7 +379,7 @@ class FolderShell(addons.FtrawEnableAddon):
         # The folder must not be compressed
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        ctarget = target + ".tgz"
+        ctarget = target + '.{:s}'.format(self.tarfix_extension)
         source, target = self._folder_preftget(source, target)
         # Create a local directory, get the source file and untar it
         loccwd = self.sh.getcwd()
@@ -364,7 +388,7 @@ class FolderShell(addons.FtrawEnableAddon):
             rc, dict_args = self.sh.ecfsget(source=source,
                                             target=ctarget,
                                             options=options)
-            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.untar(ctarget, autocompress=False)
             rc = rc and self.sh.rm(ctarget)
             self._folder_postftget(target, loccwd, loctmp)
         return rc, dict_args
@@ -381,10 +405,10 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if not target.endswith('.tgz'):
-            target += ".tgz"
+        if not target.endswith('.{:s}'.format(self.tarfix_extension)):
+            target += '.{:s}'.format(self.tarfix_extension)
         source = self.sh.path.abspath(source)
-        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
         try:
             rc = self.sh.tar(csource, source)
             if rc:
@@ -409,7 +433,7 @@ class FolderShell(addons.FtrawEnableAddon):
         # The folder must not be compressed
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        ctarget = target + ".tgz"
+        ctarget = target + '.{:s}'.format(self.tarfix_extension)
         source, target = self._folder_preftget(source, target)
         # Create a local directory, get the source file and untar it
         loccwd = self.sh.getcwd()
@@ -419,7 +443,7 @@ class FolderShell(addons.FtrawEnableAddon):
                                                    target=ctarget,
                                                    gateway=gateway,
                                                    remote=remote)
-            rc = rc and self.sh.untar(ctarget)
+            rc = rc and self.sh.untar(ctarget, autocompress=False)
             rc = rc and self.sh.rm(ctarget)
             self._folder_postftget(target, loccwd, loctmp)
         return rc, dict_args
@@ -439,10 +463,10 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if not target.endswith('.tgz'):
-            target += ".tgz"
+        if not target.endswith('.{:s}'.format(self.tarfix_extension)):
+            target += '.{:s}'.format(self.tarfix_extension)
         source = self.sh.path.abspath(source)
-        csource = source + self.sh.safe_filesuffix() + ".tgz"
+        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
         try:
             rc = self.sh.tar(csource, source)
             if rc:
@@ -454,6 +478,20 @@ class FolderShell(addons.FtrawEnableAddon):
         finally:
             self.sh.rm(csource)
         return rc, dict_args
+
+    @property
+    def tarfix_extension(self):
+        """Return the extension of tar file associated with this extension."""
+        if self._COMPRESSED:
+            if self._COMPRESSED == 'gz':
+                return "tgz"
+            elif self._COMPRESSED == 'bz2':
+                return "tar.bz2"
+            else:
+                raise ValueError("Unsupported compression type: {:s}"
+                                 .format(self._COMPRESSED))
+        else:
+            return "tar"
 
     def tarfix_in(self, source, destination):
         """Automatically untar **source** if **source** is a tarfile and **destination** is not.

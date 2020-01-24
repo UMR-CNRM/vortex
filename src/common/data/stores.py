@@ -121,6 +121,9 @@ class BdpeStore(Store):
             if not rc:
                 logger.warning('Something went wrong while uncompressing the file %s.', tempfile)
 
+        # Final step : deal with format specific packing
+        rc = rc and self.system.forceunpack(local, fmt=options.get('fmt'))
+
         if self.system.path.exists(diagfile):
             self.system.remove(diagfile)
 

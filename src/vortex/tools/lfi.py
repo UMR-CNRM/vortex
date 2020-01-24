@@ -266,6 +266,24 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
             pass
         return None
 
+    def _std_forcepack(self, source, destination=None):
+        """Returned a path to a packed data."""
+        if self.is_xlfi(source):
+            destination = (destination if destination else
+                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+            if not self.sh.path.exists(destination):
+                st = self._std_copy(source=source, destination=destination, pack=True)
+                if st:
+                    return destination
+                else:
+                    raise IOError('XLFI packing failed')
+            else:
+                return destination
+        else:
+            return source
+
+    fa_forcepack = lfi_forcepack = _std_forcepack
+
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
