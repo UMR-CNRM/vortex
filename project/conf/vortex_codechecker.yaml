@@ -6,13 +6,13 @@ checkconfigs:
                  # the checker class as keyword arguments
          - type: pycodestyle
            max_line_length: 120
-           ignore: [E401, E402, W504]
+           ignore: &PEP8IGN [E401, E402, W504]
    pylong:
       label: "code "
       checkers:
          - type: pycodestyle
            max_line_length: 400
-           ignore: [E401, E402, W504]
+           ignore: *PEP8IGN
    docweak:
       label: "doc  "
       checkers:
@@ -26,12 +26,14 @@ checkconfigs:
       checkers:
          - type: pydocstyle
            convention: pep257
-           ignore: [D105, D107, D200, D401]
-   astroimport:
+           # Idealy, D204, D205 and D400 should be checked but there is a lot
+           # of work !
+           ignore: [D105, D107, D200, D204, D205, D400, D401]
+   astrovtx:
       label: "astro"
       checkers:
-         - type: astroidimport
-           overall_whitelist:
+         - type: astroidcheck
+           importuse_overall_whitelist: &IMP_O_WL
             - bronx.fancies.arguments
             - bronx.fancies.multicfg
             - vortex.tools.addons
@@ -47,31 +49,51 @@ checkconfigs:
             - iga.tools.actions
             - iga.tools.services
             - intairpol.tools.addons
-           local_whitelist:
+           importuse_local_whitelist: &IMP_L_WL
             site/footprints/loggers.py: [logging, ]
             src/common/algo/ifsroot.py: [common.algo.ifsnaming, ]
             src/vortex/sessions.py: [vortex.gloves, ]
+           importblacklist: &IMP_BL
+            os: [src/vortex/tools/systems.py, src/vortex/tools/env.py]
+            resource: [src/vortex/tools/systems.py, ]
+            shutil: [src/vortex/tools/systems.py, ]
+           importdeprecated: &IMP_DE
+            footprints.loggers: bronx.fancies.loggers
+            vortex.tools.date: bronx.stdtypes.date
+            vortex.tools.ddhpack: vortex.tools.folder
+            vortex.tools.odb: vortex.tools.folder
+            vortex.tools.rawfiles: vortex.tools.folder
+           builtinblacklist: &BLT_BL
+            open: "use io.open instead in order to improve Python2/3 compatibility"
+   astro:
+      label: "astro"
+      checkers:
+         - type: astroidcheck
+           importuse_overall_whitelist: *IMP_O_WL
+           importuse_local_whitelist: *IMP_L_WL
+           importdeprecated: *IMP_DE
+           builtinblacklist: *BLT_BL
 
 places:
    site:  # The place nickname
       path: site  # The path to the place (relative to the vortex repository root)
       footprints_detect: true  # Do we need to look for footprint definitions ?
       checkconfigs:  # List of checkconfig (see above) to apply on this place
-         - astroimport
+         - astro
          - pystd
          - docstrict
    weaksite:
       path: site/bronx/fancies
       footprints_detect: true
       checkconfigs:
-         - astroimport
+         - astro
          - pystd
          - docweak
    src:
       path: src
       footprints_detect: true
       checkconfigs:
-         - astroimport
+         - astrovtx
          - pystd
          - docweak
    tests:
@@ -83,13 +105,13 @@ places:
       path: bin
       footprints_detect: true
       checkconfigs:
-         - astroimport
+         - astro
          - pylong
          - docweak
    project:
       path: project
       checkconfigs:
-         - astroimport
+         - astro
          - pylong
          - docweak
  

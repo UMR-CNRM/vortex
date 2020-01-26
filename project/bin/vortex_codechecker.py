@@ -250,14 +250,29 @@ DictOfImports = typing.Dict[str, typing.Tuple[int, str]]
 SetOfNames = typing.Set[str]
 
 
-class AstroidImportChecker(object):
+class AstroidChecker(object):
     """Check the source code for unused imports using astroid."""
 
-    _RESFMT = '{:s}-imp   l.{:4d}    : {!s}'
+    _RESFMT_I = '{:s}-imp   l.{:4d}    : {!s}'
+    _RESFMT_B = '{:s}-bbla  l.XXXX    : {!s}'
+    _UI_MSG = 'unused import "{:s}" (as "{:s}").'
+    _BL_MSG = 'blacklisted import (should never be used in Vortex) "{:s}".'
+    _DE_MSG = 'deprecated import "{:s}". Use "{:s}" instead.'
+    _BB_MSG = 'blacklisted builtin "{:s}" ({:s})'
 
-    def __init__(self, overall_whitelist=None, local_whitelist=None):
-        self._o_whitelist = set(overall_whitelist) if overall_whitelist else set()
-        self._l_whitelist = dict(local_whitelist) if local_whitelist else dict()
+    def __init__(self,
+                 importuse_overall_whitelist=None,
+                 importuse_local_whitelist=None,
+                 importblacklist=None,
+                 importdeprecated=None,
+                 builtinblacklist=None):
+        self._o_whitelist = (set(importuse_overall_whitelist)
+                             if importuse_overall_whitelist else set())
+        self._l_whitelist = (dict(importuse_local_whitelist)
+                             if importuse_local_whitelist else dict())
+        self._blacklist = dict(importblacklist) if importblacklist else dict()
+        self._deprecated = dict(importdeprecated) if importdeprecated else dict()
+        self._builtin_bl = dict(builtinblacklist) if builtinblacklist else dict()
 
     def _astroid_imports_tree_recurse(self,
                                       tree: typing.Union[astroid.ALL_NODE_CLASSES],
@@ -325,6 +340,14 @@ class AstroidImportChecker(object):
                 names.add(node.name)
             self._astroid_names_tree_recurse(node, names)
 
+    def _newresult_i(self, label, import_item, msgfmt, *args):
+        return (import_item[0],
+                self._RESFMT_I.format(label, import_item[0], msgfmt.format(* args)))
+
+    def _newresult_b(self, label, msgfmt, *args):
+        return (0,
+                self._RESFMT_B.format(label, msgfmt.format(* args)))
+
     def __call__(self, vpycode: VortexPythonCode, label: str) -> CheckerErrorsList:
         """Run the check on **vpycode**."""
         astp = vpycode.p_astroid
@@ -337,18 +360,32 @@ class AstroidImportChecker(object):
             names: SetOfNames = set()
             self._astroid_imports_tree_recurse(astp, imports, l_whitelist)
             self._astroid_names_tree_recurse(astp, names)
-            errors.extend([(imports[imp][0],
-                            self._RESFMT.format(label, imports[imp][0],
-                                                'Unused import "{:s}" (as "{:s}").'
-                                                .format(imports[imp][1], imp)))
+            # Unused code
+            errors.extend([self._newresult_i(label, imports[imp], self._UI_MSG,
+                                             imports[imp][1], imp)
                            for imp in set(imports.keys()) - names])
+            # Blacklisted modules
+            for bmod, excl in self._blacklist.items():
+                if (vpycode.shortpath not in excl):
+                    errors.extend([self._newresult_i(label, iitem, self._BL_MSG, iitem[1])
+                                   for imp, iitem in imports.items()
+                                   if re.match('^' + bmod + r'(\.|$)', iitem[1])])
+            # Decprecated modules
+            for dmod, repl in self._deprecated.items():
+                errors.extend([self._newresult_i(label, iitem, self._DE_MSG, iitem[1], repl)
+                               for imp, iitem in imports.items()
+                               if re.match(dmod + r'(\.|$)', imports[imp][1])])
+            # Builtin blacklist
+            for bblt, expl in self._builtin_bl.items():
+                if bblt in names and bblt not in imports:
+                    errors.append(self._newresult_b(label, self._BB_MSG, bblt, expl))
         return errors
 
 
 _AVAILABLE_CHECKERS = dict(
     pycodestyle=PycodestyleChecker,
     pydocstyle=PydocstyleChecker,
-    astroidimport=AstroidImportChecker,
+    astroidcheck=AstroidChecker,
 )
 
 _ARGPARSE_EPILOG = """
@@ -480,11 +517,15 @@ class VortexPlace(_AnyConfigEntry):
                 errors.extend(checker(vpc, checkconfig.label))
         return errors
 
-    def summarize_pycode(self, vpc_name: str, errors: CheckerErrorsList) -> int:
+    def summarize_pycode(self,
+                         vpc_name: str, errors: CheckerErrorsList,
+                         rfilter: typing.Union[None, re.Pattern]) -> int:
         """Print the errors summary.
 
         :return: The number of errors
         """
+        errors = [err for err in errors
+                  if not rfilter or rfilter.match(err[1])]
         if errors:
             print('=== ' + vpc_name + ' ===')
             for errordesc in sorted(errors):
@@ -589,6 +630,8 @@ def main():
     parser.add_argument("-p", "--vortexpath", dest="vortexpath", action="store",
                         default=_VTXBASE,
                         help="Vortex repository location [default: %(default)s]")
+    parser.add_argument("-f", "--filter", dest="filter", action="store", type=re.compile,
+                        help="Filter the results based on a regex")
 
     # Process arguments
     args = parser.parse_args()
@@ -617,7 +660,7 @@ def main():
         with concurrent.futures.ProcessPoolExecutor(max_workers=args.nprocs) as executor:
             c_checkers = {vpc.shortpath: executor.submit(place.check_pycode, vpc)
                           for vpc in place.iter_pycode(confdata.places_paths)}
-            total_errors += sum([place.summarize_pycode(vpc_name, checker.result())
+            total_errors += sum([place.summarize_pycode(vpc_name, checker.result(), args.filter)
                                  for vpc_name, checker in c_checkers.items()])
 
     if total_errors:
