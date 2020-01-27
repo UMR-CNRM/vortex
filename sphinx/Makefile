@@ -79,7 +79,11 @@ export BRONX_FANCIES_RSTDOC
 # -------------
 # Build targets
 
-all: $(NOTEBOOKS) auto_html_docs html  # HTML documentation is obviously the default
+EXTRAPATH   := $(PWD)/../src:$(PWD)/../site:$(PWD)/../project:$(PYTHONPATH)
+export PYTHONPATH = $(EXTRAPATH)
+
+
+all: auto_html_docs html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
 .PHONY: all full-check miss-check $(CHECKREPORT) html auto_html_docs \
@@ -142,7 +146,7 @@ auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
 # Build the sphinx-html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+html: $(NOTEBOOKS) $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks
