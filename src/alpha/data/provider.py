@@ -7,6 +7,7 @@ import os.path
 
 from bronx.fancies import loggers
 
+from vortex.syntax.stdattrs import namespacefp
 from vortex.util.config     import GenericConfigParser
 from vortex.data.providers  import Provider
 
@@ -28,29 +29,32 @@ class AlphaCfgParser(GenericConfigParser):
 
 class AlphaSopranoDevProvider(Provider):
 
-    _footprint = dict(
-        info = 'ALPHA Soprano provider',
-        attr = dict(
-            namespace = dict(
-                values   = ['alphadev.soprano.fr'],
-                optional  = False,
-            ),
-            storage = dict(
-                values   = ['rason.meteo.fr', ],
-                optional  = False,
-            ),
-            tube = dict(
-                optional = True,
-                values   = ['scp', 'ftp'],
-                default  = 'ftp'
-            ),
-            config = dict(
-                type     = AlphaCfgParser,
-                optional = True,
-                default  = AlphaCfgParser('@alpha-map-resources.ini')
+    _footprint = [
+        namespacefp,
+        dict(
+            info = 'ALPHA Soprano provider',
+            attr = dict(
+                namespace = dict(
+                    values   = ['alphadev.soprano.fr'],
+                    optional  = False,
+                ),
+                storage = dict(
+                    values   = ['rason.meteo.fr', ],
+                    optional  = False,
+                ),
+                tube = dict(
+                    optional = True,
+                    values   = ['scp', 'ftp'],
+                    default  = 'ftp'
+                ),
+                config = dict(
+                    type     = AlphaCfgParser,
+                    optional = True,
+                    default  = AlphaCfgParser('@alpha-map-resources.ini')
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):

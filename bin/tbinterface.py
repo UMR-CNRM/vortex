@@ -30,9 +30,9 @@ import vortex.tools.ddhpack  # @UnusedImport
 import vortex.tools.lfi  # @UnusedImport
 
 
-NAMESPACES_MAP = dict(swapp=('common', 'gco', 'olive', 'intairpol'),
-                      json=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),
-                      xml=('common', 'gco', 'olive', 'iga', 'previmar', 'cen', 'intairpol', 'ecmwf'),)
+NAMESPACES_MAP = dict(swapp=('common', 'gco', 'intairpol', 'olive'),
+                      json=('alpha', 'cen', 'common', 'davai', 'ecmwf', 'gco', 'iga', 'intairpol', 'olive', 'previmar'),
+                      xml=('alpha', 'cen', 'common', 'davai', 'ecmwf', 'gco', 'iga', 'intairpol', 'olive', 'previmar'),)
 
 COLLECTORS_DFLT = ('container', 'provider', 'resource', 'component')
 
