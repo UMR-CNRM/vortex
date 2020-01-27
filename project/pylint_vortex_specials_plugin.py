@@ -67,5 +67,5 @@ def transform_module(mod):
             mod.globals[attr + 's'] = new_ast
 
 
-MANAGER.register_transform(scoped_nodes.Class, transform)
+MANAGER.register_transform(scoped_nodes.ClassDef, transform)
 MANAGER.register_transform(scoped_nodes.Module, transform_module)
