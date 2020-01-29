@@ -125,7 +125,10 @@ class UGetShell(cmd.Cmd):
         # Read the configuration
         if sh.path.exists(self._config_file):
             with io.open(self._config_file, 'r') as fhconf:
-                self._config.readfp(fhconf)
+                if six.PY2:
+                    self._config.readfp(fhconf)
+                else:
+                    self._config.read_file(fhconf)
         else:
             # Or create a void one...
             self._config.add_section('cli')
@@ -506,7 +509,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('location', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with open(self._config_file, 'w') as fpconf:
+            with io.open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):

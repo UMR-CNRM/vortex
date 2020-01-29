@@ -5,8 +5,6 @@ DAVAI expertise AlgoComponents.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import json
-
 from footprints import FPList, FPDict
 from bronx.fancies import loggers
 
@@ -141,8 +139,7 @@ class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
                                       'short': 'Ended ! Summary failed',
                                       'text': 'Task ended, but Expertise failed: no TaskSummary available !'},
                            'Exception': str(e)}
-                with open(promise[0].rh.container.localpath(), 'w') as out:
-                    json.dump(summary, out)
+                self.system.json_dump(summary, promise[0].rh.container.localpath(), indent=4)
             promise[0].put(incache=True)
         elif len(promise) > 1:
             raise AlgoComponentError("There shouldn't be more than 1 promise here.")

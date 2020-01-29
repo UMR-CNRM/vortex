@@ -9,7 +9,6 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
-from math import ceil
 import re
 import sys
 

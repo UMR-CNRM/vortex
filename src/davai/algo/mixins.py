@@ -5,8 +5,6 @@ Wrappers above usual AlgoComponents.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import json
-
 import footprints
 from bronx.stdtypes import date
 
@@ -64,8 +62,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         promise = [x for x in self.promises
                    if x.role == 'TaskSummary']
         if len(promise) == 1:
-            with open(promise[0].rh.container.localpath(), 'w') as out:
-                json.dump(summary, out, indent=4)
+            self.system.json_dump(summary, promise[0].rh.container.localpath(), indent=4)
             promise[0].put(incache=True)
         elif len(promise) > 1:
             raise AlgoComponentError("There shouldn't be more than 1 promise here.")

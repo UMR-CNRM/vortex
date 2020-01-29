@@ -25,8 +25,6 @@ import footprints
 import vortex  # @UnusedImport
 # For the addons to be recognised
 import vortex.tools.folder  # @UnusedImport
-import vortex.tools.odb  # @UnusedImport
-import vortex.tools.ddhpack  # @UnusedImport
 import vortex.tools.lfi  # @UnusedImport
 
 

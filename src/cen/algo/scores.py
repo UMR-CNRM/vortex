@@ -18,7 +18,6 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
     from snowtools.scores.ensemble import ESCROC_EnsembleScores
-    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 
 
 @echecker.disabled_if_unavailable

@@ -54,7 +54,15 @@ checkconfigs:
             src/common/algo/ifsroot.py: [common.algo.ifsnaming, ]
             src/vortex/sessions.py: [vortex.gloves, ]
            importblacklist: &IMP_BL
-            os: [src/vortex/tools/systems.py, src/vortex/tools/env.py]
+            os:
+               - src/vortex/data/containers.py
+               - src/vortex/data/providers.py
+               - src/vortex/tools/systems.py
+               - src/vortex/tools/env.py
+               - src/vortex/tools/delayedactions.py
+               - src/alpha/data/provider.py
+               - src/iga/data/providers.py
+               - src/sandbox/util/askjeeves.py
             resource: [src/vortex/tools/systems.py, ]
             shutil: [src/vortex/tools/systems.py, ]
            importdeprecated: &IMP_DE
@@ -64,7 +72,9 @@ checkconfigs:
             vortex.tools.odb: vortex.tools.folder
             vortex.tools.rawfiles: vortex.tools.folder
            builtinblacklist: &BLT_BL
-            open: "use io.open instead in order to improve Python2/3 compatibility"
+            open:
+               why: "use io.open instead in order to improve Python2/3 compatibility"
+               whitelist: [src/common/tools/grib.py, ]
    astro:
       label: "astro"
       checkers:
@@ -82,6 +92,12 @@ places:
          - astro
          - pystd
          - docstrict
+   jeevessite:
+      path: site/jeeves
+      footprints_detect: true
+      checkconfigs:  # No astroid checks since Python3 compatibility is not checked...
+         - pystd
+         - docweak
    weaksite:
       path: site/bronx/fancies
       footprints_detect: true

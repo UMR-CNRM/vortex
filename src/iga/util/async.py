@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import fcntl
+import io
 from vortex.util.worker import VortexWorker
 
 #: No automatic export
@@ -13,7 +15,7 @@ __all__ = []
 class LockedOpen(object):
     """Context class for locking a file while it is open."""
     def __init__(self, filename, mode):
-        self.fp = open(filename, mode)
+        self.fp = io.open(filename, mode)
 
     @property
     def fid(self):
@@ -41,6 +43,6 @@ def dayfile_report(pnum, ask, config, logger, **kw):
         data = vwork.get_dataset(ask)
         logger.debug('Reporting to', pnum=pnum, target=data.target)
         sh.filecocoon(data.target)
-        with LockedOpen(data.target, 'a') as fp:
+        with LockedOpen(data.target, 'a' + ('b' if six.PY2 else '')) as fp:
             fp.write(data.infos)
     return (pnum, vwork.rc, value)

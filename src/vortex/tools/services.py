@@ -17,7 +17,6 @@ import hashlib
 import io
 from email import encoders
 from string import Template
-import sys
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date

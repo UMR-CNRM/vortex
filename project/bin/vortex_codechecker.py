@@ -9,6 +9,7 @@ Run various code checkers on the Vortex' repository.
 import abc
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 import concurrent.futures
+import io
 import logging
 import os
 import re
@@ -86,7 +87,7 @@ class VortexPythonCode(object):
     def code(self):
         """Read the source file and returns it as a string."""
         if self._code is None:
-            with open(self._path) as fhcode:
+            with io.open(self._path, 'r', encoding='utf-8') as fhcode:
                 self._code = fhcode.read()
         return self._code
 
@@ -376,9 +377,9 @@ class AstroidChecker(object):
                                for imp, iitem in imports.items()
                                if re.match(dmod + r'(\.|$)', imports[imp][1])])
             # Builtin blacklist
-            for bblt, expl in self._builtin_bl.items():
-                if bblt in names and bblt not in imports:
-                    errors.append(self._newresult_b(label, self._BB_MSG, bblt, expl))
+            for bblt, desc in self._builtin_bl.items():
+                if bblt in names and bblt not in imports and vpycode.shortpath not in desc['whitelist']:
+                    errors.append(self._newresult_b(label, self._BB_MSG, bblt, desc['why']))
         return errors
 
 
@@ -558,7 +559,7 @@ class CheckerConfig(object):
         if not os.path.exists(self._file):
             raise IOError("The configuration file {:s} is missing.".format(self._file))
         # Load the yaml configuration file
-        with open(self._file) as fhconf:
+        with io.open(self._file, 'r', encoding='utf-8') as fhconf:
             try:
                 self._confdata = yaml.load(fhconf, yaml.SafeLoader)
             except yaml.YAMLError:

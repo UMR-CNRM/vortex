@@ -16,7 +16,6 @@ import io
 import tempfile
 
 from bronx.fancies import loggers
-import footprints
 from vortex.tools.net import DEFAULT_FTP_PORT
 from vortex.util.iosponge import IoSponge
 from . import addons

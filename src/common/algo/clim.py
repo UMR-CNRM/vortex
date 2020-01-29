@@ -351,8 +351,8 @@ class MakeLAMDomain(AlgoComponent):
         # build geometry
         geometry = build_func(interactive=False, **self.geom_params)
         # summary, plot, namelists:
-        with open(self.geometry.tag + '_summary.txt', 'w') as o:
-            o.write(dm.output.summary(geometry))
+        with io.open(self.geometry.tag + '_summary.txt', 'w') as o:
+            o.write(six.text_type(dm.output.summary(geometry)))
         if self.illustration:
             dm.output.plot_geometry(geometry,
                                     lonlat_included=lonlat_included,
@@ -538,27 +538,27 @@ class MakeGaussGeometry(Parallel):
         nam_pgd['NAMGEM'].delvar('NSTTYP')
         nam_pgd['NAMDIM'].delvar('NSMAX')
         nam_pgd['NAMDIM'].delvar('NDLON')
-        with open('.'.join([self.geometry.tag,
-                            'namel_buildpgd',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_buildpgd',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam_pgd.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C923 namelist
         del nam['NAM_PGD_GRID']
-        with open('.'.join([self.geometry.tag,
-                            'namel_c923',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c923',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
         trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
                                                       'max_lon_number': self.longitudes},
                                                      grid=self.orography_grid)['max']
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
-        with open('.'.join([self.geometry.tag,
-                            'namel_c923_orography',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c923_orography',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C927 (fullpos) namelist
         nam = namelist.NamelistSet()
@@ -575,10 +575,10 @@ class MakeGaussGeometry(Parallel):
         nrgri = [v for _, v in sorted(namrgri['NAMRGRI'].items())]
         for i in range(len(nrgri)):
             nam['NAMFPG']['NFPRGRI({:>4})'.format(i + 1)] = nrgri[i]
-        with open('.'.join([self.geometry.tag,
-                            'namel_c927',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c927',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         super(MakeGaussGeometry, self).postfix(rh, opts)
 

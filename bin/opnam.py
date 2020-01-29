@@ -5,7 +5,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import locale
 import sys
-import argparse
 
 locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
@@ -21,9 +20,7 @@ import gco.tools.diggers
 # Meteo stuf
 import common
 
-from bronx.stdtypes import date
 from bronx.fancies.arguments import CfgMeteoArgumentParser
-from bronx.fancies.colors import termcolors
 import bronx.fancies.multicfg
 
 t  = vortex.ticket()

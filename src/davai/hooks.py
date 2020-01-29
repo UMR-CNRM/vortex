@@ -46,8 +46,7 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
     """
     server_syntax = 'http://<host>[:<port>]/<url> (port is optional)'
     try:
-        with open(rh.container.localpath(), 'r') as s:
-            summary = json.load(s)
+        summary = t.sh.json_load(rh.container.localpath())
         if rh.resource.kind == 'xpinfo':
             jsonData = {rh.resource.kind: summary}
         elif rh.resource.kind == 'taskinfo':

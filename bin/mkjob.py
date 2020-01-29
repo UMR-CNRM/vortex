@@ -85,8 +85,8 @@ def parse_command_line():
         job = make_cmdline(args.job)
         jobs.append(job)
         if args.write:
-            with open(args.file, 'a') as fp:
-                fp.write(args.job + "\n")
+            with io.open(args.file, 'a') as fp:
+                fp.write(six.text_type(args.job) + "\n")
 
     if args.add:
         newparams = make_cmdline(args.add)
@@ -116,7 +116,7 @@ def make_cmdline(description):
 def list_variables():
     t = vortex.ticket()
     core = load_template(t, '@opjob-variables.tpl')
-    with open(core.srcfile, 'r') as f:
+    with io.open(core.srcfile, 'r') as f:
         for line in f:
             print(line)
 

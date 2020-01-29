@@ -59,7 +59,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from collections import namedtuple, defaultdict
 import multiprocessing
-import os
 import tempfile
 import time
 

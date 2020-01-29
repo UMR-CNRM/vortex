@@ -13,7 +13,6 @@ import six
 
 from collections import namedtuple, OrderedDict
 from contextlib import contextmanager
-import io
 import numpy as np
 import re
 
