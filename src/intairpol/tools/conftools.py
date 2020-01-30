@@ -13,6 +13,7 @@ import collections
 import functools
 
 from bronx.fancies import language, loggers
+from bronx.stdtypes import date
 from bronx.stdtypes.date import Date, Time, Period, timerangex
 from footprints.stdtypes import FPDict
 
@@ -741,7 +742,7 @@ class MocageDomainsConfTool(ConfTool):
         """nhcy used by mocage algo"""
         cpl_steps = self.atm_cpl_steps(cutoff, hh, start, final=True, first=True)
         cpl_steps = cpl_steps['geometry'][self.first_active(cutoff, hh)]
-        return (cpl_steps[1] - cpl_steps[0]).hour
+        return date.Period('PT{}H'.format((cpl_steps[1] - cpl_steps[0]).hour))
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
