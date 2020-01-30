@@ -720,7 +720,7 @@ class MocageDomainsConfTool(ConfTool):
 
     def _domain_any_steps(self, cutoff, hh, entry, start, end,
                           shift=False, final=True, first=True):
-        start = Time(start)
+        start = Time(0) if start is None else Time(start)
         if end is None:
             end = self.finalterms[cutoff][hh]
         else:
@@ -897,7 +897,7 @@ class MocageMixedDomainsInfo(object):
         return self._get_mixeddomains_attr(name)
 
     def _get_mixeddomains_attr(self, name):
-        stuff = set([getattr(subdomain, name) for subdomain in self._subdomains])
+        stuff = [getattr(subdomain, name) for subdomain in self._subdomains]
         if len(stuff) > 1:
             raise AttributeError('Inconsistent {:s} values among subdomains'.format(name))
         return stuff.pop()
@@ -926,7 +926,7 @@ class MocageMixedDomainsInfo(object):
             return []
 
     def _domain_any_steps(self, entry, start, end, shift=False, final=True, first=True):
-        start = Time(start)
+        start = Time(0) if start is None else Time(start)
         end = Time(self.finalterm) if end is None else Time(end)
         dentry = entry.replace('steps', 'delta')
         dshift = getattr(self, dentry, Time(0)) if shift else Time(0)
