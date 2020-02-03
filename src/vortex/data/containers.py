@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract and generic classes for any "Container". "Container" objects
+describe where to store the data localy.
+
+Roughly there are :class:`Virtual` and concrete containers. With :class:`Virtual`
+containers such as :class:`InCore` or :class:`MayFly`, the data may lie in
+memory. On the oposite, with concrete containers, data lie on disk within the
+working directory.
+
+The :class:`SingleFile` container is by far the most commonly used.
+"""
+
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
@@ -32,6 +45,7 @@ class DataSizeTooBig(IOError):
 
 
 class Container(footprints.FootprintBase):
+    """Abstract class for any Container."""
 
     _abstract = True
     _collector = ('container',)

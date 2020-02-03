@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+Various resources needed to build ad Data Assimilmation system.
+"""
 
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time
@@ -174,7 +177,7 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
         return 'srenorm.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
-        """OpArchive specific pathname needs."""
+        """Op Archive specific pathname needs."""
         return dict(
             nativefmt=self.nativefmt,
             model=self.model,
@@ -222,7 +225,7 @@ class Wavelet(GeoFlowResource):
         return 'wavelet.cv.t{!s}'.format(self.geometry.truncation)
 
     def archive_pathinfo(self):
-        """OpArchive specific pathname needs."""
+        """Op Archive specific pathname needs."""
         return dict(
             nativefmt=self.nativefmt,
             model=self.model,

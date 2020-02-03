@@ -71,7 +71,6 @@ class SignalInterruptHandler(object):
             # In this portion of the script the python shell will abruptly stop if
             # a signal is received
         """
-
         self._signals = signals
         self._original_handlers = {}
         self._active = False

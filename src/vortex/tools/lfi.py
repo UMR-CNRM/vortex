@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module needed to interact with FA and LFI files.
+
+
+It provides shell addons to deal with:
+
+    * Splitted FA files (as produced by the Arpege/IFS IO server)
+    * The ability to compare Fa or LFI files
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io

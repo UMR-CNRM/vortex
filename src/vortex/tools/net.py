@@ -44,14 +44,13 @@ DEFAULT_FTP_PORT = ftplib.FTP_PORT
 def uriparse(uristring):
     """Parse the specified ``uristring`` as a dictionary including keys:
 
-     * scheme
-     * netloc
-     * port
-     * query
-     * username
-     * password
+    * scheme
+    * netloc
+    * port
+    * query
+    * username
+    * password
     """
-
     (realscheme, other) = uristring.split(':', 1)
     rp = urlparse.urlparse('http:' + other)
     uridict = rp._asdict()
@@ -1075,7 +1074,8 @@ class Ssh(object):
 
     def cocoon(self, destination):
         """Create the remote directory to contain ``destination``.
-           Return False on failure.
+
+        Return ``False`` on failure.
         """
         remote_dir = self.sh.path.dirname(destination)
         if remote_dir == '':
@@ -1215,8 +1215,9 @@ class Ssh(object):
         return rc
 
     def get_permissions(self, source):
-        """Convenience method to retrieve the permissions
-           of a file/dir (in a form suitable for chmod).
+        """
+        Convenience method to retrieve the permissions of a file/dir (in a form
+        suitable for chmod).
         """
         mode = self.sh.stat(source).st_mode
         return stat.S_IMODE(mode)
@@ -1621,7 +1622,7 @@ class AssistedSsh(Ssh):
     @_check_fatal
     @_tryagain
     def remote(self):
-        """hostname to use for this kind of remote execution."""
+        """Hostname to use for this kind of remote execution."""
         if len(self.targets) == 1:
             # This is simple enough, do not bother testing...
             self._chosen_target = self.targets[0]
@@ -1659,14 +1660,18 @@ class AbstractNetstats(object):
 
     @abc.abstractmethod
     def tcp_netstats(self):
-        """Informations on active TCP connections (returns a list of
-        :class:`TcpConnectionStatus` objects.)"""
+        """Informations on active TCP connections.
+
+        Returns a list of :class:`TcpConnectionStatus` objects.
+        """
         pass
 
     @abc.abstractmethod
     def udp_netstats(self):
-        """Informations on active UDP connections (returns a list of
-        :class:`UdpConnectionStatus` objects.)"""
+        """Informations on active UDP connections.
+
+        Returns a list of :class:`UdpConnectionStatus` objects.
+        """
         pass
 
     def available_localport(self):

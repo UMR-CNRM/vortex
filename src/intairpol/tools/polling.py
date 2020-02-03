@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -14,8 +18,8 @@ logger = loggers.getLogger(__name__)
 
 
 class IO_Poll_Mocage(addons.Addon):
-    """
-    """
+    """TODO class documentation."""
+
     _footprint = dict(
         info = 'Default io_poll mocage system interface',
         attr = dict(

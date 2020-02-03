@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """
 Framework for parallelisation of tasks.
 =======================================
 
-The package works with three levels of subprocessing:\n
+The package works with three levels of subprocessing:
+
 - the main program, in which are defined each task "instructions",
   and that communicates with the intermediate subprocess
 - the intermediate subprocess, that receive instructions sets from the main
@@ -15,7 +17,8 @@ The package works with three levels of subprocessing:\n
 This segmentation takes the image of a Boss distributing instructions to
 Workers, and getting their report when they finish.
 
-The main program can:\n
+The main program can:
+
 - initiate the Boss
 - give instructions to the Boss, for them to be executed (by the Workers)
 - tell the Boss to send the Workers to work
@@ -24,28 +27,31 @@ The main program can:\n
 - wait until all instructions have been executed
 - get report (interim or final) from the Boss (composed of workers reports)
 
-The Boss (in its subprocess loop):\n
+The Boss (in its subprocess loop):
+
 - receives either series of instructions or "control signals" from the main
-  program.
-  Control signals concern:\n
+  program. Control signals concern:
+
     - halt/resume execution of instructions
     - request for (interim) report
     - end of instructions information
-    - stop signals (letting workers finish current tasks or not)\n
+    - stop signals (letting workers finish current tasks or not)
+
 - collects reports from the workers, with handling of their errors: if an error
   occur in a subprocess, all other subprocesses are stopped and the error is
   returned to the main program.
-- schedule execution of instructions, asking a Scheduler with regards to:\n
+- schedule execution of instructions, asking a Scheduler with regards to:
+
     - pending instructions (work to do)
     - current workers (work being done)
-    - previous reports (work already done)\n
-  (cf. schedulers doc for more details).
+    - previous reports (work already done)
+
+  (cf. :mod:`taylorism.schedulers` doc for more details).
 
 The Workers are defined BY their instructions (their attributes), and their
 task (what they do with their instructions).
 Each worker is an independent subprocess, triggered by the Boss subprocess and
 supposed to return it the report of its work when finished.
-
 
 Use of the module
 -----------------
@@ -64,9 +70,9 @@ Cf. :mod:`taylorism.examples` for a simple example.
 Dependencies
 ------------
 
-``footprints`` (MF package)
+:mod:`footprints` (MF package)
 
-``bronx`` (MF package)
+:mod:`bronx` (MF package)
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -608,9 +614,7 @@ class Boss(object):
 ##################################
 
     def _send_report(self, report, splitmode=True):
-        """
-        report must have keys 'workers_report', 'status' and optionally others.
-        """
+        """Report must have keys 'workers_report', 'status' and optionally others."""
         if not splitmode:
             self.control_messenger_in.send(report)
         else:
@@ -628,9 +632,7 @@ class Boss(object):
             self.control_messenger_in.send(('status', report['status']))
 
     def _recv_report(self, splitmode=True):
-        """
-        report must have keys 'workers_report', 'status' and optionally others.
-        """
+        """Report must have keys 'workers_report', 'status' and optionally others."""
         if not splitmode:
             report = self.control_messenger_out.recv()
         else:
@@ -648,8 +650,7 @@ class Boss(object):
         return report
 
     def _listen_and_communicate(self):
-        """
-        Interface routine, to catch exceptions and communicate.
+        """Interface routine, to catch exceptions and communicate.
 
         From within this method down, everything is done in the subprocess
         world !

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Generate a script based on the Vortex and Application configuration files."""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -24,6 +28,7 @@ logger = loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
+    """TODO class documentation."""
 
     _footprint = dict(
         info = 'Op Job assistant.',
@@ -341,7 +346,7 @@ class OutputReportContext(_ReportContext):
 
 
 def get_resource_value(r, key):
-    """ this function returns the resource value """
+    """This function returns the resource value."""
     try:
         kw = dict(area=lambda r: r.resource.geometry.area,
                   term=lambda r: r.resource.term,
@@ -352,7 +357,7 @@ def get_resource_value(r, key):
 
 
 def filteractive(r, dic):
-    """ this function returns the filter status """
+    """This function returns the filter status."""
     filter_active = True
     if dic is not None:
         for k, w in six.iteritems(dic):
@@ -411,8 +416,8 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 def opphase_hook_factory(optfilter=None):
     """Hook functions factory to phase files while the execution is running.
 
-    :param dict optfilter: (used to allow routing) """
-
+    :param dict optfilter: (used to allow routing)
+    """
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)

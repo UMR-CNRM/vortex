@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO module description.
+"""
+
 from __future__ import print_function
 
 import os
@@ -103,9 +107,11 @@ def duration_to_seconds(value):
 
 
 def clean_older_files(logger, path, timelimit, pattern='*'):
-    """Remove files in this path matching the glob pattern and
-       older than timelimit seconds (not recursive).
-       See :py:func:`duration_to_seconds` for the timelimit accepted forms.
+    """
+    Remove files in this path matching the glob pattern and older than timelimit
+    seconds (not recursive).
+
+    See :py:func:`duration_to_seconds` for the timelimit accepted forms.
     """
     seconds = duration_to_seconds(timelimit)
     rightnow = time.time()
@@ -118,9 +124,10 @@ def clean_older_files(logger, path, timelimit, pattern='*'):
 
 
 def parent_mkdir(path, mode=0o755):
-    """mkdir -p : creates parent directories if necessary.
-       Does not change the mode of existing directories.
-       Return True if at least one directory was created.
+    """Like ``mkdir -p``: creates parent directories if necessary.
+
+    Does not change the mode of existing directories. Return ``True`` if at
+    least one directory was created.
     """
     try:
         os.makedirs(path, mode=mode)

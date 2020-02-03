@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -331,7 +335,7 @@ class SurScriptSurges(BlackBox):
 
 
 class MasterWaves(OceanographicModel):
-    """ Master MFWAM exe """
+    """Master MFWAM executable."""
     _footprint = [
         gvar,
         dict(
@@ -356,7 +360,7 @@ class MasterWaves(OceanographicModel):
 
 
 class Filteralti(BlackBox):
-    """ Altimeter data filtering."""
+    """Altimeter data filtering."""
     _footprint = [
         gvar,
         dict(
@@ -385,7 +389,7 @@ class Filteralti(BlackBox):
 
 
 class InterpWave(BlackBox):
-    """ MFWAM output post-processing."""
+    """MFWAM output post-processing."""
     _footprint = [
         gvar,
         dict(

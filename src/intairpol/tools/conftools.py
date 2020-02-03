@@ -740,7 +740,7 @@ class MocageDomainsConfTool(ConfTool):
     @_add_start_end_doc
     @_add_cutoff_hh_doc
     def freq_nhcy_run(self, cutoff, hh, start=0):
-        """nhcy used by mocage algo"""
+        """The "nhcy" used by a Mocage AlgoComponent."""
         cpl_steps = self.atm_cpl_steps(cutoff, hh, start, final=True, first=True)
         cpl_steps = cpl_steps['geometry'][self.first_active(cutoff, hh)]
         return (cpl_steps[1] - cpl_steps[0]).hour

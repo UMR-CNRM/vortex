@@ -422,8 +422,10 @@ class FlatReport(object):
         self._items.append(kw)
 
     def reshuffle(self, sortlist=None, skip=True):
-        """Sort the entire set of items as a hierarchical tree
-        driven by keys of the specified ``sortlist``."""
+        """
+        Sort the entire set of items as a hierarchical tree driven by keys of the
+        specified ``sortlist``.
+        """
         self._tree = dict()
         if sortlist is not None:
             self._sort = sortlist[:]

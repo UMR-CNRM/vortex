@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Various Resources for executables used in NWP.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import vortex
@@ -694,8 +698,10 @@ class PertSurf(BlackBox):
 
 @gmkpack_bin_deco
 class AddPearp(BlackBox):
-    """Tool that adds perturbations taken from a given PEARP member
-    to the deterministic initial conditions."""
+    """
+    Tool that adds perturbations taken from a given PEARP member
+    to the deterministic initial conditions.
+    """
 
     _footprint = [
         gvar,

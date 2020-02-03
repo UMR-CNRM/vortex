@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.util.worker import VortexWorker
@@ -12,9 +16,11 @@ __all__ = []
 
 def _double_ssh(sh, loginnode, transfernode):
     """Applies a double ssh to retrieve the effective name of a machine.
-       This trick enables the load balancing and node crash recovery
-       capabilities handled by the network teams through DNS names.
-       May return None when network problems occur.
+
+    This trick enables the load balancing and node crash recovery
+    capabilities handled by the network teams through DNS names.
+
+    May return None when network problems occur.
     """
     cmd = 'ssh {} ssh {} hostname'.format(loginnode, transfernode)
     rc = sh.spawn(cmd, shell=True, output=True, fatal=False)
@@ -25,9 +31,10 @@ def _double_ssh(sh, loginnode, transfernode):
 
 def system_ftput(pnum, ask, config, logger, **opts):
     """Ftp transfer to some archive host.
-       Removes the source on success.
-       In phase mode, raw ftp is not allowed, and the hostname
-       is dynamically obtained by a double ssh.
+
+    Removes the source on success.
+    In phase mode, raw ftp is not allowed, and the hostname is dynamically
+    obtained by a double ssh.
     """
 
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
@@ -104,9 +111,10 @@ def system_cp(pnum, ask, config, logger, **opts):
 
 def system_scp(pnum, ask, config, logger, **opts):
     """Scp transfer to some archive host.
-       Removes the source on success.
-       In phase mode, raw ftp is not allowed, and the hostname
-       is dynamically obtained by a double ssh.
+
+    Removes the source on success.
+    In phase mode, raw ftp is not allowed, and the hostname is dynamically
+    obtained by a double ssh.
     """
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
     value = dict(rpool='retry')

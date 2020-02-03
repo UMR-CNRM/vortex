@@ -291,6 +291,7 @@ class ExportService(object):
 
 
 class ShellAccessExportService(ExportService):
+    """Abstract class for ExportServices relying on some kind of Unix shell."""
 
     def sh_execute(self, cmd, onerror_raise=True, silent=False, catch_output=False):
         """Execute a shell command on the remote host.

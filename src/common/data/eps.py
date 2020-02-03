@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources needed to build the Ensemble Prediction System.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import copy

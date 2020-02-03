@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A command line tool that compares two Arpege/IFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import argparse

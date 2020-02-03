@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources to handle any boundary conditions data for a coupled model.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re

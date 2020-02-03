@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+:class:`Handler` class is a cornerstone in any Vortex script. :class:`Handler`
+objects are in charge of manipulating data between the working directory and
+the various caches or archives".
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -92,8 +98,9 @@ class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
 class Handler(object):
     """
     The resource handler object gathers a provider, a resource and a container
-    for any specific resource. Other parameters given at construct time
-    are stored as options.
+    for any specific resource.
+
+    Other parameters given at construct time are stored as options.
     """
 
     def __init__(self, rd, **kw):

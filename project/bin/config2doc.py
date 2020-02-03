@@ -80,6 +80,7 @@ def geometry_easydump(parser, section, comment, ckeys):
 
 
 class RstConfigFileParser(object):
+    """Read and Process the configuration file to document."""
 
     _RST_COMMENT_LINE = re.compile(r'^[#;]R\s+(.*)$')
     _RST_COMMENT_LINEABOVE = re.compile(r'^[#;]Rabove\s+(.*)$')

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -16,6 +20,7 @@ logger = loggers.getLogger(__name__)
 
 
 class AlphaPythonScript(Script):
+    """TODO: Class documentation."""
 
     _footprint = [
         gvar,
@@ -42,8 +47,7 @@ class AlphaPythonScript(Script):
 
 
 class AlphaShellScript(Script):
-
-    """ This script launch alpha prod and amandements """
+    """This script launch alpha prod and amandements."""
 
     _footprint = [
         gvar,

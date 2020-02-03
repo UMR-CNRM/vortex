@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+Abstract classes for :mod:`taylorism` workers to be used in conjunction with
+AlgoComponents based on the :class:`~vortex.algo.components.TaylorRun` class.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -44,12 +48,10 @@ class WithoutCouplingForecasts(Parallel):
         else:
             self.flyput = False
 
-    def execute(self, rh, opts):
-        super(WithoutCouplingForecasts, self).execute(rh, opts)
-
 
 class SurgesCouplingForecasts(Parallel):
-    """"""
+    """TODO: Class documentation."""
+
     _footprint = dict(
         attr = dict(
             binary = dict(

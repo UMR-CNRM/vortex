@@ -65,7 +65,6 @@ def process_namelist(filename, directives,
                        index of key in block (except a sorting is requested
                        later on.
     """
-
     if not isinstance(directives, (list, tuple)):
         directives = [directives, ]
 
@@ -194,6 +193,7 @@ def process_tnt_stack(directive, sorting=SECOND_ORDER_SORTING):
 
 
 def namelist_read_and_sort(namfile):
+    """Read a namelist and return it as a sorted string."""
     try:
         namp = BronxNamelistAdapter(namfile)
     except (ValueError, IOError):

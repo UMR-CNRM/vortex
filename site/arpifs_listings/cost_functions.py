@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 Module that deals with part of the Arpege/IFS listings related to the variational
 data assimilation's cost functions.
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from six import StringIO
 

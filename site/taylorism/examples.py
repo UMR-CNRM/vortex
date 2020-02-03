@@ -150,7 +150,6 @@ class MatrixProducter(Worker):
 
 def sleepers_generic_program(verbose=True, scheduler=None):
     """Generic example: how to run and control the Boss."""
-
     boss = run_as_server(
         common_instructions=dict(wakeup_sentence='Hello Dolly !'),
         individual_instructions=dict(sleeping_time=[4, 9, 2, 1]),

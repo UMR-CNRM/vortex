@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Generic Resources and Contents to work with namelists.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io

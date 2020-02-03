@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 """
 All kinds of AlgoComponents used to prepare Mocage runs (deals with external forcings).
 """
+
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
 from collections import defaultdict

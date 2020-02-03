@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -231,7 +236,7 @@ class CouplingGridOasis(GenvUsageModelResource):
 
 
 class AltimetryPreproc(GenvModelResource):
-    """ Thresholds for altimeter preprocessing. """
+    """Thresholds for altimeter preprocessing."""
     _footprint = dict(
         info = 'Thresholds for altimeter preprocessing',
         attr = dict(
@@ -260,7 +265,7 @@ class AltimetryPreproc(GenvModelResource):
 
 
 class WamPreproc(GenvModelResource):
-    """ Constant files for MFWAM """
+    """Constant files for MFWAM."""
     _footprint = dict(
         info = 'Constant files for MFWAM',
         attr = dict(
@@ -282,7 +287,7 @@ class WamPreproc(GenvModelResource):
 
 
 class WamGridPost(GenvModelResource):
-    """ Information on a grid for MFWAM post-processing"""
+    """Information on a grid for MFWAM post-processing."""
     _footprint = dict(
         info = 'Grid information for MFWAM post-processing',
         attr = dict(

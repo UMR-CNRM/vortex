@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various Resources for constant files used in NWP.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints

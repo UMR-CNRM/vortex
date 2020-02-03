@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources for query files used for extractions in various databases.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
-
-"""
-Query files used by various databases.
-"""
 
 #: No automatic export
 __all__ = []

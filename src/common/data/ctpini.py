@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Ctpini files.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.fancies import loggers
@@ -10,10 +14,6 @@ from vortex.data.flow import GeoFlowResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
 from common.data.gridfiles import GridPoint
-
-"""
-Ctpini files
-"""
 
 #: No automatic export
 __all__ = []

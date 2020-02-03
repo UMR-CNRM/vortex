@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -14,8 +18,7 @@ logger = loggers.getLogger(__name__)
 
 
 def EchoData(options):
-    """Generate data configuration for surges model.
-    """
+    """Generate data configuration for surges model."""
     outstr = ''
     rhdict = options.get('rhandler', None)
     if rhdict:

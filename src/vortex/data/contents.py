@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A handful of abstract and generic :class:`DataContent` classes designed to access
+and modify data of a given "Resource".
+
+These classes are not meant to be used directly. To retrieve a
+:class:`DataContent` object on a given "Resource", please use the
+:data:`vortex.data.handlers.Handler.contents` property.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six

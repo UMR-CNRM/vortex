@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract and generic classes provider for any "Provider". "Provider" objects,
+describe where are stored the data.
+
+Of course, the :class:`Vortex` abstract provider is a must see. It has three
+declinations depending on the experiment indentifier type.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os.path
@@ -20,6 +28,7 @@ logger = loggers.getLogger(__name__)
 
 
 class Provider(footprints.FootprintBase):
+    """Abstract class for any Provider."""
 
     _abstract = True
     _collector = ('provider',)

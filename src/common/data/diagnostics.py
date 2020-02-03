@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
@@ -14,11 +18,8 @@ __all__ = []
 
 
 class ISP(GeoFlowResource):
+    """Class for Forecasted Satellite Image resource. Obsolete."""
 
-    """
-    Class for Forecasted Satellite Image resource. Obsolete.
-    Used to be an ``isp`` !
-    """
     _footprint = dict(
         info = 'Forecasted Satellite Image',
         attr = dict(

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -98,6 +102,7 @@ class _S2MWorker(VortexWorkerBlindRun):
 
 
 class GuessWorker(_S2MWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -147,6 +152,7 @@ class GuessWorker(_S2MWorker):
 
 
 class _SafranWorker(_S2MWorker):
+    """TODO: Class documentation."""
 
     _abstract = True
     _footprint = dict(
@@ -272,7 +278,7 @@ class _SafranWorker(_S2MWorker):
             d.write('3,1,3,3\n')
 
     def get_guess(self, dates, prefix='P', fatal=False, dt=3):
-        """ Try to guess the corresponding input file"""
+        """Try to guess the corresponding input file."""
         # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
@@ -354,6 +360,7 @@ class _SafranWorker(_S2MWorker):
 
 
 class InterCEPWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -408,6 +415,7 @@ class InterCEPWorker(_SafranWorker):
 
 
 class SafraneWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -445,6 +453,7 @@ class SafraneWorker(_SafranWorker):
 
 
 class SypluieWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -489,6 +498,7 @@ class SypluieWorker(_SafranWorker):
 
 
 class SyrpluieWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -539,6 +549,7 @@ class SyrpluieWorker(_SafranWorker):
 
 
 class SyvaprWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -571,6 +582,7 @@ class SyvaprWorker(_SafranWorker):
 
 
 class SyvafiWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -604,6 +616,7 @@ class SyvafiWorker(_SafranWorker):
 
 
 class SyrmrrWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -634,6 +647,7 @@ class SyrmrrWorker(_SafranWorker):
 
 
 class SytistWorker(_SafranWorker):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -719,6 +733,7 @@ class SytistWorker(_SafranWorker):
 
 
 class S2MExecutionError(ExecutionError):
+    """TODO: Class documentation."""
 
     def __init__(self, model, deterministic, subdir, datebegin, dateend):
         self.model = model
@@ -796,8 +811,10 @@ class SurfexWorker(_S2MWorker):
     )
 
     def modify_prep(self, datebegin_this_run):
-        """The PREP file needs to be modified if the init date differs from the starting date
-         or if a threshold needs to be applied on snow water equivalent."""
+        """
+        The PREP file needs to be modified if the init date differs from the starting
+        date or if a threshold needs to be applied on snow water equivalent.
+        """
         modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
         modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit
         modif = modif_swe or modif_date
@@ -1120,6 +1137,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
 
 class Guess(ParaExpresso):
+    """AlgoComponent that runs several executions of a guess-making script."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions of a guess-making script',
@@ -1192,6 +1210,7 @@ class Guess(ParaExpresso):
 
 
 class S2MComponent(ParaBlindRun):
+    """AlgoComponent that runs several executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1275,6 +1294,7 @@ class S2MComponent(ParaBlindRun):
 
 
 class S2MReanalysis(S2MComponent):
+    """AlgoComponent that runs several executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1347,6 +1367,7 @@ class S2MReanalysis(S2MComponent):
 
 
 class S2MReforecast(S2MComponent):
+    """AlgoComponent that runs several executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1399,6 +1420,7 @@ class S2MReforecast(S2MComponent):
 
 @echecker.disabled_if_unavailable
 class SurfexComponent(S2MComponent):
+    """AlgoComponent that runs several executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1497,6 +1519,7 @@ class SurfexComponent(S2MComponent):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingComponent(TaylorRun):
+    """AlgoComponent that runs several executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1566,6 +1589,7 @@ class PrepareForcingComponent(TaylorRun):
 
 @echecker.disabled_if_unavailable
 class SurfexComponentMultiDates(SurfexComponent):
+    """AlgoComponent that runs several executions in parallel."""
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(

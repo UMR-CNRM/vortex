@@ -128,7 +128,6 @@ def merge_contents(*kargs):
     """Automatically merge several DataContents.
 
     Example:
-
     .. code-block:: python
 
         mergedcontent = merge_contents(content1, content2, content3)

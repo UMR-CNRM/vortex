@@ -1,3 +1,7 @@
+"""
+A pylint plugin to fix a few Vortex strange behaviours.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from astroid import MANAGER

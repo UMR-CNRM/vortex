@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to the Ensemble Prediction System.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
@@ -219,8 +223,10 @@ class CombiSVunit(CombiSV):
 
 
 class CombiSVnorm(CombiSV):
-    """Compute a norm consistent with the background error
-     and combine the normed SV to create the SV perturbations."""
+    """
+    Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -346,8 +352,10 @@ class CombiIC(Combi):
 
 
 class CombiBreeding(CombiPert):
-    """Compute a norm consistent with the background error
-    and combine the normed SV to create the SV perturbations."""
+    """
+    Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations.
+    """
 
     _footprint = dict(
         attr = dict(

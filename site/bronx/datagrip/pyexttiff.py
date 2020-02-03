@@ -81,7 +81,7 @@ class TiffFile(object):
             return dict((k, numpy.dtype(v).newbyteorder('>')) for k, v in TiffFile._type2dtype.items())
 
     def __init__(self, filename, subIFDpaths=[], method=1):
-        """ Opens a tiff file, reads header and IFDs.
+        """Opens a tiff file, reads header and IFDs.
 
         *filename* is the filename containing the tiff
 
@@ -99,7 +99,6 @@ class TiffFile(object):
             * 3: same as 2 but with modifications allowed - DANGEROUS
 
         """
-
         self._filename = filename
         self._subIFDpaths = subIFDpaths
         self._fileHandle = None

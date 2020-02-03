@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources to handle observations files in various formats.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six

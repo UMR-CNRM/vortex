@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Abstract class for any model specific and/or domain specific "Resource".
+
+    * :class:`StaticGeoResource`: Specific to an horizontal geometry;
+    * :class:`ModelResource`: Specific to a a given model;
+    * :class:`ModelGeoResource`: Specific to a a given model and horizontal geometry.
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from .resources import Resource

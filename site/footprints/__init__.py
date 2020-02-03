@@ -532,7 +532,6 @@ class Footprint(object):
 
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
-
         opts = dict(fatal=setup.fatal, fast=setup.fastmode)
         opts.update(kw)
         opts_fatal = opts['fatal']  # Shortcut for faster execution

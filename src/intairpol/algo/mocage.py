@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 """
 AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 """
+
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
 import io
@@ -78,7 +78,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
     def prepare(self, rh, opts):
-        """ Prepare the synchronisation with next tasks"""
+        """Prepare the synchronisation with next tasks."""
         # to control synchronisation and promised files: use the script in iopoll method
         # The script executed via iopoll method returns the list of promised files ready
         if self.promises:
@@ -91,8 +91,8 @@ class AbstractMocageRoot(Parallel):
         super(AbstractMocageRoot, self).prepare(rh, opts)
 
     def _sorted_inputs_terms(self, **kwargs):
-        """
-        Build a dictionary that contains a list of sections for each geometry
+        """Build a dictionary that contains a list of sections for each geometry.
+
         :param kwargs: attributes that will be used to sort the input files
         :return: a dictionary like:
         {'geometry1': [terms1, terms2, ...],
@@ -178,7 +178,7 @@ class AbstractMocageRoot(Parallel):
 
 
 class Forecast(AbstractMocageRoot):
-    """Algo component for mocage forecasts"""
+    """Algo component for mocage forecasts."""
 
     _footprint = dict(
         info = 'Mocage forecast',

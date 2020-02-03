@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+The default collect of addons used in the SWAPP/Olive system.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.addons import AddonGroup

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Utility classes to interact with long running binaries.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -125,7 +129,7 @@ class ServerSyncSimpleSocket(ServerSyncTool):
             t.sh.remove(self.medium)
 
     def _command(self, mess):
-        """ Send a command (a string) to the server; wait for a response """
+        """Send a command (a string) to the server and wait for a response."""
         if self._socket_conn is not None:
             logger.info('Sending "%s" to the server.', mess)
             # NB: For send/recv, the settimeout also applies...

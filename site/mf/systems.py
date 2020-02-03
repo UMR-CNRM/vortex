@@ -123,7 +123,7 @@ class MeteoSoprano(Target):
 
 
 class MeteoSopranoDevRH6(MeteoSoprano):
-    """ A Soprano Development Server running CentOS 6."""
+    """A Soprano Development Server running CentOS 6."""
 
     _footprint = dict(
         info = 'A Soprano Development Server running CentOS 6',

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -182,8 +186,10 @@ class BufrPoint(FlowResource):
 @namebuilding_insert('radical', lambda s: s.realkind + '.' + s.fields)
 @namebuilding_insert('geo', lambda s: [s.geometry.area, s.geometry.rnice])
 class ForcingOutData(InitialCondition):
-    """Class of a Stress, wind and pressure forcing interpolated on native grid Hycom
-    and min max values."""
+    """
+    Class of a Stress, wind and pressure forcing interpolated on native grid Hycom
+    and min max values.
+    """
     _footprint = dict(
         info = 'Stress, wind and pressure forcing interpolated on native grid Hycom and min max values.',
         attr = dict(

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -215,7 +219,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
 
 class MfwamGauss2Grib(ParaBlindRun):
-    """ Post-processing of MFWAM output gribs"""
+    """Post-processing of MFWAM output gribs."""
 
     _footprint = dict(
         info ="Post-processing of MFWAM output gribs",
@@ -249,7 +253,7 @@ class MfwamGauss2Grib(ParaBlindRun):
     )
 
     def execute(self, rh, opts):
-        """ The algo component launchs a worker per output file """
+        """The algo component launchs a worker per output file."""
         self._default_pre_execute(rh, opts)
 
         common_i = self._default_common_instructions(rh, opts)
@@ -297,7 +301,7 @@ class MfwamGauss2Grib(ParaBlindRun):
 
 
 class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
-    """ Worker of the post-processing for MFWAM"""
+    """Worker of the post-processing for MFWAM."""
 
     _footprint = dict(
         info = "Worker of the post-processing for MFWAM",
@@ -317,7 +321,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
     )
 
     def vortex_task(self, **kwargs):  # @UnusedVariable
-        """Post-processing of a single output grib"""
+        """Post-processing of a single output grib."""
         logger.info("Starting the post-processing")
 
         sh = self.system.sh

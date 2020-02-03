@@ -207,7 +207,6 @@ def global_pnames(provider, resource):
 
 
 def clim_bdap_bnames(resource, provider):
-    """docstring for clim_bdap_bnames"""
     if 'arome' in resource.model:
         localname = 'BDAP_frangp_isba' + six.text_type(resource.month)
     elif resource.model == 'aladin':
@@ -227,7 +226,6 @@ def clim_bdap_bnames(resource, provider):
 
 
 def clim_model_bnames(resource, provider):
-    """docstring for clim_model_bnames"""
     if resource.model == 'arome' or resource.model == 'aladin':
         localname = 'clim_' + resource.geometry.area + '_isba' + six.text_type(resource.month)
     elif resource.model == 'arpege':
@@ -238,7 +236,6 @@ def clim_model_bnames(resource, provider):
 
 
 def rawfields_bnames(resource, provider):
-    """docstring for rawfileds_bnames"""
     if resource.origin == 'nesdis':
         return resource.fields + '.' + resource.origin + '.' + 'bdap'
     elif resource.origin == 'ostia':
@@ -250,22 +247,18 @@ def rawfields_bnames(resource, provider):
 
 
 def obsfire_bnames(resource, provider):
-    """docstring for obsfirepack_bnames"""
     return 'GFASfires_H_fcst_' + resource.date.ymd + '.tar.gz'
 
 
 def chemical_bc_bnames(resource, provider):
-    """docstring for chemical_bc_bnames"""
     return 'bc22_{0.ymdh:s}.nc'.format(resource.date + resource.term)
 
 
 def geofields_bnames(resource, provider):
-    """docstring for geofields_bnames"""
     return 'ICMSHANAL' + resource.fields.upper()
 
 
 def analysis_bnames(resource, provider):
-    """docstring for analysis_bnames"""
     model_info, suffix = faNames(
         resource.cutoff, resource.date.hour, resource.model, resource.filling,
         vapp=provider.vapp, vconf=provider.vconf,
@@ -299,7 +292,6 @@ def analysis_bnames(resource, provider):
 
 
 def historic_bnames(resource, provider):
-    """docstring for historic_bnames"""
     if resource.model == 'surfex':
         return histsurf_bnames(resource, provider)
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
@@ -349,7 +341,6 @@ def historic_bnames(resource, provider):
 
 
 def pts_bnames(resource, provider):
-    """docstring for pts_bnames"""
     if resource.model == 'hycom':
         # s_ddpts_aro_OIN_pre
         # s_ddpts_cep_OIN_ana
@@ -370,7 +361,6 @@ def pts_bnames(resource, provider):
 
 
 def bufr_bnames(resource, provider):
-    """docstring for bufr_bnames"""
     if resource.model == 'hycom':
         region_map = dict(atl='', med='_MED', oin='_OIN')
         mode_map = dict(fc='prv', an='ana')
@@ -381,7 +371,6 @@ def bufr_bnames(resource, provider):
 
 
 def SurgesResultNative_bnames(resource, provider):
-    """docstring for SurgesResultNative_bnames"""
     if resource.model == 'hycom':
         region_map = dict(atl='_', med='_MED_')
         mode_map = dict(fc='pre', an='ana')
@@ -393,7 +382,6 @@ def SurgesResultNative_bnames(resource, provider):
 
 
 def SurgesWw3coupling_bnames(resource, provider):
-    """docstring for SurgesWw3coupling_bnames"""
     if resource.model == 'hycom':
         region_map = dict(atl='_', med='_MED_')
         mode_map = dict(fc='pre', an='ana')
@@ -408,13 +396,11 @@ def SurgesWw3coupling_bnames(resource, provider):
 
 
 def AltidataWave_bnames(resource, provider):
-    """docstring"""
     if resource.model == 'mfwam':
         return 'altidata_{0:s}'.format(resource.date.ymdhm)
 
 
 def histsurf_bnames(resource, provider):
-    """docstring for histsurf"""
     model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                  vapp=provider.vapp, vconf=provider.vconf)
     reseau = resource.date.hour
@@ -438,7 +424,6 @@ def histsurf_bnames(resource, provider):
 
 
 def gridpoint_bnames(resource, provider):
-    """docstring for gridpoint_bnames"""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('gridpoint_bnames: cutoff %s reseau %s model %s',
                  cutoff, reseau, model)
@@ -503,7 +488,6 @@ def gridpoint_bnames(resource, provider):
 
 
 def varbc_bnames(resource, provider):
-    """docstring for varbc_bnames"""
     reseau, model, stage = resource.date.hour, resource.model, resource.stage
     if model in ['reunion', 'aladin', 'caledonie', 'antiguy', 'polynesie']:
         suffix = '_alad'
@@ -525,7 +509,6 @@ def varbc_bnames(resource, provider):
 
 
 def boundary_bnames(resource, provider):
-    """docstring for boundary_bnames"""
     cutoff, reseau, model, term = resource.cutoff, resource.date.hour, resource.model, resource.term
     if 'arome' in model:
         if hasattr(resource, 'source_conf'):
@@ -547,7 +530,6 @@ def boundary_bnames(resource, provider):
 
 
 def refdata_bnames(resource, provider):
-    """docstring for refdata_bnames."""
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     logger.debug('cutoff %s reseau %s model %s', cutoff, reseau, model)
     u_prefix, suffix = gribNames(cutoff, reseau, model)  # @UnusedVariable
@@ -574,7 +556,6 @@ def bgstderr_bnames(resource, provider):
 
 
 def observations_bnames(resource, provider):
-    """docstring for observations_bnames"""
     fmt, part = resource.nativefmt, resource.part
     cutoff, reseau, model = resource.cutoff, resource.date.hour, resource.model
     day = six.text_type(resource.date.day)
@@ -598,7 +579,6 @@ def observations_bnames(resource, provider):
 
 
 def global_bnames(resource, provider):
-    """Return the basename of the resource."""
     for elmt in list(sys.modules):
         if sys.modules[elmt]:
             try:
@@ -631,7 +611,7 @@ def global_bnames(resource, provider):
 
 
 def global_snames(resource, provider):
-    """global names for soprano provider"""
+    """Global names for soprano provider"""
     bname = None
     vconf = getattr(provider, 'vconf', None)
     suff = _reseau_suffix(resource.cutoff, resource.date.hh, vconf)

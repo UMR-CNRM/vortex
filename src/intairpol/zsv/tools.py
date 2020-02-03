@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 """
 TODO: Module documentation
 """
+
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
 import io
@@ -25,6 +25,7 @@ logger = loggers.getLogger(__name__)
 
 
 class ZSVDriver(AirTool):
+    """Driver for processing ZSV sites data."""
 
     _footprint = dict(
         info = 'Driver for processing ZSV sites data',
@@ -185,6 +186,7 @@ class ZSVDriver(AirTool):
 
 
 class ZSVQualityStats(ZSVDriver):
+    """ZSV quality indices statistic computations."""
 
     _footprint = dict(
         info = 'ZSV quality indices statistic computations',

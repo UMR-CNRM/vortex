@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to the coupling between NWP models.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re

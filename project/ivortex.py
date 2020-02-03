@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+"""
+An ipython extension to integrate Vortex nicely.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import atexit

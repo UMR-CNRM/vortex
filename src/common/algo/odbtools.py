@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents to work with Observational DataBases.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 import six
 
@@ -424,8 +428,10 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         self._boss.make_them_work()
 
     def execute(self, rh, opts):
-        """For each base, a directory is created such that each worker works in his directory.
-        Symlinks are created into these working directories. """
+        """
+        For each base, a directory is created such that each worker works in his
+        directory. Symlinks are created into these working directories.
+        """
 
         sh = self.system
         cycle = rh.resource.cycle
@@ -684,7 +690,7 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         )
 
     def execute(self, rh, opts):
-        """ to mask input."""
+        """To mask input."""
 
         sh = self.system
 

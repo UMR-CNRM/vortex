@@ -15,10 +15,10 @@ Formats hypothesis:
 1. Ideally dates and times should be represented as a valid ISO 8601 strings.
    Here are a few exemples:
 
-       * 2016-01-01 or 20160101 (for a date)
-       * 12:00, 1200, 12:00:00 or 120000 (for a time)
-       * A combination of both: 2016-01-01T12:00
-       * Optionally the time zone indicator: 2016-01-01T12:00Z
+    * 2016-01-01 or 20160101 (for a date)
+    * 12:00, 1200, 12:00:00 or 120000 (for a time)
+    * A combination of both: 2016-01-01T12:00
+    * Optionally the time zone indicator: 2016-01-01T12:00Z
 
 2. For a date, the following will also be accepted yyyymmdd[hh[mn[ss]]] with
    yyyy as the year in 4 numbers, mm as the month in 2 numbers, dd as the
@@ -26,20 +26,20 @@ Formats hypothesis:
 
 3. For time periods, the following convention applies:
 
-      * P starts an ISO 8601 Period definition
-      * nY, the number of years (n positive integer),
-      * nM, the number of months (n positive integer),
-      * nD, the number of days (n positive integer),
-      * T as a time separator,
-      * nH, the number of hours (n positive integer),
-      * nM, the number of minutes (n positive integer),
-      * nS, the number of seconds (n positive integer)
+    * P starts an ISO 8601 Period definition
+    * nY, the number of years (n positive integer),
+    * nM, the number of months (n positive integer),
+    * nD, the number of days (n positive integer),
+    * T as a time separator,
+    * nH, the number of hours (n positive integer),
+    * nM, the number of minutes (n positive integer),
+    * nS, the number of seconds (n positive integer)
 
    Examples:
+    * P1Y <=> is a 1 year period
+    * P20D <=> is a 20 days period
+    * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 
-      * P1Y <=> is a 1 year period
-      * P20D <=> is a 20 days period
-      * PT15H10M55S <=> is a 15 hours, 10 minutes and 55 seconds period
 """
 
 from __future__ import print_function, absolute_import, division, unicode_literals
@@ -238,7 +238,6 @@ def daterange(start, end=None, step='P1D'):
          Date(2017, 1, 10, 0, 0), Date(2017, 1, 11, 0, 0)]
 
     """
-
     if not isinstance(start, Date):
         start = Date(start)
 
@@ -321,7 +320,6 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
          ...'loop2017060100', ...'loop2017061500', ...'loop2017062900', ...'loop2017122500']
 
     """
-
     rangevalues = list()
 
     pstarts = ([six.text_type(s) for s in start]
@@ -539,7 +537,6 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
         >>> timeintrangex('0-12-3,18-36-6,48')
         [0, 3, 6, 9, 12, 18, 24, 30, 36, 48]
     """
-
     pstarts = ([six.text_type(s) for s in start]
                if isinstance(start, (list, tuple)) else six.text_type(start).split(','))
     auto_prefix = None
@@ -1931,7 +1928,6 @@ class Month(object):
         an integer (number of months), a :class:`Period` object , or a string
         that can be converted to a :class:`Period` object
         """
-
         if isinstance(delta, int):
             return self.__add__(-1 * delta)
         elif not isinstance(delta, datetime.timedelta):

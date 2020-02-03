@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals any Arpege/IFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -191,7 +195,6 @@ def compare_norms(test, ref,
                    comparison.
                  - if 'plot', plot a graph of differences
     """
-
     assert ref.look_for_end()
     assert test.look_for_end()
     assert ref.pattern_type == 'norms'
@@ -228,7 +231,6 @@ def compare_jo_tables(test, ref,
     :param bw: Black & White flag
     :param onlymaxdiff: Only max difference is printed for each table
     """
-
     assert ref.look_for_end()
     assert test.look_for_end()
     assert ref.pattern_type == 'Jo-tables'

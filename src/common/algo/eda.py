@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to the Ensemble Data Assimilation
+system.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various resources to handle climatology files used in the Surfex model.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import ModelGeoResource

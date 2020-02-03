@@ -16,7 +16,7 @@ from bronx.patterns import getbytag
 
 
 class PrivateHistory(object):
-    """Multi-purpose history like object.
+    r"""Multi-purpose history like object.
 
     Items added to an History object are recorded along with a number (starting
     from 1 and incremented each time an item is added) and a timestamp.
@@ -66,7 +66,7 @@ class PrivateHistory(object):
         # Simple searches are possible
         >>> hst.grep('a tup') # doctest: +ELLIPSIS
         [(4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
-        >>> hst.match(r'En\\w+\\s+[24]') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> hst.match(r'En\w+\s+[24]') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         [(2, datetime.datetime(...), (...'Entry 2',)),
          (4, datetime.datetime(...), (...'Entry 4', ...'as a tuple'))]
 
@@ -255,6 +255,7 @@ class PrivateHistory(object):
                                                       size=self._sizefmt))
 
     def __call__(self):
+        """Display the whole history as a numbered list."""
         return self.show()
 
     @property

@@ -148,7 +148,8 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     def opts_plus_job_plus_tpl(what, default):
         """
         Function that look up in command line options, then in job's conf,
-        then in template's conf."""
+        then in template's conf.
+        """
         return opts.pop(what, p_jobconf.get(what, p_tplconf.get(what, default)))
 
     # A last chance for these super-stars : they may be set in job's conf...

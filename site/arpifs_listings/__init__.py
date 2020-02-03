@@ -45,7 +45,6 @@ def compare_files(file_test, file_ref,
         :param bw: Black & White flag
 
     """
-
     test = listings.OutputListing(file_test, pattern_type=pattern)
     if test.look_for_end():
         test.parse_patterns()

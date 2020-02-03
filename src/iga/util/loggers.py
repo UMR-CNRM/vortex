@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import logging
@@ -24,8 +28,6 @@ class MyLogger(object):
 
 
 def create_logger():
-    """docstring for create_logger"""
-
     # create logger with 'bfootprint'
     logger = logging.getLogger('bfootprint')
     # logger.setLevel(logging.DEBUG)
@@ -41,8 +43,6 @@ def create_logger():
 
 
 def iga_logger():
-    """docstring for create_logger"""
-
     # create logger with 'bfootprint'
     logger = logging.getLogger('iga')
     # logger.setLevel(logging.DEBUG)

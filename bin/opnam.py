@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Binary documentation.
+"""
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import locale
@@ -33,6 +37,7 @@ FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 
 
 
 class OpNamArgs(CfgMeteoArgumentParser):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         priority = dict(
@@ -47,6 +52,7 @@ class OpNamArgs(CfgMeteoArgumentParser):
 
 
 class OpNamCmd(ExtendedCmdLiner):
+    """TODO: Class documentation."""
 
     @WrapCmdLineArgs('cfgname', 'cfgtag', 'cfgdir', 'cfgroot', 'cfgfile', 'suite', 'loglevel')
     def do_setcfg(self, **opts):

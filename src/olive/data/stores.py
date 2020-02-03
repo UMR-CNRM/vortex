@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+Various research specific stores (to be used in the SWAPP/Olive system).
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -65,7 +69,7 @@ class StoreGlue(object):
         return self.glueretrieve(section, 'objname')
 
     def gluelist(self, section):
-        """returns the list of options in the specified ``section``."""
+        """Returns the list of options in the specified ``section``."""
         if self.gluemap.has_section(section):
             return [x for x in self.gluemap.options(section) if not x.startswith('obj')]
         else:

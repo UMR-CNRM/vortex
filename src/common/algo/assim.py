@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to Data Assimilation systems.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -18,8 +22,7 @@ logger = loggers.getLogger(__name__)
 
 
 class MergeVarBC(Parallel):
-    """
-    Merge two VarBC files.
+    """Merge two VarBC files.
 
     The VarBC file resulting from the MergeVarBC contains all the items of the
     first VarBC file plus any new item that would be present in the second file.

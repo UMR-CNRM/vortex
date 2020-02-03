@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -46,7 +50,8 @@ class BdpeStore(Store):
 
     def bdpelocate(self, remote, options):
         """Reasonably close to whatever 'remote location' could mean.
-           e.g.: bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
+
+        e.g.: ``bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term``
         """
         return self.scheme + '://' + self.netloc + remote['path']
 

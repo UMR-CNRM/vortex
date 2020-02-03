@@ -23,6 +23,7 @@ ALTNAMES = ('intairpol', 'airpol', 'airtools')
 
 
 class AirTool(footprints.FootprintBase):
+    """Abstract Miscellaneous Tool from the intairpol package."""
 
     _abstract = True
     _collector = ('airtool',)

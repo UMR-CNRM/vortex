@@ -2,6 +2,32 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+Abstract class for any AlgoComponent (:class:`AlgoComponent`) or AlgoComponent's
+Mixins (:class:`AlgoComponentDecoMixin`).
+
+Some very generic concrete AlgoComponent classes are also provided:
+
+    * :class:`Expresso`: launch a simple script;
+    * :class:`BlindRun`: launch a simple executable (no MPI);
+    * :class:`Parallel`: launch an MPI application.
+
+Additional abstract classes provide multiprocessing support (through the
+:mod:`taylorism` package):
+
+    * :class:`TaylorRun`: launch a piece of Python code on several processes;
+    * :class:`ParaExpresso`: launch a script multiple times (in parallel);
+    * :class:`ParaBlindRun`: launch an executable multiple times (in parallel).
+
+Such classes are based on the :mod:`taylorism` (the developer should be familiar
+with this package) and uses "Worker" classes provided in the
+:mod:`vortex.tools.parallelism` package.
+
+When class inheritance is not applicable or ineffective, The AlgoComponent's
+Mixins are a powerful tool to mutualise some pieces of code. See the
+:class:`AlgoComponentDecoMixin` class documentation for more details.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Footprint utilities to handle the ``priority`` footprint's attribute.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six

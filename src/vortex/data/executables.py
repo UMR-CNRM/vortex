@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Abstract for any "Resource" class that deal with some kind of :class:`Script` or
+:class:`Binary` executable.
+
+Mode specialised version are also provided for various physical models:
+
+    * :class:`NWPModel`;
+    * :class:`OceanographicModel`;
+    * :class:`SurfaceModel`;
+    * :class:`ChemistryModel`.
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
@@ -126,6 +139,7 @@ class GnuScript(Executable):
 
 class Binary(Executable):
     """Basic compiled executable."""
+
     _abstract = True
     _footprint = dict(
         attr = dict(

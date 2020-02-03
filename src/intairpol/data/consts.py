@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 from common.data.consts import GenvModelResource
@@ -10,9 +14,8 @@ __all__ = []
 
 
 class StaticSurfaceEmissions(GenvModelResource):
-    """
-    Emissions files collected by international community.
-    """
+    """Emissions files collected by international community."""
+
     _footprint = dict(
         info = 'Emissions files for sumo',
         attr = dict(
@@ -31,9 +34,8 @@ class StaticSurfaceEmissions(GenvModelResource):
 
 
 class Regrid(GenvModelResource):
-    """
-    Parameters for mocage grid transformation from 0.2 to 0.1 degree.
-    """
+    """Parameters for mocage grid transformation from 0.2 to 0.1 degree."""
+
     _footprint = dict(
         info = 'Parameters for mocage grid transformation',
         attr = dict(
@@ -52,9 +54,8 @@ class Regrid(GenvModelResource):
 
 
 class GribTemplate(GenvModelResource):
-    """
-    File constant for macc/mocage forecast.
-    """
+    """File constant for macc/mocage forecast."""
+
     _footprint = dict(
         info = 'Grib template for mocage forecast',
         attr = dict(
@@ -77,9 +78,8 @@ class GribTemplate(GenvModelResource):
 
 
 class ChemicalSurfaceScheme(GenvModelResource):
-    """
-     Chemical surface scheme.
-    """
+    """Chemical surface scheme."""
+
     _footprint = dict(
         info = 'Chemical surface scheme',
         attr = dict(
@@ -98,9 +98,8 @@ class ChemicalSurfaceScheme(GenvModelResource):
 
 
 class FireCst(GenvModelResource):
-    """
-     Fire constant file
-    """
+    """Fire constant file."""
+
     _footprint = dict(
         info = 'Fire constant file',
         attr = dict(
@@ -119,9 +118,8 @@ class FireCst(GenvModelResource):
 
 
 class CfcScenario(GenvModelResource):
-    """
-     Fire constant file
-    """
+    """Fire constant file."""
+
     _footprint = dict(
         info = 'Initial CFC concentration clim file',
         attr = dict(
@@ -140,9 +138,8 @@ class CfcScenario(GenvModelResource):
 
 
 class TopScenario(GenvModelResource):
-    """
-    Top model scenario.
-    """
+    """Top model scenario."""
+
     _footprint = dict(
         info = 'Top model scenario',
         attr = dict(
@@ -161,9 +158,8 @@ class TopScenario(GenvModelResource):
 
 
 class HybridLevels(GenvModelResource):
-    """
-    Hybrid levels description.
-    """
+    """Hybrid levels description."""
+
     _footprint = dict(
         info='Hybrid levels',
         attr=dict(
@@ -182,9 +178,8 @@ class HybridLevels(GenvModelResource):
 
 
 class SurfaceEmissionsProfilesTable(GenvModelResource):
-    """
-    Emissions profiles table.
-    """
+    """Emissions profiles table."""
+
     _footprint = dict(
         info='Surface Emissions profiles table',
         attr=dict(

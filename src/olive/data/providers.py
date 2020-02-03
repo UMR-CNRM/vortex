@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Various research specific providers (to be used in the SWAPP/Olive system).
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six

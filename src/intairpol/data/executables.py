@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import BlackBox, ChemistryModel
@@ -35,7 +39,7 @@ class Mocage(ChemistryModel):
 
 @namebuilding_append('src', lambda s: s.subkind)
 class MocageAssim(ChemistryModel):
-    """Mocage Palm Component (assim version)"""
+    """Mocage Palm Component (assim version)."""
     _footprint = [
         gvar,
         dict(
@@ -141,7 +145,7 @@ class MkTopBD(BlackBox):
 
 
 class Init(BlackBox):
-    """Chemical Climatological Init"""
+    """Chemical Climatological Init."""
 
     _footprint = [
         gvar,
@@ -160,7 +164,7 @@ class Init(BlackBox):
 
 
 class TestRestart(BlackBox):
-    """Control Guess file """
+    """Control Guess file."""
 
     _footprint = [
         gvar,

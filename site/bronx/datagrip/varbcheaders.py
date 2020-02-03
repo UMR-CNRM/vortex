@@ -16,7 +16,7 @@ __all__ = []
 
 
 class VarbcHeadersFile(collections_abc.Mapping):
-    """Class to handle the headers of a VarBC file.
+    r"""Class to handle the headers of a VarBC file.
 
     By headers, we mean the first 3 lines that contain informations about the
     file's version, date, experiment number (expver) and size (e.g. the number
@@ -29,7 +29,7 @@ class VarbcHeadersFile(collections_abc.Mapping):
         MINI  20200101         0
                 11     10980
         other stuff...
-        >>> vbch = VarbcHeadersFile(VarbcHeadersFile.DOCTEST_DATA.split("\\n"))
+        >>> vbch = VarbcHeadersFile(VarbcHeadersFile.DOCTEST_DATA.split("\n"))
         >>> len(vbch)
         4
         >>> set(vbch) == set(['version', 'date', 'nentries', 'expver'])

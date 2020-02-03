@@ -327,6 +327,7 @@ class TntStackDirective(object):
 #
 
 def get_template(tplname, encoding=None):
+    """Retrieve a template file in the dedicated directory."""
     tplfile = os.path.join(TPL_DIRECTORY, tplname)
     with io.open(tplfile, 'r', encoding=encoding) as fhtpl:
         tpl = string.Template(fhtpl.read())

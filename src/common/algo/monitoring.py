@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to observations monitoring.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -16,7 +20,8 @@ logger = loggers.getLogger(__name__)
 
 
 class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
-    """Compute monitoring statistics"""
+    """Compute monitoring statistics."""
+
     _footprint = dict(
         attr = dict(
             kind = dict(

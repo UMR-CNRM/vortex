@@ -12,6 +12,7 @@ from bronx.stdtypes.date import yesterday, Date, Period, Time
 
 
 class S2MTaskMixIn(object):
+    """Usefull addtions for any S2M task."""
 
     nightruntime = Time(hour=3, minute=0)
     firstassimruntime = Time(hour=6, minute=0)

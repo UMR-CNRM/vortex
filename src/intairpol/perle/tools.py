@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 TODO: Module documentation
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 import io
@@ -34,6 +34,8 @@ EMISSION_TYPES = dict(
 
 
 class SimulationLevel(six.text_type):
+    """TODO: Class documentation."""
+
     def __new__(cls, value):
         value = six.text_type(value).upper()
         for k in SIMULATION_LEVELS.keys():
@@ -53,6 +55,8 @@ class SimulationLevel(six.text_type):
 
 
 class EmissionType(six.text_type):
+    """TODO: Class documentation."""
+
     def __new__(cls, value):
         value = six.text_type(value).lower()
         for k in EMISSION_TYPES.keys():
@@ -72,6 +76,7 @@ class EmissionType(six.text_type):
 
 
 class PerleTool(AirTool):
+    """TODO: Class documentation."""
 
     _abstract = True
     _footprint = dict(
@@ -89,6 +94,7 @@ class PerleTool(AirTool):
 
 
 class PerleLauncher(PerleTool):
+    """TODO: Class documentation."""
 
     _abstract = True
     _footprint = dict(
@@ -177,6 +183,7 @@ class PerleLauncher(PerleTool):
 
 
 class OldPerleLauncher(PerleLauncher):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         info = 'PERLE launcher old style',

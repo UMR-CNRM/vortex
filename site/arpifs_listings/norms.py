@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals with part of the Arpege/IFS listings related to the
+spectral norms of model or post-processing fields.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
@@ -181,6 +186,7 @@ class Norms(object):
         self.gpnorms = gpnorms
 
     def as_dict(self):
+        """Return this entry data as a dictionary."""
         return {'step': self.step,
                 'spnorms': self.spnorms,
                 'gpnorms': self.gpnorms}
@@ -192,6 +198,7 @@ class Norms(object):
 
     @property
     def found_NaN(self):
+        """Return whether NaN are present in the listing."""
         return (any([re_for_nan.match(str(v)) for v in self.spnorms.values()]) or
                 any([re_for_nan.match(str(v)) for v in self.gpnorms.values()]))
 
@@ -531,7 +538,6 @@ def compare_norms(test_norm, ref_norm, only=None):
     If **only** among ('spectral', 'gridpoint'), only compare the requested
     type of norms.
     """
-
     comp_spnorms = collections.OrderedDict()
     comp_gpnorms = collections.OrderedDict()
     if only != 'gridpoint':

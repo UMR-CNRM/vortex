@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers

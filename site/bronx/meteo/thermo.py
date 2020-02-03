@@ -204,6 +204,7 @@ class Thermo(object):
 
     @property
     def hydrometeors(self):
+        """The list of hydrometeors."""
         return self._hydrometeors
 
     def _compute_new_T(self, target, precision):
@@ -339,7 +340,6 @@ class Thermo(object):
               constant during evaporation
 
         """
-
         assert mix_rule in [None, 'same', '0T-20'], "mix_rule must be None, 'same' or '0T-20'"
         if species == ['c']:
             assert mix_rule in [None], "mix_rule must be None or 'same' when adjusting only 'c'"
@@ -602,8 +602,10 @@ class Thermo(object):
 
     @staticmethod
     def R_T_P2rho(R, T, P):
-        """Computes the volumic mass of wet air (rho) from R, T and P
-           or       the volumic mass of dry air (rhod) from Rstar, T and P."""
+        """
+        Computes the volumic mass of wet air (rho) from R, T and P
+        or the volumic mass of dry air (rhod) from Rstar, T and P.
+        """
         return P / (R * T)
 
     @staticmethod

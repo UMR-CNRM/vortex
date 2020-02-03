@@ -1,6 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module needed to interact with GRIB files.
+
+It provides shell addons to deal with:
+
+    * Splitted GRIB files (as produced by the Arpege/IFS IO server)
+    * The ability to compare GRIB files
+
+It also provdes an AlgoComponnent's Mixin to properly setup the environment
+when using the grib_api or ecCodes libraries.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -257,7 +269,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     @addons.require_external_addon('ecfs')
     def grib_ecfsput(self, source, target, cpipeline=None, options=None):
-        """ Put a grib resource using ECfs.
+        """Put a grib resource using ECfs.
 
         :param source: source file
         :param target: target file

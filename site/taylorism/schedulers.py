@@ -30,7 +30,7 @@ Compatibility classes are still provided (see :class:`LaxistScheduler`,
 Dependencies
 ------------
 
-``footprints`` (MF package)
+:mod:`footprints` (MF package)
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -69,7 +69,8 @@ class BaseScheduler(FootprintBase):
         Split *pending_instructions* into "launchable" and "not_yet_launchable"
         instructions according to the scheduler own rules.
 
-        For that purpose and in a generic manner, the scheduler may need:\n
+        For that purpose and in a generic manner, the scheduler may need:
+
         - *pending_instructions*: todo
         - *workers*: being done
         - *report*: done.
@@ -156,7 +157,6 @@ def BindingAwareScheduler(cls):
 
     NB: The class' footprint should include a 'binded' attribute.
     """
-
     # Wrap _workers_hooks
     original_hooks = getattr(cls, '_workers_hooks')
 
@@ -248,7 +248,7 @@ class NewMaxMemoryScheduler(NewLimitedScheduler):
     ]
 
     def __init__(self, *args, **kw):
-        """Setup the maximum """
+        """Setup the maximum available memory."""
         super(NewMaxMemoryScheduler, self).__init__(*args, **kw)
         if self.max_memory is None:
             # memory tools are all but generic, they might fail !
@@ -348,6 +348,7 @@ class NewSingleOpenFileScheduler(NewMaxThreadsScheduler):
     )
 
     def launchable(self, pending_instructions, workers, report):
+        """Limit strategy: deal with what looks like a file locking."""
         launchable = []
         not_yet_launchable = []
         open_files = [w.fileA for w in workers.values()] + [w.fileB for w in workers.values()]

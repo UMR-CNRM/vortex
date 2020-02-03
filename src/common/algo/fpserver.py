@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+AlgoComponents for the next generation of Fullpos runs (based on the 903
+configuration).
+"""
 
-"""
-AlgoComponents for the next generation of Fullpos runs (based on the 903 configuration).
-"""
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 

@@ -54,6 +54,7 @@ def _string_encode(valueslist):
 
 
 def visualdiff(before_filename, after_filename, bw=False):
+    """Print a nicely formated text representation of the differences."""
     namtxtB = tnt.util.namelist_read_and_sort(before_filename).split('\n')
     namtxtA = tnt.util.namelist_read_and_sort(after_filename).split('\n')
 
@@ -65,6 +66,7 @@ def visualdiff(before_filename, after_filename, bw=False):
 
 
 def htmldiff_view(before_filename, after_filename, outfilename):
+    """Create an HTML representation of the differences and open a web browser."""
     namtxtB = tnt.util.namelist_read_and_sort(before_filename).split('\n')
     namtxtA = tnt.util.namelist_read_and_sort(after_filename).split('\n')
 
@@ -77,6 +79,7 @@ def htmldiff_view(before_filename, after_filename, outfilename):
 
 
 def extdiff(before_filename, after_filename, tool):
+    """Visualise the differences with an external tool such as ``vim`` or ``meld``."""
     with tempfile.NamedTemporaryFile(mode='w', prefix='tntdiff_BEFORE.', delete=True) as fhB:
         with tempfile.NamedTemporaryFile(mode='w', prefix='tntdiff_AFTER.', delete=True) as fhA:
             fhB.write(tnt.util.namelist_read_and_sort(before_filename))

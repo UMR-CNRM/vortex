@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+Resources associated with the handling of gridded data (other than full model states).
+"""
 
-"""
-Resources associated with the handling of gridded data.
-"""
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
@@ -32,9 +32,9 @@ _ORIGIN_INFO = _ORIGIN_INFO.replace('\n', ' ')
 class AbstractGridpoint(GeoFlowResource):
     """Gridpoint file calculated in a post-processing task or module.
 
-        * Possible formats are 'grib', 'fa' or 'netcdf'.
-        * A gridpoint file can be calculated for files from different sources given
-          by the "origin" attribute.
+    * Possible formats are 'grib', 'fa' or 'netcdf'.
+    * A gridpoint file can be calculated for files from different sources given
+      by the "origin" attribute.
 
     """
 
