@@ -23,7 +23,7 @@ from vortex import sessions, data, proxy, VortexForceComplete
 from vortex.layout.dataflow import stripargs_section, intent, ixo, Section
 
 #: Automatic export of superstar interface.
-__all__ = [ 'rload', 'rget', 'rput' ]
+__all__ = ['rload', 'rget', 'rput']
 
 logger = loggers.getLogger(__name__)
 
@@ -37,25 +37,25 @@ sectionmap = {'input': 'get', 'output': 'put', 'executable': 'get'}
 
 #: Default value for the **now** attribute of :func:`input`, :func:`executable`
 #: and :func:`output` functions
-active_now              = False
+active_now = False
 #: Default value for the **insitu** attribute of the :func:`input` and
 #: :func:`executable` functions
-active_insitu           = False
+active_insitu = False
 #: If *False*, drastically reduces the amount of messages printed by the
 #: toolbox module
-active_verbose          = True
+active_verbose = True
 #: If *False*, do not try to create/make any promise
-active_promise          = True
+active_promise = True
 #: If *False*, this makes the :func:`clear_promises` function inactive
-active_clear            = False
+active_clear = False
 #: If *False*, this will reset to *False* any ``metadatacheck`` attribute
 #: passed to the :func:`input` or :func:`executable` functions
-active_metadatacheck    = True
+active_metadatacheck = True
 #: If *True*, archive stores will not be used at all (only cache stores will
 #: be used)
-active_incache          = False
+active_incache = False
 #: Use the earlyget feature during :func:`input` calls
-active_batchinputs      = True
+active_batchinputs = True
 
 #: History recording
 history = History(tag='rload')
@@ -242,12 +242,12 @@ def add_section(section, args, kw):
     t = sessions.current()
 
     # First, retrieve arguments of the toolbox command itself
-    now       = kw.pop('now', active_now)
-    loglevel  = kw.pop('loglevel', None)
+    now = kw.pop('now', active_now)
+    loglevel = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', active_verbose)
-    complete  = kw.pop('complete', False)
-    insitu    = kw.get('insitu', False)
-    batch     = kw.pop('batch', False)
+    complete = kw.pop('complete', False)
+    insitu = kw.get('insitu', False)
+    batch = kw.pop('batch', False)
     lastfatal = kw.pop('lastfatal', None)
 
     if complete:
@@ -261,8 +261,8 @@ def add_section(section, args, kw):
 
     # Second, retrieve arguments that could be used by the now command
     cmdopts = dict(
-        incache = kw.pop('incache', active_incache),
-        force = kw.pop('force', False)
+        incache=kw.pop('incache', active_incache),
+        force=kw.pop('force', False)
     )
 
     # Third, collect arguments for triggering some hook
@@ -517,9 +517,9 @@ def promise(*args, **kw):
         with the newly created class:`~vortex.layout.dataflow.Section` objects).
     """
     kw.update(
-        promised = True,
-        force    = True,
-        now      = active_promise,
+        promised=True,
+        force=True,
+        now=active_promise,
     )
     if not active_promise:
         kw.setdefault('verbose', False)
@@ -611,10 +611,10 @@ def diff(*args, **kw):
     """
 
     # First, retrieve arguments of the toolbox command itself
-    fatal     = kw.pop('fatal', True)
-    loglevel  = kw.pop('loglevel', None)
+    fatal = kw.pop('fatal', True)
+    loglevel = kw.pop('loglevel', None)
     talkative = kw.pop('verbose', active_verbose)
-    batch     = kw.pop('batch', active_batchinputs)
+    batch = kw.pop('batch', active_batchinputs)
 
     # Distinguish between section arguments, and resource loader arguments
     opts, kwclean = stripargs_section(**kw)
@@ -748,9 +748,9 @@ def magic(localpath, **kw):
     a file container and an anonymous provider described with its URL.
     """
     kw.update(
-        unknown  = True,
-        magic    = 'magic://localhost/' + localpath,
-        filename = localpath,
+        unknown=True,
+        magic='magic://localhost/' + localpath,
+        filename=localpath,
     )
     rhmagic = rh(**kw)
     rhmagic.get()

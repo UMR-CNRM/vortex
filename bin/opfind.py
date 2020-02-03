@@ -26,10 +26,15 @@ import iga
 from bronx.stdtypes import date
 from bronx.fancies.arguments import CfgMeteoArgumentParser
 from bronx.fancies.colors import termcolors
+from bronx.fancies.dispatch import ExtendedCmdLiner
+from bronx.fancies.wrapcmd import WrapCmdLineArgs
 import bronx.fancies.multicfg
 
-t  = vortex.ticket()
+t = vortex.ticket()
 t.setloglevel('warning')
+
+
+FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
 
 
 class OpFindArgs(CfgMeteoArgumentParser):
@@ -43,50 +48,44 @@ class OpFindArgs(CfgMeteoArgumentParser):
     def refine_defined_cfgroot(self):
         """Set site conf directory as default."""
         return dict(
-            default = t.glove.siteconf,
+            default=t.glove.siteconf,
         )
 
     def refine_defined_xdate(self):
         """Set the last synoptic hour as default, UTC."""
         return dict(
-            default = date.lastround(base=date.utcnow(), rh=3).ymdhm,
+            default=date.lastround(base=date.utcnow(), rh=3).ymdhm,
         )
 
     def add_defined_notterm(self):
         """Terms that should be excluded from the selection."""
         return dict(
-            options  = '--notterm',
-            help     = 'Discarded terms',
-            metavar  = 'terms',
-            default  = None,
-            callback = self.mktimelist,
+            options='--notterm',
+            help='Discarded terms',
+            metavar='terms',
+            default=None,
+            callback=self.mktimelist,
         )
 
     def add_defined_location(self):
         """Location of the expected resources (e.g.: archive or inline)."""
         return dict(
-            options  = '--location',
-            help     = 'Nickname for location providers',
-            metavar  = 'location-name',
-            nargs    = '+',
-            choices  = ('disk', 'arch'),
-            default  = ['disk', 'arch'],
-            callback = self.mktuple,
+            options='--location',
+            help='Nickname for location providers',
+            metavar='location-name',
+            nargs='+',
+            choices=('disk', 'arch'),
+            default=['disk', 'arch'],
+            callback=self.mktuple,
         )
 
     def add_defined_check(self):
         """Actually check the physical availability of the expected resource."""
         return dict(
-            options  = '--check',
-            help     = 'Activate effective check of files',
-            action   = 'store_true',
+            options='--check',
+            help='Activate effective check of files',
+            action='store_true',
         )
-
-
-from bronx.fancies.wrapcmd import WrapCmdLineArgs
-from bronx.fancies.dispatch import ExtendedCmdLiner
-
-FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
 
 
 class OpFindCmd(ExtendedCmdLiner):

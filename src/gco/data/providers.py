@@ -17,16 +17,16 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 _COMMON_GCO_FP = dict(
-    gspool = dict(
-        alias    = ('gtmp', 'gcotmp', 'gcospool', 'tampon'),
-        optional = True,
-        default  = 'tampon'
+    gspool=dict(
+        alias=('gtmp', 'gcotmp', 'gcospool', 'tampon'),
+        optional=True,
+        default='tampon'
     ),
-    gnamespace = dict(
-        type     = Namespace,
-        optional = True,
-        values   = ['gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr'],
-        default  = Namespace('gco.meteo.fr'),
+    gnamespace=dict(
+        type=Namespace,
+        optional=True,
+        values=['gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr'],
+        default=Namespace('gco.meteo.fr'),
     ))
 
 

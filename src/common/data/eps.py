@@ -8,13 +8,13 @@ import copy
 from bronx.fancies import loggers
 import footprints
 
-from bronx.stdtypes.date      import Date, Time
-from bronx.syntax.decorators  import secure_getattr
-from vortex.data.flow         import FlowResource
-from vortex.data.contents     import JsonDictContent, TextContent
-from vortex.syntax.stdattrs   import number_deco
-from vortex.syntax.stddeco    import namebuilding_delete, namebuilding_insert
-from common.data.modelstates  import Historic
+from bronx.stdtypes.date import Date, Time
+from bronx.syntax.decorators import secure_getattr
+from vortex.data.flow import FlowResource
+from vortex.data.contents import JsonDictContent, TextContent
+from vortex.syntax.stdattrs import number_deco
+from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
+from common.data.modelstates import Historic
 
 #: No automatic export
 __all__ = []
@@ -97,11 +97,11 @@ class SingularVector(Historic):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'SVARPE'  + '{0:03d}'.format(self.number) + '+0000'
+        return 'SVARPE' + '{0:03d}'.format(self.number) + '+0000'
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        return 'SVARPE'  + '{0:03d}'.format(self.number) + '+0000'
+        return 'SVARPE' + '{0:03d}'.format(self.number) + '+0000'
 
 
 class NormCoeff(FlowResource):

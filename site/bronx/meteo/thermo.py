@@ -157,38 +157,38 @@ class Thermo(object):
             assert len(set(self._hydrometeors)) == len(self._hydrometeors), \
                 "hydrometeors components must appear only once."
 
-        self._allKnownMethods = [(N_Theta,  [N_T, N_P],                    self.T_P2Theta),
-                                 (N_T,      [N_Theta, N_P],                self.Theta_P2T),
-                                 (N_ThetaV, [N_Theta, N_rv, N_rt],         self.Theta_rv_rt2ThetaV),
-                                 (N_ThetaV, [N_Theta, N_qv, N_qt],         self.Theta_qv_qt2ThetaV),
-                                 (N_TV,     [N_ThetaV, N_P],               self.Theta_P2T),
-                                 (N_ThetaV, [N_TV, N_P],                   self.T_P2Theta),
-                                 (N_ff,     [N_u, N_v],                    self.u_v2ff),
-                                 (N_dd,     [N_u, N_v],                    self.u_v2dd),
-                                 (N_rho,    [N_R, N_T, N_P],               self.R_T_P2rho),
-                                 (N_rhov,   [N_rho, N_qv],                 self.rho_qv2rhov),
-                                 (N_rhod,   [N_Rstar, N_T, N_P],           self.R_T_P2rho),
-                                 (N_qci,    [N_qc, N_qi],                  self.qc_qi2qci),
-                                 (N_esatw,  [N_T],                         self.T2esatw),
-                                 (N_esati,  [N_T],                         self.T2esati),
-                                 (N_rsatw,  [N_esatw, N_P],                self.e_P2rv),
-                                 (N_rsati,  [N_esati, N_P],                self.e_P2rv),
-                                 (N_rv,     [N_e, N_P],                    self.e_P2rv),
-                                 (N_qv,     [N_e, N_P, N_qliquid, N_qice], self.e_P_qliquid_qice2qv),
-                                 (N_e,      [N_Huw, N_esatw],              self.Huw_esatw2e),
-                                 (N_e,      [N_Hui, N_esati],              self.Hui_esati2e),
-                                 (N_e,      [N_rv, N_P],                   self.rv_P2e),
-                                 (N_e,      [N_qv, N_qt, N_P],             self.qv_qt_P2e),
-                                 (N_Huw,    [N_e, N_esatw],                self.e_esatw2Huw),
-                                 (N_Hui,    [N_e, N_esati],                self.e_esati2Hui),
-                                 (N_Td,     [N_e],                         self.Td2e),
-                                 (N_R,      [N_qv, N_qliquid, N_qice],     self.qv_qliquid_qice2R),
-                                 (N_Rstar,  [N_rv],                        self.rv2Rstar),
-                                 (N_qt,     [N_qv, N_qliquid, N_qice],     self.qv_qliquid_qice2qt),
-                                 (N_rt,     [N_rv, N_rliquid, N_rice],     self.rv_rliquid_rice2rt),
-                                 (N_TV,     [N_qv, N_qliquid, N_qice, N_T],self.qv_qliquid_qice_T2TV),
-                                 (N_Cp,     [N_qv, N_qliquid, N_qice],     self.qv_qliquid_qice2Cp),
-                                 (N_Cph,    [N_rv, N_rliquid, N_rice],     self.rv_rliquid_rice2Cph),
+        self._allKnownMethods = [(N_Theta, [N_T, N_P], self.T_P2Theta),
+                                 (N_T, [N_Theta, N_P], self.Theta_P2T),
+                                 (N_ThetaV, [N_Theta, N_rv, N_rt], self.Theta_rv_rt2ThetaV),
+                                 (N_ThetaV, [N_Theta, N_qv, N_qt], self.Theta_qv_qt2ThetaV),
+                                 (N_TV, [N_ThetaV, N_P], self.Theta_P2T),
+                                 (N_ThetaV, [N_TV, N_P], self.T_P2Theta),
+                                 (N_ff, [N_u, N_v], self.u_v2ff),
+                                 (N_dd, [N_u, N_v], self.u_v2dd),
+                                 (N_rho, [N_R, N_T, N_P], self.R_T_P2rho),
+                                 (N_rhov, [N_rho, N_qv], self.rho_qv2rhov),
+                                 (N_rhod, [N_Rstar, N_T, N_P], self.R_T_P2rho),
+                                 (N_qci, [N_qc, N_qi], self.qc_qi2qci),
+                                 (N_esatw, [N_T], self.T2esatw),
+                                 (N_esati, [N_T], self.T2esati),
+                                 (N_rsatw, [N_esatw, N_P], self.e_P2rv),
+                                 (N_rsati, [N_esati, N_P], self.e_P2rv),
+                                 (N_rv, [N_e, N_P], self.e_P2rv),
+                                 (N_qv, [N_e, N_P, N_qliquid, N_qice], self.e_P_qliquid_qice2qv),
+                                 (N_e, [N_Huw, N_esatw], self.Huw_esatw2e),
+                                 (N_e, [N_Hui, N_esati], self.Hui_esati2e),
+                                 (N_e, [N_rv, N_P], self.rv_P2e),
+                                 (N_e, [N_qv, N_qt, N_P], self.qv_qt_P2e),
+                                 (N_Huw, [N_e, N_esatw], self.e_esatw2Huw),
+                                 (N_Hui, [N_e, N_esati], self.e_esati2Hui),
+                                 (N_Td, [N_e], self.Td2e),
+                                 (N_R, [N_qv, N_qliquid, N_qice], self.qv_qliquid_qice2R),
+                                 (N_Rstar, [N_rv], self.rv2Rstar),
+                                 (N_qt, [N_qv, N_qliquid, N_qice], self.qv_qliquid_qice2qt),
+                                 (N_rt, [N_rv, N_rliquid, N_rice], self.rv_rliquid_rice2rt),
+                                 (N_TV, [N_qv, N_qliquid, N_qice, N_T], self.qv_qliquid_qice_T2TV),
+                                 (N_Cp, [N_qv, N_qliquid, N_qice], self.qv_qliquid_qice2Cp),
+                                 (N_Cph, [N_rv, N_rliquid, N_rice], self.rv_rliquid_rice2Cph),
                                  ]
 
         if self._hydrometeors is not None:
@@ -254,7 +254,8 @@ class Thermo(object):
             elif precision != 'full':
                 L_before = L0 + (csts.Cpv - Cx) * (self.get(N_T) - csts.T0)
             if precision == 'standard':
-                # Explicit calcul, L and Cph are assumed to be constant during the transformation (they are taken equal to their initial values)
+                # Explicit calcul, L and Cph are assumed to be constant during the transformation
+                # (they are taken equal to their initial values)
                 T = T + L_before * (target[s] - r[s]) / Cph_before
             elif precision == 'full':
                 # Cp dT = Lv dqv integrated on the transformation. We have L+/L-=Cp-/Cp+
@@ -364,7 +365,8 @@ class Thermo(object):
                 rsat = tempo.get(N_rsati)
             elif set(species) == set(['c', 'i']):
                 if mix_rule == 'same':
-                    ice_fraction = np.where(tempo.get(N_rc) + tempo.get(N_ri) > 0., tempo.get(N_ri) / (tempo.get(N_rc) + tempo.get(N_ri)), 0.)
+                    ice_fraction = np.where(tempo.get(N_rc) + tempo.get(N_ri) > 0.,
+                                            tempo.get(N_ri) / (tempo.get(N_rc) + tempo.get(N_ri)), 0.)
                 else:
                     ice_fraction = (csts.T0 - tempo.get(N_T)) / 20.
                     ice_fraction = np.maximum(0., np.minimum(1, ice_fraction))
@@ -373,11 +375,15 @@ class Thermo(object):
             else:
                 raise ValueError("species can only contain 'c' and/or 'i'.")
 
-            diff = np.maximum(-cond, tempo.get(N_rv) - rsat)  # if rv>rsat, diff is the part of rv that we must condensate on cloud
-            #                                                   if rv<rsat, diff is the content we must take to cloud to put it back to vapor (hence the maximum)
+            diff = np.maximum(-cond, tempo.get(N_rv) - rsat)  # if rv>rsat, diff is the part of rv that we
+            #                                                               must condensate on cloud
+            #                                                   if rv<rsat, diff is the content we must take
+            #                                                               to cloud to put it back to vapor
+            #                                                               (hence the maximum)
             cond = cond + 0.8 * diff  # Tuning factor to limit oscilations and non-convergence
             target = {s: (tempo.get('r' + s)
-                          if s not in species else cond * (ice_fraction if s == 'i' else (1 - ice_fraction))) for s in [k for k in tempo.hydrometeors if k != 'v']}
+                          if s not in species else cond * (ice_fraction if s == 'i' else (1 - ice_fraction)))
+                      for s in [k for k in tempo.hydrometeors if k != 'v']}
             T = tempo._compute_new_T(target, precision)
 
             result = self.__class__(hydrometeors=self.hydrometeors)
@@ -423,7 +429,8 @@ class Thermo(object):
             for iMethod, method in enumerate(listOfMethods):
                 if parameter not in self._data and method[0] == parameter:
                     # We try to call this method.
-                    # To prevent cyclic calls, we give it the remaining available methods (excluding recursively the current one)
+                    # To prevent cyclic calls, we give it the remaining available methods
+                    # (excluding recursively the current one)
                     m = list(listOfMethods)
                     m.pop(iMethod)
                     try:

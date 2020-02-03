@@ -7,7 +7,7 @@ from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
 
 #: Automatic export of MiscGenv
-__all__ = [ 'MiscGenv' ]
+__all__ = ['MiscGenv', ]
 
 
 class MiscGenv(StaticResource):

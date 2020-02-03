@@ -152,14 +152,14 @@ def sleepers_generic_program(verbose=True, scheduler=None):
     """Generic example: how to run and control the Boss."""
 
     boss = run_as_server(
-        common_instructions     = dict(wakeup_sentence = 'Hello Dolly !'),
-        individual_instructions = dict(sleeping_time   = [4, 9, 2, 1]),
-        scheduler               = scheduler,
-        verbose                 = verbose,
+        common_instructions=dict(wakeup_sentence='Hello Dolly !'),
+        individual_instructions=dict(sleeping_time=[4, 9, 2, 1]),
+        scheduler=scheduler,
+        verbose=verbose,
     )
     time.sleep(5)
     print('Intermediate report:', boss.get_report())
-    boss.set_instructions(dict(), individual_instructions=dict(sleeping_time = [3]))
+    boss.set_instructions(dict(), individual_instructions=dict(sleeping_time=[3, ]))
     boss.wait_till_finished()
     report = boss.get_report()
     for r in report['workers_report']:
@@ -169,40 +169,40 @@ def sleepers_generic_program(verbose=True, scheduler=None):
 def sleepers_example_laxist(verbose=True):
     """Example: assuming no selection of strategy for scheduling."""
     sleepers_generic_program(
-        verbose = verbose,
-        scheduler = fpx.scheduler(nosort=True),
+        verbose=verbose,
+        scheduler=fpx.scheduler(nosort=True),
     )
 
 
 def sleepers_example_threads(verbose=True):
     """Example: scheduling is driven by number of threads."""
     sleepers_generic_program(
-        verbose = verbose,
-        scheduler = fpx.scheduler(limit='threads', max_threads=3),
+        verbose=verbose,
+        scheduler=fpx.scheduler(limit='threads', max_threads=3),
     )
 
 
 def sleepers_example_bindedthreads(verbose=True):
     """Example: scheduling is driven by number of threads and processes are binded."""
     sleepers_generic_program(
-        verbose = verbose,
-        scheduler = fpx.scheduler(limit='threads', max_threads=3, binded=True),
+        verbose=verbose,
+        scheduler=fpx.scheduler(limit='threads', max_threads=3, binded=True),
     )
 
 
 def sleepers_example_memory(verbose=True):
     """Example: scheduling is driven by memory consumption."""
     sleepers_generic_program(
-        verbose = verbose,
-        scheduler = fpx.scheduler(limit='memory', memory_per_task=1.8),
+        verbose=verbose,
+        scheduler=fpx.scheduler(limit='memory', memory_per_task=1.8),
     )
 
 
 def sleepers_example_bindedmemory(verbose=True):
     """Example: scheduling is driven by memory consumption and processes are binded."""
     sleepers_generic_program(
-        verbose = verbose,
-        scheduler = fpx.scheduler(limit='memory', binded=True),
+        verbose=verbose,
+        scheduler=fpx.scheduler(limit='memory', binded=True),
     )
 
 
@@ -244,8 +244,8 @@ def summer_example(verbose=True, use_lock=True):
     print(str(s[0]) + '==' + str(sum(range(n))))
 
 
-def matrixproduct_example(A_shape = (6, 7), B_shape = (7, 8),
-                          iblocks = 2, jblocks = 4,
+def matrixproduct_example(A_shape=(6, 7), B_shape=(7, 8),
+                          iblocks=2, jblocks=4,
                           verbose=True):
     """
     Example: how to use several numpy array shared among workers.

@@ -22,9 +22,9 @@ class OpTask(Task):
 
     def report_execution_error(self, exc):  # @UnusedVariable
         """Report any execution error."""
-        listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
+        listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         self.sh.header('Send a mail due to an execution error')
-        ad.opmail(task=self.tag, id ='execution_error', listing=listing)
+        ad.opmail(task=self.tag, id='execution_error', listing=listing)
 
     def defaults(self, extras):
         """Set defaults for toolbox defaults, with priority to actual conf."""
@@ -56,12 +56,13 @@ class MissingObsMixin(object):
 
     def missing_obs_report(self, exc):
         """Report (e-mail) any Bator failure."""
-        listing   = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
-        outstr = "Les bases ODB suivantes ont rencontré des problèmes lors de l'exécution de la tâche {0:s}\n".format(self.tag)
+        listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
+        outstr = ("Les bases ODB suivantes ont rencontré des problèmes lors de " +
+                  "l'exécution de la tâche {0:s}\n".format(self.tag))
         for i, iexc in enumerate(exc._excs):
             outstr += "\n-{0:2d}: {1:s}".format(i + 1, iexc.odb_database.upper())
 
-        ad.opmail(task=self.tag, id ='execution_nonfatal_error', msg=outstr, listing=listing)
+        ad.opmail(task=self.tag, id='execution_nonfatal_error', msg=outstr, listing=listing)
 
 
 class OpTaskMPI(OpTask):

@@ -67,7 +67,7 @@ class IFSModel(NWPModel):
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
-            model = self.model
+            model=self.model
         )
 
     def iga_basename(self):
@@ -221,8 +221,8 @@ class ProTool(BlackBox):
                     default  = 'master_addsurf'
                 ),
                 kind = dict(
-                    values   = [ 'protool', 'addsurf' ],
-                    remap    = dict(addsurf = 'protool'),
+                    values   = ['protool', 'addsurf'],
+                    remap    = dict(addsurf='protool'),
                 ),
             )
         )
@@ -321,10 +321,10 @@ class IceNCDF2Ascii(BlackBox):
     def command_line(self, file_in_hn, file_in_hs, param, file_out):
         """Build the command line to launch the executable."""
         return '{file_in_hn} {file_in_hs} {param} {file_out}'.format(
-            file_in_hn = file_in_hn,
-            file_in_hs = file_in_hs,
-            param = param,
-            file_out = file_out
+            file_in_hn=file_in_hn,
+            file_in_hs=file_in_hs,
+            param=param,
+            file_out=file_out
         )
 
 

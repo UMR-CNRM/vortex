@@ -96,7 +96,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
 
     def _members_effective_inputs(self):
         """The list of effective sections representing input data."""
-        return sorted(self.context.sequence.effective_inputs(role = self._INPUTS_ROLE),
+        return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
                       key=attrgetter('rh.provider.member'))
 
     def _check_members_list_numbering(self, rh, mlist, mformats):
@@ -228,12 +228,12 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
 
     def _members_effective_inputs(self):
         """The list of effective sections representing input data."""
-        return sorted(self.context.sequence.effective_inputs(role = self._INPUTS_ROLE),
+        return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
                       key=attrgetter('rh.resource.date', 'rh.provider.member'))
 
     def _members_all_inputs(self):
         """The list of sections representing input data."""
-        return sorted(self.context.sequence.filtered_inputs(role = self._INPUTS_ROLE),
+        return sorted(self.context.sequence.filtered_inputs(role=self._INPUTS_ROLE),
                       key=attrgetter('rh.resource.date', 'rh.provider.member'))
 
     def modelstate_needs_renumbering(self, rh):
@@ -289,8 +289,8 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
             innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
                                           totalnumber=self.actual_totalnumber,
                                           actualfmt=eff_format)
-            all_sections  = self._members_all_inputs()
-            paddingstuff = self.context.sequence.effective_inputs(role = self._PADDING_ROLE)
+            all_sections = self._members_all_inputs()
+            paddingstuff = self.context.sequence.effective_inputs(role=self._PADDING_ROLE)
             for i, s in enumerate(all_sections, start=1):
                 if s.stage == 'get' and s.rh.container.exists():
                     logger.info("Soft-Linking %s to %s", s.rh.container.localpath(),
@@ -389,7 +389,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         eff_terms = None
         for role in roles:
             eterm = set([sec.rh.resource.term for sec
-                         in self.context.sequence.effective_inputs(role = role)])
+                         in self.context.sequence.effective_inputs(role=role)])
             if eterm:
                 if eff_terms is None:
                     eff_terms = eterm
@@ -400,7 +400,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
 
     def _link_stuff_in(self, role, actualterm, targetnc, targetintent='in', wastebasket=None):
         estuff = [sec
-                  for sec in self.context.sequence.effective_inputs(role = role)
+                  for sec in self.context.sequence.effective_inputs(role=role)
                   if sec.rh.resource.term == actualterm]
         if len(estuff) > 1:
             logger.warning('Multiple %s  for the same date ! Going on...', role)
@@ -464,7 +464,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                                         inputkind='clim_model')
                 # Deal with useless stuff... SADLY !
                 useless = [sec
-                           for sec in self.context.sequence.effective_inputs(role = 'Useless')
+                           for sec in self.context.sequence.effective_inputs(role='Useless')
                            if (sec.rh.resource.term == actualterm and
                                self._USELESS_MATCH.match(sec.rh.container.localpath()))]
                 for a_useless in useless:
@@ -490,7 +490,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                     self.system.mkdir(self._RUNSTORE)
                     # Freeze the current output
                     shelf_label = self.system.path.join(self._RUNSTORE, outnc(number=1, term=actualterm))
-                    self.system.move(outnc(number=1, term=Time(0)), shelf_label, fmt = 'fa')
+                    self.system.move(outnc(number=1, term=Time(0)), shelf_label, fmt='fa')
                     self._outputs_shelf.append(shelf_label)
                     # Some cleaning
                     for afile in wastebasket:
@@ -583,9 +583,9 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
         """Default pre-link for the initial condition file"""
         super(IFSCovB, self).prepare(rh, opts)
         # Legacy...
-        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'Rawfiles'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')),
-                                  start = 1):
+        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='Rawfiles'),
+                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
             for filename in self.system.listdir(repname):
@@ -594,15 +594,15 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
                     self.system.softlink(self.system.path.join(repname, filename),
                                          radical.format(num, level.group(1)))
         # Legacy...
-        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'LaggedEnsemble'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')),
-                                  start = 1):
+        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='LaggedEnsemble'),
+                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))
         # Requesting Hybrid cimputations ?
         if self.hybrid:
-            hybstuff = self.context.sequence.effective_inputs(role = self._HYBRID_CLIM_ROLE)
+            hybstuff = self.context.sequence.effective_inputs(role=self._HYBRID_CLIM_ROLE)
             hybformat = hybstuff[0].rh.container.actualfmt
             totalnumber = self.actual_nbe * self.actual_nresx if self.padding else self.actual_nbe
             for i, tnum in enumerate(range(totalnumber + 1, 2 * totalnumber + 1)):

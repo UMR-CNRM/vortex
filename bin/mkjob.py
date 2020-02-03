@@ -20,7 +20,7 @@ vortex_path = os.path.join(appbase, 'vortex')
 if not os.path.exists(vortex_path):
     vortex_path = os.path.dirname(os.path.dirname(sys.argv[0]))
 
-pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
+pathdirs = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 
 for d in pathdirs:
     if os.path.isdir(d):

@@ -89,9 +89,9 @@ class _AbstractLAMBoundary(GeoFlowResource):
         else:
             directory = 'autres'
         return dict(
-            fmt       = directory,
-            model     = self.model,
-            nativefmt = self.nativefmt,
+            fmt=directory,
+            model=self.model,
+            nativefmt=self.nativefmt,
         )
 
     def _geo2basename_info(self, add_stretching=True):
@@ -150,19 +150,19 @@ class EnhancedLAMBoundary(_AbstractLAMBoundary):
 
 
 _abs_forcing_fp = footprints.DecorativeFootprint(
-    info = 'Coupling file for any offline model.',
-    attr = dict(
-        kind = dict(
-            values  = ['forcing', ],
+    info='Coupling file for any offline model.',
+    attr=dict(
+        kind=dict(
+            values=['forcing', ],
         ),
-        filling = dict(),
-        source_app = dict(),
-        source_conf = dict(),
-        source_cutoff = _a_source_cutoff,
+        filling=dict(),
+        source_app=dict(),
+        source_conf=dict(),
+        source_cutoff=_a_source_cutoff,
     ),
-    decorator = [namebuilding_insert('src', lambda s: [s.source_app, s.source_conf,
-                                                       {'cutoff': s.source_cutoff}]),
-                 overwrite_realkind('forcing'), ]
+    decorator=[namebuilding_insert('src', lambda s: [s.source_app, s.source_conf,
+                                                     {'cutoff': s.source_cutoff}]),
+               overwrite_realkind('forcing'), ]
 )
 
 
@@ -181,18 +181,18 @@ class _AbstractPeriodForcing(GeoPeriodFlowResource):
 
 
 _abs_surfex_forcing_fp = footprints.Footprint(
-    info = 'Coupling/Forcing file for Surfex.',
-    attr = dict(
-        model = dict(
-            values  = ['surfex', ],
+    info='Coupling/Forcing file for Surfex.',
+    attr=dict(
+        model=dict(
+            values=['surfex', ],
         ),
-        filling = dict(
-            values  = ['atm', ],
-            default = 'atm',
+        filling=dict(
+            values=['atm', ],
+            default='atm',
         ),
-        nativefmt = dict(
-            values  = ['netcdf', 'ascii'],
-            default = 'netcdf',
+        nativefmt=dict(
+            values=['netcdf', 'ascii'],
+            default='netcdf',
         ),
     )
 )

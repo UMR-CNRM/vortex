@@ -185,7 +185,8 @@ class TiffFile(object):
                 offsetValues = numpy.array([offsetValues])
                 nbBytesPerStrip = numpy.array([nbBytesPerStrip])
             if nbRows / nbRowsPerStrip + (1 if nbRows % nbRowsPerStrip != 0 else 0) != len(offsetValues):
-                raise PyexttiffError("Total number of rows, strip numbers and number of rows per strips are not consistent.")
+                raise PyexttiffError("Total number of rows, " +
+                                     "strip numbers and number of rows per strips are not consistent.")
             data = []
             for i in range(len(offsetValues)):
                 data.append(self._get_values(offsetValues[i], 1, nbBytesPerStrip[i]))
@@ -250,7 +251,8 @@ class TiffFile(object):
             dtype = self.dtypes.type2dt.get(typ)
             size = TiffFile._type2bytes.get(typ)
             if dtype is None or size is None:
-                raise PyexttiffError('_get_values: incomplete info for type=%r [%r]: dtype=%s, bytes=%s\n' % (typ, ntyp, dtype, size))
+                raise PyexttiffError(('_get_values: incomplete info for type=%r [%r]: ' +
+                                      'dtype=%s, bytes=%s\n') % (typ, ntyp, dtype, size))
         result = self.get_data()[offset:offset + size * count].view(dtype=dtype)
         return result
 

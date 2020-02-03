@@ -54,7 +54,8 @@ class XpidRegister(AlgoComponent):
                     info = "The store in which to pick initial resources"
                 ),
                 usecase = dict(
-                    info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.""",
+                    info = ("Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. " +
+                            "Non-Regression Validation."),
                 ),
             )
         )
@@ -244,9 +245,13 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             xp = [rh.provider.experiment for rh in resource_handlers]
             block = [rh.provider.block for rh in resource_handlers]
             if len(set(xp)) > 1:
-                raise AlgoComponentError(refkind + " reference resources must all come from the same 'experiment'.")  # continuity
+                raise AlgoComponentError(
+                    refkind +
+                    " reference resources must all come from the same 'experiment'.")  # continuity
             if len(set(block)) > 1:
-                raise AlgoComponentError(refkind + " reference resources must all come from the same 'block'.")  # consistency
+                raise AlgoComponentError(
+                    refkind +
+                    " reference resources must all come from the same 'block'.")  # consistency
             if refkind == 'Continuity':
                 ref_is = {'experiment': xp[0],
                           'task': '(same)'}

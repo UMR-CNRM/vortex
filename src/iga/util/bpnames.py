@@ -20,8 +20,8 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 _arpcourt_vconf = ('courtfr', 'frcourt', 'court')
-_arome_vconf    = ('3dvarfr',)
-_arpege_vconf   = ('4dvarfr',)
+_arome_vconf = ('3dvarfr',)
+_arpege_vconf = ('4dvarfr',)
 
 
 def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
@@ -35,7 +35,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
                        '05': '05', '06': 'SX', '07': '07', '08': '08', '09': 'NF',
                        '10': '10', '11': '11', '12': 'PM', '13': '13', '14': '14',
                        '15': 'QZ', '16': '16', '17': '17', '18': 'DH', '19': '19',
-                       '20': '20', '21': 'VU', '22': '22', '23': '23' }
+                       '20': '20', '21': 'VU', '22': '22', '23': '23'}
         reseau_suff = reseau_prod[_reseau]
     elif cutoff == 'production' and vconf == 'pifrance' or vconf == 'france_jj1':
         reseau_prod = {'00': '00', '01': '01', '02': '02', '03': '03', '04': '04',
@@ -69,7 +69,7 @@ def faNames(cutoff, reseau, model, filling=None, vapp=None, vconf=None):
         else:
             map_suffix = {(cutoff, h): 'r{:02d}'.format(h) for h in assim_cutoffs}
     elif cutoff == 'production' and vconf not in _arpcourt_vconf:
-        suffix_r0 = 'rAM' if model == 'arpege' or model == 'surfex'  else 'rCM'
+        suffix_r0 = 'rAM' if model == 'arpege' or model == 'surfex' else 'rCM'
         map_suffix = dict(
             zip(
                 zip(
@@ -271,14 +271,14 @@ def analysis_bnames(resource, provider):
         vapp=provider.vapp, vconf=provider.vconf,
     )
     # patch for the different kind of analysis (surface and atmospheric)
-    if ( resource.model == 'arome' and resource.filling == 'surf' ) or resource.model == 'surfex':
+    if (resource.model == 'arome' and resource.filling == 'surf') or resource.model == 'surfex':
         if provider.vconf in _arome_vconf:
             return 'INIT_SURF.fa.' + suffix
         else:
             return 'ICMSHARPEINIT.' + suffix + '.sfx'
     elif resource.model == 'hycom' and resource.filling == 'surf':
-        region_map = dict(atl= '', med='_MED', oin='_OIN')
-        mode_map = dict(fc= 'pre', an='ana')
+        region_map = dict(atl='', med='_MED', oin='_OIN')
+        mode_map = dict(fc='pre', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
 
@@ -383,8 +383,8 @@ def bufr_bnames(resource, provider):
 def SurgesResultNative_bnames(resource, provider):
     """docstring for SurgesResultNative_bnames"""
     if resource.model == 'hycom':
-        region_map = dict(atl= '_', med='_MED_')
-        mode_map = dict(fc= 'pre', an= 'ana')
+        region_map = dict(atl='_', med='_MED_')
+        mode_map = dict(fc='pre', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
         config = provider.vconf[-3:] + region + mode
@@ -395,8 +395,8 @@ def SurgesResultNative_bnames(resource, provider):
 def SurgesWw3coupling_bnames(resource, provider):
     """docstring for SurgesWw3coupling_bnames"""
     if resource.model == 'hycom':
-        region_map = dict(atl= '_', med='_MED_')
-        mode_map = dict(fc= 'pre', an= 'ana')
+        region_map = dict(atl='_', med='_MED_')
+        mode_map = dict(fc='pre', an='ana')
         region = region_map.get(provider.vconf[:3], provider.vconf[:3])
         mode = mode_map.get(provider.vconf[4:][:2], None)
         config = provider.vconf[-3:] + region + mode
@@ -432,7 +432,7 @@ def histsurf_bnames(resource, provider):
             bname = 'ICMSH' + model_info + '+' + resource.term.fmthour + '.sfx.' + suffix
 
     elif resource.cutoff == 'assim':
-            bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
+        bname = 'PREP.fa_' + '{:02d}'.format(reseau) + '.{:02d}'.format(resource.term.hour)
 
     return bname
 
@@ -474,8 +474,8 @@ def gridpoint_bnames(resource, provider):
                                        vapp=provider.vapp, vconf=provider.vconf)
             localname = prefix + resource.geometry.area + suffix + resource.term.fmthour
         elif resource.model == 'hycom':
-            region_map = dict(atl= '', med='_MED', oin='_OIN')
-            mode_map = dict(fc= 'prv', an='ana')
+            region_map = dict(atl='', med='_MED', oin='_OIN')
+            mode_map = dict(fc='prv', an='ana')
             region = region_map.get(provider.vconf[:3], provider.vconf[:3])
             mode = mode_map.get(provider.vconf[4:][:2], None)
             localname = '{0:s}_{1:s}_{2:02d}{3:s}.{4:03d}.grb'.format(
@@ -504,7 +504,7 @@ def gridpoint_bnames(resource, provider):
 
 def varbc_bnames(resource, provider):
     """docstring for varbc_bnames"""
-    reseau, model, stage  = resource.date.hour, resource.model, resource.stage
+    reseau, model, stage = resource.date.hour, resource.model, resource.stage
     if model in ['reunion', 'aladin', 'caledonie', 'antiguy', 'polynesie']:
         suffix = '_alad'
     elif model == "arpege":
@@ -663,16 +663,18 @@ def global_snames(resource, provider):
                 bname = 'SSOL_glob.grb'
         elif resource.vapp_origin == 'pg1':
             if resource.vconf_origin in ['pagrex', 'parome']:
-                bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
+                         '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
             if resource.vconf_origin == 'pa':
-                bname = 'pg1_' + resource.vconf_origin + '_' + str(resource.date) + '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
+                         '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
 
     if resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':
             if resource.cutoff == 'production':
                 bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
             else:
-                bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh  + '.nc'
+                bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
 
     if vconf == 'aefrance' or vconf == 'pifrance':
         my_model = '_' + resource.model.upper()
@@ -701,7 +703,7 @@ def global_snames(resource, provider):
         if resource.part == 'prof':
             bname = 'RD_2' + my_model + '.' + suff
         elif resource.part == 'conv':
-            bname = 'RD_1' + my_model  + '.' + suff
+            bname = 'RD_1' + my_model + '.' + suff
         elif resource.part == 'surf':
             bname = 'RD_SURFAN' + my_model + '.' + suff
         else:

@@ -120,7 +120,8 @@ class CouplingWw3Write(GeoFlowResource):
 class SurgesResultNative(GeoFlowResource):
     """Class for grid solutions of the HYCOM model (netcdf file)."""
     _footprint = dict(
-        info = '(H, u, v) parameters data projected in native geometry grid HYCOM with/without forcing (netcdf data file)',
+        info = ('(H, u, v) parameters data projected in native geometry grid HYCOM ' +
+                'with/without forcing (netcdf data file)'),
         attr = dict(
             kind = dict(
                 values = ['SurgesResultNative'],

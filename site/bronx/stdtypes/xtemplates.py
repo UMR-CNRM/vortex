@@ -53,7 +53,8 @@ class DefaultTemplate(object):
         ...                         __loopiterator__='zip(members, physics)',
         ...                         __loopvariables__='member, physic',
         ...                         __body__=dict(kind='member_spec',
-        ...                                       msg='{{"Member number: {:03d} next one is {!s}".format(member, member_next)}}',
+        ...                                       msg=('{{"Member number: {:03d} next one is {!s}"' +
+        ...                                            '.format(member, member_next)}}'),
         ...                                       member='{{member}}',
         ...                                       physic_id='{{physic}}',
         ...                                       terms=dict(__bronx_tpl_engine__='loop',

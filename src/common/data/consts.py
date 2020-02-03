@@ -5,14 +5,14 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 
-from vortex.data.outflow    import StaticResource, ModelResource, ModelGeoResource
+from vortex.data.outflow import StaticResource, ModelResource, ModelGeoResource
 from vortex.data.geometries import LonlatGeometry, GaussGeometry
-from vortex.data.contents   import TextContent, JsonDictContent
+from vortex.data.contents import TextContent, JsonDictContent
 from vortex.syntax.stdattrs import month_deco
-from vortex.syntax.stddeco  import namebuilding_append, namebuilding_delete, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 
-from gco.syntax.stdattrs    import gvar
+from gco.syntax.stdattrs import gvar
 
 #: No automatic export
 __all__ = []
@@ -21,15 +21,15 @@ __all__ = []
 class GenvModelResource(ModelResource):
     """Abstract class for gget driven resources."""
 
-    _abstract  = True
-    _footprint = [ gvar, ]
+    _abstract = True
+    _footprint = [gvar, ]
 
 
 class GenvModelGeoResource(ModelGeoResource):
     """Abstract class for gget driven resources."""
 
-    _abstract  = True
-    _footprint = [ gvar, ]
+    _abstract = True
+    _footprint = [gvar, ]
 
 
 class GPSList(GenvModelResource):
@@ -93,10 +93,10 @@ class BatorAveragingMask(GenvModelResource):
         info = 'Definition file for the bator averaging',
         attr = dict(
             kind = dict(
-                values  = [ 'avgmask', ]
+                values  = ['avgmask', ]
             ),
             sensor = dict(
-                values  = [ 'atms', 'ssmis', ]
+                values  = ['atms', 'ssmis']
             ),
             clscontents = dict(
                 default = TextContent,
@@ -117,7 +117,7 @@ class AtmsMask(BatorAveragingMask):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values   = [ 'atms', 'atmsmask', ],
+                values   = ['atms', 'atmsmask'],
                 remap    = dict(atms='atmsmask'),
             ),
             sensor = dict(
@@ -140,7 +140,7 @@ class RtCoef(GenvModelResource):
         info = 'Set of satellite  coefficients',
         attr = dict(
             kind = dict(
-                values  = [ 'rtcoef' ]
+                values  = ['rtcoef', ]
             ),
             gvar = dict(
                 default = 'rtcoef_tgz'
@@ -162,7 +162,7 @@ class RRTM(GenvModelResource):
         info = 'Coefficients of RRTM scheme',
         attr = dict(
             kind = dict(
-                values  = [ 'rrtm' ]
+                values  = ['rrtm', ]
             ),
             gvar = dict(
                 default = 'rrtm_const'
@@ -334,7 +334,7 @@ class CstLim(GenvModelResource):
         info = 'Coefficients for some purpose... but which one ?',
         attr = dict(
             kind = dict(
-                values   = ['cstlim', 'cst_lim' ],
+                values   = ['cstlim', 'cst_lim'],
                 remap    = dict(autoremap = 'first'),
             ),
             scope = dict(
@@ -362,7 +362,7 @@ class RszCoef(GenvModelResource):
         info = 'Coefficients for some purpose... but which one ?',
         attr = dict(
             kind = dict(
-                values  = ['rszcoef', 'rsz_coef' ],
+                values  = ['rszcoef', 'rsz_coef'],
                 remap   = dict(autoremap = 'first'),
             ),
             gvar = dict(
@@ -447,7 +447,7 @@ class AtlasEmissivity(GenvModelResource):
     """
     Abstract class for any Emissivity atlas.
     """
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         attr = dict(
             kind = dict(

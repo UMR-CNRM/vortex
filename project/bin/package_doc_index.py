@@ -162,7 +162,7 @@ class RstIndexEntry(object):
     @staticmethod
     def _process_template(**subdict):
         with io.open(_DOC_TEMPLATE, 'r', encoding='utf-8') as fhd:
-                tplobj = fhd.read()
+            tplobj = fhd.read()
         tplobj = string.Template(tplobj)
         return tplobj.substitute(subdict)
 

@@ -108,8 +108,8 @@ class CombiPert(Combi):
         super(CombiPert, self).prepare(rh, opts)
 
         # Tweak the namelists
-        for namsec in self.context.sequence.effective_inputs(role = re.compile('Namelist'),
-                                                             kind = 'namelist'):
+        for namsec in self.context.sequence.effective_inputs(role=re.compile('Namelist'),
+                                                             kind='namelist'):
             logger.info("Add the NBPERT coefficient to the NAMENS namelist entry")
             namsec.rh.contents['NAMENS']['NBPERT'] = self.nbpert
             namsec.rh.save()
@@ -166,8 +166,7 @@ class CombiSV(CombiPert):
         self.system.json_dump(nbVect, self.info_fname)
 
         # Tweak the namelists
-        namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')
-        # namsecs = self.setlink(initrole = 'Namelist', initkind = 'namelist', initname = 'namcombi'),  TODO PC qd combi aura 1 seule nam
+        namsecs = self.context.sequence.effective_inputs(role=re.compile('Namelist'), kind='namelist')
         for namsec in namsecs:
             namsec.rh.contents['NAMMOD']['LVS'] = True
             namsec.rh.contents['NAMMOD']['LANAP'] = False
@@ -289,8 +288,8 @@ class CombiIC(Combi):
             namcoefvs = namsec[0].rh.contents.newblock('NAMCOEFVS')
             namcoefvs['RCOEFVS'] = sv_sections[0].rh.contents['rcoefvs']
             # The mean value may be present among the SV inputs: remove it
-            svsecs = [sec for sec in self.context.sequence.effective_inputs(role = 'SVPerturbedState') or
-                      [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
+            svsecs = [sec for sec in self.context.sequence.effective_inputs(role='SVPerturbedState') or
+                      [sec for sec in self.context.sequence.effective_inputs(role='PerturbedState')
                        if 'ICHR' in sec.rh.container.filename] if sec.rh.resource.number]
             nbPert = nbPert or len(svsecs)
 
@@ -301,8 +300,8 @@ class CombiIC(Combi):
             logger.info("Add the breeding coefficient to the NAMCOEFBM namelist entry.")
             namcoefbm = namsec[0].rh.contents.newblock('NAMCOEFBM')
             namcoefbm['RCOEFBM'] = bd_sections[0].rh.contents['rcoefbm']
-            nbBd = len(self.context.sequence.effective_inputs(role = 'BreedingPerturbedState') or
-                       [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
+            nbBd = len(self.context.sequence.effective_inputs(role='BreedingPerturbedState') or
+                       [sec for sec in self.context.sequence.effective_inputs(role='PerturbedState')
                         if 'BMHR' in sec.rh.container.filename])
             # symmetric perturbations except if analysis: one more file
             # or zero if one control ic (hypothesis: odd nbic)
@@ -313,7 +312,7 @@ class CombiIC(Combi):
         # Dealing with initial conditions from the assimilation ensemble
         # the mean value may be present among the AE inputs: remove it
         aesecs = [sec for sec in self.context.sequence.effective_inputs(
-            role = ('AEPerturbedState', 'ModelState')) if sec.rh.resource.number]
+            role=('AEPerturbedState', 'ModelState')) if sec.rh.resource.number]
         nammod['LANAP'] = bool(aesecs)
         nbAe = len(aesecs)
         nbPert = nbPert or nbAe
@@ -370,7 +369,7 @@ class CombiBreeding(CombiPert):
         super(CombiBreeding, self).prepare(rh, opts)
 
         # Consistent naming with the Fortran execution
-        hst_sections = self.context.sequence.effective_inputs(kind = ('pert', 'historic'))
+        hst_sections = self.context.sequence.effective_inputs(kind=('pert', 'historic'))
         for num, hst in enumerate(hst_sections):
             self.system.softlink(hst.rh.container.localpath(),
                                  re.sub(r'^(.*?)\d+$', r'\1', hst.rh.container.localpath()) +

@@ -307,7 +307,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
             fhwrap.write('set -e\n')
             fhwrap.write('echo "I am running on $(hostname) !"\n')
             for k, v in t.topenv.items():
-                if re.match('[-_\w]+$', k):  # Get rid of weird variable names
+                if re.match(r'[-_\w]+$', k):  # Get rid of weird variable names
                     fhwrap.write("export {:s}='{!s}'\n".format(k.upper(), v))
             fhwrap.write('exec $*\n')
         t.sh.xperm(self._lwrapper, force=True)

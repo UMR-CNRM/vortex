@@ -229,18 +229,18 @@ class Deposit(getbytag.GetByTag):
     def __init__(self, logger=None, path=None, active=False, target=None,
                  cleaning=True, maxitems=128, maxtime='24H', keepzip='10d',
                  periodclean='15mn', minclean='48H'):
-        self._logger      = logger
-        self._target      = target
-        self._path        = self.tag if path is None else path
-        self.active       = active
-        self._cleaning    = bool(cleaning)
-        self._maxitems    = int(maxitems)
-        self._maxtime     = duration_to_seconds(maxtime)
-        self._keepzip     = duration_to_seconds(keepzip)
+        self._logger = logger
+        self._target = target
+        self._path = self.tag if path is None else path
+        self.active = active
+        self._cleaning = bool(cleaning)
+        self._maxitems = int(maxitems)
+        self._maxtime = duration_to_seconds(maxtime)
+        self._keepzip = duration_to_seconds(keepzip)
         self._periodclean = duration_to_seconds(periodclean)
-        self._tryclean    = None
-        self._lastclean   = None
-        self._minclean    = duration_to_seconds(minclean)
+        self._tryclean = None
+        self._lastclean = None
+        self._minclean = duration_to_seconds(minclean)
         self._first_clean()
 
     @property

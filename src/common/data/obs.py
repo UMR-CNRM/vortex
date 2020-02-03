@@ -21,7 +21,7 @@ from vortex.syntax import stdattrs, stddeco
 from gco.syntax.stdattrs import gvar, GenvKey
 
 #: Automatic export of Observations class
-__all__ = [ 'Observations' ]
+__all__ = ['Observations', ]
 
 logger = loggers.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class Observations(GeoFlowResource):
     Abstract observation resource.
     """
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Observations file',
         attr = dict(
@@ -411,7 +411,7 @@ class BlackList(FlowResource):
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
-            model = self.model
+            model=self.model
         )
 
     def archive_map(self):

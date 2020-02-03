@@ -102,7 +102,7 @@ class SurgesCouplingForecasts(Parallel):
             self.export('mpitool')
 
         # Tweak the pseudo hycom namelists New version  !
-        for namsec in self.context.sequence.effective_inputs(role = re.compile('FileConfig')):
+        for namsec in self.context.sequence.effective_inputs(role=re.compile('FileConfig')):
 
             r = namsec.rh
 
@@ -124,9 +124,9 @@ class SurgesCouplingForecasts(Parallel):
                 dico["h_rese"] = reseau
                 dico["modele"] = r.provider.vconf.upper()[-3:]
                 xp = r.provider.vconf[-5:-3]
-                mode_map = dict(fc= 'PR', an='AA')
+                mode_map = dict(fc='PR', an='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
-                dico["nmatm"]  = str(self.freq_forcage)
+                dico["nmatm"] = str(self.freq_forcage)
                 dico["codmod"] = self.codmod
                 dico["imodel"] = str(self.numod)
                 dico["kmodel"] = self.config_name

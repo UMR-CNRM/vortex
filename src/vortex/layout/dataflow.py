@@ -52,7 +52,7 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal', 'coherentgroup' ]
+section_args = ['role', 'alternate', 'intent', 'fatal', 'coherentgroup']
 
 
 def stripargs_section(**kw):
@@ -62,7 +62,7 @@ def stripargs_section(**kw):
     ( section_options, other_options ).
     """
     opts = dict()
-    for opt in [ x for x in section_args if x in kw ]:
+    for opt in [x for x in section_args if x in kw]:
         opts[opt] = kw.pop(opt)
     return (opts, kw)
 
@@ -121,7 +121,7 @@ class Section(object):
         self._coherentgroups = set(self._coherentgroups.split(',')
                                    if self._coherentgroups else [])
         self._coherentgroups_opened = {g: True for g in self._coherentgroups}
-        self.stages = [ kw.pop('stage', 'load') ]
+        self.stages = [kw.pop('stage', 'load'), ]
         self.__dict__.update(kw)
         # If alternate is specified role have to be removed
         if self._alternate:
@@ -388,7 +388,7 @@ class Sequence(observer.Observer):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
         if type(rhset) != list:
-            rhset = [ rhset ]
+            rhset = [rhset, ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
         for rh in rhset:
@@ -447,7 +447,7 @@ class Sequence(observer.Observer):
             )]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
-            inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
+            inkind = [x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind)]
         return inrole or inkind
 
     def inputs(self):
@@ -473,7 +473,7 @@ class Sequence(observer.Observer):
         """
         return self._section_list_filter(
             [x for x in self.inputs()
-             if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()
+             if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()
              ],
             **kw)
 

@@ -101,7 +101,7 @@ class TwistedBrokenFTPFactory(FTPFactory):
 class TestFTPServer(object):
 
     def __init__(self, port, serverroot, user, password,
-                 pass_seq = (), retr_seq = (), stor_seq = ()):
+                 pass_seq=(), retr_seq=(), stor_seq=()):
         self.port = port
         self.serverroot = serverroot
         self.user = user

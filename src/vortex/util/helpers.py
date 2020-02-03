@@ -159,7 +159,7 @@ def merge_contents(*kargs):
     return newcontent
 
 
-def mix_list(list_elements, date = None, member = None):
+def mix_list(list_elements, date=None, member=None):
     """Mix a list using a determined seed, if member and/or date are present."""
     dateinfo = date if date is None else Date(date)
     memberinfo = member if member is None else int(member)

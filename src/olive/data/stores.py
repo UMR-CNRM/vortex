@@ -178,7 +178,7 @@ class OliveArchiveStore(ArchiveStore):
         """Remap actual remote path to distant store path for read-only actions."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ self.system.path.sep, self.storehead ]
+        xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
 
     def remap_write(self, remote, options):
@@ -523,4 +523,4 @@ class OpStore(MultiStore):
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
         prefix, u_multi, u_region = self.netloc.split('.')
-        return ( prefix + '.cache.fr', prefix + '.archive.fr' )
+        return (prefix + '.cache.fr', prefix + '.archive.fr')

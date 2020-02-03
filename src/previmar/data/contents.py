@@ -26,7 +26,8 @@ class SurgeTemplate(AlmostListContent):
             if m:
                 dico_in = m.groupdict()
                 if dico_in['key'] in dictkeyvalue.keys():
-                    line = "{0:11s}'{1:6s}' = {2:s}\n".format(dictkeyvalue[dico_in['key']], dico_in['key'], dico_in['info'])
+                    line = "{0:11s}'{1:6s}' = {2:s}\n".format(dictkeyvalue[dico_in['key']],
+                                                              dico_in['key'], dico_in['info'])
             self._data.append(line)
 
 

@@ -87,5 +87,6 @@ class TestVarbcFile(unittest.TestCase):
         with self.assertRaises(ValueError):
             varbcheaders.VarbcHeadersFile(['VARBC_cycle.version006', 'blop'])
 
+
 if __name__ == '__main__':
     unittest.main()

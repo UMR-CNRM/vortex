@@ -9,7 +9,7 @@ from vortex.data.flow import GeoFlowResource
 from vortex.syntax import stddeco
 
 #: Automatic export of  class
-__all__ = [ ]
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 

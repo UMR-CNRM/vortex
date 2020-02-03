@@ -122,12 +122,12 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
         return dict(
-            name       = (self.xpname + 'xxxx')[:4].upper(),
-            conf       = self.conf,
-            timescheme = self.timescheme,
-            timestep   = self.timestep,
-            fcterm     = self.fcterm,
-            fcunit     = self.fcunit,
+            name=(self.xpname + 'xxxx')[:4].upper(),
+            conf=self.conf,
+            timescheme=self.timescheme,
+            timestep=self.timestep,
+            fcterm=self.fcterm,
+            fcunit=self.fcunit,
         )
 
     def naming_convention(self, kind, rh, actualfmt=None, **kwargs):
@@ -215,8 +215,8 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
         self.system.remove(target_name)
 
         logger.info("Linking in the %s file (%s) for month %s.", convkind, target_name, month)
-        rc = self.setlink(initrole = inputrole, initkind = inputkind, inittest = checker,
-                          initname = target_name)
+        rc = self.setlink(initrole=inputrole, initkind=inputkind, inittest=checker,
+                          initname=target_name)
         return target_name if rc else None
 
     def all_localclim_fixer(self, rh, month, convkind='targetclim', actualfmt=None,
@@ -243,7 +243,7 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
         dealtwith = list()
 
         for tclimrh in [x.rh for x in self.context.sequence.effective_inputs(
-                role = inputrole, kind = inputkind,
+                role=inputrole, kind=inputkind,
         ) if x.rh.resource.month == month]:
             thisclim = tclimrh.container.localpath()
             thisname = nc(area=tclimrh.resource.geometry.area)

@@ -12,7 +12,7 @@ from bronx.fancies import loggers
 from vortex import sessions
 from vortex.util import config
 
-#: No automatic export
+# : No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
@@ -24,25 +24,25 @@ class ServerSyncTool(footprints.FootprintBase):
     main process and the server.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('serversynctool',)
     _footprint = dict(
-        info = 'Abstract Server Synchronisation Tool',
-        attr = dict(
-            method = dict(
+        info='Abstract Server Synchronisation Tool',
+        attr=dict(
+            method=dict(
             ),
-            medium = dict(
-                optional    = True,
+            medium=dict(
+                optional=True,
             ),
-            raiseonexit = dict(
-                type        = bool,
-                optional    = True,
-                default     = True
+            raiseonexit=dict(
+                type=bool,
+                optional=True,
+                default=True
             ),
-            checkinterval = dict(
-                type        = int,
-                optional    = True,
-                default     = 10,
+            checkinterval=dict(
+                type=int,
+                optional=True,
+                default=10,
             ),
         )
     )
@@ -82,17 +82,17 @@ class ServerSyncSimpleSocket(ServerSyncTool):
     """
 
     _footprint = dict(
-        info = 'Server Synchronisation Tool that uses a Socket',
-        attr = dict(
-            method = dict(
-                values      = ['simple_socket'],
+        info='Server Synchronisation Tool that uses a Socket',
+        attr=dict(
+            method=dict(
+                values=['simple_socket'],
             ),
-            medium = dict(
-                optional    = False,
+            medium=dict(
+                optional=False,
             ),
-            tplname = dict(
-                optional    = True,
-                default     = '@servsync-simplesocket.tpl',
+            tplname=dict(
+                optional=True,
+                default='@servsync-simplesocket.tpl',
             ),
         )
     )
@@ -111,8 +111,8 @@ class ServerSyncSimpleSocket(ServerSyncTool):
         tpl = config.load_template(t, self.tplname)
         with io.open(self.medium, 'wt') as fd:
             fd.write(tpl.substitute(
-                python  = sys.executable,
-                address = self._socket.getsockname(),
+                python=sys.executable,
+                address=self._socket.getsockname(),
             ))
         t.sh.chmod(self.medium, 0o555)
 

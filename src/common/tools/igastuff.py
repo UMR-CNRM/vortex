@@ -11,61 +11,61 @@ __all__ = []
 
 #: Specific tricks for base naming in iga fuzzy namespace.
 fuzzystr = dict(
-    histfix = dict(
-        historic = dict(
-            pearp = 'prev', arome = 'AROM', arpege = 'arpe', arp_court = 'arpe',
-            aearp='arpe', aladin = 'ALAD', surfex = 'SURF'
+    histfix=dict(
+        historic=dict(
+            pearp='prev', arome='AROM', arpege='arpe', arp_court='arpe',
+            aearp='arpe', aladin='ALAD', surfex='SURF'
         )
     ),
-    prefix = dict(
+    prefix=dict(
         # LFM 2016/12/30: It was dble='PA' but apparently it's wrong. No idea why...
-        gridpoint = dict( oper = 'PE', dble = 'PE', mirr='PE', hycom_grb='vent' ),
-        historic = dict( hycom='s_init0_', mfwam='BLS_', mfwam_BLS='BLS_', mfwam_LAW='LAW_' ),
-        analysis = dict( hycom='s_init0_', mfwam='LAW_')
+        gridpoint=dict(oper='PE', dble='PE', mirr='PE', hycom_grb='vent'),
+        historic=dict(hycom='s_init0_', mfwam='BLS_', mfwam_BLS='BLS_', mfwam_LAW='LAW_'),
+        analysis=dict(hycom='s_init0_', mfwam='LAW_')
     ),
-    suffix = dict(
-        bgstderr = dict( input = 'in', output = 'out' ),
-        analysis = dict( hycom_hycom = '.gz', hycom_surcotes = '.gz', hycom_surcotes_oi = '.gz'),
-        historic=dict( surfex_arpege='.sfx', surfex_aearp='.sfx',
-                       hycom_hycom = '.gz', hycom_surcotes = '.gz', hycom_surcotes_oi = '.gz'),
-        gridpoint=dict( hycom_grb= 'grb' ),
+    suffix=dict(
+        bgstderr=dict(input='in', output='out'),
+        analysis=dict(hycom_hycom='.gz', hycom_surcotes='.gz', hycom_surcotes_oi='.gz'),
+        historic=dict(surfex_arpege='.sfx', surfex_aearp='.sfx',
+                      hycom_hycom='.gz', hycom_surcotes='.gz', hycom_surcotes_oi='.gz'),
+        gridpoint=dict(hycom_grb='grb'),
     ),
-    term0003 = dict(
-        bgstderr = dict( input = '', output = '_assim' ),
+    term0003=dict(
+        bgstderr=dict(input='', output='_assim'),
     ),
-    term0009 = dict(
-        bgstderr = dict( input = '', output = '_production' ),
+    term0009=dict(
+        bgstderr=dict(input='', output='_production'),
     ),
-    term0012 = dict(
-        bgstderr = dict( input = '_production_dsbscr', output = '_production_dsbscr' ),
+    term0012=dict(
+        bgstderr=dict(input='_production_dsbscr', output='_production_dsbscr'),
     ),
-    varbcarpege = dict(
-        varbc = dict( input = '.cycle_arp', output = '.cycle' ),
+    varbcarpege=dict(
+        varbc=dict(input='.cycle_arp', output='.cycle'),
     ),
-    varbcaladin = dict(
-        varbc = dict( input = '.cycle_alad', output = '.cycle' ),
+    varbcaladin=dict(
+        varbc=dict(input='.cycle_alad', output='.cycle'),
     ),
-    varbcarome = dict(
-        varbc = dict( input = '.cycle_aro', output = '.cycle' ),
+    varbcarome=dict(
+        varbc=dict(input='.cycle_aro', output='.cycle'),
     ),
-    surf0000 = dict(
-        histsurf = dict( input = 'INIT_SURF', output = 'INIT_SURF' ),
-        historic = dict( input = 'INIT_SURF', output = 'INIT_SURF' ),
+    surf0000=dict(
+        histsurf=dict(input='INIT_SURF', output='INIT_SURF'),
+        historic=dict(input='INIT_SURF', output='INIT_SURF'),
     ),
-    surf0003 = dict(
-        histsurf = dict( input = 'PREP', output = 'AROMOUT_.0003' ),
-        historic = dict( input = 'PREP', output = 'AROMOUT_.0003' ),
+    surf0003=dict(
+        histsurf=dict(input='PREP', output='AROMOUT_.0003'),
+        historic=dict(input='PREP', output='AROMOUT_.0003'),
     ),
-    surf0006 = dict(
-        histsurf = dict( input = 'PREP', output = 'AROMOUT_.0006' ),
-        historic = dict( input = 'PREP', output = 'AROMOUT_.0006' ),
+    surf0006=dict(
+        histsurf=dict(input='PREP', output='AROMOUT_.0006'),
+        historic=dict(input='PREP', output='AROMOUT_.0006'),
     ),
 )
 
 arpcourt_vconf = ('courtfr', 'frcourt', 'court')
 
 
-def fuzzyname(entry, realkind, key, default =None):
+def fuzzyname(entry, realkind, key, default=None):
     """Returns any non-standard naming convention in the operational namespace."""
     try:
         return fuzzystr[entry][realkind][key]
@@ -191,8 +191,7 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                          'assmp2': 'mfwamassmp2',
                          'assms1': 'mfwamassms1',
                          'assms2': 'mfwamassms2',
-                         'angola01': 'mfwamangola',
-                          },
+                         'angola01': 'mfwamangola', },
                }
 
 
@@ -248,6 +247,5 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                          'assmp2': 'mfwamassmp2',
                          'assms1': 'mfwamassms1',
                          'assms2': 'mfwamassms2',
-                         'angola01': 'mfwamangola',
-                          },
+                         'angola01': 'mfwamangola', },
                }

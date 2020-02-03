@@ -1125,7 +1125,7 @@ class Ssh(object):
         return source, destination
 
     def scpput(self, source, destination, scpopts=''):
-        """Send ``source`` to ``destination``.
+        r"""Send ``source`` to ``destination``.
 
         - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
         - ``destination`` is the remote name, unless it ends with '/', in
@@ -1175,7 +1175,7 @@ class Ssh(object):
         return rc
 
     def scpget(self, source, destination, scpopts='', isadir=False):
-        """Send ``source`` to ``destination``.
+        r"""Send ``source`` to ``destination``.
 
         - ``source`` is the remote name, not a pattern (no '\*.grib').
         - ``destination`` is a single file or a directory, unless it ends with
@@ -1513,13 +1513,16 @@ class AssistedSsh(Ssh):
         >>> print(ssh3, ssh3.remote)  # Pick one randomly
         'beaufixlogin0'
         >>> ssh3.execute("false")
-        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:00][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=2/3)...
-        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:01][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=3/3)...
-        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (3) was reached...
         False
@@ -1528,7 +1531,8 @@ class AssistedSsh(Ssh):
 
         >>> ssh4 = AssistedSsh(sh, 'network', virtualnode=True,  fatal=True)
         >>> ssh4.execute("false")
-        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (1) was reached...
         RuntimeError: Could not execute the SSH command.

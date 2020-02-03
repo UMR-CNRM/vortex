@@ -7,7 +7,7 @@ import six
 
 import functools
 
-__all__ = [ 'top' ]
+__all__ = ['top', ]
 
 
 @functools.total_ordering
@@ -15,7 +15,7 @@ class PriorityLevel(object):
     """Single level to be used inside footprints."""
 
     def __init__(self, tagname, pset):
-        self._tag  = tagname
+        self._tag = tagname
         if isinstance(pset, PrioritySet):
             self._pset = pset
         else:
@@ -151,7 +151,7 @@ class PrioritySet(object):
     def restore(self, tag):
         """Restore previously frozen defaults under the specified ``tag``."""
         self._levels = self._freeze[tag.lower()][:]
-        for levelname in [ x for x in self._levels if x not in self.__dict__ ]:
+        for levelname in [x for x in self._levels if x not in self.__dict__]:
             self.__dict__[levelname] = PriorityLevel(levelname, pset=self)
 
     def extend(self, *levels):
@@ -159,7 +159,7 @@ class PrioritySet(object):
         Extends the set of logical names for priorities.
         Existing levels are reranked at top priority as well as new one.
         """
-        for levelname in [ x.upper() for x in levels ]:
+        for levelname in [x.upper() for x in levels]:
             while levelname in self._levels:
                 self._levels.remove(levelname)
             self._levels.append(levelname)

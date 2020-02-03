@@ -138,7 +138,7 @@ class TestDriver(object):
                 tstack = TestsStack()
                 try:
                     tstack.load_test(todo)
-                except:  # @IgnorePep8
+                except Exception:
                     logger.error('Exception raised while processing TestStack# %d', i)
                     logger.error('TestStack definition was:\n%s', pprint.pformat(todo))
                     raise
@@ -329,7 +329,7 @@ class SingleTest(object):
         tmprh = self.rh
         try:
             self.results.append(default, 'location', tmprh.location())
-        except:  # @IgnorePep8
+        except Exception:
             logger.error('Location error on ResourceHandler:')
             tmprh.quickview()
             raise

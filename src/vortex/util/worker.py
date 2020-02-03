@@ -49,9 +49,9 @@ class VortexWorker(object):
     def __init__(self, modules=tuple(), verbose=False, logger=None,
                  logmap=('debug', 'info', 'warning'),
                  logmsg='Vortex context log gateway'):
-        self._logger  = logger
-        self._logmap  = logmap
-        self._logmsg  = logmsg
+        self._logger = logger
+        self._logmap = logmap
+        self._logmsg = logmsg
         self._modules = modules
         self.verbose = verbose
         self.rc = True

@@ -264,7 +264,7 @@ class SurfaceArp(AbstractSumoForcingWithMeteo):
             rhlists.sort(key=lambda rh: rh.resource.date + rh.resource.term)
 
         # loop on domains
-        for currentdom, currentrhs  in domains.items():
+        for currentdom, currentrhs in domains.items():
             sh.title('Loop on domain {0:s} '.format(currentdom))
             actualdate = currentrhs[0].resource.date + currentrhs[0].resource.term
             logger.info("{:s}: actualdate is {!s}.".format(currentdom, actualdate))
@@ -361,6 +361,6 @@ class Mktopbd(BlindRun):
     def spawn_stdin_options(self):
         """Build the dictionnary to provide arguments to the binary."""
         return dict(
-            fcterm   = self.fcterm,
-            basedate = self.basedate,
+            fcterm=self.fcterm,
+            basedate=self.basedate,
         )

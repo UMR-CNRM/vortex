@@ -122,7 +122,7 @@ class SeaIceAnalysis(IFSParallel):
         super(SeaIceAnalysis, self).prepare(rh, opts)
 
         namrh_list = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                            kind='namelist',)]
+                                                                           kind='namelist',)]
 
         if not namrh_list:
             logger.critical('No namelist was found.')
@@ -164,7 +164,7 @@ class Canari(IFSParallel, odb.OdbComponentDecoMixin):
         super(Canari, self).prepare(rh, opts)
 
         # Looking for input observations
-        obsodb = [ x for x in self.lookupodb() if x.rh.resource.part.startswith('surf') ]
+        obsodb = [x for x in self.lookupodb() if x.rh.resource.part.startswith('surf')]
         if not obsodb:
             raise ValueError('No surface obsdata for canari')
         self.odb_date_and_layout_from_sections(obsodb)
@@ -186,9 +186,9 @@ class Canari(IFSParallel, odb.OdbComponentDecoMixin):
         self.odb.create_poolmask(self.virtualdb, cma_path)
         self.odb.shuffle_setup(self.slots, mergedirect=True, ccmadirect=False)
         self.env.update(
-            ODB_POOLMASKING          = 1,
-            ODB_PACKING              = -1,
-            BASETIME                 = self.date.ymdh,
+            ODB_POOLMASKING=1,
+            ODB_PACKING=-1,
+            BASETIME=self.date.ymdh,
         )
 
         # Fix the input DB intent
@@ -274,8 +274,8 @@ class IFSODBCCMA(IFSParallel, odb.OdbComponentDecoMixin):
         sh = self.system
 
         # Looking for input observations
-        allodb  = self.lookupodb()
-        allccma = [ x for x in allodb if x.rh.resource.layout.lower() == 'ccma' ]
+        allodb = self.lookupodb()
+        allccma = [x for x in allodb if x.rh.resource.layout.lower() == 'ccma']
         if allccma:
             if len(allccma) > 1:
                 logger.error('Multiple CCMA databases detected: only the first one is taken into account')
@@ -427,12 +427,12 @@ class SstGrb2Ascii(BlindRun):
     def spawn_command_options(self):
         """Build the dictionnary to provide arguments to the binary."""
         return dict(
-            year = self.date.year,
-            month = self.date.month,
-            day = self.date.day,
-            hour = self.date.hour,
-            lon = self.nlon,
-            lat = self.nlat,
+            year=self.date.year,
+            month=self.date.month,
+            day=self.date.day,
+            hour=self.date.hour,
+            lon=self.nlon,
+            lat=self.nlat,
         )
 
 
@@ -487,8 +487,8 @@ class IceNetCDF2Ascii(BlindRun):
     def spawn_command_options(self):
         """Build the dictionnary to provide arguments to the binary."""
         return dict(
-            file_in_hn = self.input_file_hn,
-            file_in_hs = self.input_file_hs,
-            param = self.param,
-            file_out = self.output_file
+            file_in_hn=self.input_file_hn,
+            file_in_hs=self.input_file_hs,
+            param=self.param,
+            file_out=self.output_file
         )

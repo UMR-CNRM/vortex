@@ -216,12 +216,12 @@ def main():
     intro = Sherlock()
 
     report = dict(
-        mkrst = list(),
-        todo = list(),
-        quid = list(),
-        nope = list(),
-        dstr = list(),
-        miss = list(),
+        mkrst=list(),
+        todo=list(),
+        quid=list(),
+        nope=list(),
+        dstr=list(),
+        miss=list(),
     )
 
     for modulename, loaded in sh.vortex_loaded_modules():

@@ -97,7 +97,7 @@ class NamelistContent(AlmostDictContent):
     def slurp(self, container):
         """Get data from the ``container`` namelist."""
         if not self._parser:
-                self._parser = NamelistParser(macros=self._declaredmacros)
+            self._parser = NamelistParser(macros=self._declaredmacros)
         with container.preferred_decoding(byte=False):
             container.rewind()
             try:
@@ -183,7 +183,7 @@ class Namelist(ModelResource):
                 dateNsource = s.split(':')
                 if dateNsource[0]:
                     if len(dateNsource) == 2:
-                        date = Date(dateNsource[1], year = self.date.year)
+                        date = Date(dateNsource[1], year=self.date.year)
                     else:
                         date = Date(self.date.year, 1, 1)
                     if date not in datedSource.keys():
@@ -316,7 +316,7 @@ class NamelistTerm(Namelist):
             s = r.search(val)
             if s:
                 fixed = 1
-                ( dirpath, base ) = (s.group(1), s.group(2))
+                (dirpath, base) = (s.group(1), s.group(2))
                 if dirpath is None:
                     dirpath = ''
                 ext = ''
@@ -354,7 +354,7 @@ class NamelistSelect(NamelistTerm):
             info = 'Select namelist for fullpos ',
             attr = dict(
                 kind = dict(
-                    values = [ 'namselect' ]
+                    values = ['namselect', ]
                 )
             )
         )
@@ -382,7 +382,7 @@ class NamelistFullPos(NamelistTerm):
             info = 'Namelist for offline fullpos ',
             attr = dict(
                 kind = dict(
-                    values = [ 'namelistfp' ]
+                    values = ['namelistfp', ]
                 )
             )
         )
@@ -448,7 +448,7 @@ class XXTContent(IndexedTable):
     def mapdomains(self, maxterm=None):
         """Return a map of domains associated for each term in selection namelists."""
         mapdom = dict()
-        allterms = sorted([ Time(x) for x in self.keys() ])
+        allterms = sorted([Time(x) for x in self.keys()])
         if maxterm is None:
             if allterms:
                 maxterm = allterms[-1]
@@ -459,7 +459,7 @@ class XXTContent(IndexedTable):
         if (self._cachedomains is None) or (self._cachedomains_term != maxterm):
 
             select_seen = dict()
-            for term in [ x for x in allterms if x <= maxterm ]:
+            for term in [x for x in allterms if x <= maxterm]:
                 tvalue = self.get(term.fmthm, self.get(six.text_type(term.hour), None))
                 sh = sessions.system()
                 if tvalue[0] is not None and sh.path.exists(tvalue[0]):
@@ -470,7 +470,7 @@ class XXTContent(IndexedTable):
                             xx = fortp.parse(fd.read())
                         domains = set()
                         for nb in xx.values():
-                            for domlist in [ y for x, y in nb.items() if x.startswith('CLD') ]:
+                            for domlist in [y for x, y in nb.items() if x.startswith('CLD')]:
                                 domains = domains | set(domlist.pop().split(':'))
                         select_seen[tvalue[1]] = domains
                     else:
@@ -509,7 +509,7 @@ class NamelistSelectDef(StaticResource):
                     default = '[model]',
                 ),
                 kind = dict(
-                    values = [ 'xxtdef', 'namselectdef' ]
+                    values = ['xxtdef', 'namselectdef']
                 ),
                 clscontents = dict(
                     default = XXTContent

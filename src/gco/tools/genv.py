@@ -69,15 +69,15 @@ def nicedump(**kw):
     ldump = list()
     c = contents(**kw)
     if c:
-        ldump = [ '{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
-                  for k, v in sorted(c.items()) ]
+        ldump = ['{0:s}="{1:s}"'.format(k, ' '.join(v if type(v) is list else [v]))
+                 for k, v in sorted(c.items())]
     return ldump
 
 
 def as_rawstr(cycle):
     """Return a raw string of the cycle contents."""
     thisdump = nicedump(cycle=cycle)
-    thisdump[0:0] = [ 'CYCLE_NAME="' + cycle  + '"' ]
+    thisdump[0:0] = ['CYCLE_NAME="' + cycle + '"', ]
     return "\n".join(thisdump)
 
 

@@ -330,13 +330,13 @@ class TestOopsParallel(unittest.TestCase):
                                 FakeMProvider(3)),
                         FakeSec(FakeTResource('9:00', '2019010100'),
                                 FakeMProvider(3))], )
-        self.assert_mdectect_p( [1, ], [0, 3], 1,
-                                SurfaceGuess=[FakeSec(FakeResource(), FakeProvider())],
-                                **what)
-        self.assert_mdectect_p( [], [0, 3], 0,
-                                SurfaceGuess=[FakeSec(FakeResource(), FakeMProvider(1), stage='void'),
-                                              FakeSec(FakeResource(), FakeMProvider(3)), ],
-                                **what)
+        self.assert_mdectect_p([1, ], [0, 3], 1,
+                               SurfaceGuess=[FakeSec(FakeResource(), FakeProvider())],
+                               **what)
+        self.assert_mdectect_p([], [0, 3], 0,
+                               SurfaceGuess=[FakeSec(FakeResource(), FakeMProvider(1), stage='void'),
+                                             FakeSec(FakeResource(), FakeMProvider(3)), ],
+                               **what)
         for minsize in (2, None):
             with self.assertRaises(AlgoComponentError):
                 self.assert_mdectect_p([1, ], [0, 3], minsize,

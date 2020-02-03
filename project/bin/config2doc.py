@@ -59,7 +59,7 @@ def default_section_cb(parser, section, comment, ckeys):
     maxv = max(max([len(parser.get(section, k)) for k in parser.options(section)]), 5)
     maxck = max(max([len(ckeys.get(k, None) or '') for k in parser.options(section)]), 8)
     outstr += '    ' + '=' * maxk + ' ' + '=' * maxv + ' ' + '=' * maxck + "\n"
-    outstr += '    ' + 'Key'.ljust(maxk) + ' ' + 'Value'.ljust(maxv) + ' ' + 'Comment'.ljust(maxck)  + "\n"
+    outstr += '    ' + 'Key'.ljust(maxk) + ' ' + 'Value'.ljust(maxv) + ' ' + 'Comment'.ljust(maxck) + "\n"
     outstr += '    ' + '=' * maxk + ' ' + '=' * maxv + ' ' + '=' * maxck + "\n"
 
     tablerows = list()

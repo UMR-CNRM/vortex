@@ -99,14 +99,14 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         # setup MPI compatibilite
         self.env.update(
-            I_MPI_COMPATIBILITY = 4,
+            I_MPI_COMPATIBILITY=4,
         )
 
         fcterm = self.fcterm
 
         windcandidate = [x.rh
                          for x in self.context.sequence.effective_inputs(role=re.compile('wind'),
-                                                                         kind = 'gridpoint')]
+                                                                         kind='gridpoint')]
 
         # Is there a analysis wind forcing ?
         if len(windcandidate) == 2:
@@ -163,7 +163,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcontents = namcandidate[0].rh.contents
 
         namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
-        namcontents.setmacro('CDATEF', datefinana.compact() )  # fin echeance analyse ici T0
+        namcontents.setmacro('CDATEF', datefinana.compact())   # fin echeance analyse ici T0
         namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
 
         allobs_sec = self.context.sequence.effective_inputs(role='observation',
@@ -337,7 +337,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output
                 output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
-                sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt = 'grib')
+                sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt='grib')
                 output_files.add(sh.path.join(cwd, output_file))
 
         # Deal with promised resources

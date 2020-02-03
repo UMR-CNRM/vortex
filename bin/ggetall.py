@@ -64,13 +64,13 @@ def parse_command_line():
     if not args.tourist:
         import vortex
         gl = vortex.sessions.getglove(
-            tag     = 'opid',
-            profile = 'oper'
+            tag='opid',
+            profile='oper'
         )
         vortex.sessions.get(
-            tag     = 'opview',
-            active  = True,
-            glove   = gl,
+            tag='opview',
+            active=True,
+            glove=gl,
         )
     # add cycles from -f arguments
     args.cycles = args.cycles or list()

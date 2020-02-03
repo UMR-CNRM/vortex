@@ -171,8 +171,8 @@ class FieldBundle(object):
     def read_grib(self, filename):
         """Read in a GRIB file."""
         with usepygram.epy_env_prepare(sessions.current()):
-            gribdata = footprints.proxy.dataformat(filename = filename,
-                                                   openmode = 'r', format = 'GRIB')
+            gribdata = footprints.proxy.dataformat(filename=filename,
+                                                   openmode='r', format='GRIB')
             fld = gribdata.iter_fields(get_info_as_json=(six.text_type('centre'),
                                                          six.text_type('subCentre')))
             while fld:

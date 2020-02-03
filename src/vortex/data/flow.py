@@ -3,9 +3,9 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from .resources  import Resource
+from .resources import Resource
 from .geometries import hgeometry_deco
-from .contents   import FormatAdapter
+from .contents import FormatAdapter
 
 from vortex.syntax.stdattrs import model_deco, date_deco, dateperiod_deco, cutoff_deco, term_deco
 from vortex.syntax.stddeco import namebuilding_insert

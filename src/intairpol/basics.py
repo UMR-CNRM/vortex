@@ -24,7 +24,7 @@ ALTNAMES = ('intairpol', 'airpol', 'airtools')
 
 class AirTool(footprints.FootprintBase):
 
-    _abstract  = True
+    _abstract = True
     _collector = ('airtool',)
     _footprint = dict(
         info = 'Abstract Miscellaneous Tool from the intairpol package',
@@ -116,7 +116,7 @@ class AirTool(footprints.FootprintBase):
     def actualcfg(self):
         if self._actualcfg is None:
             if self.sh.path.isdir(self.cfgpath):
-                self._actualcfg  = self.sh.path.join(self.cfgpath, self.cfgfile)
+                self._actualcfg = self.sh.path.join(self.cfgpath, self.cfgfile)
             else:
                 self._actualcfg = self.sh.abspath(self.cfgfile)
         return self._actualcfg

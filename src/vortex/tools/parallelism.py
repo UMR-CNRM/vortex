@@ -48,9 +48,9 @@ class TaylorVortexWorker(taylorism.Worker):
 
     def _vortex_shortcuts(self):
         """Setup a few shortcuts."""
-        self.ticket  = vortex.sessions.current()
+        self.ticket = vortex.sessions.current()
         self.context = self.ticket.context
-        self.system  = self.context.system
+        self.system = self.context.system
 
     def _vortex_rc_wrapup(self, rc, psi_rc):
         """Complement the return code with the ParallelSilencer recording."""

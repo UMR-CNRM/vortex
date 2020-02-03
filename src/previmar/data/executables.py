@@ -71,7 +71,7 @@ class MasterSurges(OceanographicModel):
             name_simu_arg = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
         else:
             name_simu_arg = [self.rundir] * 3
-        name_simu_arg += [six.text_type( self.num_exp ), ]
+        name_simu_arg += [six.text_type(self.num_exp), ]
         cmd = ' '.join(name_simu_arg)
         return cmd
 
@@ -110,10 +110,10 @@ class InterpolationSurges(MasterSurges):
     ]
 
     def command_line(self, **opts):
-        name_simu_arg  = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
-        name_simu_arg += [six.text_type( self.num_exp ), ]
+        name_simu_arg = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
+        name_simu_arg += [six.text_type(self.num_exp), ]
         name_simu_arg += [self.version, self.version_cible]
-        name_simu_arg += [six.text_type( self.bloc_increment ), ]
+        name_simu_arg += [six.text_type(self.bloc_increment), ]
 
         cmd = ' '.join(name_simu_arg)
         return cmd
@@ -189,7 +189,7 @@ class FiltrageGrib(Script):
                 gvar = dict(
                     default  = 'pesurcote_filtrage_grib',
                     values   = ['pesurcote_filtrage_grib', 'filtrage_grib'],
-                    remap    = {'filtrage_grib': 'pesurcote_filtrage_grib' },
+                    remap    = {'filtrage_grib': 'pesurcote_filtrage_grib'},
                 ),
             )
         )
@@ -236,7 +236,7 @@ class FusionGrib(Script):
                 gvar = dict(
                     default  = 'pesurcote_fusion_grib',
                     values   = ['pesurcote_fusion_grib', 'fusion_grib'],
-                    remap    = {'fusion_grib': 'pesurcote_fusion_grib' },
+                    remap    = {'fusion_grib': 'pesurcote_fusion_grib'},
                 ),
             )
         )
@@ -316,7 +316,7 @@ class SurScriptSurges(BlackBox):
             info = 'SurScript Surges used on double binaries execution',
             attr = dict(
                 kind = dict(
-                    values = [ 'SurScriptBinary'],
+                    values = ['SurScriptBinary', ],
                 ),
                 gvar = dict(
                     default  = '[model]_shell_select_binary',

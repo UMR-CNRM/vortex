@@ -221,7 +221,7 @@ class CostFunctions(object):
                         * zip(* [[k.iter, k.sim,
                                   str(v.j), str(v.jo), str(v.jb), str(v.jc), str(v.jq), str(v.jp), str(v.gradj)]
                                  for k, v in self.items()]),
-                        output_callback = sio.write)
+                        output_callback=sio.write)
         sio.seek(0)
         return ret + sio.read()
 

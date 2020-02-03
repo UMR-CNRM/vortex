@@ -200,9 +200,9 @@ class TestEmailServices(unittest.TestCase):
         self.port = get_email_port_number()
         self.configure_mailserver()
         self.servicedefaults = dict(
-            smtpserver = 'localhost',
-            smtpport = self.port,
-            sender = 'test@unittest.dummy',
+            smtpserver='localhost',
+            smtpport=self.port,
+            sender='test@unittest.dummy',
         )
 
     def tearDown(self):
@@ -286,9 +286,9 @@ class TestEmailServices(unittest.TestCase):
         with self.server() as messages:
             for testid in ('ascii', 'french'):
                 eserv = fpx.service(kind="sendmail",
-                                    message = _MSGS[testid],
-                                    subject = _SUBJECTS[testid],
-                                    to = 'queue',
+                                    message=_MSGS[testid],
+                                    subject=_SUBJECTS[testid],
+                                    to='queue',
                                     ** self.servicedefaults)
                 eserv()
                 self.assertMessage(messages, _REFS[testid])
@@ -297,10 +297,10 @@ class TestEmailServices(unittest.TestCase):
                     tmpfh.write(_MSGS[testid].encode(_INPUTMSG_ENCODING))
                     tmpfh.flush()
                     eserv = fpx.service(kind="sendmail",
-                                        filename = tmpfh.name,
-                                        inputs_charset = _INPUTMSG_ENCODING,
-                                        subject = _SUBJECTS[testid],
-                                        to = 'queue',
+                                        filename=tmpfh.name,
+                                        inputs_charset=_INPUTMSG_ENCODING,
+                                        subject=_SUBJECTS[testid],
+                                        to='queue',
                                         ** self.servicedefaults)
                     eserv()
                     self.assertMessage(messages, _REFS[testid])
@@ -309,10 +309,10 @@ class TestEmailServices(unittest.TestCase):
                     tmpfh.write(_BYTES2ATTACH)
                     tmpfh.flush()
                     eserv = fpx.service(kind="sendmail",
-                                        message = _MSGS[testid],
-                                        subject = _SUBJECTS[testid],
-                                        attachments = [tmpfh.name, ],
-                                        to = 'queue',
+                                        message=_MSGS[testid],
+                                        subject=_SUBJECTS[testid],
+                                        attachments=[tmpfh.name, ],
+                                        to='queue',
                                         ** self.servicedefaults)
                     eserv()
                     self.assertMessagePlusAttach(messages, _REFS2[testid], tmpfh.name, _BYTES2ATTACH)
@@ -325,7 +325,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
-                                inputs_charset = 'utf-8',
+                                inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'
@@ -340,7 +340,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
-                                inputs_charset = 'utf-8',
+                                inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'

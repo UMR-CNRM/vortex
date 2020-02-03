@@ -25,7 +25,7 @@ class MpiAuto(mpitools.MpiTool):
     _footprint = dict(
         attr = dict(
             mpiname = dict(
-                values = [ 'mpiauto' ],
+                values = ['mpiauto', ],
             ),
             mpiopts = dict(
                 default = None
@@ -139,7 +139,7 @@ class MpiAutoDDT(MpiAuto):
     _footprint = dict(
         attr = dict(
             mpiname = dict(
-                values = [ 'mpiauto-ddt' ],
+                values = ['mpiauto-ddt', ],
             ),
         )
     )
@@ -194,7 +194,7 @@ def arpifs_commons_binarydeco(cls):
             namw = True
         if 'NAMPAR1' in namcontents:
             np1 = namcontents['NAMPAR1']
-            for nstr in [ x for x in ('NSTRIN', 'NSTROUT') if x in np1 ]:
+            for nstr in [x for x in ('NSTRIN', 'NSTROUT') if x in np1]:
                 if isinstance(np1[nstr], (int, float)) and np1[nstr] > self.nprocs:
                     logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
                     np1[nstr] = self.nprocs
@@ -296,23 +296,23 @@ class MpiNWPIO(mpitools.MpiBinaryIOServer):
 
         namio.nproc_io = self.nprocs
 
-        if 'VORTEX_IOSERVER_METHOD'   in self.env:
-            namio.nio_serv_method      = self.env.VORTEX_IOSERVER_METHOD
+        if 'VORTEX_IOSERVER_METHOD' in self.env:
+            namio.nio_serv_method = self.env.VORTEX_IOSERVER_METHOD
 
-        if 'VORTEX_IOSERVER_BUFMAX'   in self.env:
+        if 'VORTEX_IOSERVER_BUFMAX' in self.env:
             namio.nio_serv_buf_maxsize = self.env.VORTEX_IOSERVER_BUFMAX
 
         if 'VORTEX_IOSERVER_MLSERVER' in self.env:
-            namio.nmsg_level_server    = self.env.VORTEX_IOSERVER_MLSERVER
+            namio.nmsg_level_server = self.env.VORTEX_IOSERVER_MLSERVER
 
         if 'VORTEX_IOSERVER_MLCLIENT' in self.env:
-            namio.nmsg_level_client    = self.env.VORTEX_IOSERVER_MLCLIENT
+            namio.nmsg_level_client = self.env.VORTEX_IOSERVER_MLCLIENT
 
-        if 'VORTEX_IOSERVER_PROCESS'  in self.env:
-            namio.nprocess_level       = self.env.VORTEX_IOSERVER_PROCESS
+        if 'VORTEX_IOSERVER_PROCESS' in self.env:
+            namio.nprocess_level = self.env.VORTEX_IOSERVER_PROCESS
 
         if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
-            namio.pioprocr_MDL         = self.env.VORTEX_IOSERVER_PIOMODEL
+            namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
 
         self.system.subtitle('Parallel io namelist')
         print(namio.dumps())

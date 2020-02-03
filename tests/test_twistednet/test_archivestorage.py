@@ -71,10 +71,10 @@ class TestArchiveStorage(unittest.TestCase):
 
     def archive(self):
         self.sh.touch('void_config_file.ini')
-        return fpx.archive(kind = 'std',
+        return fpx.archive(kind='std',
                            storage='localhost:{:d}'.format(self.port),
-                           tube = 'ftp',
-                           inifile = 'void_config_file.ini')
+                           tube='ftp',
+                           inifile='void_config_file.ini')
 
     def test_archive_storage(self):
         with self.server():
@@ -127,10 +127,10 @@ class TestArchiveStorage(unittest.TestCase):
                     fht.seek(0)
                     fht.flush()
                     self.assertTrue(st.insert('some/test/filecomp', fht,
-                                              compressionpipeline = cpipe))
+                                              compressionpipeline=cpipe))
                 self.assertTrue(st.retrieve('some/test/filecomp.gz', 'testgzip1'))
                 with gzip.GzipFile(filename='testgzip1', mode='rb') as fhgz:
                     self.assertEqual(fhgz.read(), b'Coucou_Very_Very_Long')
                 self.assertTrue(st.retrieve('some/test/filecomp', 'testgzip2',
-                                            compressionpipeline = cpipe))
+                                            compressionpipeline=cpipe))
                 self.assertFile('testgzip2', b'Coucou_Very_Very_Long')

@@ -77,9 +77,9 @@ def _olive_jobout_sizecontrol(sh, stepfile, directory=None, extrasuffix=''):
                                    '@olive-swapp-file2big.tpl')
         with io.open(fullstepfile + '.oversized' + extrasuffix, 'w') as fd:
             fd.write(tpl.substitute(
-                filename = fullstepfile + extrasuffix,
-                mysize = '{:.1f}'.format(mysize / 1024. / 1024.),
-                sizelimit = '{:.1f}'.format(STEPFILE_MAX_SIZE / 1024. / 1024.))
+                filename=fullstepfile + extrasuffix,
+                mysize='{:.1f}'.format(mysize / 1024. / 1024.),
+                sizelimit='{:.1f}'.format(STEPFILE_MAX_SIZE / 1024. / 1024.))
             )
         return stepfile + '.oversized'
     else:
@@ -103,7 +103,7 @@ def olive_jobout(sh, env, output, localout=None, mode='socket'):
             [_olive_jobout_sizecontrol(sh, x, extrasuffix='.out')
              for x in sh.ls(depot + '/step.[0-9][0-9]')
              if (sh.path.exists(x + '.done') and
-                 int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP)) ]
+                 int(re.search(r'\.(\d+)$', x).group(1)) < int(env.MTOOL_STEP))]
         )
     else:
         localout = _olive_jobout_sizecontrol(sh, localout, directory='~')

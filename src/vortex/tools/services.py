@@ -41,7 +41,7 @@ class Service(footprints.FootprintBase):
     Abstract base class for services.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('service',)
     _footprint = dict(
         info = 'Abstract services class',
@@ -191,9 +191,9 @@ class MailService(Service):
             from email.mime.image import MIMEImage
             from email.mime.text import MIMEText
             self._mimemap = dict(
-                text  = MIMEText,
-                image = MIMEImage,
-                audio = MIMEAudio
+                text=MIMEText,
+                image=MIMEImage,
+                audio=MIMEAudio
             )
         finally:
             return self._mimemap
@@ -489,16 +489,16 @@ class JeevesService(Service):
             for arg in args:
                 data.update(arg)
             fulltalk = dict(
-                user = self.juser,
-                jtag = self.sh.path.join(self.jpath, self.jfile),
-                todo = self.todo,
-                mail = data.pop('mail', self.glove.email),
-                apps = data.pop('apps', (self.glove.vapp,)),
-                conf = data.pop('conf', (self.glove.vconf,)),
-                task = self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),
+                user=self.juser,
+                jtag=self.sh.path.join(self.jpath, self.jfile),
+                todo=self.todo,
+                mail=data.pop('mail', self.glove.email),
+                apps=data.pop('apps', (self.glove.vapp,)),
+                conf=data.pop('conf', (self.glove.vconf,)),
+                task=self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),
             )
             fulltalk.update(
-                data = data,
+                data=data,
             )
             jr = bertie.ask(**fulltalk)
             return (jr.todo, jr.last)

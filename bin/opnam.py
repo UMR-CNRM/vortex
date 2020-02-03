@@ -21,10 +21,15 @@ import gco.tools.diggers
 import common
 
 from bronx.fancies.arguments import CfgMeteoArgumentParser
+from bronx.fancies.dispatch import ExtendedCmdLiner
 import bronx.fancies.multicfg
+from bronx.fancies.wrapcmd import WrapCmdLineArgs
 
-t  = vortex.ticket()
+t = vortex.ticket()
 t.setloglevel('warning')
+
+
+FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
 
 
 class OpNamArgs(CfgMeteoArgumentParser):
@@ -37,14 +42,8 @@ class OpNamArgs(CfgMeteoArgumentParser):
 
     def refine_defined_cfgroot(self):
         return dict(
-            default = t.glove.siteconf,
+            default=t.glove.siteconf,
         )
-
-
-from bronx.fancies.wrapcmd import WrapCmdLineArgs
-from bronx.fancies.dispatch import ExtendedCmdLiner
-
-FULL_OPTS = ('xdate', 'model', 'cutoff', 'term', 'notterm', 'location', 'step', 'suite', 'kind', 'namespace')
 
 
 class OpNamCmd(ExtendedCmdLiner):
@@ -98,10 +97,10 @@ class OpNamCmd(ExtendedCmdLiner):
         if opts['kind'] is None and 'select' in opts['remote']:
             opts['kind'] = 'namselect'
         if opts['kind'] is None and 'fp' in opts['remote']:
-                opts['kind'] = 'namelistfp'
+            opts['kind'] = 'namelistfp'
         if opts['kind'] is None:
             opts['kind'] = 'namelist'
-        self.stdlog(self.job.load( **opts))
+        self.stdlog(self.job.load(** opts))
 
     @WrapCmdLineArgs()
     def do_cat(self, **opts):

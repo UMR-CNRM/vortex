@@ -12,14 +12,14 @@ from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
-__all__ = [ 'Resource' ]
+__all__ = ['Resource', ]
 
 logger = loggers.getLogger(__name__)
 
 
 class Resource(footprints.FootprintBase):
 
-    _abstract  = True
+    _abstract = True
     _collector = ('resource',)
     _footprint = [
         nativefmt_deco,
@@ -51,7 +51,7 @@ class Resource(footprints.FootprintBase):
     def _str_more(self):
         """Return a string representation of meaningful attributes for formatted output."""
         d = self.footprint_as_shallow_dict()
-        for xdel in [ x for x in notinrepr if x in d ]:
+        for xdel in [x for x in notinrepr if x in d]:
             del d[xdel]
         return ' '.join(['{0:s}=\'{1!s}\''.format(k, v) for k, v in d.items()])
 

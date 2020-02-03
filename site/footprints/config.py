@@ -78,24 +78,24 @@ class FootprintSetup(getbytag.GetByTag):
                  report=ONERROR_REPORTING, lreport_len=DFLT_MAXLEN_LIGHT_REPORTING,
                  report_style=RAW_REPORTINGSTYLE, nullreport=reporting.NullReport()):
         """Initialisation of a simple footprint setup driver."""
-        self._extended    = bool(extended)
-        self.docstrings   = docstrings
-        self.shortnames   = bool(shortnames)
-        self.fatal        = bool(fatal)
-        self.report       = report
-        self.lreport_len  = lreport_len
+        self._extended = bool(extended)
+        self.docstrings = docstrings
+        self.shortnames = bool(shortnames)
+        self.fatal = bool(fatal)
+        self.report = report
+        self.lreport_len = lreport_len
         self.report_style = report_style
-        self.nullreport   = nullreport
-        self.fastmode     = bool(fastmode)
-        self.fastkeys     = tuple(fastkeys)
-        self.callback     = callback
+        self.nullreport = nullreport
+        self.fastmode = bool(fastmode)
+        self.fastkeys = tuple(fastkeys)
+        self.callback = callback
 
         if proxies is None:
             self.proxies = set()
         else:
             self.proxies = set(proxies)
 
-        self._defaults  = dictionaries.LowerCaseDict()
+        self._defaults = dictionaries.LowerCaseDict()
         if defaults is not None:
             self._defaults.update(defaults)
             logger.warning('New FootprintSetup')
@@ -112,7 +112,7 @@ class FootprintSetup(getbytag.GetByTag):
 
     def as_dict(self):
         """Return a standalone dictionary or current setup attributes."""
-        return dict([ (k.lstrip('_'), v) for k, v in self.__dict__.items() ])
+        return dict([(k.lstrip('_'), v) for k, v in self.__dict__.items()])
 
     def info(self):
         """Summary of actual settings."""

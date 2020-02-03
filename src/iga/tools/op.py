@@ -41,8 +41,8 @@ class OpJobAssistantTest(JobAssistant):
 
         opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
-            tag     = 'opid',
-            profile = opd.get('op_suite', 'oper')
+            tag='opid',
+            profile=opd.get('op_suite', 'oper')
         )
 
         print(gl.idcard())
@@ -50,12 +50,12 @@ class OpJobAssistantTest(JobAssistant):
         # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
 
-        t  = vortex.sessions.get(
-            tag     = 'opview',
-            active  = True,
-            glove   = gl,
-            topenv  = vortex.rootenv,
-            prompt  = vortex.__prompt__
+        t = vortex.sessions.get(
+            tag='opview',
+            active=True,
+            glove=gl,
+            topenv=vortex.rootenv,
+            prompt=vortex.__prompt__
         )
 
         return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
@@ -154,10 +154,10 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Current rundir <%s>', t.rundir)
 
     def _toolbox_setup(self, t, **kw):
-        super(OpJobAssistantTest, self)._toolbox_setup( t, **kw)
+        super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
         opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
-            jname = opd.get('op_jeeves', None),
+            jname=opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
             sender='admin_prod_sc@meteo.fr',
         )
@@ -192,7 +192,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
-        super(OpJobAssistantTest, self)._system_setup( t, **kw)
+        super(OpJobAssistantTest, self)._system_setup(t, **kw)
         t.sh.allow_cross_users_links = False
 
     def register_cycle(self, cycle):
@@ -441,7 +441,7 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
         max_value = int(maxvalue)
         current_value = 0
         if hasattr(rh.resource, 'term') and useterm:
-                current_value = rh.resource.term.hour
+            current_value = rh.resource.term.hour
         if sharedadvance:
             if useterm:
                 if sharedadvance.value < current_value:

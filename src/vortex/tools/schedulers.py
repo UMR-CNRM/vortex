@@ -23,7 +23,7 @@ logger = loggers.getLogger(__name__)
 class Scheduler(Service):
     """Abstract class for scheduling systems."""
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Scheduling service class',
         attr = dict(
@@ -63,7 +63,7 @@ class Scheduler(Service):
 class EcmwfLikeScheduler(Scheduler):
     """Abstract class for any ECMWF scheduling systems (SMS, Ecflow)."""
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         attr = dict(
             env_pattern = dict(
@@ -83,10 +83,10 @@ class EcmwfLikeScheduler(Scheduler):
     def conf(self, kwenv):
         """Possibly export the provided variables and return a dictionary of positioned variables."""
         if kwenv:
-            for schedvar in [ x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern) ]:
+            for schedvar in [x.upper() for x in kwenv.keys() if x.upper().startswith(self.env_pattern)]:
                 self.env[schedvar] = six.text_type(kwenv[schedvar])
         subenv = dict()
-        for schedvar in [ x for x in self.env.keys() if x.startswith(self.env_pattern) ]:
+        for schedvar in [x for x in self.env.keys() if x.startswith(self.env_pattern)]:
             subenv[schedvar] = self.env.get(schedvar)
         return subenv
 
@@ -117,7 +117,7 @@ class EcmwfLikeScheduler(Scheduler):
 
     def child(self, cmd, *options, **kwoptions):
         """Miscellaneous sms/ecflow child sub-command."""
-        rc  = None
+        rc = None
         cmd = self.cmd_rename(cmd)
         if cmd in self.muteset:
             logger.warning('%s mute command [%s]', self.kind, cmd)
@@ -182,7 +182,7 @@ class SMS(EcmwfLikeScheduler):
         self._actual_rootdir = self.rootdir
         if self._actual_rootdir is None:
             thistarget = self.sh.default_target
-            guesspath  = self.env.SMS_INSTALL_ROOT or thistarget.get('sms:rootdir')
+            guesspath = self.env.SMS_INSTALL_ROOT or thistarget.get('sms:rootdir')
             if guesspath is None:
                 logger.warning('SMS service could not guess install location [%s]', str(guesspath))
             else:

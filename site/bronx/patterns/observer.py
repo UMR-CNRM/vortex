@@ -162,7 +162,7 @@ class SecludedObserverBoard(object):
 
     def __init__(self):
         self._listen = catalog.Catalog(weak=True)
-        self._items  = catalog.Catalog(weak=True)
+        self._items = catalog.Catalog(weak=True)
 
     def __deepcopy__(self, memo):
         """No deepcopy expected, so ``self`` is returned."""

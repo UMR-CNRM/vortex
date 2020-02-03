@@ -33,10 +33,10 @@ class DataContent(object):
     _diffable = False
 
     def __init__(self, **kw):
-        self._datafmt   = None
-        self._data      = None
-        self._metadata  = ReadOnlyDict()
-        self._size      = 0
+        self._datafmt = None
+        self._data = None
+        self._metadata = ReadOnlyDict()
+        self._size = 0
         for k, v in six.iteritems(kw):
             self.__dict__['_' + k] = v
 
@@ -465,10 +465,10 @@ class FormatAdapter(DataContent):
         """
         t = sessions.current()
         t.env.delta(
-            LFI_HNDL_SPEC   = ':1',
-            DR_HOOK_SILENT  = 1,
-            DR_HOOK_NOT_MPI = 1,
-            OMP_NUM_THREADS = 1,
+            LFI_HNDL_SPEC=':1',
+            DR_HOOK_SILENT=1,
+            DR_HOOK_NOT_MPI=1,
+            OMP_NUM_THREADS=1,
         )
         return self
 
@@ -482,16 +482,16 @@ class FormatAdapter(DataContent):
         if self.datafmt:
             with self:
                 self._data = footprints.proxy.dataformat(
-                    filename       = container.abspath,
-                    openmode       = 'r',
-                    fmtdelayedopen = True,
-                    format         = container.actualfmt.upper(),
+                    filename=container.abspath,
+                    openmode='r',
+                    fmtdelayedopen=True,
+                    format=container.actualfmt.upper(),
                 )
                 # Look for a metadatareader object
                 if self._data is not None and footprints.proxy.metadatareaders is not None:
                     mreader = footprints.proxy.metadatareader(
-                        format        = container.actualfmt.upper(),
-                        _emptywarning = False,
+                        format=container.actualfmt.upper(),
+                        _emptywarning=False,
                     )
                     if mreader is not None:
                         mreader.content_init(self._data)
@@ -506,7 +506,7 @@ class MetaDataReader(footprints.FootprintBase):
     container is actually read.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('metadatareader',)
     _footprint = dict(
         info = 'Abstract MetaDataReader',

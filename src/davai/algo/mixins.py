@@ -33,10 +33,10 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         footprints.Footprint(
             info='The CrashWitness version of the Algo',
             attr=dict(
-                crash_witness = dict(
-                    type = bool,
-                    optional = False,
-                    values = [True, ]
+                crash_witness=dict(
+                    type=bool,
+                    optional=False,
+                    values=[True, ]
                 ),
             )
         ),

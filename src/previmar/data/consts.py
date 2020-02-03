@@ -36,7 +36,7 @@ class GenvUsageModelResource(GenvModelResource):
             if re.search('(_TGZ$)', self.gvar):
                 usage_key = re.sub('(_TGZ$)', ('_' + self.usage + '_TGZ').upper(), self.gvar)
             else:
-                usage_key = ( self.gvar + '_' + self.usage).upper()
+                usage_key = (self.gvar + '_' + self.usage).upper()
         else:
             usage_key = self.gvar
         return usage_key
@@ -103,7 +103,7 @@ class SurgesNativeGrid(GenvModelResource):
             info = 'Static grid forcing for a surges model and BottomFriction if variable',
             attr = dict(
                 kind = dict(
-                    values  = [ 'SurgesNativeGrid', 'SurgesForcingData', 'BottomFriction'],
+                    values  = ['SurgesNativeGrid', 'SurgesForcingData', 'BottomFriction'],
                 ),
                 gvar = dict(
                     default = '[model]_[fields]_[gdomain]_tgz',

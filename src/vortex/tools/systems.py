@@ -2407,8 +2407,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
-    # noinspection PyPep8
-    def l(self, *args):  # @IgnorePep8
+    def pyls(self, *args):
         """
         Proxy to globbing after removing any option. A bit like the
         :meth:`ls` method except that that shell's ``ls`` command is not actually
@@ -2417,7 +2416,7 @@ class OSExtended(System):
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
-        self.stderr('l', *rl)
+        self.stderr('pyls', *rl)
         return self.glob(*rl)
 
     def ldirs(self, *args):
@@ -2736,10 +2735,10 @@ class OSExtended(System):
         return path
 
 
-_python27_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python27 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('2.7.0'),
-                                        before_python = PythonSimplifiedVersion('3.4.0')
+_python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('2.7.0'),
+                                        before_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 
@@ -2772,9 +2771,9 @@ class Python27(object):
         return thisfunc
 
 
-_python34_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python34 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('3.4.0')
+_python34_fp = footprints.Footprint(info='An abstract footprint to be used with the Python34 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 

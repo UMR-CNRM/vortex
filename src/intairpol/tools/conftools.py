@@ -494,7 +494,8 @@ class MocageDomainsConfTool(ConfTool):
         """
         super(MocageDomainsConfTool, self).__init__(*kargs, **kwargs)
         if set(self.config.keys()) != set(('actives', 'domains', 'finalterms')):
-            raise MocageDomainsConfError('The config dictionary must contain "active", "domains" and "finalterm" entries')
+            raise MocageDomainsConfError('The config dictionary must contain "active", ' +
+                                         '"domains" and "finalterm" entries')
         self._actual_config = dict(domains=dict())
         for d, ddef in self.config['domains'].items():
             if 'is_like' not in ddef:
@@ -508,7 +509,8 @@ class MocageDomainsConfTool(ConfTool):
                                                  .format(ddef['is_like']))
         self._actual_config['actives'] = self._item_transform(self.config['actives'],
                                                               validcb=lambda ds: ((isinstance(ds, (list, tuple)) and
-                                                                                   all([d in self.domains for d in ds])) or
+                                                                                   all([d in self.domains
+                                                                                        for d in ds])) or
                                                                                   ds in self.domains),
                                                               validmsg='Validation error: Active domain not defined',
                                                               cast=list)
@@ -627,7 +629,7 @@ class MocageDomainsConfTool(ConfTool):
             ddef[k] = self._item_transform(ddef[k], cast=Period)
         # Deal with any steps
         for k in ('post_steps', 'restart_steps', 'stats_steps', 'atm_cpl_steps',
-                  'surf_cpl_steps', 'chem_cpl_steps' ):
+                  'surf_cpl_steps', 'chem_cpl_steps'):
             ddef[k] = self._item_transform(ddef[k],
                                            validcb=self._any_steps_validation,
                                            validmsg='any_steps should be parsable by timerangex')

@@ -36,7 +36,7 @@ with echecker:
 class _S2MWorker(VortexWorkerBlindRun):
     """This algo component is designed to run an S2M task without MPI parallelization."""
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'AlgoComponent designed to run an S2M experiment without MPI parallelization.',
         attr = dict(
@@ -105,7 +105,7 @@ class GuessWorker(_S2MWorker):
                 values = ['guess', 'intercep']
             ),
             interpreter = dict(
-                values = ['python', 'current' ]
+                values = ['python', 'current']
             ),
             reforecast = dict(
                 type     = bool,
@@ -128,7 +128,8 @@ class GuessWorker(_S2MWorker):
             self.local_spawn(list_name)
             self.postfix()
         except ExecutionError:
-            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir, self.datebegin, self.dateend)
+            rdict['rc'] = S2MExecutionError(self.progname, self.deterministic, self.subdir,
+                                            self.datebegin, self.dateend)
         finally:
             return rdict  # Note than in the other case return rdict is at the end
 
@@ -147,7 +148,7 @@ class GuessWorker(_S2MWorker):
 
 class _SafranWorker(_S2MWorker):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         attr = dict(
             datebegin = a_date,
@@ -686,7 +687,9 @@ class SytistWorker(_SafranWorker):
         self.link_in('SAPLUI5_ANA' + dates[-1].ymdh, 'SAPLUI5_ANA')
         for suffix in ['HA', 'HS', 'NA', 'TA', 'TS', 'UA', 'US', 'VA', 'VS']:
             self.link_in('SAF4D_{0:s}_{1:s}'.format(suffix, dates[-1].ymdh), 'SAF4D_{0:s}'.format(suffix))
-        rdict, go = self.check_mandatory_resources(rdict, ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh) for d in dates])
+        rdict, go = self.check_mandatory_resources(rdict,
+                                                   ['SAPLUI5'] + ['SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh)
+                                                                  for d in dates])
         if go:
             for j, d in enumerate(dates):
                 self.link_in('SAFRANE_d{0!s}_{1:s}'.format(day, d.ymdh), 'SAFRAN' + six.text_type(j + 1))
@@ -840,9 +843,11 @@ class SurfexWorker(_S2MWorker):
 
     def _surfex_task(self, rundir, thisdir, rdict):
         # ESCROC cases: each member will need to have its own namelist
-        # meteo ensemble cases: the forcing modification must be applied to all members and the namelist generation requires that
-        # the forcing generation has already be done. Therefore, preprocessing is done in the offline algo in all these cases
-        # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow to build PGD and PREP
+        # meteo ensemble cases: the forcing modification must be applied to all members and the namelist
+        # generation requires that the forcing generation has already be done. Therefore, preprocessing
+        # is done in the offline algo in all these cases
+        # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
+        # to build PGD and PREP
         namelist_ready = self.kind == 'deterministic'
         need_other_run = True
         need_other_forcing = True
@@ -910,7 +915,7 @@ class SurfexWorker(_S2MWorker):
                     if self.geometry[0] in ["alp", "pyr", "cor"]:
                         print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry[0]]
-                        liste_aspect  = infomassifs().get_list_aspect(8, ["0", "20", "40"])
+                        liste_aspect = infomassifs().get_list_aspect(8, ["0", "20", "40"])
                         self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
                         forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000,
                                          ["0", "20", "40"], liste_aspect)
@@ -1091,7 +1096,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
                         print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
-                        liste_aspect  = infomassifs().get_list_aspect(8, list_slopes)
+                        liste_aspect = infomassifs().get_list_aspect(8, list_slopes)
                         self.system.mv("FORCING.nc", "FORCING_OLD.nc")
                         forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs,
                                          0, 5000, list_slopes, liste_aspect)
@@ -1120,7 +1125,7 @@ class Guess(ParaExpresso):
         info = 'AlgoComponent that runs several executions of a guess-making script',
         attr = dict(
             kind = dict(
-                values = [ 'guess'],
+                values = ['guess'],
             ),
             interpreter = dict(
                 values = ['python', 'current']
@@ -1337,7 +1342,7 @@ class S2MReanalysis(S2MComponent):
         self._add_instructions(common_i, dict(subdir=subdirs,
                                               datebegin=list_dates_begin,
                                               dateend=list_dates_end,
-                                              deterministic= deterministic))
+                                              deterministic=deterministic))
         self._default_post_execute(rh, opts)
 
 

@@ -17,7 +17,7 @@ logger = loggers.getLogger(__name__)
 class Glove(footprints.FootprintBase):
     """Base class for GLObal Versatile Environment."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('glove',)
     _footprint = dict(
         info = 'Abstract glove',
@@ -59,13 +59,13 @@ class Glove(footprints.FootprintBase):
         logger.debug('Glove abstract %s init', self.__class__)
         super(Glove, self).__init__(*args, **kw)
         self._rmdepthmin = 3
-        self._siteroot   = None
-        self._siteconf   = None
-        self._sitedoc    = None
-        self._sitesrc    = None
-        self._ftdhost    = None
-        self._ftduser    = None
-        self._ftusers    = dict()
+        self._siteroot = None
+        self._siteconf = None
+        self._sitedoc = None
+        self._sitesrc = None
+        self._ftdhost = None
+        self._ftduser = None
+        self._ftusers = dict()
 
     @property
     def realkind(self):
@@ -132,7 +132,7 @@ class Glove(footprints.FootprintBase):
     def safedirs(self):
         """Protected paths as a list a tuples (path, depth)."""
         e = Environment(active=False)
-        return [ (e.HOME, 2), (e.TMPDIR, 1) ]
+        return [(e.HOME, 2), (e.TMPDIR, 1)]
 
     def setftuser(self, user, hostname=None):
         """Register a default username for *hostname*.

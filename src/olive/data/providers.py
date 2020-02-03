@@ -172,8 +172,8 @@ class OpArchive(Provider):
         bname = resource.basename(self.realkind)
 
         if hasattr(resource, 'model') and resource.model == 'hycom':
-            region_map = dict(atl= '_', med='_MED_', oin='_OIN_')
-            mode_map = dict(fc= 'pre', an='ana' )
+            region_map = dict(atl='_', med='_MED_', oin='_OIN_')
+            mode_map = dict(fc='pre', an='ana')
             region = region_map.get(self.vconf[:3], self.vconf[:3])
             mode = mode_map.get(self.vconf[4:][:2], self.vconf[4:][:2])
             config = self.vconf[-3:] + region + mode
@@ -237,12 +237,15 @@ class OpArchive(Provider):
                     rr = archive_suffix(resource.model, resource.cutoff,
                                         resource.date, vconf=self.vconf)
                     if getattr(self, keyattr) == 'pearp':
-                        fuzzy = '_'.join(('fc', rr, six.text_type(self.member), resource.geometry.area, resource.term.fmthour))
+                        fuzzy = '_'.join(('fc', rr, six.text_type(self.member),
+                                          resource.geometry.area, resource.term.fmthour))
                     elif getattr(self, keyattr) in ('surcotes', 'surcotes_oi'):
-                        if getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('001', resource.geometry.tag):
+                        if (getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and
+                                re.search('001', resource.geometry.tag)):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'hr', config,
                                               resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
-                        elif getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and re.search('01', resource.geometry.tag):
+                        elif (getattr(self, keyattr) == 'surcotes' and self.vconf[-3:] == 'aro' and
+                              re.search('01', resource.geometry.tag)):
                             fuzzy = '.'.join((fuzzyname('prefix', 'gridpoint', 'hycom_grb') + 'lr', config,
                                               resource.date.ymdh[4:], fuzzyname('suffix', 'gridpoint', 'hycom_grb')))
                         else:
@@ -286,15 +289,15 @@ class OpArchive(Provider):
         if self.member is not None:
             run = 'RUN' + "%d" % self.member
             if re.match(r'pearp', self.igakey) and resource.realkind == 'gridpoint':
-                    return '/'.join((self.igakey, suite, dd, rr))
+                return '/'.join((self.igakey, suite, dd, rr))
             else:
-                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run ))
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run))
         else:
             if re.match(r'arpege|arome|aearp', self.igakey):
-                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, rdir )).rstrip('/')
+                return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, rdir)).rstrip('/')
             else:
                 if re.match(r'testms1|testmp1', self.igakey):
-                    return '/'.join((self.igakey, dd, rr ))
+                    return '/'.join((self.igakey, dd, rr))
                 elif re.match(r'mocage', self.igakey):
                     return '/'.join((self.igakey, suite, dd))
                 elif re.match(r'macc', self.igakey) and re.match(r'production', rinfo['cutoff']):
@@ -302,11 +305,11 @@ class OpArchive(Provider):
                 elif re.match(r'macc', self.igakey) and re.match(r'assim', rinfo['cutoff']):
                     return '/'.join((self.igakey, suite, rinfo['cutoff'], dd))
                 elif re.match(r'surcotes|surcotes_oi', self.igakey):
-                    return '/'.join((self.igakey, suite, dd, rr )).rstrip('/')
+                    return '/'.join((self.igakey, suite, dd, rr)).rstrip('/')
                 elif re.match(r'mfwam|vagues', self.igakey):
-                    return '/'.join(('vagues', suite, self.igakey, dd )).rstrip('/')
+                    return '/'.join(('vagues', suite, self.igakey, dd)).rstrip('/')
                 else:
-                    return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr ))
+                    return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr))
 
 
 class OpArchiveCourt(OpArchive):

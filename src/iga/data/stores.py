@@ -70,7 +70,7 @@ class IgaFinder(Finder):
                 }
             ),
             rootdir = dict(
-                alias    = [ 'opdata', 'datadir' ],
+                alias    = ['opdata', 'datadir'],
                 optional = True,
                 default  = DelayedEnvValue('DATADIR'),
             ),
@@ -185,8 +185,8 @@ class SopranoStore(Store):
             local,
             self.fullpath(remote),
             # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt')
+            hostname=self.hostname(),
+            logname=remote['username'],
+            fmt=options.get('fmt')
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)

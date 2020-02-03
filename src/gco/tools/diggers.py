@@ -29,7 +29,7 @@ class Digger(footprints.FootprintBase):
     according to some contract.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('digger',)
     _footprint = dict(
         info = 'Default digger class.',
@@ -122,7 +122,7 @@ class OpDigger(Digger):
 
     def toolbox_setup(self, **kw):
         toolbox.defaults.update(
-            rootdir = kw.get('rootdir', '/chaine/mxpt001'),
+            rootdir=kw.get('rootdir', '/chaine/mxpt001'),
         )
 
     def prune_options(self, kw):
@@ -162,17 +162,21 @@ class OpDigger(Digger):
     def getrh(self, vapp, vconf, cutoff, basedate, term, location, kw):
         fp = self.cfg.info[vapp][vconf].get('resources', dict()).copy()
         fp.update(
-            incore        = True,
-            vapp          = vapp,
-            vconf         = vconf,
-            cutoff        = cutoff,
-            date          = basedate,
-            term          = term,
-            model         = vapp,
-            suite         = kw.get('suite', fp.get('suite', 'oper')),
-            kind          = kw.get('kind', fp.get('kind', 'historic')),
-            namespace     = kw.get('namespace', fp.get('namespace', self.cfg.defaults['locations'][location].get('namespace'))),
-            metadatacheck = kw.get('datacheck', fp.get('datacheck', self.cfg.defaults['locations'][location].get('datacheck'))),
+            incore=True,
+            vapp=vapp,
+            vconf=vconf,
+            cutoff=cutoff,
+            date=basedate,
+            term=term,
+            model=vapp,
+            suite=kw.get('suite', fp.get('suite', 'oper')),
+            kind=kw.get('kind', fp.get('kind', 'historic')),
+            namespace=kw.get('namespace',
+                             fp.get('namespace',
+                                    self.cfg.defaults['locations'][location].get('namespace'))),
+            metadatacheck=kw.get('datacheck',
+                                 fp.get('datacheck',
+                                        self.cfg.defaults['locations'][location].get('datacheck'))),
         )
         return toolbox.rh(**fp)
 

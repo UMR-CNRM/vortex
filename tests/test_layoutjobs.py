@@ -33,13 +33,13 @@ class TestMkjobDetect(unittest.TestCase):
         self.sh.mkdir('BLOP@leffe/arpege/4dvarfr')
         self.sh.cd('BLOP@leffe/arpege/4dvarfr')
         fullp = self.sh.pwd()
-        trdefaults = dict(appbase = fullp,
-                          target_appbase = fullp,
-                          xpid = 'BLOP@leffe',
-                          vapp = 'arpege',
-                          vconf = '4dvarfr',
-                          jobconf = self.sh.path.join(fullp, 'conf', 'arpege_4dvarfr.ini'),
-                          taskconf = '')
+        trdefaults = dict(appbase=fullp,
+                          target_appbase=fullp,
+                          xpid='BLOP@leffe',
+                          vapp='arpege',
+                          vconf='4dvarfr',
+                          jobconf=self.sh.path.join(fullp, 'conf', 'arpege_4dvarfr.ini'),
+                          taskconf='')
         for sub in ('.', 'tasks', 'jobs', 'logs'):
             with self.sh.cdcontext(sub, create=True):
                 tr_opts, auto_opts, opts = _mkjob_opts_detect_1(self.t)
@@ -47,9 +47,9 @@ class TestMkjobDetect(unittest.TestCase):
                 self.assertDictEqual(auto_opts, dict())
                 self.assertDictEqual(opts, dict())
         tr_opts, auto_opts, opts = _mkjob_opts_detect_1(self.t,
-                                                        taskconf = 'toto',
-                                                        target_appbase = 'truc',
-                                                        xpid = 'ABCD')
+                                                        taskconf='toto',
+                                                        target_appbase='truc',
+                                                        xpid='ABCD')
         trloc = dict(trdefaults)
         trloc['taskconf'] = '_toto'
         trloc['jobconf'] = self.sh.path.join(fullp, 'conf', 'arpege_4dvarfr_toto.ini')

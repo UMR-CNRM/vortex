@@ -20,7 +20,7 @@ class IO_Poll_Mocage(addons.Addon):
         info = 'Default io_poll mocage system interface',
         attr = dict(
             kind = dict(
-                values  = ['iopoll_mocage' ],
+                values  = ['iopoll_mocage', ],
             ),
             interpreter = dict(
                 values  = ['bash', 'sh'],

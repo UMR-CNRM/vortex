@@ -144,7 +144,7 @@ class GitToolboxProvider(ToolboxProvider):
         return output
 
     def _gitversion(self):
-        if re.match('\d+\.\d+\.\d+$', self._wantedversion):
+        if re.match(r'\d+\.\d+\.\d+$', self._wantedversion):
             return 'v{:s}'.format(self._wantedversion)
         else:
             return 'origin/{:s}'.format(self._wantedversion)

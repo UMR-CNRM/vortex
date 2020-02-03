@@ -93,10 +93,10 @@ class TestParallel(unittest.TestCase):
 
     def _fix_algo(self, algo):
         # That's ugly :-(
-        algo.ticket  = vortex.sessions.current()
+        algo.ticket = vortex.sessions.current()
         algo.context = algo.ticket.context
-        algo.env  = algo.ticket.env
-        algo.system  = algo.ticket.system()
+        algo.env = algo.ticket.env
+        algo.system = algo.ticket.system()
         algo.target = algo.system.default_target
         return algo
 
@@ -106,7 +106,7 @@ class TestParallel(unittest.TestCase):
 
     def assertWrapper(self, mpirankvar, binpaths,
                       tplname='@mpitools/envelope_wrapper_default.tpl',
-                      binargs = ()):
+                      binargs=()):
         with io.open('./global_envelope_wrapper.py') as fhw:
             wrapper_new = fhw.read()
         wtpl_ref = config.load_template(self.t, tplname, encoding='utf-8')

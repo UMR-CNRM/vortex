@@ -227,7 +227,7 @@ class OceanographicModel(Binary):
 
 class SurfaceModel(Binary):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Model used for the Safran-Surfex-Mepra chain.',
         attr = dict(
@@ -250,7 +250,7 @@ class SurfaceModel(Binary):
 
 class ChemistryModel(Binary):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Base class for Chemistry models.',
         attr = dict(

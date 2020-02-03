@@ -21,7 +21,7 @@ logger = loggers.getLogger(__name__)
 
 class Provider(footprints.FootprintBase):
 
-    _abstract  = True
+    _abstract = True
     _collector = ('provider',)
     _footprint = dict(
         info = 'Abstract root provider',
@@ -262,9 +262,9 @@ class Vortex(Provider):
                     ],
                     default  = Namespace('vortex.cache.fr'),
                     remap    = {
-                        'open.cache.fr'   : 'vortex.cache.fr',
-                        'open.archive.fr' : 'vortex.archive.fr',
-                        'open.multi.fr'   : 'vortex.multi.fr',
+                        'open.cache.fr': 'vortex.cache.fr',
+                        'open.archive.fr': 'vortex.archive.fr',
+                        'open.multi.fr': 'vortex.multi.fr',
                     }
                 ),
                 namebuild = dict(

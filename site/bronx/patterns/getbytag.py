@@ -117,7 +117,7 @@ class GetByTag(object):
         if tag is None:
             if args:
                 args = list(args)
-                tag  = args.pop(0)
+                tag = args.pop(0)
             else:
                 tag = cls._tag_default
         tag = cls.tag_clean(tag)

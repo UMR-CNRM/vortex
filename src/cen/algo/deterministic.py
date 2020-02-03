@@ -69,8 +69,8 @@ class Surfex_PreProcess(AlgoComponent):
             newcontent = update_surfex_namelist_object(
                 namelist.contents,
                 self.datebegin,
-                forcing = self.forcingname,
-                dateend = self.dateend
+                forcing=self.forcingname,
+                dateend=self.dateend
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
@@ -243,7 +243,7 @@ class Surfex_Parallel(Parallel):
             newcontent = update_surfex_namelist_object(
                 namelist.contents,
                 datebegin,
-                dateend = dateend,
+                dateend=dateend,
                 updateloc=False
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)

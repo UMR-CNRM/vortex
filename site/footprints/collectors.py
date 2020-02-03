@@ -123,7 +123,7 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
     def filter_higher_level(self, tag):
         """Find in current collector classes with priority level higher or equal to ``level``."""
         plevel = priorities.top.level(tag)
-        return [ cl for cl in self.items() if cl.footprint_pl() >= plevel ]
+        return [cl for cl in self.items() if cl.footprint_pl() >= plevel]
 
     def discard_higher_level(self, tag, verbose=True):
         """Discard from current collector classes with priority level higher or equal to ``level``."""
@@ -440,10 +440,10 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
                 opt = ' [optional]' if fp.optional(k) else ''
                 alist = attrmap.setdefault(k + opt, list())
                 alist.append(dict(
-                    name    = c.__name__,
-                    module  = c.__module__,
-                    values  = fp.get_values(k),
-                    outcast = fp.get_outcast(k)
+                    name=c.__name__,
+                    module=c.__module__,
+                    values=fp.get_values(k),
+                    outcast=fp.get_outcast(k)
                 ))
         return attrmap
 
@@ -458,7 +458,7 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
             print(' *', a + ':')
             for info in sorted(attrmap[a], key=lambda x: x['name']):
                 print(' ' * 4, info['name'].ljust(22), '+', info['module'])
-                for k in [ x for x in info.keys() if x not in ('name', 'module') and info[x] ]:
+                for k in [x for x in info.keys() if x not in ('name', 'module') and info[x]]:
                     print(' ' * 29, '|', k, '=',
                           str(info[k]).replace("'", '').replace('(', '').replace(')', '').strip(','))
             print()
@@ -469,7 +469,7 @@ class Collector(getbytag.GetByTag, Catalog, observer.Observer):
         collected by the current collector.
         """
         attrmap = self.build_attrmap(only=only)
-        for a in [ x.split() + [''] for x in sorted(attrmap.keys()) ]:
+        for a in [x.split() + [''] for x in sorted(attrmap.keys())]:
             print(' *', a[0].ljust(24), a[1])
 
     def get_values(self, attrname):

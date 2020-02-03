@@ -43,8 +43,8 @@ class PGDRaw(ModelGeoResource):
         nbi = super(PGDRaw, self).namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
-            cen_rawbasename = ('PGD_' + self.geometry.area + '.' +
-                               self._extension_remap.get(self.nativefmt, self.nativefmt))
+            cen_rawbasename=('PGD_' + self.geometry.area + '.' +
+                             self._extension_remap.get(self.nativefmt, self.nativefmt))
             # With the standard provider, the usual keys will be used...
         )
         return nbi

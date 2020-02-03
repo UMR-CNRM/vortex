@@ -105,11 +105,11 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     Interface to LFI commands through Perl wrappers.
     """
 
-    LFI_HNDL_SPEC   = ':1'
-    DR_HOOK_SILENT  = 1
+    LFI_HNDL_SPEC = ':1'
+    DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE   = '32M'
-    KMP_STACKSIZE   = '32M'
+    OMP_STACKSIZE = '32M'
+    KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
@@ -184,9 +184,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         kw['output'] = True
         rawout = self._spawn(cmd, **kw)
         return LFI_Status(
-            rc     = 0,
-            stdout = rawout,
-            result = [tuple(eval(x)[0]) for x in rawout if x.startswith('[')]
+            rc=0,
+            stdout=rawout,
+            result=[tuple(eval(x)[0]) for x in rawout if x.startswith('[')]
         )
 
     fa_table = lfi_table = _std_table
@@ -233,9 +233,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         trfields.unchanged = set([x[0] for x in stlist.result]) - set(trfields)
 
         return LFI_Status(
-            rc     = int(bool(fields)),
-            stdout = rawout,
-            result = trfields
+            rc=int(bool(fields)),
+            stdout=rawout,
+            result=trfields
         )
 
     fa_diff = lfi_diff = _std_diff
@@ -254,9 +254,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     def _pack_stream(self, source):
         return self._spawn_wrap('pack', [source, ],
-                                output  = False,
-                                inpipe  = True,
-                                bufsize = 8192)
+                                output=False,
+                                inpipe=True,
+                                bufsize=8192)
 
     def _packed_size(self, source):
         out = self._spawn_wrap('size', [source, ], output=True, inpipe=False)
@@ -509,9 +509,9 @@ class LFI_Tool_Py(LFI_Tool_Raw):
     def _pack_stream(self, source):
         return self._spawn(['lfi_alt_pack', '--lfi-file-in', source,
                             '--lfi-file-out', '-'],
-                           output  = False,
-                           inpipe  = True,
-                           bufsize = 8192)
+                           output=False,
+                           inpipe=True,
+                           bufsize=8192)
 
     def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""
@@ -562,14 +562,14 @@ class LFI_Tool_Py(LFI_Tool_Raw):
         self.sh.chmod(destination, 0o644)
         return rc
 
-    _cp_aspack_fsok_read  = _cp_pack_read
+    _cp_aspack_fsok_read = _cp_pack_read
     _cp_aspack_fsok_write = _cp_pack_write
-    _cp_aspack_fsko_read  = _cp_pack_read
+    _cp_aspack_fsko_read = _cp_pack_read
     _cp_aspack_fsko_write = _cp_pack_write
 
-    _cp_nopack_fsok_read  = _cp_copy_read
+    _cp_nopack_fsok_read = _cp_copy_read
     _cp_nopack_fsok_write = _cp_copy_write
-    _cp_nopack_fsko_read  = _cp_pack_read
+    _cp_nopack_fsko_read = _cp_pack_read
     _cp_nopack_fsko_write = _cp_pack_write
 
     def _multicpmethod(self, pack=False, intent='in', samefs=False):
@@ -631,11 +631,11 @@ class IO_Poll(addons.Addon):
     This addon is in charge of multi-file reshaping after IFS-ARPEGE execution.
     """
 
-    LFI_HNDL_SPEC   = ':1'
-    DR_HOOK_SILENT  = 1
+    LFI_HNDL_SPEC = ':1'
+    DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE   = '32M'
-    KMP_STACKSIZE   = '32M'
+    OMP_STACKSIZE = '32M'
+    KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(

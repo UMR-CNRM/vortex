@@ -147,7 +147,7 @@ class utDate(TestCase):
     def test_date_easter(self):
         check = {2011: 20110424, 2012: 20120408, 2013: 20130331,
                  2014: 20140420, 2015: 20150405, 2016: 20160327,
-                 2017: 20170416, 2018: 20180401, 2019: 20190421 }
+                 2017: 20170416, 2018: 20180401, 2019: 20190421}
         for y, d in check.items():
             self.assertEqual(date.Date(str(d)), date.easter(y))
 
@@ -206,10 +206,10 @@ class utDate(TestCase):
 
     def test_date_replace(self):
         args = [
-            { 'month': 12 },
-            { 'minute': 21 },
-            { 'second': 59 },
-            { 'year': 2015, 'second': 1 }
+            {'month': 12},
+            {'minute': 21},
+            {'second': 59},
+            {'year': 2015, 'second': 1}
         ]
         expected = [
             date.Date("20111231").compact(),
@@ -534,7 +534,7 @@ class utTime(TestCase):
         self.assertEqual(t.fmtdhm, '-021830')
 
         a = date.Time(48, 0)
-        b = date.Time( 0, 48 * 60)
+        b = date.Time(0, 48 * 60)
         self.assertEqual(a, b)
 
     def test_time_compute(self):

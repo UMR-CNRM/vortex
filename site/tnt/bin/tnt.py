@@ -46,12 +46,12 @@ if __name__ == '__main__':
                             type=str,
                             help='path to a file that contains a namelist delta.')
     directives.add_argument('-c',
-                        dest='check_namelist',
-                        action='store_true',
-                        help='check that the namelist is ok and do a first order sorting. \
-                              This option is equivalent to. \
-                              "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
-                        default=False)
+                            dest='check_namelist',
+                            action='store_true',
+                            help='check that the namelist is ok and do a first order sorting. \
+                                  This option is equivalent to. \
+                                  "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
+                            default=False)
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',

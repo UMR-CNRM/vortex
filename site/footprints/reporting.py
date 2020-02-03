@@ -21,11 +21,11 @@ from bronx.patterns import getbytag
 #: No automatic export
 __all__ = []
 
-REPORT_WHY_MISSING  = 'Missing value'
-REPORT_WHY_INVALID  = 'Invalid value'
-REPORT_WHY_OUTSIDE  = 'Not in values'
-REPORT_WHY_OUTCAST  = 'Outcast value'
-REPORT_WHY_RECLASS  = 'Could not reclass'
+REPORT_WHY_MISSING = 'Missing value'
+REPORT_WHY_INVALID = 'Invalid value'
+REPORT_WHY_OUTSIDE = 'Not in values'
+REPORT_WHY_OUTCAST = 'Outcast value'
+REPORT_WHY_RECLASS = 'Could not reclass'
 REPORT_WHY_SUBCLASS = 'Not a subclass'
 
 REPORT_ONLY_NOTFOUND = 'No value found'
@@ -311,7 +311,8 @@ class FootprintLog(getbytag.GetByTag):
         """
         if self.last:
             info = self.last.as_dict()
-            for k in [ x for x in info if not re.search(select, x, re.IGNORECASE) or not info[x] ]:
+            for k in [x for x in info
+                      if not re.search(select, x, re.IGNORECASE) or not info[x]]:
                 del info[k]
             return info
         else:

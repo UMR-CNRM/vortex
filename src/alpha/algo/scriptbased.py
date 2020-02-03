@@ -5,7 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies import loggers
 
-from vortex.algo.components  import Expresso
+from vortex.algo.components import Expresso
 
 #: No automatic export
 __all__ = []

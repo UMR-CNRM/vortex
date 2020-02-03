@@ -35,7 +35,8 @@ def dictmerge(d1, d2):
         >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
         >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
         >>> (dictmerge(a, b) ==
-        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}})
+        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')},
+        ...                                  'truncation': {'type': 'int', 'optional': 'False'}}})
         True
 
         >>> (dictmerge({'a':'1'}, {'b':'2'}) ==
@@ -238,7 +239,10 @@ def expand(desc):
         ... # - testfile_def_3
         ... # - testfile_a_trap
         >>> expand({'fname': r'testfile_{glob:i:\\w+}_{glob:n:\\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
-        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'}, {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'}, {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'}, {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
+        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'},
+         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'},
+         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'},
+         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
 
     Explanation: The files currently in the working directory are matched using regular
     expressions. If the filename matches, some matching parts may be re-used to fill

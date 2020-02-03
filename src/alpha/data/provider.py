@@ -8,8 +8,8 @@ import os.path
 from bronx.fancies import loggers
 
 from vortex.syntax.stdattrs import namespacefp
-from vortex.util.config     import GenericConfigParser
-from vortex.data.providers  import Provider
+from vortex.util.config import GenericConfigParser
+from vortex.data.providers import Provider
 
 #: No automatic export
 __all__ = []

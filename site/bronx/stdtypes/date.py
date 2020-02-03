@@ -173,25 +173,25 @@ if six.PY2:
 
 def mkisodate(datestr):
     """A crude attempt to reshape the iso8601 format."""
-    l = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
-    if len(l) > 4 and l[4] != '-':
-        l[4:4] = ['-', ]
-    if len(l) > 7 and l[7] != '-':
-        l[7:7] = ['-', ]
-    if len(l) > 10 and l[10] != 'T':
-        if l[10] in (' ', '-', 'H'):
-            l[10] = 'T'
+    ldate = list(re.sub(r' ?(UTC|GMT)$', '', datestr.strip()))
+    if len(ldate) > 4 and ldate[4] != '-':
+        ldate[4:4] = ['-', ]
+    if len(ldate) > 7 and ldate[7] != '-':
+        ldate[7:7] = ['-', ]
+    if len(ldate) > 10 and ldate[10] != 'T':
+        if ldate[10] in (' ', '-', 'H'):
+            ldate[10] = 'T'
         else:
-            l[10:10] = ['T', ]
-    if 10 < len(l) <= 13:
-        l.extend(['0', '0'])
-    if len(l) > 13 and l[13] != ':':
-        l[13:13] = [':', ]
-    if len(l) > 16 and l[16] != ':':
-        l[16:16] = [':', ]
-    if len(l) > 13 and l[-1] != 'Z':
-        l.append('Z')
-    return ''.join(l)
+            ldate[10:10] = ['T', ]
+    if 10 < len(ldate) <= 13:
+        ldate.extend(['0', '0'])
+    if len(ldate) > 13 and ldate[13] != ':':
+        ldate[13:13] = [':', ]
+    if len(ldate) > 16 and ldate[16] != ':':
+        ldate[16:16] = [':', ]
+    if len(ldate) > 13 and ldate[-1] != 'Z':
+        ldate.append('Z')
+    return ''.join(ldate)
 
 
 def stardates():
@@ -279,11 +279,15 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
     *lists*, *tuples* or comma-separated string can be provided::
 
-        >>> daterangex(['2017010100-2017013100-P14D', '2017060100-2017063000-P14D', '2017122500'])  # doctest: +NORMALIZE_WHITESPACE
+        >>> daterangex(['2017010100-2017013100-P14D',
+        ...             '2017060100-2017063000-P14D',
+        ...             '2017122500'])  # doctest: +NORMALIZE_WHITESPACE
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
          Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
          Date(2017, 12, 25, 0, 0)]
-        >>> daterangex('2017010100-2017013100-P14D,2017060100-2017063000-P14D,2017122500')  # doctest: +NORMALIZE_WHITESPACE
+        >>> daterangex('2017010100-2017013100-P14D,' +
+        ...            '2017060100-2017063000-P14D,' +
+        ...            '2017122500')  # doctest: +NORMALIZE_WHITESPACE
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0),
          Date(2017, 6, 1, 0, 0), Date(2017, 6, 15, 0, 0), Date(2017, 6, 29, 0, 0),
          Date(2017, 12, 25, 0, 0)]
@@ -344,7 +348,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         if shift is not None:
             realshift = Period(shift)
             realstart += realshift
-            realend   += realshift
+            realend += realshift
 
         pvalues = daterange(realstart, realend, realstep)
 
@@ -362,7 +366,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
                         pvalues = [x() for x in pvalues]
 
             if prefix is not None:
-                    pvalues = [ prefix + six.text_type(x) for x in pvalues ]
+                pvalues = [prefix + six.text_type(x) for x in pvalues]
 
         rangevalues.extend(pvalues)
 
@@ -414,8 +418,9 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 
     With complex strings::
 
-        >>> timerangex('0-12-3,18-36-6,48')
-        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0), Time(18, 0), Time(24, 0), Time(30, 0), Time(36, 0), Time(48, 0)]
+        >>> timerangex('0-12-3,18-36-6,48')  # doctest: +NORMALIZE_WHITESPACE
+        [Time(0, 0), Time(3, 0), Time(6, 0), Time(9, 0), Time(12, 0), Time(18, 0),
+         Time(24, 0), Time(30, 0), Time(36, 0), Time(48, 0)]
     """
     rangevalues = list()
 
@@ -457,10 +462,10 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
         if shift is not None:
             realshift = Time(shift)
             realstart += realshift
-            realend   += realshift
+            realend += realshift
 
         signstep = int(realstep > 0) * 2 - 1
-        pvalues = [ realstart ]
+        pvalues = [realstart, ]
         while signstep * (pvalues[-1] - realend) < 0:
             pvalues.append(pvalues[-1] + realstep)
         if signstep * (pvalues[-1] - realend) > 0:
@@ -552,7 +557,7 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
 
     if all([isinstance(x, Time) for x in trx]):
         trx = [TimeInt(x) for x in trx]
-        if all([ x.is_int() for x in trx ]):
+        if all([x.is_int() for x in trx]):
             pvalues = [x.value for x in trx]
         else:
             pvalues = [x.str_time for x in trx]
@@ -566,7 +571,7 @@ def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None)
                    for i, x in enumerate(pvalues)]
 
     if prefix is not None:
-        pvalues = [ prefix + six.text_type(x) for x in pvalues ]
+        pvalues = [prefix + six.text_type(x) for x in pvalues]
 
     return sorted(pvalues)
 
@@ -577,7 +582,7 @@ class Period(datetime.timedelta):
     with iso8601 capabilities.
     """
 
-    _my_re  = re.compile(
+    _my_re = re.compile(
         r'(?P<X>[+-]?P)(?P<Y>[0-9]+([,.][0-9]+)?Y)?'
         r'(?P<M>[0-9]+([,.][0-9]+)?M)?'
         r'(?P<W>[0-9]+([,.][0-9]+)?W)?'
@@ -1327,10 +1332,10 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         """Return the nivology season of a current date"""
         if self.month < 8:
             season_begin = datetime.datetime(self.year - 1, 8, 1)
-            season_end   = datetime.datetime(self.year, 7, 31)
+            season_end = datetime.datetime(self.year, 7, 31)
         else:
             season_begin = datetime.datetime(self.year, 8, 1)
-            season_end   = datetime.datetime(self.year + 1, 7, 31)
+            season_end = datetime.datetime(self.year + 1, 7, 31)
 
         return season_begin.strftime('%y') + season_end.strftime('%y')
 
@@ -1622,7 +1627,7 @@ class Time(_GetattrCalculatorMixin):
 
     @property
     def notnull(self):
-        if self.hour!=0 or self.minute!=0:
+        if self.hour != 0 or self.minute != 0:
             return 1
         return 0
 

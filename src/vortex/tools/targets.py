@@ -46,8 +46,8 @@ class Target(fp.FootprintBase):
     configuration file (``target-[hostname].ini`` by default).
     """
 
-    _abstract  = True
-    _explicit  = False
+    _abstract = True
+    _explicit = False
     _collector = ('target',)
     _footprint = dict(
         info = 'Default target description',
@@ -363,7 +363,7 @@ class LocalTarget(Target):
         info = 'Nice local target',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux', 'Darwin', 'Local', 'Localhost' ]
+                values = ['Linux', 'Darwin', 'Local', 'Localhost']
             ),
         )
     )

@@ -503,7 +503,7 @@ class GRIBAPI_Tool(addons.Addon):
 
     def _actual_diff(self, grib1, grib2, skipkeys, **kw):
         """Run the actual GRIBAPI command."""
-        cmd = [ 'grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2 ]
+        cmd = ['grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2]
         kw['fatal'] = False
         kw['output'] = False
         return self._spawn_wrap(cmd, **kw)

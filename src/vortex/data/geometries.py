@@ -128,10 +128,10 @@ class Geometry(bronx.patterns.getbytag.GetByTag):
 
         .. note:: This is an abstract class, do not instantiate.
         """
-        self.info    = 'anonymous'
+        self.info = 'anonymous'
         self.inifile = None
         self.__dict__.update(kw)
-        self.kind    = 'abstract'
+        self.kind = 'abstract'
         self._init_attributes = {k: v for k, v in kw.items() if v is not None}
         logger.debug('Abstract Geometry init kw=%s', str(kw))
 
@@ -195,25 +195,25 @@ class HorizontalGeometry(Geometry):
         .. note:: This is an abstract class, do not instantiate.
         """
         desc = dict(
-            info = 'anonymous',
-            gridtype = None,
-            area = None,
-            nlon = None,
-            nlonmax = None,
-            nlat = None,
-            ni = None,
-            nj = None,
-            resolution = 0.,
-            expected_resolution = 0.,
-            runit = None,
-            truncation = None,
-            truncationtype = None,
-            stretching = None,
-            nmassif = None,
-            nposts = None,
-            lam = True,
-            lonmin = None,
-            latmin = None,
+            info='anonymous',
+            gridtype=None,
+            area=None,
+            nlon=None,
+            nlonmax=None,
+            nlat=None,
+            ni=None,
+            nj=None,
+            resolution=0.,
+            expected_resolution=0.,
+            runit=None,
+            truncation=None,
+            truncationtype=None,
+            stretching=None,
+            nmassif=None,
+            nposts=None,
+            lam=True,
+            lonmin=None,
+            latmin=None,
         )
         desc.update(kw)
         super(HorizontalGeometry, self).__init__(**desc)
@@ -310,7 +310,7 @@ class HorizontalGeometry(Geometry):
     def coordinates(self):
         if any([getattr(self, x) is None for x in ('lonmin', 'latmin', 'nlat', 'nlon', 'resolution')]):
             return
-        coordinates = dict(lonmin = self.lonmin, latmin = self.latmin)
+        coordinates = dict(lonmin=self.lonmin, latmin=self.latmin)
         coordinates['latmax'] = self.latmin + self.resolution * (self.nlat - 1)
         coordinates['lonmax'] = self.lonmin + self.resolution * (self.nlon - 1)
         return coordinates
@@ -590,8 +590,8 @@ class RedgridGeometry(HorizontalGeometry):
 
 #: Usual definition of the ``geometry`` attribute.
 a_hgeometry = dict(
-    info = "The resource's horizontal geometry.",
-    type = HorizontalGeometry,
+    info="The resource's horizontal geometry.",
+    type=HorizontalGeometry,
 )
 
 
@@ -618,16 +618,16 @@ def _add_geo2basename_info(cls):
 
 
 #: Abstract footprint definition of the ``geometry`` attribute.
-hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
-                                 attr = dict(geometry = a_hgeometry))
+hgeometry = footprints.Footprint(info='Abstract Horizontal Geometry',
+                                 attr=dict(geometry=a_hgeometry))
 
 #: Abstract footprint definition of the ``geometry`` attribute with decorators
 #: that alter the ``namebuilding_info`` method
 hgeometry_deco = footprints.DecorativeFootprint(
     hgeometry,
-    decorator = [_add_geo2basename_info,
-                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
-                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
+    decorator=[_add_geo2basename_info,
+               namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+               generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
 
 
 # Load default geometries when the module is first imported

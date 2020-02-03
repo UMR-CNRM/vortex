@@ -143,13 +143,13 @@ class PollutantsTable(ConfigurationTable):
     """
     Configuration file with description of pollutants elements or sites.
     """
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Pollutants table configuration files',
         attr = dict(
             kind = dict(),
             family = dict(
-                values   = [ 'pollutants', 'pollution' ],
+                values   = ['pollutants', 'pollution'],
                 remap    = dict(pollution = 'pollutants'),
             ),
         )

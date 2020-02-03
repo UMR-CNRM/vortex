@@ -62,7 +62,7 @@ class AbstractGridpoint(GeoFlowResource):
                 )
             ),
             kind = dict(
-                values = [ 'gridpoint', 'gribfile', 'fullpos' ],
+                values = ['gridpoint', 'gribfile', 'fullpos'],
                 remap = dict(
                     fullpos = 'gridpoint'
                 )
@@ -112,21 +112,21 @@ class AbstractGridpoint(GeoFlowResource):
             else:
                 source = 'forecast'
         ninfo.update(
-            radical = 'grid',
-            src     = [self.model, source],
+            radical='grid',
+            src=[self.model, source],
         )
         return ninfo
 
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         directory = dict(
-            fa = 'fic_day',
-            grib = 'bdap'
+            fa='fic_day',
+            grib='bdap'
         )
         return dict(
-            fmt       = directory[self.nativefmt],
-            nativefmt = self.nativefmt,
-            model     = self.model,
+            fmt=directory[self.nativefmt],
+            nativefmt=self.nativefmt,
+            model=self.model,
         )
 
 
@@ -137,7 +137,7 @@ class GridPoint(AbstractGridpoint):
     """
 
     _abstract = True
-    _footprint = [ term_deco, ]
+    _footprint = [term_deco, ]
 
 
 class TimePeriodGridPoint(AbstractGridpoint):
@@ -290,7 +290,7 @@ class GridPointExport(GridPoint):
         elif self.model == 'ifs':
             deltastr = 'PT{!s}H'.format(self.term.hour)
             deltadate = self.date + deltastr
-            name = 'MET' + deltadate.ymd + '.' + self.geometry.area  + '.grb'
+            name = 'MET' + deltadate.ymd + '.' + self.geometry.area + '.grb'
 
         if name is None:
             raise ValueError('Could not build a proper archive name: {!s}'.format(self))

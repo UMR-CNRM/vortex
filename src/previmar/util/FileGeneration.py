@@ -42,25 +42,25 @@ def EchoData(options):
         freq_grib = "{}".format(rhdict.get('options', {}).get('freq_grib', ''))
         freq_forcage = "{}".format(rhdict.get('options', {}).get('freq_forcage', ''))
 
-        deb_res   = 0
+        deb_res = 0
         mod = 'PR'
         if forcage_mode in 'AN':
             mod = 'AA'
-            fin_res   = int(term_hh) - 1
+            fin_res = int(term_hh) - 1
 
         if forcage_mode in {'FC', 'PE'}:
             mod = 'PR'
-            fin_res   = int(term_hh)
+            fin_res = int(term_hh)
 
-        Initial   = Initial_w
+        Initial = Initial_w
         if forcage in {'ARP', 'ARO', 'CEP', 'AOC'}:
             red_maree = 'NON'
-            Initial   = Initial_w
+            Initial = Initial_w
         elif forcage in 'RED':
             red_maree = 'OUI'
-            Initial   = 0
-            deb_res   = -1
-            fin_res   = deb_res
+            Initial = 0
+            deb_res = -1
+            fin_res = deb_res
 
         # Nom du modele
         outstr += forcage + "\n"

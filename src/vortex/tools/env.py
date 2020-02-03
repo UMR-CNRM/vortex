@@ -80,11 +80,11 @@ class Environment(object):
         """
         self.__dict__['_history'] = PrivateHistory() if history else None
         self.__dict__['_verbose'] = verbose
-        self.__dict__['_frozen']  = collections.deque()
-        self.__dict__['_pool']    = dict()
-        self.__dict__['_mods']    = set()
-        self.__dict__['_sh']      = None
-        self.__dict__['_os']      = list()
+        self.__dict__['_frozen'] = collections.deque()
+        self.__dict__['_pool'] = dict()
+        self.__dict__['_mods'] = set()
+        self.__dict__['_sh'] = None
+        self.__dict__['_os'] = list()
         if env is not None and isinstance(env, Environment):
             self._env_clone_internals(env, contextlock)
             if verbose:

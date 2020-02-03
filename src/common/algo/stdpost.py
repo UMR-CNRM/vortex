@@ -10,22 +10,22 @@ import json
 import re
 import time
 
-from bronx.datagrip.namelist  import NamelistBlock
+from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from footprints.stdtypes import FPTuple
 import footprints
 from taylorism import Boss
 
-from vortex.layout.monitor    import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
-from vortex.algo.components   import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
-from vortex.algo.components   import TaylorRun, BlindRun, ParaBlindRun, Parallel
-from vortex.syntax.stdattrs   import DelayedEnvValue, FmtInt
-from vortex.tools.grib        import EcGribDecoMixin
+from vortex.layout.monitor import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
+from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
+from vortex.algo.components import TaylorRun, BlindRun, ParaBlindRun, Parallel
+from vortex.syntax.stdattrs import DelayedEnvValue, FmtInt
+from vortex.tools.grib import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
-from vortex.tools.systems     import ExecutionError
+from vortex.tools.systems import ExecutionError
 
-from common.tools.grib        import GRIBFilter
-from common.tools.drhook      import DrHookDecoMixin
+from common.tools.grib import GRIBFilter
+from common.tools.drhook import DrHookDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -820,25 +820,25 @@ class _DiagPIDecoMixin(AlgoComponentDecoMixin):
     """Class variables and methods usefull for DiagPI."""
 
     _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
-        attr = dict(
-            kind = dict(
-                values = ['diagpi', 'diaglabo'],
+        attr=dict(
+            kind=dict(
+                values=['diagpi', 'diaglabo'],
             ),
-            numod = dict(
-                info     = 'The GRIB model number',
-                type     = int,
-                optional = True,
-                default  = DelayedEnvValue('VORTEX_GRIB_NUMOD', 62),
+            numod=dict(
+                info='The GRIB model number',
+                type=int,
+                optional=True,
+                default=DelayedEnvValue('VORTEX_GRIB_NUMOD', 62),
             ),
-            gribcat = dict(
-                type     = bool,
-                optional = True,
-                default  = False
+            gribcat=dict(
+                type=bool,
+                optional=True,
+                default=False
             ),
-            gribfilter_tasks = dict(
-                type     = int,
-                optional = True,
-                default  = 8,
+            gribfilter_tasks=dict(
+                type=int,
+                optional=True,
+                default=8,
             ),
         ),
     )]
@@ -1073,7 +1073,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
-                self.system.move(thisoutput, 'GGRID' + r.container.localpath()[6:], fmt = r.container.actualfmt)
+                self.system.move(thisoutput, 'GGRID' + r.container.localpath()[6:], fmt=r.container.actualfmt)
             else:
                 logger.warning('Missing some grib output for %s',
                                thisoutput)

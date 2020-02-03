@@ -74,7 +74,7 @@ class PPCamsBDAP(BlindRun):
         # HM files from forecast
         hmrh = self.context.sequence.effective_inputs(
             role='HMFiles',
-            kind='gridpoint' )
+            kind='gridpoint')
         # overwrite hmrh by the ascending sort of the hmrh list
         hmrh.sort(key=lambda s: s.rh.resource.term)
 
@@ -124,7 +124,7 @@ class PPCamsBDAP(BlindRun):
             # The grib2 output may be promised for BDAP transferts : put method applied to these outputs
             # put these outputs in the cache ; IGA will perform the following actions.
             expected = [x for x in self.promises
-                        if (re.match(actualname, x.rh.container.localpath()) ) ]
+                        if (re.match(actualname, x.rh.container.localpath()))]
             for thispromise in expected:
                 thispromise.put(incache=True)
 
@@ -165,9 +165,9 @@ class MkStatsCams(Expresso):
             actualmask = '?' * digits + actualmask[digits:]
 
         return dict(
-            prefix  = '"' + actualprefix + '+"',
-            mask    = '"' + actualmask + '"',
-            verbose = '',
+            prefix='"' + actualprefix + '+"',
+            mask='"' + actualmask + '"',
+            verbose='',
         )
 
 
@@ -228,7 +228,7 @@ class PPprevairBDAP(Parallel):
         # HM files from forecast
         hmrh = self.context.sequence.effective_inputs(
             role='HMFiles',
-            kind='GridPoint' )
+            kind='GridPoint')
         logger.info('Number of HMFilesFA %d ', len(hmrh))
 
         if len(hmrh) == 0:
@@ -269,6 +269,6 @@ class PPprevairBDAP(Parallel):
             # applied to these outputs. put these outputs in the cache ; IGA
             # will perform the following actions.
             expected = [x for x in self.promises
-                        if (re.match(actualname, x.rh.container.localpath()) ) ]
+                        if (re.match(actualname, x.rh.container.localpath()))]
             for thispromise in expected:
                 thispromise.put(incache=True)

@@ -33,7 +33,7 @@ class MeteoBull(Target):
         info = 'Bull Supercomputer at Meteo France',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = ['Linux', ]
             ),
             inifile = dict(
                 default = '@target-[inetname].ini',
@@ -113,7 +113,7 @@ class MeteoSoprano(Target):
         info = 'A Soprano Server at Meteo France',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = ['Linux', ]
             ),
         ),
         priority = dict(
@@ -189,7 +189,7 @@ class CnrmLinuxWorkstation(UmrCnrmTarget):
         info='Aneto Cluster at CNRM',
         attr=dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = ['Linux', ]
             ),
             inifile=dict(
                 default = '@target-cnrmworkstation.ini',
@@ -212,7 +212,7 @@ class CnrmLinuxServer(UmrCnrmTarget):
         info='Aneto Cluster at CNRM',
         attr=dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = ['Linux', ]
             ),
             inifile=dict(
                 default = '@target-cnrmserver.ini',

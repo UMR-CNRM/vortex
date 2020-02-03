@@ -91,8 +91,8 @@ class BaseScheduler(FootprintBase):
         for instructions in launchable:
             possible_tickets.append(None)
             instructions.update(
-                scheduler_ticket = possible_tickets.pop(0),
-                scheduler_hooks  = self._workers_hooks(),
+                scheduler_ticket=possible_tickets.pop(0),
+                scheduler_hooks=self._workers_hooks(),
             )
         return launchable
 
@@ -134,11 +134,11 @@ class NewLimitedScheduler(BaseScheduler):
 
 
 #: Abstract footprint attribute for binding aware schedulers
-_binded_fpattr = footprints.Footprint(info = 'Abstract binded attribute',
-                                      attr = dict(binded = dict(type=bool,
-                                                                info="Binds the process to a single cpu.",
-                                                                default=False,
-                                                                optional=True)))
+_binded_fpattr = footprints.Footprint(info='Abstract binded attribute',
+                                      attr=dict(binded=dict(type=bool,
+                                                            info="Binds the process to a single cpu.",
+                                                            default=False,
+                                                            optional=True)))
 
 
 def binding_setup(worker):
@@ -421,7 +421,7 @@ class MaxMemoryScheduler(_AbstractOldSchedulerProxy):
         else:
             max_memory = None
         super(MaxMemoryScheduler, self).__init__(limit='memory',
-                                                 max_memory = max_memory,
+                                                 max_memory=max_memory,
                                                  memory_max_percentage=max_memory_percentage)
 
 

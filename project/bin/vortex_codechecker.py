@@ -170,7 +170,7 @@ class MyPycodestyleReporter(pycodestyle.BaseReport):
         """Report an error, according to options."""
         code = super(MyPycodestyleReporter, self).error(line_number, offset,
                                                         text, check)
-        if code and (self.counters[code] == 1):
+        if code:
             self._deferred_messages.append(
                 (line_number, offset, code, text[5:], check.__doc__))
         return code

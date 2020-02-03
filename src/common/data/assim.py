@@ -176,11 +176,11 @@ class BackgroundErrorNorm(_BackgroundErrorInfo):
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""
         return dict(
-            nativefmt = self.nativefmt,
-            model     = self.model,
-            date      = self.date,
-            cutoff    = self.cutoff,
-            arpege_aearp_directory = 'wavelet',
+            nativefmt=self.nativefmt,
+            model=self.model,
+            date=self.date,
+            cutoff=self.cutoff,
+            arpege_aearp_directory='wavelet',
         )
 
 
@@ -224,11 +224,11 @@ class Wavelet(GeoFlowResource):
     def archive_pathinfo(self):
         """OpArchive specific pathname needs."""
         return dict(
-            nativefmt = self.nativefmt,
-            model     = self.model,
-            date      = self.date,
-            cutoff    = self.cutoff,
-            arpege_aearp_directory = self.realkind,
+            nativefmt=self.nativefmt,
+            model=self.model,
+            date=self.date,
+            cutoff=self.cutoff,
+            arpege_aearp_directory=self.realkind,
         )
 
 
@@ -297,7 +297,7 @@ class StartingPointMinim(InternalMinim):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'STPMIN'  + self.olive_suffixtr()
+        return 'STPMIN' + self.olive_suffixtr()
 
 
 class AnalysedStateMinim(InternalMinim):
@@ -318,7 +318,7 @@ class AnalysedStateMinim(InternalMinim):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        return 'ANAMIN'  + self.olive_suffixtr()
+        return 'ANAMIN' + self.olive_suffixtr()
 
 
 class PrecevMap(FlowResource):
