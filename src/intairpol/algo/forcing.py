@@ -9,11 +9,13 @@ All kinds of AlgoComponents used to prepare Mocage runs (deals with external for
 
 import six
 from collections import defaultdict
+from functools import partial
 import io
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.iterators import pcn
 
 import footprints
 
@@ -256,46 +258,36 @@ class SurfaceArp(AbstractSumoForcingWithMeteo):
 
         # Grib files from Arpege AMECH*:
         # retrieve the domains, put the associated ressource handlers in lists
-        # and sort them according to their validity date
-        domains = defaultdict(list)
+        domains = defaultdict(partial(defaultdict, list))
         for rhi in self._surface_fields_rh:
-            domains[rhi.resource.geometry.area].append(rhi)
-        for rhlists in domains.values():
-            rhlists.sort(key=lambda rh: rh.resource.date + rh.resource.term)
+            vdate = rhi.resource.date + rhi.resource.term
+            vday = date.Date(vdate.year, vdate.month, vdate.day, 0, 0)
+            domains[rhi.resource.geometry.area][vday].append(rhi)
+        # Sort things up...
+        for domainrhs in domains.values():
+            for daysrhs in domainrhs.values():
+                daysrhs.sort(key=lambda rh: rh.resource.date + rh.resource.term)
 
         # loop on domains
-        for currentdom, currentrhs  in domains.items():
-            sh.title('Loop on domain {0:s} '.format(currentdom))
-            
-            # Loop on the terms
-            # NB: tricky, the frequency of inputs changes over the days
-            ldates = [(rhi.resource.date + rhi.resource.term) for rhi in currentrhs]
-            lchanges = []
-            mem = ldates[0].ymd
-            for i in range(1, len(ldates)):
-                if ldates[i].ymd != mem:
-                    lchanges.append(i)
-                    mem = ldates[i].ymd
-            
-            # Loop on the days
-            first=0
-            for idx in lchanges:
-                subrh = currentrhs[first:idx+1]
-                actualdate = ldates[first]
-                first = idx
+        for currentdom, domainrhs in sorted(domains.items()):
+            sh.title('Loop on domain {0:s}'.format(currentdom))
 
-                logger.info("{:s}: actualdate is {!s}.".format(currentdom, actualdate))
-                for num, rhi in enumerate(subrh, start=1):
-                    sh.title('{:s}: Link on term {:s} (as {:s})'.format(currentdom,
-                                                                        rhi.resource.term.fmthm,
-                                                                        self._INPUTFILES_FMT.format(num)))
+            for _, currentday, nextday in pcn(sorted(domainrhs)):
+                if nextday is None:
+                    continue
+                sh.title("{:s}: Looping on actualdate={!s}".format(currentdom, currentday))
+
+                dayrhs = domainrhs[currentday] + [domainrhs[nextday][0], ]
+                for num, rhi in enumerate(dayrhs, start=1):
+                    logger.info('%s: Link on term %s (as %s).', currentdom,
+                                rhi.resource.term.fmthm, self._INPUTFILES_FMT.format(num))
                     self.system.softlink(rhi.container.localpath(), self._INPUTFILES_FMT.format(num))
 
                 # Let's run sumo...
-                self._sumo_exec(namcontent, refblock, actualdate, currentdom, rh, opts)
+                self._sumo_exec(namcontent, refblock, currentday, currentdom, rh, opts)
 
                 # Some cleaning for this domain
-                for i in range(len(currentrhs)):
+                for i in range(len(dayrhs)):
                     sh.rm(self._INPUTFILES_FMT.format(i + 1))
 
 
