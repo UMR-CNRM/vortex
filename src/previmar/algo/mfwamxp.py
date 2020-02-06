@@ -104,12 +104,15 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         fcterm = self.fcterm
 
+
         windcandidate = [x.rh
-                         for x in self.context.sequence.effective_inputs(role=re.compile('wind'),
+                         for x in self.context.sequence.effective_inputs(role=('Wind',),
                                                                          kind = 'gridpoint')]
 
         # Is there a analysis wind forcing ?
         if len(windcandidate) == 2:
+            
+            rhgrib = windcandidate[0]
 
             # Check for input grib files to concatenate
             rhdict = {rh.resource.origin: rh for rh in windcandidate}
@@ -152,6 +155,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             else:
                 datefinana = datedebana
         else:
+            logger.info("%s winds",len(windcandidate))
             raise ValueError("No winds or too much")
 
         # Tweak Namelist parameters
@@ -166,18 +170,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcontents.setmacro('CDATEF', datefinana.compact() )  # fin echeance analyse ici T0
         namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
 
-        allobs_sec = self.context.sequence.effective_inputs(role='observation',
-                                                            kind='altidata')
-        if allobs_sec:
-            for altirh in [s.rh for s in allobs_sec if s.rh.resource.realkind == 'AltidataWave']:
-                altirh.contents.sort()
-                altirh.save()
-                logger.info('%s file sorted', altirh.container.localpath())
-            logger.info('Some observations were found.')
-            namcontents.setmacro('IASSI', 1)
-        else:
-            logger.info('No observations found, no assimilation.')
-            namcontents.setmacro('IASSI', 0)
 
         if self.current_coupling:
             namcontents.setmacro('CDATECURA', (datedebana - self.currentbegin).compact())
@@ -339,6 +331,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
                 sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt = 'grib')
                 output_files.add(sh.path.join(cwd, output_file))
+                
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()
