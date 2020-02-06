@@ -9,7 +9,6 @@ import six
 __all__ = []
 
 import io
-import re
 import time
 
 from bronx.datagrip import namelist as bnamelist
@@ -104,14 +103,12 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         fcterm = self.fcterm
 
-
         windcandidate = [x.rh
                          for x in self.context.sequence.effective_inputs(role=('Wind',),
                                                                          kind = 'gridpoint')]
 
         # Is there a analysis wind forcing ?
         if len(windcandidate) == 2:
-            
             rhgrib = windcandidate[0]
 
             # Check for input grib files to concatenate
@@ -155,8 +152,8 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             else:
                 datefinana = datedebana
         else:
-            logger.info("%s winds",len(windcandidate))
-            raise ValueError("No winds or too much")
+            logger.info("%d winds", len(windcandidate))
+            raise ValueError("No winds or too many")
 
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),
@@ -169,7 +166,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         namcontents.setmacro('CBPLTDT', datedebana.compact())  # debut analyse
         namcontents.setmacro('CDATEF', datefinana.compact() )  # fin echeance analyse ici T0
         namcontents.setmacro('CEPLTDT', datefin)  # fin echeance prevision
-
 
         if self.current_coupling:
             namcontents.setmacro('CDATECURA', (datedebana - self.currentbegin).compact())
@@ -331,7 +327,6 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 output_file = "reg{0:s}_{1:s}".format(self.file_out, dom)
                 sh.mv(self.fortoutput, sh.path.join(cwd, output_file), fmt = 'grib')
                 output_files.add(sh.path.join(cwd, output_file))
-                
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()
