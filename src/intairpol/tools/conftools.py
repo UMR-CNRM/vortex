@@ -77,7 +77,10 @@ class MocageDomainInfo(collections.namedtuple('MocageDomainInfoBase', _MocageDom
         str_indent = ' ' * indent
         str_stack = list()
         for k in _MocageDomainInfoBase_keys:
-            str_stack.append('{:s}{:16s}: {!s}'.format(str_indent, k, getattr(self, k)))
+            what = getattr(self, k)
+            if isinstance(what, (list, tuple)):
+                what = ','.join(['{!s}'.format(w) for w in what])
+            str_stack.append('{:s}{:16s}: {!s}'.format(str_indent, k, what))
         return '\n'.join(str_stack)
 
     def __str__(self):
@@ -181,7 +184,7 @@ class MocageDomainsConfTool(ConfTool):
             ...                                                 atm_cpl_delta=dict(production='PT24H',
             ...                                                                    assim='PT12H'),
             ...                                                 surf_cpl_delta='PT24H',
-            ...                                                 atm_cpl_steps='0-finalterm-3',
+            ...                                                 atm_cpl_steps=['0-6-1', '9-finalterm-3'],
             ...                                                 surf_cpl_steps='0-finalterm-3',
             ...                                                 chem_cpl_steps='0-finalterm-3',
             ...                                                 post_steps='',
@@ -215,7 +218,7 @@ class MocageDomainsConfTool(ConfTool):
             atm_cpl_delta   : PT43200S
             chem_cpl_delta  : PT43200S
             surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-finalterm-3
+            atm_cpl_steps   : 0-6-1,9-finalterm-3
             chem_cpl_steps  : 0-finalterm-3
             surf_cpl_steps  : 0-finalterm-3
             post_steps      :
@@ -230,7 +233,7 @@ class MocageDomainsConfTool(ConfTool):
             atm_cpl_delta   : PT43200S
             chem_cpl_delta  : PT43200S
             surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-finalterm-3
+            atm_cpl_steps   : 0-6-1,9-finalterm-3
             chem_cpl_steps  : 0-finalterm-3
             surf_cpl_steps  : 0-finalterm-3
             post_steps      :
@@ -269,6 +272,11 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> print(', '.join(mct.grep_active('assim', '00', 'GLOB11', 'GLOB22')))
             GLOB22
+
+        Or to retrieve the name of the first active domain::
+
+            >>> print(mct.first_active('assim', '00'))
+            MACC01
 
         The dictionary that associates source_apps and geometries::
 
@@ -336,7 +344,8 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> (mct.atm_cpl_steps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
-            ...                'MACC01': timerangex('0-24-3'), 'GLOB22': timerangex('0-24-3')}})
+            ...                'MACC01': timerangex('0-6-1,9-24-3'),
+            ...                'GLOB22': timerangex('0-6-1,9-24-3')}})
             True
             >>> (mct.chem_cpl_steps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
@@ -351,15 +360,18 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> (mct.atm_cpl_steps('assim', '00', first=False) ==
             ...  {'geometry': {'GLOB11': timerangex('1-24-1'),
-            ...                'MACC01': timerangex('3-24-3'), 'GLOB22': timerangex('3-24-3')}})
+            ...                'MACC01': timerangex('1-6-1,9-24-3'),
+            ...                'GLOB22': timerangex('1-6-1,9-24-3')}})
             True
             >>> (mct.atm_cpl_steps('assim', '00', final=False) ==
             ...  {'geometry': {'GLOB11': timerangex('0-23-1'),
-            ...                'MACC01': timerangex('0-21-3'), 'GLOB22': timerangex('0-21-3')}})
+            ...                'MACC01': timerangex('0-6-1,9-21-3'),
+            ...                'GLOB22': timerangex('0-6-1,9-21-3')}})
             True
             >>> (mct.atm_cpl_steps('assim', '00', first=False, final=False) ==
             ...  {'geometry': {'GLOB11': timerangex('1-23-1'),
-            ...                'MACC01': timerangex('3-21-3'), 'GLOB22': timerangex('3-21-3')}})
+            ...                'MACC01': timerangex('1-6-1,9-21-3'),
+            ...                'GLOB22': timerangex('1-6-1,9-21-3')}})
             True
 
         By default, the coupling data's term starts at the first term listed in the settings
@@ -378,11 +390,24 @@ class MocageDomainsConfTool(ConfTool):
             ...                'MACC01': timerangex('12-24-3'), 'GLOB22': timerangex('12-24-3')}})
             True
 
+        For the first active domain, the coupling frequency at the begining of
+        the steps list can be obtained as follows::
+
+            >>> mct.atm_cpl_firstfreq('assim', 0)
+            Period(seconds=3600)
+            >>> mct.atm_cpl_firstfreq('assim', 0, start=6)
+            Period(seconds=10800)
+            >>> mct.chem_cpl_firstfreq('assim', 0)
+            Period(seconds=10800)
+            >>> mct.surf_cpl_firstfreq('assim', 0)
+            Period(seconds=10800)
+
         There are equivalent methods that return values shifted by the ``(atm|chem|surf)_cpl_delta`` entry::
 
             >>> (mct.atm_cpl_shiftedsteps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-1'),
-            ...                'MACC01': timerangex('12-36-3'), 'GLOB22': timerangex('12-36-3')}})
+            ...                'MACC01': timerangex('12-18-1,21-36-3'),
+            ...                'GLOB22': timerangex('12-18-1,21-36-3')}})
             True
             >>> (mct.chem_cpl_shiftedsteps('assim', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-24-3'),
@@ -398,19 +423,23 @@ class MocageDomainsConfTool(ConfTool):
 
             >>> (mct.atm_cpl_steps('production', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
-            ...                'MACC01': timerangex('0-72-3'), 'GLOB22': timerangex('0-72-3')}})
+            ...                'MACC01': timerangex('0-6-1,9-72-3'),
+            ...                'GLOB22': timerangex('0-6-1,9-72-3')}})
             True
             >>> (mct.atm_cpl_shiftedsteps('production', '00') ==
             ...  {'geometry': {'GLOB11': timerangex('0-72-1'),
-            ...                'MACC01': timerangex('24-96-3'), 'GLOB22': timerangex('24-96-3')}})
+            ...                'MACC01': timerangex('24-30-1,33-96-3'),
+            ...                'GLOB22': timerangex('24-30-1,33-96-3')}})
             True
             >>> (mct.atm_cpl_steps('production', '12') ==
             ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
-            ...                'MACC01': timerangex('0-48-3'), 'GLOB22': timerangex('0-48-3')}})
+            ...                'MACC01': timerangex('0-6-1,9-48-3'),
+            ...                'GLOB22': timerangex('0-6-1,9-48-3')}})
             True
             >>> (mct.atm_cpl_shiftedsteps('production', '12') ==
             ...  {'geometry': {'GLOB11': timerangex('0-48-1'),
-            ...                'MACC01': timerangex('24-72-3'), 'GLOB22': timerangex('24-72-3')}})
+            ...                'MACC01': timerangex('24-30-1,33-72-3'),
+            ...                'GLOB22': timerangex('24-30-1,33-72-3')}})
             True
 
         The dictionary that associates post-processing terms and geometries work the same way::
@@ -445,7 +474,13 @@ class MocageDomainsConfTool(ConfTool):
             >>> mct.group('assim', '00', ['MACC01', 'GLOB22']).atm_cpl_date('2019080700')
             Date(2019, 8, 6, 12, 0)
             >>> (mct.group('assim', '00', ['MACC01', 'GLOB22']).atm_cpl_steps() ==
-            ...  timerangex('0-24-3'))
+            ...  timerangex('0-6-1,9-24-3'))
+            True
+
+        Groups with only one domain also work (also it is kind of useless...)::
+
+            >>> (mct.group('assim', '00', ['GLOB11', ], active=False).atm_cpl_steps() ==
+            ...  timerangex('0-24-1'))
             True
 
         Using *group*, if domains are inconsistent, an exception is raised::
@@ -711,8 +746,8 @@ class MocageDomainsConfTool(ConfTool):
     def _expand_any_steps(self, ddef, entry, cutoff, hh, shift):
         rangestr = getattr(ddef, entry)[cutoff][hh]
         if rangestr:
-            if not isinstance(rangestr, list):
-                rangestr = [rangestr, ]
+            if not isinstance(rangestr, (list, tuple)):
+                rangestr = (rangestr, )
             actual_finalterm_str = str(self.finalterms[cutoff][hh])
             return timerangex(",".join([rs.replace('finalterm',
                                                    actual_finalterm_str) for rs in rangestr]),
@@ -722,7 +757,7 @@ class MocageDomainsConfTool(ConfTool):
 
     def _domain_any_steps(self, cutoff, hh, entry, start, end,
                           shift=False, final=True, first=True):
-        start = Time(start)
+        start = Time(0) if start is None else Time(start)
         if end is None:
             end = self.finalterms[cutoff][hh]
         else:
@@ -736,14 +771,6 @@ class MocageDomainsConfTool(ConfTool):
                                                (first and t - dshift == start),
                                      self._expand_any_steps(v, entry, cutoff, hh, dshift)))
         return dict(geometry=subdict)
-
-    @_add_start_end_doc
-    @_add_cutoff_hh_doc
-    def freq_nhcy_run(self, cutoff, hh, start=0):
-        """The "nhcy" used by a Mocage AlgoComponent."""
-        cpl_steps = self.atm_cpl_steps(cutoff, hh, start, final=True, first=True)
-        cpl_steps = cpl_steps['geometry'][self.first_active(cutoff, hh)]
-        return (cpl_steps[1] - cpl_steps[0]).hour
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
@@ -786,6 +813,42 @@ class MocageDomainsConfTool(ConfTool):
         """The geometry/shifted chem_cpl_steps :mod:`footprints`' substitution dictionary."""
         return self._domain_any_steps(cutoff, hh, 'chem_cpl_steps', start, end,
                                       shift=True, final=final, first=first)
+
+    def _domain_any_freq(self, cutoff, hh, entry, start):
+        start = Time(0) if start is None else Time(start)
+        cpl_steps = getattr(self, entry)(cutoff, hh, start, end=None, final=True, first=True)
+        cpl_steps = cpl_steps['geometry'][self.first_active(cutoff, hh)]
+        return Period(cpl_steps[1] - cpl_steps[0])
+
+    @_add_cutoff_hh_doc
+    def atm_cpl_firstfreq(self, cutoff, hh, start=0):
+        """
+        The atm coupling frequency at the begining of the coupling period for the
+        first active domain.
+
+        :param bronx.stdtypes.date.Time start: the series of steps starts at...
+        """
+        return self._domain_any_freq(cutoff, hh, 'atm_cpl_steps', start)
+
+    @_add_cutoff_hh_doc
+    def surf_cpl_firstfreq(self, cutoff, hh, start=0):
+        """
+        The surf coupling frequency at the begining of the coupling period for the
+        first active domain.
+
+        :param bronx.stdtypes.date.Time start: the series of steps starts at...
+        """
+        return self._domain_any_freq(cutoff, hh, 'surf_cpl_steps', start)
+
+    @_add_cutoff_hh_doc
+    def chem_cpl_firstfreq(self, cutoff, hh, start=0):
+        """
+        The chem coupling frequency at the begining of the coupling period for the
+        first active domain.
+
+        :param bronx.stdtypes.date.Time start: the series of steps starts at...
+        """
+        return self._domain_any_freq(cutoff, hh, 'chem_cpl_steps', start)
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
@@ -899,7 +962,9 @@ class MocageMixedDomainsInfo(object):
         return self._get_mixeddomains_attr(name)
 
     def _get_mixeddomains_attr(self, name):
-        stuff = set([getattr(subdomain, name) for subdomain in self._subdomains])
+        stuff = set()
+        for s_attr in [getattr(s, name) for s in self._subdomains]:
+            stuff.add(tuple(s_attr) if isinstance(s_attr, list) else s_attr)
         if len(stuff) > 1:
             raise AttributeError('Inconsistent {:s} values among subdomains'.format(name))
         return stuff.pop()
@@ -919,8 +984,8 @@ class MocageMixedDomainsInfo(object):
     def _expand_any_steps(self, entry, shift):
         rangestr = self._get_mixeddomains_attr(entry)
         if rangestr:
-            if not isinstance(rangestr, list):
-                rangestr = [rangestr, ]
+            if not isinstance(rangestr, (list, tuple)):
+                rangestr = (rangestr, )
             return timerangex(",".join([rs.replace('finalterm',
                                                    str(self.finalterm)) for rs in rangestr]),
                               shift=shift)
@@ -928,7 +993,7 @@ class MocageMixedDomainsInfo(object):
             return []
 
     def _domain_any_steps(self, entry, start, end, shift=False, final=True, first=True):
-        start = Time(start)
+        start = Time(0) if start is None else Time(start)
         end = Time(self.finalterm) if end is None else Time(end)
         dentry = entry.replace('steps', 'delta')
         dshift = getattr(self, dentry, Time(0)) if shift else Time(0)

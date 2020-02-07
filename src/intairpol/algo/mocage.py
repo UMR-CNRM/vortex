@@ -169,7 +169,7 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
         # NHCY is expressed in hours...
-        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600.)
+        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600)
 
         namrh.save()
         namrh.container.cat()

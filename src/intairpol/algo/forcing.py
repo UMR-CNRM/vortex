@@ -9,11 +9,13 @@ from __future__ import absolute_import, print_function, division, unicode_litera
 
 import six
 from collections import defaultdict
+from functools import partial
 import io
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.stdtypes import date
+from bronx.syntax.iterators import pcn
 
 import footprints
 
@@ -256,30 +258,37 @@ class SurfaceArp(AbstractSumoForcingWithMeteo):
 
         # Grib files from Arpege AMECH*:
         # retrieve the domains, put the associated ressource handlers in lists
-        # and sort them according to their validity date
-        domains = defaultdict(list)
-        for rh in self._surface_fields_rh:
-            domains[rh.resource.geometry.area].append(rh)
-        for rhlists in domains.values():
-            rhlists.sort(key=lambda rh: rh.resource.date + rh.resource.term)
+        domains = defaultdict(partial(defaultdict, list))
+        for rhi in self._surface_fields_rh:
+            vdate = rhi.resource.date + rhi.resource.term
+            vday = date.Date(vdate.year, vdate.month, vdate.day, 0, 0)
+            domains[rhi.resource.geometry.area][vday].append(rhi)
+        # Sort things up...
+        for domainrhs in domains.values():
+            for daysrhs in domainrhs.values():
+                daysrhs.sort(key=lambda rh: rh.resource.date + rh.resource.term)
 
         # loop on domains
-        for currentdom, currentrhs in domains.items():
-            sh.title('Loop on domain {0:s} '.format(currentdom))
-            actualdate = currentrhs[0].resource.date + currentrhs[0].resource.term
-            logger.info("{:s}: actualdate is {!s}.".format(currentdom, actualdate))
-            for num, rh in enumerate(currentrhs, start=1):
-                sh.title('{:s}: Link on term {:s} (as {:s})'.format(currentdom,
-                                                                    rh.resource.term.fmthm,
-                                                                    self._INPUTFILES_FMT.format(num)))
-                self.system.softlink(rh.container.localpath(), self._INPUTFILES_FMT.format(num))
+        for currentdom, domainrhs in sorted(domains.items()):
+            sh.title('Loop on domain {0:s}'.format(currentdom))
 
-            # Let's run sumo...
-            self._sumo_exec(namcontent, refblock, actualdate, currentdom, rh, opts)
+            for _, currentday, nextday in pcn(sorted(domainrhs)):
+                if nextday is None:
+                    continue
+                sh.title("{:s}: Looping on actualdate={!s}".format(currentdom, currentday))
 
-            # Some cleaning for this domain
-            for i in range(len(currentrhs)):
-                sh.rm(self._INPUTFILES_FMT.format(i + 1))
+                dayrhs = domainrhs[currentday] + [domainrhs[nextday][0], ]
+                for num, rhi in enumerate(dayrhs, start=1):
+                    logger.info('%s: Link on term %s (as %s).', currentdom,
+                                rhi.resource.term.fmthm, self._INPUTFILES_FMT.format(num))
+                    self.system.softlink(rhi.container.localpath(), self._INPUTFILES_FMT.format(num))
+
+                # Let's run sumo...
+                self._sumo_exec(namcontent, refblock, currentday, currentdom, rh, opts)
+
+                # Some cleaning for this domain
+                for i in range(len(dayrhs)):
+                    sh.rm(self._INPUTFILES_FMT.format(i + 1))
 
 
 class Fire(AbstractSumoForcing):
