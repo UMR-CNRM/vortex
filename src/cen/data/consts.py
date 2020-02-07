@@ -56,6 +56,7 @@ class Params(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc', 'ascii'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -81,6 +82,7 @@ class climTG(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -120,6 +122,7 @@ class GridTarget(GenvModelGeoResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
+                    remap   = dict(nc='netcdf'),
                 ),
                 gvar = dict(
                     default = '[kind]_[gdomain]',

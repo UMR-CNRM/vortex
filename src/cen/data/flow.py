@@ -106,7 +106,7 @@ class SurfaceIO(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -200,6 +200,7 @@ class Prep(InitialCondition):
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
                     default = 'netcdf',
+                    remap = dict(nc='netcdf'),
                 ),
                 origin = dict(
                     default = None,
@@ -256,7 +257,7 @@ class SnowObs(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
