@@ -25,10 +25,10 @@ strongly advised.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-__version__ = '1.6.3'
+__version__ = '1.6.4'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.6.4'
+__nextversion__ = '1.7.0'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []
