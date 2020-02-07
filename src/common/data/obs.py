@@ -298,7 +298,8 @@ class VarBCContent(DataContent):
         """Get data from the ``container``."""
         self._do_delayed_slurp = container
         super(VarBCContent, self).slurp(container)
-        self._metadata = VarbcHeadersFile(container)
+        container.rewind()
+        self._metadata = VarbcHeadersFile([container.readline() for _ in range(3)])
 
     @property
     def size(self):

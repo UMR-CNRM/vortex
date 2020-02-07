@@ -372,7 +372,7 @@ class StandardReport(object):
         """Add a information node to the ``base`` or to the current node."""
         base = kw.pop('base', self.current())
         entry = self.doc.createElement(key)
-        for k, v in kw.items():
+        for k, v in sorted(kw.items()):
             entry.setAttribute(k, v)
         base.appendChild(entry)
         return base.lastChild
