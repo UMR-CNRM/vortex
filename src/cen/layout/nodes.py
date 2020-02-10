@@ -192,6 +192,7 @@ class S2MTaskMixIn(object):
                     for suffix in list_suffix:
                         if suffix in self.conf.geometry.area:
                             return [self.conf.geometry.area.replace(suffix, '')]
+                    return [self.conf.geometry.area]  # for cases with meteo=safran but unknown area
             else:
                 return [self.conf.geometry.area]
 
