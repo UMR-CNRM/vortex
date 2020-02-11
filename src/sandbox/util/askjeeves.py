@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -12,7 +16,8 @@ __all__ = []
 
 def test_foo(pnum, ask, config, logger, **kw):
     """Jeeves debugging access point.
-       Simple sleep.
+
+    Simple sleep.
     """
     rc, value = True, 'Yo'
     logger.loglevel = 'debug'

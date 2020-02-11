@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import io
@@ -267,7 +271,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
 
 def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
-    """
+    r"""
     Remove a frozen cycle: undoes what freeze_cycle did, but without removing
     any file in use by any of the other frozen cycles ("\*.genv" in genvpath).
     """

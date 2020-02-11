@@ -3,6 +3,7 @@
 
 """
 Standard services to be used by user defined actions.
+
 With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
@@ -17,7 +18,6 @@ import hashlib
 import io
 from email import encoders
 from string import Template
-import sys
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -42,7 +42,7 @@ class Service(footprints.FootprintBase):
     Abstract base class for services.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('service',)
     _footprint = dict(
         info = 'Abstract services class',
@@ -192,9 +192,9 @@ class MailService(Service):
             from email.mime.image import MIMEImage
             from email.mime.text import MIMEText
             self._mimemap = dict(
-                text  = MIMEText,
-                image = MIMEImage,
-                audio = MIMEAudio
+                text=MIMEText,
+                image=MIMEImage,
+                audio=MIMEAudio
             )
         finally:
             return self._mimemap
@@ -490,16 +490,16 @@ class JeevesService(Service):
             for arg in args:
                 data.update(arg)
             fulltalk = dict(
-                user = self.juser,
-                jtag = self.sh.path.join(self.jpath, self.jfile),
-                todo = self.todo,
-                mail = data.pop('mail', self.glove.email),
-                apps = data.pop('apps', (self.glove.vapp,)),
-                conf = data.pop('conf', (self.glove.vconf,)),
-                task = self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),
+                user=self.juser,
+                jtag=self.sh.path.join(self.jpath, self.jfile),
+                todo=self.todo,
+                mail=data.pop('mail', self.glove.email),
+                apps=data.pop('apps', (self.glove.vapp,)),
+                conf=data.pop('conf', (self.glove.vconf,)),
+                task=self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),
             )
             fulltalk.update(
-                data = data,
+                data=data,
             )
             jr = bertie.ask(**fulltalk)
             return (jr.todo, jr.last)
@@ -593,8 +593,10 @@ class Directory(object):
                      count, str(self))
 
     def get_addresses(self, definition, add_domain=True):
-        """Build a space separated list of unique mail addresses
-           from a string that may reference aliases."""
+        """
+        Build a space separated list of unique mail addresses from a string that
+        may reference aliases.
+        """
         addresses = set()
         for item in definition.lower().replace(',', ' ').split():
             if item in self.aliases:
@@ -753,9 +755,9 @@ class TemplatedMailService(MailService):
     def substitute(tpl, tpldict, depth=1):
         """Safely apply template substitution.
 
-          * Syntactic and missing keys errors are detected and logged.
-          * on error, a safe substitution is applied.
-          * The substitution is iterated ``depth`` times.
+        * Syntactic and missing keys errors are detected and logged.
+        * on error, a safe substitution is applied.
+        * The substitution is iterated ``depth`` times.
         """
         if not isinstance(tpl, Template):
             tpl = Template(tpl)
@@ -783,9 +785,9 @@ class TemplatedMailService(MailService):
     def get_message(self, tpldict):
         """Contents:
 
-          * from the fp if given, else the catalog gives the template file name.
-          * template-substituted.
-          * header and trailer are added.
+        * from the fp if given, else the catalog gives the template file name.
+        * template-substituted.
+        * header and trailer are added.
         """
         tpl = self.message
         if tpl == '':
@@ -802,8 +804,8 @@ class TemplatedMailService(MailService):
     def get_subject(self, tpldict):
         """Subject:
 
-          * from the fp if given, else from the catalog.
-          * template-substituted.
+        * from the fp if given, else from the catalog.
+        * template-substituted.
         """
         tpl = self.subject
         if tpl is None:
@@ -817,11 +819,11 @@ class TemplatedMailService(MailService):
     def get_to(self, tpldict):
         """Recipients:
 
-          * from the fp if given, else from the catalog.
-          * template-substituted.
-          * expanded by the directory (if any).
-          * substituted again, to allow for $vars in the directory.
-          * directory-expanded again for domain completion and unicity.
+        * from the fp if given, else from the catalog.
+        * template-substituted.
+        * expanded by the directory (if any).
+        * substituted again, to allow for $vars in the directory.
+        * directory-expanded again for domain completion and unicity.
         """
         tpl = self.to
         if tpl is None:
@@ -867,9 +869,9 @@ class TemplatedMailService(MailService):
     def __call__(self, *args):
         """Main action:
 
-          * substitute templates where needed.
-          * apply directory definitions to recipients.
-          * activation is checked before sending via the Mail Service.
+        * substitute templates where needed.
+        * apply directory definitions to recipients.
+        * activation is checked before sending via the Mail Service.
 
         Arguments are passed as add_ons to the substitution dictionary.
         """

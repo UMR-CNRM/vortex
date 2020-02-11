@@ -152,6 +152,11 @@ class ExecutionError(RuntimeError):
     pass
 
 
+class CopyTreeError(OSError):
+    """An error raised during the recursive copy of a directory."""
+    pass
+
+
 class CdContext(object):
     """
     Context manager for temporarily changing the working directory.
@@ -1938,6 +1943,38 @@ class OSExtended(System):
         return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
+    def _copydatatree(self, src, dst):
+        """Recursively copy a directory tree using copyfile.
+
+        This is a variant of shutil's copytree. But, unlike with copytree,
+        only data are copied (the permissions, access times, ... are ignored).
+
+        The destination directory must not already exist.
+        """
+        self.stderr('_copydatatree', src, dst)
+        with self.mute_stderr():
+            names = self._os.listdir(src)
+            self._os.makedirs(dst)
+            errors = []
+            for name in names:
+                srcname = self._os.path.join(src, name)
+                dstname = self._os.path.join(dst, name)
+                try:
+                    if self.path.isdir(srcname):
+                        self._copydatatree(srcname, dstname)
+                    else:
+                        # Will raise a SpecialFileError for unsupported file types
+                        self._sh.copyfile(srcname, dstname)
+                # catch the Error from the recursive copytree so that we can
+                # continue with other files
+                except CopyTreeError as err:
+                    errors.extend(err.args[0])
+                except OSError as why:
+                    errors.append((srcname, dstname, str(why)))
+            if errors:
+                raise CopyTreeError(errors)
+        return dst
+
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
 
@@ -1949,7 +1986,7 @@ class OSExtended(System):
         self.stderr('rawcp', source, destination)
         tmp = destination + self.safe_filesuffix()
         if self.path.isdir(source):
-            self.copytree(source, tmp)
+            self._copydatatree(source, tmp)
             # Warning: Not an atomic portion of code (sorry)
             do_cleanup = self.path.exists(destination)
             if do_cleanup:
@@ -2370,8 +2407,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
-    # noinspection PyPep8
-    def l(self, *args):  # @IgnorePep8
+    def pyls(self, *args):
         """
         Proxy to globbing after removing any option. A bit like the
         :meth:`ls` method except that that shell's ``ls`` command is not actually
@@ -2380,7 +2416,7 @@ class OSExtended(System):
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
-        self.stderr('l', *rl)
+        self.stderr('pyls', *rl)
         return self.glob(*rl)
 
     def ldirs(self, *args):
@@ -2514,6 +2550,16 @@ class OSExtended(System):
         radix = self.tarname_radix(objname)
         ext = objname.replace(radix, '')
         return (radix, ext)
+
+    @fmtshcmd
+    def forcepack(self, source, destination=None):  # @UnusedVariable
+        """Return the path to a "packed" data (i.e. a ready to send single file)."""
+        return source
+
+    @fmtshcmd
+    def forceunpack(self, source):  # @UnusedVariable
+        """Unpack the data "inplace" (if needed, depending on the format)."""
+        return True
 
     def blind_dump(self, gateway, obj, destination, bytesdump=False, **opts):
         """
@@ -2689,10 +2735,10 @@ class OSExtended(System):
         return path
 
 
-_python27_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python27 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('2.7.0'),
-                                        before_python = PythonSimplifiedVersion('3.4.0')
+_python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('2.7.0'),
+                                        before_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 
@@ -2725,9 +2771,9 @@ class Python27(object):
         return thisfunc
 
 
-_python34_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python34 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('3.4.0')
+_python34_fp = footprints.Footprint(info='An abstract footprint to be used with the Python34 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 

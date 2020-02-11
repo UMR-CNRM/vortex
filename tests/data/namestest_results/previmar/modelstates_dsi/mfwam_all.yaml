@@ -1,0 +1,744 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010100'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].archive.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0000_000000000000
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010100'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].inline.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101000000_0000000000
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010106'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].archive.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0600_000000000000
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010106'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].inline.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101060000_0000000000
+    - default: &id005 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010112'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].archive.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1200_000000000000
+    - default: &id006 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010112'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].inline.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101120000_0000000000
+    - default: &id007 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010118'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].archive.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1800_000000000000
+    - default: &id008 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: '2018010118'
+        geometry: globalirr02
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: '[suite].inline.fr'
+        vapp: mfwam
+        vconf: globalarp02
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_AM00_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_SX00_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_PM00_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_DH00_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101180000_0000000000
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/BLS20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0000_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0600_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1200_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1800_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0000_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0600_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1200_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1800_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0000_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_0600_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1200_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_1800_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/LAW20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0000_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_0600_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1200_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_1800_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/fic_day/20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/BLS20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: BLS
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_AM00_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_SX00_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_PM00_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_DH00_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_AM00_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_SX00_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_PM00_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_DH00_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: WaveInit
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_AM00_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_SX00_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_PM00_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/LAW_DH00_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/LAW20180101180000_0000004300
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000000000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000000000
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000000000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000000000
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000000000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000000000
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000000000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000000000
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000240000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000002400
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000240000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000002400
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000240000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000002400
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000240000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000002400
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      fields: LAW
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_AM00_000000430000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101000000_0000004300
+    - default: *id003
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_SX00_000000430000
+    - default: *id004
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101060000_0000004300
+    - default: *id005
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_PM00_000000430000
+    - default: *id006
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101120000_0000004300
+    - default: *id007
+      location: op://oper.archive.fr/vagues/oper/mfwamgloarp02/01/BLS_DH00_000000430000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/mfwamgloarp02/oper/data/guess/20180101180000_0000004300

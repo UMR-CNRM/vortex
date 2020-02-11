@@ -90,9 +90,9 @@ class SummariesStack(object):
     trolleytar = 'trolley.tar'
     xpinfo = 'xpinfo.json'
     # syntax: taskinfo.scope.json
-    _re_tasksummary = re.compile('(?P<task>.+)\.(?P<scope>' +
+    _re_tasksummary = re.compile(r'(?P<task>.+)\.(?P<scope>' +
                                  '|'.join(('itself', 'consistency', 'continuity')) +
-                                 ')\.json$')
+                                 r')\.json$')
     _task_junction = '-'
 
     def __init__(self, ticket, vapp, vconf, xpid):

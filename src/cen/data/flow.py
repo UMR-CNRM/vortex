@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from bronx.fancies           import loggers
-from bronx.stdtypes.date     import Date, Time
-from cen.syntax.stdattrs     import cendateperiod_deco
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Date, Time
+from cen.syntax.stdattrs import cendateperiod_deco
 from common.data.modelstates import InitialCondition
-from common.data.obs         import ObsRaw
+from common.data.obs import ObsRaw
 import footprints
 from footprints.util import rangex
-from vortex.data.flow        import GeoFlowResource
-from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
+from vortex.data.flow import GeoFlowResource
+from vortex.data.geometries import UnstructuredGeometry, HorizontalGeometry
 from vortex.syntax.stdattrs import a_date
-from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 
 #: No automatic export
@@ -102,7 +106,7 @@ class SurfaceIO(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -196,6 +200,7 @@ class Prep(InitialCondition):
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
                     default = 'netcdf',
+                    remap = dict(nc='netcdf'),
                 ),
                 origin = dict(
                     default = None,
@@ -252,7 +257,7 @@ class SnowObs(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",

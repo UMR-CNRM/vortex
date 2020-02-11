@@ -12,6 +12,7 @@ from bronx.stdtypes.date import yesterday, Date, Period, Time
 
 
 class S2MTaskMixIn(object):
+    """Usefull addtions for any S2M task."""
 
     nightruntime = Time(hour=3, minute=0)
     firstassimruntime = Time(hour=6, minute=0)
@@ -124,9 +125,12 @@ class S2MTaskMixIn(object):
                 # First alternate for 06h run, second alternate for 09h run: 03h run
                 alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour), "assimilation"))
             # Very last alternates (and only one for 03h run: forecast J+4 of day J-4
-            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) -
+                               Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) -
+                               Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) -
+                               Period(days=4), "production"))
 
         else:
             if self.conf.rundate.hour == self.monthly_analysis_time.hour:
@@ -153,8 +157,10 @@ class S2MTaskMixIn(object):
 
             else:
                 rundate_prep = self.conf.rundate.replace(hour=self.nightruntime.hour)
-                alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=1), "assimilation"))
-                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=1), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) -
+                                   Period(days=1), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) -
+                                   Period(days=1), "assimilation"))
 
         return rundate_prep, alternates
 
@@ -237,7 +243,7 @@ class S2MTaskMixIn(object):
             datebegin_input = Date(datebegin.year - 1, 8, 1, 6, 0, 0)
         dateend_input = datebegin_input
         while dateend_input < dateend:
-            dateend_input = datebegin_input.replace(year = datebegin_input.year + 1)
+            dateend_input = datebegin_input.replace(year=datebegin_input.year + 1)
             list_dates_begin_input.append(datebegin_input)
             datebegin_input = dateend_input
 

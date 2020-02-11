@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various utility classes and functions to be used with the taylorism package.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import multiprocessing
@@ -8,11 +12,13 @@ from multiprocessing import sharedctypes
 
 
 class SharedNumpyArray(object):
+    """
+    Wrapper to multiprocessing.Array, for it to be shared in memory among
+    Workers, while being handled as a numpy.ndarray or numpy.ma.masked_array.
+    """
+
     def __init__(self, array):
         """
-        Wrapper to multiprocessing.Array, for it to be shared in memory among
-        Workers, while being handled as a numpy.ndarray or
-        numpy.ma.masked_array.
 
         :param array: initialize the SharedNumpyArray with this one, supposed
             to be either a multiprocessing.Array, a numpy.ndarray or a

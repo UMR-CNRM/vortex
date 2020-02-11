@@ -61,3 +61,22 @@ Classes
    :members:
    :member-order: alphabetical
    
+.. autoclass:: Filteralti
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FiltrageGribWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: InterpWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MasterWaves
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -7,6 +7,7 @@ Get a climatology file from the Genv provider.
 Can be launched anywhere where Gget or Gget light is available
 (on super-computer for instance).
 
+Ok 20200114 - NM + PL
 Ok 20180731 - GR
 """
 
@@ -39,14 +40,15 @@ runmonth = date.Month("201801010000")
 # define the resource
 rh = toolbox.rload(
     # Ressource
-    kind     = 'clim_bdap',
-    month    = runmonth,
-    geometry = "EURW1S40",
-    model    = "arome",
+    kind      = 'clim_bdap',
+    month     = runmonth,
+    geometry  = "EURAT1S20",
+    model     = "arome",
     # Provider
-    genv     = "cy42_op2.68",
+    genv      = "cy43t2_op2.15",
+    gautofill = "True",
     # Container
-    local    = "Const.clim.[geometry::area].[month]"
+    local     = "Const.clim.[geometry::area].[month]"
 )[0]
 
 print(rh.complete)

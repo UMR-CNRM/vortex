@@ -31,13 +31,13 @@ class DrHookDecoMixin(AlgoComponentDecoMixin):
 
     _MIXIN_EXTRA_FOOTPRINTS = [
         footprints.Footprint(
-            attr = dict(
-                drhookprof = dict(
-                    info            = 'Activate the DrHook profiling.',
-                    optional        = True,
-                    type            = bool,
-                    default         = False,
-                    doc_zorder      = -50,
+            attr=dict(
+                drhookprof=dict(
+                    info='Activate the DrHook profiling.',
+                    optional=True,
+                    type=bool,
+                    default=False,
+                    doc_zorder=-50,
                 ),
             ),
         )]

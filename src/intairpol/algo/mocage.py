@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 """
 AlgoComponents to run Mocage in various modes (forecast, assim, ...).
 """
+
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
 import io
@@ -38,11 +38,22 @@ class AbstractMocageRoot(Parallel):
                     info     = 'Forecast term',
                     type     = date.Time,
                 ),
+                nhcy = dict(
+                    info     = 'Meteo coupling frequency',
+                    type     = date.Period,
+                    optional = True,
+                    default  = date.Period('PT3H'),
+                ),
                 cpldelta = dict(
                     info     = 'Default delta for coupling based on FM files',
                     type     = date.Period,
                     optional = True,
                     default  = 0
+                ),
+                extrasetup = dict(
+                    info        = "Some additive settings (environment variables)",
+                    optional    = True,
+                    default     = None,
                 ),
                 model = dict(
                     values   = ['mocage', ]
@@ -67,7 +78,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Setup %s macro to %s in %s', macro, value, rh.container.actualpath())
 
     def prepare(self, rh, opts):
-        """ Prepare the synchronisation with next tasks"""
+        """Prepare the synchronisation with next tasks."""
         # to control synchronisation and promised files: use the script in iopoll method
         # The script executed via iopoll method returns the list of promised files ready
         if self.promises:
@@ -75,12 +86,13 @@ class AbstractMocageRoot(Parallel):
             self.flyput = True
         else:
             self.flyput = False
-
+        if self.extrasetup:
+            self.export(self.extrasetup)
         super(AbstractMocageRoot, self).prepare(rh, opts)
 
     def _sorted_inputs_terms(self, **kwargs):
-        """
-        Build a dictionary that contains a list of sections for each geometry
+        """Build a dictionary that contains a list of sections for each geometry.
+
         :param kwargs: attributes that will be used to sort the input files
         :return: a dictionary like:
         {'geometry1': [terms1, terms2, ...],
@@ -140,6 +152,7 @@ class AbstractMocageRoot(Parallel):
         logger.info('Min Max (smterms) : %04d %d', minsm, maxsm)
         logger.info('self.fcterm.hour  :      %d', self.fcterm.hour)
         logger.info('Fcterm            :      %d', realfcterm)
+        logger.info('NHCY              :      %s', str(self.nhcy))
 
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
@@ -155,6 +168,8 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'DD2', int(last.day))
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
+        # NHCY is expressed in hours...
+        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600)
 
         namrh.save()
         namrh.container.cat()
@@ -163,7 +178,7 @@ class AbstractMocageRoot(Parallel):
 
 
 class Forecast(AbstractMocageRoot):
-    """Algo component for mocage forecasts"""
+    """Algo component for mocage forecasts."""
 
     _footprint = dict(
         info = 'Mocage forecast',

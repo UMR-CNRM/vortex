@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various resources to handle climatology files used in NWP models.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.geometries import LonlatGeometry
@@ -15,10 +19,9 @@ __all__ = []
 
 @namebuilding_insert('radical', lambda s: 'clim')
 class GenericClim(ModelGeoResource):
-    """
-    Abstract class for a model climatology.
-    An HorizontalGeometry object is needed.
-    A Genvkey can be given.
+    """Abstract class for a model climatology.
+
+    An HorizontalGeometry object is needed. A Genvkey can be given.
     """
     _abstract = True
     _footprint = [
@@ -52,8 +55,8 @@ class GenericClim(ModelGeoResource):
 
 
 class GlobalClim(GenericClim):
-    """
-    Class for a model climatology of a global model.
+    """Class for a model climatology of a global model.
+
     A SpectralGeometry object is needed. A Genvkey can be given.
     """
     _footprint = dict(
@@ -70,8 +73,8 @@ class GlobalClim(GenericClim):
 
 
 class MonthlyGlobalClim(GlobalClim):
-    """
-    Class for a monthly model climatology of a global model.
+    """Class for a monthly model climatology of a global model.
+
     A SpectralGeometry object is needed. A Genvkey can be given.
     """
 
@@ -84,8 +87,8 @@ class MonthlyGlobalClim(GlobalClim):
 
 
 class ClimLAM(GenericClim):
-    """
-    Class for a model climatology of a Local Area Model.
+    """Class for a model climatology of a Local Area Model.
+
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
@@ -108,8 +111,8 @@ class ClimLAM(GenericClim):
 
 
 class MonthlyClimLAM(ClimLAM):
-    """
-    Class for a monthly model climatology of a Local Area Model.
+    """Class for a monthly model climatology of a Local Area Model.
+
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
@@ -123,8 +126,8 @@ class MonthlyClimLAM(ClimLAM):
 
 
 class ClimBDAP(GenericClim):
-    """
-    Class for a climatology of a BDAP domain.
+    """Class for a climatology of a BDAP domain.
+
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
@@ -156,8 +159,8 @@ class ClimBDAP(GenericClim):
 
 
 class MonthlyClimBDAP(ClimBDAP):
-    """
-    Class for a monthly climatology of a BDAP domain.
+    """Class for a monthly climatology of a BDAP domain.
+
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
@@ -175,6 +178,7 @@ class GTOPO30DerivedDB(StaticGeoResource):
     """
     Class of a tar-zip file containing parameters derived from
     GTOPO30 database, generated with old stuff.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -204,8 +208,8 @@ class GTOPO30DerivedDB(StaticGeoResource):
 
 
 class UrbanisationDB(StaticGeoResource):
-    """
-    Class of a binary file containing urbanisation database.
+    """Class of a binary file containing urbanisation database.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -235,8 +239,8 @@ class UrbanisationDB(StaticGeoResource):
 
 
 class WaterPercentageDB(StaticGeoResource):
-    """
-    Class of a binary file containing water percentage database.
+    """Class of a binary file containing water percentage database.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -266,9 +270,8 @@ class WaterPercentageDB(StaticGeoResource):
 
 
 class SoilANdVegDB(StaticGeoResource):
-    """
-    Class of a tar-zip file containing parameters derived from
-    various databases.
+    """Class of a tar-zip file containing parameters derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -298,9 +301,8 @@ class SoilANdVegDB(StaticGeoResource):
 
 
 class MonthlyLAIDB(StaticGeoResource):
-    """
-    Class of a binary file containing monthly LAI derived from
-    various databases.
+    """Class of a binary file containing monthly LAI derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -331,9 +333,8 @@ class MonthlyLAIDB(StaticGeoResource):
 
 
 class MonthlyVegDB(StaticGeoResource):
-    """
-    Class of a binary file containing monthly vegetation derived from
-    various databases.
+    """Class of a binary file containing monthly vegetation derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -366,8 +367,8 @@ class MonthlyVegDB(StaticGeoResource):
 class SoilClimatologyDB(StaticGeoResource):
     """
     Class of a binary file containing climatologic soil parameters
-    (temperature, moisture, snow, ice) derived from
-    various databases.
+    (temperature, moisture, snow, ice) derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -400,6 +401,7 @@ class SurfGeopotentialDB(StaticGeoResource):
     """
     Class of a binary file containing Surface Geopotential derived from
     various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -431,8 +433,8 @@ class SurfGeopotentialDB(StaticGeoResource):
 class MonthlySoilClimatologyDB(SoilClimatologyDB):
     """
     Class of a binary file containing monthly climatologic soil parameters
-    (temperature, moisture, snow, ice) derived from
-    various databases.
+    (temperature, moisture, snow, ice) derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -447,6 +449,7 @@ class MonthlyChemicalDB(StaticGeoResource):
     """
     Class of a binary file containing climatologic chemicals (ozone, aerosols)
     parameters derived from various databases.
+
     A Genvkey can be given.
     """
     _footprint = [
@@ -477,6 +480,8 @@ class MonthlyChemicalDB(StaticGeoResource):
 
 
 class GeometryIllustration(StaticGeoResource):
+    """Illustration of a domain geographic coverage."""
+
     _footprint = dict(
         info = 'Illustration of a domain geographic coverage.',
         attr = dict(

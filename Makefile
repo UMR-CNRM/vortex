@@ -5,13 +5,15 @@ CLOCBIN     = cloc
 DOC_DIR		= sphinx
 TEST_DIR	= tests
 
+STYLEPY		= project/bin/vortex_codechecker.py
+
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
 EXTRAPATH   := $(PWD)/src:$(PWD)/site:$(PWD)/project:$(PYTHONPATH)
 export PYTHONPATH = $(EXTRAPATH)
 
-.PHONY: check tests cover doc cloc cloc_all pylint flake8 clean $(CLEANDIRS)
+.PHONY: check tests cover doc style cloc cloc_all pylint flake8 clean $(CLEANDIRS)
 
 # Run a minimal set of tests (should always succeed)
 check:
@@ -28,6 +30,10 @@ cover:
 # Build the sphinx documentation
 doc:
 	$(MAKE) -C $(DOC_DIR)
+
+# Run the Vortex's code chercker
+style:
+	$(STYLEPY)
 
 # Count the number of source code lines
 cloc        : ; $(CLOCPY) -p $(CLOCBIN) -d $(CLOCDEF) site src tests conf,templates examples sphinx

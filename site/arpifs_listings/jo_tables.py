@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals with part of the Arpege/IFS listings related to the
+processing of observations (JO-tables).
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -38,14 +43,12 @@ def _compute_diff(exp, ref):
 
 def _chk_diff(exp, ref, thres, bw=False):
     """Internal function to check if the relative difference is within bounds.
-    If not trigger the use of the red color
 
     :param exp: Value to test (float or int)
     :param ref: Ref value
     :param thres: Threshold
     :param bw: Black & White flag
     """
-
     diff, reldiff = _compute_diff(exp, ref)
     # Set colors
     if abs(reldiff) > thres and not bw:
@@ -59,7 +62,7 @@ def _chk_diff(exp, ref, thres, bw=False):
 
 
 def _write_n(out, sthg):
-    """Write a string into **out**, ending with '\n'."""
+    r"""Write a string into **out**, ending with '\n'."""
     out.write(sthg + '\n')
 
 
@@ -187,7 +190,7 @@ class JoVariable(object):
                 'jo/nxp': 0 if (self.n == 0) else self.jo / self.n, }
 
     def as_dict(self):
-        """as dict"""
+        """Return this entry data as a dictionary."""
         return {'n': self.n,
                 'jo': self.jo,
                 'jon': 0 if (self.n == 0) else self.jo / self.n, }
@@ -264,7 +267,7 @@ class JoSensor(_JoMixinPlus):
         return diff
 
     def as_dict(self):
-        """as dict"""
+        """Return this entry data as a dictionary."""
         dico = OrderedDict()
         for v in self.keys():
             dico[v] = self[v].as_dict()
@@ -468,7 +471,7 @@ class JoTable(_JoMixinPlus):
         return diff
 
     def as_dict(self):
-        """as dict."""
+        """Return this entry data as a dictionary."""
         dico = OrderedDict()
         for o in self.keys():
             dico[o] = self[o].as_dict()
@@ -525,7 +528,7 @@ class JoTable(_JoMixinPlus):
         _write_n(out, '')
 
     def end_of_group(self, *kargs):
-        """ Record the global ObsCount and Jo.
+        """Record the global ObsCount and Jo.
 
         :param ntotal: Global ObsCount
         :param jo: Global Jo
@@ -573,7 +576,7 @@ class JoTables(_JoMixin):
                 all([self[k] == other[k] for k in self.keys()]))
 
     def print_head(self, ref, out=sys.stdout):
-        """ Print very useful generic informations."""
+        """Print very useful generic informations."""
         _write_n(out, 'Experiment Jo Tables read from file: %s' % self.filename)
         _write_n(out, 'Reference  Jo Tables read from file: %s' % ref.filename)
         _write_n(out, '')

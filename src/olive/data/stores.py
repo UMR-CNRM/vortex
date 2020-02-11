@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+Various research specific stores (to be used in the SWAPP/Olive system).
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -65,7 +69,7 @@ class StoreGlue(object):
         return self.glueretrieve(section, 'objname')
 
     def gluelist(self, section):
-        """returns the list of options in the specified ``section``."""
+        """Returns the list of options in the specified ``section``."""
         if self.gluemap.has_section(section):
             return [x for x in self.gluemap.options(section) if not x.startswith('obj')]
         else:
@@ -178,7 +182,7 @@ class OliveArchiveStore(ArchiveStore):
         """Remap actual remote path to distant store path for read-only actions."""
         xpath = remote['path'].split('/')
         xpath[1:2] = list(xpath[1])
-        xpath[:0] = [ self.system.path.sep, self.storehead ]
+        xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
 
     def remap_write(self, remote, options):
@@ -523,4 +527,4 @@ class OpStore(MultiStore):
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
         prefix, u_multi, u_region = self.netloc.split('.')
-        return ( prefix + '.cache.fr', prefix + '.archive.fr' )
+        return (prefix + '.cache.fr', prefix + '.archive.fr')

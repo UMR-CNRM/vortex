@@ -2,6 +2,32 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+Abstract class for any AlgoComponent (:class:`AlgoComponent`) or AlgoComponent's
+Mixins (:class:`AlgoComponentDecoMixin`).
+
+Some very generic concrete AlgoComponent classes are also provided:
+
+    * :class:`Expresso`: launch a simple script;
+    * :class:`BlindRun`: launch a simple executable (no MPI);
+    * :class:`Parallel`: launch an MPI application.
+
+Additional abstract classes provide multiprocessing support (through the
+:mod:`taylorism` package):
+
+    * :class:`TaylorRun`: launch a piece of Python code on several processes;
+    * :class:`ParaExpresso`: launch a script multiple times (in parallel);
+    * :class:`ParaBlindRun`: launch an executable multiple times (in parallel).
+
+Such classes are based on the :mod:`taylorism` (the developer should be familiar
+with this package) and uses "Worker" classes provided in the
+:mod:`vortex.tools.parallelism` package.
+
+When class inheritance is not applicable or ineffective, The AlgoComponent's
+Mixins are a powerful tool to mutualise some pieces of code. See the
+:class:`AlgoComponentDecoMixin` class documentation for more details.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
@@ -418,14 +444,14 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
     _SERVERSYNC_RUNONSTARTUP = True
     _SERVERSYNC_STOPONEXIT = True
 
-    _abstract  = True
+    _abstract = True
     _collector = ('component',)
     _footprint = dict(
         info = 'Abstract algo component',
         attr = dict(
             engine = dict(
                 info     = 'The way the executable should be run.',
-                values   = [ 'algo' ]
+                values   = ['algo', ]
             ),
             flyput = dict(
                 info            = 'Activate a background job in charge off on the fly processing.',
@@ -630,6 +656,41 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         """Map output to another filename."""
         return item
 
+    def _flyput_job_internal_search(self, io_poll_method, io_poll_args, io_poll_kwargs):
+        data = list()
+        for arg in io_poll_args:
+            logger.info('Polling check arg %s', arg)
+            rc = io_poll_method(arg, **io_poll_kwargs)
+            try:
+                data.extend(rc.result)
+            except AttributeError:
+                data.extend(rc)
+            data = [x for x in data if x]
+            logger.info('Polling retrieved data %s', str(data))
+        return data
+
+    def _flyput_job_internal_put(self, data):
+        for thisdata in data:
+            if self.flymapping:
+                mappeddata = self.flyput_outputmapping(thisdata)
+                if not mappeddata:
+                    raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
+            else:
+                mappeddata = thisdata
+            candidates = [x for x in self.promises
+                          if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
+            if candidates:
+                logger.info('Polled data is promised <%s>', thisdata)
+                bingo = candidates.pop()
+                if thisdata != mappeddata:
+                    logger.info('Linking <%s> to <%s> (fmt=%s) before put',
+                                thisdata, mappeddata, bingo.rh.container.actualfmt)
+                    self.system.cp(thisdata, mappeddata, intent='in',
+                                   fmt=bingo.rh.container.actualfmt)
+                bingo.put(incache=True)
+            else:
+                logger.warning('Polled data not promised <%s>', thisdata)
+
     def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
                    event_complete, event_free, queue_context):
         """Poll new data resources."""
@@ -644,37 +705,10 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
         while redo and not event_complete.is_set():
             event_free.clear()
-            data = list()
             try:
-                for arg in io_poll_args:
-                    logger.info('Polling check arg %s', arg)
-                    rc = io_poll_method(arg, **io_poll_kwargs)
-                    try:
-                        data.extend(rc.result)
-                    except AttributeError:
-                        data.extend(rc)
-                data = [x for x in data if x]
-                logger.info('Polling retrieved data %s', str(data))
-                for thisdata in data:
-                    if self.flymapping:
-                        mappeddata = self.flyput_outputmapping(thisdata)
-                        if not mappeddata:
-                            raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
-                    else:
-                        mappeddata = thisdata
-                    candidates = [x for x in self.promises
-                                  if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
-                    if candidates:
-                        logger.info('Polled data is promised <%s>', thisdata)
-                        bingo = candidates.pop()
-                        if thisdata != mappeddata:
-                            logger.info('Linking <%s> to <%s> (fmt=%s) before put',
-                                        thisdata, mappeddata, bingo.rh.container.actualfmt)
-                            self.system.cp(thisdata, mappeddata, intent='in',
-                                           fmt=bingo.rh.container.actualfmt)
-                        bingo.put(incache=True)
-                    else:
-                        logger.warning('Polled data not promised <%s>', thisdata)
+                data = self._flyput_job_internal_search(io_poll_method,
+                                                        io_poll_args, io_poll_kwargs)
+                self._flyput_job_internal_put(data)
             except Exception as trouble:
                 logger.error('Polling trouble: %s', str(trouble))
                 redo = False
@@ -730,9 +764,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         queue_ctx = multiprocessing.Queue()
 
         p_io = multiprocessing.Process(
-            name   = self.footprint_clsname(),
-            target = self.flyput_job,
-            args   = (io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
+            name=self.footprint_clsname(),
+            target=self.flyput_job,
+            args=(io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
         )
 
         # The co-process is started
@@ -741,28 +775,25 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         return (p_io, event_stop, event_free, queue_ctx)
 
     def manual_flypolling(self):
+        """Call the flyput method and returns the list of newly available files."""
         # Find out a polling method
         io_poll_method = self.flyput_method()
         if not io_poll_method:
             raise AlgoComponentError('Unable to find an io_poll_method')
         # Find out some polling prefixes
-        io_poll_args = self.flyput_args()
+        io_poll_args = self.flyput_check()
         if not io_poll_args:
             raise AlgoComponentError('Unable to find an io_poll_args')
         # Additional named attributes
         io_poll_kwargs = self.flyput_kwargs()
         # Starting polling each of the prefixes
-        data = list()
-        for arg in io_poll_args:
-            logger.info('Polling check arg %s', arg)
-            rc = io_poll_method(arg, **io_poll_kwargs)
-            try:
-                data.extend(rc.result)
-            except AttributeError:
-                data.extend(rc)
-            data = [x for x in data if x]
-            logger.info('Polling retrieved data %s', str(data))
-        return data
+        return self._flyput_job_internal_search(io_poll_method,
+                                                io_poll_args, io_poll_kwargs)
+
+    def manual_flypolling_job(self):
+        """Call the flyput method and deal with promised files."""
+        data = self.manual_flypolling()
+        self._flyput_job_internal_put(data)
 
     def flyput_end(self, p_io, e_complete, e_free, queue_ctx):
         """Wait for the co-process in charge of promises."""
@@ -796,9 +827,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         """Start a subprocess and run the server in it."""
         self._server_event = multiprocessing.Event()
         self._server_process = multiprocessing.Process(
-            name   = self.footprint_clsname(),
-            target = self.server_job,
-            args   = (rh, opts)
+            name=self.footprint_clsname(),
+            target=self.server_job,
+            args=(rh, opts)
         )
         self._server_process.start()
 
@@ -949,9 +980,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                 if self.serversync_method is None:
                     raise ValueError('The serversync_method must be provided.')
                 self._server_synctool = footprints.proxy.serversynctool(
-                    method      = self.serversync_method,
-                    medium      = self.serversync_medium,
-                    raiseonexit = self._SERVERSYNC_RAISEONEXIT,
+                    method=self.serversync_method,
+                    medium=self.serversync_medium,
+                    raiseonexit=self._SERVERSYNC_RAISEONEXIT,
                 )
                 self._server_synctool.set_servercheck_callback(self.server_alive)
                 self.server_begin(rh, opts)
@@ -1500,8 +1531,8 @@ class Parallel(xExecutableAlgoComponent):
             if self.env.VORTEX_MPI_OPTS is not None:
                 mpi_extras['mpiopts'] = self.env.VORTEX_MPI_OPTS
             mpi = footprints.proxy.mpitool(
-                sysname = self.system.sysname,
-                mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
+                sysname=self.system.sysname,
+                mpiname=self.mpiname or self.env.VORTEX_MPI_NAME,
                 **mpi_extras
             )
         if not mpi:
@@ -1595,14 +1626,14 @@ class Parallel(xExecutableAlgoComponent):
                 if use_envelope:
                     bins.append(
                         footprints.proxy.mpibinary(
-                            kind  = bnames[i]
+                            kind=bnames[i]
                         )
                     )
                 else:
                     bins.append(
                         footprints.proxy.mpibinary(
-                            kind  = bnames[i],
-                            nodes = self.env.get('VORTEX_SUBMIT_NODES', 1),
+                            kind=bnames[i],
+                            nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
                             **mpi_desc
                         )
                     )
@@ -1678,27 +1709,27 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
     """Adds an IOServer capabilities (footprints attributes + MPI bianries alteration)."""
 
     _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
-        info = "Abstract IoServer footprints' attributes.",
-        attr = dict(
-            ioserver = dict(
-                info            = 'The object used to launch the IOserver part of the binary.',
-                type            = mpitools.MpiBinaryIOServer,
-                optional        = True,
-                default         = None,
-                doc_visibility  = footprints.doc.visibility.GURU,
+        info="Abstract IoServer footprints' attributes.",
+        attr=dict(
+            ioserver=dict(
+                info='The object used to launch the IOserver part of the binary.',
+                type=mpitools.MpiBinaryIOServer,
+                optional=True,
+                default=None,
+                doc_visibility=footprints.doc.visibility.GURU,
             ),
-            ioname = dict(
-                info            = ('The binary_kind of a class in the mpibinary collector ' +
-                                   '(used only if *ioserver* is not provided)'),
-                optional        = True,
-                default         = 'ioserv',
-                doc_visibility  = footprints.doc.visibility.GURU,
+            ioname=dict(
+                info=('The binary_kind of a class in the mpibinary collector ' +
+                      '(used only if *ioserver* is not provided)'),
+                optional=True,
+                default='ioserv',
+                doc_visibility=footprints.doc.visibility.GURU,
             ),
-            iolocation = dict(
-                info            = 'Location of the IO server within the binary list',
-                type            = int,
-                default         = -1,
-                optional        = True
+            iolocation=dict(
+                info='Location of the IO server within the binary list',
+                type=int,
+                default=-1,
+                optional=True
             )
         )),
     ]
@@ -1710,10 +1741,10 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
         io = self.ioserver
         if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
             io = footprints.proxy.mpibinary(
-                kind   = self.ioname,
-                nodes  = self.env.VORTEX_IOSERVER_NODES,
-                tasks  = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
-                openmp = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
+                kind=self.ioname,
+                nodes=self.env.VORTEX_IOSERVER_NODES,
+                tasks=self.env.VORTEX_IOSERVER_TASKS or master.tasks,
+                openmp=self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
             io.options = {x[3:]: opts[x]
                           for x in opts.keys() if x.startswith('io_')}
             io.master = master.master
@@ -1746,29 +1777,28 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
     """
 
     _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
-        info = "Abstract OpenPALM footprints' attributes.",
-        attr = dict(
-            openpalm_driver = dict(
-                info            = ('The path to the OpenPALM driver binary. ' +
-                                   'When omitted, the input sequence is looked up ' +
-                                   'for section with ``role=OpenPALM Driver``.'),
-                optional        = True,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
+        info="Abstract OpenPALM footprints' attributes.",
+        attr=dict(
+            openpalm_driver=dict(
+                info=('The path to the OpenPALM driver binary. ' +
+                      'When omitted, the input sequence is looked up ' +
+                      'for section with ``role=OpenPALM Driver``.'),
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
-            openpalm_overcommit = dict(
-                info            = ('Run the OpenPALM driver on the first node ' +
-                                   'in addition to existing tasks. Otherwise ' +
-                                   'dedicated tasks are used.'),
-                type            = bool,
-                default         = True,
-                optional        = True,
-                doc_visibility  = footprints.doc.visibility.ADVANCED,
+            openpalm_overcommit=dict(
+                info=('Run the OpenPALM driver on the first node in addition ' +
+                      'to existing tasks. Otherwise dedicated tasks are used.'),
+                type=bool,
+                default=True,
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
-            openpalm_binkind = dict(
-                info            = 'The binary kind for the OpenPALM driver.',
-                optional        = True,
-                default         = 'basic',
-                doc_visibility  = footprints.doc.visibility.GURU,
+            openpalm_binkind=dict(
+                info='The binary kind for the OpenPALM driver.',
+                optional=True,
+                default='basic',
+                doc_visibility=footprints.doc.visibility.GURU,
             ),
         )),
     ]
@@ -1795,10 +1825,10 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
         single_bin = len(bins) == 1
         master = bins[0]
         driver = footprints.proxy.mpibinary(
-            kind   = self.openpalm_binkind,
-            nodes  = 1,
-            tasks  = self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
-            openmp = self.env.VORTEX_OPENPALM_DRV_OPENMP or master.openmp,
+            kind=self.openpalm_binkind,
+            nodes=1,
+            tasks=self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
+            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or master.openmp,
         )
         driver.options = {x[8:]: opts[x]
                           for x in opts.keys() if x.startswith('palmdrv_')}
@@ -1853,7 +1883,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                     raise AlgoComponentError("'nn' and 'nnp' must be defined for the master executable")
                 env = [dict(nn=1,
                             nnp=master.options['nnp'] + driver.nprocs,
-                            openmp=master.options.get('openmp', 1)) ]
+                            openmp=master.options.get('openmp', 1))]
                 if master.options['nn'] > 1:
                     env.append(dict(nn=master.options['nn'] - 1,
                                     nnp=master.options['nnp'],

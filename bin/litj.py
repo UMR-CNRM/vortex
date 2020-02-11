@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, division
-# from __future__ import absolute_import, unicode_literals
-
 """
-Leave it to Jeeves
+Leave it to Jeeves.
+
 A basic launching interface to Jeeves' services !
 """
+
+from __future__ import print_function, division
+# from __future__ import absolute_import, unicode_literals
 
 import os
 import re

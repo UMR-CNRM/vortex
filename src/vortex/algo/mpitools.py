@@ -98,7 +98,7 @@ class MpiException(Exception):
 class MpiTool(footprints.FootprintBase):
     """Root class for any :class:`MpiTool` subclass."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('mpitool', )
     _footprint = dict(
         info = 'MpiTool class in charge of a particular MPI implementation',

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Various Resources for executables used in NWP.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import vortex
@@ -67,7 +71,7 @@ class IFSModel(NWPModel):
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
-            model = self.model
+            model=self.model
         )
 
     def iga_basename(self):
@@ -221,8 +225,8 @@ class ProTool(BlackBox):
                     default  = 'master_addsurf'
                 ),
                 kind = dict(
-                    values   = [ 'protool', 'addsurf' ],
-                    remap    = dict(addsurf = 'protool'),
+                    values   = ['protool', 'addsurf'],
+                    remap    = dict(addsurf='protool'),
                 ),
             )
         )
@@ -321,10 +325,10 @@ class IceNCDF2Ascii(BlackBox):
     def command_line(self, file_in_hn, file_in_hs, param, file_out):
         """Build the command line to launch the executable."""
         return '{file_in_hn} {file_in_hs} {param} {file_out}'.format(
-            file_in_hn = file_in_hn,
-            file_in_hs = file_in_hs,
-            param = param,
-            file_out = file_out
+            file_in_hn=file_in_hn,
+            file_in_hs=file_in_hs,
+            param=param,
+            file_out=file_out
         )
 
 
@@ -694,8 +698,10 @@ class PertSurf(BlackBox):
 
 @gmkpack_bin_deco
 class AddPearp(BlackBox):
-    """Tool that adds perturbations taken from a given PEARP member
-    to the deterministic initial conditions."""
+    """
+    Tool that adds perturbations taken from a given PEARP member
+    to the deterministic initial conditions.
+    """
 
     _footprint = [
         gvar,

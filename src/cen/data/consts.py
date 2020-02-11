@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -52,6 +56,7 @@ class Params(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc', 'ascii'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -77,6 +82,7 @@ class climTG(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -95,7 +101,7 @@ class climTG(GenvModelGeoResource):
         nbi = super(climTG, self).namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
-            cen_rawbasename = (self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            cen_rawbasename=(self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
             # With the standard provider, the usual keys will be used.
         )
         return nbi
@@ -106,20 +112,24 @@ class GridTarget(GenvModelGeoResource):
     Resource describing a grid for interpolation of data based on massifs geometry
     """
 
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ["interpolgrid"],
-            ),
-            nativefmt = dict(
-                values  = ['netcdf', 'nc'],
-                default = 'netcdf',
-            ),
-            gvar = dict(
-                default = '[kind]',
-            ),
+    _footprint = [
+        gdomain,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values = ["interpolgrid"],
+                ),
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap   = dict(nc='netcdf'),
+                ),
+                gvar = dict(
+                    default = '[kind]_[gdomain]',
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

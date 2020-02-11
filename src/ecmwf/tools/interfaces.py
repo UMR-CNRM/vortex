@@ -56,7 +56,7 @@ class ECMWFInterface(object):
                                                list_options=list_options)
         logger.debug("The command line launched is: {}".format(command_line))
         command_line = command_line.split()
-        return self.system.spawn(command_line, shell = False, output = False)
+        return self.system.spawn(command_line, shell=False, output=False)
 
     @staticmethod
     def build_command_line(command, list_args, dict_args, list_options):

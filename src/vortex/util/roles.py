@@ -52,5 +52,5 @@ def setrole(role, tag=None):
 
 
 _rolesgateway = dict(
-    default = stdfactoryrole
+    default=stdfactoryrole
 )

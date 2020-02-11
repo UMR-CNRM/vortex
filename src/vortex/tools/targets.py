@@ -46,8 +46,8 @@ class Target(fp.FootprintBase):
     configuration file (``target-[hostname].ini`` by default).
     """
 
-    _abstract  = True
-    _explicit  = False
+    _abstract = True
+    _explicit = False
     _collector = ('target',)
     _footprint = dict(
         info = 'Default target description',
@@ -160,8 +160,9 @@ class Target(fp.FootprintBase):
         return default
 
     def getx(self, key, default=None, env_key=None, silent=False, aslist=False):
-        """
-        Return a value from several sources in turn:
+        r"""Return a value from several sources.
+
+        In turn, the following sources are considered:
 
         - a shell environment variable
         - this configuration handler (key = 'section:option') (see the :meth:`get` method)
@@ -174,7 +175,7 @@ class Target(fp.FootprintBase):
         e.g. these notations are equivalent::
 
             alist = val1 val2 val3 val4 val5
-            alist  = val1, val2 val3 \\
+            alist  = val1, val2 val3 \
                      val4,
                      val5
 
@@ -301,8 +302,10 @@ class Target(fp.FootprintBase):
 
     @property
     def specialnodes(self):
-        """Returns a dictionary that contains the list of nodes for a given
-        node-type."""
+        """
+        Returns a dictionary that contains the list of nodes for a given
+        node-type.
+        """
         if self._specialnodes is None:
             self._specialnodes = self._init_supernodes(self._re_nodes_property)
             for ntype, aliases in self.specialnodesaliases.items():
@@ -363,7 +366,7 @@ class LocalTarget(Target):
         info = 'Nice local target',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux', 'Darwin', 'Local', 'Localhost' ]
+                values = ['Linux', 'Darwin', 'Local', 'Localhost']
             ),
         )
     )

@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 from argparse import ArgumentParser
 import importlib
+import io
 import os
 import re
 import string
@@ -146,7 +147,7 @@ class RstIndexEntry(object):
         index_t = index_t.rstrip('.')
         logger.info('{0._mainpack:s}: Creating {0.packindex:s} (header: {1:s})'.
                     format(self, index_t))
-        with open(self.packindex, 'w') as fhidx:
+        with io.open(self.packindex, 'w', encoding='utf-8') as fhidx:
             fhidx.write(self._process_template(
                 packdoc=index_t,
                 packdoc_sep=('=' * len(index_t)),
@@ -160,8 +161,8 @@ class RstIndexEntry(object):
 
     @staticmethod
     def _process_template(**subdict):
-        with open(_DOC_TEMPLATE) as fhd:
-                tplobj = fhd.read()
+        with io.open(_DOC_TEMPLATE, 'r', encoding='utf-8') as fhd:
+            tplobj = fhd.read()
         tplobj = string.Template(tplobj)
         return tplobj.substitute(subdict)
 

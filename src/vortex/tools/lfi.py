@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module needed to interact with FA and LFI files.
+
+
+It provides shell addons to deal with:
+
+    * Splitted FA files (as produced by the Arpege/IFS IO server)
+    * The ability to compare Fa or LFI files
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -105,11 +116,11 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     Interface to LFI commands through Perl wrappers.
     """
 
-    LFI_HNDL_SPEC   = ':1'
-    DR_HOOK_SILENT  = 1
+    LFI_HNDL_SPEC = ':1'
+    DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE   = '32M'
-    KMP_STACKSIZE   = '32M'
+    OMP_STACKSIZE = '32M'
+    KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(
@@ -184,9 +195,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         kw['output'] = True
         rawout = self._spawn(cmd, **kw)
         return LFI_Status(
-            rc     = 0,
-            stdout = rawout,
-            result = [tuple(eval(x)[0]) for x in rawout if x.startswith('[')]
+            rc=0,
+            stdout=rawout,
+            result=[tuple(eval(x)[0]) for x in rawout if x.startswith('[')]
         )
 
     fa_table = lfi_table = _std_table
@@ -233,9 +244,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         trfields.unchanged = set([x[0] for x in stlist.result]) - set(trfields)
 
         return LFI_Status(
-            rc     = int(bool(fields)),
-            stdout = rawout,
-            result = trfields
+            rc=int(bool(fields)),
+            stdout=rawout,
+            result=trfields
         )
 
     fa_diff = lfi_diff = _std_diff
@@ -254,9 +265,9 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     def _pack_stream(self, source):
         return self._spawn_wrap('pack', [source, ],
-                                output  = False,
-                                inpipe  = True,
-                                bufsize = 8192)
+                                output=False,
+                                inpipe=True,
+                                bufsize=8192)
 
     def _packed_size(self, source):
         out = self._spawn_wrap('size', [source, ], output=True, inpipe=False)
@@ -265,6 +276,24 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         except ValueError:
             pass
         return None
+
+    def _std_forcepack(self, source, destination=None):
+        """Returned a path to a packed data."""
+        if self.is_xlfi(source):
+            destination = (destination if destination else
+                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+            if not self.sh.path.exists(destination):
+                st = self._std_copy(source=source, destination=destination, pack=True)
+                if st:
+                    return destination
+                else:
+                    raise IOError('XLFI packing failed')
+            else:
+                return destination
+        else:
+            return source
+
+    fa_forcepack = lfi_forcepack = _std_forcepack
 
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
@@ -491,9 +520,9 @@ class LFI_Tool_Py(LFI_Tool_Raw):
     def _pack_stream(self, source):
         return self._spawn(['lfi_alt_pack', '--lfi-file-in', source,
                             '--lfi-file-out', '-'],
-                           output  = False,
-                           inpipe  = True,
-                           bufsize = 8192)
+                           output=False,
+                           inpipe=True,
+                           bufsize=8192)
 
     def _std_remove(self, *args):
         """Remove (possibly) multi lfi files."""
@@ -544,14 +573,14 @@ class LFI_Tool_Py(LFI_Tool_Raw):
         self.sh.chmod(destination, 0o644)
         return rc
 
-    _cp_aspack_fsok_read  = _cp_pack_read
+    _cp_aspack_fsok_read = _cp_pack_read
     _cp_aspack_fsok_write = _cp_pack_write
-    _cp_aspack_fsko_read  = _cp_pack_read
+    _cp_aspack_fsko_read = _cp_pack_read
     _cp_aspack_fsko_write = _cp_pack_write
 
-    _cp_nopack_fsok_read  = _cp_copy_read
+    _cp_nopack_fsok_read = _cp_copy_read
     _cp_nopack_fsok_write = _cp_copy_write
-    _cp_nopack_fsko_read  = _cp_pack_read
+    _cp_nopack_fsko_read = _cp_pack_read
     _cp_nopack_fsko_write = _cp_pack_write
 
     def _multicpmethod(self, pack=False, intent='in', samefs=False):
@@ -613,11 +642,11 @@ class IO_Poll(addons.Addon):
     This addon is in charge of multi-file reshaping after IFS-ARPEGE execution.
     """
 
-    LFI_HNDL_SPEC   = ':1'
-    DR_HOOK_SILENT  = 1
+    LFI_HNDL_SPEC = ':1'
+    DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE   = '32M'
-    KMP_STACKSIZE   = '32M'
+    OMP_STACKSIZE = '32M'
+    KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(

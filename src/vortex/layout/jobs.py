@@ -67,7 +67,7 @@ def _mkjob_opts_detect_1(t, ** opts):
     # Things guessed from the directory name
     opset = _guess_vapp_vconf_xpid(t)
     appbase = opts.pop('appbase', opset.appbase)
-    target_appbase  = opts.get('target_appbase', opset.appbase)
+    target_appbase = opts.get('target_appbase', opset.appbase)
     xpid = opts.get('xpid', opset.xpid)
     vapp = opts.pop('vapp', opset.vapp)
     vconf = opts.pop('vconf', opset.vconf)
@@ -148,7 +148,8 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     def opts_plus_job_plus_tpl(what, default):
         """
         Function that look up in command line options, then in job's conf,
-        then in template's conf."""
+        then in template's conf.
+        """
         return opts.pop(what, p_jobconf.get(what, p_tplconf.get(what, default)))
 
     # A last chance for these super-stars : they may be set in job's conf...
@@ -292,8 +293,8 @@ def _mkjob_opts_autoexport(auto_opts):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        inifile   = '@job-default.ini',
-        wrap      = False,
+        inifile='@job-default.ini',
+        wrap=False,
     )
     opts.update(kw)
 
@@ -535,7 +536,7 @@ class JobAssistant(footprints.FootprintBase):
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
         specials = kw.get('actual', dict())
-        t.glove.vapp  = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
+        t.glove.vapp = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
         t.glove.vconf = kw.get('vconf', specials.get(self.special_prefix + 'vconf', None))
         # Ensure that the script's path is an absolute path
         sys.argv[0] = t.sh.path.abspath(sys.argv[0])
@@ -667,7 +668,7 @@ class JobAssistant(footprints.FootprintBase):
 class JobAssistantPlugin(footprints.FootprintBase):
 
     _conflicts = []
-    _abstract  = True
+    _abstract = True
     _collector = ('jobassistant_plugin',)
     _footprint = dict(
         info = 'Abstract JobAssistant Plugin',

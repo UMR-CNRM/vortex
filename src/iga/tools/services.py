@@ -355,6 +355,10 @@ class RoutingService(Service):
         attr = dict(
             filename = dict(
             ),
+            filefmt = dict(
+                optional = True,
+                default  = None
+            ),
             targetname = dict(
                 optional = True,
                 default  = None
@@ -385,6 +389,8 @@ class RoutingService(Service):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
         self._actual_filename = self.sh.path.abspath(self.filename)
+        self._actual_filename = self.sh.forcepack(self._actual_filename,
+                                                  fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -641,8 +647,8 @@ class BdpeService(RoutingService):
             logger.info(msg)
             return None
 
-        default = '{0.productid}{0.term.fmtraw}'.format(self)
-        return self.iniparser.get(self.soprano_target, self.routingkey.lower(), default)
+        actual_key = self.iniparser.get(self.soprano_target, self.routingkey.lower(), raw=True)
+        return actual_key.format(self)
 
     def __call__(self):
         """The actual call to the service."""

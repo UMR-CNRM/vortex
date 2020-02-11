@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to the coupling between NWP models.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -57,8 +61,8 @@ class Coupling(FullPos):
         sh = self.system
 
         cplsec = self.context.sequence.effective_inputs(
-            role = ('InitialCondition', 'CouplingSource'),
-            kind = ('historic', 'analysis')
+            role=('InitialCondition', 'CouplingSource'),
+            kind=('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
         ininc = self.naming_convention('ic', rh)
@@ -66,12 +70,12 @@ class Coupling(FullPos):
         isMany = len(cplsec) > 1
         outprefix = 'PF{0:s}AREA'.format(self.xpname)
 
-        cplguess = self.context.sequence.effective_inputs(role = 'Guess')
+        cplguess = self.context.sequence.effective_inputs(role='Guess')
         cplguess.sort(key=lambda s: s.rh.resource.term)
         guessing = bool(cplguess)
 
-        cplsurf = self.context.sequence.effective_inputs(role = ('SurfaceInitialCondition',
-                                                                 'SurfaceCouplingSource'))
+        cplsurf = self.context.sequence.effective_inputs(role=('SurfaceInitialCondition',
+                                                               'SurfaceCouplingSource'))
         cplsurf.sort(key=lambda s: s.rh.resource.term)
         surfacing = bool(cplsurf)
         inisurfnc = self.naming_convention('ic', rh, model='surfex')
@@ -80,9 +84,9 @@ class Coupling(FullPos):
             # Link in the Surfex's PGD
             sclimnc = self.naming_convention(kind='targetclim', rh=rh, model='surfex')
             self.setlink(
-                initrole = ('ClimPGD', ),
-                initkind = ('pgdfa', 'pgdlfi'),
-                initname = sclimnc(area='AREA')
+                initrole=('ClimPGD',),
+                initkind=('pgdfa', 'pgdlfi'),
+                initname=sclimnc(area='AREA')
             )
 
         for sec in cplsec:
@@ -105,7 +109,7 @@ class Coupling(FullPos):
             # If the surface file is needed, set the actual initsurf file
             if cplsurf:
                 # Expecting the coupling surface source to be there...
-                cplsurf_in  = cplsurf.pop(0)
+                cplsurf_in = cplsurf.pop(0)
                 self.grab(cplsurf_in, comment='coupling surface source')
                 if sh.path.exists(infilesurf):
                     if isMany:
@@ -119,7 +123,7 @@ class Coupling(FullPos):
 
             # The output could be an input as well
             if cplguess:
-                cplout  = cplguess.pop(0)
+                cplout = cplguess.pop(0)
                 cplpath = cplout.rh.container.localpath()
                 if sh.path.exists(cplpath):
                     actualdateguess = cplout.rh.resource.date + cplout.rh.resource.term
@@ -187,10 +191,10 @@ class Coupling(FullPos):
             # prepares the next execution
             if isMany:
                 # Some cleaning
-                sh.rmall('PXFPOS*', fmt = r.container.actualfmt)
-                sh.remove(infile, fmt = r.container.actualfmt)
+                sh.rmall('PXFPOS*', fmt=r.container.actualfmt)
+                sh.remove(infile, fmt=r.container.actualfmt)
                 if cplsurf:
-                    sh.remove(infilesurf, fmt = r.container.actualfmt)
+                    sh.remove(infilesurf, fmt=r.container.actualfmt)
                 if not self.server_run:
                     sh.rmall('ncf927', 'dirlst', 'NODE.[0123456789]*', 'std*')
 
@@ -308,8 +312,8 @@ class Prep(BlindRun, DrHookDecoMixin):
         sh = self.system
 
         cplsec = self.context.sequence.effective_inputs(
-            role = ('InitialCondition', 'CouplingSource'),
-            kind = ('historic', 'analysis')
+            role=('InitialCondition', 'CouplingSource'),
+            kind=('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
         infile = 'PREP1.{:s}'.format(self.underlyingformat)
@@ -388,7 +392,7 @@ class C901(IFSParallel):
         for (file_role, file_template) in list_types:
             result[file_role] = dict()
             input_files = self.context.sequence.effective_inputs(
-                role = file_role
+                role=file_role
             )
             template = file_template.format(prefix=r"(?P<prefix>\S{4})", suffix=r"(?P<suffix>\S*)")
             for file_s in input_files:
@@ -441,8 +445,8 @@ class C901(IFSParallel):
 
         # Modify namelist
         input_namelist = self.context.sequence.effective_inputs(
-            role = "Namelist",
-            kind = "namelist"
+            role="Namelist",
+            kind="namelist"
         )
         for namelist in input_namelist:
             namcontents = namelist.rh.contents

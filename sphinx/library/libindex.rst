@@ -31,6 +31,7 @@ Roughly, here is a description of the various packages:
 
 * :ref:`common <common-autoindex>`: Some common code but mostly Meteo-France's
   NWP related classes
+* :ref:`alpha <alpha-autoindex>`: Code dedicated to Meteo-France's Alpha project
 * :ref:`cen <cen-autoindex>`: Code dedicated to snowpack forecast and data assimilation
   (Meteo-France's CEN team)
 * :ref:`previmar <previmar-autoindex>`: Code dedicated to wave modelling
@@ -51,6 +52,7 @@ Here is the expanded index for all of these packages:
    ecmwf/index
    
    common/index
+   alpha/index
    cen/index
    davai/index
    previmar/index

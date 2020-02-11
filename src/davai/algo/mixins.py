@@ -5,16 +5,19 @@ Wrappers above usual AlgoComponents.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import json
-
 import footprints
 from bronx.stdtypes import date
 
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
+from common.algo.oopsroot import OOPSMinim
 from common.algo.assim import (Screening, Minim)
 from common.algo.odbtools import (Raw2ODBparallel)
+from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
+                                   FullPosBDAP, FullPosGeo)
+from common.algo.clim import (BuildPGD, BuildPGD_MPI)
+from common.algo.coupling import Prep
 
 #: No automatic export
 __all__ = []
@@ -30,10 +33,10 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         footprints.Footprint(
             info='The CrashWitness version of the Algo',
             attr=dict(
-                crash_witness = dict(
-                    type = bool,
-                    optional = False,
-                    values = [True, ]
+                crash_witness=dict(
+                    type=bool,
+                    optional=False,
+                    values=[True, ]
                 ),
             )
         ),
@@ -59,8 +62,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         promise = [x for x in self.promises
                    if x.role == 'TaskSummary']
         if len(promise) == 1:
-            with open(promise[0].rh.container.localpath(), 'w') as out:
-                json.dump(summary, out, indent=4)
+            self.system.json_dump(summary, promise[0].rh.container.localpath(), indent=4)
             promise[0].put(incache=True)
         elif len(promise) > 1:
             raise AlgoComponentError("There shouldn't be more than 1 promise here.")
@@ -87,6 +89,10 @@ class OOPSTest_CrashWitness(OOPSTest, _CrashWitnessDecoMixin):
     pass
 
 
+class OOPSMinim_CrashWitness(OOPSMinim, _CrashWitnessDecoMixin):
+    pass
+
+
 # Legacy algos
 class Screening_CrashWitness(Screening, _CrashWitnessDecoMixin):
     pass
@@ -97,4 +103,36 @@ class Minim_CrashWitness(Minim, _CrashWitnessDecoMixin):
 
 
 class Raw2ODBparallel_CrashWitness(Raw2ODBparallel, _CrashWitnessDecoMixin):
+    pass
+
+
+class Forecast_CrashWitness(Forecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class LAMForecast_CrashWitness(LAMForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class DFIForecast_CrashWitness(DFIForecast, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
+    pass
+
+
+class BuildPGD_CrashWitness(BuildPGD, _CrashWitnessDecoMixin):
+    pass
+
+
+class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
+    pass
+
+
+class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
     pass

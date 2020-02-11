@@ -52,7 +52,7 @@ def observer_board(obsname=None):
 class Store(footprints.FootprintBase):
     """Root class for any :class:`Store` subclasses."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('store',)
     _footprint = [
         hashalgo,
@@ -152,6 +152,11 @@ class Store(footprints.FootprintBase):
             else:
                 self._cpipeline = None
         return self._cpipeline
+
+    @property
+    def tracking_extraargs(self):
+        """When tracking get/put request: extra args that will be added to the URI query."""
+        return dict()
 
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
@@ -346,7 +351,7 @@ class Store(footprints.FootprintBase):
 class MultiStore(footprints.FootprintBase):
     """Agregate various :class:`Store` items."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('store',)
     _footprint = [
         compressionpipeline,
@@ -665,12 +670,20 @@ class ArchiveStore(Store):
 
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
+        self._archive = None
         super(ArchiveStore, self).__init__(*args, **kw)
         del self.archive
 
     @property
     def realkind(self):
         return 'archivestore'
+
+    @property
+    def tracking_extraargs(self):
+        tea = super(ArchiveStore, self).tracking_extraargs
+        if self.storage:
+            tea['storage'] = self.storage
+        return tea
 
     def _str_more(self):
         return 'archive={!r}'.format(self.archive)
@@ -683,10 +696,10 @@ class ArchiveStore(Store):
         """Create a new Archive object only if needed."""
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
-                kind = self.underlying_archive_kind,
-                storage = self.storage if self.storage else 'generic',
-                tube = self.storetube,
-                readonly = self.readonly,
+                kind=self.underlying_archive_kind,
+                storage=self.storage if self.storage else 'generic',
+                tube=self.storetube,
+                readonly=self.readonly,
             )
             self._archives_object_stack.add(self._archive)
         return self._archive
@@ -711,24 +724,24 @@ class ArchiveStore(Store):
 
     def inarchivecheck(self, remote, options):
         return self.archive.check(self._inarchiveformatpath(remote),
-                                  username = remote.get('username', None),
-                                  compressionpipeline = self._actual_cpipeline)
+                                  username=remote.get('username', None),
+                                  compressionpipeline=self._actual_cpipeline)
 
     def inarchivelocate(self, remote, options):
         return self.archive.fullpath(self._inarchiveformatpath(remote),
-                                     username = remote.get('username', None),
-                                     compressionpipeline = self._actual_cpipeline)
+                                     username=remote.get('username', None),
+                                     compressionpipeline=self._actual_cpipeline)
 
     def inarchivelist(self, remote, options):
         """Use the archive object to list available files."""
         return self.archive.list(self._inarchiveformatpath(remote),
-                                 username = remote.get('username', None))
+                                 username=remote.get('username', None))
 
     def inarchiveprestageinfo(self, remote, options):
         """Returns the prestaging informations"""
         return self.archive.prestageinfo(self._inarchiveformatpath(remote),
-                                         username = remote.get('username', None),
-                                         compressionpipeline = self._actual_cpipeline)
+                                         username=remote.get('username', None),
+                                         compressionpipeline=self._actual_cpipeline)
 
     def inarchiveget(self, remote, local, options):
         logger.info('inarchiveget on %s://%s/%s (to: %s)',
@@ -738,8 +751,8 @@ class ArchiveStore(Store):
             intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
-            username = remote['username'],
-            compressionpipeline = self._actual_cpipeline,
+            username=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
         )
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
@@ -751,8 +764,8 @@ class ArchiveStore(Store):
             intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
-            username = remote['username'],
-            compressionpipeline = self._actual_cpipeline,
+            username=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
         )
         return rc
 
@@ -765,8 +778,8 @@ class ArchiveStore(Store):
             intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
-            username = remote['username'],
-            compressionpipeline = self._actual_cpipeline,
+            username=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
         )
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
@@ -775,13 +788,13 @@ class ArchiveStore(Store):
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.insert(
             self._inarchiveformatpath(remote), local,
-            intent = _ARCHIVE_PUT_INTENT,
-            fmt = options.get('fmt', 'foo'),
-            info = options.get('rhandler'),
-            logname = remote['username'],
-            compressionpipeline = self._actual_cpipeline,
-            sync = options.get('synchro', not options.get('delayed', not self.storesync)),
-            enforcesync = options.get('enforcesync', False),
+            intent=_ARCHIVE_PUT_INTENT,
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler'),
+            logname=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
+            sync=options.get('synchro', not options.get('delayed', not self.storesync)),
+            enforcesync=options.get('enforcesync', False),
         )
         return rc and self._hash_put(self.inarchiveput, local, remote, options)
 
@@ -790,15 +803,15 @@ class ArchiveStore(Store):
                     self.scheme, self.netloc, self._inarchiveformatpath(remote))
         return self.archive.delete(
             self._inarchiveformatpath(remote),
-            fmt  = options.get('fmt', 'foo'),
-            info = options.get('rhandler', None),
-            username = remote['username'],
+            fmt=options.get('fmt', 'foo'),
+            info=options.get('rhandler', None),
+            username=remote['username'],
         )
 
 
 def _default_remoteconfig_dict():
     """Just an utility method for ConfigurableArchiveStore."""
-    return dict(restrict=None, seen = False)
+    return dict(restrict=None, seen=False)
 
 
 class ConfigurableArchiveStore(object):
@@ -922,7 +935,8 @@ class ConfigurableArchiveStore(object):
                     # Trying to compile the regex !
                     if conf['remoteconfigs'][r_id]['restrict'] is not None:
                         try:
-                            conf['remoteconfigs'][r_id]['restrict'] = re.compile(conf['remoteconfigs'][r_id]['restrict'])
+                            compiled_re = re.compile(conf['remoteconfigs'][r_id]['restrict'])
+                            conf['remoteconfigs'][r_id]['restrict'] = compiled_re
                         except re.error as e:
                             logger.error('The regex provided for %s does not compile !: "%s".',
                                          r_id, str(e))
@@ -1062,14 +1076,14 @@ class CacheStore(Store):
     def _get_cache(self):
         if not self._cache:
             self._cache = footprints.proxy.caches.default(
-                kind       = self.underlying_cache_kind,
-                storage    = self.hostname,
-                inifile    = self.config_name,
-                rootdir    = self.rootdir,
-                headdir    = self.headdir,
-                rtouch     = self.rtouch,
-                rtouchskip = self.rtouchskip,
-                readonly   = self.readonly
+                kind=self.underlying_cache_kind,
+                storage=self.hostname,
+                inifile=self.config_name,
+                rootdir=self.rootdir,
+                headdir=self.headdir,
+                rtouch=self.rtouch,
+                rtouchskip=self.rtouchskip,
+                readonly=self.readonly
             )
             self._caches_object_stack.add(self._cache)
         return self._cache
@@ -1114,13 +1128,13 @@ class CacheStore(Store):
         rc = self.cache.retrieve(
             remote['path'],
             local,
-            intent             = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
-            fmt                = options.get('fmt'),
-            info               = options.get('rhandler', None),
-            tarextract         = options.get('auto_tarextract', False),
-            dirextract         = options.get('auto_dirextract', False),
-            uniquelevel_ignore = options.get('uniquelevel_ignore', True),
-            silent             = options.get('silent', False),
+            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt'),
+            info=options.get('rhandler', None),
+            tarextract=options.get('auto_tarextract', False),
+            dirextract=options.get('auto_dirextract', False),
+            uniquelevel_ignore=options.get('uniquelevel_ignore', True),
+            silent=options.get('silent', False),
         )
         if rc or not options.get('silent', False):
             logger.info('incacheget retrieve rc=%s location=%s', str(rc),
@@ -1134,9 +1148,9 @@ class CacheStore(Store):
         rc = self.cache.insert(
             remote['path'],
             local,
-            intent = _CACHE_PUT_INTENT,
-            fmt    = options.get('fmt'),
-            info   = options.get('rhandler', None),
+            intent=_CACHE_PUT_INTENT,
+            fmt=options.get('fmt'),
+            info=options.get('rhandler', None),
         )
         logger.info('incacheput insert rc=%s location=%s', str(rc),
                     str(self.incachelocate(remote, options)))
@@ -1148,15 +1162,15 @@ class CacheStore(Store):
                     self.scheme, self.netloc, remote['path'])
         return self.cache.delete(
             remote['path'],
-            fmt  = options.get('fmt'),
-            info = options.get('rhandler', None),
+            fmt=options.get('fmt'),
+            info=options.get('rhandler', None),
         )
 
 
 class PromiseStore(footprints.FootprintBase):
     """Combined a Promise Store for expected resources and any other matching Store."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('store',)
     _footprint = dict(
         info = 'Promise store',
@@ -1228,12 +1242,12 @@ class PromiseStore(footprints.FootprintBase):
     def mkpromise_info(self, remote, options):
         """Build a dictionary with relevant informations for the promise."""
         return dict(
-            promise  = True,
-            stamp    = date.stamp(),
-            itself   = self.promise.locate(remote, options),
-            locate   = self.other.locate(remote, options),
-            datafmt  = options.get('fmt', None),
-            rhandler = options.get('rhandler', None),
+            promise=True,
+            stamp=date.stamp(),
+            itself=self.promise.locate(remote, options),
+            locate=self.other.locate(remote, options),
+            datafmt=options.get('fmt', None),
+            rhandler=options.get('rhandler', None),
         )
 
     def mkpromise_file(self, info, local):

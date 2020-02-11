@@ -28,7 +28,7 @@ Example::
     >>> cur_da_hub.actionhistory(dactions[0])  # doctest:+ELLIPSIS
     <....DemoSleepDelayedActionHandler object at 0x...> says:
     [...][...] : NEW  id=sleeper_action_...: request=1
-    [...][...] : UPD  id=sleeper_action_...: result=<multiprocessing.pool.ApplyResult object at 0x...> (instead of: None)
+    [...][...] : UPD  id=sleeper_action_...: result=<multiprocessing.pool.ApplyResult object at 0x...> ...
 
     # Wait for all the sleepers to wake up... It would be possible to do that
     # explicitly by calling the ``finalise`` method, but ``retrieve`` implicitly
@@ -49,7 +49,7 @@ Example::
     >>> cur_da_hub.actionhistory(dactions[0])  # doctest:+ELLIPSIS
     <....DemoSleepDelayedActionHandler object at 0x...> says:
     [...][...] : NEW  id=sleeper_action_0000000000000001: request=1
-    [...][...] : UPD  id=sleeper_action_0000000000000001: result=<multiprocessing.pool.ApplyResult object at 0x...> (instead of: None)
+    [...][...] : UPD  id=sleeper_action_0000000000000001: result=<multiprocessing.pool.ApplyResult object at 0x...> ...
     [...][...] : UPD  id=sleeper_action_0000000000000001: status=done (instead of: void)
     [...][...] : USED id=sleeper_action_0000000000000001
 

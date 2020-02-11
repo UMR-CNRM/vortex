@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+"""
+Abstract classes for :mod:`taylorism` workers to be used in conjunction with
+AlgoComponents based on the :class:`~vortex.algo.components.TaylorRun` class.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
@@ -48,9 +53,9 @@ class TaylorVortexWorker(taylorism.Worker):
 
     def _vortex_shortcuts(self):
         """Setup a few shortcuts."""
-        self.ticket  = vortex.sessions.current()
+        self.ticket = vortex.sessions.current()
         self.context = self.ticket.context
-        self.system  = self.context.system
+        self.system = self.context.system
 
     def _vortex_rc_wrapup(self, rc, psi_rc):
         """Complement the return code with the ParallelSilencer recording."""

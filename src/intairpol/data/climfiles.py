@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 from vortex.syntax.stdattrs import month_deco
@@ -15,8 +19,8 @@ __all__ = []
 
 
 class ChemicalBackup(GenvModelResource):
-    """
-    Pseudo-climatological file for chemical boundary conditions.
+    """Pseudo-climatological file for chemical boundary conditions.
+
     Backup values for missing values.
     """
     _footprint = dict(
@@ -41,9 +45,8 @@ class ChemicalBackup(GenvModelResource):
 
 
 class MonthClimMisc(GenericClim):
-    """
-     Monthly miscellaneous climatological files
-    """
+    """Monthly miscellaneous climatological files."""
+
     _footprint = [
         month_deco,
         dict(
@@ -71,9 +74,8 @@ class MonthClimMisc(GenericClim):
 
 
 class DomainMonthClimMisc(GenericClim):
-    """
-     Monthly miscellaneous climatological files by domain
-    """
+    """Monthly miscellaneous climatological files by domain."""
+
     _footprint = [
         month_deco,
         gdomain,
@@ -105,8 +107,8 @@ class DomainMonthClimMisc(GenericClim):
 
 
 class Ch4SurfEmissions(GenericClim):
-    """
-    Class for a CH4 climatology (domain dependnat)
+    """Class for a CH4 climatology (domain dependant).
+
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
@@ -134,8 +136,8 @@ class Ch4SurfEmissions(GenericClim):
 
 
 class SurfaceSpeciesConfig(GenericClim):
-    """
-    Class for a surface species configuration file (domain dependnat)
+    """Class for a surface species configuration file (domain dependant).
+
     A LonlatGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """

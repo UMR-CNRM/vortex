@@ -253,7 +253,7 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                cplsteps=self._STEPS, cplxpid=self._XPID,
-                                               verbose=False, compute_on_refill = False)
+                                               verbose=False, compute_on_refill=False)
 
     def test_weird_coupling_prepare(self):
         with self.assertRaises(CouplingOffsetConfPrepareError):
@@ -352,7 +352,7 @@ class Coupling3DVSparseConfToolTest(unittest.TestCase):
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                cplsteps=self._STEPS, cplxpid=self._XPID,
-                                               verbose=False, compute_on_refill = False)
+                                               verbose=False, compute_on_refill=False)
 
     def test_weird_coupling_prepare(self):
         with self.assertRaises(CouplingOffsetConfPrepareError):
@@ -429,19 +429,19 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                                 cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                 cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                 cplsteps=self._STEPS, cplxpid=self._XPID,
-                                                verbose=False, compute_on_refill = False)
+                                                verbose=False, compute_on_refill=False)
         self.wtoolA1 = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._AL1_BASE, cplvapp=self._VAPP,
                                                  cplvconf=self._AL1_VCONF, cplcutoff=self._CUTOFF,
                                                  cplsteps=self._STEPS, cplxpid=self._XPID,
-                                                 verbose=False, compute_on_refill = False)
+                                                 verbose=False, compute_on_refill=False)
         self.wtoolA2 = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._AL2_BASE, cplvapp=self._VAPP,
                                                  cplvconf=self._AL1_VCONF, cplcutoff=self._CUTOFF,
                                                  cplsteps=self._STEPS_A2, cplxpid=self._XPID,
-                                                 verbose=False, compute_on_refill = False)
+                                                 verbose=False, compute_on_refill=False)
         self.wtoolKO = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._BASE, cplvapp=self._VAPP,
@@ -449,24 +449,24 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                                  cplsteps=self._STEPS, cplxpid=self._XPID,
                                                  verbose=False, refill_cutoff='production')
         self.wtoolAggN = footprints.proxy.conftool(kind='aggcouplingoffset',
-                                                   nominal = [self.wtoolN, ],
-                                                   alternate = [self.wtoolA1, self.wtoolA2],
-                                                   use_alternates = False)
+                                                   nominal=[self.wtoolN, ],
+                                                   alternate=[self.wtoolA1, self.wtoolA2],
+                                                   use_alternates=False)
         self.wtoolAggA = footprints.proxy.conftool(kind='aggcouplingoffset',
-                                                   nominal = [self.wtoolN, ],
-                                                   alternate = [self.wtoolA1, self.wtoolA2],
-                                                   use_alternates = True)
+                                                   nominal=[self.wtoolN, ],
+                                                   alternate=[self.wtoolA1, self.wtoolA2],
+                                                   use_alternates=True)
 
     def test_agg_consistency(self):
         footprints.proxy.conftool(kind='aggcouplingoffset',
-                                  nominal = [self.wtoolN, ],
-                                  alternate = [self.wtoolA1, self.wtoolKO],
-                                  use_alternates = False)
+                                  nominal=[self.wtoolN, ],
+                                  alternate=[self.wtoolA1, self.wtoolKO],
+                                  use_alternates=False)
         with self.assertRaises(CouplingOffsetConfError):
             footprints.proxy.conftool(kind='aggcouplingoffset',
-                                      nominal = [self.wtoolN, ],
-                                      alternate = [self.wtoolA1, self.wtoolKO],
-                                      use_alternates = True)
+                                      nominal=[self.wtoolN, ],
+                                      alternate=[self.wtoolA1, self.wtoolKO],
+                                      use_alternates=True)
 
     def test_weird_coupling_prepare_aggn(self):
         self.assertListEqual(self.wtoolAggN.prepare_terms('2017010100', 'production', 'arpege', 'courtfr', xpid='ABCE'),
@@ -802,7 +802,7 @@ class IntairpolMDomainConfToolTest(unittest.TestCase):
                          dict(assim=HHDict({Time(0): 'toto', 'default': 'titi'}),
                               production=HHDict({'default': 'TOTO'})))
         # _post_steps_validation
-        psv = MocageDomainsConfTool._post_steps_validation  # (value)
+        psv = MocageDomainsConfTool._any_steps_validation  # (value)
         self.assertTrue(psv('0'))
         self.assertTrue(psv('finalterm'))
         self.assertTrue(psv('0-15-1'))

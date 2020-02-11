@@ -90,7 +90,7 @@ class DiscoveredTests(collections_abc.Mapping):
             tdriver = TestDriver(tfile, resultfile, REGISTERPATH)
             try:
                 tdriver.load_test(tdata)
-            except:  # @IgnorePep8
+            except Exception:
                 logger.error('Exception raised while created a TestDriver for %s.', tfile)
                 raise
             self._tdrivers[tfile] = tdriver
@@ -108,7 +108,7 @@ class DiscoveredTests(collections_abc.Mapping):
         for tfile, td in self.items():
             try:
                 callback(td)
-            except:  # @IgnorePep8
+            except Exception:
                 logger.error('Exception raised while %s for %s.',
                              actionmsg, self.shorten_names(tfile))
                 raise

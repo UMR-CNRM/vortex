@@ -1,6 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module needed to interact with GRIB files.
+
+It provides shell addons to deal with:
+
+    * Splitted GRIB files (as produced by the Arpege/IFS IO server)
+    * The ability to compare GRIB files
+
+It also provdes an AlgoComponnent's Mixin to properly setup the environment
+when using the grib_api or ecCodes libraries.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -162,6 +174,23 @@ class GRIB_Tool(addons.FtrawEnableAddon):
             self.sh.pclose(p)
             return True
 
+    def _std_forcepack(self, source, destination=None):
+        """Returned a path to a packed data."""
+        if self.is_xgrib(source):
+            destination = (destination if destination else
+                           '{:s}{:s}'.format(source, self.sh.safe_filesuffix()))
+            if not self.sh.path.exists(destination):
+                if self.xgrib_pack(source, destination):
+                    return destination
+                else:
+                    raise IOError('XGrib packing failed')
+            else:
+                return destination
+        else:
+            return source
+
+    grib_forcepack = _std_forcepack
+
     def _std_ftput(self, source, destination, hostname=None, logname=None,
                    port=DEFAULT_FTP_PORT, cpipeline=None, sync=False):
         """On the fly packing and ftp."""
@@ -240,7 +269,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 
     @addons.require_external_addon('ecfs')
     def grib_ecfsput(self, source, target, cpipeline=None, options=None):
-        """ Put a grib resource using ECfs.
+        """Put a grib resource using ECfs.
 
         :param source: source file
         :param target: target file
@@ -486,7 +515,7 @@ class GRIBAPI_Tool(addons.Addon):
 
     def _actual_diff(self, grib1, grib2, skipkeys, **kw):
         """Run the actual GRIBAPI command."""
-        cmd = [ 'grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2 ]
+        cmd = ['grib_compare', '-r', '-b', ','.join(skipkeys), grib1, grib2]
         kw['fatal'] = False
         kw['output'] = False
         return self._spawn_wrap(cmd, **kw)

@@ -1,18 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources to handle any NWP model state variable.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
 
 from bronx.fancies import loggers
 
-from vortex.data.flow       import GeoFlowResource
+from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stdattrs import term_deco
-from vortex.syntax.stddeco  import namebuilding_insert
-from bronx.stdtypes.date    import Time
+from vortex.syntax.stddeco import namebuilding_insert
+from bronx.stdtypes.date import Time
 
-from common.tools.igastuff  import archive_suffix
+from common.tools.igastuff import archive_suffix
 from vortex.data.geometries import CurvlinearGeometry
 
 #: No automatic export
@@ -74,8 +78,8 @@ class Analysis(GeoFlowResource):
                 ananame = 'analyse_surf'
             elif self.model == 'surfex':
                 ananame = 'analyse'
-            elif self.model == 'hycom':
-                ananame = '(histfix:igakey)'
+            elif self.model in ('hycom', 'mfwam'):
+                ananame = '(prefix:modelkey)(termfix:modelkey)(suffix:modelkey)'
             else:
                 ananame = 'analyse_surface1'
 
@@ -90,13 +94,13 @@ class Analysis(GeoFlowResource):
 
     def olive_basename(self):
         """OLIVE specific naming convention."""
-        olivename_map = { 'atm': 'TRAJ' + self.model[:4].upper() + '+0000',
-                          'surf': 'surfanalyse',
-                          'full': 'analyse'}
+        olivename_map = {'atm': 'TRAJ' + self.model[:4].upper() + '+0000',
+                         'surf': 'surfanalyse',
+                         'full': 'analyse'}
         if self.model != 'arpege':
             olivename_map['surf'] = 'analyse'
             if self.model == 'surfex':
-                olivename_map = { k: x + '.sfx' for k, x in olivename_map.items() }
+                olivename_map = {k: x + '.sfx' for k, x in olivename_map.items()}
         return olivename_map[self.filling]
 
     def iga_pathinfo(self):
@@ -111,7 +115,7 @@ class Analysis(GeoFlowResource):
                 directory = 'workdir/analyse'
             else:
                 directory = 'autres'
-        elif self.model == 'hycom':
+        elif self.model in ('hycom', 'mfwam'):
             if self.filling == 'surf':
                 directory = 'guess'
         elif self.model == 'surfex':
@@ -122,9 +126,9 @@ class Analysis(GeoFlowResource):
             else:
                 directory = 'workdir/analyse'
         return dict(
-            fmt       = directory,
-            model     = self.model,
-            nativefmt = self.nativefmt,
+            fmt=directory,
+            model=self.model,
+            nativefmt=self.nativefmt,
         )
 
 
@@ -192,8 +196,12 @@ class Historic(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        prefix = '(icmshfix:modelkey)'
-        midfix = '(histfix:igakey)'
+        if self.model in ('mfwam', 'hycom'):
+            prefix = '(prefix:modelkey)'
+            midfix = ''
+        else:
+            prefix = '(icmshfix:modelkey)'
+            midfix = '(histfix:igakey)'
         termfix = '(termfix:modelkey)'
         suffix = '(suffix:modelkey)'
 

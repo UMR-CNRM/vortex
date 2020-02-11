@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*
 
+"""
+A template of configuration file for TNT.
+"""
+
 # 1. Blocks to be added.
 new_blocks = set(['NAMNEW',
                   ])

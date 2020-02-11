@@ -5,8 +5,6 @@ DAVAI expertise AlgoComponents.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import json
-
 from footprints import FPList, FPDict
 from bronx.fancies import loggers
 
@@ -56,7 +54,8 @@ class XpidRegister(AlgoComponent):
                     info = "The store in which to pick initial resources"
                 ),
                 usecase = dict(
-                    info = """Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. Non-Regression Validation.""",
+                    info = ("Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. " +
+                            "Non-Regression Validation."),
                 ),
             )
         )
@@ -100,6 +99,30 @@ class XpidRegister(AlgoComponent):
         return details
 
 
+class XPsetup(AlgoComponent):
+    """Collect metadata about the experiment."""
+
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the tested experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['xpsetup'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        import davai_tbx  # @UnresolvedImport
+        xpm = davai_tbx.util.XPMetadata(self.experiment)
+        xpm.write()
+
+
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Expertise algo to catch exceptions in the parsing/summary/comparison,
@@ -117,8 +140,7 @@ class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
                                       'short': 'Ended ! Summary failed',
                                       'text': 'Task ended, but Expertise failed: no TaskSummary available !'},
                            'Exception': str(e)}
-                with open(promise[0].rh.container.localpath(), 'w') as out:
-                    json.dump(summary, out)
+                self.system.json_dump(summary, promise[0].rh.container.localpath(), indent=4)
             promise[0].put(incache=True)
         elif len(promise) > 1:
             raise AlgoComponentError("There shouldn't be more than 1 promise here.")
@@ -191,6 +213,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             # prepare
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
+        self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 
     def postfix(self, rh, opts):  # @UnusedVariable
@@ -222,9 +245,13 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             xp = [rh.provider.experiment for rh in resource_handlers]
             block = [rh.provider.block for rh in resource_handlers]
             if len(set(xp)) > 1:
-                raise AlgoComponentError(refkind + " reference resources must all come from the same 'experiment'.")  # continuity
+                raise AlgoComponentError(
+                    refkind +
+                    " reference resources must all come from the same 'experiment'.")  # continuity
             if len(set(block)) > 1:
-                raise AlgoComponentError(refkind + " reference resources must all come from the same 'block'.")  # consistency
+                raise AlgoComponentError(
+                    refkind +
+                    " reference resources must all come from the same 'block'.")  # consistency
             if refkind == 'Continuity':
                 ref_is = {'experiment': xp[0],
                           'task': '(same)'}

@@ -296,7 +296,7 @@ class ExtendedReadOnlyConfigParser(GenericReadOnlyConfigParser):
     """
 
     _RE_VALIDATE = re.compile(r'([\w-]+)[ \t]*:?')
-    _RE_KEYC     = re.compile(r"%\(([^)]+)\)s")
+    _RE_KEYC = re.compile(r"%\(([^)]+)\)s")
 
     _max_interpolation_depth = 20
 
@@ -632,13 +632,13 @@ class IniConf(footprints.FootprintBase):
     Generic Python configuration file.
     """
     _collector = ('iniconf',)
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info='Abstract Python Inifile',
         attr=dict(
             kind = dict(
                 info     = "The configuration object kind.",
-                values   = [ 'generic', ],
+                values   = ['generic', ],
             ),
             clsconfig = dict(
                 type            = GenericReadOnlyConfigParser,
@@ -671,7 +671,7 @@ class ConfigurationTable(IniConf):
     items (instantiated from the tableitem footprint's collector) from a given
     configuration file.
     """
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Abstract configuration tables',
         attr = dict(
@@ -752,8 +752,8 @@ class ConfigurationTable(IniConf):
                             if re.search('[a-z]_[a-z]', v, re.IGNORECASE):
                                 d[item][k] = v.replace('_', "'")
                     d[item][self.searchkeys[0]] = item
-                    d[item][self.groupname]     = group
-                    d[item]['translator']       = self.translator
+                    d[item][self.groupname] = group
+                    d[item]['translator'] = self.translator
                     itemobj = footprints.proxy.tableitem(**d[item])
                     if itemobj is not None:
                         self._tablelist.append(itemobj)

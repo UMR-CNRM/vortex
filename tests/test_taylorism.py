@@ -106,9 +106,9 @@ class UtTaylorism(TestCase):
         """
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(),
-            individual_instructions = dict(sleeping_time=[0.001, 0.01], succeed=[False, True]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+            common_instructions=dict(),
+            individual_instructions=dict(sleeping_time=[0.001, 0.01], succeed=[False, True]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
         with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(_TestError):
@@ -122,9 +122,9 @@ class UtTaylorism(TestCase):
         """
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(),
-            individual_instructions = dict(sleeping_time=[60, 60], succeed=[True, True]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+            common_instructions=dict(),
+            individual_instructions=dict(sleeping_time=[60, 60], succeed=[True, True]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
         with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(interrupt.SignalInterruptError):
@@ -139,9 +139,9 @@ class UtTaylorism(TestCase):
         for scheduler in (footprints.proxy.scheduler(limit='threads', max_threads=2),
                           schedulers.MaxThreadsScheduler(max_threads=2)):
             boss = taylorism.run_as_server(
-                common_instructions     = dict(succeed=True,),
-                individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
-                scheduler               = scheduler,
+                common_instructions=dict(succeed=True,),
+                individual_instructions=dict(sleeping_time=[0.001, 0.001, 0.001]),
+                scheduler=scheduler,
             )
             time.sleep(0.1)
             boss.set_instructions(dict(succeed=True,), individual_instructions=dict(sleeping_time=[0.001, ]))
@@ -157,25 +157,25 @@ class UtTaylorism(TestCase):
         """
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(),
-            individual_instructions = dict(sleeping_time=[0.001, 60], succeed=[False, True]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+            common_instructions=dict(),
+            individual_instructions=dict(sleeping_time=[0.001, 60], succeed=[False, True]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
         time.sleep(0.1)
         with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(_TestError):
                 boss.set_instructions(
                     dict(),
-                    individual_instructions = dict(sleeping_time=[1, ], bidon=['a' * 100000000, ])
+                    individual_instructions=dict(sleeping_time=[1, ], bidon=['a' * 100000000, ])
                 )
 
     def test_binding(self):
         """Checks that the binding works."""
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(wakeup_sentence='yo', succeed=True, bind_test=True),
-            individual_instructions = dict(sleeping_time=[0.001, 0.001, 0.001]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2, binded=True),
+            common_instructions=dict(wakeup_sentence='yo', succeed=True, bind_test=True),
+            individual_instructions=dict(sleeping_time=[0.001, 0.001, 0.001]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2, binded=True),
         )
         try:
             boss.wait_till_finished()
@@ -194,9 +194,9 @@ class UtTaylorism(TestCase):
         taylorism_log.setLevel(tloglevel_taylorism)
         with self.assertRaises(ValueError):
             boss = taylorism.run_as_server(
-                common_instructions     = dict(),
-                individual_instructions = dict(name=['alfred', 'alfred'], sleeping_time=[60, 60], succeed=[True, True]),
-                scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+                common_instructions=dict(),
+                individual_instructions=dict(name=['alfred', 'alfred'], sleeping_time=[60, 60], succeed=[True, True]),
+                scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
             )
             boss.wait_till_finished()
 
@@ -204,9 +204,9 @@ class UtTaylorism(TestCase):
         """Checks that expansion in workers name works fine."""
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
-            common_instructions     = dict(name='jean-pierre_[sleeping_time]', succeed=True,),
-            individual_instructions = dict(sleeping_time = [0.001, 0.01]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
+            common_instructions=dict(name='jean-pierre_[sleeping_time]', succeed=True,),
+            individual_instructions=dict(sleeping_time=[0.001, 0.01]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
         boss.wait_till_finished()
         report = boss.get_report()
@@ -219,10 +219,10 @@ class UtTaylorism(TestCase):
         vals = [813, 42, 8]
         s = taylorism.util.SharedNumpyArray(np.ones((1,), dtype=int) * vals[0])
         boss = taylorism.run_as_server(
-            common_instructions     = dict(use_lock=True),
-            individual_instructions = dict(value=vals[1:]),
-            scheduler               = footprints.proxy.scheduler(limit='threads', max_threads=2),
-            sharedmemory_common_instructions = dict(shared_sum=s)
+            common_instructions=dict(use_lock=True),
+            individual_instructions=dict(value=vals[1:]),
+            scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
+            sharedmemory_common_instructions=dict(shared_sum=s)
         )
         boss.wait_till_finished()
         self.assertEqual(s[0], sum(vals), "sharedmemory array has wrong value:{} instead of expected: {}.".format(s[0], sum(vals)))

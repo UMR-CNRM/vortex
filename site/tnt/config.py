@@ -134,8 +134,8 @@ class TntDirective(object):
 
     def _process_set_of_blocks(self, val, realname):
         if (isinstance(val, collections_abc.Iterable) and
-              not isinstance(val, six.string_types) and
-              all([isinstance(v, six.string_types) for v in val])):
+                not isinstance(val, six.string_types) and
+                all([isinstance(v, six.string_types) for v in val])):
             return set(val)
         elif isinstance(val, six.string_types):
             return set([val, ])
@@ -327,6 +327,7 @@ class TntStackDirective(object):
 #
 
 def get_template(tplname, encoding=None):
+    """Retrieve a template file in the dedicated directory."""
     tplfile = os.path.join(TPL_DIRECTORY, tplname)
     with io.open(tplfile, 'r', encoding=encoding) as fhtpl:
         tpl = string.Template(fhtpl.read())

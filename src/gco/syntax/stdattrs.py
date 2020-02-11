@@ -16,10 +16,9 @@ from functools import total_ordering
 import footprints
 
 #: Export some new class for attributes in footprint objects, eg : GenvKey
-__all__ = [ 'GenvKey', 'GenvDomain' ]
+__all__ = ['GenvKey', 'GenvDomain']
 
-domain_remap = dict(
-)
+domain_remap = dict()
 
 
 def _lowerattr(matchobj):
@@ -39,15 +38,15 @@ class GenvKey(six.text_type):
         return six.text_type.__new__(cls, re.sub(r'\[\w+\]', _lowerattr, value.upper()))
 
 
-a_gvar = dict(info            = 'The key that identifies the resource in the Genv database.',
-              type            = GenvKey,
-              optional        = True,
-              doc_visibility  = footprints.doc.visibility.ADVANCED,
+a_gvar = dict(info='The key that identifies the resource in the Genv database.',
+              type=GenvKey,
+              optional=True,
+              doc_visibility=footprints.doc.visibility.ADVANCED,
               )
 
 #: Usual definition of the ``genv`` attribute.
-gvar = footprints.Footprint(info = 'A GENV access key',
-                            attr = dict(gvar = a_gvar))
+gvar = footprints.Footprint(info='A GENV access key',
+                            attr=dict(gvar=a_gvar))
 
 
 class GenvDomain(six.text_type):
@@ -61,15 +60,15 @@ class GenvDomain(six.text_type):
         return six.text_type.__new__(cls, domain_remap.get(value, value))
 
 
-a_gdomain = dict(info = "The resource's geographical domain name in the Genv database.",
-                 type = GenvDomain,
-                 optional = True,
-                 default = '[geometry::area]',
-                 doc_visibility  = footprints.doc.visibility.ADVANCED,)
+a_gdomain = dict(info="The resource's geographical domain name in the Genv database.",
+                 type=GenvDomain,
+                 optional=True,
+                 default='[geometry::area]',
+                 doc_visibility=footprints.doc.visibility.ADVANCED,)
 
 #: Usual definition of the ``gdomain`` attribute.
-gdomain = footprints.Footprint(info = 'A domain name in GCO convention',
-                               attr = dict(gdomain = a_gdomain))
+gdomain = footprints.Footprint(info='A domain name in GCO convention',
+                               attr=dict(gdomain=a_gdomain))
 
 
 @total_ordering
@@ -125,16 +124,15 @@ class ArpIfsSimplifiedCycle(object):
         return six.text_type(self)
 
 
-a_arpifs_cycle = dict(info     = "An Arpege/IFS cycle name",
-                      type     = ArpIfsSimplifiedCycle,
-                      optional = True,
-                      default  = 'cy40',  # For "old" Olive configurations to keep working
+a_arpifs_cycle = dict(info="An Arpege/IFS cycle name",
+                      type=ArpIfsSimplifiedCycle,
+                      optional=True,
+                      default='cy40',  # For "old" Olive configurations to keep working
                       )
 
 #: Usual definition of the ``cycle`` attribute.
-arpifs_cycle = footprints.Footprint(info = 'An abstract arpifs_cycle in GCO convention',
-                                    attr = dict(cycle = a_arpifs_cycle))
-
+arpifs_cycle = footprints.Footprint(info='An abstract arpifs_cycle in GCO convention',
+                                    attr=dict(cycle=a_arpifs_cycle))
 
 uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>\w+))')
 uget_id_regex = r'(?P<fulluget>u(?:get|env):' + uget_sloppy_id_regex.pattern + ')'

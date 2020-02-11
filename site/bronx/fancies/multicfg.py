@@ -46,7 +46,7 @@ class MultiFileCfg(footprints.FootprintBase):
     Filenames should be ``cfgname-cfgtag-*.cfgext``
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('ymlconf',)
     _footprint = dict(
         info = 'Default Multi YAML files configuration manager.',
@@ -74,7 +74,7 @@ class MultiFileCfg(footprints.FootprintBase):
     def __init__(self, *args, **kw):
         logger.debug('Abstract multicfg init %s', self.__class__)
         super(MultiFileCfg, self).__init__(*args, **kw)
-        self._cfgtmp  = dict()
+        self._cfgtmp = dict()
         self._cfgload = dict()
         self._cfgpath = fscrawler.upfirst(self.cfgdir, thispath=self.cfgroot)
         self._cfgstack = glob.glob(self.cfgfullpath())

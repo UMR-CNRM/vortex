@@ -24,7 +24,16 @@
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx',
-              'sphinx.ext.todo', 'sphinx.ext.viewcode']
+              'sphinx.ext.todo', 'sphinx.ext.viewcode', ]
+
+try:
+    import IPython
+except ImportError:
+    pass
+else:
+    # Needed with Python3, harmless with Python2
+    extensions.append('IPython.sphinxext.ipython_console_highlighting')
+    extensions.append('IPython.sphinxext.ipython_directive')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various utility functions used when parsinf ArpIFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -61,7 +65,6 @@ def diverging_digit(t, r):
     If comparison is not possible (due to formatting reason),
     raises ParsingError.
     """
-
     if t == r:
         digit = None
     else:
@@ -95,7 +98,6 @@ def number_of_different_digits(t, r):
     If comparison is not possible (due to formatting reason),
     raises ParsingError.
     """
-
     if t == r:
         digit = 0
     else:
@@ -157,7 +159,6 @@ def get_maxint(container, infinity=-999):
     Get the max value of a dict or a list, assuming its values are int.
     None values are ignored, str values come out as max.
     """
-
     assert (isinstance(container, dict) or
             isinstance(container, list) or
             isinstance(container, tuple))

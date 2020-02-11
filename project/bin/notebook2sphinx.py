@@ -27,16 +27,21 @@ try:
     # Starting from IPython 4.0, nbconvert is shipped separately
     import nbconvert
     from nbconvert.exporters import RSTExporter
+except ImportError:
+    # Old style IPython
+    try:
+        import IPython
+        from IPython.nbconvert.exporters import RSTExporter
+    except ImportError:
+        export_backend = 'Void'
+    else:
+        export_backend = 'Default'
+        tplversion = re.sub(r'^(\d+)\..*$', r'\1', IPython.__version__)
+        rst_tplfile = 'notebook2sphinx_rst_ipython_v{:s}'.format(tplversion)
+else:
     export_backend = 'Default'
     tplversion = re.sub(r'^(\d+)\..*$', r'\1', nbconvert.__version__)
     rst_tplfile = 'notebook2sphinx_rst_nbconvert_v{:s}'.format(tplversion)
-except ImportError:
-    # Old style IPython
-    import IPython
-    from IPython.nbconvert.exporters import RSTExporter
-    export_backend = 'Default'
-    tplversion = re.sub(r'^(\d+)\..*$', r'\1', IPython.__version__)
-    rst_tplfile = 'notebook2sphinx_rst_ipython_v{:s}'.format(tplversion)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -60,6 +65,15 @@ Subdirectory: {sub:s}
 _INDEX_SKEL = 'index_skeleton.rst'
 _NBCONVERT_TEMPLATES = os.path.normpath(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                                      '../templates'))
+
+_VOID_RST = '''
+###########{ti:s}
+Export of: {nb:s}
+###########{ti:s}
+
+The notebook export failed because IPython and/or nbconvert were missing when
+generating the documentation.
+'''
 
 
 class DefaultPackaging(object):
@@ -155,6 +169,19 @@ class DefaultExporter(object):
         rst, resources = self._ipynb_convert(a_file)
         rst, resources = self._rst_alter(rst, resources, a_file)
         self._rst_dump(rst, resources, outputdir, a_file)
+
+
+class VoidExporter(DefaultExporter):
+    """When IPython/nbconvert is missing."""
+
+    def _ipynb_convert(self, a_file):
+        """Actually convert the notebook."""
+        myname = os.path.splitext(os.path.basename(a_file))[0]
+        spacer = '#' * len(a_file)
+        rst = _VOID_RST.format(ti=spacer, nb=a_file)
+        resources = dict(outputs=dict(), unique_key=myname)
+        logger.info("Void ReST generated for %s.", a_file)
+        return rst, resources
 
 
 def _crawl_notebooks():

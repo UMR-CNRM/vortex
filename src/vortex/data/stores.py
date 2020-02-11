@@ -324,9 +324,9 @@ class Finder(Store):
             rpath,
             local,
             # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt'),
+            hostname=self.hostname(),
+            logname=remote['username'],
+            fmt=options.get('fmt'),
         )
         rc = rc and self._hash_get_check(self.ftpget, remote, local, options)
         if rc:
@@ -344,8 +344,8 @@ class Finder(Store):
             local,
             rpath,
             # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
+            hostname=self.hostname(),
+            logname=remote['username'],
             ** put_opts
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)

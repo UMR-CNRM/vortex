@@ -4,7 +4,7 @@
 """
 This example shows how to use a hook on a file get.
 
-Ok 20190527 - PL
+Ok 20190527 - PL + NM
 Ok 20180801 - GR
 """
 
@@ -52,10 +52,11 @@ def my_hook(t, rh):
 sh.title('Example #1')
 
 # let rh be the first resource handler returned by rload
+members = 16
 rh = toolbox.rload(
     # Resource
     kind       = 'mbsample',
-    nbsample   = 12,
+    nbsample   = members,
     date       = rundate,
     cutoff     = "production",
     model      = "arome",
@@ -90,7 +91,7 @@ sh.title('Example #2')
 rh = toolbox.rload(
     # Resource
     kind       = 'mbsample',
-    nbsample   = 12,
+    nbsample   = members,
     date       = rundate,
     cutoff     = "production",
     model      = "arome",
@@ -119,7 +120,7 @@ sh.title('Example #3')
 rh = toolbox.input(
     # Resource
     kind       = 'mbsample',
-    nbsample   = 12,
+    nbsample   = members,
     date       = rundate,
     cutoff     = "production",
     model      = "arome",

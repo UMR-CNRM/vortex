@@ -29,6 +29,8 @@ Do not create :class:`IFSNamingConvention` objects directly. Instead, use the
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
+
 import footprints
 
 from vortex.syntax.stdattrs import model, actualfmt
@@ -290,8 +292,21 @@ class IfsEdaInputName(IFSNamingConvention):
             variant = dict(
                 values = ['infl', 'infl_factor', 'mean', 'covb', ],
             ),
+            totalnumber = dict(
+                info = 'The total number of input files',
+                type = int,
+                optional = True,
+            ),
         )
     )
+
+    @property
+    def _number_fmt(self):
+        if self.totalnumber:
+            ndigits = max(int(math.floor(math.log10(self.totalnumber))) + 1, 3)
+        else:
+            ndigits = 3
+        return '{number:0' + str(ndigits) + 'd}'
 
 
 class IfsEdaArpegeFaInputName(IfsEdaInputName):
@@ -308,7 +323,7 @@ class IfsEdaArpegeFaInputName(IfsEdaInputName):
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'FAMEMBER_{number:03d}'
+        return 'FAMEMBER_' + self._number_fmt
 
 
 class IfsEdaArpegeGribInputName(IfsEdaInputName):
@@ -325,7 +340,7 @@ class IfsEdaArpegeGribInputName(IfsEdaInputName):
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'GRIBERm{number:03d}'
+        return 'GRIBERm' + self._number_fmt
 
 
 class IfsEdaAromeInputName(IfsEdaInputName):
@@ -339,7 +354,7 @@ class IfsEdaAromeInputName(IfsEdaInputName):
     )
 
     def _naming_format_string(self, **kwargs):
-        return 'ELSCF{xpname:s}ALBC{number:03d}'
+        return 'ELSCF{xpname:s}ALBC' + self._number_fmt
 
 
 class IfsEdaOutputName(IFSNamingConvention):

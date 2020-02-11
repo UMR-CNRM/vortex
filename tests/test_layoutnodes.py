@@ -315,7 +315,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
             dr = Driver(tag='job_demo_drv_' + extra, ticket=self.t,
                         nodes=[TestTask(tag='forecast1_' + extra, ticket=self.t, **opts),
                                TestTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
-                        options = opts,
+                        options=opts,
                         iniencoding='utf-8')
             dr.setup()
             dr.run()
@@ -388,17 +388,17 @@ class TestHeavyNodesStuff(unittest.TestCase):
                         play=True,
                         anystuff='truc')
             dr = Driver(tag='job_demo_drv_h1', ticket=self.t,
-                        nodes = [[LoopFamily(
+                        nodes=[[LoopFamily(
                             tag='dates',
                             ticket=self.t,
                             loopconf='rundates',
                             loopsuffix='+d{.ymdh:s}',
                             loopneednext=True,
-                            nodes = [LoopFamily(
+                            nodes=[LoopFamily(
                                 tag='members',
                                 ticket=self.t,
                                 loopconf='members,physics',
-                                nodes = [
+                                nodes=[
                                     Family(tag='update1', ticket=self.t,
                                            nodes=[
                                                TestTask(tag='forecast1h', ticket=self.t, **opts)
@@ -410,7 +410,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
                                            ], **opts),
                                 ], **opts),
                             ], **opts),
-                        ], ], options = opts)
+                        ], ], options=opts)
             dr.setup(verbose=False)
             dr.run()
             # Config
@@ -462,25 +462,25 @@ class TestHeavyNodesStuff(unittest.TestCase):
                         play=True,
                         anystuff='truc')
             dr = Driver(tag='job_demo_drv_h2', ticket=self.t,
-                        nodes = [[LoopFamily(
+                        nodes=[[LoopFamily(
                             tag='dates_h2',
                             ticket=self.t,
                             loopconf='rundates',
                             loopsuffix='+d{.ymdh:s}',
-                            nodes = [WorkshareFamily(
+                            nodes=[WorkshareFamily(
                                 tag='members_h2',
                                 ticket=self.t,
                                 workshareconf='members,physics',
                                 worksharename='members_share,physics_share',
                                 worksharesize=3,
-                                nodes = [
+                                nodes=[
                                     TestTask(tag='forecast1h_h2', ticket=self.t, **opts),
                                     TestTask(tag='forecast2h_h2', ticket=self.t,
                                              active_callback=lambda s: s.conf.rundate == '2018010100',
                                              **opts)
                                 ], **opts),
                             ], **opts),
-                        ], ], options = opts)
+                        ], ], options=opts)
             dr.setup(verbose=False)
             dr.run()
             # Config
@@ -521,26 +521,26 @@ class TestHeavyNodesStuff(unittest.TestCase):
                         play=True,
                         anystuff='truc')
             dr = Driver(tag='job_demo_drv_h3', ticket=self.t,
-                        nodes = [[LoopFamily(
+                        nodes=[[LoopFamily(
                             tag='dates_h3',
                             ticket=self.t,
                             loopconf='rundates',
                             loopsuffix='+d{.ymdh:s}',
-                            nodes = [WorkshareFamily(
+                            nodes=[WorkshareFamily(
                                 tag='members_h3',
                                 ticket=self.t,
                                 workshareconf='members,physics',
                                 worksharename='members_share,physics_share',
                                 worksharesize=3,
                                 worksharelimit='nnodes',
-                                nodes = [
+                                nodes=[
                                     TestTask(tag='forecast1h_h3', ticket=self.t, **opts),
                                     TestTask(tag='forecast2h_h3', ticket=self.t,
                                              active_callback=lambda s: s.conf.rundate == '2018010100',
                                              **opts)
                                 ], **opts),
                             ], **opts),
-                        ], ], options = opts)
+                        ], ], options=opts)
             dr.setup(verbose=False)
             dr.run()
             # Config
