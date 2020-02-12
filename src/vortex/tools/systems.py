@@ -59,6 +59,7 @@ from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
+from bronx.system.numa import LibNumaNodesInfo
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
@@ -750,6 +751,7 @@ class OSExtended(System):
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
         self.__dict__['_cpusinfo'] = None
+        self.__dict__['_numainfo'] = None
         self.__dict__['_memoryinfo'] = None
         self.__dict__['_netstatsinfo'] = None
 
@@ -1273,7 +1275,7 @@ class OSExtended(System):
 
     @property
     def cpus_info(self):
-        """Return an object of a subclass of  :class:`bronx.system.cpus.CpusInfo`.
+        """Return an object of a subclass of :class:`bronx.system.cpus.CpusInfo`.
 
         Such objects are designed to get informations on the platform's CPUs.
 
@@ -1281,6 +1283,22 @@ class OSExtended(System):
             implemented)
         """
         return self._cpusinfo
+
+    def cpus_ids_per_blocks(self, blocksize=1, topology='raw', hexmask=False):  # @UnusedVariable
+        """Get the list of CPUs IDs ordered for subsequent binding.
+
+        :param int blocksize: The number of thread consumed by one task
+        :param str topology: The task distribution scheme
+        :param bool hexmask: Return a list of CPU masks in hexadecimal
+        """
+        return []
+
+    def cpus_ids_dispenser(self, topology='raw'):
+        """Get a dispenser of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param str topology: The task distribution scheme
+        """
+        return None
 
     def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):  # @UnusedVariable
         """Get the necessary command/environment to set the CPUs affinity.
@@ -1293,6 +1311,17 @@ class OSExtended(System):
             list: Starting command prefix, dict: Environment update)
         """
         return (False, list(), dict())
+
+    @property
+    def numa_info(self):
+        """Return an object of a subclass of :class:`bronx.system.numa.NumaNodesInfo`.
+
+        Such objects are designed to get informations on the platform's NUMA layout
+
+        :note: *None* might be returned on some platforms (if numainfo is not
+            implemented)
+        """
+        return self._numainfo
 
     @property
     def memory_info(self):
@@ -2794,7 +2823,7 @@ class Garbage(OSExtended):
         info = 'Garbage base system',
         attr = dict(
             sysname = dict(
-                outcast = ['Linux', 'Darwin']
+                outcast = ['Linux', 'Darwin', 'UnitTestLinux']
             )
         ),
         priority = dict(
@@ -2850,12 +2879,68 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
+        self.__dict__['_numainfo'] = LibNumaNodesInfo()
         self.__dict__['_memoryinfo'] = LinuxMemInfo()
         self.__dict__['_netstatsinfo'] = LinuxNetstats()
 
     @property
     def realkind(self):
         return 'linux'
+
+    def cpus_ids_per_blocks(self, blocksize=1, topology='raw', hexmask=False):
+        """Get the list of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param int blocksize: the number of thread consumed by one task
+        :param str topology: The task distribution scheme
+        :param bool hexmask: Return a list of CPU masks in hexadecimal
+        """
+        if topology.startswith('numa'):
+            if topology.endswith('_discardsmt'):
+                topology = topology[:-11]
+                smtlayout = None
+            else:
+                smtlayout = self.cpus_info.physical_cores_smtthreads
+            try:
+                cpulist = getattr(self.numa_info,
+                                  topology + '_cpulist')(blocksize,
+                                                         smtlayout=smtlayout)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        else:
+            try:
+                cpulist = getattr(self.cpus_info, topology + '_cpulist')(blocksize)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+            cpulist = list(cpulist)
+            cpulist = [[cpulist[(taskid * blocksize + i)]
+                        for i in range(blocksize)]
+                       for taskid in range(len(cpulist) // blocksize)]
+        if hexmask:
+            cpulist = [hex(sum([1 << i for i in item])) for item in cpulist]
+        return cpulist
+
+    def cpus_ids_dispenser(self, topology='raw'):
+        """Get a dispenser of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param str topology: The task distribution scheme
+        """
+        if topology.startswith('numa'):
+            if topology.endswith('_discardsmt'):
+                topology = topology[:-11]
+                smtlayout = None
+            else:
+                smtlayout = self.cpus_info.physical_cores_smtthreads
+            try:
+                cpudisp = getattr(self.numa_info,
+                                  topology + '_cpu_dispenser')(smtlayout=smtlayout)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        else:
+            try:
+                cpudisp = getattr(self.cpus_info, topology + '_cpu_dispenser')()
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        return cpudisp
 
     def cpus_affinity_get(self, taskid, blocksize=1, topology='socketpacked', method='taskset'):
         """Get the necessary command/environment to set the CPUs affinity.
@@ -2867,25 +2952,25 @@ class Linux(OSExtended):
         :return: A 3-elements tuple. (bool: BindingPossible,
             list: Starting command prefix, dict: Environment update)
         """
-        if method not in ('taskset', 'gomp'):
+        if method not in ('taskset', 'gomp', 'omp', 'ompverbose'):
             raise ValueError('Unknown binding method ({:s}).'.format(method))
         if method == 'taskset':
             if not self.which('taskset'):
                 logger.warning("The taskset is program is missing. Going on without binding.")
                 return (False, list(), dict())
-        try:
-            cpulist = getattr(self.cpus_info, topology + '_cpulist')(blocksize)
-        except AttributeError:
-            raise ValueError('Unknown topology ({:s}).'.format(topology))
-        cpulist = list(cpulist)
-        cpus = [cpulist[(taskid * blocksize + i) % len(cpulist)]
-                for i in range(blocksize)]
+        cpulist = self.cpus_ids_per_blocks(blocksize=blocksize, topology=topology)
+        cpus = cpulist[taskid % len(cpulist)]
         cmdl = list()
         env = dict()
         if method == 'taskset':
             cmdl += ['taskset', '--cpu-list', ','.join([six.text_type(c) for c in cpus])]
         elif method == 'gomp':
             env['GOMP_CPU_AFFINITY'] = ' '.join([six.text_type(c) for c in cpus])
+        elif method.startswith('omp'):
+            env['OMP_PLACES'] = ','.join(['{{{:d}}}'.format(c) for c in cpus])
+            if method.endswith('verbose'):
+                env['OMP_DISPLAY_ENV'] = 'TRUE'
+                env['OMP_DISPLAY_AFFINITY'] = 'TRUE'
         return (True, cmdl, env)
 
 

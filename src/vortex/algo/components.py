@@ -1421,7 +1421,9 @@ class ParaBlindRun(TaylorRun):
                 info = "Topology/Method to set up the CPU affinity of the child task.",
                 default = None,
                 optional = True,
-                values = ['raw', 'socketpacked', 'socketpacked_gomp']
+                values = ['{:s}{:s}'.format(t, m)
+                          for t in ('raw', 'socketpacked', 'numapacked')
+                          for m in ('', '_taskset', '_gomp', '_omp', '_ompverbose')]
             ),
             taskset_bsize = dict(
                 info        = 'The number of threads used by one task',

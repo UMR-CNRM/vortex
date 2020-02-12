@@ -19,6 +19,7 @@ Sub-modules
 * :mod:`bronx.system.interrupt`: Advanced signal catching.
 * :mod:`bronx.system.memory`: To get informations on memory.
 * :mod:`bronx.system.mf`: Meteo France specific system related tools.
+* :mod:`bronx.system.numa`: To get informations on the platform's NUMA nodes.
 * :mod:`bronx.system.unistd`: Utilities to work on file descriptors through the standard Linux C layer
 
 NB: All of these sub-modules have to be imported manually (depending on your

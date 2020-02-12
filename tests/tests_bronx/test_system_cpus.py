@@ -44,6 +44,9 @@ class TestLinuxCpusInfo(unittest.TestCase):
         self.assertEqual(cinfo.nphysical_cores_per_socket, 4)
         self.assertEqual(cinfo.nvirtual_cores, 16)
         self.assertEqual(cinfo.smt_threads, 2)
+        self.assertEqual(cinfo.physical_cores_smtthreads,
+                         {k: [k + cinfo.nphysical_cores, ]
+                          for k in range(cinfo.nphysical_cores)})
         self.assertListEqual(list(cinfo.raw_cpulist()),
                              list([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]))
         self.assertListEqual(list(cinfo.socketpacked_cpulist()),
@@ -82,6 +85,8 @@ class TestLinuxCpusInfo(unittest.TestCase):
         self.assertEqual(cinfo.nphysical_cores_per_socket, 4)
         self.assertEqual(cinfo.nvirtual_cores, 8)
         self.assertEqual(cinfo.smt_threads, 1)
+        self.assertEqual(cinfo.physical_cores_smtthreads,
+                         {k: [] for k in range(cinfo.nphysical_cores)})
         self.assertListEqual(list(cinfo.raw_cpulist()),
                              list([0, 1, 2, 3, 4, 5, 6, 7]))
         self.assertListEqual(list(cinfo.socketpacked_cpulist()),
