@@ -68,8 +68,13 @@ class UtVarBCContent(_BaseDataContentTest):
 
     _data = (VBC_T, )
 
+    def test_varbc_basic1(self):
+        ct = obs.VarBCContent()
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.metadata['version'], 5)
+
     @skipUnless(npchecker, "The Numpy package is unavailable")
-    def test_indexedtable_basic2(self):
+    def test_varbc_basic2(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])
         self.assertEqual(ct.size, 1)    # This time _container_limit is big enough
