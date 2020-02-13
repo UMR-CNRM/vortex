@@ -14,6 +14,10 @@ TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
                                u'fortran', u'gco', u'services', u'drhook_not_mpi',
                                u'mocage-assim', u'mocage-assim-repro', u'mpiauto'])
 
+TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool', 'mpienv',
+                            'mpitool-fullsrun', 'mpienv-fullsrun',
+                            'mpitool-fullspecific', 'mpienv-fullspecific'))
+
 
 class TestTargetsResearch(unittest.TestCase):
 
@@ -33,7 +37,7 @@ class TestTargetsResearch(unittest.TestCase):
         self.assertEqual(self.tg.get('fakekey1'),
                          'tourist')
         self.assertSetEqual(set(self.tg.sections()),
-                            TARGETS_COMMON_SECTIONS | set(('stores', 'generic_nodes')))
+                            TARGETS_COMMON_SECTIONS | TARGET_TEST_SECTIONS)
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1')))
         self.assertDictEqual(self.tg.items('stores'),
@@ -90,7 +94,8 @@ class TestTargetsOp(unittest.TestCase):
         self.assertEqual(self.tg.get('stores:fakekey1'),
                          '1')
         self.assertSetEqual(set(self.tg.sections()),
-                            TARGETS_COMMON_SECTIONS | set(('stores', 'generic_nodes', 'toto')))
+                            TARGETS_COMMON_SECTIONS | TARGET_TEST_SECTIONS |
+                            set((('toto', ))))
         self.assertSetEqual(set(self.tg.options('stores')),
                             set(('storage', 'fakekey1', 'fakekey2')))
         self.assertDictEqual(self.tg.items('stores'),

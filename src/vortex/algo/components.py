@@ -1481,6 +1481,12 @@ class Parallel(xExecutableAlgoComponent):
                 alias           = ['mpi'],
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            mpiconflabel = dict(
+                info            = ('Some extra label used when reading the mpitool' +
+                                   'configuration in the configuration file'),
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             binaries = dict(
                 info            = 'List of MpiBinaryDescription objects',
                 optional        = True,
@@ -1503,11 +1509,49 @@ class Parallel(xExecutableAlgoComponent):
         )
     )
 
-    def prepare(self, rh, opts):
-        """Add some defaults env values for mpitool itself."""
-        super(Parallel, self).prepare(rh, opts)
-        if opts.get('mpitool', True):
-            self.export('mpitool')
+    def _mpitool_attributes(self, opts):
+        """Return the dictionary of attributes needed to create the mpitool object."""
+        # Read the appropriate configuration in the target file
+        conf_dict = self.target.items('mpitool')
+        if self.mpiconflabel:
+            conf_dict.update(self.target.items('mpitool-{!s}'.format(self.mpiconflabel)))
+        # Find the mpiname
+        act_mpiname = (opts.get('mpiname', None) or self.mpiname or
+                       self.env.VORTEX_MPI_NAME or conf_dict.get('mpiname', None))
+        if not act_mpiname:
+            raise ValueError('Unabled to find an appropriate mpiname.')
+        options = dict(mpiname=act_mpiname)
+        # Find ither generic options
+        generic_options = set(('mpilauncher', 'mpiopts'))
+
+        def _generic_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_'.format(act_mpiname)
+            for k, v in mapping.items():
+                if k.startswith(optprefix) and k[len(optprefix):] in generic_options:
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _generic_options_from_mapping(conf_dict, options, checkvalue=True)
+        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(act_mpiname, k[11:].lower()): v
+                                       for k, v in self.env.items()
+                                       if k.startswith('VORTEX_MPI_')}, options)
+        _generic_options_from_mapping(opts, options)
+        # Find other specific options (not listed in generic_options)
+
+        def _specific_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_opt_'.format(act_mpiname)
+            for k, v in mapping.items():
+                if (k.startswith(optprefix) and
+                        k[len(optprefix):] not in generic_options and
+                        k[len(optprefix):] != 'mpiname'):
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _specific_options_from_mapping(conf_dict, options, checkvalue=True)
+        _specific_options_from_mapping(opts, options)
+
+        logger.info('Attributes to create the mpitool: %s', options)
+        return options
 
     def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
@@ -1529,13 +1573,9 @@ class Parallel(xExecutableAlgoComponent):
         # Find the MPI launcher
         mpi = self.mpitool
         if not mpi:
-            mpi_extras = dict()
-            if self.env.VORTEX_MPI_OPTS is not None:
-                mpi_extras['mpiopts'] = self.env.VORTEX_MPI_OPTS
             mpi = footprints.proxy.mpitool(
                 sysname=self.system.sysname,
-                mpiname=self.mpiname or self.env.VORTEX_MPI_NAME,
-                **mpi_extras
+                ** self._mpitool_attributes(opts)
             )
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
@@ -1697,7 +1737,7 @@ class Parallel(xExecutableAlgoComponent):
         mpi, args = self._bootstrap_mpitool(rh, opts)
 
         # Specific parallel settings
-        mpi.setup(opts)
+        mpi.setup(opts, self.mpiconflabel)
 
         # This is actual running command
         self.spawn(args, opts)

@@ -109,6 +109,10 @@ class MpiTool(footprints.FootprintBase):
             mpiname = dict(
                 info     = 'The MPI implementation one wishes to use',
             ),
+            mpilauncher = dict(
+                info     = 'The MPI launcher command to be used',
+                optional = True
+            ),
             mpiopts = dict(
                 info     = 'Extra arguments for the MPI command',
                 optional = True,
@@ -153,8 +157,7 @@ class MpiTool(footprints.FootprintBase):
         """After parent initialization, set master, options and basics to undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
-        thisenv = env.current()
-        self._launcher = thisenv.VORTEX_MPI_LAUNCHER or self.mpiname
+        self._launcher = self.mpilauncher or self.mpiname
         self._binaries = []
         self._envelope = []
         self._sources = []
@@ -400,22 +403,24 @@ class MpiTool(footprints.FootprintBase):
             if changed:
                 namc.rewrite(namrh.container)
 
-    def setup_environment(self, opts):
+    def setup_environment(self, opts, conflabel):
         """MPI environment setup."""
-        if self.target.config.has_section('mpienv'):
-            for k, v in self.target.config.items('mpienv'):
-                if k not in self.env:
-                    logger.debug('Setting MPI env %s = %s', k, v)
-                    self.env[k] = six.text_type(v)
+        confdata = self.target.items('mpienv')
+        if conflabel:
+            confdata.update(self.target.items('mpienv-{!s}'.format(conflabel)))
+        for k, v in confdata.items():
+            if k not in self.env:
+                logger.info('Setting MPI env %s = %s', k, v)
+                self.env[k] = six.text_type(v)
         # Call the dedicated method en registered MPI binaries
         for bin_obj in self.binaries:
             bin_obj.setup_environment(opts)
 
-    def setup(self, opts=None):
+    def setup(self, opts=None, conflabel=None):
         """Specific MPI settings to be applied before run."""
         self.setup_namelists(opts)
         if self.target is not None:
-            self.setup_environment(opts)
+            self.setup_environment(opts, conflabel)
 
 
 class MpiBinaryDescription(footprints.FootprintBase):

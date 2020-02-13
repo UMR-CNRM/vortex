@@ -2,10 +2,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import logging
+import os
 import sys
 import tempfile
 import unittest
 
+from bronx.fancies.loggers import unittestGlobalLevel
 import footprints as fp
 import vortex
 from vortex.algo.mpitools import MpiException
@@ -13,6 +15,10 @@ from vortex.algo.components import Parallel, ParallelIoServerMixin, ParallelOpen
 from vortex.algo.components import ParallelInconsistencyAlgoComponentError, AlgoComponentError
 from vortex.util import config
 import common.algo.mpitools  # @UnusedImport
+
+DATAPATHTEST = os.path.join(os.path.dirname(__file__), '..', 'data')
+
+tloglevel = 'CRITICAL'
 
 
 # Fake objects for test purposes only
@@ -63,12 +69,17 @@ class PalmedTestEngine(Parallel, ParallelOpenPalmMixin):
     )
 
 
+@unittestGlobalLevel(tloglevel)
 class TestParallel(unittest.TestCase):
 
     _mpiauto = 'mpiauto --init-timeout-restart 2 --verbose --wrap --wrap-stdeo --wrap-stdeo-pack'
 
     def setUp(self):
         self.t = vortex.ticket()
+        # Tweak the target object
+        self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
+        self.t.sh.target(inifile=self.testconf)
+        # Local environement
         self.locenv = self.t.env.clone()
         # Clean things up
         trash = [k for k in self.locenv.keys() if k.startswith('VORTEX_')]
@@ -127,12 +138,86 @@ class TestParallel(unittest.TestCase):
             print('GOT:\n', wrapper_new)
             raise
 
+    def test_config_reader(self):
+        algo = self._fix_algo(fp.proxy.component(engine='parallel'))
+        self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpiauto'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
+        self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpirun'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiconflabel='fullsrun'))
+        self.assertEqual(algo._mpitool_attributes(dict()),
+                         dict(mpiname='mpiauto', mpilauncher='/truc/mpiauto',
+                              sublauncher='srun', bindingmethod='launcherspecific'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun',
+                                                 mpiconflabel='fullsrun'))
+        self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpirun'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiconflabel='fullsrun'))
+        self.assertEqual(algo._mpitool_attributes(dict(mpiauto_mpilauncher='toto')),
+                         dict(mpiname='mpiauto', mpilauncher='toto',
+                              sublauncher='srun', bindingmethod='launcherspecific'))
+        self.assertEqual(algo._mpitool_attributes(dict(mpiauto_mpilauncher=None)),
+                         dict(mpiname='mpiauto', mpilauncher=None,
+                              sublauncher='srun', bindingmethod='launcherspecific'))
+        with self.locenv.delta_context(VORTEX_MPI_LAUNCHER='troll'):
+            self.assertEqual(algo._mpitool_attributes(dict(mpiauto_opt_sublauncher=None)),
+                             dict(mpiname='mpiauto', mpilauncher='troll',
+                                  sublauncher=None, bindingmethod='launcherspecific'))
+        with self.locenv.delta_context(VORTEX_MPI_OPTS='--toto'):
+            self.assertEqual(algo._mpitool_attributes(dict(mpiauto_opt_sublauncher=None)),
+                             dict(mpiname='mpiauto', mpilauncher='/truc/mpiauto',
+                                  sublauncher=None, bindingmethod='launcherspecific',
+                                  mpiopts='--toto'))
+            self.assertEqual(algo._mpitool_attributes(dict(mpiauto_opt_sublauncher=None,
+                                                           mpiauto_mpiopts=None)),
+                             dict(mpiname='mpiauto', mpilauncher='/truc/mpiauto',
+                                  sublauncher=None, bindingmethod='launcherspecific',
+                                  mpiopts=None))
+
     def testOneBin(self):
         bin0 = FakeBinaryRh('fake')
         # MPI partitioning from explicit mpiopts
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('mpiauto --init-timeout-restart 2 --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
+                                                     mpiauto_opt_sublauncher='srun',
+                                                     mpiauto_opt_bindingmethod='launcherspecific',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('mpiauto --init-timeout-restart 2 --no-use-arch-bind --use-slurm-bind --use-slurm-mpi ' +
+                        '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
+                                                     mpiauto_opt_sublauncher='libspecific',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
+                                                     mpiauto_opt_bindingmethod='arch',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('mpiauto --init-timeout-restart 2 --use-arch-bind ' +
+                        '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
+                                                     mpiauto_opt_sublauncher='libspecific',
+                                                     mpiauto_opt_bindingmethod='launcherspecific',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('mpiauto --init-timeout-restart 2 --no-use-arch-bind --no-use-slurm-mpi ' +
+                        '--use-intelmpi-bind --use-openmpi-bind --use-slurm-bind ' +
+                        '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
+        with self.locenv.clone() as cloned_env:
+            cloned_env['MPIAUTOGRUIK'] = 1
+            algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiconflabel='fullspecific'))
+            mpi, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+            self.assertCmdl('mpiauto --init-timeout-restart 2 ' +
+                            '--no-use-arch-bind --no-use-slurm-mpi --use-intelmpi-bind --use-openmpi-bind --use-slurm-bind ' +
+                            '--verbose --wrap --wrap-stdeo --wrap-stdeo-pack ' +
+                            '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes',
+                            args)
+            mpi.setup_environment(dict(), conflabel='fullspecific')
+            self.assertEqual(cloned_env['FAKEVARIABLE'], 'fullspecific')
+            self.assertEqual(cloned_env['MPIAUTOCONFIG'], 'mpiauto.TIME.conf')
+            self.assertNotIn('MPIAUTOGRUIK', cloned_env)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
@@ -186,12 +271,9 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
         # Tweaking mpiopts/mpilauncher
-        self.locenv.VORTEX_MPI_OPTS = ''
-        self.locenv.VORTEX_MPI_LAUNCHER = 'mpiauto_debug'
-        _, args = algo._bootstrap_mpitool(bin0, dict())
+        with self.locenv.delta_context(VORTEX_MPI_OPTS='', VORTEX_MPI_LAUNCHER='mpiauto_debug'):
+            _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base='mpiauto_debug --init-timeout-restart 2')
-        del self.locenv.VORTEX_MPI_OPTS
-        del self.locenv.VORTEX_MPI_LAUNCHER
 
         # Let's go for an IO Server...
         algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='mpiauto'))

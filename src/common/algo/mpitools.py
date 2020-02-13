@@ -49,6 +49,20 @@ class MpiAuto(mpitools.MpiTool):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
                 doc_zorder      = -90,
             ),
+            sublauncher = dict(
+                info            = 'How to actualy launch the MPI program',
+                values          = ['srun', 'libspecific'],
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
+            bindingmethod = dict(
+                info            = 'How to bind the MPI processes',
+                values          = ['arch', 'launcherspecific', ],
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
         )
     )
 
@@ -76,19 +90,39 @@ class MpiAuto(mpitools.MpiTool):
         new_envvar = dict()
         for kv in self.mpiauto_conf.get('mpiextraenv' + self._conf_suffix, '').split(','):
             if kv:
-                skv = kv.split('%', maxsplit=1)
+                skv = kv.split('%', 1)
                 if len(skv) == 2:
                     new_envvar[skv[0]] = skv[1]
         return new_envvar
 
     def _actual_mpidelenv(self):
         """Possibly read the mpi extra environment variables in the config file."""
-        return [v for v in self.mpiauto_conf.get('mpidelenv' + self._conf_suffix, '').split(',')]
+        return [v
+                for v in self.mpiauto_conf.get('mpidelenv' + self._conf_suffix, '').split(',')
+                if v]
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
         options['init-timeout-restart'] = self.timeoutrestart
+        if self.sublauncher == 'srun':
+            options['use-slurm-mpi'] = None
+        elif self.sublauncher == 'libspecific':
+            options['no-use-slurm-mpi'] = None
+        if self.bindingmethod:
+            for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
+                      for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:
+                options.pop(k, None)
+            if self.bindingmethod == 'arch':
+                options['use-arch-bind'] = None
+            elif self.bindingmethod == 'launcherspecific' and self.sublauncher == 'srun':
+                options['no-use-arch-bind'] = None
+                options['use-slurm-bind'] = None
+            elif self.bindingmethod == 'launcherspecific':
+                options['no-use-arch-bind'] = None
+                for k in ['use-{:s}-bind'.format(t)
+                          for t in ('slurm', 'intelmpi', 'openmpi')]:
+                    options[k] = None
         return options
 
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
@@ -114,9 +148,9 @@ class MpiAuto(mpitools.MpiTool):
             raise mpitools.MpiException(msg)
         return tuned
 
-    def setup_environment(self, opts):
+    def setup_environment(self, opts, conflabel):
         """Last minute fixups."""
-        super(MpiAuto, self).setup_environment(opts)
+        super(MpiAuto, self).setup_environment(opts, conflabel)
         for k, v in self._actual_mpiextraenv().items():
             logger.info('Setting the "%s" environement variable to "%s"', k.upper(), v)
             self.env[k] = v
@@ -124,9 +158,9 @@ class MpiAuto(mpitools.MpiTool):
             logger.info('Deleting the "%s" environement variable', k.upper())
             del self.env[k]
 
-    def setup(self, opts=None):
+    def setup(self, opts=None, conflabel=None):
         """Ensure that the prefixcommand has the execution rights."""
-        super(MpiAuto, self).setup(opts)
+        super(MpiAuto, self).setup(opts, conflabel)
         for bin_obj in self.binaries:
             prefix_c = bin_obj.options.get('prefixcommand', None)
             if self.envelope and prefix_c:
@@ -221,8 +255,8 @@ def arpifs_obsort_nprocab_binarydeco(cls):
     """
     orig_setup_env = getattr(cls, 'setup_environment')
 
-    def setup_environment(self, opts):
-        orig_setup_env(self, opts)
+    def setup_environment(self, opts, conflabel):
+        orig_setup_env(self, opts, conflabel)
         self.env.NPROCA = int(self.env.NPROCA or
                               self.nprocs)
         self.env.NPROCB = int(self.env.NPROCB or
