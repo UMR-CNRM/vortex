@@ -77,8 +77,9 @@ class UtVarBCContent(_BaseDataContentTest):
     def test_varbc_basic2(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])
-        self.assertEqual(ct.size, 1)    # This time _container_limit is big enough
-        self.assertTrue(len(ct.data[1].params), 8)
+        self.assertEqual(ct.size, 721)
+        self.assertTrue(ct.data[1], 'MINI  20000101         0')
+        self.assertTrue(len(ct.parsed_data[1].params), 8)
 
 
 REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT
