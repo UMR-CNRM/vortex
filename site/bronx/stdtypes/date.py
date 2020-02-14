@@ -1625,6 +1625,10 @@ class Time(_GetattrCalculatorMixin):
     @property
     def notnull(self):
         if self.hour != 0 or self.minute != 0:
+
+    @property
+    def isnull(self):
+        if self.hour == 0 and self.minute == 0:
             return 1
         return 0
 
