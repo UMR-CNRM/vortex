@@ -373,6 +373,7 @@ class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
 
     _MIXIN_MPIBINS_HOOKS = ()
     _MIXIN_MPIENVELOPE_HOOKS = ()
+    _MIXIN_MPIENVELOPE_POSTHOOKS = ()
 
     @classmethod
     @_clsmtd_mixin_locked
@@ -389,6 +390,9 @@ class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
                                                      True),
                                                     ('_bootstrap_mpienvelope_hack',
                                                      cls._MIXIN_MPIENVELOPE_HOOKS, (),
+                                                     True),
+                                                    ('_bootstrap_mpienvelope_posthack',
+                                                     cls._MIXIN_MPIENVELOPE_POSTHOOKS, (),
                                                      True), ]:
             if hooks or prehooks:
                 setattr(targetcls, targetmtd,
@@ -1522,7 +1526,10 @@ class Parallel(xExecutableAlgoComponent):
             raise ValueError('Unabled to find an appropriate mpiname.')
         options = dict(mpiname=act_mpiname)
         # Find ither generic options
-        generic_options = set(('mpilauncher', 'mpiopts'))
+        generic_options = set(('mpilauncher',
+                               'mpiopts',
+                               'mpiwrapstd',
+                               'mpibind_topology'))
 
         def _generic_options_from_mapping(mapping, options, checkvalue=False):
             optprefix = '{:s}_'.format(act_mpiname)
@@ -1563,6 +1570,9 @@ class Parallel(xExecutableAlgoComponent):
     def _bootstrap_mpienvelope_hack(self, envelope, rh, opts, mpi):
         return copy.deepcopy(envelope)
 
+    def _bootstrap_mpienvelope_posthack(self, envelope, rh, opts, mpi):
+        return None
+
     def _bootstrap_mpitool(self, rh, opts):
         """Initialise the mpitool object and finds out the command line."""
 
@@ -1595,8 +1605,6 @@ class Parallel(xExecutableAlgoComponent):
                     blockspec['nnp'] = self.env.get('VORTEX_SUBMIT_TASKS')
                 else:
                     raise ValueError("when envelope='auto', VORTEX_SUBMIT_TASKS must be set up.")
-                if 'VORTEX_SUBMIT_OPENMP' in self.env:
-                    blockspec['openmp'] = self.env.get('VORTEX_SUBMIT_OPENMP', 1)
                 envelope = [blockspec, ]
             elif isinstance(envelope, dict):
                 envelope = [envelope, ]
@@ -1630,7 +1638,8 @@ class Parallel(xExecutableAlgoComponent):
             if use_envelope:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
-                    ranks=envelope_ntasks)
+                    ranks=envelope_ntasks,
+                    openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None))
             else:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
@@ -1696,15 +1705,21 @@ class Parallel(xExecutableAlgoComponent):
                 bins[i].master = self.absexcutable(r.container.localpath())
                 bins[i].arguments = bargs[i]
 
+        # The global envelope
+        envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
+        if envelope:
+            mpi.envelope = envelope
+
         # The binaries description
         mpi.binaries = self._bootstrap_mpibins_hack(bins, rh, opts, use_envelope)
+        upd_envelope = self._bootstrap_mpienvelope_posthack(envelope, rh, opts, mpi)
+        if upd_envelope:
+            mpi.envelope = upd_envelope
 
         # The source files
         mpi.sources = sources
 
-        envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
         if envelope:
-            mpi.envelope = envelope
             # Check the consistency between nranks and the total number of processes
             envelope_ntasks = sum([d.nprocs for d in mpi.envelope])
             mpibins_total = sum([m.nprocs for m in mpi.binaries])
@@ -1870,7 +1885,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
             kind=self.openpalm_binkind,
             nodes=1,
             tasks=self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
-            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or master.openmp,
+            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or 1,
         )
         driver.options = {x[8:]: opts[x]
                           for x in opts.keys() if x.startswith('palmdrv_')}
@@ -1898,7 +1913,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
 
     _MIXIN_MPIBINS_HOOKS = (_bootstrap_mpibins_openpalm_hack, )
 
-    def _bootstrap_mpienvelope_openpalm_hack(self, env, env0, rh, opts, mpi):
+    def _bootstrap_mpienvelope_openpalm_posthack(self, env, env0, rh, opts, mpi):
         """
         Tweak the MPI envelope in order to execute the OpenPALM driver on the
         appropriate node.
@@ -1907,7 +1922,8 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
         driver = mpi.binaries[0]  # The OpenPALM driver
         if self.openpalm_overcommit:
             # Execute the driver on the first compute node
-            if env:
+            if env or env0:
+                env = env or copy.deepcopy(env0)
                 # An envelope is already defined... update it
                 if not ('nn' in env[0] and 'nnp' in env[0]):
                     raise AlgoComponentError("'nn' and 'nnp' must be defined in the envelope")
@@ -1934,4 +1950,4 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                     env.extend([b.options for b in mpi.binaries[2:]])
         return env
 
-    _MIXIN_MPIENVELOPE_HOOKS = (_bootstrap_mpienvelope_openpalm_hack, )
+    _MIXIN_MPIENVELOPE_POSTHOOKS = (_bootstrap_mpienvelope_openpalm_posthack, )

@@ -27,8 +27,8 @@ def mocage_omplist_binarydeco(omp_variables):
 
         orig_setup_env = getattr(cls, 'setup_environment')
 
-        def setup_environment(self, opts, conflabel):
-            orig_setup_env(self, opts, conflabel)
+        def setup_environment(self, opts):
+            orig_setup_env(self, opts)
             for omp_variable in omp_variables:
                 if omp_variable not in self.env:
                     self.env[omp_variable] = self.options.get('openmp', 1)

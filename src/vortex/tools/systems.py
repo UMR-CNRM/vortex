@@ -2799,6 +2799,49 @@ class Python27(object):
             logger.error('Bad function path name <%s>' % funcname)
         return thisfunc
 
+    def which(self, cmd, mode=os.F_OK | os.X_OK, path=None):
+        """Given a command, mode, and a PATH string, return the path which
+        conforms to the given mode on the PATH, or None if there is no such
+        file.
+
+        `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
+        of os.environ.get("PATH"), or can be overridden with a custom search
+        path.
+
+        :note: this is a copy of the Python3.7 code (with the Windows part
+               removed)
+        """
+        # Check that a given file can be accessed with the correct mode.
+        def _access_check(fn, mode):
+            return (self.path.exists(fn) and self.access(fn, mode) and
+                    not self.path.isdir(fn))
+
+        # If we're given a path with a directory part, look it up directly rather
+        # than referring to PATH directories. This includes checking relative to the
+        # current directory, e.g. ./script
+        if self.path.dirname(cmd):
+            if _access_check(cmd, mode):
+                return cmd
+            return None
+
+        if path is None:
+            path = self.env.get("PATH", self.defpath)
+        if not path:
+            return None
+        path = path.split(self.pathsep)
+        files = [cmd]
+
+        seen = set()
+        for adir in path:
+            normdir = self.path.normcase(adir)
+            if normdir not in seen:
+                seen.add(normdir)
+                for thefile in files:
+                    name = self.path.join(adir, thefile)
+                    if _access_check(name, mode):
+                        return name
+        return None
+
 
 _python34_fp = footprints.Footprint(info='An abstract footprint to be used with the Python34 Mixin',
                                     only=dict(

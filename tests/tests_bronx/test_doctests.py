@@ -11,7 +11,7 @@ from bronx.fancies import display, language, loggers
 from bronx.meteo import thermo
 from bronx.patterns import getbytag, observer
 from bronx.stdtypes import date, history, tracking, xtemplates
-from bronx.syntax import iterators, minieval
+from bronx.syntax import iterators, minieval, parsing
 
 
 class utDocTests(unittest.TestCase):
@@ -36,6 +36,7 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(xtemplates)
         self.assert_doctests(iterators)
         self.assert_doctests(minieval)
+        self.assert_doctests(parsing)
 
 
 if __name__ == '__main__':

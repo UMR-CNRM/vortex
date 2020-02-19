@@ -12,9 +12,10 @@ DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
                                u'fortran', u'gco', u'services', u'drhook_not_mpi',
-                               u'mocage-assim', u'mocage-assim-repro', u'mpiauto'])
+                               u'mocage-assim', u'mocage-assim-repro', u'mpiauto',
+                               u'mpitool-mplbased', u'srun'])
 
-TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool', 'mpienv',
+TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool',
                             'mpitool-fullsrun', 'mpienv-fullsrun',
                             'mpitool-fullspecific', 'mpienv-fullspecific'))
 

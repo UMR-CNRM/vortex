@@ -634,6 +634,9 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
                 optional = True,
                 default  = 'mask4x4.txt',
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -733,6 +736,9 @@ class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
                 values = ['odbcompress'],
             ),
             ioassign = dict(),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -792,6 +798,9 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
                 value    = ['ecma', 'ccma', 'CCMA', 'ECMA'],
                 remap    = dict(CCMA ='ccma', ECMA = 'ecma'),
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -865,6 +874,9 @@ class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
             kind = dict(
                 values = ['flagscomp'],
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         ),
     )
 

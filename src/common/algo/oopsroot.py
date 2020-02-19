@@ -241,6 +241,9 @@ class OOPSParallel(Parallel,
                 default         = footprints.FPDict(),
                 doc_zorder      = -60,
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
