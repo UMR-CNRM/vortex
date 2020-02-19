@@ -295,13 +295,26 @@ class SectionsSlice(collections_abc.Sequence):
             raise KeyError("'{:s}' wasn't found in the designated dictionary"
                            .format(k))
 
+    @staticmethod
+    def _sloppy_compare(json_v, v):
+        """Try a very very permissive check."""
+        try:
+            return type(v)(json_v) == v
+        except (ValueError, TypeError):
+            try:
+                return json_v == v
+            except (ValueError, TypeError):
+                return False
+
     def _sloppy_ckeck(self, item, k, v):
         """Perform a _sloppy_lookup and check the result against *v*."""
         if k in ('role', 'alternate'):
             v = setrole(v)
         try:
             found = self._sloppy_lookup(item, k)
-            return found == v
+            if not isinstance(v, (list, tuple, set)):
+                v = [v, ]
+            return any([self._sloppy_compare(found, a_v) for a_v in v])
         except KeyError:
             return False
 
