@@ -10,6 +10,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 from bronx.compat.moves import collections_abc
+from bronx.stdtypes.date import Date, Time
 from vortex import sessions
 from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.data.flow import FlowResource
@@ -306,17 +307,24 @@ class SectionsSlice(collections_abc.Sequence):
             except (ValueError, TypeError):
                 return False
 
-    def _sloppy_ckeck(self, item, k, v):
+    def _sloppy_ckeck(self, item, k, v, extras):
         """Perform a _sloppy_lookup and check the result against *v*."""
         if k in ('role', 'alternate'):
             v = setrole(v)
         try:
-            found = self._sloppy_lookup(item, k)
-            if not isinstance(v, (list, tuple, set)):
-                v = [v, ]
-            return any([self._sloppy_compare(found, a_v) for a_v in v])
+            if k == 'baseterm':
+                found = self._sloppy_lookup(item, 'term')
+                foundbis = self._sloppy_lookup(item, 'date')
+            else:
+                found = self._sloppy_lookup(item, k)
         except KeyError:
             return False
+        if not isinstance(v, (list, tuple, set)):
+            v = [v, ]
+        if k == 'baseterm' and extras.get('basedate', None):
+            delta = (Date(extras['basedate']) - Date(foundbis))
+            found = Time(found) - delta
+        return any([self._sloppy_compare(found, a_v) for a_v in v])
 
     def filter(self, **kwargs):
         """Create a new :class:`SectionsSlice` object that will be filtered using *kwargs*.
@@ -325,8 +333,11 @@ class SectionsSlice(collections_abc.Sequence):
 
             >>> self.filter(role='Guess', member=1)
         """
+        extras = dict()
+        extras['basedate'] = kwargs.pop('basedate', None)
         newslice = [s for s in self
-                    if all([self._sloppy_ckeck(s, k, v) for k, v in kwargs.items()])]
+                    if all([self._sloppy_ckeck(s, k, v, extras)
+                            for k, v in kwargs.items()])]
         return self.__class__(newslice)
 
     def uniquefilter(self, **kwargs):

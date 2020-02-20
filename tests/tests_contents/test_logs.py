@@ -197,6 +197,17 @@ class UtRhListContent(_BaseDataContentTest):
         self.assertEqual(len(f5), 1)
         f5 = ct.filter(term=[bdate.Time(0), bdate.Time(3), bdate.Time(6)])
         self.assertEqual(len(f5), 1)
+        # Basedate mechanism
+        f6 = ct.filter(baseterm=bdate.Time(3))
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(3), basedate='201805210000')
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate='201805210300')
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate=bdate.Date('201805210300'))
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate='201805210000/PT3H')
+        self.assertEqual(f5, f6)
 
     def test_attributes(self):
         ct = logs.SectionsJsonListContent()
