@@ -197,6 +197,8 @@ class UtRhListContent(_BaseDataContentTest):
         self.assertEqual(len(f5), 1)
         f5 = ct.filter(term=[bdate.Time(0), bdate.Time(3), bdate.Time(6)])
         self.assertEqual(len(f5), 1)
+        f6 = ct.filter(term=lambda x: 0 < bdate.Time(x) < 4)
+        self.assertEqual(f5, f6)
         # Basedate mechanism
         f6 = ct.filter(baseterm=bdate.Time(3))
         self.assertEqual(f5, f6)

@@ -299,13 +299,19 @@ class SectionsSlice(collections_abc.Sequence):
     @staticmethod
     def _sloppy_compare(json_v, v):
         """Try a very very permissive check."""
-        try:
-            return type(v)(json_v) == v
-        except (ValueError, TypeError):
+        if callable(v):
             try:
-                return json_v == v
+                return v(json_v)
             except (ValueError, TypeError):
                 return False
+        else:
+            try:
+                return type(v)(json_v) == v
+            except (ValueError, TypeError):
+                try:
+                    return json_v == v
+                except (ValueError, TypeError):
+                    return False
 
     def _sloppy_ckeck(self, item, k, v, extras):
         """Perform a _sloppy_lookup and check the result against *v*."""
