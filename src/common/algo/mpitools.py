@@ -152,8 +152,22 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
             raise mpitools.MpiException(msg)
         return tuned
 
+    def _envelope_mkwrapper_todostack(self):
+        ranksidx = 0
+        todostack, ranks_bsize = super(MpiAuto, self)._envelope_mkwrapper_todostack()
+        for bin_obj in self.binaries:
+            if bin_obj.options:
+                for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
+                    prefix_c = bin_obj.options.get('prefixcommand', None)
+                    if prefix_c:
+                        todostack[mpirank] = (prefix_c,
+                                              [todostack[mpirank][0], ] + todostack[mpirank][1],
+                                              todostack[mpirank][2])
+                ranksidx += bin_obj.nprocs
+        return todostack, ranks_bsize
+
     def _envelope_mkcmdline_extra(self, cmdl):
-        """If possible, ddd an openmp option when the arch binding method is used."""
+        """If possible, add an openmp option when the arch binding method is used."""
 
         if self.bindingmethod != 'vortex':
             openmps = set([b.options.get('openmp', None) for b in self.binaries])
@@ -176,8 +190,6 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
         """Ensure that the prefixcommand has the execution rights."""
         for bin_obj in self.binaries:
             prefix_c = bin_obj.options.get('prefixcommand', None)
-            if self.envelope and prefix_c:
-                raise ValueError('It is not allowed to specify a prefixcommand when an envelope is used.')
             if prefix_c is not None:
                 if self.system.path.exists(prefix_c):
                     self.system.xperm(prefix_c, force=True)

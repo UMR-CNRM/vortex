@@ -307,6 +307,15 @@ class TestParallel(unittest.TestCase):
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
         self.assertWrapper('MPIAUTORANK', binpaths, binomp=[10, ] * 8,
                            tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(envelope=dict(nn=2, nnp=4),
+                                                                  nranks=8, openmp=10,
+                                                                  prefixcommand='gruik.sh')))
+        self.assertCmdl('{base:s} --nn 2 --nnp 4 --prefix-command ./global_envelope_wrapper.py --openmp 10 -- {pwd:s}/fake',
+                        args, base=self._mpiauto)
+        binpaths = ['gruik.sh', ] * 8
+        binargs = ["'{:s}', '{:s}', '{:s}'".format('{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), '-joke', 'yes'), ] * 8
+        self.assertWrapper('MPIAUTORANK', binpaths, binargs=binargs, binomp=[10, ] * 8,
+                           tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, np=8, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)

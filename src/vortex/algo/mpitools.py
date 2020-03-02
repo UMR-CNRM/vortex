@@ -414,9 +414,7 @@ class MpiTool(footprints.FootprintBase):
                          if k not in ('openmp')}
         e_bit.master = self._envelope_wrapper_name
 
-    def _envelope_mkwrapper(self, cmdl):
-        """Generate the wrapper script used when an envelope is defined."""
-        # Generate the dictionary that associate rank numbers and programs
+    def _envelope_mkwrapper_todostack(self):
         ranksidx = 0
         ranks_bsize = dict()
         todostack = dict()
@@ -432,7 +430,9 @@ class MpiTool(footprints.FootprintBase):
                     todostack[mpirank] = (bin_obj.master, bin_obj.arguments,
                                           bin_obj.options.get('openmp', None))
                 ranksidx += bin_obj.nprocs
-        # Generate the binding stuff
+        return todostack, ranks_bsize
+
+    def _envelope_mkwrapper_bindingstack(self, ranks_bsize):
         if self.bindingmethod == 'vortex':
             ranksidx = 0
             bindingstack = dict()
@@ -451,15 +451,10 @@ class MpiTool(footprints.FootprintBase):
                     raise MpiException("Vortex binding error.")
         else:
             bindingstack = dict()
+        return bindingstack
 
-        # Create the launchwrapper
-        wtpl = config.load_template(self.ticket,
-                                    self._envelope_wrapper_tpl,
-                                    encoding='utf-8')
-        with io.open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
-            fhw.write(
-                wtpl.substitute(
-                    python=sys.executable,
+    def _envelope_mkwrapper_tplsubs(self, todostack, bindingstack):
+        return dict(python=sys.executable,
                     sitepath=self.system.path.join(self.ticket.glove.siteroot, 'site'),
                     mpirankvariable=self._envelope_rank_var,
                     todolist=("\n".join(["  {:d}: ('{:s}', [{:s}], {:s}),".format(
@@ -471,8 +466,22 @@ class MpiTool(footprints.FootprintBase):
                     bindinglist=("\n".join(["  {:d}: [{:s}],".format(
                                             mpi_r,
                                             ', '.join(['{:d}'.format(a) for a in what]))
-                                            for mpi_r, what in sorted(bindingstack.items())])),
-                )
+                                            for mpi_r, what in sorted(bindingstack.items())])))
+
+    def _envelope_mkwrapper(self, cmdl):
+        """Generate the wrapper script used when an envelope is defined."""
+        # Generate the dictionary that associate rank numbers and programs
+        todostack, ranks_bsize = self._envelope_mkwrapper_todostack()
+        # Generate the binding stuff
+        bindingstack = self._envelope_mkwrapper_bindingstack(ranks_bsize)
+        # Create the launchwrapper
+        wtpl = config.load_template(self.ticket,
+                                    self._envelope_wrapper_tpl,
+                                    encoding='utf-8')
+        with io.open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
+            fhw.write(
+                wtpl.substitute(** self._envelope_mkwrapper_tplsubs(todostack,
+                                                                    bindingstack))
             )
         self.system.xperm(self._envelope_wrapper_name, force=True)
         return self._envelope_wrapper_name
