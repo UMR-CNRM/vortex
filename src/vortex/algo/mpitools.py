@@ -426,7 +426,10 @@ class MpiTool(footprints.FootprintBase):
                 if not bin_obj.nprocs:
                     raise ValueError('nranks must be provided when using envelopes')
                 for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
-                    ranks_bsize[mpirank] = bin_obj.options.get('openmp', 1)
+                    if bin_obj.allowbind:
+                        ranks_bsize[mpirank] = bin_obj.options.get('openmp', 1)
+                    else:
+                        ranks_bsize[mpirank] = -1
                     todostack[mpirank] = (bin_obj.master, bin_obj.arguments,
                                           bin_obj.options.get('openmp', None))
                 ranksidx += bin_obj.nprocs
@@ -444,7 +447,10 @@ class MpiTool(footprints.FootprintBase):
                             raise MpiException('Unable to detect the CPU layout with topology: {:s}'
                                                .format(self._actual_vortexbind_topology,))
                         for _ in range(e_bit.options['nnp']):
-                            bindingstack[ranksidx] = cpudisp(ranks_bsize.get(ranksidx, 1))
+                            if ranks_bsize.get(ranksidx, 1) != -1:
+                                bindingstack[ranksidx] = cpudisp(ranks_bsize.get(ranksidx, 1))
+                            else:
+                                bindingstack[ranksidx] = set(self.system.cpus_info.cpus.keys())
                             ranksidx += 1
                 else:
                     logger.error("Cannot compute a proper binding without nn/nnp information")
@@ -716,10 +722,16 @@ class MpiBinaryDescription(footprints.FootprintBase):
                 access   = 'rwx'
             ),
             ranks = dict(
-                info     = "The number of MPI ranks to use (only when working in an envelop)",
+                info     = "The number of MPI ranks to use (only when working in an envelope)",
                 type     = int,
                 optional = True,
                 access   = 'rwx'
+            ),
+            allowbind = dict(
+                info     = "Allow the MpiTool to bind this executable",
+                type     = bool,
+                optional = True,
+                default  = True,
             ),
             basics = dict(
                 type     = footprints.FPList,
@@ -1019,20 +1031,22 @@ class SRun(ConfigurableMpiTool):
 
     def _build_cpumask(self, cmdl, what, bsize):
         """Add a --cpu-bind option if needed."""
+        cmdl.append(self._cpubind_opt)
         if self.bindingmethod == 'native':
             assert len(what) == 1, "Only one item is allowed."
-            ids = self.system.cpus_ids_per_blocks(blocksize=bsize,
-                                                  topology=self._actual_mpibind_topology,
-                                                  hexmask=True)
-            if not ids:
-                raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                   .format(self._actual_vortexbind_topology,))
-            masklist = [m for _, m in zip(range(what[0].options['nnp']),
-                                          itertools.cycle(ids))]
-            cmdl.append(self._cpubind_opt)
-            cmdl.append('mask_cpu:' + ','.join(masklist))
+            if what[0].allowbind:
+                ids = self.system.cpus_ids_per_blocks(blocksize=bsize,
+                                                      topology=self._actual_mpibind_topology,
+                                                      hexmask=True)
+                if not ids:
+                    raise MpiException('Unable to detect the CPU layout with topology: {:s}'
+                                       .format(self._actual_vortexbind_topology,))
+                masklist = [m for _, m in zip(range(what[0].options['nnp']),
+                                              itertools.cycle(ids))]
+                cmdl.append('mask_cpu:' + ','.join(masklist))
+            else:
+                cmdl.append('none')
         else:
-            cmdl.append(self._cpubind_opt)
             cmdl.append('none')
 
     def _simple_mkcmdline(self, cmdl):

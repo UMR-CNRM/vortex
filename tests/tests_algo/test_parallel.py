@@ -55,6 +55,11 @@ class FakeCpuDispenser():
         return [self._cpulist.popleft() for _ in range(bsize)]
 
 
+class FakeCpusInfos():
+
+    cpus = {k: None for k in range(0, 40)}
+
+
 class FakeSystem(OSExtended):
 
     _footprint = dict(
@@ -65,6 +70,10 @@ class FakeSystem(OSExtended):
             )
         )
     )
+
+    def __init__(self, *args, **kw):
+        super(FakeSystem, self).__init__(*args, **kw)
+        self.__dict__['_cpusinfo'] = FakeCpusInfos()
 
     def cpus_ids_per_blocks(self, blocksize=1, topology='raw', hexmask=False):  # @UnusedVariable
         ncpus = 40
@@ -244,6 +253,12 @@ class TestParallel(unittest.TestCase):
                                                      srun_opt_bindingmethod='native',))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
                         '--cpu-bind mask_cpu:0x3ff,0xffc00,0x3ff00000,0xffc0000000 ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10, allowbind=False),
+                                                     srun_opt_bindingmethod='native',))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+                        '--cpu-bind none ' +
                         '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
@@ -465,7 +480,8 @@ class TestParallel(unittest.TestCase):
         for bm in ('vortex', 'native'):
             _, args = algo._bootstrap_mpitool(bins,
                                               dict(srun_opt_bindingmethod=bm,
-                                                   mpiopts=dict(nn=[2, 2, 1],
+                                                   mpiopts=dict(allowbind=[False, True, True],
+                                                                nn=[2, 2, 1],
                                                                 openmp=[10, 5, 5],
                                                                 nnp=[4, 8, 8])))
             self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
@@ -476,7 +492,7 @@ class TestParallel(unittest.TestCase):
             binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 16)
             binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
             binomp = [10, ] * 8 + [5, ] * 16 + [5, ] * 8
-            bindingl = ([list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 2 +
+            bindingl = ([list(range(40)), ] * 8 +
                         [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 3)
             self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
 
@@ -544,32 +560,61 @@ class TestParallel(unittest.TestCase):
         binomp = [1, ] + [10, ] * 12 + [5, ] * 16
         self.assertWrapper('MPIRANK', binpaths, binargs=['', ], binomp=binomp)
         # MPI partitioning from explicit mpiopts: with envelope provided, overcommiting
-        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='mpirun',))
+        self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='srun',))
         _, args = algo._bootstrap_mpitool([bin0, bin1],
                                           dict(mpiopts=dict(np=[8, 4], envelope='auto')))
-        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 8 ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 13 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8)
         binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 4)
         binomp = [1, ] + [None, ] * 12
-        self.assertWrapper('MPIRANK', binpaths, binargs=['', ], binomp=binomp)
+        self.assertWrapper('SLURM_PROCID', binpaths, binargs=['', ], binomp=binomp)
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 4 -np 4 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 25 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 24)
-        self.assertWrapper('MPIRANK', binpaths,
+        self.assertWrapper('SLURM_PROCID', binpaths,
                            binomp=[1, ] + [10, ] * 24,
                            binargs=['', ])
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
-        self.assertCmdl('mpirun -npernode 5 -np 5 ./global_envelope_wrapper.py : -npernode 8 -np 16 ./global_envelope_wrapper.py', args)
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
-        self.assertWrapper('MPIRANK', binpaths,
+        self.assertWrapper('SLURM_PROCID', binpaths,
                            binomp=[1, ] + [10, ] * 20,
+                           binargs=['', ])
+        self.locenv.VORTEX_SUBMIT_OPENMP = 5
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(srun_opt_bindingmethod='vortex',
+                                               mpiopts=dict(envelope=[dict(nn=1, nnp=4),
+                                                                      dict(nn=2, nnp=8)])))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
+        self.assertWrapper('SLURM_PROCID', binpaths,
+                           binomp=[1, ] + [5, ] * 20,
+                           bindinglist = ([[0, ], ] +
+                                          [list(range(1 + i * 5, 1 + (i + 1) * 5)) for i in range(4)] +
+                                          [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
+                           binargs=['', ])
+        _, args = algo._bootstrap_mpitool([bin0, ],
+                                          dict(srun_opt_bindingmethod='vortex',
+                                               palmdrv_bind=False,
+                                               mpiopts=dict(envelope=[dict(nn=1, nnp=4),
+                                                                      dict(nn=2, nnp=8)])))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+        binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
+        self.assertWrapper('SLURM_PROCID', binpaths,
+                           binomp=[1, ] + [5, ] * 20,
+                           bindinglist = ([list(range(0, 40)), ] +
+                                          [list(range(i * 5, (i + 1) * 5)) for i in range(4)] +
+                                          [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
                            binargs=['', ])
         # MPI partitioning from explicit mpiopts: no envelope provided, dedicated
         self.locenv.VORTEX_SUBMIT_NODES = 4

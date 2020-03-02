@@ -1635,15 +1635,18 @@ class Parallel(xExecutableAlgoComponent):
         if len(rh) == 1 and not self.binaries:
 
             # The main program
+            allowbind = mpi_opts.pop('allowbind', True)
             if use_envelope:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
                     ranks=envelope_ntasks,
-                    openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None))
+                    openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None),
+                    allowbind=allowbind)
             else:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
                     nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                    allowbind=allowbind,
                     **mpi_desc)
             master.options = mpi_opts
             master.master = self.absexcutable(rh[0].container.localpath())
@@ -1673,11 +1676,13 @@ class Parallel(xExecutableAlgoComponent):
 
             # Create MpiBinaryDescription objects
             bins = list()
+            allowbinds = mpi_opts.pop('allowbind', [True, ] * len(rh))
             for i, r in enumerate(rh):
                 if use_envelope:
                     bins.append(
                         footprints.proxy.mpibinary(
-                            kind=bnames[i]
+                            kind=bnames[i],
+                            allowbind=allowbinds[i]
                         )
                     )
                 else:
@@ -1685,6 +1690,7 @@ class Parallel(xExecutableAlgoComponent):
                         footprints.proxy.mpibinary(
                             kind=bnames[i],
                             nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                            allowbind=allowbinds[i],
                             **mpi_desc
                         )
                     )
@@ -1851,6 +1857,13 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                 optional=True,
                 doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
+            openpalm_binddriver=dict(
+                info='Try to bind the OpenPALM driver binary.',
+                type=bool,
+                optional=True,
+                default=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
             openpalm_binkind=dict(
                 info='The binary kind for the OpenPALM driver.',
                 optional=True,
@@ -1886,6 +1899,9 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
             nodes=1,
             tasks=self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
             openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or 1,
+            allowbind=opts.pop('palmdrv_bind',
+                               self.env.get('VORTEX_OPENPALM_DRV_BIND',
+                                            self.openpalm_binddriver)),
         )
         driver.options = {x[8:]: opts[x]
                           for x in opts.keys() if x.startswith('palmdrv_')}
