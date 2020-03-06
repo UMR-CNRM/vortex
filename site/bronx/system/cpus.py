@@ -429,4 +429,6 @@ else:
         """Set the cpu affinity of a process."""
         if pid is None:
             pid = 0
+        if isinstance(cpus, int):
+            cpus = [cpus]
         os.sched_setaffinity(pid, cpus)

@@ -128,7 +128,7 @@ class UtTaylorism(TestCase):
         )
         with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(interrupt.SignalInterruptError):
-                time.sleep(0.01)
+                time.sleep(2)
                 boss._process.terminate()
                 boss.wait_till_finished()
 
@@ -143,7 +143,7 @@ class UtTaylorism(TestCase):
                 individual_instructions=dict(sleeping_time=[0.001, 0.001, 0.001]),
                 scheduler=scheduler,
             )
-            time.sleep(0.1)
+            time.sleep(0.2)
             boss.set_instructions(dict(succeed=True,), individual_instructions=dict(sleeping_time=[0.001, ]))
             boss.wait_till_finished()
             report = boss.get_report()
@@ -161,7 +161,7 @@ class UtTaylorism(TestCase):
             individual_instructions=dict(sleeping_time=[0.001, 60], succeed=[False, True]),
             scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2),
         )
-        time.sleep(0.1)
+        time.sleep(0.5)
         with interrupt.SignalInterruptHandler(emitlogs=False):
             with self.assertRaises(_TestError):
                 boss.set_instructions(

@@ -598,9 +598,9 @@ class TestParallel(unittest.TestCase):
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
         self.assertWrapper('SLURM_PROCID', binpaths,
                            binomp=[1, ] + [5, ] * 20,
-                           bindinglist = ([[0, ], ] +
-                                          [list(range(1 + i * 5, 1 + (i + 1) * 5)) for i in range(4)] +
-                                          [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
+                           bindinglist=([[0, ]] +
+                                        [list(range(1 + i * 5, 1 + (i + 1) * 5)) for i in range(4)] +
+                                        [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
                            binargs=['', ])
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(srun_opt_bindingmethod='vortex',
@@ -612,9 +612,9 @@ class TestParallel(unittest.TestCase):
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
         self.assertWrapper('SLURM_PROCID', binpaths,
                            binomp=[1, ] + [5, ] * 20,
-                           bindinglist = ([list(range(0, 40)), ] +
-                                          [list(range(i * 5, (i + 1) * 5)) for i in range(4)] +
-                                          [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
+                           bindinglist=([list(range(0, 40)), ] +
+                                        [list(range(i * 5, (i + 1) * 5)) for i in range(4)] +
+                                        [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
                            binargs=['', ])
         # MPI partitioning from explicit mpiopts: no envelope provided, dedicated
         self.locenv.VORTEX_SUBMIT_NODES = 4

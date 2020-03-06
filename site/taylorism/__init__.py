@@ -264,9 +264,9 @@ class Worker(FootprintBase):
         on the system.
         """
         cpuloc = cpus.get_affinity()
-        if cpuloc == list(cpus.LinuxCpusInfo().raw_cpulist()):
+        if cpuloc == set(cpus.LinuxCpusInfo().raw_cpulist()):
             cpuloc = [None]
-        return cpuloc
+        return list(cpuloc)
 
     def work(self):
         """Send the Worker to his job."""
