@@ -124,22 +124,22 @@ $(XMLEXPORTDIR):
 # Build the notebooks export
 $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
-	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
+	$(PYTHON) $(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
 # Clean a library index
 clean-%_libindex:
-	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
 
 # Standard build for library indexes
 %_libindex:
-	$(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
 
 # Special builds for some library indexes (custom versionid)
 taylorism_libindex:
-	$(GENEINDEX) -v --versionid version_taylorism $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --versionid version_taylorism $(patsubst %_libindex, library/%, $@)
 
 footprints_libindex:
-	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
 
 # Build the $(AUTO_HTML_DOC) directory
 auto_html_docs:
