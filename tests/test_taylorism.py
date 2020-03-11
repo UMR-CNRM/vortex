@@ -171,19 +171,25 @@ class UtTaylorism(TestCase):
 
     def test_binding(self):
         """Checks that the binding works."""
+        try:
+            li = cpus_tool.LinuxCpusInfo()
+            avcpus = cpus_tool.get_affinity()
+        except cpus_tool.CpusToolUnavailableError as e:
+            raise self.skipTest(str(e))
+        if set(li.cpus.keys()) != avcpus:
+            raise self.skipTest('The host is not entirely available.')
         taylorism_log.setLevel(tloglevel_taylorism)
         boss = taylorism.run_as_server(
             common_instructions=dict(wakeup_sentence='yo', succeed=True, bind_test=True),
             individual_instructions=dict(sleeping_time=[0.001, 0.001, 0.001]),
             scheduler=footprints.proxy.scheduler(limit='threads', max_threads=2, binded=True),
         )
-        try:
-            boss.wait_till_finished()
-        except cpus_tool.CpusToolUnavailableError as e:
-            raise self.skipTest(str(e))
+        boss.wait_till_finished()
         report = boss.get_report()
-        self.assertEqual(len(report['workers_report']), 3, "3 instructions have been sent, which is not the size of report.")
-        self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]), set([0, 1]))
+        self.assertEqual(len(report['workers_report']), 3,
+                         "3 instructions have been sent, which is not the size of report.")
+        self.assertEqual(set([r['report'][1][0] for r in report['workers_report']]),
+                         set(list(li.socketpacked_cpulist())[:2]))
 
     @stderr2out_deco
     def test_redundant_workers_name(self):

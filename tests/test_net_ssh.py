@@ -33,6 +33,7 @@ def check_localssh():
         subprocess.check_output(['ssh', '-x',
                                  '-oNumberOfPasswordPrompts=0',
                                  '-oConnectTimeout=1',
+                                 '-oNoHostAuthenticationForLocalhost=true',
                                  test_host, 'true'], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
         return False

@@ -148,6 +148,11 @@ class ContribCheckerConfig(ConfigParser):
         return self._doc_sphinxbuilder
 
     @property
+    def doc_extrapath(self):
+        """An extra path to be added to the system's path (to find things like pandoc)."""
+        return self.get('doc', 'extrapath', fallback='')
+
+    @property
     def codechecker_interpreter(self):
         """
         The path to the Python's interpreter to be used when performing the
@@ -328,6 +333,7 @@ class NoseChecker(AbstractChecker):
         for nkey, nresults in self._allresults.items():
             accrc = sum([rc for rc, _ in nresults.values()])
             if accrc:
+                print()
                 print('Error detected in Unit-tests with Python {:s}:\n'.format(nkey))
                 for rc, noutput in nresults.values():
                     if rc:
@@ -376,6 +382,7 @@ class AbstractOneShotChecker(AbstractChecker):
     def dumperrors(self):
         """Display the test output if something went wrong with the external command."""
         if self._result[0]:
+            print()
             print('Error detected during {:s}:\n'.format(self._DUMP_TXT))
             print(self._result[1])
 
@@ -420,6 +427,21 @@ class DocSphinxChecker(AbstractOneShotChecker):
     _DUMP_TXT = 'sphinx doc building'
     _SUMMARY_TXT = 'Sphinx Doc Build'
     _BAD_WORDS = ('WARNING', 'ERROR', 'SEVERE')
+
+    @contextlib.contextmanager
+    def _spawn_switch(self):
+        """Jump into the ``self._testdir`` directory and setup the environment."""
+        extrapath = self.config.doc_extrapath
+        if extrapath:
+            try:
+                os.environ['PATH'] = extrapath + ':' + os.environ['PATH']
+                with super()._spawn_switch():
+                    yield
+            finally:
+                os.environ['PATH'] = os.environ['PATH'][len(extrapath) + 1:]
+        else:
+            with super()._spawn_switch():
+                yield
 
     def _spawn_cmdl(self):
         return ['make',
@@ -494,6 +516,8 @@ interpreter=/usr/bin/python3
 sphinxbuilder=/usr/bin/sphinx-build
 ; The makefile target to use when building the documentation.
 ;buildtarget=html
+; An extra directory to be added to the system's PATH (for things like pandoc)
+;extrapath=
 
 """
 
@@ -553,12 +577,12 @@ def main():
         futures = [executor.submit(checker.check) for checker in checkers]
         concurrent.futures.wait(futures)
 
-    print()
     for checker in checkers:
         checker.dumperrors()
     print()
     for checker in checkers:
         checker.summarise()
+    print()
 
 
 if __name__ == "__main__":
