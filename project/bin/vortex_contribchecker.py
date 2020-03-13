@@ -261,11 +261,15 @@ class NoseChecker(AbstractChecker):
     #: Argument to be added to the nosetests command line
     _DEFAULT_ARGS = ['--no-byte-compile']
 
+    #: A list of tests not to be launched in parallel
+    _CRITCALTESTS = set()
+
     #: A list of tests that last a while (they should be run first)
     _LONGTESTS = {'test_names',
                   'test_twistednet',
                   'test_net_ssh.py',
-                  'test_algo_server.py'}
+                  'test_algo_server.py',
+                  'test_taylorism.py'}
 
     #: Seconds (the longest test should not last more than...)
     _TIMEOUT = 120
@@ -283,11 +287,17 @@ class NoseChecker(AbstractChecker):
         vtxpath = (os.path.join(self.config.vortexbase, 'src') + ':' +
                    os.path.join(self.config.vortexbase, 'project') + ':' +
                    os.path.join(self.config.vortexbase, 'site') + ':')
+        prev_names_tasks = os.environ.get('VORTEX_TEST_NAMES_NTASKS', None)
         try:
             os.environ['PYTHONPATH'] = vtxpath + os.environ['PYTHONPATH']
+            os.environ['VORTEX_TEST_NAMES_NTASKS'] = '2'
             with super()._spawn_switch():
                 yield
         finally:
+            if prev_names_tasks is not None:
+                os.environ['VORTEX_TEST_NAMES_NTASKS'] = prev_names_tasks
+            else:
+                del os.environ['VORTEX_TEST_NAMES_NTASKS']
             os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'][len(vtxpath):]
 
     def _spawn(self, cmd, *args, **kwargs):
@@ -297,6 +307,7 @@ class NoseChecker(AbstractChecker):
 
     def _discover_tests(self):
         """Crawl into the tests directory to find the test modules/packages."""
+        tests_critical = list()
         tests_long = list()
         tests_packages = list()
         tests_simple = list()
@@ -304,27 +315,33 @@ class NoseChecker(AbstractChecker):
             if item.startswith('test_') or item.startswith('tests_'):
                 if item in self._LONGTESTS:
                     tests_long.append(item)
+                elif item in self._CRITCALTESTS:
+                    tests_critical.append(item)
                 else:
                     if os.path.isdir(os.path.join(self._testdir, item)):
                         tests_packages.append(item)
                     else:
                         if item.endswith('.py'):
                             tests_simple.append(item)
-        return sorted(tests_long) + sorted(tests_packages) + sorted(tests_simple)
+        return (sorted(tests_critical),
+                sorted(tests_long) + sorted(tests_packages) + sorted(tests_simple))
 
     def check(self):
         """Run Vortex's unit-tests."""
-        todo = self._discover_tests()
+        critical, todo = self._discover_tests()
         # Parallel run of all nose tests
         for nkey, ntester in self.config.nosetesters.items():
             logger.info("Starting tests with %s's nose (%s)", nkey, ntester)
+            self._allresults[nkey] = dict()
+            for a_test in critical:
+                self._allresults[nkey][a_test] = self._spawn(ntester, a_test)
             with self._spawn_switch():
                 with concurrent.futures.ThreadPoolExecutor(
                     max_workers=self.config.nosetests_ntasks
                 ) as executor:
                     bareresults = executor.map(self._spawn, [ntester, ] * len(todo), todo,
                                                timeout=self._TIMEOUT)
-            self._allresults[nkey] = {t: r for t, r in zip(todo, bareresults)}
+            self._allresults[nkey].update({t: r for t, r in zip(todo, bareresults)})
             logger.info("Done     testing with %s's nose", nkey)
         logger.debug('nose overall results:\n%s', pprint.pformat(self._allresults))
 

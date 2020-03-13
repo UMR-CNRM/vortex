@@ -66,6 +66,13 @@ class TestNamesComparisonError(TestNamesError):
         self._desc = desc
         super(TestNamesComparisonError, self).__init__(msg if msg else self._DEFAULT_MSG)
 
+    def __reduce__(self):
+        """What to do after pickling..."""
+        return (TestNamesComparisonError,
+                (self._defaults,
+                 self._desc,
+                 super(TestNamesComparisonError, self).__str__()))
+
     def __str__(self):
         outstr = super(TestNamesComparisonError, self).__str__() + '\n'
         outstr += 'List of defaults\n{!s}\n'.format(self._defaults)
@@ -80,6 +87,12 @@ class TestNamesComparisonDiffError(TestNamesComparisonError):
         self._ref = ref
         self._me = me
         super(TestNamesComparisonDiffError, self).__init__(defaults, desc, msg=None)
+
+    def __reduce__(self):
+        """What to do after pickling..."""
+        _, (default, desc, msg) = super(TestNamesComparisonDiffError, self).__reduce__()
+        return (TestNamesComparisonDiffError,
+                (default, desc, self._ref, self._me, msg))
 
     def __str__(self):
         outstr = super(TestNamesComparisonDiffError, self).__str__() + '\n'
@@ -282,9 +295,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
                     logger.warning(str(exc))
                     raise exc
                 if ref_result != result:
-                    exc = TestNamesComparisonDiffError(default, test.desc, ref_result, result)
-                    logger.warning(str(exc))
-                    raise exc
+                    raise TestNamesComparisonDiffError(default, test.desc, ref_result, result)
                 else:
                     logger.debug("Comparison OK for desc:\n%s\ndefault:\n%s",
                                  str(test.desc), str(default))
@@ -422,8 +433,26 @@ class TestParameters(collections_abc.Hashable):
         else:
             return False
 
+    if six.PY3:
+        @staticmethod
+        def _py27_like_gt(me, other):
+            try:
+                return me > other
+            except TypeError:
+                return type(me).__name__ > type(other).__name__
+    else:
+        @staticmethod
+        def _py27_like_gt(me, other):
+            return me > other
+
     def __gt__(self, other):
-        return self._desc > other._desc
+        for i_me, i_other in zip(self._desc, other._desc):
+            for ii_me, ii_other in zip(i_me, i_other):
+                if self._py27_like_gt(ii_me, ii_other):
+                    return True
+                if ii_me != ii_other:
+                    return False
+        return len(self._desc) > len(other._desc)
 
     def __str__(self):
         return pprint.pformat(self._desc_dict)
