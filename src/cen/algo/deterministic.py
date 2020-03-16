@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
+from crocO import set_options
 
 from bronx.stdtypes.date import Date, tomorrow
 import footprints
