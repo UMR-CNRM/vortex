@@ -5,20 +5,17 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies           import loggers
 from bronx.stdtypes.date     import Date, Time
-
-import footprints
-from footprints.util import rangex
-
-from vortex.data.flow        import GeoFlowResource
-from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
-from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
-
+from cen.syntax.stdattrs     import cendateperiod_deco
 from common.data.modelstates import InitialCondition
 from common.data.obs         import ObsRaw
-
-from vortex.syntax.stdattrs import a_date
-from cen.syntax.stdattrs     import cendateperiod_deco
+import footprints
+from footprints.util import rangex
+from vortex.data.flow        import GeoFlowResource
+from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
 from vortex.data.resources import Resource
+from vortex.syntax.stdattrs import a_date
+from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
+
 
 #: No automatic export
 __all__ = []
@@ -456,6 +453,64 @@ class PfSample(Resource):
     @property
     def realkind(self):
         return str(self.model) + '_' + self.dateassim.ymdh + '.txt'
+
+
+class ProPickleFile(Resource):
+    '''
+    @author : B. Cluzet
+    Pickled CRAMPON PRO output to save time and transfer.
+    '''
+
+    _footprint = [
+        dict(
+            info = 'pf sample file',
+            attr = dict(
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True
+                ),
+                model = dict(
+                    values = ['ensProOl', 'ensProAn', ]
+                ),
+            )
+        )
+    ]
+    _extension_remap = dict(netcdf='.pkl')  # BC to check this shit
+
+    @property
+    def realkind(self):
+        return str(self.model) + '.pkl'
+
+
+class PrepPickleFile(Resource):
+    '''
+    @author : B. Cluzet
+    Pickled CRAMPON PRRP output to save time and transfer.
+    '''
+
+    _footprint = [
+        dict(
+            info = 'pf sample file',
+            attr = dict(
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True
+                ),
+                model = dict(
+                    values = ['bg', 'an', 'ol']
+                ),
+                dateassim = dict(
+                    info = "date of the analysis",
+                    type = Date,
+                ),
+            )
+        )
+    ]
+    _extension_remap = dict(netcdf='.pkl')  # BC to check this shit
+
+    @property
+    def realkind(self):
+        return str(self.model) + '_' + self.dateassim.ymdh + '.pkl'
 
 
 class ScoresSnow(SurfaceIO):

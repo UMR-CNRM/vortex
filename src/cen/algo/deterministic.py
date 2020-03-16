@@ -4,11 +4,13 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-import footprints
+from crocO import set_options
 
+from bronx.stdtypes.date import Date, tomorrow
+import footprints
 from vortex.algo.components import Parallel, AlgoComponent
+
 
 logger = loggers.getLogger(__name__)
 

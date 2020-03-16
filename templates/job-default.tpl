@@ -53,9 +53,11 @@ $auto_options
 )
 
 ja = footprints.proxy.jobassistant(kind = 'generic',
-                                   modules = footprints.stdtypes.FPSet(($loadedmods)),
-                                   addons = footprints.stdtypes.FPSet(($loadedaddons)),
-                                   ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
+                                   modules = footprints.stdtypes.FPSet((
+                                       'common', 'gco', 'olive', 'cen',
+                                       'vortex.tools.lfi', 'vortex.tools.odb',
+                                       'common.util.usepygram')),
+                                   addons = footprints.stdtypes.FPSet(('lfi', 'iopoll', 'odb')),
                                    special_prefix='rd_',
                                    )
 ja.add_plugin('tmpdir')
@@ -63,7 +65,7 @@ ja.add_plugin('tmpdir')
 try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
 
-    opts = dict(jobassistant=ja, play=True)
+    opts = dict(jobassistant=ja, play=True, defaults=dict(gnamespace='gco.multi.fr'))
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()

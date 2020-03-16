@@ -3,18 +3,20 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from bronx.datagrip.namelist import NamelistParser
-from bronx.fancies import loggers
-from bronx.stdtypes.date import Date, Period, tomorrow
-from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import io
 import os
-import random
 
-import footprints
+from CrocOpp import CrocOpp
+from bronx.datagrip.namelist import NamelistParser
+from bronx.fancies import loggers
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+from crocO import set_options
 import six
-from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, Parallel
+
+from bronx.stdtypes.date import Date, Period, tomorrow
+import footprints
+from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, Parallel, AlgoComponent
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
@@ -1677,3 +1679,54 @@ class SurfexComponentMultiDates(SurfexComponent):
         ddict.pop('dateinit')
 
         return ddict
+
+
+@echecker.disabled_if_unavailable
+class PicklePro(AlgoComponent):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['picklepro']),
+            engine = dict(
+                optional     = True,
+                default   = 's2m',
+                values = ['s2m']
+            ),
+            vapp = dict(
+                values = ['s2m']),
+            vconf = dict(
+                default = '12'),
+        )
+    )
+
+    def execute(self, rh, opts):
+        print('cwd', os.getcwd())
+        n = NamelistParser()
+        N = n.parse('conf/OPTIONS.nam')
+        print('NAM_obs', N['NAM_OBS'].COBS_M)
+        # issue when only assim 1 var, causing the .join to crash
+        if isinstance(N['NAM_OBS'].COBS_M, str) or isinstance(N['NAM_OBS'].COBS_M, unicode):
+            gg = [N['NAM_OBS'].COBS_M]
+        else:
+            gg = N['NAM_OBS'].COBS_M
+        assimvars = ','.join(gg)
+        print('assvars', assimvars)
+        ppvars = ','.join(list(set(gg + ['DEP', 'SWE'])))
+        # xp corresponds to the task rep, from Crampon Driver
+        xp = 'crampon_out'
+        print('------loading xp ', xp, '------')
+        args = [
+            '/home/cluzetb/snowtools_git/assim/crocO.py',
+            '--xpid', xp,
+            '--vconf', self.vconf,
+            '-d', 'all',
+            '--vars', assimvars,
+            '--ppvars', ppvars,
+            '-o', 'pickle',
+            '--readprep',
+        ]
+        options, conf = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf))
+        # troll the xpiddir
+        options.xpiddir = os.getcwd() + '/'
+        _ = CrocOpp(options, conf)
