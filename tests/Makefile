@@ -1,5 +1,6 @@
 
-EXTRAPATH    := $(PWD)/../src:$(PWD)/../site:$(PWD)/../project:$(PYTHONPATH)
+VORTEXBASE  := $(shell pwd)/..
+EXTRAPATH   := $(VORTEXBASE)/src:$(VORTEXBASE)/site:$(VORTEXBASE)/project:$(VORTEXBASE)/tests:$(PYTHONPATH)
 export PYTHONPATH = $(EXTRAPATH)
 
 PYTHON        = python2.7

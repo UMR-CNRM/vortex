@@ -26,15 +26,18 @@ except ImportError:
 
 
 class TestNames(TestCase):
+    """The TestDriver class to run names tests."""
 
     def setUp(self):
+        """Check if PyYAML is available."""
         super(TestNames, self).setUp()
         if yaml is None:
             raise SkipTest("PyYAML seems to be missing")
 
     def test_all_names(self):
+        """Actualy tests all the configured resource's Handlers."""
         allresults = discover.all_tests.alltests_runsequence(('compute_results',
                                                               'load_references',
                                                               'check_results'))
-        self.assertTrue(all([rc is True for rc, _ in allresults.values()]),
+        self.assertTrue(all([rc is True for rc, _, _ in allresults.values()]),
                         'Some of the name check failed (see the output)')

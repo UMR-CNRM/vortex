@@ -288,8 +288,11 @@ class NoseChecker(AbstractChecker):
                    os.path.join(self.config.vortexbase, 'project') + ':' +
                    os.path.join(self.config.vortexbase, 'site') + ':')
         prev_names_tasks = os.environ.get('VORTEX_TEST_NAMES_NTASKS', None)
+        prev_pythonpath = os.environ.get('PYTHONPATH', None)
         try:
-            os.environ['PYTHONPATH'] = vtxpath + os.environ['PYTHONPATH']
+            os.environ['PYTHONPATH'] = vtxpath
+            if prev_pythonpath:
+                os.environ['PYTHONPATH'] += ':' + os.environ['PYTHONPATH']
             os.environ['VORTEX_TEST_NAMES_NTASKS'] = '2'
             with super()._spawn_switch():
                 yield
@@ -298,7 +301,10 @@ class NoseChecker(AbstractChecker):
                 os.environ['VORTEX_TEST_NAMES_NTASKS'] = prev_names_tasks
             else:
                 del os.environ['VORTEX_TEST_NAMES_NTASKS']
-            os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'][len(vtxpath):]
+            if prev_pythonpath is not None:
+                os.environ['PYTHONPATH'] = prev_pythonpath
+            else:
+                del os.environ['PYTHONPATH']
 
     def _spawn(self, cmd, *args, **kwargs):
         """Run the nosetests command and automatically adds some arguments."""

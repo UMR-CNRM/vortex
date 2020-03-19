@@ -42,7 +42,7 @@ logger = loggers.getLogger(__name__)
 # Exceptions
 
 class TestNamesError(Exception):
-    """Abstract Exception of test_names's specific errors."""
+    """Abstract Exception of test_names' specific errors."""
     pass
 
 
@@ -116,6 +116,14 @@ class TestDriver(object):
     """
 
     def __init__(self, inifile, resultfile, registerpath):
+        """
+        :param inifile: The path to the YAML configuration file to deal with.
+        :param resultfile: The path to the YAML file that contains reference
+                           data associated with the **inifile** configuration
+                           file.
+        :param registerpath: Path to the directory that contains hard-coded
+                             test resources (such as Genv data).
+        """
         hm5 = hashlib.md5()
         hm5.update(inifile.encode())
         self._inihash = hm5.hexdigest()
@@ -132,7 +140,12 @@ class TestDriver(object):
         self._todo = list()
 
     def load_test(self, dumpeddata):
-        """Load the content of a YAML test file."""
+        """Load the content of a YAML test file.
+
+        :param dumpeddata: The raw data read from the YAML file. Beware that
+                           **dumpeddata** is the content of the YAML file, not
+                           the path to the YAML file itself.
+        """
         self.clear()
         if 'default' in dumpeddata:
             dumpeddefaults = dumpeddata['default']
@@ -157,6 +170,10 @@ class TestDriver(object):
                     raise
                 self._todo.append(tstack)
 
+    def ntests(self):
+        """Return the number of resource's Handlers tested by this driver."""
+        return sum([len(stack) for stack in self._todo]) * len(self._defaults)
+
     def _format_default_raw(self, default):
         return default
 
@@ -175,15 +192,21 @@ class TestDriver(object):
         return getattr(self, '_format_default_{:s}'.format(self._defaults_style))(default)
 
     def compute_results(self, loglevel='info'):
-        """Launch all the tests (compute the associated locations)."""
+        """
+        For each set of defaults and resource's Handler defined in the
+        configuration file, compute the associated URI.
+
+        :param loglevel: Temporarily change the logging level
+        """
         original_stag = vortex.sessions.get().tag
         try:
             with contextboundGlobalLevel(loglevel):
+                # A new session is created for each TestDriver object
                 gl = vortex.sessions.getglove(user='tourist')
                 t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
                 logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
                 t.env.MTOOLDIR = '/'
-                # Deal with genvs
+                # Deal with every defined Genv
                 for genv in self._genvs:
                     try:
                         with io.open(os.path.join(self._registerpath, 'genv', genv), 'r') as fhgenv:
@@ -199,6 +222,7 @@ class TestDriver(object):
                     original_vconf = t.glove.vconf
                     original_defaults = fp.setup.defaults.copy()  # @UndefinedVariable
                     try:
+                        # Fix the glove and set the defaults
                         rawdefault = default.raw.copy()
                         if 'vapp' in rawdefault:
                             t.glove.vapp = rawdefault['vapp']
@@ -207,9 +231,11 @@ class TestDriver(object):
                         fp.setup.defaults = self._format_default(rawdefault)
                         logger.debug("Glove's vapp/vconf: %s/%s", t.glove.vapp, t.glove.vconf)
                         logger.debug("Footprints defaults: %s", str(fp.setup.defaults))
+                        # For each resource's Handler, actualy compute the URI
                         for tstack in self._todo:
                             tstack.compute_results(default)
                     finally:
+                        # Restore the initial glove and defaults
                         t.glove.vapp = original_vapp
                         t.glove.vconf = original_vconf
                         fp.setup.defaults = original_defaults
@@ -244,7 +270,7 @@ class TestDriver(object):
 
 
 class TestsStack(bronx.stdtypes.catalog.Catalog):
-    """Contains a subset of SingleTests."""
+    """Contains a set of SingleTests."""
 
     def __init__(self, *kargs, **kwargs):
         super(TestsStack, self).__init__(*kargs, **kwargs)
@@ -253,20 +279,34 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
             self._lookupmap[item.desc].append(item)
 
     def add(self, *stuff):
-        """Add a new SingleTest to the stack."""
+        """Add a new SingleTest to the stack.
+
+        :param stuff: a tuple of :class:`SingleTest` objects.
+        """
         super(TestsStack, self).add(*stuff)
         for item in stuff:
             self._lookupmap[item.desc].append(item)
 
     def lookup(self, desc, default):
-        """Look for test result given the test description and a set of defaut values."""
+        """
+        Look for a test result given the test description (**desc**) and a
+        set of **defaut** values.
+
+        :param desc: the description of the test to look for
+        :param default: the set of defaults to look for
+        :rtype: SingleTest
+        """
         for item in self._lookupmap[desc]:
             if default in item.results:
                 return item.results[default]
         return None
 
     def load_test(self, dumpeddata):
-        """Load the content of a YAML definition file."""
+        """Load the content of a YAML definition file.
+
+        :param dumpeddata: The subset of raw data, read from the YAML file,
+                           that is relevant to this subset of tests.
+        """
         self.clear()
         dumpedcommons = dict()
         if 'commons' in dumpeddata:
@@ -281,12 +321,21 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
                 self.add(SingleTest(expandedtest))
 
     def compute_results(self, defaults):
-        """Launch all the SingleTests of this stack (compute the associated locations)."""
+        """
+        For a given set of **defaults**, compute the associated URI for each of
+        the resource's Handlers defined in this object.
+        """
         for ntest in self:
             ntest.compute_results(defaults)
 
     def check_against(self, ref):
-        """Check the results against reference data"""
+        """
+        Check the results (that must have been computed with the
+        :meth:`compute_results` method) against reference data
+
+        :param ref: A :class:`TestsStack` object that holds the reference
+                    data we are comparing to.
+        """
         for test in self:
             for default, result in test.results.items():
                 ref_result = ref.lookup(test.desc, default)
@@ -302,27 +351,35 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
 
 
 class SingleTest(object):
-    """Handle a single test case."""
+    """Handle a single test case (i.e. A single resource's Handler to be tested)."""
 
     _DEFAULT_CONTAINER = fp.proxy.container(incore=True)
 
     def __init__(self, desc, results=None):
+        """
+        :param desc: The description that is used to build the resource's Handler
+        :param results: A :class:`TestResults` object where tests results will
+                        be appended (if missing a new :class:`TestResults` object
+                        is created)
+        """
         self._desc = TestParameters(desc) if not isinstance(desc, TestParameters) else desc
         self._results = TestResults() if results is None else results
 
     @property
     def desc(self):
-        """The footprint's descrition for this test."""
+        """
+        The footprint's descrition for this test :class:`TestParameters` object.
+        """
         return self._desc
 
     @property
     def results(self):
-        """Results fo rthis test."""
+        """Results for this test (as a :class:`TestResults` object)."""
         return self._results
 
     @property
     def rh(self):
-        """Generate the ResourceHandler associated with this test."""
+        """Generate the ResourceHandler associated with this test and return it."""
         picked_up = fp.proxy.providers.pickup(  # @UndefinedVariable
             *fp.proxy.resources.pickup_and_cache(self.desc.raw.copy())  # @UndefinedVariable
         )
@@ -335,11 +392,11 @@ class SingleTest(object):
             raise ValueError("The ResourceHandler is incomplete")
         return picked_rh
 
-    def compute_results(self, default):
-        """Launch this SingleTest for a given set of defaults."""
+    def compute_results(self, defaults):
+        """For a given set of **defaults**, compute the associated URI."""
         tmprh = self.rh
         try:
-            self.results.append(default, 'location', tmprh.location())
+            self.results.append(defaults, 'location', tmprh.location())
         except Exception:
             logger.error('Location error on ResourceHandler:')
             tmprh.quickview()
@@ -347,7 +404,7 @@ class SingleTest(object):
 
     @classmethod
     def to_yaml(cls, dumper, data):
-        """YAML exporter."""
+        """Internal YAML exporter for this object."""
         odict = YamlOrderedDict()
         odict['description'] = data.desc
         odict['results'] = data.results
@@ -355,7 +412,7 @@ class SingleTest(object):
 
     @classmethod
     def from_yaml(cls, loader, node):  # @UnusedVariable
-        """YAML constructor."""
+        """Internal YAML constructor for this object."""
         d = loader.construct_mapping(node)
         return cls(d['description'], d['results'])
 
@@ -370,6 +427,12 @@ class TestResults(collections_abc.Mapping):
         self._results = collections.defaultdict(dict)
 
     def append(self, default, key, value):
+        """Append a result (a generated URI) to this object.
+
+        :param TestParameters default: The set of default used for this test
+        :param TestParameters key: The footprint description for this test
+        :param value: The generated URI
+        """
         self._results[default][key] = value
 
     def __len__(self):
@@ -386,11 +449,13 @@ class TestResults(collections_abc.Mapping):
         return self._results[default]
 
     def items(self):
+        """Iterate over results."""
         for k, v in self._results.items():
             yield k, v
 
     @classmethod
     def to_yaml(cls, dumper, data):
+        """Internal YAML exporter for this object."""
         tests = list()
         for d, v in sorted(data._results.items()):
             odict = YamlOrderedDict()
@@ -402,6 +467,7 @@ class TestResults(collections_abc.Mapping):
 
     @classmethod
     def from_yaml(cls, loader, node):  # @UnusedVariable
+        """Internal YAML constructor for this object."""
         newobj = cls()
         for item in node.value:
             d = loader.construct_mapping(item)
@@ -416,12 +482,16 @@ class TestParameters(collections_abc.Hashable):
     """Utility class that holds a footprint's description."""
 
     def __init__(self, desc):
+        """
+        :param desc: The footprint's description (as a dictionary)
+        """
         self._desc_dict = desc
         self._desc = [(k, desc[k]) for k in sorted(desc.keys())]
         self._desc = tuple(self._desc)
 
     @property
     def raw(self):
+        """The footprint's description (as a dictionary)."""
         return self._desc_dict
 
     def __hash__(self):
@@ -459,6 +529,7 @@ class TestParameters(collections_abc.Hashable):
 
     @classmethod
     def to_yaml(cls, dumper, data):
+        """Internal YAML exporter for this object."""
         odict = YamlOrderedDict()
         for item in data._desc:
             odict[item[0]] = item[1]
@@ -466,6 +537,7 @@ class TestParameters(collections_abc.Hashable):
 
     @classmethod
     def from_yaml(cls, loader, node):  # @UnusedVariable
+        """Internal YAML constructor for this object."""
         return cls(loader.construct_mapping(node))
 
 

@@ -5,8 +5,8 @@
 project.bin.test_names_cli.py -- Manages Unit-Tests from the test_names package.
 
 There are several possible actions:
-* list: List all the available test files
-* load: Read in test file(s)
+* list: List all the available tests configuration files
+* load: Read in the tests configuration file(s)
 * loadref: Load the reference data
 * compute: Run the test(s) but do not check the results
 * check: Run the test(s), Load the reference data, Check the results
@@ -35,14 +35,13 @@ sys.path.insert(0, os.path.join(vortexbase, 'tests'))
 
 from bronx.fancies import loggers
 
-from test_names import discover
-
 logger = loggers.getLogger(__name__)
 
 ACTION_FUNCTION_ID = '_do_action_'
 
 
 def _do_action_list(args):  # @UnusedVariable
+    from test_names import discover
     print()
     print('Test files located in "{:s}". Here are the available test files:'
           .format(discover.TESTSPATH))
@@ -50,14 +49,17 @@ def _do_action_list(args):  # @UnusedVariable
     for f in discover.all_tests:
         print('  * ' + f)
     print()
+    return dict()
 
 
 def _do_sequence(args, todo):
+    from test_names import discover
+    print()
     if args.only:
-        _, rc, outputs = discover.all_tests.test_runsequence(args.only, todo=todo)
-        discover.all_tests.summarise_runsequence(args.only, rc, outputs,
+        _, rc, ntests, outputs = discover.all_tests.test_runsequence(args.only, todo=todo)
+        discover.all_tests.summarise_runsequence(args.only, rc, ntests, outputs,
                                                  verbose=args.verbose)
-        return {args.only: (rc, outputs)}
+        return {args.only: (rc, ntests, outputs)}
     else:
         re_select = re.compile(args.regex, re.IGNORECASE) if args.regex else None
         return discover.all_tests.alltests_runsequence(todo=todo,
@@ -108,6 +110,18 @@ def cprofile_activate(do_cprofile):
         yield
 
 
+_ARGPARSE_EPILOG = """
+Note: With Python3 (only), several actions can be launched in parallel which
+      speeds up the process. The number of tasks that should be used can be
+      specified:
+      - using the "--ntasks" command line option;
+      - by setting the "VORTEX_TEST_NAMES_NTASKS" environment variable
+        (that will be ignored when running Python 2.7);
+      - otherwise, the default is to use a number of tasks equal to the number
+        of CPUs available on the system.
+"""
+
+
 def main():
     """Process command line options."""
 
@@ -120,13 +134,13 @@ def main():
                               for f in globals() if f.startswith(ACTION_FUNCTION_ID)])
 
     # Setup the argument parser
-    parser = ArgumentParser(description=program_desc,
+    parser = ArgumentParser(description=program_desc, epilog=_ARGPARSE_EPILOG,
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", action="count", default=0,
                         help="Increase the verbosity.")
     parser.add_argument("-p", "--cprofile", action="store_true",
                         help="Profile the code using cProfile.")
-    parser.add_argument("-t", "--ntasks", action="store", type=int, default=1,
+    parser.add_argument("-t", "--ntasks", action="store", type=int, default=None,
                         help="The number of parallel tasks to be used (default: %(default)s)")
     parser.add_argument("-i", "--only", action='store',
                         help="Process only one test file.")
@@ -134,15 +148,20 @@ def main():
                         help=("Use a regex to select which test files will be considered" +
                               "(This regex will be used in a case insensitive search)."))
     parser.add_argument("actions", action='store', nargs='+', choices=possibleactions,
-                        help="What to do ?")
+                        help="A list of actions to perform (see abose the list of possible actions).")
     args = parser.parse_args()
 
     if args.verbose >= 2:
         loggers.getLogger('test_names').setLevel('DEBUG')
 
-    if six.PY2 and args.ntasks > 1:
+    if six.PY2 and args.ntasks and args.ntasks > 1:
         logger.warning("The 'concurrent.futures' module is unavailable with Python2: " +
                        "Won't test things in parallel.")
+
+    if args.cprofile:
+        logger.info("The number of tasks if resetted to 1 since a cProfile " +
+                    "is requested.")
+        args.ntasks = 1
 
     global_rc = True
     with cprofile_activate(args.cprofile):
@@ -150,10 +169,16 @@ def main():
             mtd_todo = '{:s}{:s}'.format(ACTION_FUNCTION_ID, action)
             allresults = globals()[mtd_todo](args)
             global_rc = global_rc and all([rc is True
-                                           for rc, _ in allresults.values()])
+                                           for rc, _, _ in allresults.values()])
+            global_ntests = sum([ntests for _, ntests, _ in allresults.values()])
 
     if not global_rc:
+        print('\nWARNING: Some tests failed (a total of {:d} resource Handlers were tested).\n'
+              .format(global_ntests))
         sys.exit(1)
+    else:
+        print('\nEverything went fine (a total of {:d} resource Handlers were tested).\n'
+              .format(global_ntests))
 
 
 if __name__ == "__main__":
