@@ -2922,7 +2922,11 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
-        self.__dict__['_numainfo'] = LibNumaNodesInfo()
+        try:
+            self.__dict__['_numainfo'] = LibNumaNodesInfo()
+        except (OSError, NotImplementedError):
+            # On very few Linux systems, libnuma is not available...
+            pass
         self.__dict__['_memoryinfo'] = LinuxMemInfo()
         self.__dict__['_netstatsinfo'] = LinuxNetstats()
 

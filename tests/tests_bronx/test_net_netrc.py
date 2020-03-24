@@ -22,7 +22,7 @@ except ImportError:  # For python <= 2.7.13
     try:
         from test import test_support
     except ImportError as e:
-        sys.stderr.write('{:s}: Import error < {:s} >.\n'.format(__file__, e))
+        sys.stderr.write('{:s}: Import error < {!s} >.\n'.format(__file__, e))
         test_support_ok = False
 
 if test_support_ok:

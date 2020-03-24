@@ -144,8 +144,8 @@ class FakeLibnumaNodesInfos(LibNumaNodesInfo):
 class TestNumaNodesInfos(unittest.TestCase):
 
     def test_bare_libnuma(self):
-        ninfo = LibNumaNodesInfo()
         try:
+            ninfo = LibNumaNodesInfo()
             self.assertTrue(len(ninfo) > 0)
         except (OSError, NotImplementedError):
             self.skipTest('Apparently the libnuma is missing')
