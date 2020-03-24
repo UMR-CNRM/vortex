@@ -542,7 +542,8 @@ class MultiStore(footprints.FootprintBase):
                 restores = []
                 if rc and self.refillstore and num > 0:
                     restores = [ostore for ostore in f_rd_ostores[:num]
-                                if ostore.writeable and ostore in f_wr_ostores]
+                                if (ostore.writeable and ostore in f_wr_ostores and
+                                    ostore.use_cache())]
                 # Do the refills and check if one of them succeed
                 refill_in_progress = False
                 for restore in restores:
