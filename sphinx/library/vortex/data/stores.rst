@@ -13,13 +13,15 @@ Package
 
 .. autodata:: __all__
 
-Functions
----------
-
-Classes
--------
+Generic stores classes
+----------------------
 
 .. autoclass:: MagicPlace
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FunctionStoreCallbackError
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -33,6 +35,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Vortex' stores classes
+----------------------
+
+Archive stores classes
+**********************
 
 .. autoclass:: VortexArchiveStore
    :show-inheritance:
@@ -50,6 +58,14 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: VortexFreeStdArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Cache stores classes
+********************
+
+.. autoclass:: _VortexCacheBaseStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -84,6 +100,10 @@ Classes
    :members:
    :member-order: alphabetical
 
+
+Promises and Multi stores classes
+*********************************
+
 .. autoclass:: VortexStore
    :show-inheritance:
    :members:
@@ -95,14 +115,6 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: VortexPromiseStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-Exeptions
----------
-
-.. autoclass:: FunctionStoreCallbackError
    :show-inheritance:
    :members:
    :member-order: alphabetical
