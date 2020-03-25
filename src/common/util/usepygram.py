@@ -34,6 +34,12 @@ with epygram_checker as ec_register:
     except AttributeError:
         hasFA = False
     ec_register.update(needFA=hasFA)
+    try:
+        u_unused = epygram.formats.GRIB
+        hasGRIB = True
+    except AttributeError:
+        hasGRIB = False
+    ec_register.update(needGRIB=hasGRIB)
     logger.info('Epygram %s loaded.', str(epygram.__version__))
 
 

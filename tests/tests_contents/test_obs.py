@@ -52,6 +52,7 @@ class UtVarBCContentLimited(_BaseDataContentTest):
     _data = (VBC_T, )
     _container_limit = 50  # This limit is intentionally very small
 
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
     def test_indexedtable_basic(self):
         resource = _FakeResource()
         ct = obs.VarBCContent()
@@ -68,12 +69,13 @@ class UtVarBCContent(_BaseDataContentTest):
 
     _data = (VBC_T, )
 
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
     def test_varbc_basic1(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])
         self.assertEqual(ct.metadata['version'], 5)
 
-    @skipUnless(npchecker, "The Numpy package is unavailable")
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
     def test_varbc_basic2(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])

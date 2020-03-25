@@ -64,6 +64,9 @@ class AbstractMocageRoot(Parallel):
                 flypoll = dict(
                     default  = 'iopoll_mocage',
                 ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
+                )
             )
         )
     ]
