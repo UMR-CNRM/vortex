@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 import ftplib
+import re
 import uuid
 
 from bronx.fancies import loggers
@@ -46,7 +47,7 @@ class MeteoBull(Target):
 
     def generic(self):
         """Generic name is inetname suffixed with ``fe`` or ``cn``."""
-        if 'login' in self.hostname or 'transfer' in self.hostname:
+        if re.search('(login|transfert|nmipt|ndl)', self.hostname):
             return self.inetname + 'fe'
         else:
             return self.inetname + 'cn'
@@ -99,6 +100,40 @@ class Epona(MeteoBull):
         ),
         only = dict(
             hostname = footprints.FPRegex(r'epona(?:login)?\d+(?:\.|$)')
+        )
+    )
+
+
+class Belenos(MeteoBull):
+    """Belenos Supercomputer at Meteo-France."""
+
+    _footprint = dict(
+        info = 'Bull Belenos supercomputer at Meteo France',
+        attr = dict(
+            inetname = dict(
+                default = 'belenos',
+                values  = ['belenos']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'belenos(?:login|transfert|nmipt|ndl)?\d+(?:\.|$)')
+        )
+    )
+
+
+class Taranis(MeteoBull):
+    """Taranis Supercomputer at Meteo-France."""
+
+    _footprint = dict(
+        info = 'Bull Taranis supercomputer at Meteo France',
+        attr = dict(
+            inetname = dict(
+                default = 'taranis',
+                values  = ['taranis']
+            ),
+        ),
+        only = dict(
+            hostname = footprints.FPRegex(r'taranis(?:login|transfert|nmipt|ndl)?\d+(?:\.|$)')
         )
     )
 
