@@ -1861,7 +1861,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                 info='Try to bind the OpenPALM driver binary.',
                 type=bool,
                 optional=True,
-                default=True,
+                default=False,
                 doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
             openpalm_binkind=dict(

@@ -591,6 +591,7 @@ class TestParallel(unittest.TestCase):
         self.locenv.VORTEX_SUBMIT_OPENMP = 5
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(srun_opt_bindingmethod='vortex',
+                                               palmdrv_bind=True,
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
@@ -604,7 +605,6 @@ class TestParallel(unittest.TestCase):
                            binargs=['', ])
         _, args = algo._bootstrap_mpitool([bin0, ],
                                           dict(srun_opt_bindingmethod='vortex',
-                                               palmdrv_bind=False,
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
