@@ -685,9 +685,11 @@ class ConfigurableMpiTool(MpiTool):
 
     def setup_environment(self, opts, conflabel):
         """Last minute fixups."""
-        super(ConfigurableMpiTool, self).setup_environment(opts, conflabel)
         for k, v in self._actual_mpiextraenv().items():
-            self._logged_env_set(k, v)
+            if k not in self.env:
+                # If already present, do not overwrite
+                self._logged_env_set(k, v)
+        super(ConfigurableMpiTool, self).setup_environment(opts, conflabel)
         for k in self._actual_mpidelenv():
             self._logged_env_del(k)
 
