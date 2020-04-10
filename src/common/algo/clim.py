@@ -481,6 +481,20 @@ class MakeGaussGeometry(Parallel):
         self._unit = 4
 
     def _complete_dimensions(self):
+        from common.util.usepygram import epygram_checker
+        if epygram_checker.is_available(version='1.4.4'):
+            from epygram.geometries.SpectralGeometry import complete_gridpoint_dimensions
+            longitudes, latitudes = complete_gridpoint_dimensions(self.longitudes,
+                                                                  self.latitudes,
+                                                                  self.truncation,
+                                                                  self.grid,
+                                                                  self.stretching)
+            self._attributes['longitudes'] = longitudes
+            self._attributes['latitudes'] = latitudes
+        else:
+            self._old_internal_complete_dimensions()
+    
+    def _old_internal_complete_dimensions(self):
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
         if self.latitudes is None and self.longitudes is None:
             dims = gridpoint_dims_from_truncation({'max': self.truncation},
@@ -511,6 +525,23 @@ class MakeGaussGeometry(Parallel):
         return options
 
     def postfix(self, rh, opts):
+        """Complete and write namelists."""
+        from common.util.usepygram import epygram_checker
+        if epygram_checker.is_available(version='1.4.4'):
+            from epygram.geometries.domain_making.output import gauss_rgrid2namelists
+            gauss_rgrid2namelists('fort.{!s}'.format(self._unit),
+                                  self.geometry.tag,
+                                  self.latitudes,
+                                  self.longitudes,
+                                  self.truncation,
+                                  self.stretching,
+                                  self.orography_grid,
+                                  self.pole)
+        else:
+            self._old_internal_postfix(rh, opts)
+        super(MakeGaussGeometry, self).postfix(rh, opts)
+    
+    def _old_internal_postfix(self, rh, opts):
         """Complete and write namelists."""
         import math
         from epygram.geometries.SpectralGeometry import truncation_from_gridpoint_dims
@@ -551,9 +582,19 @@ class MakeGaussGeometry(Parallel):
                      'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
-        trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
-                                                      'max_lon_number': self.longitudes},
-                                                     grid=self.orography_grid)['max']
+        from common.util.usepygram import epygram_checker
+        ev = '1.4.4'
+        if epygram_checker.is_available(version=ev):
+            trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
+                                                          'max_lon_number': self.longitudes},
+                                                         grid=self.orography_grid,
+                                                         stretching_coef=self.stretching
+                                                         )['max']
+        else:
+            trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
+                                                          'max_lon_number': self.longitudes},
+                                                         grid=self.orography_grid
+                                                         )['max']
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
         with io.open('.'.join([self.geometry.tag,
                                'namel_c923_orography',
@@ -580,7 +621,6 @@ class MakeGaussGeometry(Parallel):
                                'geoblocks']),
                      'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
-        super(MakeGaussGeometry, self).postfix(rh, opts)
 
 
 class MakeBDAPDomain(AlgoComponent):
