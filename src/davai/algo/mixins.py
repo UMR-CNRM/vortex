@@ -17,7 +17,7 @@ from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
 from common.algo.clim import (BuildPGD, BuildPGD_MPI)
-from common.algo.coupling import Prep
+from common.algo.coupling import (Prep, Coupling)
 
 #: No automatic export
 __all__ = []
@@ -135,4 +135,8 @@ class BuildPGD_MPI_CrashWitness(BuildPGD_MPI, _CrashWitnessDecoMixin):
 
 
 class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
+    pass
+
+
+class Coupling_CrashWitness(Coupling, _CrashWitnessDecoMixin):
     pass
