@@ -165,7 +165,7 @@ def makejob(job):
     def _wrap_launch(jobfile):
         """Launch the **jobfile** script using **extra_wrapper*."""
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
-                   if isinstance(tplconf['rundate'], basestring) else '.')
+                   if isinstance(tplconf['rundate'], six.string_types) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
                                                   tstamp=bronx.stdtypes.date.now().ymdhms,
                                                   appbase=tplconf['appbase'],
