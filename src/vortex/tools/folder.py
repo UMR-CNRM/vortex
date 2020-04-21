@@ -12,6 +12,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import six
 
+import ftplib
 import io
 import tempfile
 
@@ -26,6 +27,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 _folder_exposed_methods = set(['cp', 'mv', 'forcepack', 'forceunpack',
+                               'anyft_remote_rewrite',
                                'ftget', 'rawftget', 'batchrawftget', 'ftput', 'rawftput',
                                'scpget', 'scpput',
                                'ecfsget', 'ecfsput', 'ectransget', 'ectransput'])
@@ -152,8 +154,6 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_preftget(self, source, destination):
         """Prepare source and destination"""
-        if not self.sh.is_tarname(source):
-            source += '.{:s}'.format(self.tarfix_extension)
         destination = self.sh.path.abspath(self.sh.path.expanduser(destination))
         self.sh.rm(destination)
         return source, destination
@@ -183,6 +183,10 @@ class FolderShell(addons.FtrawEnableAddon):
             self.sh.cd(loccwd)
             self.sh.rm(loctmp)
 
+    def _folder_anyft_remote_rewrite(self, remote):
+        """Add the folder suffix before using file transfert protocols."""
+        return '{:s}.{:s}'.format(remote, self.tarfix_extension)
+
     def _folder_ftget(self, source, destination, hostname=None, logname=None,
                       port=DEFAULT_FTP_PORT, cpipeline=None):
         """Proceed direct ftp get on the specified target."""
@@ -208,6 +212,9 @@ class FolderShell(addons.FtrawEnableAddon):
                         rc = rc and self.sh.untar(self.tmpname + extname, autocompress=False)
                     finally:
                         self.sh.rm(self.tmpname + extname)
+            except ftplib.all_errors as e:
+                logger.warning('An FTP error occured: %s', str(e))
+                rc = False
             finally:
                 ftp.close()
                 self._folder_postftget(destination, loccwd, loctmp)
@@ -286,10 +293,6 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         hostname = self.sh._fix_fthostname(hostname)
-
-        if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
-            destination += '.{:s}'.format(self.tarfix_extension)
-
         source = self.sh.path.abspath(source)
 
         ftp = self.sh.ftp(hostname, logname, port=port)
@@ -297,9 +300,14 @@ class FolderShell(addons.FtrawEnableAddon):
             packed_size = self._packed_size(source)
             p = self._folder_pack_stream(source)
             sponge = IoSponge(p.stdout, guessed_size=packed_size)
-            rc = ftp.put(sponge, destination, size=sponge.size, exact=False)
-            self.sh.pclose(p)
-            ftp.close()
+            try:
+                rc = ftp.put(sponge, destination, size=sponge.size, exact=False)
+                self.sh.pclose(p)
+            except ftplib.all_errors as e:
+                logger.warning('An FTP error occured: %s', str(e))
+                rc = False
+            finally:
+                ftp.close()
             return rc
         else:
             return False
@@ -310,8 +318,6 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         if self.sh.ftraw and self.rawftshell is not None:
-            if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
-                destination += '.{:s}'.format(self.tarfix_extension)
             newsource = self.sh.copy2ftspool(source, nest=True,
                                              fmt=self.supportedfmt)
             request = self.sh.path.dirname(newsource) + '.request'
@@ -353,9 +359,6 @@ class FolderShell(addons.FtrawEnableAddon):
         """Upload a folder using scp."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-
-        if not destination.endswith('.{:s}'.format(self.tarfix_extension)):
-            destination += '.{:s}'.format(self.tarfix_extension)
 
         source = self.sh.path.abspath(source)
         logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
@@ -404,8 +407,6 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if not target.endswith('.{:s}'.format(self.tarfix_extension)):
-            target += '.{:s}'.format(self.tarfix_extension)
         source = self.sh.path.abspath(source)
         csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
         try:
@@ -462,8 +463,6 @@ class FolderShell(addons.FtrawEnableAddon):
         """
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        if not target.endswith('.{:s}'.format(self.tarfix_extension)):
-            target += '.{:s}'.format(self.tarfix_extension)
         source = self.sh.path.abspath(source)
         csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
         try:
@@ -637,6 +636,23 @@ class WavesBCShell(FolderShell):
         attr = dict(
             kind = dict(
                 values   = ['wbcpack'],
+            ),
+        )
+    )
+
+
+@folderize
+class FilesPackShell(FolderShell):
+    """
+    Default interface to files packs commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default Files packs system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['filespack'],
             ),
         )
     )

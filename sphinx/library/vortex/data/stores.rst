@@ -38,26 +38,50 @@ Generic stores classes
 
 Vortex' stores classes
 ----------------------
+.. autoclass:: _VortexStackedStorageMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Archive stores classes
 **********************
 
+.. autoclass:: _VortexBaseArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexStdBaseArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexStdStackedArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexOpBaseArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexOpStackedArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexFreeStdBaseArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexFreeStdStackedArchiveStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VortexArchiveStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VortexOpArchiveStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VortexStdArchiveStore
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: VortexFreeStdArchiveStore
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -100,9 +124,23 @@ Cache stores classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: VortexStackStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: VortexVsopStackStore
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Promises and Multi stores classes
 *********************************
+
+.. autoclass:: VortexStoreLegacy
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: VortexStore
    :show-inheritance:

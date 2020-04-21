@@ -129,7 +129,6 @@ class Storage(footprints.FootprintBase):
             ),
             storage=dict(
                 info="The storage target.",
-                optional=True,
             ),
             record=dict(
                 info="Record insert, retrieve, delete actions in an History object.",
@@ -328,7 +327,6 @@ class Cache(Storage):
         info = 'Default cache description',
         attr = dict(
             inifile = dict(
-                optional = True,
                 default  = '@cache-[storage].ini',
             ),
             headdir = dict(
@@ -337,7 +335,6 @@ class Cache(Storage):
                 default  = 'cache',
             ),
             storage = dict(
-                optional = True,
                 default  = 'localhost',
             ),
             rtouch = dict(
@@ -494,31 +491,19 @@ class Cache(Storage):
         return rc, dict(fmt=fmt)
 
 
-DEFAULT_ARCHIVE_TUBES = ['ftp', ]
-
-
 class Archive(Storage):
     """The default class to handle storage to a remote location."""
-
-    _default_tube = 'ftp'
-    _default_storage = 'hendrix.meteo.fr'
 
     _collector = ('archive', )
     _footprint = dict(
         info = 'Default archive description',
         attr = dict(
             inifile = dict(
-                optional = True,
                 default  = '@archive-[storage].ini',
-            ),
-            storage = dict(
-                optional = True,
-                default  = 'generic',
             ),
             tube = dict(
                 info     = "How to communicate with the archive ?",
-                optional = True,
-                values   = DEFAULT_ARCHIVE_TUBES,
+                values   = ['ftp'],
             ),
         )
     )
@@ -526,83 +511,65 @@ class Archive(Storage):
     @property
     def tag(self):
         """The identifier of this cache place."""
-        return '{:s}_{:s}_{:s}'.format(self.realkind, self.actual_storage, self.kind)
+        return '{:s}_{:s}_{:s}'.format(self.realkind, self.storage, self.kind)
 
     @property
     def realkind(self):
         return 'archive'
 
-    @property
-    def actual_storage(self):
-        """This archive network name (potentially read form the configuration file)."""
-        return ((self.storage if self.storage != 'generic' else None) or
-                self.sh.env.VORTEX_DEFAULT_STORAGE or
-                self.sh.glove.default_fthost or
-                (self._actual_config.get(self.kind, 'storage')
-                 if self._actual_config.has_option(self.kind, 'storage') else None) or
-                self.sh.default_target.get('stores:archive_storage', None) or
-                self.sh.default_target.get('stores:storage', None) or
-                self._default_storage)
-
-    @property
-    def actual_tube(self):
-        """This archive communication scheme (potentially read form the configuration file)."""
-        return (self.tube or
-                self.sh.env.VORTEX_DEFAULT_ARCHIVE_TUBE or
-                (self._actual_config.get(self.kind, 'tube', None)
-                 if self._actual_config.has_option(self.kind, 'tube') else None) or
-                self.sh.default_target.get('stores:archive_tube', None) or
-                self._default_tube)
-
     def _formatted_path(self, rawpath, **kwargs):
         root = kwargs.get('root', None)
         if root is not None:
             rawpath = self.sh.path.join(root, rawpath.lstrip('/'))
+        # Deal with compression
         compressionpipeline = kwargs.get('compressionpipeline', None)
         if compressionpipeline is not None:
             rawpath += compressionpipeline.suffix
-        return rawpath
+        return self.sh.anyft_remote_rewrite(rawpath, fmt=kwargs.get('fmt', 'foo'))
+
+    def _actual_proxy_method(self, pmethod):
+        """Create a proxy method based on the **pmethod** actual method."""
+        def actual_proxy(item, *kargs, **kwargs):
+            path = self._formatted_path(item, **kwargs)
+            if path is None:
+                raise ValueError("The archive's path is void.")
+            return pmethod(path, *kargs, **kwargs)
+
+        actual_proxy.__name__ = pmethod.__name__
+        actual_proxy.__doc__ = pmethod.__doc__
+        return actual_proxy
 
     def __getattr__(self, attr):
         """Provides proxy methods for _actual_* methods."""
         methods = r'fullpath|prestageinfo|check|list|insert|retrieve|delete'
         mattr = re.match(r'_actual_(?P<action>' + methods + r')', attr)
         if mattr:
-            pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, mattr.group('action')))
-
-            def actual_proxy(item, *kargs, **kwargs):
-                path = self._formatted_path(item, **kwargs)
-                if path is None:
-                    raise ValueError("The archive's path is void.")
-                return pmethod(path, *kargs, **kwargs)
-
-            actual_proxy.__name__ = pmethod.__name__
-            actual_proxy.__doc__ = pmethod.__doc__
-            return actual_proxy
+            pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, mattr.group('action')))
+            return self._actual_proxy_method(pmethod)
         else:
             raise AttributeError("The {:s} attribute was not found in this object"
                                  .format(attr))
 
     def _actual_earlyretrieve(self, item, local, **kwargs):
         """Proxy to the appropriate tube dependent earlyretrieve method (if available)."""
-        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'earlyretrieve'), None)
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, 'earlyretrieve'), None)
         if pmethod:
-            return pmethod(item, local, **kwargs)
+            return self._actual_proxy_method(pmethod)(item, local, **kwargs)
         else:
             return None
 
     def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):
         """Proxy to the appropriate tube dependent finaliseretrieve method (if available)."""
-        pmethod = getattr(self, '_{:s}{:s}'.format(self.actual_tube, 'finaliseretrieve'), None)
+        pmethod = getattr(self, '_{:s}{:s}'.format(self.tube, 'finaliseretrieve'), None)
         if pmethod:
-            return pmethod(retrieve_id, item, local, **kwargs)
+            return self._actual_proxy_method(pmethod)(item, local, retrieve_id, **kwargs)
         else:
             return False, dict()
 
     @property
     def _ftp_hostinfos(self):
         """Return the FTP hostname end port number."""
-        s_storage = self.actual_storage.split(':', 1)
+        s_storage = self.storage.split(':', 1)
         hostname = s_storage[0]
         port = None
         if len(s_storage) > 1:
@@ -639,7 +606,7 @@ class Archive(Storage):
                     username = ftp.logname
                 finally:
                     ftp.close()
-        baseinfo = dict(storage=self.actual_storage,
+        baseinfo = dict(storage=self.storage,
                         logname=username,
                         location=item, )
         return baseinfo, dict()
@@ -651,9 +618,9 @@ class Archive(Storage):
         if ftp:
             try:
                 rc = ftp.size(item)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as e:
                 pass
-            except ftplib.all_errors:
+            except ftplib.all_errors as e:
                 pass
             finally:
                 ftp.close()
@@ -687,7 +654,7 @@ class Archive(Storage):
 
     def _ftpretrieve(self, item, local, **kwargs):
         """Actual _retrieve using ftp."""
-        logger.info('ftpget on ftp://%s/%s (to: %s)', self.actual_storage, item, local)
+        logger.info('ftpget on ftp://%s/%s (to: %s)', self.storage, item, local)
         extras = dict(fmt=kwargs.get('fmt', 'foo'),
                       cpipeline=kwargs.get('compressionpipeline', None))
         hostname, port = self._ftp_hostinfos
@@ -712,7 +679,7 @@ class Archive(Storage):
         if self.sh.rawftget_worthy(item, local, cpipeline):
             return self.context.delayedactions_hub.register((item, kwargs.get('fmt', 'foo')),
                                                             kind='archive',
-                                                            storage=self.actual_storage,
+                                                            storage=self.storage,
                                                             goal='get',
                                                             tube='ftp',
                                                             raw=True,
@@ -720,7 +687,7 @@ class Archive(Storage):
         else:
             return None
 
-    def _ftpfinaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
+    def _ftpfinaliseretrieve(self, item, local, retrieve_id, **kwargs):  # @UnusedVariable
         """
         Get the resource given the **retrieve_id** identifier returned by the
         :meth:`_ftpearlyretrieve` method.
@@ -741,7 +708,7 @@ class Archive(Storage):
         sync_insert = kwargs.get('sync', True)
         hostname, port = self._ftp_hostinfos
         if sync_insert:
-            logger.info('ftpput to ftp://%s/%s (from: %s)', self.actual_storage, item, local)
+            logger.info('ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
                           cpipeline=kwargs.get('compressionpipeline', None))
             if port is not None:
@@ -756,7 +723,7 @@ class Archive(Storage):
                 ** extras
             )
         else:
-            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.actual_storage, item, local)
+            logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
             tempo = footprints.proxy.service(kind='hiddencache',
                                              asfmt=kwargs.get('fmt'))
             compressionpipeline = kwargs.get('compressionpipeline', '')
@@ -783,8 +750,8 @@ class Archive(Storage):
         rc = None
         ftp = self._ftp_client(logname=kwargs.get('username', None))
         if ftp:
-            if self.check(item, **kwargs):
-                logger.info('ftpdelete on ftp://%s/%s', self.actual_storage, item)
+            if self._ftpcheck(item, **kwargs)[0]:
+                logger.info('ftpdelete on ftp://%s/%s', self.storage, item)
                 rc = ftp.delete(item)
                 ftp.close()
             else:
@@ -1213,7 +1180,7 @@ class HackerCache(FixedEntryCache):
             gl = sessions.current().glove
             sweethome = sh.path.join(gl.configrc, 'hack')
             sh.mkdir(sweethome)
-            logger.debug('Using %s hack cache: %s', self, sweethome)
+            logger.debug('Using %s hack cache: %s', self.__class__, sweethome)
         else:
             sweethome = self.actual_rootdir
         return sh.path.join(sweethome, self.actual_headdir)

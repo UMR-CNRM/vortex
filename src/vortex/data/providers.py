@@ -11,6 +11,7 @@ declinations depending on the experiment indentifier type.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.urllib import parse as urlparse
 import os.path
 
 from bronx.fancies import loggers
@@ -266,14 +267,15 @@ class Vortex(Provider):
                 ),
                 namespace = dict(
                     values   = [
-                        'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
-                        'open.cache.fr', 'open.archive.fr', 'open.multi.fr',
+                        'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr', 'vortex.stack.fr',
+                        'open.cache.fr', 'open.archive.fr', 'open.multi.fr', 'open.stack.fr',
                     ],
                     default  = Namespace('vortex.cache.fr'),
                     remap    = {
                         'open.cache.fr': 'vortex.cache.fr',
                         'open.archive.fr': 'vortex.archive.fr',
                         'open.multi.fr': 'vortex.multi.fr',
+                        'open.stack.fr': 'vortex.stack.fr',
                     }
                 ),
                 namebuild = dict(
@@ -331,8 +333,8 @@ class Vortex(Provider):
         """Returns the current ``namespace``."""
         return self.namespace.netloc
 
-    def pathname(self, resource):
-        """Constructs pathname of the ``resource`` according to :func:`namebuilding_info`."""
+    def _pathname_info(self, resource):
+        """Return all the necessary informations to build a pathname."""
         rinfo = resource.namebuilding_info()
         rinfo.update(
             vapp=self.vapp,
@@ -342,7 +344,11 @@ class Vortex(Provider):
             member=self.member,
             scenario=self.scenario,
         )
-        return self.namebuilder.pack_pathname(rinfo)
+        return rinfo
+
+    def pathname(self, resource):
+        """Constructs pathname of the ``resource`` according to :func:`namebuilding_info`."""
+        return self.namebuilder.pack_pathname(self._pathname_info(resource))
 
     def basename(self, resource):
         """
@@ -350,6 +356,24 @@ class Vortex(Provider):
         and resource :func:`~vortex.data.resources.Resource.namebuilding_info`.
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
+
+    def urlquery(self, resource):
+        """Construct the urlquery (taking into account stacked storage)."""
+        s_urlquery = super(Vortex, self).urlquery(resource)
+        if s_urlquery:
+            uqs = urlparse.parse_qs(super(Vortex, self).urlquery(resource))
+        else:
+            uqs = dict()
+        stackres, keepmember = resource.stackedstorage_resource()
+        if stackres:
+            stackpathinfo = self._pathname_info(stackres)
+            stackpathinfo['block'] = 'stacks'
+            if not keepmember:
+                stackpathinfo['member'] = None
+            uqs['stackpath'] = [(self.namebuilder.pack_pathname(stackpathinfo) + '/' +
+                                 self.basename(stackres)), ]
+            uqs['stackfmt'] = [stackres.nativefmt, ]
+        return urlparse.urlencode(sorted(uqs.items()), doseq=True)
 
 
 class VortexStd(Vortex):

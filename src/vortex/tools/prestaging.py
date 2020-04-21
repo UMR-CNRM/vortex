@@ -71,7 +71,7 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
 
     def describe(self, fulldump=False):
         """Print the object's characteristics and content."""
-        res = 'PrestagingTool object of class: {:s}\n'.format(self.__class__)
+        res = 'PrestagingTool object of class: {!s}\n'.format(self.__class__)
         for k, v in self.footprint_as_shallow_dict().items():
             res += '  * {:s}: {!s}\n'.format(k, v)
         if fulldump:

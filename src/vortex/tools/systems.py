@@ -69,6 +69,7 @@ from vortex.tools.net import AssistedSsh, LinuxNetstats
 from vortex.tools.compression import CompressionPipeline
 from bronx.syntax.decorators import nicedeco_plusdoc
 from vortex.syntax.stdattrs import DelayedInit
+import ftplib
 
 #: No automatic export
 __all__ = []
@@ -1500,6 +1501,14 @@ class OSExtended(System):
                 return None
 
     @fmtshcmd
+    def anyft_remote_rewrite(self, remote):
+        """
+        When copying the data using a file transfer protocol (FTP, scp, ...),
+        given the format, possibly modify the remote name.
+        """
+        return remote
+
+    @fmtshcmd
     def ftget(self, source, destination, hostname=None, logname=None, port=DEFAULT_FTP_PORT,
               cpipeline=None):
         """Proceed to a direct ftp get on the specified target (using Vortex's FTP client).
@@ -1527,6 +1536,9 @@ class OSExtended(System):
                 else:
                     with cpipeline.stream2uncompress(destination) as cdestination:
                         rc = ftp.get(source, cdestination)
+            except ftplib.all_errors as e:
+                logger.warning('An FTP error occured: %s', str(e))
+                rc = False
             finally:
                 ftp.close()
             return rc
@@ -1564,6 +1576,9 @@ class OSExtended(System):
                         with cpipeline.compress2stream(source, iosponge=True) as csource:
                             # csource is an IoSponge consequently the size attribute exists
                             rc = ftp.put(csource, destination, size=csource.size)
+                except ftplib.all_errors as e:
+                    logger.warning('An FTP error occured: %s', str(e))
+                    rc = False
                 finally:
                     ftp.close()
         else:
@@ -1617,9 +1632,12 @@ class OSExtended(System):
                 actual_dest = re.sub('^~/+', '', destination)
                 if logname:
                     actual_dest = re.sub('^~{:s}/+'.format(logname), '', actual_dest)
-                rc = self.spawn([ftcmd,
-                                 '-o', 'mkdir', ] +  # Automatically create subdirectories
-                                extras + [source, actual_dest], output=False)
+                try:
+                    rc = self.spawn([ftcmd,
+                                     '-o', 'mkdir', ] +  # Automatically create subdirectories
+                                    extras + [source, actual_dest], output=False)
+                except ExecutionError:
+                    rc = False
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
@@ -1641,7 +1659,10 @@ class OSExtended(System):
                 if logname:
                     extras.extend(['-u', logname])
                 ftcmd = self.ftgetcmd or 'ftget'
-                rc = self.spawn([ftcmd, ] + extras + [source, destination], output=False)
+                try:
+                    rc = self.spawn([ftcmd, ] + extras + [source, destination], output=False)
+                except ExecutionError:
+                    rc = False
             else:
                 raise IOError('Could not cocoon: {!s}'.format(destination))
         else:
@@ -1673,7 +1694,10 @@ class OSExtended(System):
                 tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)
                                   for s, d in zip(source, destination)])
                 tmpio.seek(0)
-                rc = self.spawn([ftcmd, ] + extras, output=False, stdin=tmpio)
+                try:
+                    rc = self.spawn([ftcmd, ] + extras, output=False, stdin=tmpio)
+                except ExecutionError:
+                    rc = False
         else:
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
         return rc
@@ -1750,7 +1774,7 @@ class OSExtended(System):
 
     @fmtshcmd
     def rawftget(self, source, destination, hostname=None, logname=None, port=None,
-                 cpipeline=None):  # @UnusedVariable
+                 cpipeline=None):
         """Proceed with some external ftget command on the specified target.
 
         :param str source: the remote path to get data
@@ -1760,11 +1784,13 @@ class OSExtended(System):
         :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
+        if cpipeline is not None:
+            raise IOError("cpipeline is not supported by this method.")
         return self.ftserv_get(source, destination, hostname, logname, port=port)
 
     @fmtshcmd
     def batchrawftget(self, source, destination, hostname=None, logname=None,
-                      port=None, cpipeline=None):  # @UnusedVariable
+                      port=None, cpipeline=None):
         """Proceed with some external ftget command on the specified target.
 
         :param source: A list of remote paths to get data
@@ -1774,6 +1800,8 @@ class OSExtended(System):
         :param int port: the port number on the remote host.
         :param CompressionPipeline cpipeline: unused (kept for compatibility)
         """
+        if cpipeline is not None:
+            raise IOError("cpipeline is not supported by this method.")
         return self.ftserv_batchget(source, destination, hostname, logname, port=port)
 
     def smartftget(self, source, destination, hostname=None, logname=None, port=None,

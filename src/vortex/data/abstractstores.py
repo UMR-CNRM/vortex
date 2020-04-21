@@ -158,6 +158,15 @@ class Store(footprints.FootprintBase):
         """When tracking get/put request: extra args that will be added to the URI query."""
         return dict()
 
+    def _hash_check_or_delete(self, callback, remote, options=None):
+        """Check or delete a hash file."""
+        if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
+            return True
+        options = self._hash_store_defaults(options)
+        remote = remote.copy()
+        remote['path'] = remote['path'] + '.' + self.storehash
+        return callback(remote, options)
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
@@ -354,7 +363,7 @@ class MultiStore(footprints.FootprintBase):
     _abstract = True
     _collector = ('store',)
     _footprint = [
-        compressionpipeline,
+        compressionpipeline,  # Not used by cache stores but ok, just in case...
         hashalgo,
         dict(
             info = 'Multi store',
@@ -371,13 +380,20 @@ class MultiStore(footprints.FootprintBase):
                     optional = True,
                     default  = False,
                 ),
+                storehash=dict(
+                    values=hashalgo_avail_list,
+                ),
+                # ArchiveStores only be harmless for others...
                 storage = dict(
                     optional = True,
                     default  = None,
                 ),
-                storetube=dict(
-                    optional=True,
+                storetube = dict(
+                    optional  = True,
                 ),
+                storeroot = dict(
+                    optional  = True,
+                )
             ),
         )
     ]
@@ -440,16 +456,21 @@ class MultiStore(footprints.FootprintBase):
         """Abstract method."""
         pass
 
+    def alternates_fpextras(self):
+        """Abstract method."""
+        return dict()
+
     def alternates_fp(self):
         """
         Returns a list of anonymous descriptions to be used as footprint entries
         while loading alternates stores.
         """
         return [
-            dict(system=self.system, storehash=self.storehash,
+            dict(system=self.system,
+                 storehash=self.storehash, store_compressed=self.store_compressed,
                  storage=self.storage, storetube=self.storetube,
-                 store_compressed=self.store_compressed,
-                 scheme=x, netloc=y)
+                 storeroot=self.storeroot,
+                 scheme=x, netloc=y, ** self.alternates_fpextras())
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
         ]
@@ -513,10 +534,16 @@ class MultiStore(footprints.FootprintBase):
         f_ostores = self.filtered_readable_openedstores(remote)
         if not f_ostores:
             return False
-        rc = True
-        for sto in f_ostores:
-            logger.debug('Multistore prestage at %s', sto)
-            rc = rc and sto.prestage(remote.copy(), options)
+        if len(f_ostores) == 1:
+            logger.debug('Multistore prestage at %s', f_ostores[0])
+            rc = f_ostores[0].prestage(remote.copy(), options)
+        else:
+            rc = True
+            for sto in f_ostores:
+                if sto.check(remote.copy(), options):
+                    logger.debug('Multistore prestage at %s', sto)
+                    rc = sto.prestage(remote.copy(), options)
+                    break
         return rc
 
     def _refilling_get(self, remote, local, options=None, result_id=None):
@@ -641,22 +668,19 @@ class ArchiveStore(Store):
                     values   = ['open.archive.fr'],
                 ),
                 storehash = dict(
-                    values = hashalgo_avail_list,
+                    values   = hashalgo_avail_list,
                 ),
                 storage = dict(
                     optional = True,
-                    default  = None,
                 ),
                 storetube = dict(
                     optional = True,
                 ),
                 storeroot = dict(
                     optional = True,
-                    default  = '/tmp',
                 ),
                 storehead = dict(
                     optional = True,
-                    default  = 'sto',
                 ),
                 storesync = dict(
                     alias    = ('archsync', 'synchro'),
@@ -669,6 +693,11 @@ class ArchiveStore(Store):
                     optional = True,
                     default  = True,
                 ),
+                genericconfig = dict(
+                    type     = config.GenericReadOnlyConfigParser,
+                    optional = True,
+                    default  = config.GenericReadOnlyConfigParser('@store-archive-mapping.ini'),
+                ),
             )
         ),
     ]
@@ -676,8 +705,11 @@ class ArchiveStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
         self._archive = None
+        self._actual_storage = None
+        self._actual_storetube = None
         super(ArchiveStore, self).__init__(*args, **kw)
-        del self.archive
+        self._actual_storage = self.storage
+        self._actual_storetube = self.storetube
 
     @property
     def realkind(self):
@@ -697,13 +729,49 @@ class ArchiveStore(Store):
     def underlying_archive_kind(self):
         return 'std'
 
+    @property
+    def actual_storage(self):
+        """This archive network name (potentially read form the configuration file)."""
+        if self._actual_storage is None:
+            self._actual_storage = (
+                self.system.env.VORTEX_DEFAULT_STORAGE or
+                self.system.glove.default_fthost or
+                self.system.default_target.get('stores:archive_storage', None) or
+                self.system.default_target.get('stores:storage', None)
+            )
+            if self._actual_storage is None:
+                raise ValueError('Unable to find the archive network name.')
+        return self._actual_storage
+
+    def _actual_from_genericconf(self, what):
+        """Read an entry in the generic configuration file"""
+        result = None
+        inetsource = self.system.default_target.inetname
+        k_inet = '{:s}@{:s}'.format(self.actual_storage, inetsource)
+        if self.genericconfig.has_option(k_inet, what):
+            result = self.genericconfig.get(k_inet, what)
+        if result is None and self.genericconfig.has_option(self.actual_storage, what):
+            result = self.genericconfig.get(self.actual_storage, what)
+        if result is None and what in self.genericconfig.defaults():
+            result = self.genericconfig.defaults()[what]
+        return result
+
+    @property
+    def actual_storetube(self):
+        """This archive network name (potentially read form the configuration file)."""
+        if self._actual_storetube is None:
+            self._actual_storetube = self._actual_from_genericconf('storetube')
+            if self._actual_storetube is None:
+                raise ValueError('Unable to find the archive access method.')
+        return self._actual_storetube
+
     def _get_archive(self):
         """Create a new Archive object only if needed."""
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
                 kind=self.underlying_archive_kind,
-                storage=self.storage if self.storage else 'generic',
-                tube=self.storetube,
+                storage=self.actual_storage,
+                tube=self.actual_storetube,
                 readonly=self.readonly,
             )
             self._archives_object_stack.add(self._archive)
@@ -721,20 +789,32 @@ class ArchiveStore(Store):
     archive = property(_get_archive, _set_archive, _del_archive)
 
     def _inarchiveformatpath(self, remote):
-        formatted = self.system.path.join(
-            remote.get('root', self.storeroot),
-            remote['path'].lstrip(self.system.path.sep)
-        )
+        pathroot = remote.get('root', self.storeroot)
+        if pathroot is not None:
+            formatted = self.system.path.join(
+                pathroot,
+                remote['path'].lstrip(self.system.path.sep)
+            )
+        else:
+            formatted = remote['path'].lstrip(self.system.path.sep)
         return formatted
 
     def inarchivecheck(self, remote, options):
-        return self.archive.check(self._inarchiveformatpath(remote),
-                                  username=remote.get('username', None),
-                                  compressionpipeline=self._actual_cpipeline)
+        """Use the archive object to check if **remote** exists."""
+        # Try to delete the md5 file but ignore errors...
+        if self._hash_check_or_delete(self.inarchivecheck, remote, options):
+            return self.archive.check(self._inarchiveformatpath(remote),
+                                      username=remote.get('username', None),
+                                      fmt=options.get('fmt', 'foo'),
+                                      compressionpipeline=self._actual_cpipeline)
+        else:
+            return False
 
     def inarchivelocate(self, remote, options):
+        """Use the archive object to obtain **remote** physical location."""
         return self.archive.fullpath(self._inarchiveformatpath(remote),
                                      username=remote.get('username', None),
+                                     fmt=options.get('fmt', 'foo'),
                                      compressionpipeline=self._actual_cpipeline)
 
     def inarchivelist(self, remote, options):
@@ -746,9 +826,11 @@ class ArchiveStore(Store):
         """Returns the prestaging informations"""
         return self.archive.prestageinfo(self._inarchiveformatpath(remote),
                                          username=remote.get('username', None),
+                                         fmt=options.get('fmt', 'foo'),
                                          compressionpipeline=self._actual_cpipeline)
 
     def inarchiveget(self, remote, local, options):
+        """Use the archive object to retrieve **remote** in **local**."""
         logger.info('inarchiveget on %s://%s/%s (to: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.retrieve(
@@ -762,6 +844,7 @@ class ArchiveStore(Store):
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
     def inarchiveearlyget(self, remote, local, options):
+        """Use the archive object to initiate an early get request on **remote**."""
         logger.debug('inarchiveearlyget on %s://%s/%s (to: %s)',
                      self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.earlyretrieve(
@@ -775,6 +858,7 @@ class ArchiveStore(Store):
         return rc
 
     def inarchivefinaliseget(self, result_id, remote, local, options):
+        """Use the archive object to finalise the **result_id** early get request."""
         logger.info('inarchivefinaliseget on %s://%s/%s (to: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.finaliseretrieve(
@@ -789,6 +873,7 @@ class ArchiveStore(Store):
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
     def inarchiveput(self, local, remote, options):
+        """Use the archive object to put **local** to **remote**"""
         logger.info('inarchiveput to %s://%s/%s (from: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.insert(
@@ -806,11 +891,14 @@ class ArchiveStore(Store):
     def inarchivedelete(self, remote, options):
         logger.info('inarchivedelete on %s://%s/%s',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote))
+        # Try to delete the md5 file but ignore errors...
+        self._hash_check_or_delete(self.inarchivedelete, remote, options)
         return self.archive.delete(
             self._inarchiveformatpath(remote),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
         )
 
 
@@ -905,7 +993,7 @@ class ConfigurableArchiveStore(object):
             # Global configuration file
             logger.info("Reading config file: %s", self._store_global_config)
             maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-            conf['host'] = dict(maincfg.items(self.archive.actual_storage))
+            conf['host'] = dict(maincfg.items(self.actual_storage))
             conf['locations'] = defaultdict(dict)
 
             # Look for a local configuration file
@@ -966,7 +1054,7 @@ class ConfigurableArchiveStore(object):
         method
         """
         ds = sessions.current().datastore
-        conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
+        conf = ds.get(self._datastore_id, dict(storage=self.actual_storage),
                       default_payload=dict(), readonly=True)
         mylocation = uuid.location
         self._load_config(conf, mylocation)
@@ -979,7 +1067,7 @@ class ConfigurableArchiveStore(object):
     def _actual_storeroot(self, uuid):
         """For a given **uuid**, determine the proper storeroot."""
         if self.storeroot is None:
-            # Read the sotreroot from the configuration data
+            # Read the storeroot from the configuration data
             st_root = self._actual_fromconf(uuid, 'storeroot')
             if st_root is None:
                 raise IOError("No valid storeroot could be found.")
@@ -1026,10 +1114,6 @@ class CacheStore(Store):
                 optional = True,
                 default  = 'conf',
             ),
-            storage = dict(
-                optional = True,
-                default  = None,
-            ),
             rtouch = dict(
                 type     = bool,
                 optional = True,
@@ -1044,9 +1128,9 @@ class CacheStore(Store):
     )
 
     def __init__(self, *args, **kw):
+        del self.cache
         logger.debug('Generic cache store init %s', self.__class__)
         super(CacheStore, self).__init__(*args, **kw)
-        del self.cache
 
     @property
     def realkind(self):
@@ -1055,15 +1139,12 @@ class CacheStore(Store):
     @property
     def hostname(self):
         """Returns the current :attr:`storage`."""
-        tg = self.system.default_target
-        return tg.inetname if self.storage is None else self.storage
+        return self.system.default_target.inetname
 
     @property
     def config_name(self):
         """Returns the current :attr:`storage`."""
-        tg = self.system.default_target
-        idname = tg.cache_storage_alias() if self.storage is None else self.storage
-        return '@cache-{!s}.ini'.format(idname)
+        return '@cache-{!s}.ini'.format(self.system.default_target.cache_storage_alias())
 
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
@@ -1109,10 +1190,13 @@ class CacheStore(Store):
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
-        st = self.cache.check(remote['path'])
-        if options.get('isfile', False) and st:
-            st = self.system.path.isfile(self.incachelocate(remote, options))
-        return st
+        if self._hash_check_or_delete(self.incachecheck, remote, options):
+            st = self.cache.check(remote['path'])
+            if options.get('isfile', False) and st:
+                st = self.system.path.isfile(self.incachelocate(remote, options))
+            return st
+        else:
+            return False
 
     def incachelocate(self, remote, options):
         """Agregates cache to remote subpath."""
@@ -1165,6 +1249,7 @@ class CacheStore(Store):
         """Simple removing of the remote resource in cache."""
         logger.info('incachedelete on %s://%s/%s',
                     self.scheme, self.netloc, remote['path'])
+        self._hash_check_or_delete(self.incachedelete, remote, options)
         return self.cache.delete(
             remote['path'],
             fmt=options.get('fmt'),
