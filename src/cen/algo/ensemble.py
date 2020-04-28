@@ -7,11 +7,9 @@ from collections import defaultdict
 import io
 import os
 
-from CrocOpp import CrocOpp
 from bronx.datagrip.namelist import NamelistParser
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-from crocO import set_options
 import six
 
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -711,7 +709,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'crampon'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -778,7 +776,7 @@ class SurfexWorker(_S2MWorker):
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
-        if self.kind == 'crampon':
+        if self.kind == 'croco':
 
             # the forcings are in common :
             forcdir = '../../../../common/'
@@ -831,7 +829,7 @@ class SurfexWorker(_S2MWorker):
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
                 elif sytron:
-                    # ensmeteo+sytron or crampon: the forcing files are supposed to be in the subdirectories
+                    # ensmeteo+sytron or croco: the forcing files are supposed to be in the subdirectories
                     # of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
                 else:
@@ -1346,7 +1344,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'crampon', 'prepareforcing']
+                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco', 'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1420,7 +1418,7 @@ class SurfexComponent(S2MComponent):
     def get_subdirs(self, rh, opts):
         if self.kind == "escroc":
             subdirs = ['mb{0:04d}'.format(m) for m in self.members]
-        elif self.kind == 'crampon':  # in crampon case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
+        elif self.kind == 'croco':  # in croco case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
             subdirs = ['mb{0:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
@@ -1679,54 +1677,3 @@ class SurfexComponentMultiDates(SurfexComponent):
         ddict.pop('dateinit')
 
         return ddict
-
-
-@echecker.disabled_if_unavailable
-class PicklePro(AlgoComponent):
-
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values = ['picklepro']),
-            engine = dict(
-                optional     = True,
-                default   = 's2m',
-                values = ['s2m']
-            ),
-            vapp = dict(
-                values = ['s2m']),
-            vconf = dict(
-                default = '12'),
-        )
-    )
-
-    def execute(self, rh, opts):
-        print('cwd', os.getcwd())
-        n = NamelistParser()
-        N = n.parse('conf/OPTIONS.nam')
-        print('NAM_obs', N['NAM_OBS'].COBS_M)
-        # issue when only assim 1 var, causing the .join to crash
-        if isinstance(N['NAM_OBS'].COBS_M, str) or isinstance(N['NAM_OBS'].COBS_M, unicode):
-            gg = [N['NAM_OBS'].COBS_M]
-        else:
-            gg = N['NAM_OBS'].COBS_M
-        assimvars = ','.join(gg)
-        print('assvars', assimvars)
-        ppvars = ','.join(list(set(gg + ['DEP', 'SWE'])))
-        # xp corresponds to the task rep, from Crampon Driver
-        xp = 'crampon_out'
-        print('------loading xp ', xp, '------')
-        args = [
-            '/home/cluzetb/snowtools_git/assim/crocO.py',
-            '--xpid', xp,
-            '--vconf', self.vconf,
-            '-d', 'all',
-            '--vars', assimvars,
-            '--ppvars', ppvars,
-            '-o', 'pickle',
-            '--readprep',
-        ]
-        options, conf = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf))
-        # troll the xpiddir
-        options.xpiddir = os.getcwd() + '/'
-        _ = CrocOpp(options, conf)
