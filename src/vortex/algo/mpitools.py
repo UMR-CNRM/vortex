@@ -192,7 +192,9 @@ class MpiTool(footprints.FootprintBase):
         self._envelope = []
         self._sources = []
         self._mpilib_data_cache = None
+        self._mpilib_identification_cache = None
         self._ranks_map_cache = None
+        self._complex_ranks_map = None
         for k in self.basics:
             self.__dict__['_' + k] = None
 
@@ -320,12 +322,14 @@ class MpiTool(footprints.FootprintBase):
         if self.envelope:
             self._set_binaries_envelope_hack(self._binaries)
         self._mpilib_data_cache = None
+        self._mpilib_identification_cache = None
         self._ranks_map_cache = None
+        self._complex_ranks_map = None
 
     binaries = property(_get_binaries, _set_binaries)
 
     def _mpilib_data(self):
-        """From the binaries, try to detect MPI library and mpirun path."""
+        """From the binaries, try to detect MPI library and mpirun paths."""
         if self._mpilib_data_cache is None:
             mpilib_guesses = ('libmpi.so', 'libmpi_mt.so',
                               'libmpi_dbg.so', 'libmpi_dbg_mt.so')
@@ -368,6 +372,41 @@ class MpiTool(footprints.FootprintBase):
                 self._mpilib_data_cache = mpilib_data.pop()
         return self._mpilib_data_cache if self._mpilib_data_cache else None
 
+    def _mpilib_match_result(self, regex, rclines, which):
+        for line in rclines:
+            matched = regex.match(line)
+            if matched:
+                logger.info('MPI implementation detected: %s (%s)',
+                            which, ' '.join(matched.groups()))
+                return [which] + [int(res) for res in matched.groups()]
+        return False
+
+    def _mpilib_identification(self):
+        """Try to guess the name and version of the MPI library."""
+        if self._mpilib_data() is None:
+            return None
+        if self._mpilib_identification_cache is None:
+            mpi_lib, mpi_tools_dir = self._mpilib_data()
+            sh = self.system
+            mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
+            if sh.path.exists(mpirun_path):
+                rc = sh.spawn([mpirun_path, '--version'], output=True, fatal=False)
+                if rc:
+                    id_res = self._mpilib_match_result(
+                        re.compile(r'^.*Intel.*MPI.*Version\s+(\d+)\s+Update\s+(\d+)',
+                                   re.IGNORECASE),
+                        rc, 'intelmpi')
+                    id_res = id_res or self._mpilib_match_result(
+                        re.compile(r'^.*Open\s*MPI.*\s+(\d+)\.(\d+)(?:\.(\d+))?',
+                                   re.IGNORECASE),
+                        rc, 'openmpi')
+                    if id_res:
+                        self._mpilib_identification_cache = tuple([mpi_lib, mpi_tools_dir] +
+                                                                  id_res)
+            if self._mpilib_identification_cache is None:
+                self._mpilib_identification_cache = (mpi_lib, mpi_tools_dir, 'unknown')
+        return self._mpilib_identification_cache
+
     def _get_sources(self):
         """Returns a list of directories that may contain source files."""
         return self._sources
@@ -407,6 +446,7 @@ class MpiTool(footprints.FootprintBase):
     def _ranks_mapping(self):
         """When group are defined, associate each MPI rank with a "real" slot."""
         if self._ranks_map_cache is None:
+            self._complex_ranks_map = True  # A conservative default value...
             ranks_map = dict()
             has_bin_groups = not all([b.group is None for b in self.binaries])
             cursor = 0  # The MPI rank we are currently processing
@@ -448,12 +488,21 @@ class MpiTool(footprints.FootprintBase):
                     cursor += a_bin.nprocs
             else:
                 # Just do nothing...
+                self._complex_ranks_map = False
                 for a_bin in self.binaries:
                     for rank in range(a_bin.nprocs):
                         ranks_map[rank + cursor] = rank + cursor
                     cursor += a_bin.nprocs
             self._ranks_map_cache = ranks_map
         return self._ranks_map_cache
+
+    @property
+    def _complex_ranks_mapping(self):
+        """Is it a complex ranks mapping (e.g not the identity)."""
+        if self._complex_ranks_map is None:
+            # To initialise everything...
+            self._ranks_mapping
+        return self._complex_ranks_map
 
     def _wrapstd_mkwrapper(self):
         """Generate the wrapper script used when wrapstd=True."""
@@ -706,12 +755,44 @@ class MpiTool(footprints.FootprintBase):
             sdict.update(mpilib=mpilib_data[0], mpibindir=mpilib_data[1])
         return sdict
 
+    def _environment_confdata(self, conflabel):
+        """Read relevant environment variable from the target config file"""
+        mpi_infos = self._mpilib_identification()
+        # Find out what are the relevant configuration sections
+        sections_stack = list()
+        all_sections = self.target.sections()
+        for main_entry in ('mpienv',
+                           'mpienv:{:s}'.format(self.mpiname),
+                           'mpienv-{!s}'.format(conflabel),
+                           'mpienv-{!s}:{:s}'.format(conflabel, self.mpiname),):
+            if main_entry in all_sections:
+                sections_stack.append(main_entry)
+            if mpi_infos:
+                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[2])
+                if not lib_entry.endswith('unknown') and lib_entry in all_sections:
+                    sections_stack.append(lib_entry)
+                v_tuples = {tuple([int(d) for d in e[len(lib_entry) + 1:].split('.')]): e
+                            for e in [s for s in all_sections
+                                      if s.startswith(lib_entry + ':')]}
+                my_version = tuple(mpi_infos[3:])
+                v_candidates = [v for v in v_tuples if v <= my_version]
+                if v_candidates:
+                    sections_stack.append(v_tuples[max(v_candidates)])
+        if sections_stack:
+            logger.info('Environment variables taken from the following conf sections: %s',
+                        ','.join(sections_stack))
+        # Read all the relevant sections
+        conf_data = dict()
+        for section in sections_stack:
+            conf_data.update(self.target.items(section))
+        # Removed void values
+        conf_data = {k: v for k, v in conf_data.items()
+                     if v != 'vortex_void_value'}
+        return conf_data
+
     def setup_environment(self, opts, conflabel):
         """MPI environment setup."""
-        confdata = self.target.items('mpienv')
-        confdata.update(self.target.items('mpienv:{:s}'.format(self.mpiname)))
-        if conflabel:
-            confdata.update(self.target.items('mpienv-{!s}'.format(conflabel)))
+        confdata = self._environment_confdata(conflabel)
         envsub = self._environment_substitution_dict(opts, conflabel)
         for k, v in confdata.items():
             if k not in self.env:
@@ -1253,6 +1334,14 @@ class SRun(ConfigurableMpiTool):
         return sdict
 
     def setup_environment(self, opts, conflabel):
+        """Tweak the environment with some srun specific settings."""
+        super(SRun, self).setup_environment(opts, conflabel)
+        if (self._complex_ranks_mapping and
+                self._mpilib_identification() and
+                self._mpilib_identification()[2] == 'intelmpi'):
+            logger.info('(Sadly) with IntelMPI, I_MPI_SLURM_EXT=0 is needed when a complex arbitrary' +
+                        'ranks distribution is used. Exporting it !')
+            self.env['I_MPI_SLURM_EXT'] = 0
         if len(self.binaries) == 1 and not self.envelope:
             omp = self.binaries[0].options.get('openmp', None)
             if omp is not None:
@@ -1260,11 +1349,13 @@ class SRun(ConfigurableMpiTool):
         if self.bindingmethod == 'native' and 'OMP_PROC_BIND' not in self.env:
             self._logged_env_set('OMP_PROC_BIND', 'true')
         # cleaning unwanted environment stuff
+        unwanted = set()
         for k in self.env:
             if k.startswith('SLURM_'):
                 k = k[6:]
                 if (k in ('NTASKS', 'NPROCS') or
                         re.match('N?TASKS_PER_', k) or
                         re.match('N?CPUS_PER_', k)):
-                    self.env.delvar('SLURM_{:s}'.format(k))
-        super(SRun, self).setup_environment(opts, conflabel)
+                    unwanted.add(k)
+        for k in unwanted:
+            self.env.delvar('SLURM_{:s}'.format(k))

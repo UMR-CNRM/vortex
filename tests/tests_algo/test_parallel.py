@@ -228,6 +228,21 @@ class TestParallel(unittest.TestCase):
                                   sublauncher=None, bindingmethod='launcherspecific',
                                   mpiopts=None))
 
+    def test_env_setup(self):
+        bin0 = FakeBinaryRh('fake')
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        mpitool, _ = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertDictEqual(mpitool._environment_confdata(''),
+                             dict(defaultmpivar='foo'))
+        self.assertDictEqual(mpitool._environment_confdata('fullsrun'),
+                             dict(defaultmpivar='foo', fakevariable='fullsrun'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
+        mpitool, _ = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertDictEqual(mpitool._environment_confdata(''),
+                             dict(defaultmpivar='foo', fakevariable='basicsrun'))
+        self.assertDictEqual(mpitool._environment_confdata('fullsrun'),
+                             dict(fakevariable='rawsrun'))
+
     def testOneBin(self):
         bin0 = FakeBinaryRh('fake')
         # MPI partitioning from explicit mpiopts
