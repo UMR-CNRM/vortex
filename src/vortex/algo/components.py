@@ -30,8 +30,10 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import contextlib
 import copy
 import locale
+import logging
 import multiprocessing
 import shlex
 import sys
@@ -1491,6 +1493,12 @@ class Parallel(xExecutableAlgoComponent):
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            mpiverbose = dict(
+                info            = 'Boost logging verbosity in mpitools',
+                optional        = True,
+                default         = False,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             binaries = dict(
                 info            = 'List of MpiBinaryDescription objects',
                 optional        = True,
@@ -1759,6 +1767,22 @@ class Parallel(xExecutableAlgoComponent):
 
         return mpi, args
 
+    @contextlib.contextmanager
+    def _tweak_mpitools_logging(self):
+        if self.mpiverbose:
+            m_loggers = dict()
+            for m_logger_name in [l for l in loggers.lognames if 'mpitools' in l]:
+                m_logger = loggers.getLogger(m_logger_name)
+                m_loggers[m_logger] = m_logger.level
+                m_logger.setLevel(logging.DEBUG)
+            try:
+                yield
+            finally:
+                for m_logger, prev_level in m_loggers.items():
+                    m_logger.setLevel(prev_level)
+        else:
+            yield
+
     def execute_single(self, rh, opts):
         """Run the specified resource handler through the `mpitool` launcher
 
@@ -1768,17 +1792,19 @@ class Parallel(xExecutableAlgoComponent):
 
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
 
-        # Return a mpitool object and the mpicommand line
-        mpi, args = self._bootstrap_mpitool(rh, opts)
+        with self._tweak_mpitools_logging():
 
-        # Specific parallel settings
-        mpi.setup(opts, self.mpiconflabel)
+            # Return a mpitool object and the mpicommand line
+            mpi, args = self._bootstrap_mpitool(rh, opts)
 
-        # This is actual running command
-        self.spawn(args, opts)
+            # Specific parallel settings
+            mpi.setup(opts, self.mpiconflabel)
 
-        # Specific parallel cleaning
-        mpi.clean(opts)
+            # This is actual running command
+            self.spawn(args, opts)
+
+            # Specific parallel cleaning
+            mpi.clean(opts)
 
 
 @algo_component_deco_mixin_autodoc

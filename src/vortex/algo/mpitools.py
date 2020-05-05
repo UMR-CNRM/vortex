@@ -578,20 +578,22 @@ class MpiTool(footprints.FootprintBase):
         return todostack, ranks_bsize
 
     def _envelope_mkwrapper_bindingstack(self, ranks_bsize):
+        binding_stack = dict()
+        binding_node = dict()
         if self.bindingmethod == 'vortex':
-            binding_stack = dict()
+
             # Dispensers map
             ranks_idx = 0
             dispensers_map = dict()
             for e_bit in self.envelope:
                 if 'nn' in e_bit.options and 'nnp' in e_bit.options:
-                    for _ in range(e_bit.options['nn']):
+                    for i_node in range(e_bit.options['nn']):
                         cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
                         if not cpu_disp:
                             raise MpiException('Unable to detect the CPU layout with topology: {:s}'
                                                .format(self._actual_vortexbind_topology,))
                         for _ in range(e_bit.options['nnp']):
-                            dispensers_map[ranks_idx] = cpu_disp
+                            dispensers_map[ranks_idx] = (cpu_disp, i_node)
                             ranks_idx += 1
                 else:
                     logger.error("Cannot compute a proper binding without nn/nnp information")
@@ -601,15 +603,14 @@ class MpiTool(footprints.FootprintBase):
             for e_bit in self.envelope:
                 for _ in range(e_bit.options['nn']):
                     for _ in range(e_bit.options['nnp']):
+                        cpu_disp, i_node = dispensers_map[self._ranks_mapping[ranks_idx]]
                         if ranks_bsize.get(ranks_idx, 1) != -1:
-                            cpu_disp = dispensers_map[self._ranks_mapping[ranks_idx]]
                             binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
                         else:
                             binding_stack[ranks_idx] = set(self.system.cpus_info.cpus.keys())
+                        binding_node[ranks_idx] = i_node
                         ranks_idx += 1
-        else:
-            binding_stack = dict()
-        return binding_stack
+        return binding_stack, binding_node
 
     def _envelope_mkwrapper_tplsubs(self, todostack, bindingstack):
         return dict(python=sys.executable,
@@ -631,7 +632,26 @@ class MpiTool(footprints.FootprintBase):
         # Generate the dictionary that associate rank numbers and programs
         todostack, ranks_bsize = self._envelope_mkwrapper_todostack()
         # Generate the binding stuff
-        bindingstack = self._envelope_mkwrapper_bindingstack(ranks_bsize)
+        bindingstack, bindingnode = self._envelope_mkwrapper_bindingstack(ranks_bsize)
+        # Print binding details
+        logger.debug('Vortex Envelope Mechanism is used' +
+                     (' & vortex binding is on.' if bindingstack else '.'))
+        env_info_head = '{:5s} {:24s} {:4s}'.format('#rank', 'binary_name', '#OMP')
+        env_info_fmt = '{:5d} {:24s} {:4s}'
+        if bindingstack:
+            env_info_head += ' {:5s} {:s}'.format('#node', 'bindings_list')
+            env_info_fmt2 = ' {:5d} {:s}'
+        binding_str = [env_info_head]
+        for i_rank in sorted(todostack):
+            entry_str = env_info_fmt.format(i_rank,
+                                            self.system.path.basename(todostack[i_rank][0])[:24],
+                                            str(todostack[i_rank][2]))
+            if bindingstack:
+                entry_str += env_info_fmt2.format(bindingnode[i_rank],
+                                                  ','.join([str(c)
+                                                            for c in sorted(bindingstack[i_rank])]))
+            binding_str.append(entry_str)
+        logger.debug('Here are the envelope details:\n%s', '\n'.join(binding_str))
         # Create the launchwrapper
         wtpl = config.load_template(self.ticket,
                                     self._envelope_wrapper_tpl,
@@ -1274,8 +1294,9 @@ class SRun(ConfigurableMpiTool):
                                                        else self.env.SLURM_JOB_NODELIST))
             for e_bit in self.envelope:
                 totaltasks += e_bit.nprocs
-                for _ in range(e_bit.options['nn']):
+                for i_node in range(e_bit.options['nn']):
                     availnode = next(availnodes)
+                    logger.debug('Node #%5d is: %s', i_node, availnode)
                     base_nodelist.extend([availnode, ] * e_bit.options['nnp'])
             # Re-order the nodelist based on the binary groups
             nodelist = list()
