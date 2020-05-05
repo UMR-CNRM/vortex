@@ -182,6 +182,7 @@ class MpiTool(footprints.FootprintBase):
     _envelope_rank_var = 'MPIRANK'
     _default_mpibind_topology = 'numapacked'
     _supports_binary_groups = False
+    _needs_mpilib_specific_mpienv = True
 
     def __init__(self, *args, **kw):
         """After parent initialization, set master, options and basics to undefined."""
@@ -777,7 +778,10 @@ class MpiTool(footprints.FootprintBase):
 
     def _environment_confdata(self, conflabel):
         """Read relevant environment variable from the target config file"""
-        mpi_infos = self._mpilib_identification()
+        if self._needs_mpilib_specific_mpienv:
+            mpi_infos = self._mpilib_identification()
+        else:
+            mpi_infos = None
         # Find out what are the relevant configuration sections
         sections_stack = list()
         all_sections = self.target.sections()
