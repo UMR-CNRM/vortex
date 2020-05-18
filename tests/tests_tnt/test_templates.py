@@ -34,9 +34,9 @@ COMPOSED_NAM = """\
    LNHDYN=.TRUE.,
  /
  &NAMFA
-   NVGRIB=123,
-   NBITPG=24,
    NBITCS=16,
+   NBITPG=24,
+   NVGRIB=123,
  /
  &NAMINI
    NSTEP=8,
@@ -98,12 +98,15 @@ class TestTntTemplate(unittest.TestCase):
     
     @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
     def test_recipe_yaml(self):
+        from bronx.datagrip.namelist import FIRST_ORDER_SORTING
+        sourcedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+        sourcedir = os.path.normpath(sourcedir)
         recipe = tnt.config.TntRecipe(os.path.join(tpl_path, 'tntcompose-recipe.tpl.yaml'),
-                                      sourcenam_directory='./data')
+                                      sourcenam_directory=sourcedir)
         nam = recipe.ingredients[0]
         for ingredient in recipe.ingredients[1:]:
             nam.merge(ingredient)
-        self.assertEqual(nam.dumps(), COMPOSED_NAM)
+        self.assertEqual(nam.dumps(sorting=FIRST_ORDER_SORTING), COMPOSED_NAM)
 
 
 if __name__ == "__main__":
