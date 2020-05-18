@@ -15,6 +15,7 @@ import six
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
+from .namadapter import BronxNamelistAdapter
 
 tntlog = loggers.getLogger('tntlog')
 
@@ -321,6 +322,120 @@ class TntStackDirective(object):
     def todolist(self):
         """The todo's list (as a list of dictionaries)."""
         return self._todolist
+
+
+class TntRecipe(object):
+    """
+    A YAML Recipe reader, that collects namelists and possibly filter them,
+    in sight of finally merging them.
+    """
+
+    _include_only = '/+'
+    _exclude_only = '/-'
+
+    def __init__(self, recipe_filename, sourcenam_directory=None):
+        """
+        :param recipe_filename: filepath to the YAML recipe
+        :param sourcenam_directory: an optional external directory in which to
+            pick the ingredient namelists
+        """
+        self.sourcenam_directory = sourcenam_directory
+        self._load_recipe(recipe_filename)
+
+    def _read_init_final_elements(self, ingredient):
+        """Read '__initial__' or '__final__' step **ingredient**."""
+        if ingredient is not None:
+            if isinstance(ingredient, six.string_types):
+                # external namelist
+                if self.sourcenam_directory:
+                    ingredient = os.path.join(self.sourcenam_directory, ingredient)
+                nam = BronxNamelistAdapter(ingredient, macros=self.macros)
+            else:
+                # internal dict/yaml namelist
+                nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+                nam.add_blocks(list(ingredient.keys()))
+                keys_to_add = {}
+                for b in ingredient.keys():
+                    if ingredient[b] is not None:
+                        for k, v in ingredient[b].items():
+                            keys_to_add[(b, k)] = v
+                nam.add_keys(keys_to_add)
+        else:
+            nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+        return nam
+
+    def _process_ingredient(self, input_nam, blocks):
+        """Preprocess ingredient: read according namelist and filter it."""
+        # prepare filtering elements
+        _included_blocks = []
+        excluded_blocks = []
+        included_keys = {}
+        excluded_keys = {}
+        # read namelist
+        input_nam_filename = input_nam.replace(self._exclude_only, '').replace(self._include_only, '')
+        if self.sourcenam_directory:
+            input_nam_filename = os.path.join(self.sourcenam_directory,
+                                              input_nam_filename)
+        ingredient = BronxNamelistAdapter(input_nam_filename,
+                                          macros=self.macros)
+        if blocks != '__all__':
+            if True not in [input_nam.endswith(pattern)
+                            for pattern in
+                            (self._exclude_only, self._include_only)]:
+                raise SyntaxError("Namelist name must ends with one of ('{}','{}').".
+                                  format(self._exclude_only, self._include_only))
+            for b in blocks:
+                if isinstance(b, six.string_types):
+                    if input_nam.endswith(self._exclude_only):
+                        excluded_blocks.append(b)
+                    elif input_nam.endswith(self._include_only):
+                        _included_blocks.append(b)
+                else:
+                    if len(b) != 1:
+                        raise SyntaxError("?")
+                    else:
+                        bname = list(b.keys())[0]
+                        if bname.endswith(self._include_only):
+                            # in this block, include only keys:
+                            included_keys[bname.replace(self._include_only, '')] = b[bname]
+                        elif bname.endswith(self._exclude_only):
+                            # in this block, exclude keys:
+                            excluded_keys[bname.replace(self._exclude_only, '')] = b[bname]
+                        else:
+                            raise SyntaxError("If specifying keys, namelist block must ends with one of ('{}','{}').".
+                                              format(self._exclude_only, self._include_only))
+            if input_nam.endswith(self._include_only):
+                excluded_blocks = [b for b in ingredient
+                                   if b not in set(_included_blocks +
+                                                   list(included_keys.keys()) +
+                                                   list(excluded_keys.keys()))]
+        # then filter
+        # blocks that are not requested
+        ingredient.remove_blocks(excluded_blocks)
+        # keys that are excluded
+        for b in excluded_keys:
+            ingredient.remove_keys([(b, k) for k in excluded_keys[b]])
+        # keys that are not requested
+        for b in included_keys:
+            to_remove = [(b, k) for k in ingredient[b] if k not in included_keys[b]]
+            ingredient.remove_keys(to_remove)
+        return ingredient
+
+    def _load_recipe(self, recipe_filename):
+        """Read YAML file and preprocess ingredients."""
+        from bronx.datagrip.misc import load_ordered_yaml
+        # load yaml
+        recipe = load_ordered_yaml(recipe_filename)
+        # specific cases: initialization, finalization, macros
+        self.macros = recipe.pop('__macros__', {})
+        initial = self._read_init_final_elements(recipe.pop('__initial__', None))
+        final = self._read_init_final_elements(recipe.pop('__final__', None))
+        self.ingredients = []
+        # convert each ingredient into a namelist to be merged
+        for input_nam, blocks in recipe.items():
+            self.ingredients.append(self._process_ingredient(input_nam, blocks))
+        self.ingredients.insert(0, initial)
+        self.ingredients.append(final)
 
 
 # Utility function that deals with template files

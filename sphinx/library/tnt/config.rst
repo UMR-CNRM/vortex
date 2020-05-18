@@ -52,3 +52,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: TntRecipe
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+

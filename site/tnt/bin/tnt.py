@@ -52,6 +52,11 @@ if __name__ == '__main__':
                                   This option is equivalent to. \
                                   "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
                             default=False)
+    directives.add_argument('--squeeze',
+                            dest='squeeze',
+                            action='store_true',
+                            help='squeeze the namelist: remove empty blocks.',
+                            default=False)
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
@@ -121,7 +126,7 @@ if __name__ == '__main__':
         if args.directives:
             directives = tnt.config.read_directives(args.directives)
         else:
-            if args.check_namelist:
+            if args.check_namelist or args.squeeze:
                 directives = tnt.config.TntDirective()
             else:
                 with io.open(args.namdelta, 'r') as fhnam:
@@ -134,4 +139,5 @@ if __name__ == '__main__':
                                       outfilename=args.outfilename,
                                       blocks_ref=args.blocks_ref,
                                       doctor=args.doctor,
-                                      keep_index=args.keep_index)
+                                      keep_index=args.keep_index,
+                                      squeeze=args.squeeze)

@@ -21,6 +21,40 @@ tntstack_todo_ref = [
     {'action': 'touch', u'namelist': [u'unknown_namelist', u'namelist_fp*']},
     {'action': 'clean_untouched'}]
 
+COMPOSED_NAM = """\
+ &NAERAD
+ /
+ &NAMCT0
+   LECMWF=.FALSE.,
+ /
+ &NAMDIM
+   NPROMA=-24,
+ /
+ &NAMDYN
+   LNHDYN=.TRUE.,
+ /
+ &NAMFA
+   NVGRIB=123,
+   NBITPG=24,
+   NBITCS=16,
+ /
+ &NAMINI
+   NSTEP=8,
+ /
+ &NAMKEPT
+   USELESS='YES',
+ /
+ &NAMOBJ
+   L_OOPS=.TRUE.,
+ /
+ &NAMOBS
+   LOLDPP=.TRUE.,
+ /
+ &NAMRIP
+   CSTOP='h1',
+ /
+"""
+
 
 def test_yaml():
     rc = True
@@ -61,6 +95,15 @@ class TestTntTemplate(unittest.TestCase):
         self.assertListEqual(tplyaml.todolist, tntstack_todo_ref)
         self.assertSetEqual(set(tplyaml.directives.keys()),
                             set(['surfexdiags', 'geo499c1', 'dfi']))
+    
+    @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+    def test_recipe_yaml(self):
+        recipe = tnt.config.TntRecipe(os.path.join(tpl_path, 'tntcompose-recipe.tpl.yaml'),
+                                      sourcenam_directory='./data')
+        nam = recipe.ingredients[0]
+        for ingredient in recipe.ingredients[1:]:
+            nam.merge(ingredient)
+        self.assertEqual(nam.dumps(), COMPOSED_NAM)
 
 
 if __name__ == "__main__":

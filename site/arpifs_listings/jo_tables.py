@@ -583,7 +583,9 @@ class JoTables(_JoMixin):
 
     def _allow_diff(self, ref):
         """Check if it's possible to compute a diff."""
-        if (not isinstance(ref, self.__class__) or
+        if len(self) == len(ref) == 1:
+            pass
+        elif (not isinstance(ref, self.__class__) or
                 set(self.keys()) != set(ref.keys())):
             raise JoTablesMismatchError('Jo tables names don\'t match')
 
@@ -591,8 +593,17 @@ class JoTables(_JoMixin):
         """Compute difference and relative difference for n, jo, jo/n."""
         self._allow_diff(ref)
         diff = OrderedDict()
-        for t in self.keys():
-            diff[t] = self[t].compute_diff(ref[t])
+        if len(self) == len(ref) == 1:
+            t = list(self.keys())[0]
+            tref = list(ref.keys())[0]
+            if t == tref:
+                difflabel = t
+            else:
+                difflabel = '{} vs. {}'.format(t, tref)
+            diff[difflabel] = self[t].compute_diff(ref[tref])
+        else:
+            for t in self.keys():
+                diff[t] = self[t].compute_diff(ref[t])
         return diff
 
     def as_dict(self):
@@ -605,9 +616,17 @@ class JoTables(_JoMixin):
     def maxdiff(self, ref):
         """Compute and sort out the maximum difference."""
         self._allow_diff(ref)
-        return {p: {sp: max([0.] + [self[t].maxdiff(ref[t])[p][sp] for t in self.keys()])
-                    for sp in ('diff', 'reldiff')}
-                for p in ('n', 'jo', 'jo/n')}
+        if len(self) == len(ref) == 1:
+            t = list(self.keys())[0]
+            tref = list(ref.keys())[0]
+            maxdiff = {p: {sp: max([0.] + [self[t].maxdiff(ref[tref])[p][sp]])
+                           for sp in ('diff', 'reldiff')}
+                       for p in ('n', 'jo', 'jo/n')}
+        else:
+            maxdiff = {p: {sp: max([0.] + [self[t].maxdiff(ref[t])[p][sp] for t in self.keys()])
+                           for sp in ('diff', 'reldiff')}
+                       for p in ('n', 'jo', 'jo/n')}
+        return maxdiff
 
     def print_diff(self, ref,
                    nthres=DEFAULT_N_THRESHOLD,
@@ -627,9 +646,18 @@ class JoTables(_JoMixin):
         :param onlymaxdiff: Only max difference is printed for each table
         """
         self._allow_diff(ref)
-        for tname in self.keys():
-            self[tname].print_diff(ref[tname],
+        if len(self) == len(ref) == 1:
+            tname = list(self.keys())[0]
+            tref = list(ref.keys())[0]
+            self[tname].print_diff(ref[tref],
                                    nthres=nthres, jothres=jothres,
                                    bw=bw,
                                    out=out,
                                    onlymaxdiff=onlymaxdiff)
+        else:
+            for tname in self.keys():
+                self[tname].print_diff(ref[tname],
+                                       nthres=nthres, jothres=jothres,
+                                       bw=bw,
+                                       out=out,
+                                       onlymaxdiff=onlymaxdiff)

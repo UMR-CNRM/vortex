@@ -102,4 +102,9 @@ Mixed AlgoComponents
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Coupling_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+

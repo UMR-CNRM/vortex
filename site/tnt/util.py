@@ -3,6 +3,7 @@ Utility methods widely used in the various TNT utilities.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import glob
 import io
@@ -12,6 +13,7 @@ import shutil
 from bronx.fancies import loggers
 from bronx.fancies.colors import termcolors
 from tnt.namadapter import BronxNamelistAdapter, NO_SORTING, FIRST_ORDER_SORTING, SECOND_ORDER_SORTING
+from .config import TntRecipe
 
 tntlog = loggers.getLogger('tntlog')
 tntstacklog = loggers.getLogger('tntstacklog')
@@ -34,7 +36,8 @@ def process_namelist(filename, directives,
                      in_place=False,
                      outfilename=None,
                      doctor=False,
-                     keep_index=False):
+                     keep_index=False,
+                     squeeze=False):
     """
     For the syntax of keys & blocks arguments, please refer to the according
     functions.
@@ -64,6 +67,7 @@ def process_namelist(filename, directives,
     :param keep_index: if True, moved keys in identical block keep the original
                        index of key in block (except a sorting is requested
                        later on.
+    :param squeeze: squeeze the namelist: remove empty blocks.
     """
     if not isinstance(directives, (list, tuple)):
         directives = [directives, ]
@@ -102,6 +106,9 @@ def process_namelist(filename, directives,
                              d.namdelta)
                 raise
             initial_nam.merge(ndelta)
+
+    if squeeze:
+        initial_nam.squeeze()
 
     if blocks_ref is not None:
         cb = initial_nam.check_blocks(blocks_ref, directives[0].macros)
@@ -234,3 +241,38 @@ def colorise_diff(lines):
         prevline = l
     newdiff.append(_color_diffline(prevline))
     return newdiff
+
+
+def compose_namelist(recipe_filename,
+                     sourcenam_directory=None,
+                     suffix='.nam',
+                     sorting=NO_SORTING,
+                     squeeze=False):
+    """
+    Compose a namelist from a **recipe_filename**. For the syntax of recipe,
+    see template recipe.
+
+    :param sourcenam_directory: path to directory in which to look for source
+                                namelists
+    :param suffix: suffix to add to generated namelist:
+                   output name is ./recipe_basename[suffix]
+    :param sorting: Sorting option (from bronx.datagrip.namelist):
+                    NO_SORTING;
+                    FIRST_ORDER_SORTING => sort all keys within blocks;
+                    SECOND_ORDER_SORTING => sort only within indexes or
+                    attributes of the same key, within blocks.
+    :param squeeze: squeeze the namelist: remove empty blocks.
+    """
+    # read
+    recipe = TntRecipe(recipe_filename, sourcenam_directory=sourcenam_directory)
+    # merge
+    nam = recipe.ingredients[0]
+    for ingredient in recipe.ingredients[1:]:
+        nam.merge(ingredient)
+    if squeeze:
+        nam.squeeze()
+    # write
+    namelistname = os.path.basename(recipe_filename.replace('.yaml', suffix))
+    with io.open(namelistname, 'w', encoding='ascii') as fh_namout:
+        fh_namout.write(nam.dumps(sorting=sorting))
+
