@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     _tmpl = 'tmpl_compose-recipe.tnt'
 
-    parser = argparse.ArgumentParser(description='TNT - The Namelist Tool - Compose: a namelist composer merging parts of others.',
+    parser = argparse.ArgumentParser(description='TNT - The Namelist Tool - Compose: ' +
+                                     'a namelist composer merging parts of others.',
                                      epilog='End of help for: %(prog)s')
     parser.add_argument('recipes',
                         type=str,

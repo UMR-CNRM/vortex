@@ -3,7 +3,6 @@ Utility methods widely used in the various TNT utilities.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 
 import glob
 import io
@@ -275,4 +274,3 @@ def compose_namelist(recipe_filename,
     namelistname = os.path.basename(recipe_filename.replace('.yaml', suffix))
     with io.open(namelistname, 'w', encoding='ascii') as fh_namout:
         fh_namout.write(nam.dumps(sorting=sorting))
-

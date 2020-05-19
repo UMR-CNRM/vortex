@@ -493,7 +493,7 @@ class MakeGaussGeometry(Parallel):
             self._attributes['latitudes'] = latitudes
         else:
             self._old_internal_complete_dimensions()
-    
+
     def _old_internal_complete_dimensions(self):
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
         if self.latitudes is None and self.longitudes is None:
@@ -540,7 +540,7 @@ class MakeGaussGeometry(Parallel):
         else:
             self._old_internal_postfix(rh, opts)
         super(MakeGaussGeometry, self).postfix(rh, opts)
-    
+
     def _old_internal_postfix(self, rh, opts):
         """Complete and write namelists."""
         import math

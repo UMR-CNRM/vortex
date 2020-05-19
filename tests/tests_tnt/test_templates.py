@@ -95,7 +95,7 @@ class TestTntTemplate(unittest.TestCase):
         self.assertListEqual(tplyaml.todolist, tntstack_todo_ref)
         self.assertSetEqual(set(tplyaml.directives.keys()),
                             set(['surfexdiags', 'geo499c1', 'dfi']))
-    
+
     @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
     def test_recipe_yaml(self):
         from bronx.datagrip.namelist import FIRST_ORDER_SORTING

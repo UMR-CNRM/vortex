@@ -364,9 +364,9 @@ class OOPSParallel(Parallel,
         """
         defaults = {
             IfsCycle('cy1'): {
-                'ECKIT_MPI_INIT_THREAD':('MPI_THREAD_MULTIPLE'
-                                         if int(self.env.get('OMP_NUM_THREADS', '1')) > 1
-                                         else 'MPI_THREAD_SINGLE'),
+                'ECKIT_MPI_INIT_THREAD': ('MPI_THREAD_MULTIPLE'
+                                          if int(self.env.get('OMP_NUM_THREADS', '1')) > 1
+                                          else 'MPI_THREAD_SINGLE'),
             }
         }
         cydefaults = None
