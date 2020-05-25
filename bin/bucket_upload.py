@@ -63,7 +63,7 @@ def parse_command_line():
     parser.add_argument('bucket',
                         help='The bucket for input data.')
     parser.add_argument('targetstorage',
-                        help='The storage where bucket data will be sent.')
+                        help='The storage where the bucket data will be sent.')
     # Process arguments
     return parser.parse_args()
 
@@ -71,8 +71,7 @@ def parse_command_line():
 def generic_setup(args):
     """Setup a few very generic things."""
     locale.setlocale(locale.LC_ALL,
-                     os.environ.get('VORTEX_DEFAULT_ENCODING',
-                                    'en_US.UTF-8'))
+                     os.environ.get('VORTEX_DEFAULT_ENCODING', 'en_US.UTF-8'))
     # Setup logger verbosity
     if args.verbose is None:
         (loglevel_me, loglevel_main, loglevel_fp) = ('INFO', 'ERROR', 'ERROR')
@@ -209,6 +208,6 @@ if __name__ == "__main__":
                         logger.error("%s upload FAILED", xitem)
 
         if error_list:
-            logger.critical("%d upload error(s) occured:\n%s",
+            logger.critical("%d upload error(s) occurred:\n%s",
                             len(error_list), '\n'.join(error_list))
             raise OSError("Some of the upload failed.")

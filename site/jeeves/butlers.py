@@ -84,7 +84,7 @@ def _dispatch_func_wrapper(logger_cb, logger_setid_manager, loglevel,
                            modname, funcname, pnum, ask, config,
                            **kw):
     """
-    Wrapper exexuted by the pool's worker in order to launch the callback
+    Wrapper executed by the pool's worker in order to launch the callback
     ``funcname`` from module ``modname``.
 
     :param logger_cb: A callback that can be used to create logger objects
@@ -103,7 +103,7 @@ def _dispatch_func_wrapper(logger_cb, logger_setid_manager, loglevel,
     # Setup the logging system in order to display the request ID
     with logger_setid_manager(pnum, loglevel):
         my_logger = logger_cb(__name__)
-        # Add extra layer of security (just in case an exception occurs)
+        # Add an extra layer of security (just in case an exception occurs)
         try:
             # Look for the desired callback
             func = _jeeves_callback_finder(modname, funcname, my_logger)
@@ -711,7 +711,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
     def multi_stop(self, timeout=1):
         """Join all active coprocesses."""
         if hasattr(self, 'procs') and self.procs:
-            # at least, some multiproccessing setup had occured
+            # at least, some multiproccessing setup had occurred
             self.logger.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
             # look at the remaining tasks

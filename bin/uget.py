@@ -60,11 +60,11 @@ else:
 
 def ugetid_doc(func):
     """A decorator that fills the method documentation with the standard UgetId description."""
-    docaddtion = """The 'UgetId' identifies a Uget element. Its formed of an *element_name* and
+    docaddition = """The 'UgetId' identifies a Uget element. It is formed of an *element_name* and
           of a *location* : it looks like 'element_name@location'. The @location part
           may be omitted. In such a case the default_location is used (see the
           'set' and 'info' commands)."""
-    func.__doc__ = re.sub(r'\bUGETID_DOC\b', docaddtion, func.__doc__)
+    func.__doc__ = re.sub(r'\bUGETID_DOC\b', docaddition, func.__doc__)
     return func
 
 
