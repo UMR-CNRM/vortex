@@ -322,7 +322,7 @@ class System(footprints.FootprintBase):
 
     def __init__(self, *args, **kw):
         """
-        In addition to footprint's attributes,  the following attribute may be added:
+        In addition to footprint's attributes, the following attributes may be added:
 
             * **prompt** - as a starting comment line in :meth:`title` like methods.
             * **trace** - if *True* or *"log"* mimic ``set -x`` behaviour (default: *False*).
@@ -341,7 +341,7 @@ class System(footprints.FootprintBase):
 
         The :class:`System` class acts as a proxy for the :mod:`os`, :mod:`resource`
         and :mod:`shutil` modules. *i.e.* if a method or attribute
-        is not defined in the :class:`System` class, the   :mod:`os`, :mod:`resource`
+        is not defined in the :class:`System` class, the :mod:`os`, :mod:`resource`
         and :mod:`shutil` modules are looked-up (in turn): if one of them has
         the desired attribute/method, it is returned.
 
@@ -352,7 +352,7 @@ class System(footprints.FootprintBase):
         In vortex, it is mandatory to use the :class:`System` class (and not the
         official Python modules) even for attributes/methods that are not
         redefined. This is not pointless since, in the future, we may decide to
-        to redefine a given attribute/method either globally or for a specific
+        redefine a given attribute/method either globally or for a specific
         architecture.
 
         **Addons:**
@@ -446,7 +446,7 @@ class System(footprints.FootprintBase):
 
     @secure_getattr
     def __getattr__(self, key):
-        """Gateway to undefined method or attributes.
+        """Gateway to undefined methods or attributes.
 
         This is the place where the ``self.search`` list is looked for...
         """
@@ -541,7 +541,7 @@ class System(footprints.FootprintBase):
         self.flush_stdall()
 
     def subtitle(self, text='', tchar='-', autolen=96):
-        """Formated subtitle output.
+        """Formatted subtitle output.
 
         :param str text: The subtitle's text
         :param str tchar: The character used to frame the title text
@@ -559,7 +559,7 @@ class System(footprints.FootprintBase):
         self.flush_stdall()
 
     def header(self, text='', tchar='-', autolen=False, xline=True, prompt=None):
-        """Formated header output.
+        """Formatted header output.
 
         :param str text: The subtitle's text
         :param str tchar: The character used to frame the title text
@@ -750,7 +750,7 @@ class OSExtended(System):
     def __init__(self, *args, **kw):
         """
         Before going through parent initialisation (see :class:`System`),
-        pickle this attributes:
+        pickle these attributes:
 
             * **rmtreemin** - as the minimal depth needed for a :meth:`rmsafe`.
             * **cmpaftercp** - as a boolean for activating full comparison after plain cp (default: *True*).

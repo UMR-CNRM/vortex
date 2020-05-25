@@ -64,7 +64,7 @@ def printargs(func):
 
 @nicedeco
 def unicode_filter(func):
-    """This decorator force unicode when a string is returned."""
+    """This decorator forces unicode when a string is returned."""
     def unicode_func(*args, **kw):
         out = func(*args, **kw)
         if isinstance(out, str):
@@ -74,7 +74,7 @@ def unicode_filter(func):
 
 
 def timelimit(logger, nbsec):
-    """This decorator warn if the function is more than ``nbsec`` seconds long."""
+    """This decorator warns if the function is more than ``nbsec`` seconds long."""
     @nicedeco
     def internal_decorator(func):
         def timed_func(*args, **kw):

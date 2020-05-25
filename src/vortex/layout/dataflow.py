@@ -555,7 +555,7 @@ class Sequence(observer.Observer):
                 'oldhash' in info):
             logger.debug('Notified %s upd item %s', self, item)
             oldhash = info['oldhash']
-            # Fist remove the oldhash
+            # First remove the oldhash
             if oldhash in self._sections_hash:
                 for section in [s for s in self._sections_hash[oldhash] if s.rh is item]:
                     self._sections_hash[oldhash].discard(section)
