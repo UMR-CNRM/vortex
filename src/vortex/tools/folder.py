@@ -625,6 +625,23 @@ class ObsFirePackShell(FolderShell):
     )
 
 
+@folderize
+class WavesBCShell(FolderShell):
+    """
+    Default interface to waves bounding conditions commands.
+    These commands extend the shell.
+    """
+
+    _footprint = dict(
+        info = 'Default waves BC system interface',
+        attr = dict(
+            kind = dict(
+                values   = ['wbcpack'],
+            ),
+        )
+    )
+
+
 available_foldershells = [e.footprint_values('kind')[0] for e in locals().values()
                           if (isinstance(e, type) and issubclass(e, FolderShell) and
                               not e.footprint_abstract())]

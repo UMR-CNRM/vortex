@@ -85,3 +85,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GenericGridWaveSopranoData
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SopranoCurrentDataWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SopranoWindDataWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WavesBCPack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

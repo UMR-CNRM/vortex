@@ -90,6 +90,8 @@ class _AbstractLAMBoundary(GeoFlowResource):
         """Standard path information for IGA inline cache."""
         if self.model == 'arome':
             directory = 'fic_day'
+        elif self.model == 'mfwam':
+            directory = 'guess'
         else:
             directory = 'autres'
         return dict(

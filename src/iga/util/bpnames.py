@@ -44,6 +44,10 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
                        '15': '15', '16': '16', '17': '17', '18': '18', '19': '19',
                        '20': '20', '21': '21', '22': '22', '23': '23'}
         reseau_suff = reseau_prod[_reseau]
+    elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01', 'euratarpc01',
+                   'frangparo0025', 'frangparoifs0025', 'globalarp02', 'globalarpc02', 'globalcep01', 'polyaro01',
+                   'reuaro01'):
+        reseau_suff = _reseau
     else:
         logger.warning(
             "The attributes are incorrect : %s, %s, %s",
@@ -474,10 +478,10 @@ def gridpoint_bnames(resource, provider):
         elif resource.model == 'mfwam':
             logger.info("resourceterm %s", resource.term.hour)
             if provider.vconf == 'globalcep01':
-                if six.text_type(resource.term.hour) == '24':
-                    return 'windandice{0:s}_{1:s}'.format('1', resource.date.ymdhm)
-                else:
+                if six.text_type(resource.deltabegin.hour) == '0':
                     return 'windandice{0:s}_{1:s}'.format('2', resource.date.ymdhm)
+                else:
+                    return 'windandice{0:s}_{1:s}'.format('3', resource.date.ymdhm)
             else:
                 return 'windandice_{0:s}'.format(resource.date.ymdhm)
         else:
@@ -521,7 +525,14 @@ def boundary_bnames(resource, provider):
     elif resource.model == 'mocage':
         localname = 'RUN1_SM' + resource.geometry.area + '+' \
                     + resource.date.ymd
-
+    elif resource.model == 'mfwam':
+        if (resource.term < 0):
+            nw_date = (resource.date + resource.term).ymdh
+            nw_term = "0000"
+        else:
+            nw_date = resource.date.ymdh
+            nw_term = "{0:04d}".format(resource.term.hour)
+        localname = 'FBI' + nw_date + nw_term
     else:
         _, suffix = faNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(resource.term.hour)
@@ -655,6 +666,9 @@ def global_snames(resource, provider):
                 bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
             else:
                 bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
+
+    if resource.realkind in ['AltidataWave', 'SopranoWinddataWave', 'SopranoCurrentdataWave']:
+        bname = resource.sopranofile
 
     if vconf == 'aefrance' or vconf == 'pifrance':
         my_model = '_' + resource.model.upper()

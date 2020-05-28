@@ -80,6 +80,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 optional = True,
                 default  = Period('PT0H'),
             ),
+            cmems_grid = dict(
+                type = FPList,
+                default = FPList([]),
+            ),
             flyargs = dict(
                 default = ('MPP', 'APP',),
             ),
@@ -124,7 +128,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 self.system.rm(tmpout)
 
             with io.open(tmpout, 'wb') as outfile:
-                for fname in [x.container.localpath() for x in windcandidate]:
+                for fname in [x.container.localpath() for x in sorted(windcandidate, key=lambda rh: rh.resource.term)]:
                     with io.open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
@@ -133,7 +137,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 fcterm = rhdict['fcst'].resource.term
                 logger.info('fcterm %s', fcterm)
 
-            datefin = (rhdict['ana'].resource.date + fcterm + self.deltabegin).compact()
+            datefin = (rhdict['ana'].resource.date + fcterm).compact()
             datedebana = rhdict['ana'].resource.date - self.anabegin + self.deltabegin
             datefinana = rhdict['ana'].resource.date
 
@@ -149,7 +153,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 fcterm = rhgrib.resource.term
                 logger.info('fcterm %s', fcterm)
 
-            datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
+            datefin = (rhgrib.resource.date + fcterm).compact()
             datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             if self.isana:
                 datefinana = rhgrib.resource.date
@@ -158,6 +162,12 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         else:
             logger.info("%d winds", len(windcandidate))
             raise ValueError("No winds or too many")
+
+        # Untar SAR data if exists
+        sarcandidate = self.context.sequence.effective_inputs(role=('ObservationSpec'))
+        if len(sarcandidate) > 0:
+            rhsar = sarcandidate[0].rh
+            self.system.untar(rhsar.container.localpath())
 
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),
@@ -205,6 +215,16 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             self.manual_flypolling_job()
         super(Mfwam, self).postfix(rh, opts)
 
+        # Preparation of BC products for copernicus delivery
+        if (self.cmems_grid != [None]):
+            for cmems_g in self.cmems_grid:
+                self.system.mkdir(cmems_g + '_J')
+                self.system.mkdir(cmems_g + '_J1')
+                self.system.mkdir(cmems_g + '_J2')
+                self.system.mkdir(cmems_g + '_J3')
+                self.system.mkdir(cmems_g + '_J4')
+                self.system.mkdir(cmems_g + '_J5')
+
 
 class MfwamGauss2Grib(ParaBlindRun):
     """Post-processing of MFWAM output gribs."""
@@ -250,8 +270,8 @@ class MfwamGauss2Grib(ParaBlindRun):
 
         # verification of the namelists
         for dom in self.grid:
-            if not self.system.path.exists(dom + ".nam"):
-                raise IOError(dom + ".nam must exist.")
+            if not self.system.path.exists("./grids/" + dom + ".nam"):
+                raise IOError("./grids/" + dom + ".nam must exist.")
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
@@ -324,7 +344,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             for dom in self.grid:
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
-                sh.cp(sh.path.join(cwd, dom + ".nam"), 'fort.2')
+                sh.cp(sh.path.join(cwd, "grids", dom + ".nam"), 'fort.2')
                 # execution
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output

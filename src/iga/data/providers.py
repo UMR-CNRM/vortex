@@ -240,6 +240,34 @@ class SopranoProvider(Provider):
             info['level_three'] = 'alpha'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
+
+        elif self.vapp in ('mfwam', 'ww3'):
+            info['level_one'] = 'previ'
+            info['level_two'] = 'mar'
+            if resource.realkind == 'AltidataWave':
+                sopranomaptag = 'soprano'
+                info['level_three'] = resource.sopranodir
+            elif resource.realkind == 'SopranoWinddataWave':
+                if self.vconf not in ('angola0025', 'assmp1', 'assms1', 'assms2', 'caledaro01', 'polyaro01',
+                                      'reuaro01'):
+                    info['level_three'] = 'servbdap'
+                    info['level_for'] = self.vapp
+                    info['level_five'] = resource.sopranodir
+                    sopranomaptag = 'soprano@mfwamWinds'
+                else:
+                    info['level_three'] = 'servbdap'
+                    info['level_for'] = resource.sopranodir
+                    sopranomaptag = 'soprano@mfwamCurrents'
+
+            elif resource.realkind == 'SopranoCurrentdataWave':
+                info['level_three'] = 'servbdap'
+                info['level_for'] = 'courantpps4_mfwamglocep01'
+                sopranomaptag = 'soprano@mfwamCurrents'
+
+            self.config.setall(info)
+
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)
+
         else:
             info['model'] = self.vapp
 
