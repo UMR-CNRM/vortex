@@ -245,7 +245,8 @@ class MpiTool(footprints.FootprintBase):
     def _set_envelope(self, value):
         """Set the envelope description."""
         if not (isinstance(value, collections_abc.Iterable) and
-                all([isinstance(b, dict) and all([bk in ('nn', 'nnp', 'openmp') for bk in b.keys()])
+                all([isinstance(b, dict) and
+                     all([bk in ('nn', 'nnp', 'openmp', 'np') for bk in b.keys()])
                      for b in value])):
             raise ValueError('This should be an Iterable of dictionaries.')
         self._valid_envelope(value)
@@ -411,7 +412,7 @@ class MpiTool(footprints.FootprintBase):
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
         """Set the envelope fake binary options."""
         e_bit.options = {k: v for k, v in e_desc.items()
-                         if k not in ('openmp')}
+                         if k not in ('openmp', 'np')}
         e_bit.master = self._envelope_wrapper_name
 
     def _envelope_mkwrapper_todostack(self):
