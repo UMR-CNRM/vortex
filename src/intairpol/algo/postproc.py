@@ -7,18 +7,15 @@ AlgoComponents for MOCAGE post-processing.
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 import re
-from pprint import pprint
 from collections import defaultdict
 
-import numpy as np
-from netCDF4 import Dataset, MFDataset, num2date, date2num
-from datetime import datetime, timedelta
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
-from vortex.algo.components import Parallel, BlindRun, Expresso
+from vortex.algo.components import BlindRun, Expresso
 from vortex.syntax.stdattrs import model
 
 #: No automatic export
@@ -62,11 +59,17 @@ class PPCamsBDAP(BlindRun):
         return 'ppcamsbdap'
 
     def compute_daily_values(self, rh):
-        """ compute daily statistics on forecast outputs."""
+        """Compute daily statistics on forecast outputs."""
+        numpy_checker = ExternalCodeImportChecker('numpy')
+        with numpy_checker:
+            import numpy as np
+        netcdf_checker = ExternalCodeImportChecker('netCDF4')
+        with netcdf_checker:
+            from netCDF4 import Dataset, MFDataset
         if rh.resource.geometry.area not in self.stats_files:
             self.stats_files[rh.resource.geometry.area] = list()
             if rh.resource.term.hour % 24 == 0:
-                return 
+                return
         self.stats_files[rh.resource.geometry.area].append(rh.container.localpath())
         if rh.resource.term.hour % 24 != 0:
             return
@@ -79,23 +82,22 @@ class PPCamsBDAP(BlindRun):
             example_file = Dataset(self.stats_files[rh.resource.geometry.area][0])
             # Open the output files
             output_file = Dataset('ppstats.mocage-daily.{}+{:04d}.netcdf'.format(
-                                      rh.resource.geometry.area,
-                                      rh.resource.term.hour),
-                                  'w')
+                rh.resource.geometry.area,
+                rh.resource.term.hour), 'w')
             # Copy global attributes
             output_file.setncatts({k: example_file.getncattr(k) for k in example_file.ncattrs()})
             # Copy the dimensions
             for dim_name, dim_values in example_file.dimensions.iteritems():
-                output_file.createDimension(dim_name, 
-                                            len(dim_values) if not dim_values.isunlimited() 
-                                                            else None)
+                output_file.createDimension(dim_name,
+                                            len(dim_values) if not dim_values.isunlimited()
+                                            else None)
             # Process each variable
             for var_name, var_values in example_file.variables.iteritems():
                 var_dim = len(var_values.dimensions)
                 # 1D and 2D variables are just copied in the output files
                 if var_dim < 3:
                     output_var = output_file.createVariable(var_name,
-                                                            var_values.datatype, 
+                                                            var_values.datatype,
                                                             var_values.dimensions)
                     output_var.setncatts({k: var_values.getncattr(k) for k in var_values.ncattrs()})
                     output_var[:] = var_values[:]
@@ -105,12 +107,12 @@ class PPCamsBDAP(BlindRun):
                     data = np.array(all_files.variables[var_name][:])
                     # Daily mean in each grid-point
                     output_var = output_file.createVariable(var_name + '_mean', var_values.datatype,
-                                                              var_values.dimensions)
+                                                            var_values.dimensions)
                     output_var.setncatts({k: var_values.getncattr(k) for k in var_values.ncattrs()})
                     output_var[:] = np.mean(data, axis=0, keepdims=True)
                     # Daily maximum in each grid-point
                     output_var = output_file.createVariable(var_name + '_max', var_values.datatype,
-                                                              var_values.dimensions)
+                                                            var_values.dimensions)
                     output_var.setncatts({k: var_values.getncattr(k) for k in var_values.ncattrs()})
                     output_var[:] = np.max(data, axis=0, keepdims=True)
             # Close the files
@@ -129,7 +131,7 @@ class PPCamsBDAP(BlindRun):
             role='Namelist',
             kind='namelist',)
         template_multi = r'namelistgrib2_(\w+)\.nam'
-        if len(namelists) ==0:
+        if len(namelists) == 0:
             message = 'there must be at least one namelist'
             logger.critical(message)
             raise ValueError(message)
@@ -140,17 +142,17 @@ class PPCamsBDAP(BlindRun):
                 raise ValueError()
             geometries = (None, )
         else:
-            geometries = map(lambda n:re.match(template_multi,n.rh.container.localpath()), namelists)
+            geometries = map(lambda n: re.match(template_multi, n.rh.container.localpath()), namelists)
             if not all(geometries):
                 message = 'If there is more than 1 Namelist, they must be named "namelistgrib2_DOM.nam" .  STOP'
                 logger.critical(message)
                 raise ValueError(message)
             else:
-                geometries = [ m.group(1) for m in geometries ]
-        # loop on domains to construct the reference Namelists  
+                geometries = [m.group(1) for m in geometries]
+        # loop on domains to construct the reference Namelists
         if None in geometries:
-            maccraq_blocks = defaultdict(lambda : maccraq_blocks[None])
-            contents = defaultdict(lambda : contents[None])
+            maccraq_blocks = defaultdict(lambda: maccraq_blocks[None])
+            contents = defaultdict(lambda: contents[None])
         else:
             maccraq_blocks = dict()
             contents = dict()
@@ -160,9 +162,8 @@ class PPCamsBDAP(BlindRun):
             maccraq_blocks[geometry] = NamelistBlock(name='MACCRAQ_IN')
             maccraq_blocks[geometry].update(namelist.rh.contents['MACCRAQ_IN'])
         # HM files from forecast
-        hmrh = self.context.sequence.effective_inputs(
-                   role='HMFiles',
-                   kind='gridpoint')
+        hmrh = self.context.sequence.effective_inputs(role='HMFiles',
+                                                      kind='gridpoint')
         # overwrite hmrh by the ascending sort of the hmrh list
         hmrh.sort(key=lambda s: s.rh.resource.term)
         for i in hmrh:
@@ -248,4 +249,3 @@ class MkStatsCams(Expresso):
             mask='"' + actualmask + '"',
             verbose='',
         )
-
