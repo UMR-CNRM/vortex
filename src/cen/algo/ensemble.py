@@ -1288,7 +1288,8 @@ class S2MComponent(ParaBlindRun):
                 if 'source_conf' in dir(am.rh.resource):
                     cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
                 else:
-                    # If the origin of the guess is not given the execution is in 'deterministic' mode (monthly reanalysis)
+                    # If the origin of the guess is not given the execution is in 
+                    # 'deterministic' mode (monthly reanalysis)
                     cpl_model.append(True)
 
         return cpl_model
