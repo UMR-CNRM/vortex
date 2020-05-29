@@ -60,7 +60,7 @@ _MocageDomainInfoBase_keys = ('source_app', 'source_conf', 'source_cutoff',
                               'source_model', 'source_geometry',
                               'atm_cpl_delta', 'chem_cpl_delta', 'surf_cpl_delta',
                               'atm_cpl_steps', 'chem_cpl_steps', 'surf_cpl_steps',
-                              'post_steps', 'restart_steps', 'stats_steps')
+                              'post_steps', 'restart_steps', 'stats_steps','post_outgrib2')
 
 _PluralisedMocageDomainInfoBase_keys = [language.Pluralise('en_GB')(k)
                                         for k in _MocageDomainInfoBase_keys]
@@ -207,6 +207,7 @@ class MocageDomainsConfTool(ConfTool):
             chem_cpl_steps  : 0-finalterm-3
             surf_cpl_steps  : 0-finalterm-3
             post_steps      : 0-12-3,18-finalterm-6
+            post_outgrib2   : 0-12-3,18-finalterm-6
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
             >>> print(mct.ontime_domains('assim', 0)['MACC01'])  # doctest: +NORMALIZE_WHITESPACE
@@ -222,6 +223,7 @@ class MocageDomainsConfTool(ConfTool):
             chem_cpl_steps  : 0-finalterm-3
             surf_cpl_steps  : 0-finalterm-3
             post_steps      :
+            post_outgrib2      :
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
             >>> print(mct.ontime_domains('assim', 0)['GLOB22'])  # doctest: +NORMALIZE_WHITESPACE
@@ -237,6 +239,7 @@ class MocageDomainsConfTool(ConfTool):
             chem_cpl_steps  : 0-finalterm-3
             surf_cpl_steps  : 0-finalterm-3
             post_steps      :
+            post_outgrib2   :
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
 
@@ -652,6 +655,7 @@ class MocageDomainsConfTool(ConfTool):
         ddef.setdefault('chem_cpl_steps', '')
         ddef.setdefault('surf_cpl_steps', '')
         ddef.setdefault('post_steps', '')
+        ddef.setdefault('post_outgrib2', '')
         ddef.setdefault('restart_steps', '')
         ddef.setdefault('stats_steps', '')
         # Generic transform
@@ -664,7 +668,7 @@ class MocageDomainsConfTool(ConfTool):
             ddef[k] = self._item_transform(ddef[k], cast=Period)
         # Deal with any steps
         for k in ('post_steps', 'restart_steps', 'stats_steps', 'atm_cpl_steps',
-                  'surf_cpl_steps', 'chem_cpl_steps'):
+                  'surf_cpl_steps', 'chem_cpl_steps','post_outgrib2'):
             ddef[k] = self._item_transform(ddef[k],
                                            validcb=self._any_steps_validation,
                                            validmsg='any_steps should be parsable by timerangex')
@@ -762,6 +766,13 @@ class MocageDomainsConfTool(ConfTool):
             end = self.finalterms[cutoff][hh]
         else:
             end = Time(end)
+
+        # case of DEV run with endFC less than 96 and check_inputs try to resolve more Time steps than existing ones
+        if start > end:
+            start = end
+            logger.info('**** domain_any_steps : ajust start to end value %s', start)
+
+
         dentry = entry.replace('steps', 'delta')
         subdict = dict()
         for d, v in self.domains.items():
@@ -855,6 +866,13 @@ class MocageDomainsConfTool(ConfTool):
     def post_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
         return self._domain_any_steps(cutoff, hh, 'post_steps', start, end,
+                                      final=final, first=first)
+
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
+    def post_outgrib2(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The list of time for post_outgrib2 :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'post_outgrib2', start, end,
                                       final=final, first=first)
 
     @_add_start_end_doc
@@ -995,6 +1013,12 @@ class MocageMixedDomainsInfo(object):
     def _domain_any_steps(self, entry, start, end, shift=False, final=True, first=True):
         start = Time(0) if start is None else Time(start)
         end = Time(self.finalterm) if end is None else Time(end)
+
+        # case of DEV run with endFC less than 96 and check_inputs try to resolve more Time steps than existing ones
+        if start > end:
+            start = end
+            logger.info('**** domain_any_steps : ajust start to end value ', start)
+
         dentry = entry.replace('steps', 'delta')
         dshift = getattr(self, dentry, Time(0)) if shift else Time(0)
         return list(filter(lambda t: (((t - dshift > start) and (t - dshift < end)) or
@@ -1043,6 +1067,12 @@ class MocageMixedDomainsInfo(object):
         """The list of time for post_steps :mod:`footprints`' substitution dictionary."""
         return self._domain_any_steps('post_steps', start, end,
                                       final=final, first=first)
+    @_add_start_end_doc
+    def post_outgrib2(self, start=0, end=None, final=True, first=True):
+        """The list of time for post_outgrib2 :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps('post_outgrib2', start, end,
+                                      final=final, first=first)
+
 
     @_add_start_end_doc
     def restart_steps(self, start=0, end=None, final=True, first=True):
