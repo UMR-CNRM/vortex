@@ -353,8 +353,8 @@ class _SafranWorker(_S2MWorker):
             if prefix == 'P':
                 actual_dates = self.get_guess(dates, prefix='E', fatal=False)
             else:
-                logger.warning('No guess files found for date {0:s}, ' + \
-                     'SAFRAN will run with climatological guess'.format(date.ymdh))
+                logger.warning('No guess files found for date {0:s}, ' + 
+                               'SAFRAN will run with climatological guess'.format(date.ymdh))
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
 
         return actual_dates
