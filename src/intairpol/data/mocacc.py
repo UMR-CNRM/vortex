@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 """
-Resources used with MOCAGE Accident (tarfiles, txtfiles, json)
+Resources used with MOCAGE Accident (tarfiles, txtfiles, json).
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -27,11 +27,11 @@ class MocaccInputs(ModelResource):
                     values = ["mocacc_emis_and_nwp_inputs"]
                 ),
                 model = dict(
-                    values   = ['mocage', ]
+                    values = ['mocage', ]
                 ),
                 nativefmt = dict(
-                    values=["tar"],
-                    default="tar"
+                    values = ["tar"],
+                    default = "tar"
                 ),
             ),
         )
@@ -56,11 +56,11 @@ class MocaccOuputs(FlowResource):
                     values = ["mocacc_outputs"]
                 ),
                 model = dict(
-                    values   = ['mocage', ]
+                    values = ['mocage', ]
                 ),
                 nativefmt = dict(
-                    values=["tar"],
-                    default="tar"
+                    values = ["tar"],
+                    default = "tar"
                 ),
             ),
         )
@@ -81,14 +81,14 @@ class MocaccDateEch(ModelResource):
             info = "Various step / datetime for mocage accident suite",
             attr = dict(
                 kind = dict(
-                    values=["mocacc_datech"]
+                    values = ["mocacc_datech"]
                 ),
                 model = dict(
-                    values   = ['mocage', ]
+                    values = ['mocage', ]
                 ),
                 nativefmt = dict(
-                    values=["ascii"],
-                    default="ascii"
+                    values = ["ascii"],
+                    default = "ascii"
                 ),
             ),
         )
@@ -280,7 +280,7 @@ class ExtraConfMocacc(ModelResource):
                     values = ["extra_conf_mocacc"]
                 ),
                 model = dict(
-                    values   = ['mocage', ]
+                    values = ['mocage', ]
                 ),
                 nativefmt = dict(
                     values = ["json"],

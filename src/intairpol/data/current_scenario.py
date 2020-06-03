@@ -3,6 +3,7 @@
 """
 Current scenario to keep track of running scenario in operation
 (where xpid is constant).
+
 Successive tasks need to retrieve this current scenario to fetch
 ressource created earlier (with the same scenario)
 """
@@ -78,7 +79,8 @@ class CurrentScenario(ModelResource):
                 ),
                 nativefmt = dict(
                     values = ["json"],
-                    default = "json"),
+                    default = "json"
+                ),
             ),
         )
     ]

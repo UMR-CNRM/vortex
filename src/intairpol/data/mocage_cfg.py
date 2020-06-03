@@ -48,7 +48,7 @@ class MocageCfg(StaticResource):
             info = "Point source emission config file for MOCAGE",
             attr = dict(
                 kind = dict(
-                    values=["mocage_cfg"]
+                    values = ["mocage_cfg"]
                 ),
                 nativefmt = dict(
                     values  = ["ascii"],

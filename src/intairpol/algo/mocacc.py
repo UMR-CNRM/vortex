@@ -75,12 +75,12 @@ class MakeFm(Parallel):
         The result looks like that:
 
         {
-            '00.500' {
+            '00.500': {
                 "gribs": ["grib05name1", "grib05name2", ...],
                 "bdap_nwp_geom": <Geometry>,
                 "mocage_geom": <Geometry>
                 }
-            '00.100' {
+            '00.100': {
                 "gribs": ["grib01name1", "grib01name2", ...],
                 "bdap_nwp_geom": <Geometry>,
                 "mocage_geom": <Geometry>
@@ -236,10 +236,9 @@ class AbstractMocaccRoot(Parallel):
                     values   = ['mocage', ]
                 ),
                 extrasetup = dict(
-                    default  = (False, ),
-                ),
-                flyargs = dict(
-                    default  = ('HM', ),
+                    info     = "Some additive settings (environment variables)",
+                    optional = True,
+                    default  = None,
                 ),
             )
         )
@@ -289,18 +288,18 @@ class MocaccForecast(AbstractMocaccRoot):
         info = "Mocage accident forecast",
         attr = dict(
             kind = dict(
-                values = ["mocacc_forecast"]
+                values   = ["mocacc_forecast"]
             ),
             transinv = dict(
-                type = bool,
-                info = "activate inverse transport"
+                type     = bool,
+                info     = "activate inverse transport"
             ),
             llctbto = dict(
-                type = bool,
-                info = "with ctbto outputs (inverse transport only)"
+                type     = bool,
+                info     = "with ctbto outputs (inverse transport only)"
             ),
             flyargs = dict(
-                default  = ('HM', ),
+                default  = fp.FPTuple(('HM',)),
             ),
             flypoll = dict(
                 default  = 'iopoll_mocacc',
@@ -561,19 +560,19 @@ class PostMocacc(AlgoComponent):
             info = "Post-processing of mocage accident",
             attr = dict(
                 kind = dict(
-                    values = ["post_mocacc"]
+                    values   = ["post_mocacc"]
                 ),
                 engine = dict(
-                    values = ["custom"]
+                    values   = ["custom"]
                 ),
                 model = dict(
-                    values = ["mocage"]
+                    values   = ["mocage"]
                 ),
                 extern_module = dict(
-                    info = "External module to be used"
+                    info     = "External module to be used"
                 ),
                 extern_func = dict(
-                    info = "Function within external module to call"
+                    info     = "Function within external module to call"
                 ),
                 hpc_done = dict(
                     info     = "File indicating end of simulation. Added to tar",
@@ -686,14 +685,6 @@ class PostMocacc(AlgoComponent):
             latest_by_geom[r.resource.geometry] = r.container.localpath()
             todo_netcdf_by_term[r.resource.term].discard(r.container.localpath())
             done_grib_by_term[r.resource.term].add(gribname)
-
-            #  expected = [
-            #      xp
-            #      for xp in self.promises
-            #      if xp.rh.container.basename == gribname
-            #  ]
-            #  for thispromise in expected:
-            #      thispromise.put(incache=True)
 
             # If needed terms have already been done, for all geometries
             # prepare tar for routing

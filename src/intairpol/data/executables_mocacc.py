@@ -28,7 +28,7 @@ class MakeFm(BlackBox):
                     default = "master_makefm"
                 ),
                 model = dict(
-                    values   = ['mocage', ]
+                    values = ['mocage', ]
                 ),
             ),
         ),
