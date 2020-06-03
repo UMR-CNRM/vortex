@@ -27,6 +27,7 @@ non_standard_dep = {'yaml': ['bronx.fancies.multicfg',
                               'bronx.graphics.colormapping',
                               'bronx.meteo.constants',
                               'bronx.meteo.conversion',
+                              'bronx.meteo.thermo',
                               'bronx.syntax.arrays'],
                     'matplotlib': ['bronx.graphics.colormapping',
                                    'bronx.graphics.axes']}

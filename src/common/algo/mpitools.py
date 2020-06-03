@@ -8,6 +8,7 @@ General interest and NWP specific MPI launchers.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import six
 
 from bronx.fancies import loggers
 import footprints
@@ -23,7 +24,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class MpiAuto(mpitools.MpiTool):
+class MpiAuto(mpitools.ConfigurableMpiTool):
     """MpiTools that uses mpiauto as a proxy to several MPI implementations"""
 
     _footprint = dict(
@@ -49,53 +50,90 @@ class MpiAuto(mpitools.MpiTool):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
                 doc_zorder      = -90,
             ),
+            sublauncher = dict(
+                info            = 'How to actualy launch the MPI program',
+                values          = ['srun', 'libspecific'],
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
+            mpiwrapstd = dict(
+                values          = [False, ],
+            ),
+            bindingmethod = dict(
+                info            = 'How to bind the MPI processes',
+                values          = ['arch', 'launcherspecific', 'vortex'],
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
         )
     )
 
     _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_mpiauto.tpl'
     _envelope_rank_var = 'MPIAUTORANK'
-    _conf_suffix = ''
-
-    @property
-    def mpiauto_conf(self):
-        """Return the mpiauto configuration."""
-        if self.target.config.has_section('mpiauto'):
-            return dict(self.target.config.items('mpiauto'))
-        else:
-            dict()
-
-    def _actual_mpiopts(self):
-        """Possibly read the mpiopts in the config file."""
-        if self.mpiopts is None:
-            return self.mpiauto_conf.get('mpiopts' + self._conf_suffix, '')
-        else:
-            return self.mpiopts
-
-    def _actual_mpiextraenv(self):
-        """Possibly read the mpi extra environment variables in the config file."""
-        new_envvar = dict()
-        for kv in self.mpiauto_conf.get('mpiextraenv' + self._conf_suffix, '').split(','):
-            if kv:
-                skv = kv.split('%', maxsplit=1)
-                if len(skv) == 2:
-                    new_envvar[skv[0]] = skv[1]
-        return new_envvar
-
-    def _actual_mpidelenv(self):
-        """Possibly read the mpi extra environment variables in the config file."""
-        return [v for v in self.mpiauto_conf.get('mpidelenv' + self._conf_suffix, '').split(',')]
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
         options['init-timeout-restart'] = self.timeoutrestart
+        if self.sublauncher == 'srun':
+            options['use-slurm-mpi'] = None
+        elif self.sublauncher == 'libspecific':
+            options['no-use-slurm-mpi'] = None
+        if self.bindingmethod:
+            for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
+                      for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:
+                options.pop(k, None)
+            if self.bindingmethod == 'arch':
+                options['use-arch-bind'] = None
+            elif self.bindingmethod == 'launcherspecific' and self.sublauncher == 'srun':
+                options['no-use-arch-bind'] = None
+                options['use-slurm-bind'] = None
+            elif self.bindingmethod == 'launcherspecific':
+                options['no-use-arch-bind'] = None
+                for k in ['use-{:s}-bind'.format(t)
+                          for t in ('slurm', 'intelmpi', 'openmpi')]:
+                    options[k] = None
+            elif self.bindingmethod == 'vortex':
+                options['no-use-arch-bind'] = None
         return options
+
+    def _set_binaries(self, value):
+        """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
+        super(MpiAuto, self)._set_binaries(value)
+        if len(self._binaries) > 1 and self.bindingmethod not in (None, 'arch', 'vortex'):
+            logger.info("The '{:s}' binding method is not working properly with multiple binaries."
+                        .format(self.bindingmethod))
+            logger.warning("Resetting the binding method to 'vortex'.")
+            self.bindingmethod = 'vortex'
+
+    binaries = property(mpitools.MpiTool._get_binaries, _set_binaries)
 
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
         """Set the envelope fake binary options."""
-        e_bit.options = e_desc
+        e_bit.options = {k: v for k, v in e_desc.items()
+                         if k not in ('openmp')}
         e_bit.options['prefixcommand'] = self._envelope_wrapper_name
-        e_bit.master = self.binaries[0].master
+        if self.binaries:
+            e_bit.master = self.binaries[0].master
+
+    def _set_binaries_envelope_hack(self, binaries):
+        """Tweak the envelope after binaries were setup."""
+        super(MpiAuto, self)._set_binaries_envelope_hack(binaries)
+        for e_bit in self.envelope:
+            e_bit.master = binaries[0].master
+
+    def _set_envelope(self, value):
+        """Set the envelope description."""
+        super(MpiAuto, self)._set_envelope(value)
+        if len(self._envelope) > 1 and self.bindingmethod not in (None, 'arch', 'vortex'):
+            logger.info("The '{:s}' binding method is not working properly with complex envelopes."
+                        .format(self.bindingmethod))
+            logger.warning("Resetting the binding method to 'vortex'.")
+            self.bindingmethod = 'vortex'
+
+    envelope = property(mpitools.MpiTool._get_envelope, _set_envelope)
 
     def _hook_binary_mpiopts(self, options):
         tuned = options.copy()
@@ -114,28 +152,50 @@ class MpiAuto(mpitools.MpiTool):
             raise mpitools.MpiException(msg)
         return tuned
 
-    def setup_environment(self, opts):
-        """Last minute fixups."""
-        super(MpiAuto, self).setup_environment(opts)
-        for k, v in self._actual_mpiextraenv().items():
-            logger.info('Setting the "%s" environement variable to "%s"', k.upper(), v)
-            self.env[k] = v
-        for k in self._actual_mpidelenv():
-            logger.info('Deleting the "%s" environement variable', k.upper())
-            del self.env[k]
+    def _envelope_mkwrapper_todostack(self):
+        ranksidx = 0
+        todostack, ranks_bsize = super(MpiAuto, self)._envelope_mkwrapper_todostack()
+        for bin_obj in self.binaries:
+            if bin_obj.options:
+                for mpirank in range(ranksidx, ranksidx + bin_obj.nprocs):
+                    prefix_c = bin_obj.options.get('prefixcommand', None)
+                    if prefix_c:
+                        todostack[mpirank] = (prefix_c,
+                                              [todostack[mpirank][0], ] + todostack[mpirank][1],
+                                              todostack[mpirank][2])
+                ranksidx += bin_obj.nprocs
+        return todostack, ranks_bsize
 
-    def setup(self, opts=None):
+    def _envelope_mkcmdline_extra(self, cmdl):
+        """If possible, add an openmp option when the arch binding method is used."""
+
+        if self.bindingmethod != 'vortex':
+            openmps = set([b.options.get('openmp', None) for b in self.binaries])
+            if len(openmps) > 1:
+                if self.bindingmethod is not None:
+                    logger.warning("Non-uniform OpenMP threads number... Not specifying anything.")
+            else:
+                openmp = openmps.pop() or 1
+                cmdl.append(self.optprefix + self.optmap['openmp'])
+                cmdl.append(six.text_type(openmp))
+
+    def setup_environment(self, opts, conflabel):
+        """Last minute fixups."""
+        super(MpiAuto, self).setup_environment(opts, conflabel)
+        if self.bindingmethod in ('arch', 'vortex'):
+            # Make sure srun does nothing !
+            self._logged_env_set('SLURM_CPU_BIND', 'none')
+
+    def setup(self, opts=None, conflabel=None):
         """Ensure that the prefixcommand has the execution rights."""
-        super(MpiAuto, self).setup(opts)
         for bin_obj in self.binaries:
             prefix_c = bin_obj.options.get('prefixcommand', None)
-            if self.envelope and prefix_c:
-                raise ValueError('It is not allowed to specify a prefixcommand when an envelope is used.')
             if prefix_c is not None:
                 if self.system.path.exists(prefix_c):
                     self.system.xperm(prefix_c, force=True)
                 else:
                     raise IOError('The prefixcommand do not exists.')
+        super(MpiAuto, self).setup(opts, conflabel)
 
 
 class MpiAutoDDT(MpiAuto):

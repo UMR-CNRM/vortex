@@ -355,7 +355,8 @@ class Target(fp.FootprintBase):
         kmatch = self._re_isnode_property.match(key)
         if kmatch is not None:
             return ((kmatch.group(1) not in self.specialnodes) or
-                    (self.hostname in self.specialnodes[kmatch.group(1)]))
+                    any([self.hostname.startswith(s)
+                         for s in self.specialnodes[kmatch.group(1)]]))
         raise AttributeError('The "{:s}" does not exists.'.format(key))
 
 

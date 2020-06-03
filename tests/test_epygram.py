@@ -77,10 +77,12 @@ class _FakeRH(object):
 
 class _EpyTestBase(unittest.TestCase):
 
-    def setUp(self, needFA=False):
+    def setUp(self, needFA=False, needGRIB=False):
         check_opts = dict()
         if needFA:
             check_opts['needFA'] = True
+        if needGRIB:
+            check_opts['needGRIB'] = True
         if not (numpy_looks_fine and uepy.epygram_checker.is_available(version='1.0.0', ** check_opts)):
             raise self.skipTest('Epygram >= v1.0.0 with FA={} is not available'.format(needFA))
 
@@ -123,6 +125,9 @@ class TestEpygramFaContents(_EpyTestBase):
 @loggers.unittestGlobalLevel(tloglevel)
 class TestEpygramGribContents(_EpyTestBase):
 
+    def setUp(self):
+        super(TestEpygramGribContents, self).setUp(needGRIB=True)
+
     def test_grib_contents(self):
         grib_c = vortex.data.containers.SingleFile(filename=self.demofile('fullpos.light.grib'),
                                                    actualfmt='grib')
@@ -134,12 +139,10 @@ class TestEpygramGribContents(_EpyTestBase):
                                  ct.metadata)
 
 
-@loggers.unittestGlobalLevel(tloglevel)
-class TestEpygramAdvanced(_EpyTestBase):
+class _LocDirEpyTestBase(_EpyTestBase):
 
-    def setUp(self):
-        super(TestEpygramAdvanced, self).setUp(needFA=True)
-
+    def setUp(self, **kwargs):
+        super(_LocDirEpyTestBase, self).setUp(**kwargs)
         # Work in a dedicated directory
         self.tmpdir = tempfile.mkdtemp(suffix='test_epygram')
         self.oldpwd = self.sh.pwd()
@@ -151,6 +154,13 @@ class TestEpygramAdvanced(_EpyTestBase):
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)
         self.shandler.deactivate()
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramAdvanced(_LocDirEpyTestBase):
+
+    def setUp(self):
+        super(TestEpygramAdvanced, self).setUp(needFA=True)
 
     def test_epygram_hooks(self):
         self.sh.cp(self.demofile('historic.verylight.fa'),
@@ -179,6 +189,13 @@ class TestEpygramAdvanced(_EpyTestBase):
                              0)
             self.assertEqual(rh2_ct.data.readfield('SURFTITI').quadmean(),
                              0)
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TestEpygramBasedGribFilter(_LocDirEpyTestBase):
+
+    def setUp(self):
+        super(TestEpygramBasedGribFilter, self).setUp(needGRIB=True)
 
     @staticmethod
     def _simplified_grib_fid(fid):
