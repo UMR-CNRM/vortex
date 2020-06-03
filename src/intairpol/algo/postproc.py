@@ -6,16 +6,16 @@ AlgoComponents for MOCAGE post-processing.
 """
 
 from __future__ import absolute_import, print_function, division, unicode_literals
-import re
-from collections import defaultdict
 
+from collections import defaultdict
+import re
 
 from bronx.datagrip.namelist import NamelistBlock
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
 
-from vortex.algo.components import BlindRun, Expresso
+from vortex.algo.components import BlindRun, Expresso, AlgoComponentError
 from vortex.syntax.stdattrs import model
 
 #: No automatic export
@@ -46,9 +46,16 @@ class PPCamsBDAP(BlindRun):
                     default  = 'namelistgrib2.nam',
                 ),
                 daily_values = dict(
-                    type = bool,
+                    info      = "Create daily statistics files.",
+                    type     = bool,
                     optional = True,
-                    default = False,
+                    default  = False,
+                ),
+                daily_species = dict(
+                    info     = "The list of species to process in daily statistics files.",
+                    type     = footprints.FPList,
+                    optional = True,
+                    default  = footprints.FPList(['O_x', 'NO_2', 'NO', 'CO', 'SO_2', 'PM10', 'PM2.5']),
                 ),
             )
         )
@@ -66,6 +73,9 @@ class PPCamsBDAP(BlindRun):
         netcdf_checker = ExternalCodeImportChecker('netCDF4')
         with netcdf_checker:
             from netCDF4 import Dataset, MFDataset
+        if not (numpy_checker.is_available() and netcdf_checker.is_available()):
+            raise AlgoComponentError('The numpy and netCDF4 packages need to be installed ' +
+                                     'when "daily_stats" is True.')
         if rh.resource.geometry.area not in self.stats_files:
             self.stats_files[rh.resource.geometry.area] = list()
             if rh.resource.term.hour % 24 == 0:
@@ -74,8 +84,6 @@ class PPCamsBDAP(BlindRun):
         if rh.resource.term.hour % 24 != 0:
             return
         else:
-            # list of variables to process
-            species_list = ['O_x', 'NO_2', 'NO', 'CO', 'SO_2', 'PM10', 'PM2.5']
             # Open all the files simultaneously for the day considered
             all_files = MFDataset(self.stats_files[rh.resource.geometry.area])
             # Read a single example file
@@ -102,7 +110,7 @@ class PPCamsBDAP(BlindRun):
                     output_var.setncatts({k: var_values.getncattr(k) for k in var_values.ncattrs()})
                     output_var[:] = var_values[:]
                 # Other variables are processed
-                elif var_name in species_list:
+                elif var_name in self.daily_species:
                     # Read the whole data
                     data = np.array(all_files.variables[var_name][:])
                     # Daily mean in each grid-point
@@ -157,7 +165,8 @@ class PPCamsBDAP(BlindRun):
             maccraq_blocks = dict()
             contents = dict()
         for namelist, geometry in zip(namelists, geometries):
-            print('geometry : {},namelist : {}'.format(geometry, namelist))
+            logger.info('geometry : %s, namelist : %s',
+                        str(geometry), namelist.rh.container.localpath())
             contents[geometry] = namelist.rh.contents
             maccraq_blocks[geometry] = NamelistBlock(name='MACCRAQ_IN')
             maccraq_blocks[geometry].update(namelist.rh.contents['MACCRAQ_IN'])
@@ -173,7 +182,7 @@ class PPCamsBDAP(BlindRun):
             sh.title('Loop on domain {0:s} and term {1:s}'.format(r.resource.geometry.area,
                                                                   r.resource.term.fmthm))
             actualdate = r.resource.date + r.resource.term
-            # optionaly compute daily statistics
+            # optionally compute daily statistics
             if self.daily_values:
                 self.compute_daily_values(r)
             # Get a temporary namelist container
