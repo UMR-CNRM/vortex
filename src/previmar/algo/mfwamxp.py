@@ -80,10 +80,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 optional = True,
                 default  = Period('PT0H'),
             ),
-            cmems_grid = dict(
-                type = FPList,
-                default = FPList([]),
-            ),
             flyargs = dict(
                 default = ('MPP', 'APP',),
             ),
@@ -128,7 +124,8 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 self.system.rm(tmpout)
 
             with io.open(tmpout, 'wb') as outfile:
-                for fname in [x.container.localpath() for x in sorted(windcandidate, key=lambda rh: rh.resource.term)]:
+                for fname in [x.container.localpath() for x in sorted(windcandidate,
+                                                                      key=lambda rh: rh.resource.term)]:
                     with io.open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
@@ -214,16 +211,6 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         if self.flyput:
             self.manual_flypolling_job()
         super(Mfwam, self).postfix(rh, opts)
-
-        # Preparation of BC products for copernicus delivery
-        if (self.cmems_grid != [None]):
-            for cmems_g in self.cmems_grid:
-                self.system.mkdir(cmems_g + '_J')
-                self.system.mkdir(cmems_g + '_J1')
-                self.system.mkdir(cmems_g + '_J2')
-                self.system.mkdir(cmems_g + '_J3')
-                self.system.mkdir(cmems_g + '_J4')
-                self.system.mkdir(cmems_g + '_J5')
 
 
 class MfwamGauss2Grib(ParaBlindRun):

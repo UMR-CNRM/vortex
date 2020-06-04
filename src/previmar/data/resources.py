@@ -12,8 +12,6 @@ from bronx.stdtypes.date import Date, Time, Period
 
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
-from common.data.gridfiles import GridPointExport
-from common.data.boundaries import LAMBoundary
 from common.data.modelstates import InitialCondition, Historic
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from .contents import AltidataContent
@@ -326,7 +324,7 @@ class WaveInit(Historic):
         return '(prefix:fieldskey)(termfix:modelkey)(suffix:modelkey)'
 
 
-@namebuilding_append('src', lambda s: s.sopranofile)
+@namebuilding_append('src', lambda s: s.satellite)
 class GenericWaveSatelliteData(FlowResource):
     """Any kind of satellite data for wave models."""
 
@@ -340,14 +338,6 @@ class GenericWaveSatelliteData(FlowResource):
             satellite = dict(
                 optional = True,
                 default = 'allsat',
-            ),
-            sopranofile = dict(
-                optional = True,
-                default = 'allsop',
-            ),
-            sopranodir = dict(
-                optional = True,
-                default = 'allsop',
             ),
         )
     )
@@ -382,98 +372,12 @@ class SARdataWave(GenericWaveSatelliteData):
             kind = dict(
                 values = ['SARdataWave'],
             ),
+            satellite = dict(
+                optional = False,
+            ),
         )
     )
 
     @property
     def realkind(self):
         return 'SARdataWave'
-
-
-@namebuilding_append('src', lambda s: s.sopranofile)
-class GenericGridWaveSopranoData(GridPointExport):
-    """Grid data of soprano data for wave models."""
-
-    _abstract = True
-    _footprint = dict(
-        info = 'Wave soprano data file',
-        attr = dict(
-            nativefmt = dict(
-                default = 'ascii',
-            ),
-            sopranofile = dict(
-                optional = True,
-                default = 'allsop',
-            ),
-            sopranodir = dict(
-                optional = True,
-                default = 'allsop',
-            ),
-            vapp_origin = dict(
-                optional = True,
-                default = 'allsop',
-            ),
-        )
-    )
-
-
-class SopranoWindDataWave(GenericGridWaveSopranoData):
-    """Wind data for wave models."""
-
-    _footprint = dict(
-        info = 'Wind data file',
-        attr = dict(
-            kind = dict(
-                values = ['windWave'],
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'SopranoWinddataWave'
-
-
-class SopranoCurrentDataWave(GenericGridWaveSopranoData):
-    """Current data for wave models."""
-
-    _footprint = dict(
-        info = 'Current data file',
-        attr = dict(
-            kind = dict(
-                values = ['currentWave'],
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'SopranoCurrentdataWave'
-
-
-@namebuilding_delete('term')
-@namebuilding_append('src', lambda s: s.fields)
-class WavesBCPack(LAMBoundary):
-    """BC tar file."""
-
-    _footprint = dict(
-        info = 'BC for waves',
-        attr = dict(
-            kind = dict(
-                values = ['boundary'],
-            ),
-            nativefmt = dict(
-                values   = ['wbcpack'],
-                default  = 'wbcpack',
-                optional = True,
-            ),
-            fields = dict(
-                default   = 'ibipuertos_J',
-                optional  = False,
-            ),
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'BCpack'

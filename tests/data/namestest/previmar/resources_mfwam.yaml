@@ -1,0 +1,26 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: globalirr01
+            cutoff: assim
+            model: mfwam
+            namespace: vortex.multi.fr
+            cycle: hycom02_hycom@ang-main.04
+            gnamespace: 'gco.multi.fr'
+            vapp: mfwam
+            vconf: globalcep01
+
+todo:
+    # ExternalForcing/ExternalTimePeriod
+    -   commons:
+          block: toto
+          experiment: oper
+          suite: oper
+        tests:
+            -   kind: altidata
+                namespace: prod.soprano.fr
+            -   kind: SARdataWave
+                satellite: sentinel1
+                namespace: prod.soprano.fr
+

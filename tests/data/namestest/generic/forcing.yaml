@@ -1,0 +1,45 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: franmgsp
+            cutoff: assim
+            model: arome
+            namespace: vortex.multi.fr
+            cycle: al42_arome-op2.40
+            vapp: arome
+            vconf: 3dvarfr
+
+todo:
+    # ExternalForcing/ExternalTimePeriod
+    -   commons:
+            kind: forcing
+            block: coupling
+            source_app: arpege
+            source_conf: 4dvarfr
+            source_cutoff: production
+            filling: atm
+            experiment: abcd
+        tests:
+            -   nativefmt:
+                    - fa
+                    - grib
+                term: 0
+                filling: stuff
+            -   nativefmt: ascii
+                begintime:
+                  - -12
+                  - 24
+                endtime: 48
+            -   model: surfex
+                nativefmt: netcdf
+                term: 0
+            -   model: surfex
+                nativefmt: netcdf
+                begindate: "2018010100"
+                enddate: "2018013100"
+            -   model: surfex
+                nativefmt: netcdf
+                begintime: 0
+                endtime: 48
+

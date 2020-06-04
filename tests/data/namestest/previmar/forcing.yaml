@@ -1,0 +1,41 @@
+default:
+    style: olive
+    sets:
+        -   date: 2018010100
+            geometry: globalirr01
+            cutoff: assim
+            model: mfwam
+            namespace: vortex.multi.fr
+            cycle: hycom02_hycom@ang-main.04
+            gnamespace: 'gco.multi.fr'
+            vapp: mfwam
+            vconf: globalcep01
+
+todo:
+    # ExternalForcing/ExternalTimePeriod
+    -   commons:
+            kind: forcing
+            block: coupling
+            source_app: arpege
+            source_conf: 4dvarfr
+            source_cutoff: production
+            experiment: oper
+            suite: oper
+            nativefmt: grib
+        tests:
+            -   namespace: prod.soprano.fr
+                filling: wind
+                term:
+                  - 0
+                  - 24
+            -   namespace: prod.soprano.fr
+                filling: wind
+                begintime: -24
+                endtime: 0
+            -   namespace: prod.soprano.fr
+                filling: wind
+                begintime: 0
+                endtime: 120
+            -   namespace: prod.soprano.fr
+                filling: current
+                term: 0
