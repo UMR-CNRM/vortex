@@ -81,9 +81,9 @@ if __name__ == '__main__':
         else:
             sorting = tnt.namadapter.NO_SORTING
         for recipe in args.recipes:
-            tnt.util.set_verbose(args.verbose, recipe)
-            tnt.util.compose_namelist(recipe,
-                                      sourcenam_directory=args.sourcenam_directory,
-                                      suffix=args.suffix,
-                                      sorting=sorting,
-                                      squeeze=args.squeeze)
+            with tnt.util.set_verbose(args.verbose, recipe):
+                tnt.util.compose_namelist(recipe,
+                                          sourcenam_directory=args.sourcenam_directory,
+                                          suffix=args.suffix,
+                                          sorting=sorting,
+                                          squeeze=args.squeeze)

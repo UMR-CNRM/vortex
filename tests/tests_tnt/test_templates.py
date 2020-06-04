@@ -4,10 +4,16 @@ import io
 import os
 import unittest
 
+from bronx.fancies import loggers
 import tnt
+
+tloglevel = 9999
 
 tpl_path = os.path.join(os.path.realpath(__file__), '../../../site/tnt/templates')
 tpl_path = os.path.normpath(tpl_path)
+
+data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
+data_path = os.path.normpath(data_path)
 
 tntstack_todo_ref = [
     {'action': 'tnt', u'namelist': [u'namelist_screen*'], u'directive': [u'dfi', u'geo499c1']},
@@ -32,6 +38,8 @@ COMPOSED_NAM = """\
  /
  &NAMDYN
    LNHDYN=.TRUE.,
+ /
+ &NAMEMPTY
  /
  &NAMFA
    NBITCS=16,
@@ -96,17 +104,33 @@ class TestTntTemplate(unittest.TestCase):
         self.assertSetEqual(set(tplyaml.directives.keys()),
                             set(['surfexdiags', 'geo499c1', 'dfi']))
 
-    @unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+
+@unittest.skipUnless(test_yaml(), "pyyaml is unavailable")
+class TestTntRecipe(unittest.TestCase):
+
     def test_recipe_yaml(self):
         from bronx.datagrip.namelist import FIRST_ORDER_SORTING
-        sourcedir = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
-        sourcedir = os.path.normpath(sourcedir)
         recipe = tnt.config.TntRecipe(os.path.join(tpl_path, 'tntcompose-recipe.tpl.yaml'),
-                                      sourcenam_directory=sourcedir)
+                                      sourcenam_directory=data_path)
         nam = recipe.ingredients[0]
         for ingredient in recipe.ingredients[1:]:
             nam.merge(ingredient)
         self.assertEqual(nam.dumps(sorting=FIRST_ORDER_SORTING), COMPOSED_NAM)
+
+    def _assert_syntax_error(self, recipe):
+        with tnt.util.set_verbose(False, 'ko/recipe_ko1.yaml'):
+            with self.assertRaises(tnt.config.TntRecipeSyntaxError):
+                tnt.config.TntRecipe(os.path.join(data_path, 'ko', recipe),
+                                     sourcenam_directory=data_path)
+
+    def test_recipe_syntax(self):
+        self._assert_syntax_error('recipe_ko1.yaml')
+        self._assert_syntax_error('recipe_ko2.yaml')
+        self._assert_syntax_error('recipe_ko3.yaml')
+        self._assert_syntax_error('recipe_ko4.yaml')
+        self._assert_syntax_error('recipe_ko5.yaml')
+        self._assert_syntax_error('recipe_ko6.yaml')
+        self._assert_syntax_error('recipe_ko7.yaml')
 
 
 if __name__ == "__main__":

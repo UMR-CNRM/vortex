@@ -132,12 +132,12 @@ if __name__ == '__main__':
                 with io.open(args.namdelta, 'r') as fhnam:
                     directives = tnt.config.TntDirective(namdelta=fhnam.read())
         for nam in args.namelists:
-            tnt.util.set_verbose(args.verbose, nam)
-            tnt.util.process_namelist(nam, directives,
-                                      sorting=sorting,
-                                      in_place=args.in_place,
-                                      outfilename=args.outfilename,
-                                      blocks_ref=args.blocks_ref,
-                                      doctor=args.doctor,
-                                      keep_index=args.keep_index,
-                                      squeeze=args.squeeze)
+            with tnt.util.set_verbose(args.verbose, nam):
+                tnt.util.process_namelist(nam, directives,
+                                          sorting=sorting,
+                                          in_place=args.in_place,
+                                          outfilename=args.outfilename,
+                                          blocks_ref=args.blocks_ref,
+                                          doctor=args.doctor,
+                                          keep_index=args.keep_index,
+                                          squeeze=args.squeeze)

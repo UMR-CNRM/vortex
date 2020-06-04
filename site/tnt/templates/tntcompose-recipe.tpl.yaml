@@ -6,6 +6,7 @@ __initial__: init/sample.nam_oops
 __final__:
     NAMFA:
         NVGRIB: 123
+    NAMEMPTY: null
 
 # then requested blocks/keys from as many input namelists as necessary
 # [processed and merged respecting order]

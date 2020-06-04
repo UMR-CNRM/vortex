@@ -4,8 +4,10 @@ Utility methods widely used in the various TNT utilities.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 import glob
 import io
+import logging
 import os
 import shutil
 
@@ -18,14 +20,25 @@ tntlog = loggers.getLogger('tntlog')
 tntstacklog = loggers.getLogger('tntstacklog')
 
 
+@contextlib.contextmanager
 def set_verbose(verbose, filename):
     """Set or reset the verbosity level."""
+    new_lformat = logging.Formatter(
+        fmt=('# [%(name)s@{:s}][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s'
+             .format(os.path.basename(filename)))
+    )
+    old_lformat = loggers.console.formatter
+    old_tntstack_level = tntstacklog.level
+    old_tnt_level = tntlog.level
+    loggers.console.setFormatter(new_lformat)
     tntstacklog.setLevel('INFO')
-    if verbose:
-        print("==> ", filename)
-        tntlog.setLevel('INFO')
-    else:
-        tntlog.setLevel('WARNING')
+    tntlog.setLevel('INFO' if verbose else 'WARNING')
+    try:
+        yield
+    finally:
+        tntstacklog.setLevel(old_tntstack_level)
+        tntlog.setLevel(old_tnt_level)
+        loggers.console.setFormatter(old_lformat)
 
 
 def process_namelist(filename, directives,
@@ -251,6 +264,7 @@ def compose_namelist(recipe_filename,
     Compose a namelist from a **recipe_filename**. For the syntax of recipe,
     see template recipe.
 
+    :param recipe_filename: The name of the recipe/directive YAML file
     :param sourcenam_directory: path to directory in which to look for source
                                 namelists
     :param suffix: suffix to add to generated namelist:
