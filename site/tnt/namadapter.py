@@ -192,6 +192,10 @@ class AbstractNamelistAdapter(collections_abc.Mapping):
             else:
                 tntlog.warning('block "%s" missing: cannot move its key "%s".', ob, ok)
 
+    def squeeze(self):
+        """Squeeze the namelist: remove empty blocks."""
+        self._actual_squeeze()
+
     # Generic utility methods
 
     @staticmethod
@@ -310,6 +314,11 @@ class AbstractNamelistAdapter(collections_abc.Mapping):
         pass
 
     @abc.abstractmethod
+    def _actual_squeeze(self):
+        """Squeeze the namelist: remove empty blocks."""
+        pass
+
+    @abc.abstractmethod
     def dumps(self, sorting=NO_SORTING):
         """
         Returns a string that represent the namelist's set (i.e. something
@@ -395,6 +404,11 @@ class BronxNamelistAdapter(AbstractMapableNamelistAdapter):
 
     def _actual_rmkey(self, block, key):
         del self[block][key]
+
+    def _actual_squeeze(self):
+        for b in list(self.parser.keys()):
+            if len(self.parser[b]) == 0:
+                self._actual_rmblock(b)
 
     def dumps(self, sorting=NO_SORTING):
         """Returns a string that represent the namelist's set."""
