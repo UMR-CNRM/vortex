@@ -210,7 +210,7 @@ class _SafranWorker(_S2MWorker):
         _Safran_namelists = ['ANALYSE', 'CENPRAA', 'OBSERVA', 'OBSERVR', 'IMPRESS',
                              'ADAPT', 'SORTIES', 'MELANGE', 'EBAUCHE', 'rsclim.don']
         for nam in _Safran_namelists:
-            self.link_in(self.system.path.join(rundir, nam), nam)
+            self.link_ifnotprovided(self.system.path.join(rundir, nam), nam)
 
         # Generate the 'OPxxxxx' files containing links for the safran execution.
         _OP_files_common = ['OPlisteo', 'OPlysteo', 'OPlistem', 'Oplystem', 'OPlisteml', 'OPlysteml',
@@ -228,12 +228,12 @@ class _SafranWorker(_S2MWorker):
         for op_file in _OP_files_common:
             if not self.system.path.isfile(op_file):
                 with io.open(op_file, 'w') as f:
-                    f.write(rundir + '@\n')
+                    f.write(rundir.rstrip('/') + '@\n')
 
         for op_file in _OP_files_individual:
             if not self.system.path.isfile(op_file):
                 with io.open(op_file, 'w') as f:
-                    f.write(thisdir + '@\n')
+                    f.write(thisdir.rstrip('/') + '@\n')
 
         self.system.remove('sapfich')
 
@@ -353,7 +353,8 @@ class _SafranWorker(_S2MWorker):
             if prefix == 'P':
                 actual_dates = self.get_guess(dates, prefix='E', fatal=False)
             else:
-                logger.warning('No guess files found, SAFRAN will run with climatological guess')
+                logger.warning('No guess files found for date {0:s}, ' +
+                               'SAFRAN will run with climatological guess'.format(date.ymdh))
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
 
         return actual_dates
@@ -1269,9 +1270,9 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-# Ca partait d'une bonne idée mais en pratique il y a plein de cas particuliers pour lesquels ça pose problème
-# reanalyse safran, surfex postes, etc
-#         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
+        # Ca partait d'une bonne idee mais en pratique il y a plein de cas particuliers
+        # pour lesquels ca pose probleme : reanalyse safran, surfex postes, etc
+        # self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
         # Crash if subdirs is an empty list (it means that there is not any input available)
         self.algoassert(len(subdirs) >= 1)
@@ -1285,7 +1286,12 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
+                if hasattr(am.rh.resource, 'source_conf'):
+                    cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
+                else:
+                    # If the origin of the guess is not given the execution is in
+                    # 'deterministic' mode (monthly reanalysis)
+                    cpl_model.append(True)
 
         return cpl_model
 
