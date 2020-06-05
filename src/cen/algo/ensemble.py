@@ -1270,9 +1270,9 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-# Ca partait d'une bonne idée mais en pratique il y a plein de cas particuliers pour lesquels ça pose problème
-# reanalyse safran, surfex postes, etc
-#         self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
+        # Ca partait d'une bonne idee mais en pratique il y a plein de cas particuliers
+        # pour lesquels ca pose probleme : reanalyse safran, surfex postes, etc
+        # self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
         # Crash if subdirs is an empty list (it means that there is not any input available)
         self.algoassert(len(subdirs) >= 1)
@@ -1286,7 +1286,7 @@ class S2MComponent(ParaBlindRun):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                if 'source_conf' in dir(am.rh.resource):
+                if hasattr(am.rh.resource, 'source_conf'):
                     cpl_model.append(am.rh.resource.source_conf == '4dvarfr')
                 else:
                     # If the origin of the guess is not given the execution is in
