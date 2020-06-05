@@ -668,8 +668,8 @@ def global_snames(resource, provider):
             elif hasattr(resource, 'endtime'):
                 bname = 'wind_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'fcst',
                                                resource.date.hh)
-        elif resource.filling == 'current':
-            bname = 'current{:s}'.format(resource.date.hh)
+        elif resource.filling == 'currents':
+            bname = 'currents{:s}'.format(resource.date.hh)
         else:
             bname = 'allsop'
 

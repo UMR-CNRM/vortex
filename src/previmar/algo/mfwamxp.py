@@ -109,14 +109,14 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         windcandidate = [x.rh
                          for x in self.context.sequence.effective_inputs(role=('Wind',),
-                                                                         kind='gridpoint')]
+                                                                         kind='forcing')]
 
         # Is there a analysis wind forcing ?
         if len(windcandidate) == 2:
             rhgrib = windcandidate[0]
 
             # Check for input grib files to concatenate
-            rhdict = {rh.resource.origin: rh for rh in windcandidate}
+            rhdict = {rh.container.filename: rh for rh in windcandidate}
 
             # Check sfwindin
             tmpout = 'sfcwindin'
@@ -125,18 +125,18 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
             with io.open(tmpout, 'wb') as outfile:
                 for fname in [x.container.localpath() for x in sorted(windcandidate,
-                                                                      key=lambda rh: rh.resource.term)]:
+                                                                      key=lambda rh: rh.resource.begintime)]:
                     with io.open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
             # recuperation fcterm
             if fcterm is None:
-                fcterm = rhdict['fcst'].resource.term
+                fcterm = rhdict['sfcwindin_fc'].resource.endtime
                 logger.info('fcterm %s', fcterm)
 
-            datefin = (rhdict['ana'].resource.date + fcterm).compact()
-            datedebana = rhdict['ana'].resource.date - self.anabegin + self.deltabegin
-            datefinana = rhdict['ana'].resource.date
+            datefin = (rhdict['sfcwindin_ana'].resource.date + fcterm).compact()
+            datedebana = rhdict['sfcwindin_ana'].resource.date - self.anabegin + self.deltabegin
+            datefinana = rhdict['sfcwindin_ana'].resource.date
 
         elif len(windcandidate) == 1:
             rhgrib = windcandidate[0]
@@ -147,7 +147,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
             # recuperation fcterm
             if fcterm is None:
-                fcterm = rhgrib.resource.term
+                fcterm = rhgrib.resource.endtime
                 logger.info('fcterm %s', fcterm)
 
             datefin = (rhgrib.resource.date + fcterm).compact()

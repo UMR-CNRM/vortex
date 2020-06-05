@@ -257,7 +257,7 @@ class SopranoProvider(Provider):
                         sopranomaptag = 'soprano@mfwam_windforcing'
                     else:
                         info['level_four'] = 'allsop'
-                elif resource.filling == 'current':
+                elif resource.filling == 'currents':
                     info['level_four'] = 'courantpps4_mfwamglocep01'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)

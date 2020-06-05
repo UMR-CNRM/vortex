@@ -37,5 +37,5 @@ todo:
                 begintime: 0
                 endtime: 120
             -   namespace: prod.soprano.fr
-                filling: current
+                filling: currents
                 term: 0

@@ -45,7 +45,7 @@
     description: !test_names.core.TestParameters
       block: coupling
       experiment: oper
-      filling: current
+      filling: currents
       kind: forcing
       namespace: prod.soprano.fr
       nativefmt: grib
@@ -56,7 +56,7 @@
       term: 0
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://prod.soprano.fr/previ/mar/servbdap/courantpps4_mfwamglocep01/RW/current00
+      location: ftp://prod.soprano.fr/previ/mar/servbdap/courantpps4_mfwamglocep01/RW/currents00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: coupling
