@@ -13,8 +13,8 @@ from bronx.stdtypes import date
 import footprints
 from vortex.tools import env
 from vortex.data.flow import GeoFlowResource, GeoPeriodFlowResource
-from vortex.syntax.stddeco import namebuilding_insert, overwrite_realkind
-from vortex.syntax.stdattrs import term_deco, a_cutoff
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert, overwrite_realkind
+from vortex.syntax.stdattrs import term_deco, timeperiod_deco, a_cutoff
 from vortex.data.geometries import LonlatGeometry
 
 from common.tools.igastuff import archive_suffix
@@ -42,7 +42,7 @@ class _AbstractLAMBoundary(GeoFlowResource):
                     remap   = dict(autoremap = 'first'),
                 ),
                 nativefmt = dict(
-                    values  = ['fa', 'grib', 'netcdf', 'unknown', 'ascii'],
+                    values  = ['fa', 'grib', 'netcdf', 'ascii', 'wbcpack', 'unknown'],
                     default = 'fa',
                 ),
             )
@@ -90,6 +90,8 @@ class _AbstractLAMBoundary(GeoFlowResource):
         """Standard path information for IGA inline cache."""
         if self.model == 'arome':
             directory = 'fic_day'
+        elif self.model == 'mfwam':
+            directory = 'guess'
         else:
             directory = 'autres'
         return dict(
@@ -171,17 +173,47 @@ _abs_forcing_fp = footprints.DecorativeFootprint(
 
 
 class _AbstractForcing(GeoFlowResource):
-    """Class for date-based coupling file for any offline model."""
-
-    _abstract = True
-    _footprint = [_abs_forcing_fp, term_deco]
-
-
-class _AbstractPeriodForcing(GeoPeriodFlowResource):
-    """Class for period-based coupling file for any offline model."""
+    """Abstract class for date-based coupling file for any offline model."""
 
     _abstract = True
     _footprint = [_abs_forcing_fp, ]
+
+
+class _AbstractPeriodForcing(GeoPeriodFlowResource):
+    """Abstract class for period-based coupling file for any offline model."""
+
+    _abstract = True
+    _footprint = [_abs_forcing_fp, ]
+
+
+_abs_external_forcing_fp = footprints.DecorativeFootprint(
+    dict(
+        attr=dict(
+            model=dict(
+                outcast=['surfex', ],
+            ),
+        ),
+    ),
+    decorator=[namebuilding_append('src', lambda s: s.filling)],
+)
+
+
+class ExternalForcing(_AbstractForcing):
+    """Class for date-based coupling file for any offline model.
+
+    This class takes an optional **term** attribute.
+    """
+
+    _footprint = [term_deco, _abs_external_forcing_fp]
+
+
+class ExternalTimePeriodForcing(_AbstractForcing):
+    """Class for date-based coupling file for any offline model.
+
+    This class needs a **begintime**/**endtime** attribute.
+    """
+
+    _footprint = [timeperiod_deco, _abs_external_forcing_fp]
 
 
 _abs_surfex_forcing_fp = footprints.Footprint(
@@ -203,9 +235,21 @@ _abs_surfex_forcing_fp = footprints.Footprint(
 
 
 class SurfexForcing(_AbstractForcing):
-    """Class for date-based coupling file for Surfex."""
+    """Class for date-based coupling file for Surfex.
 
-    _footprint = [_abs_surfex_forcing_fp, ]
+    This class takes an optional **term** attribute.
+    """
+
+    _footprint = [term_deco, _abs_surfex_forcing_fp, ]
+
+
+class SurfexTimePeriodForcing(_AbstractForcing):
+    """Class for date-based coupling file for Surfex.
+
+    This class needs a **begintime**/**endtime** attribute.
+    """
+
+    _footprint = [timeperiod_deco, _abs_surfex_forcing_fp, ]
 
 
 class SurfexPeriodForcing(_AbstractPeriodForcing):

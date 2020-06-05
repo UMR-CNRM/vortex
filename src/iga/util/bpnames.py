@@ -44,6 +44,11 @@ def _reseau_suffix(cutoff, reseau, vconf=None, suffix_r=False):
                        '15': '15', '16': '16', '17': '17', '18': '18', '19': '19',
                        '20': '20', '21': '21', '22': '22', '23': '23'}
         reseau_suff = reseau_prod[_reseau]
+    elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
+                   'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
+                   'globalarpc02', 'globalcep01', 'polyaro01',
+                   'reuaro01'):
+        reseau_suff = _reseau
     else:
         logger.warning(
             "The attributes are incorrect : %s, %s, %s",
@@ -474,10 +479,10 @@ def gridpoint_bnames(resource, provider):
         elif resource.model == 'mfwam':
             logger.info("resourceterm %s", resource.term.hour)
             if provider.vconf == 'globalcep01':
-                if six.text_type(resource.term.hour) == '24':
-                    return 'windandice{0:s}_{1:s}'.format('1', resource.date.ymdhm)
-                else:
+                if six.text_type(resource.deltabegin.hour) == '0':
                     return 'windandice{0:s}_{1:s}'.format('2', resource.date.ymdhm)
+                else:
+                    return 'windandice{0:s}_{1:s}'.format('3', resource.date.ymdhm)
             else:
                 return 'windandice_{0:s}'.format(resource.date.ymdhm)
         else:
@@ -521,7 +526,14 @@ def boundary_bnames(resource, provider):
     elif resource.model == 'mocage':
         localname = 'RUN1_SM' + resource.geometry.area + '+' \
                     + resource.date.ymd
-
+    elif resource.model == 'mfwam':
+        if (resource.term < 0):
+            nw_date = (resource.date + resource.term).ymdh
+            nw_term = "0000"
+        else:
+            nw_date = resource.date.ymdh
+            nw_term = "{0:04d}".format(resource.term.hour)
+        localname = 'FBI' + nw_date + nw_term
     else:
         _, suffix = faNames(cutoff, reseau, model)
         nw_term = "{0:03d}".format(resource.term.hour)
@@ -615,13 +627,18 @@ def global_snames(resource, provider):
     bname = None
     vconf = getattr(provider, 'vconf', None)
     suff = _reseau_suffix(resource.cutoff, resource.date.hh, vconf)
+    if vconf == 'aefrance' or vconf == 'pifrance':
+        my_model = '_' + resource.model.upper()
+    else:
+        my_model = ''
+
     if resource.realkind == 'rawfields':
         if resource.origin == 'ostia' and resource.fields == 'sst':
             bname = 'sst.ostia'
         if resource.origin == 'bdm' and resource.fields == 'seaice':
             bname = 'SSMI.AM'
 
-    if resource.realkind == 'gridpoint':
+    elif resource.realkind == 'gridpoint':
         if resource.model == 'ifs':
             # For MACC forecast (camsfcst)
             if resource.cutoff == 'production':
@@ -630,38 +647,33 @@ def global_snames(resource, provider):
             else:
                 bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
 
-    if resource.nativefmt == 'grib':
-        if resource.model == 'ifs':
-            if resource.filling == 'atm':
-                if resource.geometry.tag == 'global256':
-                    bname = 'ALTI_glob.grb'
-                else:
-                    bname = 'ALTI_st511.grb'
-            elif resource.filling == 'surf':
-                bname = 'SOL_glob.grb'
-            elif resource.filling == 'soil':
-                bname = 'SSOL_glob.grb'
-        elif resource.vapp_origin == 'pg1':
-            if resource.vconf_origin in ['pagrex', 'parome']:
-                bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
-                         '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
-            if resource.vconf_origin == 'pa':
-                bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
-                         '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
-
-    if resource.realkind == 'chemical_bc':
+    elif resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':
             if resource.cutoff == 'production':
                 bname = '12utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
             else:
                 bname = '00utc_bc22_' + Date(resource.date.ymdh + '/+P1D').ymdh + '.nc'
 
-    if vconf == 'aefrance' or vconf == 'pifrance':
-        my_model = '_' + resource.model.upper()
-    else:
-        my_model = ''
+    elif resource.realkind in ['AltidataWave', 'SARdataWave']:
+        if resource.satellite == 'allsat' and resource.realkind == 'AltidataWave':
+            bname = 'allsop'
+        else:
+            bname = dict(sentinel1='SENT1').get(resource.satellite, resource.satellite)
 
-    if resource.realkind == 'observations':
+    elif resource.realkind == 'forcing' and resource.model in ('mfwam', 'ww3'):
+        if resource.filling == 'wind':
+            if hasattr(resource, 'term'):
+                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst',
+                                               resource.date.hh)
+            elif hasattr(resource, 'endtime'):
+                bname = 'wind_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'fcst',
+                                               resource.date.hh)
+        elif resource.filling == 'currents':
+            bname = 'currents{:s}'.format(resource.date.hh)
+        else:
+            bname = 'allsop'
+
+    elif resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
             if resource.part == 'sev':
                 bname = 'SEVIRI' + '.' + suff + '.grb'
@@ -679,7 +691,7 @@ def global_snames(resource, provider):
         elif resource.nativefmt == 'hdf5':
             bname = resource.nativefmt.upper() + '.' + resource.part + my_model + '.' + suff
 
-    if resource.realkind == 'refdata':
+    elif resource.realkind == 'refdata':
         if resource.part == 'prof':
             bname = 'RD_2' + my_model + '.' + suff
         elif resource.part == 'conv':
@@ -689,21 +701,42 @@ def global_snames(resource, provider):
         else:
             bname = 'rd_' + resource.part + my_model + '.' + suff
 
-    if resource.realkind == 'historic':
+    elif resource.realkind == 'historic':
         bname = 'toto'
 
-    if resource.realkind == 'obsmap':
+    elif resource.realkind == 'obsmap':
         if resource.scope.startswith('surf'):
             scope = resource.scope[:4].lower()
         else:
             scope = resource.scope
         bname = 'bm' + my_model + '_' + scope + '.' + suff + '.' + resource.date.ymd
 
-    if resource.realkind == 'listing_ouloutput':
+    elif resource.realkind == 'listing_ouloutput':
         if resource.scope == 'surf':
             bname = 'OULOUTPUT_SURFAN' + my_model + '.' + suff
         elif resource.scope == 'oulan':
             bname = 'OULOUTPUT' + my_model + '.' + suff
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + my_model + '.' + suff
+
+    else:
+        if resource.nativefmt == 'grib':
+            if resource.model == 'ifs':
+                if resource.filling == 'atm':
+                    if resource.geometry.tag == 'global256':
+                        bname = 'ALTI_glob.grb'
+                    else:
+                        bname = 'ALTI_st511.grb'
+                elif resource.filling == 'surf':
+                    bname = 'SOL_glob.grb'
+                elif resource.filling == 'soil':
+                    bname = 'SSOL_glob.grb'
+            elif resource.vapp_origin == 'pg1':
+                if resource.vconf_origin in ['pagrex', 'parome']:
+                    bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
+                             '_EURW1S100_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
+                if resource.vconf_origin == 'pa':
+                    bname = ('pg1_' + resource.vconf_origin + '_' + str(resource.date) +
+                             '_EURW1S10_' + 'ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
+
     return bname

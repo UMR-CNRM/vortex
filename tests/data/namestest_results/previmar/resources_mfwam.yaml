@@ -1,0 +1,30 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: toto
+      experiment: oper
+      kind: SARdataWave
+      namespace: prod.soprano.fr
+      satellite: sentinel1
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: hycom02_hycom@ang-main.04
+        date: 2018010100
+        geometry: globalirr01
+        gnamespace: gco.multi.fr
+        model: mfwam
+        namespace: vortex.multi.fr
+        vapp: mfwam
+        vconf: globalcep01
+      location: ftp://prod.soprano.fr/previ/mar/allsop/RW/SENT1
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: toto
+      experiment: oper
+      kind: altidata
+      namespace: prod.soprano.fr
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: ftp://prod.soprano.fr/previ/mar/allsop/RW/allsop
