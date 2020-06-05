@@ -41,7 +41,6 @@ from bronx.fancies import loggers
 from bronx.system import cpus, memory
 from bronx.syntax.decorators import secure_getattr
 
-import os
 import multiprocessing
 
 logger = loggers.getLogger(__name__)
@@ -147,7 +146,7 @@ def binding_setup(worker):
     cpusinfo = cpus.LinuxCpusInfo()
     cpuslist = list(cpusinfo.socketpacked_cpulist())
     binded_cpu = cpuslist[worker.scheduler_ticket % cpusinfo.nvirtual_cores]
-    cpus.set_affinity(binded_cpu, str(os.getpid()))
+    cpus.set_affinity(binded_cpu)
 
 
 def BindingAwareScheduler(cls):

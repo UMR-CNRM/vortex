@@ -24,12 +24,11 @@ class SharedNumpyArray(object):
             to be either a multiprocessing.Array, a numpy.ndarray or a
             numpy.ma.masked_array.
 
-        Note:
-            * constructing a SharedNumpyArray from a multiprocessing.Array will
-              not duplicate data but make the SharedArray be a pointer to the
-              initial array;
-            * constructing from a numpy array will duplicate data, and so the
-              initial array will no longer be consistent with this one.
+        * constructing a SharedNumpyArray from a multiprocessing.Array will
+          not duplicate data but make the SharedArray be a pointer to the
+          initial array;
+        * constructing from a numpy array will duplicate data, and so the
+          initial array will no longer be consistent with this one.
 
         The process-safetiness of the shared array is ensured
         (cf. multiprocessing.Array) through the use of

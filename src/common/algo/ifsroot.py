@@ -100,6 +100,9 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                     optional        = True,
                     type            = int,
                 ),
+                mpiconflabel = dict(
+                    default  = 'mplbased'
+                )
             )
         )
     ]

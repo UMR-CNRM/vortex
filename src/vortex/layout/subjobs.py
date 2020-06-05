@@ -18,6 +18,7 @@ import time
 
 from bronx.datagrip import datastore
 from bronx.fancies import loggers
+from bronx.syntax.parsing import xlist_strings
 import footprints as fp
 
 logger = loggers.getLogger(__name__)
@@ -285,6 +286,10 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         """This method should be overwritten and return a list of target hostnames."""
         raise NotImplementedError()
 
+    def _env_variables_iterator(self, t):
+        """Return the environment variables that will be used."""
+        return t.topenv.items()
+
     def _new_ticket_hook(self, t):
         """Common initialisations."""
         super(AbstractSshSubJobLauncher, self)._new_ticket_hook(t)
@@ -306,7 +311,7 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
             fhwrap.write('set -x\n')
             fhwrap.write('set -e\n')
             fhwrap.write('echo "I am running on $(hostname) !"\n')
-            for k, v in t.topenv.items():
+            for k, v in self._env_variables_iterator(t):
                 if re.match(r'[-_\w]+$', k):  # Get rid of weird variable names
                     fhwrap.write("export {:s}='{!s}'\n".format(k.upper(), v))
             fhwrap.write('exec $*\n')
@@ -316,6 +321,10 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         self._pfs_scriptpath = '{:s}.script.py'.format(self.fsid)
         t.sh.cp(self.scriptpath, self._pfs_scriptpath)
 
+    def _env_lastminute_update(self, tag, thost):
+        """Add some lastminute environment variables."""
+        return dict().items()
+
     def _actual_launch(self, tag):
         """Just launch the subjob using an SSH command."""
         sh = self.ticket.sh
@@ -323,7 +332,10 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         logger.info('"%s" will be used (through SSH).', thost)
         ofh = io.open(_JOB_STDEO.format(self.fsid, tag), mode='wb')
         cmd = "export VORTEX_SUBJOB_ACTIVATED='{:s}'; ".format(sh.env.VORTEX_SUBJOB_ACTIVATED)
+        cmd += ' '.join(["export {:s}='{!s}'; ".format(k, v)
+                         for k, v in self._env_lastminute_update(tag, thost)])
         cmd += ' '.join([self._lwrapper, sys.executable, self._pfs_scriptpath])
+        print(cmd)
         p = sh.ssh(thost).background_execute(cmd, sshopts='-o CheckHostIP=no',
                                              stdout=ofh, stderr=ofh)
         self._outfhs[tag] = ofh
@@ -374,6 +386,26 @@ class SlurmSshSubJobLauncher(AbstractSshSubJobLauncher):
         )
     )
 
+    def _env_variables_iterator(self, t):
+        """Return the environment variables that will be used."""
+        blacklist = set(["SLURM_{:s}".format(s)
+                         for s in ('NNODES', 'JOB_NNODES', 'JOB_NUM_NODES',
+                                   'NODELIST', 'JOB_NODELIST')])
+        slurmnodes_ids = re.compile(r'(\(x\d+\))$')
+        for k, v in t.topenv.items():
+            if k not in blacklist:
+                if k.startswith('SLURM') and slurmnodes_ids.search(v):
+                    yield k, slurmnodes_ids.sub('(x1)', v)
+                else:
+                    yield k, v
+        for k in ('SLURM_NNODES', 'SLURM_JOB_NNODES', 'SLURM_JOB_NUM_NODES'):
+            yield k, "1"
+
+    def _env_lastminute_update(self, tag, thost):  # @UnusedVariable
+        """Add some lastminute environment variables."""
+        return dict(SLURM_NODELIST=thost,
+                    SLURM_JOB_NODELIST=thost).items()
+
     def _find_raw_nodes_list(self, t):
         """Find out what is the nodes list.
 
@@ -383,24 +415,6 @@ class SlurmSshSubJobLauncher(AbstractSshSubJobLauncher):
         nlist = t.env.get('SLURM_JOB_NODELIST',
                           t.env.get('SLURM_NODELIST', None))
         if nlist:
-            re1 = re.compile(r'(?P<radical>\w+)\[(?P<numlist>[-,\d]+)\](?P<suffix>.*)$')
-            re1_m = re1.match(nlist)
-            if re1_m:
-                numbers = list()
-                for nbit in re1_m.group('numlist').split(','):
-                    if '-' in nbit:
-                        lb, ub = nbit.split('-', 1)
-                        numbers.extend([('{:0' + str(len(lb)) + 'd}').format(i)
-                                        for i in range(int(lb), int(ub) + 1)])
-                    else:
-                        numbers.append(nbit)
-                nodeslist = [re1_m.group('radical') + n + re1_m.group('suffix')
-                             for n in numbers]
-            else:
-                if ',' not in nlist:
-                    nodeslist = [nlist, ]
-                else:
-                    raise RuntimeError('Malformed nodes list: "{:s}".'.format(nlist))
+            return xlist_strings(nlist)
         else:
             raise RuntimeError('The "SLURM_JOB_NODELIST" environment variable is not defined.')
-        return nodeslist

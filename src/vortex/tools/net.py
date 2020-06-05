@@ -1732,10 +1732,14 @@ class LinuxNetstats(AbstractNetstats):
             netstats.readline()  # Skip the header line
             tmpports[self._LINUX_AF_INET4] = [re.split(r':\b|\s+', x.strip())[1:6]
                                               for x in netstats.readlines()]
-        with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
-            netstats.readline()  # Skip the header line
-            tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
-                                              for x in netstats.readlines()]
+        try:
+            with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
+                netstats.readline()  # Skip the header line
+                tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
+                                                  for x in netstats.readlines()]
+        except IOError:
+            # Apparently, no IPv6 support on this machine
+            tmpports[self._LINUX_AF_INET6] = []
         tmpports = [[rclass(family,
                             self._ip_from_hex(l[0], family), int(l[1], 16),
                             self._ip_from_hex(l[2], family), int(l[3], 16),

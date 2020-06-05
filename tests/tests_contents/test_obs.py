@@ -52,6 +52,7 @@ class UtVarBCContentLimited(_BaseDataContentTest):
     _data = (VBC_T, )
     _container_limit = 50  # This limit is intentionally very small
 
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
     def test_indexedtable_basic(self):
         resource = _FakeResource()
         ct = obs.VarBCContent()
@@ -68,12 +69,19 @@ class UtVarBCContent(_BaseDataContentTest):
 
     _data = (VBC_T, )
 
-    @skipUnless(npchecker, "The Numpy package is unavailable")
-    def test_indexedtable_basic2(self):
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
+    def test_varbc_basic1(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])
-        self.assertEqual(ct.size, 1)    # This time _container_limit is big enough
-        self.assertTrue(len(ct.data[1].params), 8)
+        self.assertEqual(ct.metadata['version'], 5)
+
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
+    def test_varbc_basic2(self):
+        ct = obs.VarBCContent()
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.size, 721)
+        self.assertTrue(ct.data[1], 'MINI  20000101         0')
+        self.assertTrue(len(ct.parsed_data[1].params), 8)
 
 
 REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT

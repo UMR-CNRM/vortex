@@ -17,9 +17,10 @@ from collections import namedtuple
 import footprints
 from bronx.datagrip.varbcheaders import VarbcHeadersFile
 from bronx.fancies import loggers
+from bronx.syntax.decorators import nicedeco
 
 from vortex.data.flow import GeoFlowResource, FlowResource
-from vortex.data.contents import TextContent, DataContent
+from vortex.data.contents import TextContent, AlmostListContent
 from vortex.syntax import stdattrs, stddeco
 
 from gco.syntax.stdattrs import gvar, GenvKey
@@ -271,40 +272,61 @@ class ObsFlags(FlowResource):
         return 'BDM_CQ'
 
 
-class VarBCContent(DataContent):
+@nicedeco
+def needs_slurp(mtd):
+    """Call _actual_slurp before anything happens."""
+
+    def new_stuff(self):
+        if self._do_delayed_slurp is not None:
+            self._actual_slurp(self._do_delayed_slurp)
+        return mtd(self)
+
+    return new_stuff
+
+
+class VarBCContent(AlmostListContent):
 
     # The VarBC file is too big: revert to the good old diff
     _diffable = False
 
     def __init__(self, **kw):
         super(VarBCContent, self).__init__(**kw)
+        self._parsed_data = None
         self._do_delayed_slurp = None
 
     @property
+    @needs_slurp
     def data(self):
         """The internal data encapsulated."""
-        if self._do_delayed_slurp is not None:
-            self._actual_slurp(self._do_delayed_slurp)
         return self._data
 
+    @property
+    @needs_slurp
+    def size(self):
+        """The internal data size."""
+        return self._size
+
+    @property
+    def parsed_data(self):
+        """The data as a :class:`VarbcFile` object."""
+        if self._parsed_data is None:
+            # May fail if Numpy is not installed...
+            from bronx.datagrip.varbc import VarbcFile
+            self._parsed_data = VarbcFile(self.data)
+        return self._parsed_data
+
     def _actual_slurp(self, container):
-        # May fail if Numpy is not installed...
-        from bronx.datagrip.varbc import VarbcFile
         with container.preferred_decoding(byte=False):
-            self._data = VarbcFile(container.readlines())
+            self._size = container.totalsize
+            self._data.extend(container.readlines())
         self._do_delayed_slurp = None
 
     def slurp(self, container):
         """Get data from the ``container``."""
         self._do_delayed_slurp = container
-        super(VarBCContent, self).slurp(container)
-        container.rewind()
-        self._metadata = VarbcHeadersFile([container.readline() for _ in range(3)])
-
-    @property
-    def size(self):
-        """The actual size of the contents."""
-        return len(self.data) if self.data else self._size
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._metadata = VarbcHeadersFile([container.readline() for _ in range(3)])
 
 
 @stddeco.namebuilding_append('src', lambda s: [s.stage, ])

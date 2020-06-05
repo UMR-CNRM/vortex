@@ -373,6 +373,7 @@ class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
 
     _MIXIN_MPIBINS_HOOKS = ()
     _MIXIN_MPIENVELOPE_HOOKS = ()
+    _MIXIN_MPIENVELOPE_POSTHOOKS = ()
 
     @classmethod
     @_clsmtd_mixin_locked
@@ -389,6 +390,9 @@ class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
                                                      True),
                                                     ('_bootstrap_mpienvelope_hack',
                                                      cls._MIXIN_MPIENVELOPE_HOOKS, (),
+                                                     True),
+                                                    ('_bootstrap_mpienvelope_posthack',
+                                                     cls._MIXIN_MPIENVELOPE_POSTHOOKS, (),
                                                      True), ]:
             if hooks or prehooks:
                 setattr(targetcls, targetmtd,
@@ -1421,7 +1425,9 @@ class ParaBlindRun(TaylorRun):
                 info = "Topology/Method to set up the CPU affinity of the child task.",
                 default = None,
                 optional = True,
-                values = ['raw', 'socketpacked', 'socketpacked_gomp']
+                values = ['{:s}{:s}'.format(t, m)
+                          for t in ('raw', 'socketpacked', 'numapacked')
+                          for m in ('', '_taskset', '_gomp', '_omp', '_ompverbose')]
             ),
             taskset_bsize = dict(
                 info        = 'The number of threads used by one task',
@@ -1479,6 +1485,12 @@ class Parallel(xExecutableAlgoComponent):
                 alias           = ['mpi'],
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            mpiconflabel = dict(
+                info            = ('Some extra label used when reading the mpitool' +
+                                   'configuration in the configuration file'),
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             binaries = dict(
                 info            = 'List of MpiBinaryDescription objects',
                 optional        = True,
@@ -1501,11 +1513,52 @@ class Parallel(xExecutableAlgoComponent):
         )
     )
 
-    def prepare(self, rh, opts):
-        """Add some defaults env values for mpitool itself."""
-        super(Parallel, self).prepare(rh, opts)
-        if opts.get('mpitool', True):
-            self.export('mpitool')
+    def _mpitool_attributes(self, opts):
+        """Return the dictionary of attributes needed to create the mpitool object."""
+        # Read the appropriate configuration in the target file
+        conf_dict = self.target.items('mpitool')
+        if self.mpiconflabel:
+            conf_dict.update(self.target.items('mpitool-{!s}'.format(self.mpiconflabel)))
+        # Find the mpiname
+        act_mpiname = (opts.get('mpiname', None) or self.mpiname or
+                       self.env.VORTEX_MPI_NAME or conf_dict.get('mpiname', None))
+        if not act_mpiname:
+            raise ValueError('Unabled to find an appropriate mpiname.')
+        options = dict(mpiname=act_mpiname)
+        # Find ither generic options
+        generic_options = set(('mpilauncher',
+                               'mpiopts',
+                               'mpiwrapstd',
+                               'mpibind_topology'))
+
+        def _generic_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_'.format(act_mpiname)
+            for k, v in mapping.items():
+                if k.startswith(optprefix) and k[len(optprefix):] in generic_options:
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _generic_options_from_mapping(conf_dict, options, checkvalue=True)
+        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(act_mpiname, k[11:].lower()): v
+                                       for k, v in self.env.items()
+                                       if k.startswith('VORTEX_MPI_')}, options)
+        _generic_options_from_mapping(opts, options)
+        # Find other specific options (not listed in generic_options)
+
+        def _specific_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_opt_'.format(act_mpiname)
+            for k, v in mapping.items():
+                if (k.startswith(optprefix) and
+                        k[len(optprefix):] not in generic_options and
+                        k[len(optprefix):] != 'mpiname'):
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _specific_options_from_mapping(conf_dict, options, checkvalue=True)
+        _specific_options_from_mapping(opts, options)
+
+        logger.info('Attributes to create the mpitool: %s', options)
+        return options
 
     def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
@@ -1517,6 +1570,9 @@ class Parallel(xExecutableAlgoComponent):
     def _bootstrap_mpienvelope_hack(self, envelope, rh, opts, mpi):
         return copy.deepcopy(envelope)
 
+    def _bootstrap_mpienvelope_posthack(self, envelope, rh, opts, mpi):
+        return None
+
     def _bootstrap_mpitool(self, rh, opts):
         """Initialise the mpitool object and finds out the command line."""
 
@@ -1527,13 +1583,9 @@ class Parallel(xExecutableAlgoComponent):
         # Find the MPI launcher
         mpi = self.mpitool
         if not mpi:
-            mpi_extras = dict()
-            if self.env.VORTEX_MPI_OPTS is not None:
-                mpi_extras['mpiopts'] = self.env.VORTEX_MPI_OPTS
             mpi = footprints.proxy.mpitool(
                 sysname=self.system.sysname,
-                mpiname=self.mpiname or self.env.VORTEX_MPI_NAME,
-                **mpi_extras
+                ** self._mpitool_attributes(opts)
             )
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
@@ -1553,8 +1605,6 @@ class Parallel(xExecutableAlgoComponent):
                     blockspec['nnp'] = self.env.get('VORTEX_SUBMIT_TASKS')
                 else:
                     raise ValueError("when envelope='auto', VORTEX_SUBMIT_TASKS must be set up.")
-                if 'VORTEX_SUBMIT_OPENMP' in self.env:
-                    blockspec['openmp'] = self.env.get('VORTEX_SUBMIT_OPENMP', 1)
                 envelope = [blockspec, ]
             elif isinstance(envelope, dict):
                 envelope = [envelope, ]
@@ -1585,14 +1635,18 @@ class Parallel(xExecutableAlgoComponent):
         if len(rh) == 1 and not self.binaries:
 
             # The main program
+            allowbind = mpi_opts.pop('allowbind', True)
             if use_envelope:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
-                    ranks=envelope_ntasks)
+                    ranks=envelope_ntasks,
+                    openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None),
+                    allowbind=allowbind)
             else:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
                     nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                    allowbind=allowbind,
                     **mpi_desc)
             master.options = mpi_opts
             master.master = self.absexcutable(rh[0].container.localpath())
@@ -1622,11 +1676,13 @@ class Parallel(xExecutableAlgoComponent):
 
             # Create MpiBinaryDescription objects
             bins = list()
+            allowbinds = mpi_opts.pop('allowbind', [True, ] * len(rh))
             for i, r in enumerate(rh):
                 if use_envelope:
                     bins.append(
                         footprints.proxy.mpibinary(
-                            kind=bnames[i]
+                            kind=bnames[i],
+                            allowbind=allowbinds[i]
                         )
                     )
                 else:
@@ -1634,6 +1690,7 @@ class Parallel(xExecutableAlgoComponent):
                         footprints.proxy.mpibinary(
                             kind=bnames[i],
                             nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                            allowbind=allowbinds[i],
                             **mpi_desc
                         )
                     )
@@ -1654,15 +1711,21 @@ class Parallel(xExecutableAlgoComponent):
                 bins[i].master = self.absexcutable(r.container.localpath())
                 bins[i].arguments = bargs[i]
 
+        # The global envelope
+        envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
+        if envelope:
+            mpi.envelope = envelope
+
         # The binaries description
         mpi.binaries = self._bootstrap_mpibins_hack(bins, rh, opts, use_envelope)
+        upd_envelope = self._bootstrap_mpienvelope_posthack(envelope, rh, opts, mpi)
+        if upd_envelope:
+            mpi.envelope = upd_envelope
 
         # The source files
         mpi.sources = sources
 
-        envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
         if envelope:
-            mpi.envelope = envelope
             # Check the consistency between nranks and the total number of processes
             envelope_ntasks = sum([d.nprocs for d in mpi.envelope])
             mpibins_total = sum([m.nprocs for m in mpi.binaries])
@@ -1695,7 +1758,7 @@ class Parallel(xExecutableAlgoComponent):
         mpi, args = self._bootstrap_mpitool(rh, opts)
 
         # Specific parallel settings
-        mpi.setup(opts)
+        mpi.setup(opts, self.mpiconflabel)
 
         # This is actual running command
         self.spawn(args, opts)
@@ -1794,6 +1857,13 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                 optional=True,
                 doc_visibility=footprints.doc.visibility.ADVANCED,
             ),
+            openpalm_binddriver=dict(
+                info='Try to bind the OpenPALM driver binary.',
+                type=bool,
+                optional=True,
+                default=False,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
             openpalm_binkind=dict(
                 info='The binary kind for the OpenPALM driver.',
                 optional=True,
@@ -1828,7 +1898,10 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
             kind=self.openpalm_binkind,
             nodes=1,
             tasks=self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
-            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or master.openmp,
+            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or 1,
+            allowbind=opts.pop('palmdrv_bind',
+                               self.env.get('VORTEX_OPENPALM_DRV_BIND',
+                                            self.openpalm_binddriver)),
         )
         driver.options = {x[8:]: opts[x]
                           for x in opts.keys() if x.startswith('palmdrv_')}
@@ -1856,7 +1929,7 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
 
     _MIXIN_MPIBINS_HOOKS = (_bootstrap_mpibins_openpalm_hack, )
 
-    def _bootstrap_mpienvelope_openpalm_hack(self, env, env0, rh, opts, mpi):
+    def _bootstrap_mpienvelope_openpalm_posthack(self, env, env0, rh, opts, mpi):
         """
         Tweak the MPI envelope in order to execute the OpenPALM driver on the
         appropriate node.
@@ -1865,7 +1938,8 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
         driver = mpi.binaries[0]  # The OpenPALM driver
         if self.openpalm_overcommit:
             # Execute the driver on the first compute node
-            if env:
+            if env or env0:
+                env = env or copy.deepcopy(env0)
                 # An envelope is already defined... update it
                 if not ('nn' in env[0] and 'nnp' in env[0]):
                     raise AlgoComponentError("'nn' and 'nnp' must be defined in the envelope")
@@ -1892,4 +1966,4 @@ class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
                     env.extend([b.options for b in mpi.binaries[2:]])
         return env
 
-    _MIXIN_MPIENVELOPE_HOOKS = (_bootstrap_mpienvelope_openpalm_hack, )
+    _MIXIN_MPIENVELOPE_POSTHOOKS = (_bootstrap_mpienvelope_openpalm_posthack, )

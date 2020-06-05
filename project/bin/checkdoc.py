@@ -199,13 +199,16 @@ def main():
 
     parser.add_argument("--discard", dest="discard", action='store', default='taylorism',
                         help="Ignore some of the packages")
+    parser.add_argument("--fail", dest="fail", action="store_true",
+                        help="Return a non-zero error code on failure.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--light", dest="light", action="store_true",
                        help="Only check for missing stuff...")
     group.add_argument("--mkrst", dest="mkrst", action="store_true",
                        help="Build missing RST files.")
     group.add_argument("--gen-report", dest="genreport", action="store",
-                       help="Generate the report in RST format")
+                       help="Generate the report in RST format.")
+
     args = parser.parse_args()
 
     # Discard may be a list
@@ -254,6 +257,11 @@ def main():
         generate_rst_report(args.genreport, report)
     else:
         generate_console_report(report, args.mkrst or args.light)
+
+    if args.fail:
+        if report['miss'] or (not (args.light or args.mkrst) and
+                              any([len(item) for item in report.values()])):
+            sys.exit(1)
 
 
 if __name__ == "__main__":

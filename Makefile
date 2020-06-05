@@ -10,8 +10,10 @@ STYLEPY		= project/bin/vortex_codechecker.py
 SUBDIRS		= tests sphinx
 CLEANDIRS 	= $(SUBDIRS:%=clean-%)
 
-EXTRAPATH   := $(PWD)/src:$(PWD)/site:$(PWD)/project:$(PYTHONPATH)
+VORTEXBASE  := $(shell pwd)
+EXTRAPATH   := $(VORTEXBASE)/src:$(VORTEXBASE)/site:$(VORTEXBASE)/project:$(VORTEXBASE)/tests:$(PYTHONPATH)
 export PYTHONPATH = $(EXTRAPATH)
+
 
 .PHONY: check tests cover doc style cloc cloc_all pylint flake8 clean $(CLEANDIRS)
 
