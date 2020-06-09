@@ -16,8 +16,6 @@ from bronx.stdtypes import date
 from vortex.algo.components import Parallel, AlgoComponentError, AlgoComponent
 from vortex.syntax.stdattrs import a_date, model
 
-from common.util import usepygram
-
 
 #: No automatic export
 __all__ = []
@@ -456,6 +454,7 @@ class MocaccForecast(AbstractMocaccRoot):
 
         MOCAGE_ZERO = 1.0e-30
 
+        from common.util import usepygram
         if not usepygram.epygram_checker.is_available():
             raise AlgoComponentError("Epygram needs to be available")
 
