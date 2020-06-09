@@ -28,7 +28,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.6.4'
+__version__ = '1.7.0'
 
 __tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
 
