@@ -19,11 +19,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: PPprevairBDAP
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: MkStatsCams
    :show-inheritance:
    :members:

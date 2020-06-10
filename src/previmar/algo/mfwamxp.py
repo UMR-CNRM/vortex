@@ -109,14 +109,14 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
         windcandidate = [x.rh
                          for x in self.context.sequence.effective_inputs(role=('Wind',),
-                                                                         kind='gridpoint')]
+                                                                         kind='forcing')]
 
         # Is there a analysis wind forcing ?
         if len(windcandidate) == 2:
             rhgrib = windcandidate[0]
 
             # Check for input grib files to concatenate
-            rhdict = {rh.resource.origin: rh for rh in windcandidate}
+            rhdict = {rh.container.filename: rh for rh in windcandidate}
 
             # Check sfwindin
             tmpout = 'sfcwindin'
@@ -124,18 +124,19 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 self.system.rm(tmpout)
 
             with io.open(tmpout, 'wb') as outfile:
-                for fname in [x.container.localpath() for x in windcandidate]:
+                for fname in [x.container.localpath() for x in sorted(windcandidate,
+                                                                      key=lambda rh: rh.resource.begintime)]:
                     with io.open(fname, 'rb') as infile:
                         outfile.write(infile.read())
 
             # recuperation fcterm
             if fcterm is None:
-                fcterm = rhdict['fcst'].resource.term
+                fcterm = rhdict['sfcwindin_fc'].resource.endtime
                 logger.info('fcterm %s', fcterm)
 
-            datefin = (rhdict['ana'].resource.date + fcterm + self.deltabegin).compact()
-            datedebana = rhdict['ana'].resource.date - self.anabegin + self.deltabegin
-            datefinana = rhdict['ana'].resource.date
+            datefin = (rhdict['sfcwindin_ana'].resource.date + fcterm).compact()
+            datedebana = rhdict['sfcwindin_ana'].resource.date - self.anabegin + self.deltabegin
+            datefinana = rhdict['sfcwindin_ana'].resource.date
 
         elif len(windcandidate) == 1:
             rhgrib = windcandidate[0]
@@ -146,10 +147,10 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
 
             # recuperation fcterm
             if fcterm is None:
-                fcterm = rhgrib.resource.term
+                fcterm = rhgrib.resource.endtime
                 logger.info('fcterm %s', fcterm)
 
-            datefin = (rhgrib.resource.date + fcterm + self.deltabegin).compact()
+            datefin = (rhgrib.resource.date + fcterm).compact()
             datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             if self.isana:
                 datefinana = rhgrib.resource.date
@@ -158,6 +159,12 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
         else:
             logger.info("%d winds", len(windcandidate))
             raise ValueError("No winds or too many")
+
+        # Untar SAR data if exists
+        sarcandidate = self.context.sequence.effective_inputs(role=('ObservationSpec'))
+        if len(sarcandidate) > 0:
+            rhsar = sarcandidate[0].rh
+            self.system.untar(rhsar.container.localpath())
 
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),
@@ -250,8 +257,8 @@ class MfwamGauss2Grib(ParaBlindRun):
 
         # verification of the namelists
         for dom in self.grid:
-            if not self.system.path.exists(dom + ".nam"):
-                raise IOError(dom + ".nam must exist.")
+            if not self.system.path.exists("./grids/" + dom + ".nam"):
+                raise IOError("./grids/" + dom + ".nam must exist.")
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
@@ -324,7 +331,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             for dom in self.grid:
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
-                sh.cp(sh.path.join(cwd, dom + ".nam"), 'fort.2')
+                sh.cp(sh.path.join(cwd, "grids", dom + ".nam"), 'fort.2')
                 # execution
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output

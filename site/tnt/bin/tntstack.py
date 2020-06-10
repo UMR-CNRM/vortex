@@ -69,7 +69,7 @@ if __name__ == '__main__':
         with io.open(args.directive, 'r') as fhyaml:
             directive = tnt.config.TntStackDirective(basedir, ** yaml.load(fhyaml))
 
-        tnt.util.set_verbose(args.verbose, args.directive)
-        tnt.util.process_tnt_stack(directive,
-                                   sorting=(args.first_order_sorting or args.no_sorting or
-                                            SECOND_ORDER_SORTING + 1) - 1)
+        with tnt.util.set_verbose(args.verbose, args.directive):
+            tnt.util.process_tnt_stack(directive,
+                                       sorting=(args.first_order_sorting or args.no_sorting or
+                                                SECOND_ORDER_SORTING + 1) - 1)

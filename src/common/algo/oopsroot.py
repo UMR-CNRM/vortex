@@ -276,8 +276,9 @@ class OOPSParallel(Parallel,
         self.setchannels()
         # Register all of the config files
         self.set_config_rendering()
-        # Looking for BOOST defaults...
+        # Looking for low-level-libs defaults...
         self.boost_defaults()
+        self.eckit_defaults()
 
     def spawn_hook(self):
         """Perform configuration file rendering before executing the binary."""
@@ -353,6 +354,29 @@ class OOPSParallel(Parallel,
         self.algoassert(cydefaults is not None,
                         'BOOST defaults not found for cycle: {!s}'.format(self.oops_cycle))
         logger.info('Setting up BOOST defaults:%s', lightdump(cydefaults))
+        self.env.default(**cydefaults)
+
+    def eckit_defaults(self):
+        """Set defaults for eckit environment variables.
+
+        Do not overwrite pre-initialised ones. The default list of variables
+        depends on the code's cycle number.
+        """
+        defaults = {
+            IfsCycle('cy1'): {
+                'ECKIT_MPI_INIT_THREAD': ('MPI_THREAD_MULTIPLE'
+                                          if int(self.env.get('OMP_NUM_THREADS', '1')) > 1
+                                          else 'MPI_THREAD_SINGLE'),
+            }
+        }
+        cydefaults = None
+        for k, defdict in sorted(defaults.items(), reverse=True):
+            if k < self.oops_cycle:
+                cydefaults = defdict
+                break
+        self.algoassert(cydefaults is not None,
+                        'eckit defaults not found for cycle: {!s}'.format(self.oops_cycle))
+        logger.info('Setting up eckit defaults:%s', lightdump(cydefaults))
         self.env.default(**cydefaults)
 
 

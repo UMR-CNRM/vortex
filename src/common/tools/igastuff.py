@@ -188,14 +188,14 @@ class IgakeyFactoryArchive(_BaseIgakeyFactory):
                          'globalarp02': 'mfwamgloarp02',
                          'globalarpc02': 'mfwamgloarpc02',
                          'atourxarp01': 'mfwamatourx01arp',
-                         'atourxarpc01': 'mfwamatourx01arpc',
+                         'euratarpc01': 'mfwameurcourt',
                          'frangparo0025': 'mfwamfrangp0025',
                          'frangparoifs0025': 'mfwamfrangp0025ifs',
                          'assmp1': 'mfwamassmp1',
                          'assmp2': 'mfwamassmp2',
                          'assms1': 'mfwamassms1',
                          'assms2': 'mfwamassms2',
-                         'angola01': 'mfwamangola', },
+                         'angola0025': 'mfwamangola', },
                }
 
 
@@ -244,12 +244,12 @@ class IgakeyFactoryInline(_BaseIgakeyFactory):
                          'globalarp02': 'mfwamgloarp02',
                          'globalarpc02': 'mfwamgloarpc02',
                          'atourxarp01': 'mfwamatourx01arp',
-                         'atourxarpc01': 'mfwamatourx01arpc',
+                         'euratarpc01': 'mfwameurcourt',
                          'frangparo0025': 'mfwamfrangp0025',
                          'frangparoifs0025': 'mfwamfrangp0025ifs',
                          'assmp1': 'mfwamassmp1',
                          'assmp2': 'mfwamassmp2',
                          'assms1': 'mfwamassms1',
                          'assms2': 'mfwamassms2',
-                         'angola01': 'mfwamangola', },
+                         'angola0025': 'mfwamangola', },
                }

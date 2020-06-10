@@ -94,6 +94,11 @@ class SurgesCouplingForecasts(Parallel):
             flypoll = dict(
                 default = 'iopoll_marine',
             ),
+            dir_exec = dict(
+                default = 'EXEC_OASIS',
+                optional = True,
+            ),
+
         )
     )
 
@@ -148,7 +153,7 @@ class SurgesCouplingForecasts(Parallel):
 
     def execute(self, rh, opts):
         """Jump into the correct working directory."""
-        tmpwd = 'EXEC_OASIS'
+        tmpwd = self.dir_exec
         logger.info('Temporarily change the working dir to ./%s', tmpwd)
         with self.system.cdcontext(tmpwd):
             super(SurgesCouplingForecasts, self).execute(rh, opts)

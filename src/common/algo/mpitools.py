@@ -72,6 +72,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     _envelope_wrapper_tpl = '@mpitools/envelope_wrapper_mpiauto.tpl'
     _envelope_rank_var = 'MPIAUTORANK'
+    _needs_mpilib_specific_mpienv = False
 
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
@@ -99,17 +100,6 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
                 options['no-use-arch-bind'] = None
         return options
 
-    def _set_binaries(self, value):
-        """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
-        super(MpiAuto, self)._set_binaries(value)
-        if len(self._binaries) > 1 and self.bindingmethod not in (None, 'arch', 'vortex'):
-            logger.info("The '{:s}' binding method is not working properly with multiple binaries."
-                        .format(self.bindingmethod))
-            logger.warning("Resetting the binding method to 'vortex'.")
-            self.bindingmethod = 'vortex'
-
-    binaries = property(mpitools.MpiTool._get_binaries, _set_binaries)
-
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
         """Set the envelope fake binary options."""
         e_bit.options = {k: v for k, v in e_desc.items()
@@ -117,6 +107,14 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
         e_bit.options['prefixcommand'] = self._envelope_wrapper_name
         if self.binaries:
             e_bit.master = self.binaries[0].master
+
+    def _set_binaries_hack(self, binaries):
+        """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
+        if len(binaries) > 1 and self.bindingmethod not in (None, 'arch', 'vortex'):
+            logger.info("The '{:s}' binding method is not working properly with multiple binaries."
+                        .format(self.bindingmethod))
+            logger.warning("Resetting the binding method to 'vortex'.")
+            self.bindingmethod = 'vortex'
 
     def _set_binaries_envelope_hack(self, binaries):
         """Tweak the envelope after binaries were setup."""
