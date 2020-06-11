@@ -264,7 +264,11 @@ class MpiTool(footprints.FootprintBase):
 
     def _set_envelope_from_binaries(self):
         """Create an envelope from existing binaries."""
-        self.envelope = [v.options.copy() for v in self.binaries]
+        new_envelope = list()
+        for a_bin in self.binaries:
+            new_envelope.append({k: v for k, v in a_bin.options.items()
+                                 if k in ('nn', 'nnp', 'openmp', 'np')})
+        self.envelope = new_envelope
 
     def _set_binaries_envelope_hack(self, binaries):
         """Tweak the envelope after binaries were setup."""
