@@ -49,22 +49,22 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
                             'SurfaceBackground',)
 
     _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
-        info = "Abstract mbdetect footprint",
-        attr = dict(
-            ens_minsize = dict(
-                info            = "For a multi-member algocomponnent, the minimum of the ensemble.",
-                optional        = True,
-                type            = int
+        info="Abstract mbdetect footprint",
+        attr=dict(
+            ens_minsize=dict(
+                info="For a multi-member algocomponnent, the minimum of the ensemble.",
+                optional=True,
+                type=int
             ),
-            strict_mbdetect = dict(
-                info            = "Performs a strict members/terms detection",
-                type            = bool,
-                optional        = True,
-                default         = True,
-                doc_zorder      = -60,
+            strict_mbdetect=dict(
+                info="Performs a strict members/terms detection",
+                type=bool,
+                optional=True,
+                default=True,
+                doc_zorder=-60,
             )
         )
-    ), )
+    ),)
 
     @staticmethod
     def _stateless_members_detect(smap, basedate, ensminsize=None, utest=False):
@@ -241,6 +241,9 @@ class OOPSParallel(Parallel,
                 default         = footprints.FPDict(),
                 doc_zorder      = -60,
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -380,7 +383,7 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
         sh = self.system
 
         # Looking for input observations
-        allodb  = self.lookupodb()
+        allodb = self.lookupodb()
         allcma = [x for x in allodb if x.rh.resource.layout.lower() == self.virtualdb]
         if self.virtualdb.lower() == 'ccma':
             self.algoassert(len(allcma) == 1, 'A unique CCMA database is to be provided.')

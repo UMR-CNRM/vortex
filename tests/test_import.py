@@ -19,15 +19,18 @@ import vortex
 import common  # @UnusedImport
 
 non_standard_dep = {'yaml': ['bronx.fancies.multicfg',
-                             'bronx.fancies.dispatch' ],
+                             'bronx.fancies.dispatch'],
                     'PIL': ['bronx.datagrip.pyexttiff', ],
                     'numpy': ['bronx.datagrip.pyexttiff',
+                              'bronx.datagrip.varbc',
+                              'bronx.datagrip.varbcheaders',
                               'bronx.graphics.colormapping',
                               'bronx.meteo.constants',
                               'bronx.meteo.conversion',
+                              'bronx.meteo.thermo',
                               'bronx.syntax.arrays'],
                     'matplotlib': ['bronx.graphics.colormapping',
-                                   'bronx.graphics.axes' ]}
+                                   'bronx.graphics.axes']}
 
 tloglevel = 'critical'
 

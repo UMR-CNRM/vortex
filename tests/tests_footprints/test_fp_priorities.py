@@ -98,7 +98,7 @@ class utPriorities(TestCase):
 
         rv = priorities.top
         self.assertTrue(rv.NONE < rv.DEFAULT < rv.TOOLBOX < rv.DEBUG)
-        self.assertTrue(rv.DEBUG   > 'toolbox')
+        self.assertTrue(rv.DEBUG > 'toolbox')
         self.assertTrue(rv.DEFAULT < 'toolbox')
         self.assertIsNone(rv.DEBUG.nextlevel())
         self.assertIsNone(rv.NONE.prevlevel())

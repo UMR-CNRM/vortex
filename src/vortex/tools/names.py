@@ -46,7 +46,7 @@ class AbstractVortexNameBuilder(footprints.FootprintBase):
         logger.debug('Init VortexNameBuilder %s', self.__class__)
         super(AbstractVortexNameBuilder, self).__init__(*args, **kw)
         self._default = dict(
-            radical    = 'vortexdata',
+            radical='vortexdata',
         )
         # List of known defaults
         for k in ['flow', 'src', 'term', 'period', 'cen_period', 'geo', 'suffix',

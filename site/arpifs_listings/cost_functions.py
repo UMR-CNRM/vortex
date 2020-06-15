@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 Module that deals with part of the Arpege/IFS listings related to the variational
 data assimilation's cost functions.
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 from six import StringIO
 
@@ -221,7 +221,7 @@ class CostFunctions(object):
                         * zip(* [[k.iter, k.sim,
                                   str(v.j), str(v.jo), str(v.jb), str(v.jc), str(v.jq), str(v.jp), str(v.gradj)]
                                  for k, v in self.items()]),
-                        output_callback = sio.write)
+                        output_callback=sio.write)
         sio.seek(0)
         return ret + sio.read()
 

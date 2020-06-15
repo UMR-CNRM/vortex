@@ -48,14 +48,13 @@ gl = vortex.ticket().glove
 tg = sh.target()
 
 
-# A decorator that fills the method documentation with the standard UgetId
-# description
 def ugetid_doc(func):
-    """The 'UgetId' identifies a Uget element. Its formed of an *element_name* and
+    """A decorator that fills the method documentation with the standard UgetId description."""
+    docaddtion = """The 'UgetId' identifies a Uget element. Its formed of an *element_name* and
           of a *location* : it looks like 'element_name@location'. The @location part
           may be omitted. In such a case the default_location is used (see the
           'set' and 'info' commands)."""
-    func.__doc__ = re.sub(r'\bUGETID_DOC\b', ugetid_doc.__doc__, func.__doc__)
+    func.__doc__ = re.sub(r'\bUGETID_DOC\b', docaddtion, func.__doc__)
     return func
 
 
@@ -125,7 +124,10 @@ class UGetShell(cmd.Cmd):
         # Read the configuration
         if sh.path.exists(self._config_file):
             with io.open(self._config_file, 'r') as fhconf:
-                self._config.readfp(fhconf)
+                if six.PY2:
+                    self._config.readfp(fhconf)
+                else:
+                    self._config.read_file(fhconf)
         else:
             # Or create a void one...
             self._config.add_section('cli')
@@ -506,7 +508,7 @@ class UGetShell(cmd.Cmd):
                 self._cliconfig_set('location', mline['value'])
             elif mline['what2'] == 'ftuser':
                 self._locationconfig_set(mline['target'], 'ftuser', mline['user'])
-            with open(self._config_file, 'w') as fpconf:
+            with io.open(self._config_file, 'w' + ('b' if six.PY2 else '')) as fpconf:
                 self._config.write(fpconf)
 
     def complete_check(self, text, line, begidx, endidx):

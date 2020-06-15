@@ -13,9 +13,13 @@ default:
             vapp: hycom
             vconf: atl@fcarp 
             kind: gridpoint
-            origin: hst
+            origin:
+                - fcst
+                - ana
             term: 3
-            namespace: '[suite].inline.fr'
+            namespace:
+               - '[suite].inline.fr'
+               - '[suite].archive.fr'
 
 todo:
     # Gridpoints

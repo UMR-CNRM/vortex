@@ -25,17 +25,19 @@ logger = loggers.getLogger(__name__)
 
 
 def dictmerge(d1, d2):
-    """
-    Merge two dictionaries d1 and d2 with a recursive function (d1 and d2 can be
-    dictionaries of dictionaries). The result is in d1.
-    If keys exist in d1 and d2, d1 keys are replaced by d2 keys.
+    """Merge two dictionaries *d1* and *d2* with a recursive function.
+
+    * *d1* and *d2* can be dictionaries of dictionaries;
+    * The result is in *d1*. If keys exist in *d1* and *d2*, *d1* keys are
+      replaced by *d2* keys.
 
     Examples::
 
         >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
         >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
         >>> (dictmerge(a, b) ==
-        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')}, 'truncation': {'type': 'int', 'optional': 'False'}}})
+        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')},
+        ...                                  'truncation': {'type': 'int', 'optional': 'False'}}})
         True
 
         >>> (dictmerge({'a':'1'}, {'b':'2'}) ==
@@ -47,7 +49,6 @@ def dictmerge(d1, d2):
         True
 
     """
-
     for key, value in six.iteritems(d2):
         if isinstance(value, dict) and not value.__class__.__name__.startswith('FP'):
             if key in d1 and isinstance(d1[key], dict) and not value.__class__.__name__.startswith('FP'):
@@ -62,10 +63,9 @@ def dictmerge(d1, d2):
 
 def list2dict(a, klist):
     """
-    Reshape any entry of ``a`` specified in ``klist`` as a dictionary of the
+    Reshape any entry of *a* specified in *klist* as a dictionary of the
     iterable contents of these entries.
     """
-
     for k in klist:
         if k in a and isinstance(a[k], (list, tuple)):
             ad = dict()
@@ -200,7 +200,7 @@ def _parse_globs(todo):
 
 
 def expand(desc):
-    """
+    r"""
     Expand the given description according to iterable or expandable arguments.
 
     List expansion::
@@ -237,14 +237,16 @@ def expand(desc):
         ... # - testfile_def_2
         ... # - testfile_def_3
         ... # - testfile_a_trap
-        >>> expand({'fname': r'testfile_{glob:i:\\w+}_{glob:n:\\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
-        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'}, {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'}, {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'}, {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
+        >>> expand({'fname': r'testfile_{glob:i:\w+}_{glob:n:\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
+        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'},
+         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'},
+         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'},
+         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
 
     Explanation: The files currently in the working directory are matched using regular
     expressions. If the filename matches, some matching parts may be re-used to fill
     other keys in the dictionary.
     """
-
     ld = deque([desc, ])
     todo = True
     nbpass = 0

@@ -90,6 +90,7 @@ logger = fp.loggers.getLogger(__name__)
 
 
 class ExtraArgumentError(Exception):
+    """Exception raised when incorrect arguments are provided."""
 
     def __init__(self, msg='Incorrect extra arguments. Please check your command line"'):
         super(ExtraArgumentError, self).__init__(msg)

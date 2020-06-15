@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO module description.
+"""
+
 from __future__ import print_function
 
 import sys
@@ -16,9 +20,9 @@ import traceback
 import subprocess
 import multiprocessing
 
-from ast          import literal_eval
-from datetime     import datetime
-from signal       import SIGTERM
+from ast import literal_eval
+from datetime import datetime
+from signal import SIGTERM
 from six.moves.configparser import SafeConfigParser
 
 import footprints
@@ -36,21 +40,21 @@ class GentleTalk(object):
 
     _levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
 
-    DEBUG    = '\033[94m'
-    INFO     = '\033[0m'
-    WARNING  = '\033[93m'
-    ERROR    = '\033[95m'
+    DEBUG = '\033[94m'
+    INFO = '\033[0m'
+    WARNING = '\033[93m'
+    ERROR = '\033[95m'
     CRITICAL = '\033[91m'
-    ENDC     = '\033[0m'
-    BOLD     = '\033[1m'
-    HEADER   = '\033[95m'
-    OKBLUE   = '\033[94m'
-    OKGREEN  = '\033[92m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
 
     def __init__(self, datefmt='%Y/%m/%d-%H:%M:%S', loglevel=1, taskno=0):
-        self._datefmt  = datefmt
-        self._taskno   = int(taskno)
-        self.loglevel  = loglevel
+        self._datefmt = datefmt
+        self._taskno = int(taskno)
+        self.loglevel = loglevel
 
     def clone(self, taskno):
         """Clone the actual logger with a different task number."""
@@ -147,16 +151,16 @@ class GentleTalk(object):
 class GentleTalkMono(GentleTalk):
     """Monochrome version of the GentleTalk interface."""
 
-    DEBUG    = ''
-    INFO     = ''
-    WARNING  = ''
-    ERROR    = ''
+    DEBUG = ''
+    INFO = ''
+    WARNING = ''
+    ERROR = ''
     CRITICAL = ''
-    ENDC     = ''
-    BOLD     = ''
-    HEADER   = ''
-    OKBLUE   = ''
-    OKGREEN  = ''
+    ENDC = ''
+    BOLD = ''
+    HEADER = ''
+    OKBLUE = ''
+    OKGREEN = ''
 
 
 class ExitHandler(object):
@@ -326,16 +330,16 @@ class BaseDaemon(object):
     """
 
     def __init__(self, tag='test', pidfile=None, loglevel=1, inifile=None, redirect=None):
-        self._tag        = tag
-        self._pidfile    = PidFile(tag=tag, filename=pidfile)
-        self._tmpdir     = os.path.join(os.environ['HOME'], 'tmp')
-        self._rundir     = os.getcwd()
-        self._logger     = None
-        self._loglevel   = loglevel
-        self._stdin      = os.devnull
-        self._redirect   = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
+        self._tag = tag
+        self._pidfile = PidFile(tag=tag, filename=pidfile)
+        self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
+        self._rundir = os.getcwd()
+        self._logger = None
+        self._loglevel = loglevel
+        self._stdin = os.devnull
+        self._redirect = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
         self._daemonized = False
-        self._inifile    = self._tag if inifile is None else inifile
+        self._inifile = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
             self._inifile += '.ini'
 
@@ -785,7 +789,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             except ImportError:
                 self.critical('Import failed', module='importlib')
                 raise
-            except:
+            except Exception:
                 self.critical('Unexpected', error=sys.exc_info()[0])
                 raise
             else:
@@ -1014,7 +1018,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 for req in todo:
                     rt = self.redo.setdefault(req, dict(first=stamp, last=stamp, delay=rtinit, nbt=0))
                     rttotal = (stamp - rt['first']).total_seconds()
-                    rtlast  = (stamp - rt['last' ]).total_seconds()
+                    rtlast = (stamp - rt['last']).total_seconds()
                     if rttotal > rtstop:
                         tbusy = True
                         self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)

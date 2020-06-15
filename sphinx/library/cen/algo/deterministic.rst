@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Interpol_Forcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 .. hints
 .. .. autodata:: XXX

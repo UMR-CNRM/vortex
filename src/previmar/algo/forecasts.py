@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -44,12 +48,10 @@ class WithoutCouplingForecasts(Parallel):
         else:
             self.flyput = False
 
-    def execute(self, rh, opts):
-        super(WithoutCouplingForecasts, self).execute(rh, opts)
-
 
 class SurgesCouplingForecasts(Parallel):
-    """"""
+    """TODO: Class documentation."""
+
     _footprint = dict(
         attr = dict(
             binary = dict(
@@ -102,7 +104,7 @@ class SurgesCouplingForecasts(Parallel):
             self.export('mpitool')
 
         # Tweak the pseudo hycom namelists New version  !
-        for namsec in self.context.sequence.effective_inputs(role = re.compile('FileConfig')):
+        for namsec in self.context.sequence.effective_inputs(role=re.compile('FileConfig')):
 
             r = namsec.rh
 
@@ -124,9 +126,9 @@ class SurgesCouplingForecasts(Parallel):
                 dico["h_rese"] = reseau
                 dico["modele"] = r.provider.vconf.upper()[-3:]
                 xp = r.provider.vconf[-5:-3]
-                mode_map = dict(fc= 'PR', an='AA')
+                mode_map = dict(fc='PR', an='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
-                dico["nmatm"]  = str(self.freq_forcage)
+                dico["nmatm"] = str(self.freq_forcage)
                 dico["codmod"] = self.codmod
                 dico["imodel"] = str(self.numod)
                 dico["kmodel"] = self.config_name

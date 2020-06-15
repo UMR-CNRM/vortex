@@ -9,7 +9,6 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
-from math import ceil
 import re
 import sys
 
@@ -182,9 +181,9 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     def __init__(self, kw):
         logger.debug('Node initialisation %s', repr(self))
-        self.options    = dict()
-        self.play       = kw.pop('play', False)
-        self._ticket    = kw.pop('ticket', None)
+        self.options = dict()
+        self.play = kw.pop('play', False)
+        self._ticket = kw.pop('ticket', None)
         if self._ticket is None:
             raise ValueError("The session's ticket must be provided")
         self._configtag = kw.pop('config_tag', self.tag)
@@ -192,19 +191,19 @@ class Node(getbytag.GetByTag, NiceLayout):
         if self._active_cb is not None and not callable(self._active_cb):
             raise ValueError("If provided, active_callback must be a callable")
         self._locprefix = kw.pop('special_prefix', 'OP_').upper()
-        self._subjobok  = kw.pop('subjob_allowed', True)
+        self._subjobok = kw.pop('subjob_allowed', True)
         self._subjobtag = kw.pop('subjob_tag', None)
-        self._cycle_cb  = kw.pop('register_cycle_prefix', None)
-        j_assist        = kw.pop('jobassistant', None)
+        self._cycle_cb = kw.pop('register_cycle_prefix', None)
+        j_assist = kw.pop('jobassistant', None)
         if j_assist is not None:
             self._locprefix = j_assist.special_prefix.upper()
             self._cycle_cb = j_assist.register_cycle
             self._subjobok = j_assist.subjob_allowed
             self._subjobtag = j_assist.subjob_tag
-        self._conf       = None
+        self._conf = None
         self._activenode = None
-        self._contents   = list()
-        self._aborted    = False
+        self._contents = list()
+        self._aborted = False
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         """All the necessary arguments to build a copy of this object."""
@@ -403,9 +402,9 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Set toolbox defaults, extended with actual arguments ``extras``."""
         t = self.ticket
         toolbox.defaults(
-            model      = t.glove.vapp,
-            namespace  = self.conf.get('namespace', Namespace('vortex.cache.fr')),
-            gnamespace = self.conf.get('gnamespace', Namespace('gco.multi.fr')),
+            model=t.glove.vapp,
+            namespace=self.conf.get('namespace', Namespace('vortex.cache.fr')),
+            gnamespace=self.conf.get('gnamespace', Namespace('gco.multi.fr')),
         )
 
         if 'rundate' in self.conf:
@@ -622,9 +621,9 @@ class Family(Node):
                 fcount += 1
                 self._contents.append(
                     Family(
-                        tag    = '{0:s}.f{1:02d}'.format(self.tag, fcount),
-                        ticket = self.ticket,
-                        nodes  = x,
+                        tag='{0:s}.f{1:02d}'.format(self.tag, fcount),
+                        ticket=self.ticket,
+                        nodes=x,
                         **kw
                     )
                 )
@@ -845,7 +844,7 @@ class WorkshareFamily(Family):
             ws_number = min([sb_ws_number, lb_ws_number])
             # Find out the workshares sizes
             floorsize = n_population // ws_number
-            ws_sizes = [floorsize ] * ws_number
+            ws_sizes = [floorsize, ] * ws_number
             for i in range(n_population - ws_number * floorsize):
                 ws_sizes[i] += 1
             # Build de family's content
@@ -868,10 +867,10 @@ class Task(Node):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
         self.__dict__.update(
-            steps   = kw.pop('steps', tuple()),
-            fetch   = kw.pop('fetch', 'fetch'),
-            compute = kw.pop('compute', 'compute'),
-            backup  = kw.pop('backup', 'backup'),
+            steps=kw.pop('steps', tuple()),
+            fetch=kw.pop('fetch', 'fetch'),
+            compute=kw.pop('compute', 'compute'),
+            backup=kw.pop('backup', 'backup'),
         )
         self.options = kw.copy()
         if isinstance(self.steps, six.string_types):
@@ -926,11 +925,11 @@ class Task(Node):
         t = self.ticket
         triggered = any([i in self.conf for i in ('io_nodes', 'io_tasks', 'io_openmp')])
         if 'io_nodes' in self.conf:
-            t.env.default(VORTEX_IOSERVER_NODES  = self.conf.io_nodes)
+            t.env.default(VORTEX_IOSERVER_NODES=self.conf.io_nodes)
         if 'io_tasks' in self.conf:
-            t.env.default(VORTEX_IOSERVER_TASKS  = self.conf.io_tasks)
+            t.env.default(VORTEX_IOSERVER_TASKS=self.conf.io_tasks)
         if 'io_openmp' in self.conf:
-            t.env.default(VORTEX_IOSERVER_OPENMP = self.conf.io_openmp)
+            t.env.default(VORTEX_IOSERVER_OPENMP=self.conf.io_openmp)
         if triggered:
             self.nicedump('IOSERVER Environment', **{k: v for k, v in t.env.items()
                                                      if k.startswith('VORTEX_IOSERVER_')})
@@ -999,9 +998,9 @@ class Driver(getbytag.GetByTag, NiceLayout):
                 fcount += 1
                 self._contents.append(
                     Family(
-                        tag     = '{0:s}.f{1:02d}'.format(self.tag, fcount),
-                        ticket  = self.ticket,
-                        nodes   = x,
+                        tag='{0:s}.f{1:02d}'.format(self.tag, fcount),
+                        ticket=self.ticket,
+                        nodes=x,
                         ** dict(self._options)
                     )
                 )

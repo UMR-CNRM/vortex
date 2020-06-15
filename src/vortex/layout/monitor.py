@@ -232,9 +232,9 @@ class ManualInputMonitor(_StateFullMembersList):
     def start(self):
         """Start the background updater task."""
         self._mpjob = multiprocessing.Process(
-            name   = 'BackgroundUpdater',
-            target = self._background_updater_job,
-            args   = ()
+            name='BackgroundUpdater',
+            target=self._background_updater_job,
+            args=()
         )
         self._mpjob.start()
 

@@ -54,7 +54,7 @@ class UtDataContent(_BaseDataContentTest):
         with loggers.contextboundGlobalLevel('critical'):
             self.assertTrue(ct.metadata_check(object()))
         self.assertEqual(ct.size, len(self.data[0]))
-        self.assertEqual(ct.export_dict(), ('vortex.data.contents', 'DataContent') )
+        self.assertEqual(ct.export_dict(), ('vortex.data.contents', 'DataContent'))
         self.assertEqual(ct.is_diffable(), False)
         # Deepcopy
         ctbis = copy.deepcopy(ct)

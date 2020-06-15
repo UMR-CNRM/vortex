@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Ctpini files.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from bronx.fancies import loggers
 
 from vortex.data.outflow import StaticResource
-from vortex.data.flow    import GeoFlowResource
+from vortex.data.flow import GeoFlowResource
 from gco.syntax.stdattrs import gvar
 from vortex.data.contents import DataTemplate
 from common.data.gridfiles import GridPoint
-
-"""
-Ctpini files
-"""
 
 #: No automatic export
 __all__ = []
@@ -132,7 +132,7 @@ class GridPointCtpini(GridPoint):
         else:
             source = [self.model, self.origin, self.parameter]
         ninfo.update(
-            radical = 'ctpini-grid',
-            src     = source,
+            radical='ctpini-grid',
+            src=source,
         )
         return ninfo

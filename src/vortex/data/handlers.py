@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+:class:`Handler` class is a cornerstone in any Vortex script. :class:`Handler`
+objects are in charge of manipulating data between the working directory and
+the various caches or archives".
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -18,10 +24,10 @@ import footprints
 
 from vortex import sessions
 
-from vortex.tools  import net
-from vortex.util   import config
+from vortex.tools import net
+from vortex.util import config
 from vortex.layout import contexts, dataflow
-from vortex.data   import containers, resources, providers
+from vortex.data import containers, resources, providers
 
 #: No automatic export
 __all__ = []
@@ -92,34 +98,34 @@ class IdCardAttrDumper(bronx.fancies.dump.TxtDumper):
 class Handler(object):
     """
     The resource handler object gathers a provider, a resource and a container
-    for any specific resource. Other parameters given at construct time
-    are stored as options.
+    for any specific resource.
+
+    Other parameters given at construct time are stored as options.
     """
 
     def __init__(self, rd, **kw):
         if 'glove' in rd:
             del rd['glove']
-        self._resource      = rd.pop('resource', None)
-        self._provider      = rd.pop('provider', None)
-        self._container     = rd.pop('container', None)
-        self._empty         = rd.pop('empty', False)
-        self._contents      = None
-        self._uridata       = None
-        self._options       = rd.copy()
-        self._observer      = observer_board(obsname=kw.pop('observer', None))
+        self._resource = rd.pop('resource', None)
+        self._provider = rd.pop('provider', None)
+        self._container = rd.pop('container', None)
+        self._empty = rd.pop('empty', False)
+        self._contents = None
+        self._uridata = None
+        self._options = rd.copy()
+        self._observer = observer_board(obsname=kw.pop('observer', None))
         self._options.update(kw)
-        self._mdcheck       = self._options.pop('metadatacheck', False)
-        self._mddelta       = self._options.pop('metadatadelta', dict())
-        self._ghost         = self._options.pop('ghost', False)
-        hook_names          = [x for x in self._options.keys()
-                               if x.startswith('hook_')]
-        self._hooks         = {x[5:]: self._options.pop(x) for x in hook_names}
-        self._delayhooks    = self._options.pop('delayhooks', False)
+        self._mdcheck = self._options.pop('metadatacheck', False)
+        self._mddelta = self._options.pop('metadatadelta', dict())
+        self._ghost = self._options.pop('ghost', False)
+        hook_names = [x for x in self._options.keys() if x.startswith('hook_')]
+        self._hooks = {x[5:]: self._options.pop(x) for x in hook_names}
+        self._delayhooks = self._options.pop('delayhooks', False)
 
         self._history = History(tag='data-handler')
         self._history.append(self.__class__.__name__, 'init', True)
         self._stage = ['load']
-        self._observer.notify_new(self, dict(stage = 'load'))
+        self._observer.notify_new(self, dict(stage='load'))
         self._localpr_cache = None  # To cache the promise dictionary
         self._latest_earlyget_id = None
         self._latest_earlyget_opts = None
@@ -235,11 +241,11 @@ class Handler(object):
     def _updstage(self, newstage, insitu=False):
         """Notify the new stage to any observing system."""
         self._stage.append(newstage)
-        self._observer.notify_upd(self, dict(stage = newstage, insitu = insitu))
+        self._observer.notify_upd(self, dict(stage=newstage, insitu=insitu))
 
     def _notifyhook(self, stage, hookname):
         """Notify that a hook function has been executed."""
-        self._observer.notify_upd(self, dict(stage = stage, hook = hookname))
+        self._observer.notify_upd(self, dict(stage=stage, hook=hookname))
 
     def _notifyclear(self):
         """Notify that the hashkey has changed."""
@@ -247,7 +253,7 @@ class Handler(object):
 
     def _notifyhash(self, oldhash):
         """Notify that the hashkey has changed."""
-        self._observer.notify_upd(self, dict(oldhash = oldhash, ))
+        self._observer.notify_upd(self, dict(oldhash=oldhash,))
 
     def is_expected(self):
         """Return a boolean value according to the last stage value (expected or not)."""
@@ -297,8 +303,8 @@ class Handler(object):
     def mkopts(self, *dicos, **kw):
         """Returns options associated to that handler and a system reference."""
         opts = dict(
-            intent = dataflow.intent.IN,
-            fmt    = self.container.actualfmt,
+            intent=dataflow.intent.IN,
+            fmt=self.container.actualfmt,
         )
         opts.update(self.options)
         for d in dicos:
@@ -421,8 +427,8 @@ class Handler(object):
             self._uridata = net.uriparse(self.location())
             stopts = {k: v for k, v in self.options.items() if k.startswith('stor')}
             return footprints.proxy.store(
-                scheme = self._uridata.pop('scheme'),
-                netloc = self._uridata.pop('netloc'),
+                scheme=self._uridata.pop('scheme'),
+                netloc=self._uridata.pop('netloc'),
                 **stopts
             )
         else:
@@ -459,7 +465,7 @@ class Handler(object):
                                 # Create the content manually and drop it when we are done.
                                 contents = self.resource.contents_handler(datafmt=mycontainer.actualfmt)
                                 contents.slurp(mycontainer)
-                                rst = contents.metadata_check(self.resource, delta = self._mddelta)
+                                rst = contents.metadata_check(self.resource, delta=self._mddelta)
                     finally:
                         # Delete the temporary container
                         mycontainer.clear()
@@ -541,7 +547,7 @@ class Handler(object):
         # Check metadata if sensible
         if self._mdcheck and rst and not store.delayed:
             rst = self.contents.metadata_check(self.resource,
-                                               delta = self._mddelta)
+                                               delta=self._mddelta)
             if not rst:
                 logger.info("We are now cleaning up the container and data content.")
                 self.reset_contents()
@@ -576,7 +582,7 @@ class Handler(object):
         store = self.store
         if store:
             logger.debug('Get resource %s at %s from %s', self, self.lasturl, store)
-            st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+            st_options = self.mkopts(dict(rhandler=self.as_dict()), extras)
             # Actual get
             try:
                 rst = store.get(
@@ -608,7 +614,7 @@ class Handler(object):
         store = self.store
         if store:
             logger.debug('Early-Get resource %s at %s from %s', self, self.lasturl, store)
-            st_options = self.mkopts(dict(rhandler = self.as_dict()), extras)
+            st_options = self.mkopts(dict(rhandler=self.as_dict()), extras)
             # Actual earlyget
             try:
                 return store.earlyget(
@@ -632,16 +638,22 @@ class Handler(object):
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
                 cur_tracker = self._cur_context.localtracker
+                cur_seq = self._cur_context.sequence
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
                 if self.container.exists() and cur_tracker.is_tracked_input(iotarget):
                     # Am I consistent with the ResourceHandler recorded in the tracker ?
                     if cur_tracker[iotarget].match_rh('get', self):
                         rst = True
-                        self.container.updfill(True)
-                        self._updstage('get', insitu=True)
-                        logger.info('The <%s> resource is already here and matches the RH description :-)',
-                                    self.container.iotarget())
+                        # There is the tricky usecase where we are dealing with an alternate
+                        # that was already dealt with (yes, sometimes the nominal case and
+                        # the alternate is the same !)
+                        if not (alternate and iotarget in [s.rh.container.iotarget()
+                                                           for s in cur_seq.effective_inputs()]):
+                            self.container.updfill(True)
+                            self._updstage('get', insitu=True)
+                            logger.info('The <%s> resource is already here and matches the RH description :-)',
+                                        self.container.iotarget())
                     else:
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
@@ -776,7 +788,7 @@ class Handler(object):
                     store = self.store
                     if store:
                         logger.debug('Finalise-Get resource %s at %s from %s', self, self.lasturl, store)
-                        st_options = self.mkopts(dict(rhandler = self.as_dict()), self._latest_earlyget_opts)
+                        st_options = self.mkopts(dict(rhandler=self.as_dict()), self._latest_earlyget_opts)
                         # Actual get
                         rst = store.finaliseget(
                             self._latest_earlyget_id,
@@ -813,14 +825,20 @@ class Handler(object):
         if self.complete:
             if self.options.get('insitu', False):  # This a second pass (or third, forth, ...)
                 cur_tracker = self._cur_context.localtracker
+                cur_seq = self._cur_context.sequence
                 iotarget = self.container.iotarget()
                 # The localpath is here and listed in the tracker
                 if (self.container.exists() and
                         cur_tracker.is_tracked_input(iotarget)):
                     if cur_tracker[iotarget].match_rh('get', self):
                         rst = True
-                        self.container.updfill(True)
-                        self._updstage('get', insitu=True)
+                        # There is the tricky usecase where we are dealing with an alternate
+                        # that was already dealt with (yes, sometimes the nominal case and
+                        # the alternate is the same !)
+                        if not (alternate and iotarget in [s.rh.container.iotarget()
+                                                           for s in cur_seq.effective_inputs()]):
+                            self.container.updfill(True)
+                            self._updstage('get', insitu=True)
                     elif alternate:
                         # Alternate is on and the local file exists: ignoring the error.
                         rst = True
@@ -848,6 +866,7 @@ class Handler(object):
                     mytracker = self._cur_context.localtracker[iotarget]
                     # Execute the hooks only if the local file exists
                     if self.container.exists():
+                        self.container.updfill(True)
                         if self.hooks:
                             if not self.delayhooks:
                                 self.apply_put_hooks(mytracker=mytracker, **extras)
@@ -861,7 +880,7 @@ class Handler(object):
                     rst = store.put(
                         iotarget,
                         self.uridata,
-                        self.mkopts(dict(rhandler = self.as_dict()), extras_ext)
+                        self.mkopts(dict(rhandler=self.as_dict()), extras_ext)
                     )
                     # For the record...
                     self.history.append(store.fullname(), 'put', rst)
@@ -887,7 +906,7 @@ class Handler(object):
                 logger.debug('Delete resource %s at %s from %s', self, self.lasturl, store)
                 rst = store.delete(
                     self.uridata,
-                    self.mkopts(dict(rhandler = self.as_dict()), extras)
+                    self.mkopts(dict(rhandler=self.as_dict()), extras)
                 )
                 self.history.append(store.fullname(), 'delete', rst)
             else:
@@ -920,9 +939,9 @@ class Handler(object):
         tpl = config.load_template(t, tplfile)
         with io.open(pr_getter, 'wb') as fd:
             fd.write(tpl.substitute(
-                python  = py_exec,
-                pyopts  = py_opts,
-                promise = self.container.localpath(),
+                python=py_exec,
+                pyopts=py_opts,
+                promise=self.container.localpath(),
             ))
         t.sh.chmod(pr_getter, 0o555)
         return pr_getter
@@ -944,7 +963,7 @@ class Handler(object):
         rc = True
         if self.is_expected():
             pr = self._localpr_json
-            itself  = pr.get('itself')
+            itself = pr.get('itself')
             rc = not self._cur_session.sh.path.exists(itself)
             if rc and check_exists:
                 remote = pr.get('locate').split(';')[0]
@@ -959,7 +978,7 @@ class Handler(object):
             nb = 0
             sh = self._cur_session.sh
             pr = self._localpr_json
-            itself  = pr.get('itself')
+            itself = pr.get('itself')
             nbtries = int(timeout / sleep)
             logger.info('Waiting %d x %d s. for expected resource <%s>', nbtries, sleep, local)
             while sh.path.exists(itself):

@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract and generic classes for any "Container". "Container" objects
+describe where to store the data localy.
+
+Roughly there are :class:`Virtual` and concrete containers. With :class:`Virtual`
+containers such as :class:`InCore` or :class:`MayFly`, the data may lie in
+memory. On the oposite, with concrete containers, data lie on disk within the
+working directory.
+
+The :class:`SingleFile` container is by far the most commonly used.
+"""
+
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
@@ -32,8 +45,9 @@ class DataSizeTooBig(IOError):
 
 
 class Container(footprints.FootprintBase):
+    """Abstract class for any Container."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('container',)
     _footprint = dict(
         info = 'Abstract Container',
@@ -409,7 +423,7 @@ class InCore(Virtual):
             incore = dict(
                 info        = 'Activate the incore container.',
                 type        = bool,
-                values      = [ True ],
+                values      = [True, ],
                 alias       = ('mem', 'memory'),
                 doc_zorder = 90,
             ),
@@ -451,18 +465,18 @@ class InCore(Virtual):
         self.close()
         if self._tempo:
             iod = tempfile.NamedTemporaryFile(
-                mode    = mode,
-                prefix  = self.prefix,
-                dir     = os.getcwd(),
-                delete  = True,
+                mode=mode,
+                prefix=self.prefix,
+                dir=os.getcwd(),
+                delete=True,
                 ** self._py2to3_checks(encoding)
             )
         else:
             iod = tempfile.SpooledTemporaryFile(
-                mode     = mode,
-                prefix   = self.prefix,
-                dir      = os.getcwd(),
-                max_size = self.incorelimit,
+                mode=mode,
+                prefix=self.prefix,
+                dir=os.getcwd(),
+                max_size=self.incorelimit,
                 ** self._py2to3_checks(encoding)
             )
         return iod
@@ -478,10 +492,10 @@ class InCore(Virtual):
             self.rewind()
             self._tempo = True
             self._iod = tempfile.NamedTemporaryFile(
-                mode    = self._acmode,
-                prefix  = self.prefix,
-                dir     = os.getcwd(),
-                delete  = True,
+                mode=self._acmode,
+                prefix=self.prefix,
+                dir=os.getcwd(),
+                delete=True,
                 ** self._py2to3_checks(self._acencoding)
             )
             for data in iomem:
@@ -496,10 +510,10 @@ class InCore(Virtual):
             self.rewind()
             self._tempo = False
             self._iod = tempfile.SpooledTemporaryFile(
-                mode     = self._acmode,
-                prefix   = self.prefix,
-                dir      = os.getcwd(),
-                max_size = self.incorelimit,
+                mode=self._acmode,
+                prefix=self.prefix,
+                dir=os.getcwd(),
+                max_size=self.incorelimit,
                 ** self._py2to3_checks(self._acencoding)
             )
             for data in iotmp:
@@ -528,7 +542,7 @@ class MayFly(Virtual):
             mayfly = dict(
                 info       = 'Activate the mayfly container.',
                 type       = bool,
-                values     = [ True ],
+                values     = [True, ],
                 alias      = ('tempo',),
                 doc_zorder = 90,
             ),
@@ -564,10 +578,10 @@ class MayFly(Virtual):
         """Returns an active (opened) temporary file descriptor in binary read mode by default."""
         self.close()
         return tempfile.NamedTemporaryFile(
-            mode    = mode,
-            prefix  = self.prefix,
-            dir     = os.getcwd(),
-            delete  = self.delete,
+            mode=mode,
+            prefix=self.prefix,
+            dir=os.getcwd(),
+            delete=self.delete,
             ** self._py2to3_checks(encoding)
         )
 
@@ -695,7 +709,7 @@ class UnnamedSingleFile(_SingleFileStyle):
             shouldfly = dict(
                 info       = 'Activate the UnnamedSingleFile container',
                 type       = bool,
-                values     = [ True ],
+                values     = [True, ],
                 doc_zorder = 90,
             ),
             cwdtied = dict(

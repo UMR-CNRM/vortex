@@ -52,7 +52,7 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal', 'coherentgroup' ]
+section_args = ['role', 'alternate', 'intent', 'fatal', 'coherentgroup']
 
 
 def stripargs_section(**kw):
@@ -62,7 +62,7 @@ def stripargs_section(**kw):
     ( section_options, other_options ).
     """
     opts = dict()
-    for opt in [ x for x in section_args if x in kw ]:
+    for opt in [x for x in section_args if x in kw]:
         opts[opt] = kw.pop(opt)
     return (opts, kw)
 
@@ -121,7 +121,7 @@ class Section(object):
         self._coherentgroups = set(self._coherentgroups.split(',')
                                    if self._coherentgroups else [])
         self._coherentgroups_opened = {g: True for g in self._coherentgroups}
-        self.stages = [ kw.pop('stage', 'load') ]
+        self.stages = [kw.pop('stage', 'load'), ]
         self.__dict__.update(kw)
         # If alternate is specified role have to be removed
         if self._alternate:
@@ -388,7 +388,7 @@ class Sequence(observer.Observer):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
         if type(rhset) != list:
-            rhset = [ rhset ]
+            rhset = [rhset, ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
         for rh in rhset:
@@ -447,7 +447,7 @@ class Sequence(observer.Observer):
             )]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
-            inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
+            inkind = [x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind)]
         return inrole or inkind
 
     def inputs(self):
@@ -473,7 +473,7 @@ class Sequence(observer.Observer):
         """
         return self._section_list_filter(
             [x for x in self.inputs()
-             if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()
+             if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()
              ],
             **kw)
 
@@ -732,11 +732,14 @@ def _str2unicode(jsencode):
 
 def _fast_clean_uri(store, remote):
     """Clean a URI so that it can be compared with a JSON load version."""
+    qsl = remote['query'].copy()
+    qsl.update({'storearg_{:s}'.format(k): v
+                for k, v in store.tracking_extraargs.items()})
     return _str2unicode({u'scheme': six.text_type(store.scheme),
                          u'netloc': six.text_type(store.netloc),
                          u'path': six.text_type(remote['path']),
                          u'params': six.text_type(remote['params']),
-                         u'query': remote['query'],
+                         u'query': qsl,
                          u'fragment': six.text_type(remote['fragment'])})
 
 
@@ -792,7 +795,7 @@ class LocalTrackerEntry(object):
                 # We are using as_dict since this may be written to a JSON file
                 self._data['rhdict'][stage].append(self._clean_rhdict(rh.as_dict()))
 
-    def update_store(self, info, uri):
+    def _update_store(self, info, uri):
         """Update the entry based on data received from the observer board.
 
         This method is to be called with data originated from the
@@ -861,7 +864,7 @@ class LocalTrackerEntry(object):
         else:
             return False
 
-    def check_uri_remote_delete(self, uri):
+    def _check_uri_remote_delete(self, uri):
         """Called when a :class:`~vortex.data.stores.Store` object notifies a delete.
 
         The URIs stored for the "put" action are checked against the delete
@@ -996,11 +999,11 @@ class LocalTracker(defaultdict):
                 clean_uri = _fast_clean_uri(store, info['remote'])
                 huri = self._hashable_uri(clean_uri)
                 for atracker in list(self._uri_map['put'][huri]):
-                    atracker.check_uri_remote_delete(clean_uri)
+                    atracker._check_uri_remote_delete(clean_uri)
         else:
             if isinstance(lpath, six.string_types):
                 clean_uri = _fast_clean_uri(store, info['remote'])
-                self[lpath].update_store(info, clean_uri)
+                self[lpath]._update_store(info, clean_uri)
             else:
                 logger.debug("The iotarget isn't a six.text_type: It will be skipped in %s",
                              self.__class__)
@@ -1035,8 +1038,12 @@ class LocalTracker(defaultdict):
         :param filename: Path to the JSON file.
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
-        with io.open(filename, 'w', encoding='utf-8') as fpout:
-            json.dump(outdict, fpout, indent=2, sort_keys=True)
+        if six.PY2:
+            with io.open(filename, 'wb') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
+        else:
+            with io.open(filename, 'w', encoding='utf-8') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
         """Restore the object using a JSON file.

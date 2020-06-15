@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals with part of the Arpege/IFS listings related to the
+spectral norms of model or post-processing fields.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import sys
@@ -51,11 +56,11 @@ CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
              'start_cnt4_nsim4d': r'\s*START\s+' + _re_cnt34 + r', NSIM4D=\s+' + _re_nsim4d + r'\s*$',
              'end_cnt3': r'\s*END\s+' + _re_cnt34 + r'\s*$',
              'dfi_step': r'\s*(\d|:)*\s+' + _re_dfi + r'\s+' + _re_dfistep + r'\s*\+CPU=.*\s*$',
-             'model_init':r'\s*' + _re_model_init + r'\s*$',
-             'fields_oops':r'\s*' + _re_fields_oops + r'\s*$',
-             'fields_oopsIFS':r'\s*' + _re_fields_oopsIFS + r'\s*$',
-             'ifs_propagate_oops':r'\s*' + _re_ifs_propagate + r'\s*1\s*$',
-             'wrmlppa':r'\s*' + _re_wrmlppa + r'\s+NSTEP=\s+' + _re_nstep + r'\s+CDCONF=' + _re_cdconf + r'\s*$',
+             'model_init': r'\s*' + _re_model_init + r'\s*$',
+             'fields_oops': r'\s*' + _re_fields_oops + r'\s*$',
+             'fields_oopsIFS': r'\s*' + _re_fields_oopsIFS + r'\s*$',
+             'ifs_propagate_oops': r'\s*' + _re_ifs_propagate + r'\s*1\s*$',
+             'wrmlppa': r'\s*' + _re_wrmlppa + r'\s+NSTEP=\s+' + _re_nstep + r'\s+CDCONF=' + _re_cdconf + r'\s*$',
              }
 CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
@@ -76,7 +81,7 @@ class NormsSet(object):
             self._parse_listing(source)
         elif from_list is not None:
             self.from_list(from_list)
-    
+
     def from_list(self, list_of_Norms):
         """Initialize from a list of Norms object."""
         self.norms_at_each_step = list_of_Norms
@@ -173,18 +178,19 @@ class Norms(object):
             self._parse_norms(lines)
         elif from_dict is not None:
             self.from_dict(**from_dict)
-    
+
     def from_dict(self, step, spnorms, gpnorms):
         """Initialize from a series of dict for each attribute."""
         self.step = step
         self.spnorms = spnorms
         self.gpnorms = gpnorms
-    
+
     def as_dict(self):
-        return {'step':self.step,
-                'spnorms':self.spnorms,
-                'gpnorms':self.gpnorms}
-    
+        """Return this entry data as a dictionary."""
+        return {'step': self.step,
+                'spnorms': self.spnorms,
+                'gpnorms': self.gpnorms}
+
     @property
     def empty(self):
         """Return True if no norm has been found."""
@@ -192,6 +198,7 @@ class Norms(object):
 
     @property
     def found_NaN(self):
+        """Return whether NaN are present in the listing."""
         return (any([re_for_nan.match(str(v)) for v in self.spnorms.values()]) or
                 any([re_for_nan.match(str(v)) for v in self.gpnorms.values()]))
 
@@ -286,9 +293,9 @@ class Norms(object):
                 if fld == 'SOILB   3 FIELDS':  # dirty fix
                     for ii in range(1, 4):
                         fldii = fld + ' ({}/3)'.format(ii)
-                        vals = {'average': sub_extract[idx + 1 + (ii-1) * 3].split()[1],
-                                'minimum': sub_extract[idx + 1 + (ii-1) * 3].split()[2],
-                                'maximum': sub_extract[idx + 1 + (ii-1) * 3].split()[3]}
+                        vals = {'average': sub_extract[idx + 1 + (ii - 1) * 3].split()[1],
+                                'minimum': sub_extract[idx + 1 + (ii - 1) * 3].split()[2],
+                                'maximum': sub_extract[idx + 1 + (ii - 1) * 3].split()[3]}
                         start = idx + 1 + 6
                         self.gpnorms[fldii] = vals
                 else:
@@ -531,7 +538,6 @@ def compare_norms(test_norm, ref_norm, only=None):
     If **only** among ('spectral', 'gridpoint'), only compare the requested
     type of norms.
     """
-
     comp_spnorms = collections.OrderedDict()
     comp_gpnorms = collections.OrderedDict()
     if only != 'gridpoint':

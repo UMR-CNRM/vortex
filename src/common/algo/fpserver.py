@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+AlgoComponents for the next generation of Fullpos runs (based on the 903
+configuration).
+"""
 
-"""
-AlgoComponents for the next generation of Fullpos runs (based on the 903 configuration).
-"""
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 
@@ -226,7 +227,7 @@ class FullPosServer(IFSParallel):
     def _inputs_discover(self):
         """Retrieve the lists in input sections/ResourceHandlers."""
         # Initial conditions
-        inisec = self.context.sequence.effective_inputs(role = self._INITIALCONDITION_ROLE)
+        inisec = self.context.sequence.effective_inputs(role=self._INITIALCONDITION_ROLE)
         inidata = dict()
         if inisec:
             for s in inisec:
@@ -240,7 +241,7 @@ class FullPosServer(IFSParallel):
                     inidata[fprefix] = s
 
         # Model states
-        todosec0 = self.context.sequence.effective_inputs(role = self._INPUTDATA_ROLE)
+        todosec0 = self.context.sequence.effective_inputs(role=self._INPUTDATA_ROLE)
         todosec1 = collections.defaultdict(list)
         tododata = list()
         outprefix = None
@@ -272,8 +273,8 @@ class FullPosServer(IFSParallel):
 
         # Selection namelists
         namxxrh = collections.defaultdict(dict)
-        for isec in self.context.sequence.effective_inputs(role = 'FullPosSelection',
-                                                           kind = 'namselect'):
+        for isec in self.context.sequence.effective_inputs(role='FullPosSelection',
+                                                           kind='namselect'):
             lpath = isec.rh.container.localpath()
             dpath = self.system.path.dirname(lpath)
             namxxrh[dpath][isec.rh.resource.term] = isec.rh
@@ -429,8 +430,8 @@ class FullPosServer(IFSParallel):
 
         # Prepare the namelist
         self.system.subtitle('Setting 903 namelist settings')
-        namrhs = [x.rh for x in self.context.sequence.effective_inputs(role = 'Namelist',
-                                                                       kind = 'namelist')]
+        namrhs = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                       kind='namelist')]
         for namrh in namrhs:
             if self.outputid:
                 self._setmacro(namrh, 'OUTPUTID', self.outputid)
@@ -476,8 +477,8 @@ class FullPosServer(IFSParallel):
                         'd}$')
         o_init_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
                      r'(?P<fpdom>\w+)INIT$')
-        o_initgrb_re  = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
-                         r'(?P<fpdom>\w+)INIT$')
+        o_initgrb_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
+                        r'(?P<fpdom>\w+)INIT$')
         o_suffix = '.{:s}.out'
         o_grb_suffix = '.{:s}.grib.out'
 
@@ -527,6 +528,7 @@ class FullPosServer(IFSParallel):
         if self.flypoll == 'internal':
             self.io_poll_method = functools.partial(fullpos_server_flypoll, sh)
             self.io_poll_kwargs['termfile'] = sh.path.basename(self._MODELSIDE_TERMFILE)
+        self.flymapping = True
         self._flyput_mapping_d = outputs_mapping
 
         if anyexpected:
@@ -659,7 +661,6 @@ class FullPosServer(IFSParallel):
             # On the fly ?
             if self.promises:
                 self.flyput = True
-                self.flymapping = True
 
             # Let's roll !
             super(FullPosServer, self).execute(rh, opts)

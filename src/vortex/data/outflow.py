@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Abstract class for any model specific and/or domain specific "Resource".
+
+    * :class:`StaticGeoResource`: Specific to an horizontal geometry;
+    * :class:`ModelResource`: Specific to a a given model;
+    * :class:`ModelGeoResource`: Specific to a a given model and horizontal geometry.
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from .resources  import Resource
+from .resources import Resource
 from .geometries import hgeometry_deco
-from .contents   import FormatAdapter
+from .contents import FormatAdapter
 from vortex.syntax.stdattrs import model_deco
 
 #: No automatic export
@@ -44,7 +53,7 @@ class StaticGeoResource(StaticResource):
 class ModelResource(StaticResource):
 
     _abstract = True
-    _footprint = [ model_deco ]
+    _footprint = [model_deco, ]
 
 
 class ModelGeoResource(ModelResource):

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.compat import random
@@ -18,14 +22,17 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.scores.list_scores import ESCROC_list_scores, scores_file, ensemble_scores_file
     from snowtools.scores.ensemble import ESCROC_EnsembleScores
-    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
 
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Member(TaylorVortexWorker):
+    """
+    AlgoComponent worker designed to run one member of SURFEX-Crocus experiment
+    without MPI parallelization.
+    """
 
     _footprint = dict(
-        info = 'AlgoComponent designed to run one member of SURFEX-Crocus experiment '
+        info = 'AlgoComponent worker designed to run one member of SURFEX-Crocus experiment '
                'without MPI parallelization.',
         attr = dict(
             kind = dict(
@@ -88,6 +95,7 @@ class Escroc_Score_Member(TaylorVortexWorker):
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Ensemble(TaylorRun):
+    """AlgoComponent that compute ESCROC scores for the full ensemble."""
 
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
@@ -206,8 +214,10 @@ class Escroc_Score_Ensemble(TaylorRun):
 
 @echecker.disabled_if_unavailable
 class Escroc_Score_Subensemble(TaylorVortexWorker):
+    """AlgoComponent worker designed to compute ensemble scores for a given subensemble."""
+
     _footprint = dict(
-        info = 'AlgoComponent designed to compute ensemble scores for a given subensemble.',
+        info = 'AlgoComponent worker designed to compute ensemble scores for a given subensemble.',
         attr = dict(
             kind = dict(
                 values = ['optim_escroc'],
@@ -271,6 +281,8 @@ class Escroc_Score_Subensemble(TaylorVortexWorker):
 
 @echecker.disabled_if_unavailable
 class Escroc_Optim_Ensemble(TaylorRun):
+    """AlgoComponent that compute ESCROC scores for the full ensemble."""
+
     _footprint = dict(
         info = 'AlgoComponent that compute ESCROC scores for the full ensemble',
         attr = dict(

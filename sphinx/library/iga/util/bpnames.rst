@@ -58,6 +58,10 @@ Functions
 
 .. autofunction:: SurgesResultNative_bnames
 
+.. autofunction:: AltidataWave_bnames
+
 .. autofunction:: bufr_bnames
 
 .. autofunction:: obsfire_bnames
+
+.. autofunction:: chemical_bc_bnames

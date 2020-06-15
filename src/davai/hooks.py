@@ -6,7 +6,6 @@ Hooks for special DAVAI processings.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
-import re
 
 from bronx.fancies import loggers
 
@@ -47,8 +46,7 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
     """
     server_syntax = 'http://<host>[:<port>]/<url> (port is optional)'
     try:
-        with open(rh.container.localpath(), 'r') as s:
-            summary = json.load(s)
+        summary = t.sh.json_load(rh.container.localpath())
         if rh.resource.kind == 'xpinfo':
             jsonData = {rh.resource.kind: summary}
         elif rh.resource.kind == 'taskinfo':
@@ -70,19 +68,22 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
             sshobj = t.sh.ssh('network', virtualnode=True, maxtries=1,
                               mandatory_hostcheck=False)
             with sshobj.tunnel(davai_server['netloc'], int(davai_server['port'])) as tunnel:
-                proxies = {'http': 'http://127.0.0.1:{}'.format(tunnel.entranceport)}  # 127.0.0.1 == localhost == tunnel entrance
+                # 127.0.0.1 == localhost == tunnel entrance
+                proxies = {'http': 'http://127.0.0.1:{}'.format(tunnel.entranceport)}
                 send_task_to_DAVAI_server(davai_server_url,
                                           rh.provider.experiment,
                                           json.dumps(jsonData),
                                           kind=rh.resource.kind,
                                           fatal=fatal,
-                                          proxies=proxies)
+                                          proxies=proxies,
+                                          headers={'Host': davai_server['netloc']})
         else:
             send_task_to_DAVAI_server(davai_server_url,
                                       rh.provider.experiment,
                                       json.dumps(jsonData),
                                       kind=rh.resource.kind,
-                                      fatal=fatal)
+                                      fatal=fatal,
+                                      headers={'Host': davai_server['netloc']})
     except Exception as e:
         if fatal:
             raise

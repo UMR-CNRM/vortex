@@ -181,16 +181,16 @@ class Context(getbytag.GetByTag, observer.Observer):
         if topenv is None:
             logger.critical('Try to define a new context without a topenv.')
             raise ValueError('No top environment given to new context.')
-        self._env      = Environment(env=topenv, verbose=topenv.verbose(),
-                                     contextlock=self)
-        self._path     = path + '/' + self.tag
-        self._session  = None
-        self._rundir   = None
-        self._stamp    = '-'.join(('vortex', 'stamp', self.tag, six.text_type(id(self))))
-        self._fstore   = dict()
-        self._fstamps  = set()
-        self._wkdir    = None
-        self._record   = False
+        self._env = Environment(env=topenv, verbose=topenv.verbose(),
+                                contextlock=self)
+        self._path = path + '/' + self.tag
+        self._session = None
+        self._rundir = None
+        self._stamp = '-'.join(('vortex', 'stamp', self.tag, six.text_type(id(self))))
+        self._fstore = dict()
+        self._fstamps = set()
+        self._wkdir = None
+        self._record = False
         self._prestaging_hub = None  # Will be initialised on demand
         self._delayedactions_hub = None  # Will be initialised on demand
 

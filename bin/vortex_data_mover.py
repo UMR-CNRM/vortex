@@ -130,7 +130,6 @@ else:
     tmpbase = os.path.join(os.environ['HOME'], 'tmp')
 
 # Load vortex & co.
-import bronx
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints as fp

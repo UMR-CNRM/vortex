@@ -43,6 +43,11 @@ Mixed AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: OOPSMinim_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Screening_CrashWitness
    :show-inheritance:
    :members:
@@ -57,3 +62,44 @@ Mixed AlgoComponents
    :show-inheritance:
    :members:
    :member-order: alphabetical
+   
+.. autoclass:: Forecast_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LAMForecast_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DFIForecast_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FullPosBDAP_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FullPosGeo_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BuildPGD_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BuildPGD_MPI_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Prep_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+   

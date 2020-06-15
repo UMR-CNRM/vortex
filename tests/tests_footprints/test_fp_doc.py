@@ -44,21 +44,21 @@ class utDoc(TestCase):
 
     def setUp(self):
         self.fp = footprints.Footprint(
-            attr = dict(
-                stuff1 = dict(
-                    values = ['titi', ],
-                    info = 'This is stuff1',
-                    alias = ('arg1',),
-                    remap = dict(toto='titi')
+            attr=dict(
+                stuff1=dict(
+                    values=['titi', ],
+                    info='This is stuff1',
+                    alias=('arg1',),
+                    remap=dict(toto='titi')
                 ),
-                stuff2 = dict(
-                    type = float,
-                    optional = True,
-                    default = 'foo',
-                    doc_zorder = -50
+                stuff2=dict(
+                    type=float,
+                    optional=True,
+                    default='foo',
+                    doc_zorder=-50
                 ),
             ),
-            info = 'Some nice stuff'
+            info='Some nice stuff'
         )
 
     def test_doc_slurp(self):

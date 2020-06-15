@@ -33,6 +33,7 @@ def check_localssh():
         subprocess.check_output(['ssh', '-x',
                                  '-oNumberOfPasswordPrompts=0',
                                  '-oConnectTimeout=1',
+                                 '-oNoHostAuthenticationForLocalhost=true',
                                  test_host, 'true'], stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
         return False
@@ -227,11 +228,12 @@ class TestAssistedSsh(_SshTestBase):
         ssh = self.ssh([fake_host, test_host], permut=False, mandatory_hostcheck=False)
         self.assertEqual(ssh.remote, fake_host)
         self.assertEqual(ssh.remote, test_host)
-        self.assertIs(self.ssh(fake_host).remote, None)
+        ssh = self.ssh(fake_host)
+        self.assertEqual(ssh.remote, fake_host)
         # Failing and retrying ?
         ssh = self.ssh(fake_host, fatal=True, maxtries=2)
         with self.assertRaises(RuntimeError):
-            ssh.remote
+            ssh.check_ok()
         self.assertEqual(ssh.retries, 2)
         # virtualnodes ?
         with self.assertRaises(ValueError):

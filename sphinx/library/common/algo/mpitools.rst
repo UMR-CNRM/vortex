@@ -23,6 +23,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MpiAutoDDT
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiObsort
    :show-inheritance:
    :members:

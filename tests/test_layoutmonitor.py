@@ -84,16 +84,16 @@ class TestMonitor(unittest.TestCase):
 
     def _init_sections(self):
         const_stuff = dict(
-            kind = 'historic',
-            date = '2019010100',
-            cutoff = 'assim',
-            model = 'arpege',
-            geometry = 'global798',
-            nativefmt = 'fa',
-            experiment = 'monitortest@testuser',
-            namespace = 'vortex.cache.fr',
+            kind='historic',
+            date='2019010100',
+            cutoff='assim',
+            model='arpege',
+            geometry='global798',
+            nativefmt='fa',
+            experiment='monitortest@testuser',
+            namespace='vortex.cache.fr',
             block='forecast',
-            format = 'fa'
+            format='fa'
         )
         for it in self._TERMS:
             for im in self._MEMBERS:

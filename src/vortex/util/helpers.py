@@ -128,7 +128,6 @@ def merge_contents(*kargs):
     """Automatically merge several DataContents.
 
     Example:
-
     .. code-block:: python
 
         mergedcontent = merge_contents(content1, content2, content3)
@@ -159,7 +158,7 @@ def merge_contents(*kargs):
     return newcontent
 
 
-def mix_list(list_elements, date = None, member = None):
+def mix_list(list_elements, date=None, member=None):
     """Mix a list using a determined seed, if member and/or date are present."""
     dateinfo = date if date is None else Date(date)
     memberinfo = member if member is None else int(member)

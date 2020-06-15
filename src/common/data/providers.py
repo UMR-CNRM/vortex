@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -122,8 +126,9 @@ class BdpeProvider(Provider):
                                     self.allow_archive, resource.date.vortex())
 
     def uri(self, resource):
-        """Overridden to check the resource attributes against
-           the BDPE product description from the .ini file.
+        """
+        Overridden to check the resource attributes against
+        the BDPE product description from the .ini file.
         """
         # check that the product is described in the configuration file
         if not self._actual_config.has_section(self.bdpeid):

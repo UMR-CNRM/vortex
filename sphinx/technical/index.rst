@@ -41,4 +41,10 @@ Some user oriented documentation:
    :maxdepth: 1
 
    uget
-   
+
+Technical informations about unit-tests:
+
+.. toctree::
+   :maxdepth: 1
+
+   test_names

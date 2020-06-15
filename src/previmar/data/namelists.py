@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -17,8 +21,8 @@ logger = loggers.getLogger(__name__)
 
 
 class BlkdatNamFiles(ModelResource):
-    """
-    """
+    """TODO: Class documentation."""
+
     _footprint = [
         gvar,
         gdomain,

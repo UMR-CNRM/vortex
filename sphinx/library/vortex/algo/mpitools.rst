@@ -29,6 +29,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ConfigurableMpiTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiBinaryDescription
    :show-inheritance:
    :members:
@@ -50,6 +55,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: MpiRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SRun
    :show-inheritance:
    :members:
    :member-order: alphabetical

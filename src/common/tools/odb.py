@@ -42,9 +42,9 @@ class TimeSlots(object):
                     center = False
                 else:
                     chunk = info[3]
-        self.nslot  = int(nslot)
+        self.nslot = int(nslot)
         self.center = center if self.nslot > 1 else False
-        self.start  = bdate.Period(start)
+        self.start = bdate.Period(start)
         self.window = bdate.Period(window)
         if chunk is None:
             cslot = self.nslot - 1 if self.center else self.nslot
@@ -144,30 +144,30 @@ class OdbDriver(object):
 
         logger.info('ODB: generic setup called.'),
         self.env.update(
-            ODB_CMA                = layout.upper(),
-            ODB_IO_METHOD          = iomethod,
+            ODB_CMA=layout.upper(),
+            ODB_IO_METHOD=iomethod,
         )
 
         self.env.default(
-            ODB_DEBUG              = 0,
-            ODB_CTX_DEBUG          = 0,
-            ODB_REPRODUCIBLE_SEQNO = 4,
-            ODB_STATIC_LINKING     = 1,
-            ODB_ANALYSIS_DATE      = date.ymd,
-            ODB_ANALYSIS_TIME      = date.hm + '00',
-            TO_ODB_ECMWF           = 0,
-            TO_ODB_SWAPOUT         = 0,
+            ODB_DEBUG=0,
+            ODB_CTX_DEBUG=0,
+            ODB_REPRODUCIBLE_SEQNO=4,
+            ODB_STATIC_LINKING=1,
+            ODB_ANALYSIS_DATE=date.ymd,
+            ODB_ANALYSIS_TIME=date.hm + '00',
+            TO_ODB_ECMWF=0,
+            TO_ODB_SWAPOUT=0,
         )
 
         if iomethod == 4:
             self.env.default(
-                ODB_IO_GRPSIZE  = npool,
-                ODB_IO_FILESIZE = 128,
+                ODB_IO_GRPSIZE=npool,
+                ODB_IO_FILESIZE=128,
             )
 
         if self.sh.path.exists('IOASSIGN'):
             self.env.default(
-                IOASSIGN = self.sh.path.abspath('IOASSIGN'),
+                IOASSIGN=self.sh.path.abspath('IOASSIGN'),
             )
 
     def force_overwrite_method(self):
@@ -179,9 +179,9 @@ class OdbDriver(object):
     def _process_layout_dbpath(self, layout, dbpath=None):
         """Normalise **layout** and **dbpath**."""
         layout = layout.upper()
-        thispwd   = self.sh.path.abspath(self.sh.getcwd())
+        thispwd = self.sh.path.abspath(self.sh.getcwd())
         if dbpath is None:
-            dbpath   = self.sh.path.join(thispwd, layout)
+            dbpath = self.sh.path.join(thispwd, layout)
         return layout, dbpath, thispwd
 
     def fix_db_path(self, layout, dbpath=None, env=None):
@@ -193,31 +193,57 @@ class OdbDriver(object):
         env['ODB_SRCPATH_{:s}'.format(layout)] = dbpath
         env['ODB_DATAPATH_{:s}'.format(layout)] = dbpath
 
-    def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma', dbpath=None):
+    @property
+    def _default_iotools_path(self):
+        """The location to the default odb-tools utilities."""
+        iopath = self.target.get('odbtools:rootdir', self.env.TMPDIR)
+        iovers = self.target.get('odbtools:odbcycle', 'oper')
+        return self.sh.path.join(iopath, iovers)
+
+    @property
+    def _default_iocreate_path(self):
+        """The location to the default create_ioassign utility."""
+        return self.env.get('ODB_IOCREATE_COMMAND',
+                            self.sh.path.join(self._default_iotools_path,
+                                              self.target.get('odbtools:iocreate',
+                                                              'create_ioassign')))
+
+    @property
+    def _default_iomerge_path(self):
+        """The location to the default merge_ioassign utility."""
+        return self.env.get('ODB_IOMERGE_COMMAND',
+                            self.sh.path.join(self._default_iotools_path,
+                                              self.target.get('odbtools:iomerge',
+                                                              'merge_ioassign')))
+
+    def ioassign_create(self, ioassign='ioassign.x', npool=1, layout='ecma',
+                        dbpath=None, iocreate_path=None):
         """Build IO-Assign table."""
         layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
-        iopath   = self.target.get('odbtools:rootdir', self.env.TMPDIR)
-        iovers   = self.target.get('odbtools:odbcycle', 'oper')
-        iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
-        iocmd    = self.env.get('ODB_IOCREATE_COMMAND', self.sh.path.join(iopath, iovers, iocreate))
+        if iocreate_path is None:
+            iocreate_path = self._default_iocreate_path
         ioassign = self.sh.path.abspath(ioassign)
         self.sh.xperm(ioassign, force=True)
         self.sh.mkdir(dbpath)
         with self.env.clone() as lenv:
-            lenv['ODB_IOASSIGN_BINARY']  = ioassign
+            lenv['ODB_IOASSIGN_BINARY'] = ioassign
             self.fix_db_path(layout, dbpath, env=lenv)
-            self.sh.spawn([iocmd, '-d' + dbpath, '-l' + layout, '-n' + six.text_type(npool)],
+            self.sh.spawn([iocreate_path,
+                           '-d' + dbpath,
+                           '-l' + layout,
+                           '-n' + six.text_type(npool)],
                           output=False)
         return dbpath
 
-    def ioassign_merge(self, ioassign='ioassign.x', layout='ecma', odbnames=None, dbpath=None):
+    def ioassign_merge(self, ioassign='ioassign.x', layout='ecma', odbnames=None,
+                       dbpath=None, iomerge_path=None, iocreate_path=None):
         """Build IO-Assign table."""
         layout, dbpath, thispwd = self._process_layout_dbpath(layout, dbpath)
-        iopath   = self.target.get('odbtools:rootdir', self.env.TMPDIR)
-        iovers   = self.target.get('odbtools:odbcycle', 'oper')
-        iocreate = self.target.get('odbtools:iocreate', 'create_ioassign')
-        iomerge  = self.target.get('odbtools:iomerge', 'create_ioassign')
-        iocmd    = [self.env.get('ODB_IOMERGE_COMMAND', self.sh.path.join(iopath, iovers, iomerge))]
+        if iomerge_path is None:
+            iomerge_path = self._default_iomerge_path
+        if iocreate_path is None:
+            iocreate_path = self._default_iocreate_path
+        iocmd = [iomerge_path]
         ioassign = self.sh.path.abspath(ioassign)
         self.sh.xperm(ioassign, force=True)
         with self.sh.cdcontext(dbpath, create=True):
@@ -225,9 +251,9 @@ class OdbDriver(object):
             for dbname in odbnames:
                 iocmd.extend(['-t', dbname])
             with self.env.clone() as lenv:
-                lenv['ODB_IOASSIGN_BINARY']  = ioassign
+                lenv['ODB_IOASSIGN_BINARY'] = ioassign
                 if 'ODB_IOCREATE_COMMAND' not in lenv:
-                    lenv['ODB_IOCREATE_COMMAND'] = self.sh.path.join(iopath, iovers, iocreate)
+                    lenv['ODB_IOCREATE_COMMAND'] = iocreate_path
                 self.fix_db_path(layout, dbpath, env=lenv)
                 self.sh.spawn(iocmd, output=False)
         return dbpath
@@ -261,11 +287,11 @@ class OdbDriver(object):
                     str(mergedirect), str(ccmadirect))
         if mergedirect or ccmadirect:
             self.env.update(
-                ODB_CCMA_TSLOTS = slots.nslot,
+                ODB_CCMA_TSLOTS=slots.nslot,
             )
             self.env.default(
-                ODB_CCMA_LEFT_MARGIN = slots.leftmargin,
-                ODB_CCMA_RIGHT_MARGIN = slots.rightmargin,
+                ODB_CCMA_LEFT_MARGIN=slots.leftmargin,
+                ODB_CCMA_RIGHT_MARGIN=slots.rightmargin,
             )
             if mergedirect:
                 self.env.default(ODB_MERGEODB_DIRECT=1)
@@ -277,8 +303,8 @@ class OdbDriver(object):
         layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
         logger.info('ODB: requesting poolmask file for: %s (layout=%s).', dbpath, layout)
         self.env.update(
-            ODB_CCMA_CREATE_POOLMASK = 1,
-            ODB_CCMA_POOLMASK_FILE   = self.sh.path.join(dbpath, layout + '.poolmask'),
+            ODB_CCMA_CREATE_POOLMASK=1,
+            ODB_CCMA_POOLMASK_FILE=self.sh.path.join(dbpath, layout + '.poolmask'),
         )
 
     def change_layout(self, layout, layout_new, dbpath=None):
@@ -307,45 +333,45 @@ class OdbDriver(object):
 
 #: Footprint's attributes needed to ODB to setup properly
 odbmix_attributes = footprints.Footprint(
-    info = "Abstract ODB footprints' attributes.",
-    attr = dict(
-        npool = dict(
-            info        = 'The number of pool(s) in the ODB database.',
-            type        = int,
-            optional    = True,
-            default     = 1,
+    info="Abstract ODB footprints' attributes.",
+    attr=dict(
+        npool=dict(
+            info='The number of pool(s) in the ODB database.',
+            type=int,
+            optional=True,
+            default=1,
         ),
-        iomethod = dict(
-            info        = 'The io_method of the ODB database.',
-            type        = int,
-            optional    = True,
-            default     = 1,
-            doc_zorder  = -50,
+        iomethod=dict(
+            info='The io_method of the ODB database.',
+            type=int,
+            optional=True,
+            default=1,
+            doc_zorder=-50,
         ),
-        slots = dict(
-            info     = 'The timeslots of the assimilation window.',
-            type     = TimeSlots,
-            optional = True,
-            default  = TimeSlots(7, chunk='PT1H'),
+        slots=dict(
+            info='The timeslots of the assimilation window.',
+            type=TimeSlots,
+            optional=True,
+            default=TimeSlots(7, chunk='PT1H'),
         ),
-        virtualdb = dict(
-            info            = 'The type of the virtual ODB database.',
-            optional        = True,
-            default         = 'ecma',
-            access          = 'rwx',
-            doc_visibility  = footprints.doc.visibility.ADVANCED,
+        virtualdb=dict(
+            info='The type of the virtual ODB database.',
+            optional=True,
+            default='ecma',
+            access='rwx',
+            doc_visibility=footprints.doc.visibility.ADVANCED,
         ),
-        date = dict(
-            info            = 'The current run date.',
-            optional        = True,
-            access          = 'rwx',
-            type            = bdate.Date,
-            doc_zorder      = -50,
+        date=dict(
+            info='The current run date.',
+            optional=True,
+            access='rwx',
+            type=bdate.Date,
+            doc_zorder=-50,
         ),
-        ioassign = dict(
-            info            = 'The path to the ioassign binary (needed for merge/create actions',
-            optional        = True,
-            default         = 'ioassign.x',
+        ioassign=dict(
+            info='The path to the ioassign binary (needed for merge/create actions',
+            optional=True,
+            default='ioassign.x',
         )
     ))
 
@@ -373,24 +399,24 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         if rh and hasattr(rh.resource, 'cycle'):
             cycle = rh.resource.cycle
         self._odb = OdbDriver(
-            cycle  = cycle,
-            sh     = self.system,
-            env    = self.env,
-            target = self.target,
+            cycle=cycle,
+            sh=self.system,
+            env=self.env,
+            target=self.target,
         )
 
     def _odbobj_setup(self, rh, opts):  # @UnusedVariable
         """Setup the ODB object."""
         self.odb.setup(
-            layout   = self.virtualdb,
-            date     = self.date,
-            npool    = self.npool,
-            nslot    = self.slots.nslot,
-            iomethod = self.iomethod,
+            layout=self.virtualdb,
+            date=self.date,
+            npool=self.npool,
+            nslot=self.slots.nslot,
+            iomethod=self.iomethod,
         )
 
-    _MIXIN_PREPARE_PREHOOKS = (_odbobj_init, )
-    _MIXIN_PREPARE_HOOKS = (_odbobj_setup, )
+    _MIXIN_PREPARE_PREHOOKS = (_odbobj_init,)
+    _MIXIN_PREPARE_HOOKS = (_odbobj_setup,)
 
     @property
     def odb(self):
@@ -402,7 +428,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
     def lookupodb(self, fatal=True):
         """Return a list of effective input resources which are odb observations."""
         allodb = [
-            x for x in self.context.sequence.effective_inputs(kind = 'observations')
+            x for x in self.context.sequence.effective_inputs(kind='observations')
             if x.rh.container.actualfmt == 'odb'
         ]
         allodb.sort(key=lambda s: s.rh.resource.part)
@@ -423,9 +449,21 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         if len(alldates) != 1:
             raise AlgoComponentError("Inconsistent ODB dates")
         self.virtualdb = alllayouts.pop()
-        self.date      = alldates.pop()
+        self.date = alldates.pop()
         logger.info('ODB: Detected from ODB database(s). self.date=%s, self.virtualdb=%s.',
                     self.date.stdvortex, self.virtualdb)
+
+    def _odb_find_ioassign_script(self, purpose):
+        """Look for ioassign script of *purpose" attribute, return path."""
+        scripts = [x.rh.container.abspath
+                   for x in self.context.sequence.effective_inputs(kind='ioassign_script')
+                   if x.rh.resource.purpose == purpose]
+        if len(scripts) > 1:
+            raise AlgoComponentError("More than one purpose={} ioassign_script found in resources.")
+        elif len(scripts) == 1:
+            return scripts[0]
+        else:
+            return None
 
     def odb_merge_if_needed(self, odbsections):
         """
@@ -438,9 +476,11 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         if len(odbsections) > 1 or self.virtualdb.lower() == 'ecma':
             logger.info('ODB: merge for: %s.', self.virtualdb)
             virtualdb_path = self.odb.ioassign_merge(
-                layout   = self.virtualdb,
-                ioassign = self.ioassign,
-                odbnames = [x.rh.resource.part for x in odbsections],
+                layout=self.virtualdb,
+                ioassign=self.ioassign,
+                odbnames=[x.rh.resource.part for x in odbsections],
+                iomerge_path=self._odb_find_ioassign_script('merge'),
+                iocreate_path=self._odb_find_ioassign_script('create')
             )
         else:
             virtualdb_path = self.system.path.abspath(odbsections[0].rh.container.localpath())
@@ -454,10 +494,11 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         :return: The path to the new ODB database.
         """
         dbout = self.odb.ioassign_create(
-            layout   = layout,
-            npool    = self.npool,
-            ioassign = self.ioassign,
-            dbpath   = dbpath
+            layout=layout,
+            npool=self.npool,
+            ioassign=self.ioassign,
+            dbpath=dbpath,
+            iocreate_path=self._odb_find_ioassign_script('create')
         )
         logger.info('ODB: database created: %s (layout=%s).', dbout, layout)
         return dbout
@@ -465,7 +506,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
     def odb_handle_raw_dbs(self):
         """Look for extras ODB raw databases and fix the environment accordingly."""
         odbraw = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'odbraw')
+            x.rh for x in self.context.sequence.effective_inputs(kind='odbraw')
             if x.rh.container.actualfmt == 'odb'
         ]
         if not odbraw:

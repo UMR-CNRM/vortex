@@ -53,6 +53,12 @@ def mergecontents(options):
     # Create a Virtual container and dump the new content inside it
     virtualcont = fpx.container(incore=True)
     newcontent.rewrite(virtualcont)
+    virtualcont.rewind()
+    # Force the new container to be in bytes mode
+    if virtualcont.actualmode and 'b' not in virtualcont.actualmode:
+        virtualcont_b = fpx.container(incore=True, mode='w+b')
+        virtualcont_b.write(virtualcont.read().encode(encoding='utf-8'))
+        virtualcont = virtualcont_b
     return virtualcont
 
 

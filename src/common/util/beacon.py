@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+Functions to create and write a few information in a file using Vortex
+(FunctionStore).
+"""
 
-# Function to create and write a few information in a file using Vortex (FunctionStore)
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
 import six
@@ -13,13 +16,14 @@ __all__ = []
 
 
 def beaconfunction(options):
-    """ Function to create a file and write information in:
-        - model
-        - date
-        - cutoff
-        - vapp
-        - vconf
-        - member (optional)
+    """Function to create a file and write information in it.
+
+    - model
+    - date
+    - cutoff
+    - vapp
+    - vconf
+    - member (optional)
     """
     rst = dict()
 

@@ -136,7 +136,7 @@ class utInPlace(TestCase):
         rv = util.inplace(
             dict(a=2, c='foo_[glob:z]'),
             'a', True,
-            globs = dict(z='bar')
+            globs=dict(z='bar')
         )
         self.assertDictEqual(rv, dict(a=True, c='foo_bar'))
 
@@ -147,7 +147,7 @@ class utExpand(TestCase):
 
     def test_expand_basics(self):
         rv = util.expand(dict(a=2, c='foo'))
-        self.assertListEqual(rv, [ dict(a=2, c='foo') ])
+        self.assertListEqual(rv, [dict(a=2, c='foo'), ])
 
     def test_expand_iters(self):
         rv = util.expand(dict(arg='hop', item=(1, 2, 3)))

@@ -79,7 +79,12 @@ export BRONX_FANCIES_RSTDOC
 # -------------
 # Build targets
 
-all: $(NOTEBOOKS) auto_html_docs html  # HTML documentation is obviously the default
+VORTEXBASE  := $(shell pwd)/..
+EXTRAPATH   := $(VORTEXBASE)/src:$(VORTEXBASE)/site:$(VORTEXBASE)/project:$(VORTEXBASE)/tests:$(PYTHONPATH)
+export PYTHONPATH = $(EXTRAPATH)
+
+
+all: auto_html_docs html  # HTML documentation is obviously the default
 
 # No dependency check for the following targets (always execute them)
 .PHONY: all full-check miss-check $(CHECKREPORT) html auto_html_docs \
@@ -120,29 +125,29 @@ $(XMLEXPORTDIR):
 # Build the notebooks export
 $(NOTEBOOKS): $(NOTEBOOKS_DEP)
 	rm -rf $(NOTEBOOKS)
-	$(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
+	$(PYTHON) $(NBOOKEXPORT) -v -o $(NOTEBOOKS) $(NOTEBOOKS_IN)
 
 # Clean a library index
 clean-%_libindex:
-	$(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --clean $(patsubst clean-%_libindex, library/%, $@)
 
 # Standard build for library indexes
 %_libindex:
-	$(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v $(patsubst %_libindex, library/%, $@)
 
 # Special builds for some library indexes (custom versionid)
 taylorism_libindex:
-	$(GENEINDEX) -v --versionid version_taylorism $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --versionid version_taylorism $(patsubst %_libindex, library/%, $@)
 
 footprints_libindex:
-	$(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
+	$(PYTHON) $(GENEINDEX) -v --versionid version_fp $(patsubst %_libindex, library/%, $@)
 
 # Build the $(AUTO_HTML_DOC) directory
 auto_html_docs:
 	make -C $(AUTO_HTML_DOC) docs
 
 # Build the sphinx-html documentation
-html: $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
+html: $(NOTEBOOKS) $(CHECKREPORT) $(GEOLIST) $(BDPELIST) $(POL_ELTS) $(POL_SITES) $(BUILD_LIBINDEXES) $(XMLEXPORTDIR)
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 # Clean the notebooks

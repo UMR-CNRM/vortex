@@ -11,17 +11,21 @@ Vortex features are working correctly.
 When debugging, fix other tests first and only then look at this one !
 """
 
+import os
 import tempfile
 from unittest import TestCase, main
 
 import vortex
 from vortex import sessions, toolbox
+from vortex.data.abstractstores import _CACHE_GET_INTENT_DEFAULT
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource
 from vortex.data.providers import VortexStd
-from vortex.data.stores import _VortexCacheBaseStore, _CACHE_GET_INTENT_DEFAULT
+from vortex.data.stores import _VortexCacheBaseStore
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
 from vortex.tools.storage import FixedEntryCache
+
+MYPYFILE = os.path.abspath(__file__)
 
 
 # The test cache Storage Object
@@ -44,18 +48,18 @@ class TestDataCache(FixedEntryCache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        testsdir = self.sh.path.dirname(__file__)
+        testsdir = self.sh.path.dirname(MYPYFILE)
         return self.sh.path.join(testsdir, 'data', 'testcache', self.actual_headdir)
 
     def _actual_earlyretrieve(self, item, local, **kwargs):
         dirextract = kwargs.get("dirextract", False)
         tarextract = kwargs.get("tarextract", False)
-        if not dirextract or tarextract:
+        if not (dirextract or tarextract):
             return self.context.delayedactions_hub.register((self._formatted_path(item),
                                                              kwargs.get('fmt', 'foo'),
                                                              kwargs.get('intent', 'in')),
-                                                            kind = 'testlocalcp',
-                                                            goal = 'get')
+                                                            kind='testlocalcp',
+                                                            goal='get')
         else:
             return None
 
@@ -90,13 +94,13 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
     def incacheearlyget(self, remote, local, options):
         rc = self.cache.earlyretrieve(
             remote['path'], local,
-            intent             = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
-            fmt                = options.get('fmt'),
-            info               = options.get('rhandler', None),
-            tarextract         = options.get('auto_tarextract', False),
-            dirextract         = options.get('auto_dirextract', False),
-            uniquelevel_ignore = options.get('uniquelevel_ignore', True),
-            silent             = options.get('silent', False),
+            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt'),
+            info=options.get('rhandler', None),
+            tarextract=options.get('auto_tarextract', False),
+            dirextract=options.get('auto_dirextract', False),
+            uniquelevel_ignore=options.get('uniquelevel_ignore', True),
+            silent=options.get('silent', False),
         )
         return rc
 
@@ -104,13 +108,13 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
         rc = self.cache.finaliseretrieve(
             result_id,
             remote['path'], local,
-            intent             = options.get('intent', _CACHE_GET_INTENT_DEFAULT),
-            fmt                = options.get('fmt'),
-            info               = options.get('rhandler', None),
-            tarextract         = options.get('auto_tarextract', False),
-            dirextract         = options.get('auto_dirextract', False),
-            uniquelevel_ignore = options.get('uniquelevel_ignore', True),
-            silent             = options.get('silent', False),
+            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            fmt=options.get('fmt'),
+            info=options.get('rhandler', None),
+            tarextract=options.get('auto_tarextract', False),
+            dirextract=options.get('auto_dirextract', False),
+            uniquelevel_ignore=options.get('uniquelevel_ignore', True),
+            silent=options.get('silent', False),
         )
         return rc and self._hash_get_check(self.incacheget, remote, local, options)
 
@@ -298,14 +302,14 @@ class UtSimpleWorkflow(TestCase):
 
     def test_simpleget_and_put(self):
         desc = self.default_fp_stuff
-        desc.update(kind=['utest1', 'utest2'], local = '[kind]_get')
+        desc.update(kind=['utest1', 'utest2'], local='[kind]_get')
         descO = self.default_fp_stuff
         del descO['namespace']
         del descO['experiment']
-        descO.update(kind=['utest1', 'utest2'], local = '[kind]_get',
+        descO.update(kind=['utest1', 'utest2'], local='[kind]_get',
                      remote=self.sh.path.join(self.sh.pwd(), 'testput', '[local]'))
         descdiff = self.default_fp_stuff
-        descdiff.update(kind=['utest1', 'utest2'], local = '[kind]_get', experiment='ABC2')
+        descdiff.update(kind=['utest1', 'utest2'], local='[kind]_get', experiment='ABC2')
         for batch in [True, False]:
             # Input
             rhs = toolbox.input(now=True, verbose=False, batch=batch,
@@ -326,11 +330,11 @@ class UtSimpleWorkflow(TestCase):
 
     def test_hookedget_and_put(self):
         desc = self.default_fp_stuff
-        desc.update(kind=['utest1', 'utest2'], local = '[kind]_get')
+        desc.update(kind=['utest1', 'utest2'], local='[kind]_get')
         descO = self.default_fp_stuff
         del descO['namespace']
         del descO['experiment']
-        descO.update(kind=['utest1', 'utest2'], local = '[kind]_get',
+        descO.update(kind=['utest1', 'utest2'], local='[kind]_get',
                      remote=self.sh.path.join(self.sh.pwd(), 'testput', '[local]'))
         for batch in [True, False]:
             rhs = toolbox.input(now=True, verbose=True, intent='inout', batch=batch,
@@ -351,11 +355,11 @@ class UtSimpleWorkflow(TestCase):
 
     def test_rh_check_delayed_get(self):
         desc1 = self.default_fp_stuff
-        desc1.update(kind='utest1', local = 'utest1_get', )
+        desc1.update(kind='utest1', local='utest1_get', )
         rh1 = toolbox.rh(**desc1)
         desc2 = self.default_fp_stuff
-        desc2.update(kind='utest2', local = 'utest2_get', )
-        rh2 = toolbox.rh(**desc1)
+        desc2.update(kind='utest2', local='utest2_get', )
+        rh2 = toolbox.rh(**desc2)
         # Check
         self.assertTrue(rh1.check())
         self.assertTrue(rh2.check())
@@ -370,14 +374,14 @@ class UtSimpleWorkflow(TestCase):
 
     def test_simpleinsitu(self):
         desc = self.default_fp_stuff
-        desc.update(kind='utest1', local = 'utest1_get', )
+        desc.update(kind='utest1', local='utest1_get', )
         for batch in [True, False]:
             rhs = toolbox.input(now=True, verbose=False, batch=batch, **desc)
             self.assertIntegrity(rhs[0])
             rhsbis = toolbox.input(now=True, insitu=True, batch=batch, **desc)
             self.assertIntegrity(rhsbis[0])
             desc2 = self.default_fp_stuff
-            desc2.update(kind='utest1', local = 'utest1_getbis', )
+            desc2.update(kind='utest1', local='utest1_getbis', )
             rhster = toolbox.input(now=True, insitu=True, verbose=False, batch=batch, **desc2)
             self.assertIntegrity(rhster[0])
             for rh in [rhs[0], rhster[0]]:
@@ -388,18 +392,21 @@ class UtSimpleWorkflow(TestCase):
             therole = 'Toto{:d}'.format(i)
             # Missing
             descM = self.default_fp_stuff
-            descM.update(kind='utest1', local = 'utestM_get{:d}'.format(i), model='mocage')
+            descM.update(kind='utest1', local='utestM_get{:d}'.format(i), model='mocage')
             rhsM = toolbox.input(role=therole, now=True, fatal=False, verbose=False, batch=batch, **descM)
             self.assertFalse(rhsM)
             # Alternate
             desc = self.default_fp_stuff
-            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='arome')
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arome')
             rhs0 = toolbox.input(role=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertFalse(rhs0)
-            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='arpege')
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arpege')
             rhs1 = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertIntegrity(rhs1[0])
-            desc.update(kind='utest1', local = 'utest1_get{:d}'.format(i), model='safran')
+            rhs1bis = toolbox.input(alternate=therole, now=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs1bis)
+            self.assertFalse(rhs1bis[0].container.filled)
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='safran')
             rhs2 = toolbox.input(alternate=therole, now=True, fatal=True, verbose=False, batch=batch, **desc)
             self.assertTrue(rhs2)
             efftoto = self.sequence.effective_inputs(role=therole)
@@ -412,27 +419,59 @@ class UtSimpleWorkflow(TestCase):
             a_missing = a_report.missing_resources()
             self.assertEqual(a_missing['utestM_get{:d}'.format(i)].container.filename,
                              'utestM_get{:d}'.format(i))
-            # Cleaning...
+        self.cursession.context.localtracker.json_dump()
+        # Now test the insitu stuff
+        self.cursession.context.newcontext('insitutest', focus=True)
+        self.cursession.context.cocoon()
+        for i in range(0, 2):
+            self.sh.mv('../utest1_get{:d}'.format(i), './utest1_get{:d}'.format(i))
+        self.sh.mv('../local-tracker-state.json', 'local-tracker-state.json')
+        self.cursession.context.localtracker.json_load()
+        for i, batch in enumerate([True, False]):
+            therole = 'Toto{:d}'.format(i)
+            # Missing
+            descM = self.default_fp_stuff
+            descM.update(kind='utest1', local='utestM_get{:d}'.format(i), model='mocage')
+            rhsM = toolbox.input(role=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **descM)
+            self.assertFalse(rhsM)
+            # Alternate
+            desc = self.default_fp_stuff
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arome')
+            rhs0 = toolbox.input(role=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertFalse(rhs0)
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='arpege')
+            rhs1 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertIntegrity(rhs1[0])
+            rhs1bis = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs1bis)
+            self.assertFalse(rhs1bis[0].container.filled)
+            desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='safran')
+            rhs2 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=True, verbose=False, batch=batch, **desc)
+            self.assertTrue(rhs2)
+            efftoto = self.sequence.effective_inputs(role=therole)
+            self.assertEqual(len(efftoto), 1)
+            self.assertEqual(efftoto[0].rh.resource.model, 'arpege')
+            # nettoyage
             rhs1[0].clear()
 
     def test_coherentget(self):
         desc = self.default_fp_stuff
         vswitch = False
         rh0a = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi,tata_[cutoff]',
-                             kind='utest1', local = 'utest1_get0a', **desc)
+                             kind='utest1', local='utest1_get0a', **desc)
         rh0b = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto,titi',
-                             kind='utest1', local = 'utest1_get0b', **desc)
+                             kind='utest1', local='utest1_get0b', **desc)
         rh1 = toolbox.input(now=True, verbose=vswitch, coherentgroup='toto',
-                            kind='utest1', local = 'utest1_get1', **desc)
+                            kind='utest1', local='utest1_get1', **desc)
         rh2 = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='[failer]',
-                            kind='utest1,utest9,utest2', local = '[kind]_get2', failer='toto',
+                            kind='utest1,utest9,utest2', local='[kind]_get2', failer='toto',
                             **desc)
         rh3 = toolbox.input(role='TOTO', now=True, verbose=vswitch, fatal=False, coherentgroup='[role:lower]',
-                            kind='utest1', local = 'utest1_get3', **desc)
+                            kind='utest1', local='utest1_get3', **desc)
         rh3b = toolbox.input(now=True, verbose=vswitch, fatal=False, coherentgroup='titi',
-                             kind='utest9', local = 'utest9_get3b', **desc)
+                             kind='utest9', local='utest9_get3b', **desc)
         rh4 = toolbox.input(now=True, verbose=vswitch,
-                            kind='utest1', local = 'utest1_get4', **desc)
+                            kind='utest1', local='utest1_get4', **desc)
         self.assertEqual(len(rh0a), 1)
         self.assertEqual(len(rh0b), 1)
         self.assertEqual(len(rh1), 1)

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -24,6 +28,7 @@ logger = loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
+    """TODO class documentation."""
 
     _footprint = dict(
         info = 'Op Job assistant.',
@@ -41,8 +46,8 @@ class OpJobAssistantTest(JobAssistant):
 
         opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
-            tag     = 'opid',
-            profile = opd.get('op_suite', 'oper')
+            tag='opid',
+            profile=opd.get('op_suite', 'oper')
         )
 
         print(gl.idcard())
@@ -50,12 +55,12 @@ class OpJobAssistantTest(JobAssistant):
         # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
 
-        t  = vortex.sessions.get(
-            tag     = 'opview',
-            active  = True,
-            glove   = gl,
-            topenv  = vortex.rootenv,
-            prompt  = vortex.__prompt__
+        t = vortex.sessions.get(
+            tag='opview',
+            active=True,
+            glove=gl,
+            topenv=vortex.rootenv,
+            prompt=vortex.__prompt__
         )
 
         return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
@@ -154,10 +159,10 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Current rundir <%s>', t.rundir)
 
     def _toolbox_setup(self, t, **kw):
-        super(OpJobAssistantTest, self)._toolbox_setup( t, **kw)
+        super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
         opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
-            jname = opd.get('op_jeeves', None),
+            jname=opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
             sender='admin_prod_sc@meteo.fr',
         )
@@ -192,7 +197,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
-        super(OpJobAssistantTest, self)._system_setup( t, **kw)
+        super(OpJobAssistantTest, self)._system_setup(t, **kw)
         t.sh.allow_cross_users_links = False
 
     def register_cycle(self, cycle):
@@ -341,7 +346,7 @@ class OutputReportContext(_ReportContext):
 
 
 def get_resource_value(r, key):
-    """ this function returns the resource value """
+    """This function returns the resource value."""
     try:
         kw = dict(area=lambda r: r.resource.geometry.area,
                   term=lambda r: r.resource.term,
@@ -352,7 +357,7 @@ def get_resource_value(r, key):
 
 
 def filteractive(r, dic):
-    """ this function returns the filter status """
+    """This function returns the filter status."""
     filter_active = True
     if dic is not None:
         for k, w in six.iteritems(dic):
@@ -382,8 +387,9 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
     def hook_route(t, rh):
         kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
-                      filename=rh.container.abspath, soprano_target=soprano_target,
-                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      filename=rh.container.abspath, filefmt=rh.container.actualfmt,
+                      soprano_target=soprano_target, routingkey=routingkey,
+                      targetname=targetname, transmet=transmet,
                       header_infile=header_infile, **kw)
 
         if selkeyproductid:
@@ -410,8 +416,8 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 def opphase_hook_factory(optfilter=None):
     """Hook functions factory to phase files while the execution is running.
 
-    :param dict optfilter: (used to allow routing) """
-
+    :param dict optfilter: (used to allow routing)
+    """
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
@@ -440,7 +446,7 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
         max_value = int(maxvalue)
         current_value = 0
         if hasattr(rh.resource, 'term') and useterm:
-                current_value = rh.resource.term.hour
+            current_value = rh.resource.term.hour
         if sharedadvance:
             if useterm:
                 if sharedadvance.value < current_value:

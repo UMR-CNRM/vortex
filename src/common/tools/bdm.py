@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 Utility classes and function to work with the BDM database.
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 #: No automatic export
 __all__ = []

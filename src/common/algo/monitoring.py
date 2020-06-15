@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to observations monitoring.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -10,13 +14,14 @@ from vortex.syntax.stdattrs import a_date, a_model, a_cutoff
 from common.tools import odb, drhook
 
 #: Automatic export of Monitoring class
-__all__ = [ ]
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 
 
 class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
-    """Compute monitoring statistics"""
+    """Compute monitoring statistics."""
+
     _footprint = dict(
         attr = dict(
             kind = dict(
@@ -52,6 +57,9 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
                 remap = dict(can='surf', surface='surf', atmospheric='atm'),
                 info = 'The processing stage of the ODB base.',
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -171,7 +179,7 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         """Remove all empty files and find out if any special resources have been produced."""
 
         sh = self.system
-        self.system.dir(output = False, fatal=False)
+        self.system.dir(output=False, fatal=False)
         allfiles = sh.ls()
         for f in allfiles:
             if self.system.path.getsize(f) == 0:

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract classes for System addons.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
@@ -23,7 +27,7 @@ __all__ = []
 class Addon(footprints.FootprintBase):
     """Root class for any :class:`Addon` system subclasses."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('addon',)
     _footprint = dict(
         info = 'Default add-on',
@@ -78,10 +82,10 @@ class Addon(footprints.FootprintBase):
         if self.env is None:
             self.env = Environment(active=False, clear=True)
         clsenv = self.__class__.__dict__
-        for k in [ x for x in clsenv.keys() if x.isupper() ]:
+        for k in [x for x in clsenv.keys() if x.isupper()]:
             self.env[k] = clsenv[k]
         if self.path is None:
-            for prefix in [ x for x in (self.kind, self.cfginfo) if x is not None ]:
+            for prefix in [x for x in (self.kind, self.cfginfo) if x is not None]:
                 kpath = prefix + 'path'
                 if kpath in self.sh.env:
                     self.path = self.sh.env.get(kpath)
@@ -196,7 +200,7 @@ class Addon(footprints.FootprintBase):
 class FtrawEnableAddon(Addon):
     """Root class for any :class:`Addon` system subclasses that needs to override rawftput."""
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Default add-on with rawftput support.',
         attr = dict(
@@ -227,7 +231,7 @@ class AddonGroup(footprints.FootprintBase):
     Addons or AddonGroups into the current shell.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('addon',)
     _footprint = dict(
         info = 'Default add-on group',

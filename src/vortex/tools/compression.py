@@ -213,7 +213,7 @@ class CompressionPipeline(object):
 class CompressionUnit(footprints.FootprintBase):
     """Defines compress/uncompress methods for a given compression tool."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('compression_unit',)
     _footprint = dict(
         info = 'Abstract Compression Unit',
@@ -240,7 +240,7 @@ class CompressionUnit(footprints.FootprintBase):
 
     def _run_in_pipe(self, sh, cmd, stream, outstream=True):
         """Run *cmd* with the piped input *stream*."""
-        p = sh.popen(cmd, stdin=stream, stdout=outstream, bufsize = 8192)
+        p = sh.popen(cmd, stdin=stream, stdout=outstream, bufsize=8192)
         return p
 
     def compress(self, sh, stream):

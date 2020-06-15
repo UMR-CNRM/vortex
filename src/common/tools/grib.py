@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -193,15 +197,15 @@ class GRIBFilter(_GenericFilter):
         if self._xgrib_support and self._sh.is_xgrib(gribfile):
             idx = self._sh.xgrib_index_get(gribfile)
             in_data = [footprints.proxy.dataformat(
-                filename       = self._sh.path.realpath(a_gribfile),
-                openmode       = 'r',
-                format         = 'GRIB',
+                filename=self._sh.path.realpath(a_gribfile),
+                openmode='r',
+                format='GRIB',
             ) for a_gribfile in idx]
         else:
             in_data = [footprints.proxy.dataformat(
-                filename       = self._sh.path.realpath(gribfile),
-                openmode       = 'r',
-                format         = 'GRIB',
+                filename=self._sh.path.realpath(gribfile),
+                openmode='r',
+                format='GRIB',
             ), ]
 
         # Open output files

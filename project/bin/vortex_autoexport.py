@@ -144,7 +144,7 @@ class GitToolboxProvider(ToolboxProvider):
         return output
 
     def _gitversion(self):
-        if re.match('\d+\.\d+\.\d+$', self._wantedversion):
+        if re.match(r'\d+\.\d+\.\d+$', self._wantedversion):
             return 'v{:s}'.format(self._wantedversion)
         else:
             return 'origin/{:s}'.format(self._wantedversion)
@@ -291,6 +291,7 @@ class ExportService(object):
 
 
 class ShellAccessExportService(ExportService):
+    """Abstract class for ExportServices relying on some kind of Unix shell."""
 
     def sh_execute(self, cmd, onerror_raise=True, silent=False, catch_output=False):
         """Execute a shell command on the remote host.

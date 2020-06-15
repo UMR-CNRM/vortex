@@ -31,6 +31,21 @@ Bull Targets
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Epona
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Belenos
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Taranis
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 CNRM Targets
 ------------
 

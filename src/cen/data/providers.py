@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
-from vortex.util.config     import GenericConfigParser
-from vortex.data.providers  import Provider
+from vortex.util.config import GenericConfigParser
+from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import namespacefp
 
 #: No automatic export
@@ -83,16 +87,16 @@ class S2MReanalysisProvider(Provider):
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason
         if resource.realkind == 'observations':
-            if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
-                info['level_two']   = 'obs/rs' + season + suffix
+            if resource.part in ['synop', 'precipitation', 'hourlyobs']:
+                info['level_two'] = 'obs/rs' + season + suffix
             elif resource.part == 'nebulosity':
-                info['level_two']   = 'neb/n' + season + suffix
+                info['level_two'] = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
             if resource.source_conf == 'era40':
                 info['level_one'] = 'cep'
                 info['level_two'] = ''
             else:
-                info['level_two']   = 'guess/p' + season + suffix
+                info['level_two'] = 'guess/p' + season + suffix
 
         self.config.setall(info)
         return self.config.resolvedpath(resource, self.vapp, self.vconf, self.realkind)
@@ -153,16 +157,16 @@ class CenSopranoDevProvider(Provider):
         suffix = map_suffix[info['level_one']]
         season = resource.date.nivologyseason
         if resource.realkind == 'observations':
-            if resource.part in [ 'synop', 'precipitation', 'hourlyobs']:
-                info['level_two']   = 'obs/rs' + season + suffix
+            if resource.part in ['synop', 'precipitation', 'hourlyobs']:
+                info['level_two'] = 'obs/rs' + season + suffix
             elif resource.part == 'radiosondage':
-                info['level_two']   = 'a' + season + suffix
+                info['level_two'] = 'a' + season + suffix
             elif resource.part == 'nebulosity':
-                info['level_two']   = 'neb/n' + season + suffix
+                info['level_two'] = 'neb/n' + season + suffix
         elif resource.realkind == 'guess':
-            info['level_two']   = 'p' + season + suffix
+            info['level_two'] = 'p' + season + suffix
         elif resource.realkind == 'snowpackstate':
-            info['level_two']   = 'prep' + season + suffix
+            info['level_two'] = 'prep' + season + suffix
 
         logger.debug('sopranodevprovider::pathname info %s', info)
         self.config.setall(info)

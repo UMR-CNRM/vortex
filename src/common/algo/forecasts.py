@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to NWP direct forecasts.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import math
@@ -65,12 +69,12 @@ class Forecast(IFSParallel):
 
         ininc = self.naming_convention('ic', rh)
         analysis = self.setlink(
-            initrole = ('InitialCondition', 'Analysis'),
-            initname = ininc()
+            initrole=('InitialCondition', 'Analysis'),
+            initname=ininc()
         )
 
         if analysis:
-            analysis  = analysis.pop()
+            analysis = analysis.pop()
             thismonth = analysis.rh.resource.date.month
 
             # Possibly fix the model clim
@@ -83,15 +87,15 @@ class Forecast(IFSParallel):
             self.all_localclim_fixer(rh, thismonth)
 
             for iaurh in [x for x in
-                          self.context.sequence.effective_inputs(role = re.compile(r'IAU_\w'))]:
+                          self.context.sequence.effective_inputs(role=re.compile(r'IAU_\w'))]:
                 self.grab(iaurh, comment='IAU files')
 
             # At least, expect the analysis to be there...
             self.grab(analysis, comment='analysis')
 
         for namrh in [x.rh for x in self.context.sequence.effective_inputs(
-            role = 'Namelist',
-            kind = 'namelist',
+            role='Namelist',
+            kind='namelist',
         )]:
             try:
                 namlocal = namrh.container.actualpath()
@@ -181,12 +185,12 @@ class LAMForecast(Forecast):
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
         return dict(
-            name       = (self.xpname + 'xxxx')[:4].upper(),
-            timescheme = self.timescheme,
-            timestep   = self.timestep,
-            fcterm     = self.fcterm,
-            fcunit     = self.fcunit,
-            model      = 'aladin',
+            name=(self.xpname + 'xxxx')[:4].upper(),
+            timescheme=self.timescheme,
+            timestep=self.timestep,
+            fcterm=self.fcterm,
+            fcunit=self.fcunit,
+            model='aladin',
         )
 
     def prepare(self, rh, opts):
@@ -197,8 +201,8 @@ class LAMForecast(Forecast):
 
         # Check boundaries conditions
         cplrh = [x.rh for x in self.context.sequence.effective_inputs(
-            role = 'BoundaryConditions',
-            kind = 'boundary'
+            role='BoundaryConditions',
+            kind='boundary'
         )]
         cplrh.sort(key=lambda rh: rh.resource.date + rh.resource.term)
 
@@ -313,9 +317,9 @@ class FullPosGeo(FullPos):
         sh = self.system
 
         initrh = [x.rh for x in self.context.sequence.effective_inputs(
-            role = ('Analysis', 'Guess', 'InitialCondition'),
-            kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
-                    re.compile('pert'), ),
+            role=('Analysis', 'Guess', 'InitialCondition'),
+            kind=('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
+                  re.compile('pert'), ),
         )]
 
         # is there one (deterministic forecast) or many (ensemble forecast) fullpos to perform ?
@@ -365,7 +369,7 @@ class FullPosGeo(FullPos):
                 sh.mkdir(self._RUNSTORE)
                 # Freeze the current output
                 sh.move(output_file, sh.path.join(self._RUNSTORE, 'pfout_{:d}'.format(num)),
-                        fmt = r.container.actualfmt)
+                        fmt=r.container.actualfmt)
                 sh.remove(infile, fmt=r.container.actualfmt)
                 # Cleaning/Log management
                 if not self.server_run:
@@ -385,9 +389,9 @@ class FullPosGeo(FullPos):
         sh = self.system
 
         initrh = [x.rh for x in self.context.sequence.effective_inputs(
-            role = ('Analysis', 'Guess', 'InitialCondition'),
-            kind = ('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
-                    re.compile('pert'), ),
+            role=('Analysis', 'Guess', 'InitialCondition'),
+            kind=('analysis', 'historic', 'ic', re.compile('(stp|ana)min'),
+                  re.compile('pert'), ),
         )]
         if len(initrh) > 1:
             for num, r in enumerate(initrh):
@@ -432,17 +436,17 @@ class FullPosBDAP(FullPos):
         sh = self.system
 
         namrh = [x.rh for x in self.context.sequence.effective_inputs(
-            kind = 'namelistfp'
+            kind='namelistfp'
         )]
 
         namxx = [x.rh for x in self.context.sequence.effective_inputs(
-            role = 'FullPosSelection',
-            kind = 'namselect',
+            role='FullPosSelection',
+            kind='namselect',
         )]
 
         initsec = [x for x in self.context.sequence.effective_inputs(
-            role = ('InitialCondition', 'ModelState'),
-            kind = 'historic',
+            role=('InitialCondition', 'ModelState'),
+            kind='historic',
         )]
         initsec.sort(key=lambda sec: sec.rh.resource.term)
 
@@ -544,7 +548,7 @@ class FullPosBDAP(FullPos):
                                    sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname)))
                        if sh.path.isfile(x)]:
             sh.move(fpfile, sh.path.basename(fpfile),
-                    fmt = 'grib' if fpfile.startswith('GRIB') else 'lfi')
+                    fmt='grib' if fpfile.startswith('GRIB') else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
         super(FullPosBDAP, self).postfix(rh, opts)
@@ -605,7 +609,7 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
         self.system.subtitle("Offline SURFEX Settings.")
         # Find the run/final date
         ic = self.context.sequence.effective_inputs(
-            role = ('InitialConditions', 'ModelState', 'Analysis'))
+            role=('InitialConditions', 'ModelState', 'Analysis'))
         if ic:
             if len(ic) > 1:
                 logger.warning('Multiple initial conditions, using only the first one...')
@@ -622,7 +626,7 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
             logger.warning('No initial conditions were found. Hope you know what you are doing...')
             finaldate = None
         # Ok, let's find the namelist
-        namsecs = self.context.sequence.effective_inputs(role = ('Namelist', 'Namelistsurf'))
+        namsecs = self.context.sequence.effective_inputs(role=('Namelist', 'Namelistsurf'))
         for namsec in namsecs:
             logger.info("Processing: %s", namsec.rh.container.localpath())
             self._fix_nam_macro(namsec, 'TSTEP', self.model_tstep.length)

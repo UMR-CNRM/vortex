@@ -108,7 +108,7 @@ class UtXTemplates(TestCase):
                            member=2)
         self.assert_render(dict(a=1, b=[1, 2, 3], c='{{len(members)}}'),
                            dict(a=1, b=[1, 2, 3], c=10),
-                           members= list(range(0, 10)))
+                           members=list(range(0, 10)))
         self.assert_render(dict(a=1, b=[1, 2, 3],
                                 c=[1, '{{",".join(["mb{:02d}".format(m) for m in sorted(members)])}}']),
                            dict(a=1, b=[1, 2, 3], c=[1, 'mb00,mb01,mb02,mb03']),
@@ -176,7 +176,7 @@ class UtXTemplates(TestCase):
                                 __loopiterator__='[1, 2, 3]',
                                 __loopvariables__='i',
                                 __body__='{{u"i1={:02d} and toto={:d}".format(i + 1, toto)}}',
-                                __extra_vars__ = dict(toto='i % 2')
+                                __extra_vars__=dict(toto='i % 2')
                                 ),
                            ["i1=02 and toto=1", "i1=03 and toto=0", "i1=04 and toto=1"])
         # External attributes + several loop variables

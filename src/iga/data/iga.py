@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 from bronx.fancies import loggers
@@ -9,7 +13,7 @@ from vortex.data.flow import GeoFlowResource
 from vortex.syntax import stddeco
 
 #: Automatic export of  class
-__all__ = [ ]
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 

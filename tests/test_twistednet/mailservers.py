@@ -18,7 +18,7 @@ from bronx.fancies import loggers
 
 from zope.interface import implementer
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer
 from twisted.mail import smtp
 
 from twisted.cred.checkers import AllowAnonymousAccess
@@ -110,19 +110,25 @@ class TestMailServer(object):
     def __init__(self, port):
         self.port = port
 
-        userdb = AllowAnonymousAccess()
-        self.portal = Portal(SimpleRealm)
-        self.portal.registerChecker(userdb)
-
     def _server_task(self, queue):
 
-        def nicestop(signum, frame):
-            reactor.stop()
+        from twisted.internet import reactor
 
-        f = MpQueueSMTPFactory(self.portal, mpqueue=queue)
-        signal.signal(signal.SIGTERM, nicestop)
+        userdb = AllowAnonymousAccess()
+        portal = Portal(SimpleRealm)
+        portal.registerChecker(userdb)
+
+        f = MpQueueSMTPFactory(portal, mpqueue=queue)
+        logger.debug('ServerSide: SMTP factory was build %s.', str(f))
+        reactor.addSystemEventTrigger('before', 'shutdown',
+                                      lambda: logger.debug("ServerSide: before shtudown"))
+        reactor.addSystemEventTrigger('after', 'shutdown',
+                                      lambda: logger.debug("ServerSide: after shtudown"))
         reactor.listenTCP(self.port, f)
+        logger.info("ServerSide: Factory %s registered with port %d",
+                    str(f), self.port)
         reactor.run()
+        logger.info("ServerSide: Reactor's run returned")
         return True
 
     def check_port(self):
@@ -133,17 +139,27 @@ class TestMailServer(object):
         q = mproc.Queue()
         p = mproc.Process(target=self._server_task, args=(q, ))
         p.start()
+        logger.debug("ClientSide: subprocess started")
         try:
             self.check_port()
             logger.info('The test mailserver is ready on port: %d', self.port)
             yield TestMessagesInterface(q)
         finally:
+            logger.info("ClientSide: firing terminate")
             p.terminate()
+            logger.debug("ClientSide: terminate called")
             try:
                 q.get(timeout=0.1)
             except basequeue.Empty:
                 pass
-            p.join()
+            logger.info("ClientSide: queue get done")
+            p.join(timeout=5)
+            if p.exitcode is None:
+                # The join command timed out...
+                logger.info("ClientSide: first join timed out... force kill !")
+                os.kill(p.pid, signal.SIGKILL)
+                p.join()
+            logger.debug("ClientSide: join done")
 
 
 if __name__ == '__main__':

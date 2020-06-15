@@ -20,11 +20,11 @@ class UtEnv(TestCase):
 
     def setUp(self):
         self.res = Analysis(
-            geometry = geometries.get(tag='global798'),
-            model    = 'arpege',
-            date     = '201304231500',
-            cutoff   = 'prod',
-            kind     = 'analysis',
+            geometry=geometries.get(tag='global798'),
+            model='arpege',
+            date='201304231500',
+            cutoff='prod',
+            kind='analysis',
         )
 
     def test_basic(self):
@@ -147,9 +147,9 @@ class UtEnv(TestCase):
         e = Environment(active=True)
         e['toto'] = list(range(1, 4))
         self.assertEqual(os.environ['TOTO'], '[1, 2, 3]')
-        e['toto'] = dict(toto = 2, fun = 'coucou')
+        e['toto'] = dict(toto=2, fun='coucou')
         self.assertEqual(json.loads(os.environ['TOTO']),
-                         dict(toto = 2, fun = 'coucou'))
+                         dict(toto=2, fun='coucou'))
         e['toto'] = self.res
         self.assertEqual(
             json.loads(os.environ['TOTO']),

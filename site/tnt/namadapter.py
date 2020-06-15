@@ -291,7 +291,7 @@ class AbstractNamelistAdapter(collections_abc.Mapping):
 
     @abc.abstractmethod
     def _actual_rmblock(self, item):
-        """remove a block from the present namelist's set."""
+        """Remove a block from the present namelist's set."""
         pass
 
     @abc.abstractmethod

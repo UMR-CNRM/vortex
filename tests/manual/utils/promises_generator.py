@@ -32,8 +32,8 @@ R_ROLE = 'PickMeUp'
 RH_DICT = dict(date=R_DATE, cutoff=R_CUTOFF, model=R_MODEL, kind='gridpoint',
                origin='hst', format='grib', nativefmt='[format]',
                experiment='0007', namespace="vortex.cache.fr",
-               block='forecast', storetrack = False,
-               local = 'scrontch_[term]_[member]_[geometry::area]')
+               block='forecast', storetrack=False,
+               local='scrontch_[term]_[member]_[geometry::area]')
 
 MISC_INIDELAY = 2
 

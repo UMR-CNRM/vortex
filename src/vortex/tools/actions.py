@@ -34,11 +34,11 @@ class Action(object):
     def __init__(self, kind='foo', service=None, active=False, permanent=False):
         if service is None:
             service = 'send' + kind
-        self._service   = service
-        self._kind      = kind
-        self._active    = active
+        self._service = service
+        self._kind = kind
+        self._active = active
         self._permanent = permanent
-        self._frozen    = None
+        self._frozen = None
 
     @property
     def kind(self):
@@ -224,7 +224,8 @@ class FlowSchedulerGateway(Action):
         rc = None
         service = self.get_active_service(**kw)
         if service and self._schedcmd is not None:
-            rc = getattr(service, self._schedcmd)(*args)
+            kwbis = {k: v for k, v in kw.items() if k in ('critical', )}
+            rc = getattr(service, self._schedcmd)(*args, **kwbis)
         self._schedcmd = None
         return rc
 

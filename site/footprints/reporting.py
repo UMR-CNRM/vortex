@@ -21,11 +21,11 @@ from bronx.patterns import getbytag
 #: No automatic export
 __all__ = []
 
-REPORT_WHY_MISSING  = 'Missing value'
-REPORT_WHY_INVALID  = 'Invalid value'
-REPORT_WHY_OUTSIDE  = 'Not in values'
-REPORT_WHY_OUTCAST  = 'Outcast value'
-REPORT_WHY_RECLASS  = 'Could not reclass'
+REPORT_WHY_MISSING = 'Missing value'
+REPORT_WHY_INVALID = 'Invalid value'
+REPORT_WHY_OUTSIDE = 'Not in values'
+REPORT_WHY_OUTCAST = 'Outcast value'
+REPORT_WHY_RECLASS = 'Could not reclass'
 REPORT_WHY_SUBCLASS = 'Not a subclass'
 
 REPORT_ONLY_NOTFOUND = 'No value found'
@@ -311,7 +311,8 @@ class FootprintLog(getbytag.GetByTag):
         """
         if self.last:
             info = self.last.as_dict()
-            for k in [ x for x in info if not re.search(select, x, re.IGNORECASE) or not info[x] ]:
+            for k in [x for x in info
+                      if not re.search(select, x, re.IGNORECASE) or not info[x]]:
                 del info[k]
             return info
         else:
@@ -371,7 +372,7 @@ class StandardReport(object):
         """Add a information node to the ``base`` or to the current node."""
         base = kw.pop('base', self.current())
         entry = self.doc.createElement(key)
-        for k, v in kw.items():
+        for k, v in sorted(kw.items()):
             entry.setAttribute(k, v)
         base.appendChild(entry)
         return base.lastChild
@@ -421,8 +422,10 @@ class FlatReport(object):
         self._items.append(kw)
 
     def reshuffle(self, sortlist=None, skip=True):
-        """Sort the entire set of items as a hierarchical tree
-        driven by keys of the specified ``sortlist``."""
+        """
+        Sort the entire set of items as a hierarchical tree driven by keys of the
+        specified ``sortlist``.
+        """
         self._tree = dict()
         if sortlist is not None:
             self._sort = sortlist[:]

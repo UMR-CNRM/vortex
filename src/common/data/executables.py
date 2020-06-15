@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Various Resources for executables used in NWP.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
+
+import vortex
 
 from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle
@@ -10,6 +16,32 @@ from gco.syntax.stdattrs import gvar, arpifs_cycle
 __all__ = []
 
 
+def gmkpack_bin_deco(cls):
+    """Add the necessary method to look into gmkpack directories."""
+    def guess_binary_sources(self, provider):
+        """Return the sources location based on gmkpack layout."""
+        sh = vortex.ticket().sh
+        srcdirs = []
+        if provider.realkind == 'remote' and provider.tube in ('file', 'symlink'):
+            packroot = sh.path.dirname(provider.pathname(self))
+            srcroot = sh.path.join(packroot, 'src')
+            if sh.path.exists(srcroot):
+                insrc = sh.listdir(srcroot)
+                if 'local' in insrc:
+                    srcdirs.append('local')
+                for inter in [d for d in sorted(insrc, reverse=True)
+                              if d.startswith('inter')]:
+                    srcdirs.append(inter)
+                if 'main' in insrc:
+                    srcdirs.append('main')
+            srcdirs = [sh.path.join(srcroot, d) for d in srcdirs]
+        return srcdirs
+
+    cls.guess_binary_sources = guess_binary_sources
+    return cls
+
+
+@gmkpack_bin_deco
 class IFSModel(NWPModel):
     """Yet an other IFS Model."""
 
@@ -39,7 +71,7 @@ class IFSModel(NWPModel):
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
-            model = self.model
+            model=self.model
         )
 
     def iga_basename(self):
@@ -80,6 +112,7 @@ class Arome(IFSModel):
         return super(Arome, self).command_line(**kw)
 
 
+@gmkpack_bin_deco
 class Prep(BlackBox):
     """A tool to interpolate Surfex files."""
 
@@ -103,6 +136,7 @@ class Prep(BlackBox):
         return 'prep'
 
 
+@gmkpack_bin_deco
 class PGD(BlackBox):
     """A tool to create Surfex clim files."""
 
@@ -126,6 +160,7 @@ class PGD(BlackBox):
         return 'buildpgd'
 
 
+@gmkpack_bin_deco
 class OfflineSurfex(SurfaceModel):
     """Surfex executable."""
 
@@ -152,6 +187,7 @@ class OfflineSurfex(SurfaceModel):
         return 'offline'
 
 
+@gmkpack_bin_deco
 class ProGrid(BlackBox):
     """A tool for grib conversion."""
 
@@ -176,6 +212,7 @@ class ProGrid(BlackBox):
         return 'progrid'
 
 
+@gmkpack_bin_deco
 class ProTool(BlackBox):
     """A tool for adding fields on FA objects."""
 
@@ -188,8 +225,8 @@ class ProTool(BlackBox):
                     default  = 'master_addsurf'
                 ),
                 kind = dict(
-                    values   = [ 'protool', 'addsurf' ],
-                    remap    = dict(addsurf = 'protool'),
+                    values   = ['protool', 'addsurf'],
+                    remap    = dict(addsurf='protool'),
                 ),
             )
         )
@@ -200,6 +237,7 @@ class ProTool(BlackBox):
         return 'protool'
 
 
+@gmkpack_bin_deco
 class SstNetcdf2Ascii(BlackBox):
     """Change format of NetCDF sst files."""
 
@@ -219,6 +257,7 @@ class SstNetcdf2Ascii(BlackBox):
     ]
 
 
+@gmkpack_bin_deco
 class SstGrb2Ascii(BlackBox):
     """Transform sst grib files from the BDAP into ascii files."""
 
@@ -244,6 +283,7 @@ class SstGrb2Ascii(BlackBox):
         )
 
 
+@gmkpack_bin_deco
 class IceGrb2Ascii(BlackBox):
     """Transform sea ice grib files into ascii files using the SeaIceLonLat file for coordinates."""
 
@@ -263,6 +303,7 @@ class IceGrb2Ascii(BlackBox):
     ]
 
 
+@gmkpack_bin_deco
 class IceNCDF2Ascii(BlackBox):
     """Transform sea ice NetCDF files into obsoul files."""
 
@@ -284,10 +325,10 @@ class IceNCDF2Ascii(BlackBox):
     def command_line(self, file_in_hn, file_in_hs, param, file_out):
         """Build the command line to launch the executable."""
         return '{file_in_hn} {file_in_hs} {param} {file_out}'.format(
-            file_in_hn = file_in_hn,
-            file_in_hs = file_in_hs,
-            param = param,
-            file_out = file_out
+            file_in_hn=file_in_hn,
+            file_in_hs=file_in_hs,
+            param=param,
+            file_out=file_out
         )
 
 
@@ -320,6 +361,7 @@ class IOAssign(BlackBox):
         return 'ioassign'
 
 
+@gmkpack_bin_deco
 class Batodb(BlackBox):
     """A tool for conversion to ODB format."""
 
@@ -352,6 +394,7 @@ class Batodb(BlackBox):
         return ' '.join(cmdstuff)
 
 
+@gmkpack_bin_deco
 class Odbtools(BlackBox):
     """A tool for shuffle operations in ODB format."""
 
@@ -386,6 +429,7 @@ class Odbtools(BlackBox):
         return cmdline
 
 
+@gmkpack_bin_deco
 class FcqODB(BlackBox):
     """A tool to calculate flags on observations."""
 
@@ -405,6 +449,7 @@ class FcqODB(BlackBox):
     ]
 
 
+@gmkpack_bin_deco
 class VarBCTool(BlackBox):
     """Well... a single minded binary for a quite explicite purpose."""
 
@@ -555,6 +600,7 @@ class SFXTools(BlackBox):
         return 'sfxtools'
 
 
+@gmkpack_bin_deco
 class Combi(BlackBox):
     """Multipurpose tool to build the initial states of the ensemble prediction system."""
 
@@ -578,6 +624,7 @@ class Combi(BlackBox):
         return 'combi'
 
 
+@gmkpack_bin_deco
 class Gobptout(BlackBox):
     """A tool for grib conversion on a gaussian grid."""
 
@@ -601,6 +648,7 @@ class Gobptout(BlackBox):
         return 'gobptout'
 
 
+@gmkpack_bin_deco
 class Clust(BlackBox):
     """Tool that selects a subset of EPS members using the Clustering method."""
 
@@ -624,6 +672,7 @@ class Clust(BlackBox):
         return 'clust'
 
 
+@gmkpack_bin_deco
 class PertSurf(BlackBox):
     """Tool that adds perturbations to surface fields."""
 
@@ -647,9 +696,12 @@ class PertSurf(BlackBox):
         return 'pertsurf'
 
 
+@gmkpack_bin_deco
 class AddPearp(BlackBox):
-    """Tool that adds perturbations taken from a given PEARP member
-    to the deterministic initial conditions."""
+    """
+    Tool that adds perturbations taken from a given PEARP member
+    to the deterministic initial conditions.
+    """
 
     _footprint = [
         gvar,
@@ -784,6 +836,7 @@ class ExecReverser(BlackBox):
         return 'exec_reverser'
 
 
+@gmkpack_bin_deco
 class Rgrid(BlackBox):
     """An executable to make a gaussian reduced grid from several parameters."""
 
@@ -814,6 +867,7 @@ class Rgrid(BlackBox):
         return ' '.join(args)
 
 
+@gmkpack_bin_deco
 class Festat(BlackBox):
     """Executable to compute the B matrix and statistics upon it."""
 

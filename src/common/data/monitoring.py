@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various Resources to handle data produce by the obserations monitoring.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -10,7 +14,7 @@ from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
 from common.data.consts import GenvModelResource
 
 #: Automatic export of Observations class
-__all__ = [ ]
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 
@@ -19,7 +23,7 @@ logger = loggers.getLogger(__name__)
 class Monitoring(FlowResource):
     """Abstract monitoring resource."""
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Observations monitoring file',
         attr = dict(

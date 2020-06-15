@@ -45,7 +45,7 @@ class SatRadDecoMixin(AlgoComponentDecoMixin):
     def setchannels(self):
         """Look up for channels namelists in effective inputs."""
         namchan = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'namelist')
+            x.rh for x in self.context.sequence.effective_inputs(kind='namelist')
             if 'channel' in x.rh.options
         ]
         for thisnam in namchan:

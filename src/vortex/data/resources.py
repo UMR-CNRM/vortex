@@ -1,6 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Abstract class for any "Resource". "Resource" objects describe what is in this
+or that data.
+
+:seealso: The :mod:`~vortex.data.flow`, :mod:`~vortex.data.outflow`,
+          :mod:`~vortex.data.executables` or  :mod:`~gco.data.resources` for more
+          specialised versions that may better fit your needs.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -12,19 +21,20 @@ from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
-__all__ = [ 'Resource' ]
+__all__ = ['Resource', ]
 
 logger = loggers.getLogger(__name__)
 
 
 class Resource(footprints.FootprintBase):
+    """Abstract class for any Resource."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('resource',)
     _footprint = [
         nativefmt_deco,
         dict(
-            info = 'Abstract NWP Resource',
+            info = 'Abstract Resource',
             attr = dict(
                 clscontents = dict(
                     info            = "The class instantiated to read the container's content",
@@ -51,7 +61,7 @@ class Resource(footprints.FootprintBase):
     def _str_more(self):
         """Return a string representation of meaningful attributes for formatted output."""
         d = self.footprint_as_shallow_dict()
-        for xdel in [ x for x in notinrepr if x in d ]:
+        for xdel in [x for x in notinrepr if x in d]:
             del d[xdel]
         return ' '.join(['{0:s}=\'{1!s}\''.format(k, v) for k, v in d.items()])
 
