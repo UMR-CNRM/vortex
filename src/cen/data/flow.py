@@ -458,7 +458,7 @@ class PfSample(Resource):
 class ProPickleFile(Resource):
     '''
     @author : B. Cluzet
-    Pickled CRAMPON PRO output to save time and transfer.
+    Pickled CrocO PRO output to save time and transfer.
     '''
 
     _footprint = [
@@ -485,7 +485,7 @@ class ProPickleFile(Resource):
 class PrepPickleFile(Resource):
     '''
     @author : B. Cluzet
-    Pickled CRAMPON PRRP output to save time and transfer.
+    Pickled CrocO PRRP output to save time and transfer.
     '''
 
     _footprint = [
