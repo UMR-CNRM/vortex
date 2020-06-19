@@ -240,28 +240,28 @@ class SopranoProvider(Provider):
             info['level_three'] = 'alpha'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
-            
+
         elif self.vapp in ('mfwam', 'ww3'):
             info['level_one'] = 'previ'
             info['level_two'] = 'mar'
             if resource.realkind in ('AltidataWave', 'SARdataWave'):
-                if self.vconf == 'globalcep01':    
+                if self.vconf == 'globalcep01':
                     info['level_three'] = 'alti_mfwam'
-                elif self.vconf in ('globalarp02','globalarpc02'):
-                    info['level_three'] = 'alti_mfwamarp'                
-                sopranomaptag = 'soprano'    
+                elif self.vconf in ('globalarp02', 'globalarpc02'):
+                    info['level_three'] = 'alti_mfwamarp'
+                sopranomaptag = 'soprano'
             elif resource.realkind == 'forcing':
-                sopranomaptag = 'soprano@mfwam_forcing'                  
+                sopranomaptag = 'soprano@mfwam_forcing'
                 if resource.filling == 'wind':
                     info['level_three'] = self.vapp
-                    info['level_four'] = self.vconf                    
+                    info['level_four'] = self.vconf
                 elif resource.filling == 'currents':
-                    info['level_three'] = 'servbdap'                                    
+                    info['level_three'] = 'servbdap'
                     info['level_four'] = 'courantpps4_mfwamglocep01'
-                   
+
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)
-            
+
         else:
             info['model'] = self.vapp
 
