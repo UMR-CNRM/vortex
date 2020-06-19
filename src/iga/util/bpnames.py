@@ -656,20 +656,20 @@ def global_snames(resource, provider):
 
     elif resource.realkind in ['AltidataWave', 'SARdataWave']:
         if resource.satellite == 'allsat' and resource.realkind == 'AltidataWave':
-            bname = 'allsop'
+            bname = 'altidata_' + '{:02d}'.format(int(resource.date.hh))  
         else:
             bname = dict(sentinel1='SENT1').get(resource.satellite, resource.satellite)
 
     elif resource.realkind == 'forcing' and resource.model in ('mfwam', 'ww3'):
         if resource.filling == 'wind':
+        
             if hasattr(resource, 'term'):
-                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst',
-                                               resource.date.hh)
+                bname = 'vent_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'prv',resource.date.hh)
             elif hasattr(resource, 'endtime'):
-                bname = 'wind_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'fcst',
-                                               resource.date.hh)
+                bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv',resource.date.hh)
+                        
         elif resource.filling == 'currents':
-            bname = 'currents{:s}'.format(resource.date.hh)
+            bname = 'courant_{:s}'.format(resource.date.hh)
         else:
             bname = 'allsop'
 
