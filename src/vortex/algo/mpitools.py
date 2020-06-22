@@ -280,7 +280,8 @@ class MpiTool(footprints.FootprintBase):
         for a_bin in self.binaries:
             if a_bin.group is None:
                 # The usual (and easy) case
-                new_envelope.append(a_bin.options.copy())
+                new_envelope.append({k: v for k, v in a_bin.options.items()
+                                     if k in ('nn', 'nnp', 'openmp', 'np')})
             elif a_bin.group in groups:
                 # Deal with group of binaries
                 group = groups.pop(a_bin.group)
@@ -290,8 +291,7 @@ class MpiTool(footprints.FootprintBase):
                                      '"nn" needs to be specified in all binaries')
                 done_nodes = 0
                 for n_node in sorted(n_nodes):
-                    new_desc = a_bin.options.copy()
-                    new_desc.pop('openmp', None)
+                    new_desc = {}
                     new_desc['nn'] = n_node - done_nodes
                     new_desc['nnp'] = 0
                     for g_bin in [g_bin for g_bin in group if g_bin.options['nn'] >= n_node]:

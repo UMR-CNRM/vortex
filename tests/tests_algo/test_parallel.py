@@ -494,6 +494,19 @@ class TestParallel(unittest.TestCase):
         binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
         self.assertWrapper('MPIAUTORANK', binpaths,
                            tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
+        # Same but with a prefixcommand
+        _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(envelope='auto',
+                                                                  np=[8, 8, 8],
+                                                                  prefixcommand=['toto.sh', None, None])))
+        self.assertCmdl(
+            '{base:s} --nn 6 --nnp 4 --prefix-command ./global_envelope_wrapper.py --openmp 1 -- {pwd:s}/fake0',
+            args, base=self._mpiauto)
+        binpaths = ['toto.sh', ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binargs = ["'{pwd:s}/fake0', '-joke', 'yes'".format(pwd=self.t.sh.pwd()), ] * 8
+        self.assertWrapper('MPIAUTORANK', binpaths, binargs=binargs,
+                           tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
         # With SRUN
         self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
