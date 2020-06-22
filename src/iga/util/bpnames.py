@@ -656,7 +656,7 @@ def global_snames(resource, provider):
 
     elif resource.realkind in ['AltidataWave', 'SARdataWave']:
         if resource.satellite == 'allsat' and resource.realkind == 'AltidataWave':
-            bname = 'altidata_' + '{:02d}'.format(int(resource.date.hh)) 
+            bname = 'altidata_' + '{:02d}'.format(int(resource.date.hh))
         else:
             bname = dict(sentinel1='SENT1').get(resource.satellite, resource.satellite)
 
