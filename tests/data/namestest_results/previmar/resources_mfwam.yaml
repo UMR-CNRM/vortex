@@ -17,7 +17,7 @@
         namespace: vortex.multi.fr
         vapp: mfwam
         vconf: globalcep01
-      location: ftp://prod.soprano.fr/previ/mar/allsop/RW/SENT1
+      location: ftp://prod.soprano.fr/previ/mar/alti_mfwam/RW/SENT1
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: toto
@@ -27,4 +27,4 @@
       suite: oper
     results: !test_names.core.TestResults
     - default: *id001
-      location: ftp://prod.soprano.fr/previ/mar/allsop/RW/allsop
+      location: ftp://prod.soprano.fr/previ/mar/alti_mfwam/RW/altidata_00
