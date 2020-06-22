@@ -24,6 +24,8 @@ strongly advised.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import os
+from configparser import RawConfigParser
 
 __version__ = '1.6.4'
 __prompt__ = 'Vortex v-' + __version__ + ':'
@@ -101,6 +103,11 @@ from . import toolbox, algo, data
 
 # Register proper vortex exit before the end of interpreter session
 
+def is_vortex_quiet():
+    value = os.environ.get('VORTEX_QUIET', '0').lower()
+    if value not in RawConfigParser.BOOLEAN_STATES:
+        value = '0'
+    return RawConfigParser.BOOLEAN_STATES[value]
 
 def complete():
     sessions.exit()
@@ -108,15 +115,17 @@ def complete():
     for kid in multiprocessing.active_children():
         logger.warning('Terminate active kid %s', str(kid))
         kid.terminate()
-    print('Vortex', __version__, 'completed', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
+    if not is_vortex_quiet():
+        print('Vortex', __version__, 'completed', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
 
 
 import atexit
 atexit.register(complete)
 del atexit, complete
 
-print('Vortex', __version__, 'loaded', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
-if __version__ != footprints.__version__:
-    print('   ... with a non-matching footprints version (', footprints.__version__, ')')
+if not is_vortex_quiet():
+    print('Vortex', __version__, 'loaded', '(', bronx.stdtypes.date.at_second().reallynice(), ')')
+    if __version__ != footprints.__version__:
+        print('   ... with a non-matching footprints version (', footprints.__version__, ')')
 
 del footprints
