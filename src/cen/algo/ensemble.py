@@ -7,11 +7,9 @@ from collections import defaultdict
 import io
 import os
 
-from CrocOpp import CrocOpp
 from bronx.datagrip.namelist import NamelistParser
 from bronx.fancies import loggers
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-from crocO import set_options
 import six
 
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -27,15 +25,19 @@ logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
-    from snowtools.tools.change_prep import prep_tomodify
-    from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-    from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
-    from snowtools.utils.infomassifs import infomassifs
-    from snowtools.tools.massif_diags import massif_simu
-    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
-    from snowtools.utils.dates import get_list_dates_files
-    from snowtools.tasks.vortex_kitchen import vortex_conf_file
+    from snowtools.tools.change_prep import prep_tomodify  # @UnresolvedImport
+    from snowtools.utils.resources import get_file_period, save_file_period, save_file_date  # @UnresolvedImport
+    from snowtools.tools.update_namelist import update_surfex_namelist_object  # @UnresolvedImport
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask  # @UnresolvedImport
+    from snowtools.utils.infomassifs import infomassifs  # @UnresolvedImport
+    from snowtools.tools.massif_diags import massif_simu  # @UnresolvedImport
+    from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles  # @UnresolvedImport
+    from snowtools.utils.dates import get_list_dates_files  # @UnresolvedImport
+
+echecker = ExternalCodeImportChecker('CrocO_tools')
+with echecker:
+    from CrocoPp import CrocoPp
+    from crocO import set_options
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -1683,7 +1685,9 @@ class SurfexComponentMultiDates(SurfexComponent):
 
 @echecker.disabled_if_unavailable
 class PicklePro(AlgoComponent):
-
+    """
+    AlgoComponent designed to pickle Pro and Prep files on beaufix in order to avoid transferring it.
+    """
     _footprint = dict(
         attr = dict(
             kind = dict(
@@ -1697,6 +1701,8 @@ class PicklePro(AlgoComponent):
                 values = ['s2m']),
             vconf = dict(
                 default = '12'),
+            dates = dict(type=footprints.stdtypes.FPList,
+                         ),
         )
     )
 
@@ -1706,12 +1712,11 @@ class PicklePro(AlgoComponent):
         N = n.parse('conf/OPTIONS.nam')
         print('NAM_obs', N['NAM_OBS'].COBS_M)
         # issue when only assim 1 var, causing the .join to crash
-        if isinstance(N['NAM_OBS'].COBS_M, str) or isinstance(N['NAM_OBS'].COBS_M, unicode):
+        if isinstance(N['NAM_OBS'].COBS_M, str) or 'unicode' in str(type(N['NAM_OBS'].COBS_M)):
             gg = [N['NAM_OBS'].COBS_M]
         else:
             gg = N['NAM_OBS'].COBS_M
         assimvars = ','.join(gg)
-        print('assvars', assimvars)
         ppvars = ','.join(list(set(gg + ['DEP', 'SWE'])))
         # xp corresponds to the task rep, from Crampon Driver
         xp = 'croco_out'
@@ -1720,13 +1725,14 @@ class PicklePro(AlgoComponent):
             '/home/cluzetb/CrocO_toolbox/crocO.py',
             '--xpid', xp,
             '--vconf', self.vconf,
-            '-d', 'all',
+            '-d', ','.join(self.dates),
             '--vars', assimvars,
             '--ppvars', ppvars,
             '-o', 'pickle',
+            '--todo', 'parallelpp',
             '--readprep',
         ]
-        options, conf = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf))
+        options = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf), mutable=True)
         # troll the xpiddir
         options.xpiddir = os.getcwd() + '/'
-        _ = CrocOpp(options, conf)
+        _ = CrocoPp(options)
