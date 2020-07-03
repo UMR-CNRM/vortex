@@ -228,6 +228,21 @@ class TestParallel(unittest.TestCase):
                                   sublauncher=None, bindingmethod='launcherspecific',
                                   mpiopts=None))
 
+    def test_env_setup(self):
+        bin0 = FakeBinaryRh('fake')
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        mpitool, _ = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertDictEqual(mpitool._environment_confdata(''),
+                             dict(defaultmpivar='foo'))
+        self.assertDictEqual(mpitool._environment_confdata('fullsrun'),
+                             dict(defaultmpivar='foo', fakevariable='fullsrun'))
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
+        mpitool, _ = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertDictEqual(mpitool._environment_confdata(''),
+                             dict(defaultmpivar='foo', fakevariable='basicsrun'))
+        self.assertDictEqual(mpitool._environment_confdata('fullsrun'),
+                             dict(fakevariable='rawsrun'))
+
     def testOneBin(self):
         bin0 = FakeBinaryRh('fake')
         # MPI partitioning from explicit mpiopts
@@ -412,6 +427,23 @@ class TestParallel(unittest.TestCase):
         self.locenv.VORTEX_IOSERVER_NODES = 0
         _, args = algo._bootstrap_mpitool(bin0, dict())
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
+        # Companion IO Nodes
+        self.locenv.VORTEX_SUBMIT_OPENMP = 2
+        del self.locenv.VORTEX_IOSERVER_NODES
+        self.locenv.VORTEX_IOSERVER_COMPANION_TASKS = 1
+        self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='srun'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(srun_opt_bindingmethod='vortex'))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist ' +
+                        '--ntasks 10 --distribution arbitrary --cpu-bind none ' +
+                        './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 10
+        binomp = [2, ] * 8 + [5, 5]
+        bindingl = [[0, 1], [2, 3], [4, 5], [6, 7]] * 2 + [[8, 9, 10, 11, 12]] * 2
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 4 + ['fake1'] * 4 + ['fake0', 'fake1'])
 
     def testThreeBins(self):
         bin0 = FakeBinaryRh('fake0')
@@ -462,6 +494,19 @@ class TestParallel(unittest.TestCase):
         binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
         self.assertWrapper('MPIAUTORANK', binpaths,
                            tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
+        # Same but with a prefixcommand
+        _, args = algo._bootstrap_mpitool(bins, dict(mpiopts=dict(envelope='auto',
+                                                                  np=[8, 8, 8],
+                                                                  prefixcommand=['toto.sh', None, None])))
+        self.assertCmdl(
+            '{base:s} --nn 6 --nnp 4 --prefix-command ./global_envelope_wrapper.py --openmp 1 -- {pwd:s}/fake0',
+            args, base=self._mpiauto)
+        binpaths = ['toto.sh', ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binargs = ["'{pwd:s}/fake0', '-joke', 'yes'".format(pwd=self.t.sh.pwd()), ] * 8
+        self.assertWrapper('MPIAUTORANK', binpaths, binargs=binargs,
+                           tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
         # With SRUN
         self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
@@ -495,6 +540,31 @@ class TestParallel(unittest.TestCase):
             bindingl = ([list(range(40)), ] * 8 +
                         [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 3)
             self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(srun_opt_bindingmethod='vortex',
+                                               mpiopts=dict(groups=['squash', 'squash', None],
+                                                            nn=[4, 3, 1],
+                                                            openmp=[10, 5, 5],
+                                                            nnp=[2, 4, 8])))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+                        '--nodelist ./global_envelope_nodelist --ntasks 28 ' +
+                        '--distribution arbitrary --cpu-bind none ' +
+                        './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 12)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binomp = [10, ] * 8 + [5, ] * 12 + [5, ] * 8
+        bindingl = ([list(range(10)), list(range(10, 20))] * 4 +
+                    [list(range(20, 25)), list(range(25, 30)),
+                     list(range(30, 35)), list(range(35, 40))] * 3 +
+                    [list(range(i * 5, (i + 1) * 5)) for i in range(8)])
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts,
+                             ['fake0'] * 2 + ['fake1'] * 2 + ['fake2'] * 2 + ['fake3'] * 2 +
+                             ['fake0'] * 4 + ['fake1'] * 4 + ['fake2'] * 4 +
+                             ['fake4'] * 8)
 
     def testFullManual(self):
         bin0 = FakeBinaryRh('fake0')
@@ -565,6 +635,9 @@ class TestParallel(unittest.TestCase):
         _, args = algo._bootstrap_mpitool([bin0, bin1],
                                           dict(mpiopts=dict(np=[8, 4], envelope='auto')))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 13 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 4)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8)
         binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 4)
@@ -574,6 +647,9 @@ class TestParallel(unittest.TestCase):
                                           dict(mpiopts=dict(envelope=[dict(nn=2, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 25 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 4 + ['fake2'] * 8 + ['fake3'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 24)
         self.assertWrapper('SLURM_PROCID', binpaths,
@@ -583,6 +659,9 @@ class TestParallel(unittest.TestCase):
                                           dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
         self.assertWrapper('SLURM_PROCID', binpaths,
@@ -595,6 +674,9 @@ class TestParallel(unittest.TestCase):
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
         self.assertWrapper('SLURM_PROCID', binpaths,
@@ -608,6 +690,9 @@ class TestParallel(unittest.TestCase):
                                                mpiopts=dict(envelope=[dict(nn=1, nnp=4),
                                                                       dict(nn=2, nnp=8)])))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0'] * 5 + ['fake1'] * 8 + ['fake2'] * 8)
         binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
         binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
         self.assertWrapper('SLURM_PROCID', binpaths,

@@ -37,12 +37,14 @@ def block_from_olive_tree():
     return t.sh.path.join(* t.env['SMSNAME'].split(t.sh.path.sep)[4:])
 
 
-def default_experts():
+def default_experts(excepted=[]):
     """Defaults experts for DAVAI Expertise."""
-    return [dict(kind='drHookMax'),
-            dict(kind='rss',
-                 ntasks_per_node=sessions.current().env['VORTEX_SUBMIT_TASKS']),
-            ]
+    default = [dict(kind='drHookMax'),
+               dict(kind='rss',
+                    ntasks_per_node=sessions.current().env['VORTEX_SUBMIT_TASKS']),
+               dict(kind='setup'),
+               ]
+    return [e for e in default if e['kind'] not in excepted]
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,

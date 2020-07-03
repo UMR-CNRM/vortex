@@ -18,3 +18,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: IopollMocacc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

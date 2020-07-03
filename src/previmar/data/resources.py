@@ -372,6 +372,9 @@ class SARdataWave(GenericWaveSatelliteData):
             kind = dict(
                 values = ['SARdataWave'],
             ),
+            satellite = dict(
+                optional = False,
+            ),
         )
     )
 
