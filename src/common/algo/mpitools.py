@@ -82,7 +82,6 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
             options['use-slurm-mpi'] = None
         elif self.sublauncher == 'libspecific':
             options['no-use-slurm-mpi'] = None
-            options['no-fix-slurm-env'] = None
         if self.bindingmethod:
             for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
                       for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:

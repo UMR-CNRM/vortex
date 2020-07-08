@@ -310,17 +310,15 @@ class TestParallel(unittest.TestCase):
                                                      mpiauto_opt_sublauncher='libspecific',
                                                      mpiauto_opt_bindingmethod='launcherspecific',
                                                      mpiopts=dict(nn=2, nnp=4, openmp=10)))
-        self.assertCmdl('mpiauto --init-timeout-restart 2 --no-fix-slurm-env --no-use-arch-bind ' +
-                        '--no-use-slurm-mpi ' +
+        self.assertCmdl('mpiauto --init-timeout-restart 2 --no-use-arch-bind --no-use-slurm-mpi ' +
                         '--use-intelmpi-bind --use-openmpi-bind --use-slurm-bind ' +
                         '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
         with self.locenv.clone() as cloned_env:
             cloned_env['MPIAUTOGRUIK'] = 1
             algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiconflabel='fullspecific'))
             mpi, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
-            self.assertCmdl('mpiauto --init-timeout-restart 2 --no-fix-slurm-env ' +
-                            '--no-use-arch-bind --no-use-slurm-mpi ' +
-                            '--use-intelmpi-bind --use-openmpi-bind --use-slurm-bind ' +
+            self.assertCmdl('mpiauto --init-timeout-restart 2 ' +
+                            '--no-use-arch-bind --no-use-slurm-mpi --use-intelmpi-bind --use-openmpi-bind --use-slurm-bind ' +
                             '--verbose --wrap --wrap-stdeo --wrap-stdeo-pack ' +
                             '--nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes',
                             args)
