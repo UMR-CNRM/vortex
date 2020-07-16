@@ -1871,6 +1871,9 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
             else:
                 io.group = 'auto_masterwithio'
                 master.group = 'auto_masterwithio'
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_TASKS', None) is not None:
+            if hasattr(master, 'incore_iotasks'):
+                master.incore_iotasks = self.env.VORTEX_IOSERVER_INCORE_TASKS
         if io:
             rh.append(rh[0])
             if master.group is None:

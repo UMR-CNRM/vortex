@@ -1127,7 +1127,7 @@ class MpiBinaryIOServer(MpiBinaryDescription):
             self.openmp = thisenv.VORTEX_IOSERVER_OPENMP
 
     def expanded_options(self):
-        """The number of IO nodes may be 0: accoutn for that."""
+        """The number of IO nodes may be 0: account for that."""
         if self.nprocs == 0:
             return dict()
         else:
