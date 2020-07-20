@@ -980,7 +980,7 @@ class UGetShell(cmd.Cmd):
             if self._storearch.check(a_uri, dict()):
                 to_delete.append(h_uri)
         if to_delete:
-            to_delete.sort()
+            to_delete.sort(key=lambda u: u['path'])
             print('The following elements will be deleted:')
             for h_uri in to_delete:
                 print('  {:s}'.format(h_uri['path']))
