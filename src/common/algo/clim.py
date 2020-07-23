@@ -857,12 +857,14 @@ class Festat(Parallel):
             self.system.mkdir(diastat_dir_name)
             for file in list_diag_stat:
                 self.system.mv(file, diastat_dir_name + "/")
+            self.system.tar(diastat_dir_name + ".tar", diastat_dir_name)
         list_diag_expl = self.system.glob("expl*y")
         if len(list_diag_expl) > 0:
             diaexpl_dir_name = "dia.expl.ncases_{ncases}".format(ncases=self._nb_input_files)
             self.system.mkdir(diaexpl_dir_name)
             for file in list_diag_expl:
                 self.system.mv(file, diaexpl_dir_name + "/")
+            self.system.tar(diaexpl_dir_name + ".tar", diaexpl_dir_name)
         # Call the superclass
         super(Festat, self).postfix(rh, opts)
 
