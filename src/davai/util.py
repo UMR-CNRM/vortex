@@ -14,6 +14,7 @@ import io
 import re
 import tarfile
 import tempfile
+import os
 
 from bronx.fancies import loggers
 
@@ -45,6 +46,17 @@ def default_experts(excepted=[]):
                dict(kind='setup'),
                ]
     return [e for e in default if e['kind'] not in excepted]
+
+
+def get_packpath(pack, homepack=None, to_bin=False):
+    """Get the path to a **pack**."""
+    if homepack in (None, ''):
+        from ia4h_scm.pygmkpack import get_homepack
+        homepack = get_homepack()
+    path_elements = [homepack, pack]
+    if to_bin:
+        path_elements.append('bin')
+    return os.path.join(*path_elements)
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
