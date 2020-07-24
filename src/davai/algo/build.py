@@ -22,26 +22,26 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class IA4H_Branch_to_Pack(AlgoComponent, _CrashWitnessDecoMixin):
+class IA4H_gitref_to_Pack(AlgoComponent, _CrashWitnessDecoMixin):
     """
-    Make a pack (gmkpack) with sources from a branch.
+    Make a pack (gmkpack) with sources from a IA4H Git ref.
     """
 
     _footprint = [
         dict(
-            info = "Make a pack (gmkpack) with sources from a branch.",
+            info = "Make a pack (gmkpack) with sources from a IA4H Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_branch2pack'],
+                    values   = ['ia4h_gitref2pack'],
                 ),
-                branch = dict(
-                    info = "The branch to be exported to the pack.",
+                git_ref = dict(
+                    info = "The Git ref (branch, tag, commit) to be exported to the pack.",
                 ),
                 repository = dict(
                     info = "The git repository to be used (on the target machine).",
                 ),
                 packname = dict(
-                    info = "Name of the pack; defaults to name of the branch.",
+                    info = "Name of the pack; defaults to self.git_ref.",
                     optional = True,
                     default = None,
                 ),
@@ -53,6 +53,7 @@ class IA4H_Branch_to_Pack(AlgoComponent, _CrashWitnessDecoMixin):
                 ),
                 cleanpack = dict(
                     info = "Whether to cleanpack a preexisting pack.",
+                    type = bool,
                     optional = True,
                     default = True
                     ),
@@ -99,15 +100,15 @@ class IA4H_Branch_to_Pack(AlgoComponent, _CrashWitnessDecoMixin):
             self._attributes['rootpacks_dir'] = self.rootpacks_dir
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import branch2pack
-        pack = branch2pack(self.repository,
-                           self.branch,
-                           self.packname,
-                           preexisting_pack=self.preexisting_pack,
-                           clean_if_preexisting=self.cleanpack,
-                           rootpacks_dir=self.rootpacks_dir,
-                           homepack=self.homepack,
-                           other_pack_options=self.other_pack_options)
+        from ia4h_scm.algos import IA4H_gitref_to_pack
+        pack = IA4H_gitref_to_pack(self.repository,
+                                   self.git_ref,
+                                   self.packname,
+                                   preexisting_pack=self.preexisting_pack,
+                                   clean_if_preexisting=self.cleanpack,
+                                   rootpacks_dir=self.rootpacks_dir,
+                                   homepack=self.homepack,
+                                   other_pack_options=self.other_pack_options)
 
 # TODO: Several projects/repos to pack
 
@@ -138,11 +139,13 @@ class PackBuildExecutables(AlgoComponent, _CrashWitnessDecoMixin):
                 ),
                 regenerate_ics = dict(
                     info = "Whether to regenerate or not the ics_<program> scripts.",
+                    type = bool,
                     optional = True,
                     default = True
                     ),
                 cleanpack = dict(
                     info = "Whether to cleanpack or not before compiling.",
+                    type = bool,
                     optional = True,
                     default = True
                     ),
