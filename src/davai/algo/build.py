@@ -28,27 +28,27 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
         info="Abstract mbdetect footprint",
         attr=dict(
-            homepack = dict(
-                info = "Home directory for pack.",
-                optional = True,
-                default = None
+            homepack=dict(
+                info="Home directory for pack.",
+                optional=True,
+                default=None
             ),
-            cleanpack = dict(
-                info = "Whether to cleanpack a pack before modifying it.",
-                type = bool,
-                optional = True,
-                default = True
+            cleanpack=dict(
+                info="Whether to cleanpack a pack before modifying it.",
+                type=bool,
+                optional=True,
+                default=True
             )
         )
     ),)
-    
+
     def _set_gmkpack(self, rh, opts):  # @UnusedVariable
         gmk_installdir = self.target.config.get('gmkpack', 'gmkpack_installdir')
         self.env['PATH'] = ':'.join([self.system.path.join(gmk_installdir, 'util'),
                                      self.env['PATH']])
         self.env['GMKROOT'] = gmk_installdir
-        self.env['GMKTMP'] = self.system.getcwd() 
-    
+        self.env['GMKTMP'] = self.system.getcwd()
+
     _MIXIN_PREPARE_HOOKS = (_set_gmkpack, )
 
 
@@ -109,7 +109,7 @@ class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
                 self._attributes['rootpack'] = rootpack
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_pack
+        from ia4h_scm.algos import IA4H_gitref_to_pack  # @UnresolvedImport
         IA4H_gitref_to_pack(self.repository,
                             self.git_ref,
                             self.packname,
@@ -144,7 +144,7 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
                     type = bool,
                     optional = True,
                     default = True
-                    ),
+                ),
                 other_options = dict(
                     info = "Other options (cf. ics_build_for()).",
                     type = FPDict,
@@ -162,7 +162,7 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import pack_build_executables
+        from ia4h_scm.algos import pack_build_executables  # @UnresolvedImport
         pack_build_executables(self.packname,
                                programs=self.programs,
                                silent=True,  # so that output goes in a file

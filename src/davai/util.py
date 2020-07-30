@@ -5,7 +5,7 @@ Functions and classes used by other modules from package.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from six.moves.urllib import error as urlerror
+from six.moves.urllib import error as urlerror  # @UnresolvedImport
 
 from footprints import proxy as fpx
 
@@ -14,7 +14,6 @@ import io
 import re
 import tarfile
 import tempfile
-import os
 
 from bronx.fancies import loggers
 
@@ -51,12 +50,13 @@ def default_experts(excepted=[]):
 def get_packpath(pack, homepack=None, to_bin=False):
     """Get the path to a **pack**."""
     if homepack in (None, ''):
-        from ia4h_scm.pygmkpack import get_homepack
+        from ia4h_scm.pygmkpack import get_homepack  # @UnresolvedImport
         homepack = get_homepack()
     path_elements = [homepack, pack]
     if to_bin:
         path_elements.append('bin')
-    return os.path.join(*path_elements)
+    t = sessions.current()
+    return t.sh.path.join(*path_elements)
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
