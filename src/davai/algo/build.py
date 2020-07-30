@@ -6,14 +6,11 @@ DAVAI sources build (branch export, compilation&link) AlgoComponents.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
-from footprints import FPList, FPDict
+from footprints import FPDict
 from bronx.fancies import loggers
 
-from vortex.syntax import stdattrs
 from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
-                                    AlgoComponentError)
-from vortex.algo.components import algo_component_deco_mixin_autodoc
-from gco.tools import uenv, genv
+                                    algo_component_deco_mixin_autodoc)
 
 from .mixins import _CrashWitnessDecoMixin
 
@@ -26,7 +23,8 @@ logger = loggers.getLogger(__name__)
 
 @algo_component_deco_mixin_autodoc
 class GmkpackDecoMixin(AlgoComponentDecoMixin):
-    
+    """Common attributes to gmkpack-related algos."""
+
     _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
         info="Abstract mbdetect footprint",
         attr=dict(
@@ -48,7 +46,7 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
         gmk_installdir = self.target.config.get('gmkpack', 'gmkpack_installdir')
         self.env['PATH'] = ':'.join([self.system.path.join(gmk_installdir, 'util'),
                                      self.env['PATH']])
-        self.env['GMKROOT'] = self.system.path.join(gmk_installdir)
+        self.env['GMKROOT'] = gmk_installdir
         self.env['GMKTMP'] = self.system.getcwd() 
     
     _MIXIN_PREPARE_HOOKS = (_set_gmkpack, )
@@ -82,8 +80,8 @@ class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
                     optional = True,
                     default = False,
                 ),
-                rootpacks_dir = dict(
-                    info = "Directory in which to find rootpacks.",
+                rootpack = dict(
+                    info = "Directory in which to find rootpack(s).",
                     optional = True,
                     default = None,
                 ),
@@ -105,25 +103,21 @@ class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
         self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
                                                           'libexec',
                                                           'git-core')
-        # gmkpack
-        if self.rootpacks_dir is None:
+        if self.rootpack is None:
             rootpack = self.target.config.get('gmkpack', 'ROOTPACK')
-            self.env['ROOTPACK'] = rootpack
-            self._attributes['rootpacks_dir'] = rootpack
-        else:
-            self.env['ROOTPACK'] = self.rootpacks_dir
-            self._attributes['rootpacks_dir'] = self.rootpacks_dir
+            if rootpack not in ('', None):
+                self._attributes['rootpack'] = rootpack
 
     def execute(self, rh, kw):  # @UnusedVariable
         from ia4h_scm.algos import IA4H_gitref_to_pack
-        pack = IA4H_gitref_to_pack(self.repository,
-                                   self.git_ref,
-                                   self.packname,
-                                   preexisting_pack=self.preexisting_pack,
-                                   clean_if_preexisting=self.cleanpack,
-                                   rootpacks_dir=self.rootpacks_dir,
-                                   homepack=self.homepack,
-                                   other_pack_options=self.other_pack_options)
+        IA4H_gitref_to_pack(self.repository,
+                            self.git_ref,
+                            self.packname,
+                            preexisting_pack=self.preexisting_pack,
+                            clean_if_preexisting=self.cleanpack,
+                            rootpack=self.rootpack,
+                            homepack=self.homepack,
+                            other_pack_options=self.other_pack_options)
 
 
 class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
