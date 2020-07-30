@@ -42,7 +42,7 @@ def default_experts(excepted=[]):
     default = [dict(kind='drHookMax'),
                dict(kind='rss',
                     ntasks_per_node=sessions.current().env['VORTEX_SUBMIT_TASKS']),
-               dict(kind='setup'),
+               dict(kind='setup', fatal_exceptions=False),
                ]
     return [e for e in default if e['kind'] not in excepted]
 
