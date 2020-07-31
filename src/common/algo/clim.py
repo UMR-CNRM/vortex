@@ -890,5 +890,6 @@ class Fediacov(Parallel):
             self.system.mkdir("diag")
             for file in list_diag:
                 self.system.mv(file, "diag/")
+            self.system.tar("diag.tar", "diag")
         # Call the superclass
         super(Fediacov, self).postfix(rh, opts)
