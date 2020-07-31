@@ -98,11 +98,12 @@ class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
     def prepare(self, rh, opts):  # @UnusedVariable
         # git
         git_installdir = self.target.config.get('git', 'git_installdir')
-        self.env['PATH'] = ':'.join([self.system.path.join(git_installdir, 'bin'),
-                                     self.env['PATH']])
-        self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
-                                                          'libexec',
-                                                          'git-core')
+        if git_installdir not in ('', None):
+            self.env['PATH'] = ':'.join([self.system.path.join(git_installdir, 'bin'),
+                                         self.env['PATH']])
+            self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
+                                                              'libexec',
+                                                              'git-core')
         if self.rootpack is None:
             rootpack = self.target.config.get('gmkpack', 'ROOTPACK')
             if rootpack not in ('', None):
