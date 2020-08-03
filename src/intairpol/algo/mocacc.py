@@ -369,7 +369,7 @@ class MocaccForecast(AbstractMocaccRoot):
         return sorted(
             set(
                 [sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs]
-            )
+            ), reverse=self.transinv
         )
 
     @property
@@ -401,7 +401,7 @@ class MocaccForecast(AbstractMocaccRoot):
         # List of (geom, associated list of fm validities)
         fms_validities = self._sorted_inputs_validities
         starts_at = date.Date(self.basedate)
-        ends_at = max(fms_validities)
+        ends_at = fms_validities[-1]
 
         inputs_period_in_hours = (fms_validities[1] - fms_validities[0]).length // 3600
 
@@ -636,8 +636,11 @@ class PostMocacc(AlgoComponent):
 
         # netcdf files from forecast
         ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        transinv = True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+
         # overwrite ncrh by the ascending sort of the ncrh list
-        ncrh.sort(key=lambda s: s.rh.resource.term)
+        # or descinding if inverse transport
+        ncrh.sort(key=lambda s: s.rh.resource.term, reverse=transinv)
 
         latest_by_geom = dict()
 
@@ -668,7 +671,7 @@ class PostMocacc(AlgoComponent):
 
             # wont work with concurrency or parallelism as previous resource is expected
             # for the same geometry, for temporal integration
-            if r.resource.geometry in latest_by_geom:
+            if r.resource.geometry in latest_by_geom and not transinv:
                 logger.info(
                     "Time integration using {0!s} as initial state".format(
                         latest_by_geom[r.resource.geometry]
@@ -698,7 +701,9 @@ class PostMocacc(AlgoComponent):
                 gribs = []
 
                 for (term, gribs_by_term) in done_grib_by_term.items():
-                    if term <= r.resource.term:
+                    if term <= r.resource.term and not transinv:
+                        gribs += gribs_by_term
+                    elif term >= r.resource.term and transinv:
                         gribs += gribs_by_term
 
                 # Alerte.json may be missing
