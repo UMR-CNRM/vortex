@@ -13,7 +13,7 @@ Package
 -------
 
 .. autodata:: __all__
- 
+
 
 Classes
 -------
@@ -27,7 +27,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: GEnv
    :show-inheritance:
    :members:
@@ -37,9 +37,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: UEnvProvider
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   

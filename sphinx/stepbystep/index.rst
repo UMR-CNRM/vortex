@@ -15,9 +15,9 @@ Resource manipulations
 ======================
 
 * :ref:`Handling of Resources in Vortex (discovery) <nbook-01a_ResourceHandlingL1>`
-  (:ref:`french version <nbook-01a_ResourceHandlingL1_fr>`) 
+  (:ref:`french version <nbook-01a_ResourceHandlingL1_fr>`)
 * :ref:`Role of *footprints* in the creation of objects  <nbook-01b_ResourceHandlingFootprints>`
-  (:ref:`french version <nbook-01b_ResourceHandlingFootprints_fr>`) 
+  (:ref:`french version <nbook-01b_ResourceHandlingFootprints_fr>`)
 * :ref:`Handling of Resources in Vortex (bis) <nbook-01c_ResourceHandlingL2>`
   (:ref:`french version <nbook-01c_ResourceHandlingL2_fr>`)
 * :ref:`“Standard” attributes of Resource and Provider objects <nbook-01d_ResourceHandlingHabits>`
@@ -32,7 +32,7 @@ More information on resource management
 
 * :ref:`Access to the resource content <nbook-02_ResourceHandlingContents>`
   (:ref:`french version <nbook-02_ResourceHandlingContents_fr>`)
- 
+
 Session, Context and Environment concept
 ========================================
 

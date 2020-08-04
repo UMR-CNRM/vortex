@@ -52,7 +52,7 @@ Base class and its metaclass
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 Base Mixin class
 ****************
 
@@ -60,7 +60,7 @@ Base Mixin class
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: AlgoComponentMpiDecoMixin
    :show-inheritance:
    :members:
@@ -81,7 +81,7 @@ Abstract classes with some refinements on binaries verification
    :members:
    :member-order: alphabetical
 
-Ready to use AlgoComponents (for basic needs) 
+Ready to use AlgoComponents (for basic needs)
 ---------------------------------------------
 
 .. autoclass:: BlindRun
@@ -100,7 +100,7 @@ Ready to use AlgoComponents (for basic needs)
    :member-order: alphabetical
 
 Base classes for AlgoComponents implementing task parallelism (using taylorism)
-------------------------------------------------------------------------------- 
+-------------------------------------------------------------------------------
 
 .. autoclass:: TaylorRun
    :show-inheritance:

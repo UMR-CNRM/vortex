@@ -31,12 +31,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: AmvError
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: AtlasEmissivity
    :show-inheritance:
    :members:
@@ -161,32 +161,32 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: LFIScripts
    :show-inheritance:
    :members:
    :member-order: alphabetical
-      
+
 .. autoclass:: FilteringRequest
    :show-inheritance:
    :members:
    :member-order: alphabetical
-      
+
 .. autoclass:: GribAPIConfig
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: InterChannelsCorrelations
    :show-inheritance:
    :members:
-   :member-order: alphabetical 
+   :member-order: alphabetical
 
 .. autoclass:: StdPressure
    :show-inheritance:
    :members:
    :member-order: alphabetical
-      
+
 .. autoclass:: TruncObj
    :show-inheritance:
    :members:

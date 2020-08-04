@@ -12,7 +12,7 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 * :mod:`vortex.tools.actions`
 * :mod:`vortex.tools.addons`
 * :mod:`vortex.tools.compression`

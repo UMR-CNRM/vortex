@@ -42,7 +42,7 @@ The code auto-documentation is available here (examples are provided inside):
 
 .. toctree::
    :maxdepth: 1
-   
+
    taylorism/taylorism
 
 .. toctree::
@@ -60,7 +60,7 @@ The code auto-documentation is available here:
    :maxdepth: 2
 
    jeeves/index
- 
+
 Other user-contributed packages (usable inside and outside of Vortex)
 ---------------------------------------------------------------------
 
@@ -68,12 +68,12 @@ The code auto-documentation is available here:
 
 .. toctree::
    :maxdepth: 2
-   
+
    arpifs_listings/index
 
 .. toctree::
    :maxdepth: 1
-   
+
    tnt/tnt
 
 .. toctree::
@@ -90,10 +90,10 @@ definition of target execution hosts):
 
 .. toctree::
    :maxdepth: 2
-   
+
    ecmwf_system/index
 
 .. toctree::
    :maxdepth: 2
-   
+
    mf/index

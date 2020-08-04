@@ -5,7 +5,7 @@ VORTEX v |version| documentation
 
 Welcome!
 
-This is the documentation for Vortex |version|, last updated |today|. 
+This is the documentation for Vortex |version|, last updated |today|.
 
 Contents
 --------
@@ -23,15 +23,15 @@ method but may be a bit obscure for a first look at Vortex):
 
 .. toctree::
    :maxdepth: 1
-   
+
    The Vortex Standard Library <library/libindex>
 
 Vortex is shipped with additional packages that are leveraged in Vortex but
-may also be used independently (they are hosted in the ``site`` sub-directory):  
+may also be used independently (they are hosted in the ``site`` sub-directory):
 
 .. toctree::
    :maxdepth: 1
-      
+
    Site Packages Standard Libraries <library/siteindex>
 
 Extras
@@ -70,4 +70,3 @@ Indices and tables
    :hidden:
 
    notebooks/index
-   

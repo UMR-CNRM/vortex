@@ -1,4 +1,4 @@
-:mod:`previmar.data` --- Specific data resources for PreviMAR 
+:mod:`previmar.data` --- Specific data resources for PreviMAR
 =============================================================
 
 .. automodule:: previmar.data

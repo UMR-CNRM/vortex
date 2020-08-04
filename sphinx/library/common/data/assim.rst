@@ -20,12 +20,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: StartingPointMinim
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: InternalMinim
    :show-inheritance:
    :members:
@@ -35,7 +35,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: PrecevMap
    :show-inheritance:
    :members:
@@ -50,7 +50,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BackgroundStdError
    :show-inheritance:
    :members:
@@ -70,7 +70,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-  
+
 .. autoclass:: IOassignScript
    :show-inheritance:
    :members:

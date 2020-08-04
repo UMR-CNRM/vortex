@@ -12,7 +12,7 @@ The VORTEX Standard Library
 
 .. toctree::
    :maxdepth: 3
-   
+
    vortex/index
 
 Other optional packages intended for various uses
@@ -50,7 +50,7 @@ Here is the expanded index for all of these packages:
    olive/index
    iga/index
    ecmwf/index
-   
+
    common/index
    alpha/index
    cen/index

@@ -45,7 +45,7 @@ Exceptions
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: TestNamesComparisonError
    :show-inheritance:
    :members:
