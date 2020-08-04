@@ -273,7 +273,7 @@ def arpifs_commons_binarydeco(cls):
 # Some IFS/Arpege specific things :
 
 def arpifs_obsort_nprocab_binarydeco(cls):
-    """Handle usual IFS/Arpege environement tweaking for OBSORT (nproca & nprocb).
+    """Handle usual IFS/Arpege environment tweaking for OBSORT (nproca & nprocb).
 
     Note: This is a class decorator for class somehow based on MpiBinaryDescription
     """

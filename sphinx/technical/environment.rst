@@ -754,8 +754,8 @@ A final example and its diagram
    
    import vortex
    from vortex import sessions
-   
-   # The root session, context and environement are automaticaly created by vortex
+
+   # The root session, context and environment are automaticaly created by vortex
    t = vortex.ticket()
    print 'Rootenv: {!s}'.format(vortex.rootenv)
    

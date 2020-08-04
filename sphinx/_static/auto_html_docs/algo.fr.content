@@ -357,7 +357,7 @@ class MonAlgoComponent(AlgoComponentMere):
     def prepare(self, rh, opts):
         super(MonAlgoComponent, self).prepare(rh, opts)  # Methode mere
         # Ici votre contenu...
-        # - Manipulation de l'environement -> self.env
+        # - Manipulation de l'environnement -> self.env
         # - Acces au systeme -> self.system
         # - Acces a la sequence -> self.context.sequence
 

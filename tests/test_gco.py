@@ -155,7 +155,7 @@ class TestUgetUenv(unittest.TestCase):
 
     def tearDown(self):
         uenv.clearall()
-        # Revert to the previous environement
+        # Revert to the previous environment
         self.sh.env.active(False)
         # Do some cleaning
         self.sh.cd(self.oldpwd)
@@ -179,7 +179,7 @@ class TestUgetUenv(unittest.TestCase):
         try:
             uenv.contents('uget:cy42_op2.06.ko@huguette', 'uget', 'uget.multi.fr')
         except uenv.UenvError as e:
-            self.assertEqual(str(e), 'Malformed environement file (line 3, "ANALYSE_ISBAanalyse.isba.03")')
+            self.assertEqual(str(e), 'Malformed environment file (line 3, "ANALYSE_ISBAanalyse.isba.03")')
         # Other possible errors
         with self.assertRaises(uenv.UenvError):
             uenv.contents('uget:do_not_exists@huguette')
