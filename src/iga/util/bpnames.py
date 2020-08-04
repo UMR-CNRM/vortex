@@ -664,12 +664,12 @@ def global_snames(resource, provider):
         if resource.filling == 'wind':
 
             if hasattr(resource, 'term'):
-                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst',resource.date.hh)
+                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst', resource.date.hh)
             elif hasattr(resource, 'endtime'):
                 if resource.endtime == 240:
-                    bname = 'vent_{:s}{:s}'.format('prv_long',resource.date.hh)
+                    bname = 'vent_{:s}{:s}'.format('prv_long', resource.date.hh)
                 else:
-                    bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv',resource.date.hh)
+                    bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv', resource.date.hh)
 
         elif resource.filling == 'currents':
             bname = 'courant_{:s}'.format(resource.date.hh)
