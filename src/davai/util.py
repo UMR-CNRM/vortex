@@ -47,16 +47,32 @@ def default_experts(excepted=[]):
     return [e for e in default if e['kind'] not in excepted]
 
 
-def get_packpath(pack, homepack=None, to_bin=False):
-    """Get the path to a **pack**."""
-    if homepack in (None, ''):
-        from ia4h_scm.pygmkpack import get_homepack  # @UnresolvedImport
-        homepack = get_homepack()
-    path_elements = [homepack, pack]
-    if to_bin:
-        path_elements.append('bin')
-    t = sessions.current()
-    return t.sh.path.join(*path_elements)
+def guess_packname(git_ref,
+                   compiler_label,
+                   packtype,
+                   compiler_flag=None,
+                   abspath=False,
+                   homepack=None,
+                   to_bin=False):
+    """
+    Guess pack name from a number of arguments.
+
+    :param git_ref: Git reference to be exported to pack
+    :param compiler_label: gmkpack compiler label
+    :param packtype: type of pack, among ('incr', 'main')
+    :param compiler_flag: gmkpack compiler flag
+    :param abspath: True if the absolute path to pack is requested (instead of basename)
+    :param homepack: home of pack
+    :param to_bin: True if the path to binaries subdirectory is requested
+    """
+    from ia4h_scm.algos import guess_packname  # @UnresolvedImport
+    return guess_packname(git_ref,
+                          compiler_label,
+                          packtype,
+                          compiler_flag=compiler_flag,
+                          abspath=abspath,
+                          homepack=homepack,
+                          to_bin=to_bin)
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,

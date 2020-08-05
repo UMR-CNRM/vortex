@@ -5,6 +5,8 @@ DAVAI sources build (branch export, compilation&link) AlgoComponents.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import tempfile
+
 import footprints
 from footprints import FPDict
 from bronx.fancies import loggers
@@ -44,33 +46,69 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
 
     def _set_gmkpack(self, rh, opts):  # @UnusedVariable
         gmk_installdir = self.target.config.get('gmkpack', 'gmkpack_installdir')
-        self.env['PATH'] = ':'.join([self.system.path.join(gmk_installdir, 'util'),
-                                     self.env['PATH']])
+        self.env.setbinpath(self.system.path.join(gmk_installdir, 'util'), 0)
         self.env['GMKROOT'] = gmk_installdir
-        self.env['GMKTMP'] = self.system.getcwd()
+        prefix = self.system.glove.user + '.gmktmp.'
+        self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
+
+    def execute_finalise(self, opts):  # @UnusedVariable
+        try:
+            self.system.rmtree(self.env['GMKTMP'])
+        except Exception:
+            pass  # in case the directory has already been removed by gmkpack
 
     _MIXIN_PREPARE_HOOKS = (_set_gmkpack, )
 
 
-class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
-                          _CrashWitnessDecoMixin):
-    """Make a pack (gmkpack) with sources from a IA4H Git ref."""
+@algo_component_deco_mixin_autodoc
+class GitDecoMixin(AlgoComponentDecoMixin):
+    """Common attributes to git-related algos."""
+
+    _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
+        info="Abstract mbdetect footprint",
+        attr=dict(
+            git_ref=dict(
+                info="The Git ref (branch, tag, commit) to be exported to the pack.",
+            ),
+            repository=dict(
+                info="The git repository to be used (on the target machine).",
+            )
+        )
+    ),)
+
+    def _set_git(self, rh, opts):  # @UnusedVariable
+        git_installdir = self.target.config.get('git', 'git_installdir')
+        if git_installdir not in ('', None):
+            self.env.setbinpath(self.system.path.join(git_installdir, 'bin'), 0)
+            self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
+                                                              'libexec',
+                                                              'git-core')
+
+    _MIXIN_PREPARE_HOOKS = (_set_git, )
+
+
+class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                                     _CrashWitnessDecoMixin):
+    """Make an incremental pack (gmkpack) with sources from a IA4H Git ref."""
 
     _footprint = [
         dict(
-            info = "Make a pack (gmkpack) with sources from a IA4H Git ref.",
+            info = "Make an incremental pack (gmkpack) with sources from a IA4H Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_gitref2pack'],
+                    values   = ['ia4h_gitref2incrpack'],
                 ),
-                git_ref = dict(
-                    info = "The Git ref (branch, tag, commit) to be exported to the pack.",
+                compiler_label = dict(
+                    info = "Gmkpack compiler label.",
                 ),
-                repository = dict(
-                    info = "The git repository to be used (on the target machine).",
+                compiler_flag = dict(
+                    info = "Gmkpack compiler flag.",
+                    optional = True,
+                    default = None
                 ),
                 packname = dict(
-                    info = "Name of the pack; defaults to self.git_ref.",
+                    info = "Name of the pack; defaults to self.git_ref. " +
+                           "If '__guess__', name is guessed using davai.util.guess_packname().",
                     optional = True,
                     default = None,
                 ),
@@ -85,40 +123,77 @@ class IA4H_gitref_to_Pack(AlgoComponent, GmkpackDecoMixin,
                     optional = True,
                     default = None,
                 ),
-                other_pack_options = dict(
-                    info = "Other options to be passed to gmkpack command.",
-                    type = FPDict,
-                    optional = True,
-                    default = dict(),
-                ),
             )
         )
     ]
 
     def prepare(self, rh, opts):  # @UnusedVariable
-        # git
-        git_installdir = self.target.config.get('git', 'git_installdir')
-        if git_installdir not in ('', None):
-            self.env['PATH'] = ':'.join([self.system.path.join(git_installdir, 'bin'),
-                                         self.env['PATH']])
-            self.env['GIT_EXEC_PATH'] = self.system.path.join(git_installdir,
-                                                              'libexec',
-                                                              'git-core')
         if self.rootpack is None:
             rootpack = self.target.config.get('gmkpack', 'ROOTPACK')
             if rootpack not in ('', None):
                 self._attributes['rootpack'] = rootpack
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_pack  # @UnresolvedImport
-        IA4H_gitref_to_pack(self.repository,
-                            self.git_ref,
-                            self.packname,
-                            preexisting_pack=self.preexisting_pack,
-                            clean_if_preexisting=self.cleanpack,
-                            rootpack=self.rootpack,
-                            homepack=self.homepack,
-                            other_pack_options=self.other_pack_options)
+        from ia4h_scm.algos import IA4H_gitref_to_incrpack  # @UnresolvedImport
+        IA4H_gitref_to_incrpack(self.repository,
+                                self.git_ref,
+                                self.compiler_label,
+                                packname=self.packname,
+                                compiler_flag=self.compiler_flag,
+                                preexisting_pack=self.preexisting_pack,
+                                clean_if_preexisting=self.cleanpack,
+                                rootpack=self.rootpack,
+                                homepack=self.homepack)
+
+
+class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                              _CrashWitnessDecoMixin):
+    """Make a main pack (gmkpack) with sources from a IA4H Git ref."""
+
+    _footprint = [
+        dict(
+            info = "Make a main pack (gmkpack) with sources from a IA4H Git ref.",
+            attr = dict(
+                kind = dict(
+                    values   = ['ia4h_gitref2mainpack'],
+                ),
+                compiler_label = dict(
+                    info = "Gmkpack compiler label.",
+                ),
+                compiler_flag = dict(
+                    info = "Gmkpack compiler flag.",
+                    optional = True,
+                    default = None
+                ),
+                populate_filter_file = dict(
+                    info = """File of files to be filtered at populate time.
+                              Special values:
+                              '__inconfig__' will read according file in config of ia4h_scm package;
+                              '__inview__' will read according file in Git view""",
+                    optional = True,
+                    default = '__inconfig__'
+                ),
+                link_filter_file = dict(
+                    info = """File of symbols to be filtered at link time.
+                              Special values:
+                              '__inconfig__' will read according file in config of ia4h_scm package;
+                              '__inview__' will read according file in Git view""",
+                    optional = True,
+                    default = '__inconfig__'
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        from ia4h_scm.algos import IA4H_gitref_to_main_pack  # @UnresolvedImport
+        IA4H_gitref_to_main_pack(self.repository,
+                                 self.git_ref,
+                                 self.compiler_label,
+                                 compiler_flag=self.compiler_flag,
+                                 homepack=self.homepack,
+                                 populate_filter_file=self.populate_filter_file,
+                                 link_filter_file=self.link_filter_file)
 
 
 class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
@@ -147,7 +222,7 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
                     default = True
                 ),
                 other_options = dict(
-                    info = "Other options (cf. ics_build_for()).",
+                    info = "Other options (cf. ics_build_for() method).",
                     type = FPDict,
                     optional = True,
                     default = dict(),
