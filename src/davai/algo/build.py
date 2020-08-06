@@ -51,13 +51,14 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
         prefix = self.system.glove.user + '.gmktmp.'
         self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
 
-    def execute_finalise(self, opts):  # @UnusedVariable
+    def _gmkpack_finalise(self, opts):  # @UnusedVariable
         try:
             self.system.rmtree(self.env['GMKTMP'])
         except Exception:
             pass  # in case the directory has already been removed by gmkpack
 
     _MIXIN_PREPARE_HOOKS = (_set_gmkpack, )
+    _MIXIN_EXECUTE_FINALISE_HOOKS = (_gmkpack_finalise, )
 
 
 @algo_component_deco_mixin_autodoc
