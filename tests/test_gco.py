@@ -40,6 +40,38 @@ class FooResource(object):
 
 
 @loggers.unittestGlobalLevel(tloglevel)
+class TestGcoGget(unittest.TestCase):
+
+    def setUp(self):
+        self.cursession = vortex.sessions.current()
+        self.t = vortex.sessions.get(tag='gco_gget_test_session',
+                                     topenv=vortex.rootenv,
+                                     glove=self.cursession.glove)
+        self.t.activate()
+        # Tweak the target object
+        self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
+        self.t.sh.target(inifile=self.testconf, sysname='Linux')
+
+    def tearDown(self):
+        self.cursession.activate()
+
+    def test_paths(self):
+        st = fp.proxy.store(scheme='gget', netloc='gco.meteo.fr')
+        self.assertEqual(st._actualgget('toto'),
+                         (['gget', '-host', None], 'toto'))
+        with self.t.sh.env.clone() as lenv:
+            lenv.VORTEX_ARCHIVE_HOST = 'hendrix'
+            self.assertEqual(st._actualgget('/toto'),
+                             (['gget', '-host', 'hendrix'], 'toto'))
+            self.assertEqual(st._actualgget('truc/toto'),
+                             (['gget', '-host', 'hendrix'], 'toto'))
+            lenv.VORTEX_ARCHIVE_USER = 'machin'
+            self.assertEqual(st._actualgget('truc/toto'),
+                             (['gget', '-host', 'hendrix', '-user', 'machin'],
+                              'toto'))
+
+
+@loggers.unittestGlobalLevel(tloglevel)
 class TestGcoGenv(unittest.TestCase):
 
     def setUp(self):

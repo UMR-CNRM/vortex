@@ -157,7 +157,7 @@ class InitialCondition(Analysis):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        raise NotImplementedError("The number is only known by the provider, not supported yet.")
+        return 'ICFC_(memberfix:member)'
 
 
 class Historic(GeoFlowResource):
