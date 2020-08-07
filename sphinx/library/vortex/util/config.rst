@@ -31,7 +31,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: GenericConfigParser
    :show-inheritance:
    :members:
@@ -61,7 +61,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: TableItem
    :show-inheritance:
    :members:

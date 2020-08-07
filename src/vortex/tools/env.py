@@ -534,7 +534,7 @@ collections_abc.Mapping.register(Environment)
 
 
 class EnvironmentDeltaContext():
-    """Context that will apply a delta on the Environnement and rewind it on exit."""
+    """Context that will apply a delta on the Environment and rewind it on exit."""
 
     def __init__(self, env, **kw):
         """

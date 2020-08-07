@@ -63,10 +63,9 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: Fediacov
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
-   
+

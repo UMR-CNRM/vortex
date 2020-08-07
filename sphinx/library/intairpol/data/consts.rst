@@ -37,7 +37,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: TopScenario
    :show-inheritance:
    :members:

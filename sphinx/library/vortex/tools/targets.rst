@@ -31,4 +31,3 @@ Utility functions
 -----------------
 
 .. autofunction:: default_fqdn
-   

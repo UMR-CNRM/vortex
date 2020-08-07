@@ -12,11 +12,11 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 
 Classes
 -------
- 
+
 .. autoclass:: GenvKey
    :show-inheritance:
    :members:
@@ -26,12 +26,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-      
+
 .. autoclass:: GgetId
    :show-inheritance:
    :members:
    :member-order: alphabetical
-      
+
 .. autoclass:: UgetId
    :show-inheritance:
    :members:

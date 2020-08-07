@@ -9,7 +9,7 @@
 .. versionadded:: 0.2.0
 
 .. todo::
-   
+
       Nothing written for :mod:`vortex.tools.net` handling yet !
 
 
@@ -95,7 +95,7 @@ Network related stuff
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: UdpConnectionStatus
    :show-inheritance:
    :members:
@@ -105,4 +105,3 @@ Network related stuff
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 

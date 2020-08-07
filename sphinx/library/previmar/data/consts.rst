@@ -30,27 +30,27 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: SurgesNativeGrid
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: ConfSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BinProjSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: ConfCouplingOasisSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: CouplingGridOasis
    :show-inheritance:
    :members:

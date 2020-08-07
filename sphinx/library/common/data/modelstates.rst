@@ -16,12 +16,12 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: Analysis
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: InitialCondition
    :show-inheritance:
    :members:
@@ -41,4 +41,3 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   

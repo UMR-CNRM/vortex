@@ -62,7 +62,7 @@ Mixed AlgoComponents
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Forecast_CrashWitness
    :show-inheritance:
    :members:

@@ -46,9 +46,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: FullPosGeo
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
