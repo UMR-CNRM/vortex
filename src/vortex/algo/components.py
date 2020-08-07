@@ -205,6 +205,9 @@ class AlgoComponentDecoMixin(object):
                 executed after the original prepare method. Such methods receive
                 the same arguments list than the original decorated method.
 
+              * :data:`_MIXIN_EXECUTE_FINALISE_HOOKS`: Tuple of method that will
+                be executed after any execution (even if the execution failed).
+
               * :data:`_MIXIN_FAIL_EXECUTE_HOOKS`: Tuple of method that will
                 be executed if the execution fails (the original exception
                 will be re-raised afterwards)
@@ -240,6 +243,7 @@ class AlgoComponentDecoMixin(object):
 
     _MIXIN_PREPARE_PREHOOKS = ()
     _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_EXECUTE_FINALISE_HOOKS = ()
     _MIXIN_FAIL_EXECUTE_HOOKS = ()
     _MIXIN_POSTFIX_PREHOOKS = ()
     _MIXIN_POSTFIX_HOOKS = ()
@@ -310,6 +314,9 @@ class AlgoComponentDecoMixin(object):
                                                      False),
                                                     ('fail_execute',
                                                      cls._MIXIN_FAIL_EXECUTE_HOOKS, (),
+                                                     False),
+                                                    ('execute_finalise',
+                                                     cls._MIXIN_EXECUTE_FINALISE_HOOKS, (),
                                                      False),
                                                     ('postfix',
                                                      cls._MIXIN_POSTFIX_HOOKS,
