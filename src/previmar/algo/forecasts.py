@@ -32,7 +32,7 @@ class WithoutCouplingForecasts(Parallel):
             ),
             pollingdir = dict(
                 type = footprints.FPList,
-                default = footprints.FPList(['RES0.',]),
+                default = footprints.FPList(['RES0.', ]),
                 optional = True,
 
             ),
@@ -56,7 +56,7 @@ class WithoutCouplingForecasts(Parallel):
 
 
 class SurgesCouplingForecasts(Parallel):
-    """"""
+    """Surges Coupling""" 
     _footprint = dict(
         attr = dict(
             binary = dict(
@@ -104,11 +104,9 @@ class SurgesCouplingForecasts(Parallel):
             ),
             pollingdir = dict(
                 type = footprints.FPList,
-                default = footprints.FPList(['RES0.',]),
+                default = footprints.FPList(['RES0.', ]),
                 optional = True,
-                
             ),
-                       
         )
     )
 
@@ -141,12 +139,10 @@ class SurgesCouplingForecasts(Parallel):
                 dico["h_rese"] = reseau
                 dico["modele"] = r.provider.vconf.upper()[-3:]
                 xp = r.provider.vconf[-5:-3]
-                mode_map = dict(fc= 'PR', an='AA')
+                mode_map = dict(fc = 'PR', an ='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
-                dico["nmatm"]  = str(self.freq_forcage)
-                #if r.provider.vconf not in ['oin@fcaro','oin@ancep']:
+                dico["nmatm"] = str(self.freq_forcage)
                 dico["codmod"] = self.codmod
-
                 dico["imodel"] = str(self.numod)
                 dico["kmodel"] = self.config_name
 
@@ -201,7 +197,7 @@ class Grib2tauxParallel(ParaBlindRun):
     )
 
     def _default_pre_execute(self, rh, opts):
-        '''Change default initialisation to use LongerFirstScheduler'''
+        """Change default initialisation to use LongerFirstScheduler"""
         # Start the task scheduler
         self._boss = Boss(verbose=self.verbose,
                           scheduler=footprints.proxy.scheduler(limit='threads',
@@ -249,7 +245,7 @@ class Grib2tauxParallel(ParaBlindRun):
 
 
 class Grib2tauxWorker(VortexWorkerBlindRun):
-
+    """Transform wind and pressure"""
     _footprint = dict(
         attr = dict(
             kind = dict(
