@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+SURGES HYCOM
+"""
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -56,7 +59,7 @@ class WithoutCouplingForecasts(Parallel):
 
 
 class SurgesCouplingForecasts(Parallel):
-    """Surges Coupling""" 
+    """Surges Coupling"""
     _footprint = dict(
         attr = dict(
             binary = dict(
@@ -117,7 +120,7 @@ class SurgesCouplingForecasts(Parallel):
             self.export('mpitool')
 
         # Tweak the pseudo hycom namelists New version  !
-        for namsec in self.context.sequence.effective_inputs(role = re.compile('FileConfig')):
+        for namsec in self.context.sequence.effective_inputs(role=re.compile('FileConfig')):
 
             r = namsec.rh
 
@@ -139,7 +142,7 @@ class SurgesCouplingForecasts(Parallel):
                 dico["h_rese"] = reseau
                 dico["modele"] = r.provider.vconf.upper()[-3:]
                 xp = r.provider.vconf[-5:-3]
-                mode_map = dict(fc = 'PR', an ='AA')
+                mode_map = dict(fc='PR', an='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
                 dico["nmatm"] = str(self.freq_forcage)
                 dico["codmod"] = self.codmod
@@ -284,7 +287,7 @@ class Grib2tauxWorker(VortexWorkerBlindRun):
             # Freeze the current output
             if self.system.path.exists(file_out):
                 logger.info('output cree %s', file_out)
-                self.system.cp(file_out, '../.', fmt = 'ascii')
+                self.system.cp(file_out, '../.', fmt='ascii')
             else:
                 logger.warning('Missing some grib output for %s',
                                file_out)
