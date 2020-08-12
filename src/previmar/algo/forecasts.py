@@ -145,7 +145,8 @@ class SurgesCouplingForecasts(Parallel):
                 mode_map = dict(fc='PR', an='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
                 dico["nmatm"] = str(self.freq_forcage)
-                dico["codmod"] = self.codmod
+                if r.provider.vconf not in ['oin@fcaro','oin@ancep']:
+                    dico["codmod"] = self.codmod
                 dico["imodel"] = str(self.numod)
                 dico["kmodel"] = self.config_name
 
