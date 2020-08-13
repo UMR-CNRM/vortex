@@ -190,13 +190,32 @@ class TestParallel(unittest.TestCase):
         try:
             return self.assertEqual(wrapper_new, wrapper_ref)
         except AssertionError:
-            print('REF:\n', wrapper_ref)
-            print('GOT:\n', wrapper_new)
+            print('REF:\n' + wrapper_ref)
+            print('GOT:\n' + wrapper_new)
+            raise
+
+    def assertOmpiRankfile(self, nodelist, bindinglist=None):
+        rf_stack = list()
+        for r in range(len(nodelist)):
+            if bindinglist is None:
+                slots = ",".join([str(s) for s in range(40)])
+            else:
+                slots = ",".join([str(s) for s in bindinglist[r]])
+            rf_stack.append('rank {:d}=+n{:d} slot={:s}'.format(r, nodelist[r], slots))
+        rf_ref = '\n'.join(rf_stack)
+        with io.open('./global_envelope_rankfile') as fhw:
+            rf_new = fhw.read()
+        try:
+            return self.assertEqual(rf_new, rf_ref)
+        except AssertionError:
+            print('REF:\n' + rf_ref)
+            print('GOT:\n' + rf_new)
             raise
 
     def test_config_reader(self):
         algo = self._fix_algo(fp.proxy.component(engine='parallel'))
-        self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpiauto'))
+        self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpiauto',
+                                                                mpilauncher='mpiauto'))
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
         self.assertEqual(algo._mpitool_attributes(dict()), dict(mpiname='mpirun'))
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiconflabel='fullsrun'))
@@ -245,6 +264,7 @@ class TestParallel(unittest.TestCase):
 
     def testOneBin(self):
         bin0 = FakeBinaryRh('fake')
+        self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         # MPI partitioning from explicit mpiopts
         # MPIRUN
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
@@ -254,6 +274,12 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
+                        '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
+                        './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='srun-ddt',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('/opt/softs/arm/20.0.2/forge/bin/ddt --connect ' +
+                        'srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
                         '--nodes 2 --ntasks-per-node 4 --ntasks 8 --cpus-per-task 10 ' +
                         './global_wrapstd_wrapper.py {pwd:s}/fake -joke yes', args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
@@ -285,10 +311,98 @@ class TestParallel(unittest.TestCase):
         binomp = [10, ] * 8
         bindingl = [list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 2
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                  distribution='roundrobin')))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+                        '--nodelist ./global_envelope_nodelist --ntasks 8 ' +
+                        '--distribution arbitrary --cpu-bind none ' +
+                        './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        binomp = [10, ] * 8
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0', 'fake1'] * 4)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                  distribution='roundrobin'),
+                                                     srun_opt_bindingmethod='vortex',))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 ' +
+                        '--nodelist ./global_envelope_nodelist --ntasks 8 ' +
+                        '--distribution arbitrary --cpu-bind none ' +
+                        './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        binomp = [10, ] * 8
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in (0, 0, 1, 1, 2, 2, 3, 3)]
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0', 'fake1'] * 4)
+        # OpenMPI/mpirun
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='openmpi'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl("openmpi -npernode 4 -np 8 -x OMP_NUM_THREADS=10 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes", args)
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='openmpi'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
+                                                     openmpi_opt_bindingmethod='native', ))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes",
+                        args)
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 2
+        self.assertOmpiRankfile([0, ] * 4 + [1, ] * 4, bindingl)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10, allowbind=False),
+                                                     openmpi_opt_bindingmethod='native', ))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes",
+                        args)
+        self.assertOmpiRankfile([0, ] * 4 + [1, ] * 4)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
+                                                     openmpi_opt_bindingmethod='vortex', ))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile -np 8 " +
+                        "./global_wrapstd_wrapper.py ./global_envelope_wrapper.py",
+                        args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        binomp = [10, ] * 8
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 2
+        self.assertWrapper('OMPI_COMM_WORLD_RANK', binpaths, binomp=binomp, bindinglist=bindingl)
+        self.assertOmpiRankfile([0, ] * 4 + [1, ] * 4)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                  distribution='roundrobin')))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes",
+                        args)
+        self.assertOmpiRankfile([0, 1] * 4)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                  distribution='roundrobin'),
+                                                     openmpi_opt_bindingmethod='native', ))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes",
+                        args)
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in (0, 0, 1, 1, 2, 2, 3, 3)]
+        self.assertOmpiRankfile([0, 1] * 4, bindingl)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                  distribution='roundrobin'),
+                                                     openmpi_opt_bindingmethod='vortex', ))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile -np 8 " +
+                        "./global_wrapstd_wrapper.py ./global_envelope_wrapper.py",
+                        args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
+        binomp = [10, ] * 8
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in (0, 0, 1, 1, 2, 2, 3, 3)]
+        self.assertWrapper('OMPI_COMM_WORLD_RANK', binpaths, binomp=binomp, bindinglist=bindingl)
         # MPIAUTO
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto',
                                                      mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('{base:s} --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args, base=self._mpiauto)
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto-ddt',
+                                                     mpiopts=dict(nn=2, nnp=4, openmp=10)))
+        self.assertCmdl('mpiauto --init-timeout-restart 2 ' +
+                        '--prefix-mpirun /opt/softs/arm/20.0.2/forge/bin/ddt --connect ' +
+                        '--verbose --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiname='mpiauto', mpiauto_mpiopts='',
                                                      mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('mpiauto --init-timeout-restart 2 --nn 2 --nnp 4 --openmp 10 -- {pwd:s}/fake -joke yes', args)
@@ -365,6 +479,12 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
         with self.assertRaises(ValueError):
             _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(envelope='auto')))
+        # mpiauto does not support distribution
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpiauto'))
+        with self.assertRaises(ValueError):
+            _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
+                                                                      distribution="roundrobin")))
+
         # MPI partitioning from environment
         self.locenv.VORTEX_SUBMIT_NODES = 2
         self.locenv.VORTEX_SUBMIT_TASKS = 4
@@ -431,7 +551,6 @@ class TestParallel(unittest.TestCase):
         self.locenv.VORTEX_SUBMIT_OPENMP = 2
         del self.locenv.VORTEX_IOSERVER_NODES
         self.locenv.VORTEX_IOSERVER_COMPANION_TASKS = 1
-        self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(srun_opt_bindingmethod='vortex'))
         self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist ' +
@@ -444,6 +563,30 @@ class TestParallel(unittest.TestCase):
         with io.open('./global_envelope_nodelist', 'r') as fhnl:
             hosts = [l.strip('\n') for l in fhnl.readlines()]
         self.assertListEqual(hosts, ['fake0'] * 4 + ['fake1'] * 4 + ['fake0', 'fake1'])
+        # Companion IO Nodes + distribution
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='srun'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(distribution="roundrobin"),
+                                                     srun_opt_bindingmethod='vortex'))
+        bindingl = ([[0, 1], [0, 1], [2, 3], [2, 3], [4, 5], [4, 5], [6, 7], [6, 7]] +
+                    [[8, 9, 10, 11, 12]] * 2)
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        with io.open('./global_envelope_nodelist', 'r') as fhnl:
+            hosts = [l.strip('\n') for l in fhnl.readlines()]
+        self.assertListEqual(hosts, ['fake0', 'fake1'] * 5)
+        # OpenMPI + Companion IO Nodes + distribution
+        self.locenv.VORTEX_IOSERVER_COMPANION_TASKS = 2
+        algo = self._fix_algo(fp.proxy.component(engine='test_parallel_ioengine', mpiname='openmpi'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(distribution="roundrobin"),
+                                                     openmpi_opt_bindingmethod='native'))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=2 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes : " +
+                        "-x OMP_NUM_THREADS=5 -np 4 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake -joke yes",
+                        args)
+        bindingl = ([[0, 1], [0, 1], [2, 3], [2, 3], [4, 5], [4, 5], [6, 7], [6, 7]] +
+                    [[8, 9, 10, 11, 12], [13, 14, 15, 16, 17]] * 2)
+        self.assertOmpiRankfile([0, 1] * 4 + [0, 0, 1, 1], bindingl)
 
     def testThreeBins(self):
         bin0 = FakeBinaryRh('fake0')
@@ -507,6 +650,77 @@ class TestParallel(unittest.TestCase):
         binargs = ["'{pwd:s}/fake0', '-joke', 'yes'".format(pwd=self.t.sh.pwd()), ] * 8
         self.assertWrapper('MPIAUTORANK', binpaths, binargs=binargs,
                            tplname='@mpitools/envelope_wrapper_mpiauto.tpl')
+        # With OpenMPI
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='openmpi'))
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(mpiopts=dict(nn=[2, 2, 1],
+                                                            openmp=[10, 5, 5],
+                                                            nnp=[4, 8, 8])))
+        self.assertCmdl("openmpi " +
+                        "-npernode 4 -np 8 -x OMP_NUM_THREADS=10 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake0 -joke yes : " +
+                        "-npernode 8 -np 16 -x OMP_NUM_THREADS=5 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake1 -joke yes : " +
+                        "-npernode 8 -np 8 -x OMP_NUM_THREADS=5 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake2 -joke yes",
+                        args)
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(openmpi_opt_bindingmethod='native',
+                                               mpiopts=dict(allowbind=[False, True, True],
+                                                            nn=[2, 2, 1],
+                                                            openmp=[10, 5, 5],
+                                                            nnp=[4, 8, 8])))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                        "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake0 -joke yes : " +
+                        "-x OMP_NUM_THREADS=5 -np 16 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake1 -joke yes : " +
+                        "-x OMP_NUM_THREADS=5 -np 8 ./global_wrapstd_wrapper.py " +
+                        "{pwd:s}/fake2 -joke yes",
+                        args)
+        bindingl = ([list(range(40)), ] * 8 +
+                    [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 3)
+        self.assertOmpiRankfile([0, ] * 4 + [1, ] * 4 +
+                                [2, ] * 8 + [3, ] * 8 + [4, ] * 8, bindingl)
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(openmpi_opt_bindingmethod='vortex',
+                                               mpiopts=dict(allowbind=[False, True, True],
+                                                            nn=[2, 2, 1],
+                                                            openmp=[10, 5, 5],
+                                                            nnp=[4, 8, 8])))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile -np 32 " +
+                        "./global_wrapstd_wrapper.py ./global_envelope_wrapper.py",
+                        args)
+        binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 16)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binomp = [10, ] * 8 + [5, ] * 16 + [5, ] * 8
+        bindingl = ([list(range(40)), ] * 8 +
+                    [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 3)
+        self.assertWrapper('OMPI_COMM_WORLD_RANK', binpaths, binomp=binomp, bindinglist=bindingl)
+        self.assertOmpiRankfile([0, ] * 4 + [1, ] * 4 +
+                                [2, ] * 8 + [3, ] * 8 + [4, ] * 8)
+        _, args = algo._bootstrap_mpitool(bins,
+                                          dict(openmpi_opt_bindingmethod='vortex',
+                                               mpiopts=dict(groups=['squash', 'squash', None],
+                                                            nn=[4, 3, 1],
+                                                            openmp=[10, 5, 5],
+                                                            nnp=[2, 4, 8])))
+        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile -np 28 " +
+                        "./global_wrapstd_wrapper.py ./global_envelope_wrapper.py",
+                        args)
+        binpaths = ['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 8
+        binpaths.extend(['{pwd:s}/fake1'.format(pwd=self.t.sh.pwd()), ] * 12)
+        binpaths.extend(['{pwd:s}/fake2'.format(pwd=self.t.sh.pwd()), ] * 8)
+        binomp = [10, ] * 8 + [5, ] * 12 + [5, ] * 8
+        bindingl = ([list(range(10)), list(range(10, 20))] * 4 +
+                    [list(range(20, 25)), list(range(25, 30)),
+                     list(range(30, 35)), list(range(35, 40))] * 3 +
+                    [list(range(i * 5, (i + 1) * 5)) for i in range(8)])
+        self.assertWrapper('OMPI_COMM_WORLD_RANK', binpaths, binomp=binomp, bindinglist=bindingl)
+        self.assertOmpiRankfile([0] * 2 + [1] * 2 + [2] * 2 + [3] * 2 +
+                                [0] * 4 + [1] * 4 + [2] * 4 +
+                                [4] * 8)
         # With SRUN
         self.locenv.SLURM_JOB_NODELIST = 'fake[0-4]'
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
@@ -701,6 +915,21 @@ class TestParallel(unittest.TestCase):
                                         [list(range(i * 5, (i + 1) * 5)) for i in range(4)] +
                                         [list(range(i * 5, (i + 1) * 5)) for i in range(8)] * 2),
                            binargs=['', ])
+        with self.locenv.clone() as cloned_env:
+            cloned_env.VORTEX_MPIBIN_DEF_DISTRIBUTION = 'roundrobin'
+            algo = self._fix_algo(fp.proxy.component(engine='test_parallel_palmed_engine', mpiname='srun', ))
+            _, args = algo._bootstrap_mpitool([bin0, ],
+                                              dict(mpiopts=dict(envelope=[dict(nn=1, nnp=4),
+                                                                          dict(nn=2, nnp=8)])))
+            self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --nodelist ./global_envelope_nodelist --ntasks 21 --distribution arbitrary --cpu-bind none ./global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+            with io.open('./global_envelope_nodelist', 'r') as fhnl:
+                hosts = [l.strip('\n') for l in fhnl.readlines()]
+            self.assertListEqual(hosts, ['fake0'] + ['fake0', 'fake1', 'fake2'] * 4 + ['fake1', 'fake2'] * 4)
+            binpaths = ['the_plam_driver.x'.format(pwd=self.t.sh.pwd()), ] * 1
+            binpaths.extend(['{pwd:s}/fake0'.format(pwd=self.t.sh.pwd()), ] * 20)
+            self.assertWrapper('SLURM_PROCID', binpaths,
+                               binomp=[1, ] + [5, ] * 20,
+                               binargs=['', ])
         # MPI partitioning from explicit mpiopts: no envelope provided, dedicated
         self.locenv.VORTEX_SUBMIT_NODES = 4
         self.locenv.VORTEX_SUBMIT_TASKS = 4
