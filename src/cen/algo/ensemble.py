@@ -34,10 +34,11 @@ with echecker:
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles  # @UnresolvedImport
     from snowtools.utils.dates import get_list_dates_files  # @UnresolvedImport
 
-echecker = ExternalCodeImportChecker('CrocO_tools')
-with echecker:
+echecker_croco = ExternalCodeImportChecker('CrocO_tools')
+with echecker_croco:
     from CrocoPp import CrocoPp
     from crocO import set_options
+    from consts import CROCO
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -1683,7 +1684,7 @@ class SurfexComponentMultiDates(SurfexComponent):
         return ddict
 
 
-@echecker.disabled_if_unavailable
+@echecker_croco.disabled_if_unavailable
 class PicklePro(AlgoComponent):
     """
     AlgoComponent designed to pickle Pro and Prep files on beaufix in order to avoid transferring it.
@@ -1722,7 +1723,7 @@ class PicklePro(AlgoComponent):
         xp = 'croco_out'
         print('------loading xp ', xp, '------')
         args = [
-            '/home/cluzetb/CrocO_toolbox/crocO.py',
+            CROCO + '/crocO.py'
             '--xpid', xp,
             '--vconf', self.vconf,
             '-d', ','.join(self.dates),
@@ -1732,7 +1733,7 @@ class PicklePro(AlgoComponent):
             '--todo', 'parallelpp',
             '--readprep',
         ]
-        options = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf), mutable=True)
+        options = set_options(args, pathConf = '{0}_{1}.ini'.format(self.vapp, self.vconf), pathPgd = 'crocO/pickle/PGD.nc', mutable=True)
         # troll the xpiddir
         options.xpiddir = os.getcwd() + '/'
         _ = CrocoPp(options)
