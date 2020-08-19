@@ -1723,7 +1723,7 @@ class PicklePro(AlgoComponent):
         xp = 'croco_out'
         print('------loading xp ', xp, '------')
         args = [
-            CROCO + '/crocO.py'
+            CROCO + '/crocO.py',
             '--xpid', xp,
             '--vconf', self.vconf,
             '-d', ','.join(self.dates),
