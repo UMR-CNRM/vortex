@@ -1714,11 +1714,18 @@ class PicklePro(AlgoComponent):
         print('NAM_obs', N['NAM_OBS'].COBS_M)
         # issue when only assim 1 var, causing the .join to crash
         if isinstance(N['NAM_OBS'].COBS_M, str) or 'unicode' in str(type(N['NAM_OBS'].COBS_M)):
-            gg = [N['NAM_OBS'].COBS_M]
+            assimvars_list = [N['NAM_OBS'].COBS_M]
         else:
-            gg = N['NAM_OBS'].COBS_M
-        assimvars = ','.join(gg)
-        ppvars = ','.join(list(set(gg + ['DEP', 'SWE'])))
+            assimvars_list = N['NAM_OBS'].COBS_M
+        ppvars_list = assimvars_list
+
+        # force the reading of snowdepth and swe (if written in the pro)
+        if 'DSN_T_ISBA' in N['NAM_WRITE_DIAG_SURFN'].CSELECT:
+            ppvars_list.append('DEP')
+        if 'WSN_T_ISBA' in N['NAM_WRITE_DIAG_SURFN'].CSELECT:
+            ppvars_list.append('SWE')
+        assimvars = ','.join(assimvars_list)
+        ppvars = ','.join(list(set(ppvars_list)))
         # xp corresponds to the task rep, from Crampon Driver
         xp = 'croco_out'
         print('------loading xp ', xp, '------')
