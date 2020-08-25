@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-TODO: Module documentation
-"""
-
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -20,7 +16,8 @@ logger = loggers.getLogger(__name__)
 
 
 class AlphaPythonScript(Script):
-    """TODO: Class documentation."""
+
+    """ These scripts are useefull to compute output alpha prod and handle gribs input"""
 
     _footprint = [
         gvar,
@@ -36,7 +33,9 @@ class AlphaPythonScript(Script):
                     default = 'ALPHA_EXE_[kind]',
                 ),
                 vconf = dict(
-                    values = ['france_jj1', 'france_j2j3']
+                    values = ['france_jj1', 'france_j2j3', 'monde_jj1', 'monde_j2j3',
+                              'antilles_jj1', 'caledonie_jj1', 'polynesie_jj1', 'guyane_jj1',
+                              'mayotte_jj1', 'reunion_jj1', ]
                 ),
             )
         )
@@ -47,7 +46,8 @@ class AlphaPythonScript(Script):
 
 
 class AlphaShellScript(Script):
-    """This script launch alpha prod and amandements."""
+
+    """ This script launch alpha prod and amandements """
 
     _footprint = [
         gvar,
@@ -60,9 +60,13 @@ class AlphaShellScript(Script):
                     default = 'ALPHA_SRC_[kind]',
                 ),
                 vconf = dict(
-                    values = ['france_jj1', 'france_j2j3']
+                    values = ['france_jj1', 'france_j2j3','monde_jj1', 'monde_j2j3',
+                              'antilles_jj1', 'caledonie_jj1', 'polynesie_jj1', 'guyane_jj1',
+                              'mayotte_jj1', 'reunion_jj1' ]
                 ),
-
+                domain = dict(
+                    values = ['France', 'Monde', 'OM', 'Reunion']
+                ),
             )
         )
     ]

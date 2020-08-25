@@ -1,10 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
-"""
-TODO: Module documentation
-"""
-
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -78,3 +74,33 @@ class AlphaConfig(GenvModelResource):
     @property
     def realkind(self):
         return 'config'
+
+
+class AlphaVersion(GenvModelResource):
+    """Some kind configuration file for ALPHA.
+
+    A Genvkey can be given.
+    """
+    _footprint = [
+        dict(
+            info = 'Some kind configuration file for ALPHA.',
+            attr = dict(
+                kind = dict(
+                    values  = ['version']
+                ),
+                format = dict(
+                    values = ['ini']
+                ),
+                gvar = dict(
+                    default = 'ALPHA_CONF_VERSION',
+                ),
+                model = dict(
+                    values = ['alpha']
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'version'

@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Add some args when the script shell is executed
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
-from vortex.algo.components import Expresso
+from vortex.algo.components  import Expresso
 
 #: No automatic export
 __all__ = []
@@ -28,10 +28,11 @@ class AlphaScript(Expresso):
                 default = '',
             ),
             flypoll = dict(
-                default = ['iopoll_alpha'],
+                values = ['iopoll_alpha'],
+                optional = True,
             ),
             flyargs = dict(
-                values = ['JJ1', 'J2J3'],
+                default = ('alpha',),
             ),
         )
     )
@@ -43,7 +44,7 @@ class AlphaScript(Expresso):
         super(AlphaScript, self).prepare(rh, opts)
 
         if self.promises:
-            self.io_poll_kwargs = dict(vconf=rh.resource.vconf.upper())
+            self.io_poll_kwargs = dict(domain=rh.provider.vconf)
             self.flyput = True
         else:
             self.flyput = False

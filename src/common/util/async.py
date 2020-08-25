@@ -142,3 +142,17 @@ def system_scp(pnum, ask, config, logger, **opts):
             value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
     return pnum, vwork.rc, value
+
+def system_noop(pnum, ask, config, logger, **opts):
+    """A callback able to do nothing, but cleanly.
+
+    Used to desactivate jeeves when mirroring the operational suite.
+    """
+    logger.info('Noop', todo=ask.todo, pnum=pnum, opts=opts)
+    value = dict(rpool='error')
+
+    with VortexWorker(logger=logger) as vwork:
+        sh = vwork.vortex.sh()
+        sh.trace = True
+        data = vwork.get_dataset(ask)
+        value = dict(clear=sh.rm(data.source, fmt=data.fmt))
