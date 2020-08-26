@@ -118,7 +118,7 @@ class SurgesCouplingForecasts(Parallel):
         super(Parallel, self).prepare(rh, opts)
         if opts.get('mpitool', True):
             self.export('mpitool')
-
+        r = rh
         # Tweak the pseudo hycom namelists New version  !
         for namsec in self.context.sequence.effective_inputs(role=re.compile('FileConfig')):
 
