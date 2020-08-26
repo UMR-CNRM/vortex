@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-SURGES HYCOM
+SURGES HYCOM.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
@@ -12,7 +12,6 @@ from bronx.fancies import loggers
 from collections import defaultdict
 from vortex.algo.components import Parallel, ParaBlindRun
 from vortex.tools.parallelism import VortexWorkerBlindRun
-from taylorism import Boss
 #: No automatic export
 __all__ = []
 
@@ -54,12 +53,10 @@ class WithoutCouplingForecasts(Parallel):
         else:
             self.flyput = False
 
-    def execute(self, rh, opts):
-        super(WithoutCouplingForecasts, self).execute(rh, opts)
-
 
 class SurgesCouplingForecasts(Parallel):
-    """Surges Coupling"""
+    """Surges Coupling."""
+
     _footprint = dict(
         attr = dict(
             binary = dict(
@@ -97,17 +94,17 @@ class SurgesCouplingForecasts(Parallel):
                 optional = True,
             ),
             flyargs = dict(
-                default = ('ASUR', 'PSUR',),
+                default  = ('ASUR', 'PSUR',),
             ),
             flypoll = dict(
-                default = 'iopoll_marine',
+                default  = 'iopoll_marine',
             ),
             dir_exec = dict(
-                default = 'EXEC_OASIS',
+                default  = 'EXEC_OASIS',
             ),
             pollingdir = dict(
-                type = footprints.FPList,
-                default = footprints.FPList(['RES0.', ]),
+                type     = footprints.FPList,
+                default  = footprints.FPList(['RES0.', ]),
                 optional = True,
             ),
         )
@@ -183,32 +180,22 @@ class SurgesCouplingInterp(SurgesCouplingForecasts):
 
 
 class Grib2tauxParallel(ParaBlindRun):
-    """Algo for parallel grib2taux"""
+    """Algo for parallel grib2taux."""
+
     _footprint = dict(
         info = 'AlgoComponent that runs serial binary grib2taux',
         attr = dict(
             kind = dict(
-                values = ['Grib2tauxParaBlindRun'],
+                values   = ['Grib2tauxParaBlindRun'],
             ),
-            verbose = dict(
-                info        = 'Run in verbose mode',
-                type        = bool,
-                default     = True,
-                optional    = True,
-                doc_zorder  = -50,
+            verbose=dict(
+                default  =True,
+            ),
+            ntasks=dict(
+                default  = 10,
             ),
         )
     )
-
-    def _default_pre_execute(self, rh, opts):
-        """Change default initialisation to use LongerFirstScheduler"""
-        # Start the task scheduler
-        self._boss = Boss(verbose=self.verbose,
-                          scheduler=footprints.proxy.scheduler(limit='threads',
-                                                               max_threads=10,
-                                                               ))
-        logger.info('COUCOU boss')
-        self._boss.make_them_work()
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -232,10 +219,7 @@ class Grib2tauxParallel(ParaBlindRun):
                 scheduler_instructions['name'].append('{:s}'.format(zone))
                 scheduler_instructions['progname'].append(sh.path.join(workdir, zone, 'grib2taux'))
                 scheduler_instructions['base'].append(zone)
-                scheduler_instructions['memory'].append('100')
-                scheduler_instructions['expected_time'].append('100')
                 scheduler_instructions['subdir'].append(zone)
-                scheduler_instructions['progtaskset'].append('raw')
 
         self._default_pre_execute(rh, opts)
         # Update the common instructions
@@ -263,32 +247,23 @@ class Grib2tauxWorker(VortexWorkerBlindRun):
     )
 
     def vortex_task(self, **kwargs):
+        """TODO: documentation."""
         logger.info("self.subdir %s", self.subdir)
         file_out = 'forcing.mslprs.b'
         logger.info("file_out %s", file_out)
 
         rundir = self.system.getcwd()
-        if self.subdir is not None:
-            thisdir = self.system.path.join(rundir, self.subdir)
-            logger.info('thisdir %s', thisdir)
-            with self.system.cdcontext(thisdir, create=False):
-                if self.system.path.exists(file_out):
-                    logger.info('output cree %s', file_out)
-                    # Deal with promised resources
-                    expected = [x for x in self.context.sequence.outputs()
-                                if (x.rh.provider.expected and
-                                    x.rh.container.localpath() == file_out)]
-                    for thispromise in expected:
-                        thispromise.put(incache=True)
-                    else:
-                        logger.warning('Missing some output for %s', file_out)
-                self.local_spawn('stdout.listing')
-        else:
-            thisdir = rundir
-            # Freeze the current output
+        thisdir = self.system.path.join(rundir, self.subdir)
+        logger.info('thisdir %s', thisdir)
+        with self.system.cdcontext(thisdir, create=False):
+            self.local_spawn('stdout.listing')
             if self.system.path.exists(file_out):
                 logger.info('output cree %s', file_out)
-                self.system.cp(file_out, '../.', fmt='ascii')
+                # Deal with promised resources
+                expected = [x for x in self.context.sequence.outputs()
+                            if (x.rh.provider.expected and
+                                x.rh.container.localpath() == file_out)]
+                for thispromise in expected:
+                    thispromise.put(incache=True)
             else:
-                logger.warning('Missing some grib output for %s',
-                               file_out)
+                logger.warning('Missing some output for %s', file_out)
