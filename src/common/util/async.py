@@ -143,6 +143,7 @@ def system_scp(pnum, ask, config, logger, **opts):
 
     return pnum, vwork.rc, value
 
+
 def system_noop(pnum, ask, config, logger, **opts):
     """A callback able to do nothing, but cleanly.
 
@@ -156,3 +157,5 @@ def system_noop(pnum, ask, config, logger, **opts):
         sh.trace = True
         data = vwork.get_dataset(ask)
         value = dict(clear=sh.rm(data.source, fmt=data.fmt))
+
+    return pnum, vwork.rc, value

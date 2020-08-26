@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 """
 Functions and tools to handle resources names or other kind of names.
@@ -623,7 +625,7 @@ def global_bnames(resource, provider):
 def global_snames(resource, provider):
     """Global names for soprano provider"""
     bname = None
-    vapp  = getattr(provider, 'vapp', None)
+    vapp = getattr(provider, 'vapp', None)
     vconf = getattr(provider, 'vconf', None)
     suff = _reseau_suffix(resource.cutoff, resource.date.hh, vconf, vapp)
     if vconf == 'aefrance' or vconf == 'pifrance':
@@ -639,37 +641,27 @@ def global_snames(resource, provider):
 
     elif resource.realkind == 'gridpoint':
         if resource.model == 'ifs':
-            # For MACC forecast (camsfcst)
-            if resource.cutoff == 'production':
-                bname = 'MET' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
-            # For MACC assim
-            else:
-                bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
-
-    if resource.nativefmt == 'grib':
-        if resource.model == 'ifs':
-            # For ALPHA production ecmwf to MF
+            # Alpha
             if vapp == 'pprod':
                 if vconf == 'ecmwf2mf@determ':
-                    bname = 'cep_ifs_' + str(resource.date) + '_' + resource.geometry.area + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                    bname = 'cep_ifs_' + str(resource.date) + '_' + resource.geometry.area + '_ECH{0:04d}'.format(
+                        resource.term.hour) + '.X.grb'
                 elif vconf == 'ecmwf2mf@eps':
-                    bname = 'cep_eps_' + str(resource.date) + '_MB{0:02d}_'.format(provider.member) + resource.geometry.area + '_ECH{0:04d}'.format(resource.term.hour)  + '.X.grb'
-            #For restart_cep
-            elif resource.filling == 'atm':
-                if resource.geometry.tag == 'global256':
-                    bname = 'ALTI_glob.grb'
+                    bname = 'cep_eps_' + str(resource.date) + '_MB{0:02d}_'.format(
+                        provider.member) + resource.geometry.area + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+            # Others
+            else:
+                # For MACC forecast (camsfcst)
+                if resource.cutoff == 'production':
+                    bname = 'MET' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
+                # For MACC assim
                 else:
-                    bname = 'ALTI_st511.grb'
-            elif resource.filling == 'surf':
-                bname = 'SOL_glob.grb'
-            elif resource.filling == 'soil':
-                bname = 'SSOL_glob.grb'
-        # For ALPHA production : Satistic Adaptations from BDAP/Soprano
-        elif vconf  in ['pg1@pa', 'pg1@pagrex', 'pg1@parome', 'pg1@multimod']:
-            bname = 'pg1_' + re.split('@',vconf)[1] + '_' + str(resource.date) + '_' + resource.geometry.area + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
-
-
-
+                    bname = 'MET0utc' + resource.date.ymd + '.' + resource.geometry.area + '.grb'
+        # For ALPHA production : Statistic Adaptations from BDAP/Soprano
+        elif vconf in ['pg1@pa', 'pg1@pagrex', 'pg1@parome', 'pg1@multimod']:
+            bname = ('pg1_' + re.split('@', vconf)[1] + '_' + str(resource.date) +
+                     '_' + resource.geometry.area +
+                     '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb')
 
     elif resource.realkind == 'chemical_bc':
         if resource.model == 'mocage':

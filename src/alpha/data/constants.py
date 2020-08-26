@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -29,13 +33,13 @@ class AlphaElevation(GenvModelResource):
                     values  = ['elevation']
                 ),
                 format = dict(
-                    values = ['grib']
+                    values  = ['grib']
                 ),
                 gvar = dict(
                     default = 'ALPHA_RELIEF_CONSTANT_[gdomain]',
                 ),
                 model = dict(
-                    values = ['alpha']
+                    values  = ['alpha']
                 ),
             )
         )
@@ -59,13 +63,13 @@ class AlphaConfig(GenvModelResource):
                     values  = ['config']
                 ),
                 format = dict(
-                    values = ['json']
+                    values  = ['json']
                 ),
                 gvar = dict(
                     default = 'ALPHA_CONF_MOD_[vconf]',
                 ),
                 model = dict(
-                    values = ['alpha']
+                    values  = ['alpha']
                 ),
             )
         )
@@ -89,13 +93,13 @@ class AlphaVersion(GenvModelResource):
                     values  = ['version']
                 ),
                 format = dict(
-                    values = ['ini']
+                    values  = ['ini']
                 ),
                 gvar = dict(
                     default = 'ALPHA_CONF_VERSION',
                 ),
                 model = dict(
-                    values = ['alpha']
+                    values  = ['alpha']
                 ),
             )
         )
