@@ -372,7 +372,8 @@ class MocaccForecast(AbstractMocaccRoot):
         return sorted(
             set(
                 [sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs]
-            ), reverse=self.transinv
+            ),
+            reverse=self.transinv,
         )
 
     @property
@@ -458,6 +459,7 @@ class MocaccForecast(AbstractMocaccRoot):
         MOCAGE_ZERO = 1.0e-30
 
         from common.util import usepygram
+
         if not usepygram.epygram_checker.is_available():
             raise AlgoComponentError("Epygram needs to be available")
 
@@ -639,7 +641,9 @@ class PostMocacc(AlgoComponent):
 
         # netcdf files from forecast
         ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
-        transinv = True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        transinv = (
+            True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        )
 
         # overwrite ncrh by the ascending sort of the ncrh list
         # or descinding if inverse transport
