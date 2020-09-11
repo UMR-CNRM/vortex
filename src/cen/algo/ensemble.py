@@ -283,12 +283,15 @@ class _SafranWorker(_S2MWorker):
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
         for date in dates:
-            p = 'P{0:s}'.format(date.yymdh)
+            p = '{0:s}{1:s}'.format(prefix, date.yymdh)
+            # Cas d'un fichier P ou E unique par echeance et utilisable par SAFRAN
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
+            # Cas d'un fichier P ou E nommé avec l'annee sur 4 digits (simulations Benedicte)
             elif self.system.path.exists('{0:s}{1:s}'.format(prefix, date.ymdh)):
                 self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), prefix + date.yymdh)
                 actual_dates.append(date)
+            # Recherche d'un fichier P ou E correspondant à la date voulue en fonction du type d'execution
             else:
                 if self.system.path.islink(p):
                     self.system.remove(p)
@@ -307,7 +310,7 @@ class _SafranWorker(_S2MWorker):
                     #        The deterministic member takes the forecasts from the 0h J lead time
                     #        All PEARP members take the forecats froms the 18h J-1 lead time
                     d = date - Period(hours=6)
-                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -323,7 +326,7 @@ class _SafranWorker(_S2MWorker):
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
                         d = date - Period(hours=6)
-                        oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                        oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
                         if self.system.path.exists(oldp):
                             self.link_in(oldp, p)
                             actual_dates.append(date)
@@ -335,7 +338,7 @@ class _SafranWorker(_S2MWorker):
                         t = 0
                 while not self.system.path.islink(p) and (t <= 108):
                     d = date - Period(hours=t)
-                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, t)
+                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, t)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
