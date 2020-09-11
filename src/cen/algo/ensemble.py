@@ -353,8 +353,8 @@ class _SafranWorker(_S2MWorker):
             if prefix == 'P':
                 actual_dates = self.get_guess(dates, prefix='E', fatal=False)
             else:
-                logger.warning('No guess files found for date {0:s}, ' +
-                               'SAFRAN will run with climatological guess'.format(date.ymdh))
+                logger.warning('No guess files found for date {0:s}, '.format(date.ymdh) +
+                               'SAFRAN will run with climatological guess')
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
 
         return actual_dates
@@ -681,7 +681,8 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            self.system.tar('liste_obs_{0:s}_{1:s}.tar'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+        self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
 
         super(SytistWorker, self).postfix()
 
@@ -1363,6 +1364,8 @@ class S2MReanalysis(S2MComponent):
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
         deterministic = [True] * len(subdirs)
+        # WARNING : The current method implies that the different seasons directories are sorted
+        # One way to ensure that is to use the begin year as directory name.
         subdirs.sort()
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs,
