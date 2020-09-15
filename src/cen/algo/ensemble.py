@@ -545,7 +545,7 @@ class SyrpluieWorker(_SafranWorker):
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
-            if self.execution == 'reanalysis'and self.datebegin < Date(2017, 8, 1, 0):
+            if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
                 d.write('0,0,1\n')
             else:
                 d.write('0,0,3\n')
