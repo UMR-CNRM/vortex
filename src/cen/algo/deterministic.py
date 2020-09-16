@@ -20,7 +20,7 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.update_namelist import update_surfex_namelist_object, update_namelist_var
     from snowtools.tools.initTG import generate_clim
     from snowtools.tools.massif_diags import massif_simu
 
@@ -311,3 +311,53 @@ class Interpol_Forcing(Parallel):
             self.system.mv(forcing.rh.container.filename, 'input.nc')
             super(Interpol_Forcing, self).execute(rh, opts)
             self.system.mv('output.nc', forcing.rh.container.filename)
+
+
+@echecker.disabled_if_unavailable
+class Prosnow_Parallel(Surfex_Parallel):
+    
+    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
+        attr = dict(
+            insert_data = dict(
+                default = 'prosnow_insert_data',
+                type = str,
+                optional = False,
+            )
+        )
+    )
+
+    def prosnow_modify_namelist(self):
+  
+        print ('PROSNOW: insertion of water consumption in namelist')
+
+        new_nam = update_namelist_var("OPTIONS_unmodified.nam","water.txt")
+
+        return new_nam
+
+    def prosnow_modify_prep(self):
+  
+        print ('PROSNOW: insertion of snow height in prep')
+  
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
+        my_name_OBS = 'OBS_'+dateend_str+'.nc'
+        my_name_PREP = 'PREP_'+dateend_str+'.nc'
+
+        old_prep = prep_tomodify(my_name_PREP)
+        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc', 'prep_fillup_5.nc', 'variables', my_name_PREP)
+ 
+        return new_prep
+    
+    def execute(self, rh, opts):
+    
+            # Insert water consumption in namelist (before running surfex)
+            self.prosnow_modify_namelist()
+                
+            # Call execute of Surfex_Parallel
+            super(Prosnow_Parallel, self).execute(rh, opts)
+                
+            # Insert snow height in prep (after running surfex)
+            self.prosnow_modify_prep()
+

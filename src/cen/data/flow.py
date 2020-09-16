@@ -377,4 +377,4 @@ class SafranPackedFiles(GeoFlowResource):
 
     @property
     def realkind(self):
-        return self.kind
+        return 'observations'

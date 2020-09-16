@@ -20,7 +20,7 @@ from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
 
 import six
-
+import datetime
 
 logger = loggers.getLogger(__name__)
 
@@ -1537,7 +1537,7 @@ class PrepareForcingComponent(TaylorRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['prepareforcing']
+                values = ['prepareforcing','extractforcing']
             ),
             engine = dict(
                 values = ['s2m']),
@@ -1664,3 +1664,167 @@ class SurfexComponentMultiDates(SurfexComponent):
         ddict.pop('dateinit')
 
         return ddict
+
+
+@echecker.disabled_if_unavailable
+class PrepareForcingComponentForecast(PrepareForcingComponent):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast', 'extractforcing_LTforecast']
+            )
+        )
+    )
+        
+    def _default_common_instructions(self, rh, opts):
+
+        ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
+        for attribute in self.footprint_attributes:
+            if attribute in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)[0][0]               
+            else:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        subdirs = self.get_subdirs(rh, opts)
+        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._default_post_execute(rh, opts)
+    
+    def get_subdirs(self, rh, opts):
+
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+
+        return subdirs
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorker(PrepareForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - deterministic case',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing']
+            ),
+        )
+    )
+    
+    def forecasttype(self):
+        
+        forecast_type = 'determ'
+        return forecast_type
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return rundir
+
+    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+
+        print ("PROSNOW: using SRU geometry")
+        
+        datebegin_str = self.datebegin.strftime('%Y%m%d%H')
+        dateend_str   = self.dateend.strftime('%Y%m%d%H')
+        
+        dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_'     + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_'  + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_4 = rundir                           + '/SRU.txt'        
+        
+        # ------------------- #
+
+        # A) Init, Analysis, ST:
+                
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+        if self.forecasttype() != 'LT':        
+            rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # B) LT - Climatology:              
+                        
+        # Change dates of the climatology to the current season
+#         if self.forcingdir(rundir, thisdir) == thisdir:
+#             if self.forecasttype() == 'LT':
+#                 if int(self.datebegin.strftime('%m')) >= 8:
+#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')),8,1,6,0)
+#                 else:
+#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y'))-1,8,1,6,0)  
+#                 forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
+
+        # C) LT - Hindcast:
+
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+        rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # D) Whenever necessary:
+         
+        # Extraction of SRU geometry
+#         forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
+#         self.system.mv(dir_file_1, dir_file_3)
+#         self.system.mv(dir_file_2, dir_file_1)
+
+        # ------------------- #
+
+        return rdict
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - ST forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast']
+            )
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return thisdir
+    
+    def forecasttype(self):
+        
+        forecast_type = 'ST'
+        return forecast_type
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - LT forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_LTforecast']
+            ),
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return thisdir
+    
+    def forecasttype(self):
+        
+        forecast_type = 'LT'
+        return forecast_type
+
