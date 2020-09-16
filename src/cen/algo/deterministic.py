@@ -2,12 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, tomorrow
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 import footprints
-
 from vortex.algo.components import Parallel, AlgoComponent
 
 logger = loggers.getLogger(__name__)
@@ -16,7 +14,7 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.update_namelist import update_surfex_namelist_object, update_namelist_var
     from snowtools.tools.initTG import generate_clim
 
 
@@ -125,28 +123,26 @@ class Surfex_Parallel(Parallel):
         info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
         attr = dict(
             binary = dict(
-                values = ['OFFLINE'],
+                values = ['OFFLINE', ],
+                type = str,
+                optional = False,
             ),
-
             datebegin   = dict(
                 info = "The first date of the simulation.",
                 type = Date,
                 optional = False
             ),
-
             dateend = dict(
                 info = "The final date of the simulation.",
                 type = Date,
                 optional = False
             ),
-
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
                 type = Date,
                 optional = True,
                 default = '[datebegin]'
             ),
-
             threshold = dict(
                 info = "The initialization date if different from the starting date.",
                 type = int,
@@ -244,3 +240,53 @@ class Surfex_Parallel(Parallel):
             prep.close()
         else:
             print("DO NOT CHANGE THE PREP FILE.")
+
+
+@echecker.disabled_if_unavailable
+class Prosnow_Parallel(Surfex_Parallel):
+    
+    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
+        attr = dict(
+            insert_data = dict(
+                default = 'prosnow_insert_data',
+                type = str,
+                optional = False,
+            )
+        )
+    )
+
+    def prosnow_modify_namelist(self):
+  
+        print ('PROSNOW: insertion of water consumption in namelist')
+
+        new_nam = update_namelist_var("OPTIONS_unmodified.nam","water.txt")
+
+        return new_nam
+
+    def prosnow_modify_prep(self):
+  
+        print ('PROSNOW: insertion of snow height in prep')
+  
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
+        my_name_OBS = 'OBS_'+dateend_str+'.nc'
+        my_name_PREP = 'PREP_'+dateend_str+'.nc'
+
+        old_prep = prep_tomodify(my_name_PREP)
+        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc', 'prep_fillup_5.nc', 'variables', my_name_PREP)
+ 
+        return new_prep
+    
+    def execute(self, rh, opts):
+    
+            # Insert water consumption in namelist (before running surfex)
+            self.prosnow_modify_namelist()
+                
+            # Call execute of Surfex_Parallel
+            super(Prosnow_Parallel, self).execute(rh, opts)
+                
+            # Insert snow height in prep (after running surfex)
+            self.prosnow_modify_prep()
+

@@ -6,6 +6,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import io
 import six
+import datetime
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Period, tomorrow
@@ -25,7 +26,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract, forcinput_changedates
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -720,6 +721,12 @@ class SurfexWorker(_S2MWorker):
                 optional = True,
                 default = False,
             ),
+            dailynamelist = dict(
+                info = "If daily is True, possibility to provide a list of namelists to change each day",
+                type = list,
+                optional = True,
+                default = [],
+            ),
         )
     )
 
@@ -747,7 +754,10 @@ class SurfexWorker(_S2MWorker):
 
     def _commons(self, rundir, thisdir, rdict, **kwargs):
 
-        list_files_copy = ["OPTIONS.nam"]
+        if len(self.dailynamelist) > 1:
+            list_files_copy = self.dailynamelist
+        else:
+            list_files_copy = ["OPTIONS.nam"]
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin", "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
         list_files_link_ifnotprovided = ["PREP.nc"]
 
@@ -778,6 +788,8 @@ class SurfexWorker(_S2MWorker):
 
         sytron = self.kind == "ensmeteo+sytron" and self.subdir == "mb036"
 
+        changenamelistdaily = self.daily and (len(self.dailynamelist) > 1)
+
         while need_other_run:
 
             # Modification of the PREP file
@@ -804,7 +816,7 @@ class SurfexWorker(_S2MWorker):
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
-
+ 
                     print (forcinglist)
                     forcinput_applymask(forcinglist, "FORCING.nc",)
                     need_save_forcing = True
@@ -813,7 +825,7 @@ class SurfexWorker(_S2MWorker):
                     print ("LOOK FOR FORCING")
                     dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
                     print ("FORCING FOUND")
-
+ 
                     if self.geometry[0] in ["alp", "pyr", "cor"]:
                         print ("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry[0]]
@@ -847,6 +859,10 @@ class SurfexWorker(_S2MWorker):
                     updateloc = True
                 else:
                     namelist_ready = True
+
+            if changenamelistdaily:
+                # Change the namelist
+                self.link_in(self.dailynamelist.pop(0), "OPTIONS.nam")
 
             # Run surfex offline
             list_name = self.system.path.join(thisdir, 'offline.out')
@@ -953,7 +969,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_other_forcing:
 
-                forcingdir = rundir
+                forcingdir = self.forcingdir(rundir, thisdir)
 
                 if len(self.geometry_in) > 1:
                     print ("FORCING AGGREGATION")
@@ -963,7 +979,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
-
+ 
                     forcinput_applymask(forcinglist, "FORCING.nc",)
                     need_save_forcing = True
                 else:
@@ -971,13 +987,13 @@ class PrepareForcingWorker(TaylorVortexWorker):
                     print ("LOOK FOR FORCING")
                     dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir, datebegin_this_run, self.dateend)
                     print ("FORCING FOUND")
-
+ 
                     if self.geometry_in[0] in ["alp", "pyr", "cor"]:
                         if "allslopes" in self.geometry_out:
                             list_slopes = ["0", "20", "40"]
                         elif "flat" in self.geometry_out:
                             list_slopes = ["0"]
-
+ 
                         print ("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
                         liste_aspect  = infomassifs().get_list_aspect(8, list_slopes)
@@ -992,7 +1008,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
             need_other_run = dateend_this_run < self.dateend
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
-                save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+                save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
 
         return rdict
 
@@ -1311,6 +1327,12 @@ class SurfexComponent(S2MComponent):
                 optional = True,
                 default = False,
             ),
+            dailynamelist = dict(
+                info = "If daily is True, possibility to provide a list of namelists to change each day",
+                type = list,
+                optional = True,
+                default = [],
+            ),
             multidates = dict(
                 info = "If True, several dates allowed",
                 type = bool,
@@ -1365,7 +1387,7 @@ class PrepareForcingComponent(TaylorRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['prepareforcing']
+                values = ['prepareforcing','extractforcing']
             ),
             engine = dict(
                 values = ['s2m']),
@@ -1480,3 +1502,167 @@ class SurfexComponentMultiDates(SurfexComponent):
         ddict.pop('dateinit')
 
         return ddict
+
+
+@echecker.disabled_if_unavailable
+class PrepareForcingComponentForecast(PrepareForcingComponent):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast', 'extractforcing_LTforecast']
+            )
+        )
+    )
+        
+    def _default_common_instructions(self, rh, opts):
+
+        ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
+        for attribute in self.footprint_attributes:
+            if attribute in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)[0][0]               
+            else:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        subdirs = self.get_subdirs(rh, opts)
+        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._default_post_execute(rh, opts)
+    
+    def get_subdirs(self, rh, opts):
+
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+
+        return subdirs
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorker(PrepareForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - deterministic case',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing']
+            ),
+        )
+    )
+    
+    def forecasttype(self):
+        
+        forecast_type = 'determ'
+        return forecast_type
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return rundir
+
+    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+
+        print ("PROSNOW: using SRU geometry")
+        
+        datebegin_str = self.datebegin.strftime('%Y%m%d%H')
+        dateend_str   = self.dateend.strftime('%Y%m%d%H')
+        
+        dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_'     + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_'  + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_4 = rundir                           + '/SRU.txt'        
+        
+        # ------------------- #
+
+        # A) Init, Analysis, ST:
+                
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+        if self.forecasttype() != 'LT':        
+            rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # B) LT - Climatology:              
+                        
+        # Change dates of the climatology to the current season
+#         if self.forcingdir(rundir, thisdir) == thisdir:
+#             if self.forecasttype() == 'LT':
+#                 if int(self.datebegin.strftime('%m')) >= 8:
+#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')),8,1,6,0)
+#                 else:
+#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y'))-1,8,1,6,0)  
+#                 forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
+
+        # C) LT - Hindcast:
+
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+        rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # D) Whenever necessary:
+         
+        # Extraction of SRU geometry
+#         forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
+#         self.system.mv(dir_file_1, dir_file_3)
+#         self.system.mv(dir_file_2, dir_file_1)
+
+        # ------------------- #
+
+        return rdict
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - ST forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast']
+            )
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return thisdir
+    
+    def forecasttype(self):
+        
+        forecast_type = 'ST'
+        return forecast_type
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
+    
+    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - LT forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_LTforecast']
+            ),
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+        
+        return thisdir
+    
+    def forecasttype(self):
+        
+        forecast_type = 'LT'
+        return forecast_type
+
