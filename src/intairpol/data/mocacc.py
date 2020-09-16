@@ -72,6 +72,35 @@ class MocaccOuputs(FlowResource):
         return "mocacc_outputs"
 
 
+class CtbtoOuputs(FlowResource):
+    """Tar with txt files asked by CTBTO."""
+
+    # fmt: off
+    _footprint = [
+        term_deco,
+        dict(
+            info = "CTBTO outputs",
+            attr = dict(
+                kind = dict(
+                    values = ["ctbto_outputs"]
+                ),
+                model = dict(
+                    values = ['mocage', ]
+                ),
+                nativefmt = dict(
+                    values = ["tar"],
+                    default = "tar"
+                ),
+            ),
+        )
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "ctbto_outputs"
+
+
 class MocaccDateEch(ModelResource):
     """Various step / datetime for mocage accident suite"""
 
@@ -297,3 +326,104 @@ class ExtraConfMocacc(ModelResource):
     @property
     def realkind(self):
         return "extra_conf_mocacc"
+
+
+class ExtraConfMocaccCtbtoContent(JsonDictContent):
+    """Contents of a json used to store non permanent config for CTBTO.
+
+    These infos can change between runs, but not within a single run.
+    In this case geometry is fixed and there is no restart.
+    """
+
+    @property
+    def basetime_forecast(self):
+        """Basetime for MOCAGE Accident."""
+        return self._data["basetime_forecast"]
+
+    @property
+    def backward_to(self):
+        """Last validity expected by CTBTO."""
+        return self._data["backward_to"]
+
+    @property
+    def mail_ctbto(self):
+        """CTBTO mail."""
+        return self._data["basetime_forecast"]
+
+    @property
+    def source_vertical_profile(self):
+        """Profil vertical pour le CTBTO."""
+        return "uniform"
+
+    @property
+    def last_term(self):
+        """Last forecast term.
+        """
+        return date.Date(self.backward_to) - date.Date(self.basetime_forecast)
+
+    def get_first_basetime_forcing(self, coupling_step, couplings_delta):
+        """Calculate first forcing basetime.
+
+        Coupling_step and couplings_delta are date.Period or "PTXH"
+        """
+        basetime_forecast = date.Date(self.basetime_forecast)
+        first_basetime_forcing = date.Date(
+            basetime_forecast.year, basetime_forecast.month, basetime_forecast.day,
+        )
+
+        while (
+            first_basetime_forcing + couplings_delta - coupling_step < basetime_forecast
+        ):
+            first_basetime_forcing += date.Period(couplings_delta)
+
+        return first_basetime_forcing
+
+    def get_basetimes_forcing(self, coupling_step, couplings_delta):
+        """Get basetimes forcing needed for forecast.
+        """
+        tmp_basetime = self.get_first_basetime_forcing(coupling_step, couplings_delta)
+        basetimes_forcing = []
+        backward_to = date.Date(self.backward_to)
+
+        while tmp_basetime >= backward_to:
+            basetimes_forcing.append(tmp_basetime)
+            tmp_basetime -= couplings_delta
+
+        return basetimes_forcing
+
+
+class ExtraConfMocaccCtbto(ModelResource):
+    """Extra conf for CTBTO (MOCAGE Accident with transinv).
+
+    Several infos cannot be stored within conf as they would be usually :
+    - terms
+    - runtime (it depends on the release start)
+    - ctbto mail (depends on the CTBTO request)
+    """
+
+    # fmt: off
+    _footprint = [
+        dict(
+            info = "Extra conf for CTBTO that cannot be stored in normal conf",
+            attr = dict(
+                kind = dict(
+                    values = ["extra_conf_mocacc_ctbto"]
+                ),
+                model = dict(
+                    values = ['mocage', ]
+                ),
+                nativefmt = dict(
+                    values = ["json"],
+                    default = "json"
+                ),
+                clscontents = dict(
+                    default = ExtraConfMocaccCtbtoContent
+                ),
+            ),
+        )
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "extra_conf_mocacc_ctbto"

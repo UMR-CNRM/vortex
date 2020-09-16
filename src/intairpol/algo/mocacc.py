@@ -740,3 +740,64 @@ class PostMocacc(AlgoComponent):
 
                 # To allow flying routing via hook on promise
                 promised_sec.put(incache=True)
+
+
+class PostCtbto(AlgoComponent):
+    """
+    Post-processing of Mocage accident CTBTO.
+
+    Netcdf files produced by Forecast are converted into txt files,
+    according to the format asked by CTBTO.
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Post-processing of CTBTO",
+            attr = dict(
+                kind = dict(
+                    values   = ["post_ctbto"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "post_ctbto"
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+        sh = self.system
+        seq = self.context.sequence
+
+        import importlib
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+
+        rh_extra_conf = self.context.sequence.effective_inputs(role="ExtraConf")[0].rh
+
+        ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        ncrh.sort(key=lambda s: s.rh.resource.term, reverse=True)
+
+        myfunc(
+            [nc.rh.container.localpath() for nc in ncrh],
+            rh_extra_conf.container.localpath(),
+        )
