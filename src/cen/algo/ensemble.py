@@ -284,12 +284,15 @@ class _SafranWorker(_S2MWorker):
         # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
         for date in dates:
-            p = 'P{0:s}'.format(date.yymdh)
+            p = '{0:s}{1:s}'.format(prefix, date.yymdh)
+            # Cas d'un fichier P ou E unique par echeance et utilisable par SAFRAN
             if self.system.path.exists(p) and not self.system.path.islink(p):
                 actual_dates.append(date)
+            # Cas d'un fichier P ou E nommé avec l'annee sur 4 digits (simulations Benedicte)
             elif self.system.path.exists('{0:s}{1:s}'.format(prefix, date.ymdh)):
                 self.link_in('{0:s}{1:s}'.format(prefix, date.ymdh), prefix + date.yymdh)
                 actual_dates.append(date)
+            # Recherche d'un fichier P ou E correspondant à la date voulue en fonction du type d'execution
             else:
                 if self.system.path.islink(p):
                     self.system.remove(p)
@@ -308,7 +311,7 @@ class _SafranWorker(_S2MWorker):
                     #        The deterministic member takes the forecasts from the 0h J lead time
                     #        All PEARP members take the forecats froms the 18h J-1 lead time
                     d = date - Period(hours=6)
-                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -324,7 +327,7 @@ class _SafranWorker(_S2MWorker):
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
                         d = date - Period(hours=6)
-                        oldp = 'P{0:s}_{1!s}'.format(d.yymdh, 6)
+                        oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
                         if self.system.path.exists(oldp):
                             self.link_in(oldp, p)
                             actual_dates.append(date)
@@ -336,7 +339,7 @@ class _SafranWorker(_S2MWorker):
                         t = 0
                 while not self.system.path.islink(p) and (t <= 108):
                     d = date - Period(hours=t)
-                    oldp = 'P{0:s}_{1!s}'.format(d.yymdh, t)
+                    oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, t)
                     if self.system.path.exists(oldp):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
@@ -354,8 +357,8 @@ class _SafranWorker(_S2MWorker):
             if prefix == 'P':
                 actual_dates = self.get_guess(dates, prefix='E', fatal=False)
             else:
-                logger.warning('No guess files found for date {0:s}, ' +
-                               'SAFRAN will run with climatological guess'.format(date.ymdh))
+                logger.warning('No guess files found for date {0:s}, '.format(date.ymdh) +
+                               'SAFRAN will run with climatological guess')
                 actual_dates = [d for d in dates if d.hour in [0, 6, 12, 18]]
 
         return actual_dates
@@ -543,7 +546,7 @@ class SyrpluieWorker(_SafranWorker):
             d.write(thisdate.strftime('%y,%m,%d,%H,') + six.text_type(nech) + '\n')
             # In reanalysis execution the RR guess comes from a "weather types" analysis
             # Except for more recent years for which ARPEGE rr guess are available
-            if self.execution == 'reanalysis'and self.datebegin < Date(2017, 8, 1, 0):
+            if self.execution == 'reanalysis' and self.datebegin < Date(2017, 8, 1, 0):
                 d.write('0,0,1\n')
             else:
                 d.write('0,0,3\n')
@@ -682,7 +685,8 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            self.system.tar('liste_obs_{0:s}_{1:s}.tar'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+        self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
 
         super(SytistWorker, self).postfix()
 
@@ -1376,6 +1380,8 @@ class S2MReanalysis(S2MComponent):
         # auto-detected using the sequence
         subdirs = self.get_subdirs(rh, opts)
         deterministic = [True] * len(subdirs)
+        # WARNING : The current method implies that the different seasons directories are sorted
+        # One way to ensure that is to use the begin year as directory name.
         subdirs.sort()
         list_dates_begin, list_dates_end = self.get_list_seasons(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs,
