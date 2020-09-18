@@ -265,7 +265,7 @@ class Prep(BlindRun, DrHookDecoMixin):
                 logger.info("Linking %s to %s", localpath, output_name)
                 self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
 
-    def _process_outputs(self, section, output_clim, output_name):
+    def _process_outputs(self, binrh, section, output_clim, output_name):
         (radical, outfmt) = (self.system.path.splitext(section.rh.container.localpath())[0],
                              section.rh.container.actualfmt)
         finaloutput = '{:s}_interpolated.{:s}'.format(radical, outfmt)
@@ -289,7 +289,10 @@ class Prep(BlindRun, DrHookDecoMixin):
             logger.info("Moving %s to %s", output_name, finaloutput)
             self.system.mv(output_name, finaloutput, fmt=outfmt)
         # Also rename the listing :-)
-        self.system.mv('LISTING_PREP.txt', finallisting)
+        if binrh.resource.cycle < 'cy48t1':
+            self.system.mv('LISTING_PREP.txt', finallisting)
+        else:
+            self.system.mv('LISTING_PREP0.txt', finallisting)
         return finaloutput
 
     def prepare(self, rh, opts):
@@ -339,7 +342,7 @@ class Prep(BlindRun, DrHookDecoMixin):
             sh.dir(output=False, fatal=False)
 
             # Deal with outputs
-            actualname = self._process_outputs(sec, targetclim, outfile)
+            actualname = self._process_outputs(rh, sec, targetclim, outfile)
 
             # promises management
             expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
