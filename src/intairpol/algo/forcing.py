@@ -41,6 +41,9 @@ class CorrOmegaSurf(Parallel):
                 ),
                 model = dict(
                     values = ['mocage']
+                ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
                 )
             )
         )
@@ -93,6 +96,9 @@ class AbstractSumoForcing(Parallel):
                 ),
                 model = dict(
                     values   = ['mocage']
+                ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
                 )
             )
         )
