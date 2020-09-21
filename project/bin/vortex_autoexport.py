@@ -472,6 +472,8 @@ class SSHExportService(ShellAccessExportService):
             extras = dict()
             if 'keyfile' in self._internals:
                 extras['key_filename'] = self._internals['keyfile']
+            if 'port' in self._internals:
+                extras['port'] = int(self._internals['port'])
             self.__theclient.connect(self._internals['hostname'],
                                      username=self._internals['username'],
                                      **extras)

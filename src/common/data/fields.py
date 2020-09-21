@@ -33,7 +33,7 @@ class RawFields(StaticResource):
                     values = ['bdm', 'nesdis', 'ostia', 'psy4', 'bdpe', 'safosi']
                 ),
                 fields = dict(
-                    values = ['sst', 'seaice', 'ocean']
+                    values = ['sst', 'seaice', 'ocean', 'seaice_conc', 'seaice_thick']
                 ),
             )
         )
@@ -73,7 +73,7 @@ class GeoFields(GeoFlowResource):
                     values  = ['geofields']
                 ),
                 fields = dict(
-                    values  = ['sst', 'seaice', 'ocean']
+                    values  = ['sst', 'seaice', 'ocean', 'seaice_conc', 'seaice_thick']
                 ),
                 nativefmt = dict(
                     values  = ['fa'],

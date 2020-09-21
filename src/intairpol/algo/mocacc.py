@@ -238,6 +238,9 @@ class AbstractMocaccRoot(Parallel):
                     optional = True,
                     default  = None,
                 ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
+                ),
             )
         )
     ]

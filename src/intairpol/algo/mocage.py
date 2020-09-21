@@ -270,6 +270,9 @@ class Init(Parallel):
                 basedate = a_date,
                 model = dict(
                     values   = ['mocage']
+                ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
                 )
             )
         )
@@ -361,6 +364,9 @@ class ControlGuess(Parallel):
                 ),
                 model = dict(
                     values = ['mocage']
+                ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
                 )
             )
         )
