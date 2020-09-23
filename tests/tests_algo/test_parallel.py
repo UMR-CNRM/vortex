@@ -198,9 +198,12 @@ class TestParallel(unittest.TestCase):
         rf_stack = list()
         for r in range(len(nodelist)):
             if bindinglist is None:
-                slots = ",".join([str(s) for s in range(40)])
+                slots = "0-39"
             else:
-                slots = ",".join([str(s) for s in bindinglist[r]])
+                if len(bindinglist[r]) == 1:
+                    slots = str(bindinglist[r][0])
+                else:
+                    slots = '{:d}-{:d}'.format(min(bindinglist[r]), max(bindinglist[r]))
             rf_stack.append('rank {:d}=+n{:d} slot={:s}'.format(r, nodelist[r], slots))
         rf_ref = '\n'.join(rf_stack)
         with io.open('./global_envelope_rankfile') as fhw:
@@ -310,6 +313,16 @@ class TestParallel(unittest.TestCase):
         binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 8
         binomp = [10, ] * 8
         bindingl = [list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 2
+        self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
+        # Surbooking: 3 tasks per physical core
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=12, openmp=10),
+                                                     srun_opt_bindingmethod='vortex', ))
+        self.assertCmdl('srun --export=ALL --kill-on-bad-exit=1 --cpu-bind none ' +
+                        '--nodes 2 --ntasks-per-node 12 --ntasks 24 ' +
+                        './global_wrapstd_wrapper.py ./global_envelope_wrapper.py', args)
+        binpaths = ['{pwd:s}/fake'.format(pwd=self.t.sh.pwd()), ] * 24
+        binomp = [10, ] * 24
+        bindingl = [list(range(i * 10, (i + 1) * 10)) for i in range(4)] * 6
         self.assertWrapper('SLURM_PROCID', binpaths, binomp=binomp, bindinglist=bindingl)
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10,
                                                                   distribution='roundrobin')))

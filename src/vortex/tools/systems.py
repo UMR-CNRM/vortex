@@ -2697,7 +2697,7 @@ class OSExtended(System):
         """
         self._sighandler.deactivate()
 
-    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*([^\s]+)\s+\(0x.+\)$')
+    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*(?:([^\s]+)\s+\(0x.+\)|not found)$')
 
     def ldd(self, filename):
         """Call ldd on **filename**.
@@ -2709,7 +2709,7 @@ class OSExtended(System):
             libs = dict()
             for ldd_match in [self._LDD_REGEX.match(l) for l in ldd_out]:
                 if ldd_match is not None:
-                    libs[ldd_match.group(1)] = ldd_match.group(2)
+                    libs[ldd_match.group(1)] = ldd_match.group(2) or None
             return libs
         else:
             raise ValueError('{} is not a regular file'.format(filename))

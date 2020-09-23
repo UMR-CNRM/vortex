@@ -398,10 +398,26 @@ class MpiTool(footprints.FootprintBase):
             return None
         if self._mpilib_identification_cache is None:
             mpi_lib, mpi_tools_dir = self._mpilib_data()
+            ld_libs_extra = set()
             sh = self.system
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
-                rc = sh.spawn([mpirun_path, '--version'], output=True, fatal=False)
+                libs = sh.ldd(mpirun_path)
+
+                if any([libname is None for libname in libs.values()]):
+                    libscache = dict()
+                    for binary in self.binaries:
+                        for lib, libpath in sh.ldd(binary.master).items():
+                            if libpath:
+                                libscache[lib] = sh.path.dirname(libpath)
+                    for missing_lib in [lib for lib, libname in libs.items()
+                                        if libname is None]:
+                        if missing_lib in libscache:
+                            ld_libs_extra.add(libscache[missing_lib])
+                with self.env.clone() as localenv:
+                    for libpath in ld_libs_extra:
+                        localenv.setgenericpath('LD_LIBRARY_PATH', libpath)
+                    rc = sh.spawn([mpirun_path, '--version'], output=True, fatal=False)
                 if rc:
                     id_res = self._mpilib_match_result(
                         re.compile(r'^.*Intel.*MPI.*Version\s+(\d+)\s+Update\s+(\d+)',
@@ -412,10 +428,12 @@ class MpiTool(footprints.FootprintBase):
                                    re.IGNORECASE),
                         rc, 'openmpi')
                     if id_res:
-                        self._mpilib_identification_cache = tuple([mpi_lib, mpi_tools_dir] +
+                        ld_libs_extra = tuple(sorted(ld_libs_extra))
+                        self._mpilib_identification_cache = tuple([mpi_lib, mpi_tools_dir, ld_libs_extra] +
                                                                   id_res)
             if self._mpilib_identification_cache is None:
-                self._mpilib_identification_cache = (mpi_lib, mpi_tools_dir, 'unknown')
+                ld_libs_extra = tuple(sorted(ld_libs_extra))
+                self._mpilib_identification_cache = (mpi_lib, mpi_tools_dir, ld_libs_extra, 'unknown')
         return self._mpilib_identification_cache
 
     def _get_sources(self):
@@ -635,26 +653,30 @@ class MpiTool(footprints.FootprintBase):
                 ranksidx += bin_obj.nprocs
         return todostack, ranks_bsize
 
+    def _envelope_mkwrapper_cpu_dispensers(self):
+        # Dispensers map
+        ranks_idx = 0
+        dispensers_map = dict()
+        for e_bit in self.envelope:
+            if 'nn' in e_bit.options and 'nnp' in e_bit.options:
+                for i_node in range(e_bit.options['nn']):
+                    cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
+                    if not cpu_disp:
+                        raise MpiException('Unable to detect the CPU layout with topology: {:s}'
+                                           .format(self._actual_vortexbind_topology, ))
+                    for _ in range(e_bit.options['nnp']):
+                        dispensers_map[ranks_idx] = (cpu_disp, i_node)
+                        ranks_idx += 1
+            else:
+                logger.error("Cannot compute a proper binding without nn/nnp information")
+                raise MpiException("Vortex binding error.")
+        return dispensers_map
+
     def _envelope_mkwrapper_bindingstack(self, ranks_bsize):
         binding_stack = dict()
         binding_node = dict()
         if self.bindingmethod:
-            # Dispensers map
-            ranks_idx = 0
-            dispensers_map = dict()
-            for e_bit in self.envelope:
-                if 'nn' in e_bit.options and 'nnp' in e_bit.options:
-                    for i_node in range(e_bit.options['nn']):
-                        cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
-                        if not cpu_disp:
-                            raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                               .format(self._actual_vortexbind_topology,))
-                        for _ in range(e_bit.options['nnp']):
-                            dispensers_map[ranks_idx] = (cpu_disp, i_node)
-                            ranks_idx += 1
-                else:
-                    logger.error("Cannot compute a proper binding without nn/nnp information")
-                    raise MpiException("Vortex binding error.")
+            dispensers_map = self._envelope_mkwrapper_cpu_dispensers()
             # Actually generate the binding map
             ranks_idx = 0
             for e_bit in self.envelope:
@@ -662,7 +684,14 @@ class MpiTool(footprints.FootprintBase):
                     for _ in range(e_bit.options['nnp']):
                         cpu_disp, i_node = dispensers_map[self._ranks_mapping[ranks_idx]]
                         if ranks_bsize.get(ranks_idx, 1) != -1:
-                            binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
+                            try:
+                                binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
+                            except (StopIteration, IndexError):
+                                # When CPU dispensers are exhausted (it might happened if more tasks
+                                # than available CPUs are requested).
+                                dispensers_map = self._envelope_mkwrapper_cpu_dispensers()
+                                cpu_disp, i_node = dispensers_map[self._ranks_mapping[ranks_idx]]
+                                binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
                         else:
                             binding_stack[ranks_idx] = set(self.system.cpus_info.cpus.keys())
                         binding_node[ranks_idx] = i_node
@@ -848,13 +877,13 @@ class MpiTool(footprints.FootprintBase):
             if main_entry in all_sections:
                 sections_stack.append(main_entry)
             if mpi_infos:
-                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[2])
+                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[3])
                 if not lib_entry.endswith('unknown') and lib_entry in all_sections:
                     sections_stack.append(lib_entry)
                 v_tuples = {tuple([int(d) for d in e[len(lib_entry) + 1:].split('.')]): e
                             for e in [s for s in all_sections
                                       if s.startswith(lib_entry + ':')]}
-                my_version = tuple(mpi_infos[3:])
+                my_version = tuple(mpi_infos[4:])
                 v_candidates = [v for v in v_tuples if v <= my_version]
                 if v_candidates:
                     sections_stack.append(v_tuples[max(v_candidates)])
@@ -1437,7 +1466,7 @@ class SRun(ConfigurableMpiTool):
         super(SRun, self).setup_environment(opts, conflabel)
         if (self._complex_ranks_mapping and
                 self._mpilib_identification() and
-                self._mpilib_identification()[2] == 'intelmpi'):
+                self._mpilib_identification()[3] == 'intelmpi'):
             logger.info('(Sadly) with IntelMPI, I_MPI_SLURM_EXT=0 is needed when a complex arbitrary' +
                         'ranks distribution is used. Exporting it !')
             self.env['I_MPI_SLURM_EXT'] = 0
@@ -1566,11 +1595,29 @@ class OmpiMpiRun(ConfigurableMpiTool):
 
     def _create_rankfile(self, rankslist, nodeslist, slotslist):
         rf_strings = []
+
+        def _dump_slot_string(slot_strings, s_start, s_end):
+            if s_start == s_end:
+                slot_strings.append('{:d}'.format(s_start))
+            else:
+                slot_strings.append('{:d}-{:d}'.format(s_start, s_end))
+
         for rank, node, slot in zip(rankslist, nodeslist, slotslist):
+            slot_strings = list()
+            if slot:
+                slot = sorted(slot)
+                s_end = s_start = slot[0]
+                for s in slot[1:]:
+                    if s_end + 1 == s:
+                        s_end = s
+                    else:
+                        _dump_slot_string(slot_strings, s_start, s_end)
+                        s_end = s_start = s
+                _dump_slot_string(slot_strings, s_start, s_end)
             rf_strings.append(
                 'rank {:d}={:s} slot={:s}'.format(rank,
                                                   node,
-                                                  ','.join([str(s) for s in slot]))
+                                                  ','.join(slot_strings))
             )
         logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
         with io.open(self._envelope_rankfile_name, mode='w') as tmp_rf:
@@ -1659,6 +1706,9 @@ class OmpiMpiRun(ConfigurableMpiTool):
         super(OmpiMpiRun, self).setup_environment(opts, conflabel)
         if self.bindingmethod == 'native' and 'OMP_PROC_BIND' not in self.env:
             self._logged_env_set('OMP_PROC_BIND', 'true')
+        for libpath in self._mpilib_identification()[2]:
+            logger.info('Adding "%s" to LD_LIBRARY_PATH', libpath)
+            self.env.setgenericpath('LD_LIBRARY_PATH', libpath)
 
 
 class OmpiMpiRunDDT(OmpiMpiRun):
