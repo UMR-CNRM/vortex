@@ -62,7 +62,8 @@ ja = footprints.proxy.jobassistant(kind = 'op_default',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='op_',
                                    )
-
+for pkind in ($loadedjaplugins):
+    ja.add_plugin(pkind)
 
 import $package.$task as todo
 

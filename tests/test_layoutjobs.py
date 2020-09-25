@@ -108,6 +108,7 @@ class TestMkjobDetect(unittest.TestCase):
                  'ldlibs': '',
                  'loadedaddons': "'nwp',",
                  'loadedmods': "'common','gco','olive','common.tools.addons','common.util.usepygram',",
+                 'loadedjaplugins': '',
                  'manydates': '2019010100-2019010200-PT6H',
                  'member': 1,
                  'mtool_args': '',

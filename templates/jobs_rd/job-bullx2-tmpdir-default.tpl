@@ -69,7 +69,10 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='rd_',
                                    )
+
 ja.add_plugin('tmpdir')
+for pkind in ($loadedjaplugins):
+    ja.add_plugin(pkind)
 
 try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
