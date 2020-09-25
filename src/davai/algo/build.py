@@ -197,6 +197,80 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                                  link_filter_file=self.link_filter_file)
 
 
+class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
+                         _CrashWitnessDecoMixin):
+    """Make a main pack (gmkpack) with sources from a bundle."""
+
+    _footprint = [
+        dict(
+            info = "Make a main pack (gmkpack) with sources from a bundle.",
+            attr = dict(
+                kind = dict(
+                    values   = ['bundle2mainpack'],
+                ),
+                compiler_label = dict(
+                    info = "Gmkpack compiler label.",
+                ),
+                compiler_flag = dict(
+                    info = "Gmkpack compiler flag.",
+                    optional = True,
+                    default = None
+                ),
+                populate_filter_file = dict(
+                    info = """File of files to be filtered at populate time.
+                              Special values:
+                              '__inconfig__' will read according file in config of ia4h_scm package;
+                              '__inview__' will read according file in Git view""",
+                    optional = True,
+                    default = '__inconfig__'
+                ),
+                link_filter_file = dict(
+                    info = """File of symbols to be filtered at link time.
+                              Special values:
+                              '__inconfig__' will read according file in config of ia4h_scm package;
+                              '__inview__' will read according file in Git view""",
+                    optional = True,
+                    default = '__inconfig__'
+                ),
+                bundle_cache_dir = dict(
+                    info = """Cache directory in which to download/update repositories.
+                              Defaults to the temporary directory of execution, which may not be optimal.""",
+                    optional = True,
+                    default = None,
+                ),
+                update_git_repositories = dict(
+                    info = """If False, take git repositories as they are,
+                              without trying to update (fetch/checkout/pull)""",
+                    optional = True,
+                    type = bool,
+                    default = True
+                ),
+                bundle_download_threads = dict(
+                    info = """Number of parallel threads to download (clone/fetch) repositories.
+                              0 turns into an auto-determined number.""",
+                    optional = True,
+                    type = int,
+                    default = 1
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        from ia4h_scm.algos import bundle_to_main_pack  # @UnresolvedImport
+        bundle = [s for s in self.context.sequence.effective_inputs(role=('Bundle',))]
+        bundle_path = bundle[0].rh.container.localpath()
+        bundle_to_main_pack(bundle_path,
+                            self.compiler_label,
+                            compiler_flag=self.compiler_flag,
+                            bundle_cache_dir=self.bundle_cache_dir,
+                            homepack=self.homepack,
+                            populate_filter_file=self.populate_filter_file,
+                            link_filter_file=self.link_filter_file,
+                            update_git_repositories=self.update_git_repositories,
+                            bundle_download_threads=self.bundle_download_threads)
+
+
 class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
                            _CrashWitnessDecoMixin):
     """Compile sources and link executables within a pack (gmkpack)."""

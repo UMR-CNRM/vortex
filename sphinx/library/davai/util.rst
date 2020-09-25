@@ -22,6 +22,8 @@ Functions
 
 .. autofunction:: guess_packname
 
+.. autofunction:: bundle_guess_packname
+
 
 Exceptions
 ----------

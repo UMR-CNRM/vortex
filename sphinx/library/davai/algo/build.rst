@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Bundle_to_MainPack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: PackBuildExecutables
    :show-inheritance:
    :members:

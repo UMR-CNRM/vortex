@@ -75,6 +75,34 @@ def guess_packname(git_ref,
                           to_bin=to_bin)
 
 
+def bundle_guess_packname(bundle,
+                          compiler_label,
+                          packtype,
+                          compiler_flag=None,
+                          abspath=False,
+                          homepack=None,
+                          to_bin=False):
+    """
+    Guess pack name from a number of arguments.
+
+    :param bundle: bundle file (yaml)
+    :param compiler_label: gmkpack compiler label
+    :param packtype: type of pack, among ('incr', 'main')
+    :param compiler_flag: gmkpack compiler flag
+    :param abspath: True if the absolute path to pack is requested (instead of basename)
+    :param homepack: home of pack
+    :param to_bin: True if the path to binaries subdirectory is requested
+    """
+    from ia4h_scm.algos import bundle_guess_packname  # @UnresolvedImport
+    return bundle_guess_packname(bundle,
+                                 compiler_label,
+                                 packtype,
+                                 compiler_flag=compiler_flag,
+                                 abspath=abspath,
+                                 homepack=homepack,
+                                 to_bin=to_bin)
+
+
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
                               fatal=True, **kwargs):
     """
