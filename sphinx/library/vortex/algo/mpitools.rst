@@ -44,6 +44,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MpiBinary
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiBinaryBasic
    :show-inheritance:
    :members:
@@ -60,6 +65,21 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: SRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SRunDDT
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OmpiMpiRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OmpiMpiRunDDT
    :show-inheritance:
    :members:
    :member-order: alphabetical

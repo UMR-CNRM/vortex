@@ -15,7 +15,7 @@ TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
                                u'mocage-assim', u'mocage-assim-repro', u'mpiauto',
                                u'mpitool-mplbased', u'srun'])
 
-TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool',
+TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool', 'armtools',
                             'mpienv', 'mpienv:srun', 'mpienv:srun:intelmpi',
                             'mpitool-fullsrun',
                             'mpienv-fullsrun', 'mpienv-fullsrun:srun',

@@ -234,7 +234,7 @@ class _NumaPackedCpuIdDispenser(_NumaAbstractCpuIdDispencer):
             # Go through the various clusters
             xnodeclust_its = self._xnodesclust_its(maxdist, blocksize)
             for _ in range(len(self._xnodesclust[maxdist])):
-                # We use persistant iterator (from one call to another) in order
+                # We use persistent iterator (from one call to another) in order
                 # To evenly distribute the CPUs
                 cluster, nodes_it = next(xnodeclust_its)
                 # Try to create block of blocksize size in a round-robin manner
