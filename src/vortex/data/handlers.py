@@ -402,7 +402,7 @@ class Handler(object):
         for k, v in six.iteritems(self.options):
             try:
                 v = v.export_dict()
-            except AttributeError:
+            except (AttributeError, TypeError):
                 pass
             rhd['options'][k] = v
         for subobj in ('resource', 'provider', 'container'):

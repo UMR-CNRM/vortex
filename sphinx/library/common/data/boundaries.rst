@@ -21,7 +21,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: LAMBoundary
    :show-inheritance:
    :members:
@@ -32,12 +32,27 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: SurfexPeriodForcing
+.. autoclass:: ExternalForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExternalTimePeriodForcing
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: SurfexForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfexTimePeriodForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SurfexPeriodForcing
    :show-inheritance:
    :members:
    :member-order: alphabetical

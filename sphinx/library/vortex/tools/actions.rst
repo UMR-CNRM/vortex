@@ -52,7 +52,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: SmsGateway
    :show-inheritance:
    :members:
@@ -62,7 +62,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: SpooledActions
    :show-inheritance:
    :members:

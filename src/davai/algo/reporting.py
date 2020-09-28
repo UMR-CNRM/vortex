@@ -164,6 +164,8 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
                 experts = dict(
                     type = FPList,
                     info = "The list of footprints of Experts to be used to evaluate the Algo execution.",
+                    optional = True,
+                    default = [],
                 ),
                 ignore_reference = dict(
                     info = "Set to True if no comparison to be done.",

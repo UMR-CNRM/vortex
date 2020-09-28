@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Add some args when the script shell is executed.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -18,6 +18,7 @@ logger = loggers.getLogger(__name__)
 
 
 class AlphaScript(Expresso):
+    """Run the main Alpha script."""
 
     _footprint = dict(
         attr = dict(
@@ -28,22 +29,24 @@ class AlphaScript(Expresso):
                 default = '',
             ),
             flypoll = dict(
-                default = ['iopoll_alpha'],
+                values = ['iopoll_alpha'],
+                optional = True,
             ),
             flyargs = dict(
-                values = ['JJ1', 'J2J3'],
+                default = ('alpha',),
             ),
         )
     )
 
     def spawn_command_options(self):
+        """The command line is simply taken in the footprint."""
         return {'command_line': self.command_line}
 
     def prepare(self, rh, opts):
+        """Setup things prior to run"""
         super(AlphaScript, self).prepare(rh, opts)
-
         if self.promises:
-            self.io_poll_kwargs = dict(vconf=rh.resource.vconf.upper())
+            self.io_poll_kwargs = dict(domain=rh.provider.vconf)
             self.flyput = True
         else:
             self.flyput = False

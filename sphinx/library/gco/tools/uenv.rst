@@ -12,7 +12,7 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 Exceptions
 ----------
 

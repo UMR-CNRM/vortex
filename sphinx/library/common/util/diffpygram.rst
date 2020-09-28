@@ -41,7 +41,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: EpyGribDiff
    :show-inheritance:
    :members:

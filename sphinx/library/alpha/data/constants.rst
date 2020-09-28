@@ -23,3 +23,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AlphaVersion
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -17,7 +17,7 @@ Functions
 .. autofunction:: process_tnt_stack
 .. autofunction:: namelist_read_and_sort
 .. autofunction:: colorise_diff
-
+.. autofunction:: compose_namelist
 
 .. hints
 .. .. autodata:: XXX

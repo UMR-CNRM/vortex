@@ -20,12 +20,12 @@ Excpetions
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BdpeConfigurationError
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BdpeMismatchError
    :show-inheritance:
    :members:

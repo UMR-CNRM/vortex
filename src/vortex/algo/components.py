@@ -30,8 +30,10 @@ Mixins are a powerful tool to mutualise some pieces of code. See the
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import contextlib
 import copy
 import locale
+import logging
 import multiprocessing
 import shlex
 import sys
@@ -203,6 +205,9 @@ class AlgoComponentDecoMixin(object):
                 executed after the original prepare method. Such methods receive
                 the same arguments list than the original decorated method.
 
+              * :data:`_MIXIN_EXECUTE_FINALISE_HOOKS`: Tuple of method that will
+                be executed after any execution (even if the execution failed).
+
               * :data:`_MIXIN_FAIL_EXECUTE_HOOKS`: Tuple of method that will
                 be executed if the execution fails (the original exception
                 will be re-raised afterwards)
@@ -238,6 +243,7 @@ class AlgoComponentDecoMixin(object):
 
     _MIXIN_PREPARE_PREHOOKS = ()
     _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_EXECUTE_FINALISE_HOOKS = ()
     _MIXIN_FAIL_EXECUTE_HOOKS = ()
     _MIXIN_POSTFIX_PREHOOKS = ()
     _MIXIN_POSTFIX_HOOKS = ()
@@ -308,6 +314,9 @@ class AlgoComponentDecoMixin(object):
                                                      False),
                                                     ('fail_execute',
                                                      cls._MIXIN_FAIL_EXECUTE_HOOKS, (),
+                                                     False),
+                                                    ('execute_finalise',
+                                                     cls._MIXIN_EXECUTE_FINALISE_HOOKS, (),
                                                      False),
                                                     ('postfix',
                                                      cls._MIXIN_POSTFIX_HOOKS,
@@ -1491,6 +1500,12 @@ class Parallel(xExecutableAlgoComponent):
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            mpiverbose = dict(
+                info            = 'Boost logging verbosity in mpitools',
+                optional        = True,
+                default         = False,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             binaries = dict(
                 info            = 'List of MpiBinaryDescription objects',
                 optional        = True,
@@ -1595,6 +1610,7 @@ class Parallel(xExecutableAlgoComponent):
         mpi.import_basics(self)
 
         mpi_opts = opts.get('mpiopts', dict())
+
         envelope = []
         use_envelope = 'envelope' in mpi_opts
         if use_envelope:
@@ -1625,6 +1641,9 @@ class Parallel(xExecutableAlgoComponent):
                 if mpi_kenv in self.env:
                     mpi_desc[mpi_k] = self.env.get(mpi_kenv)
 
+        # Binaries may be grouped together on the same nodes
+        bin_groups = mpi_opts.pop('groups', [])
+
         # Find out the command line
         bargs = self.spawn_command_line(rh)
 
@@ -1633,6 +1652,10 @@ class Parallel(xExecutableAlgoComponent):
 
         # The usual case: no indications, 1 binary + a potential ioserver
         if len(rh) == 1 and not self.binaries:
+
+            # In such a case, defining group does not makes sense
+            self.algoassert(not bin_groups,
+                            "With only one binary, groups should not be defined")
 
             # The main program
             allowbind = mpi_opts.pop('allowbind', True)
@@ -1673,6 +1696,10 @@ class Parallel(xExecutableAlgoComponent):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
+            # Check bin_group shape
+            if bin_groups:
+                if len(bin_groups) != len(rh):
+                    raise ParallelInconsistencyAlgoComponentError('bin_group')
 
             # Create MpiBinaryDescription objects
             bins = list()
@@ -1696,6 +1723,8 @@ class Parallel(xExecutableAlgoComponent):
                     )
                 # Reshape mpiopts
                 bins[i].options = {k: v[i] for k, v in mpi_opts.items()}
+                if bin_groups:
+                    bins[i].group = bin_groups[i]
                 bins[i].master = self.absexcutable(r.container.localpath())
                 bins[i].arguments = bargs[i]
                 # Source files ?
@@ -1745,6 +1774,22 @@ class Parallel(xExecutableAlgoComponent):
 
         return mpi, args
 
+    @contextlib.contextmanager
+    def _tweak_mpitools_logging(self):
+        if self.mpiverbose:
+            m_loggers = dict()
+            for m_logger_name in [l for l in loggers.lognames if 'mpitools' in l]:
+                m_logger = loggers.getLogger(m_logger_name)
+                m_loggers[m_logger] = m_logger.level
+                m_logger.setLevel(logging.DEBUG)
+            try:
+                yield
+            finally:
+                for m_logger, prev_level in m_loggers.items():
+                    m_logger.setLevel(prev_level)
+        else:
+            yield
+
     def execute_single(self, rh, opts):
         """Run the specified resource handler through the `mpitool` launcher
 
@@ -1754,17 +1799,19 @@ class Parallel(xExecutableAlgoComponent):
 
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
 
-        # Return a mpitool object and the mpicommand line
-        mpi, args = self._bootstrap_mpitool(rh, opts)
+        with self._tweak_mpitools_logging():
 
-        # Specific parallel settings
-        mpi.setup(opts, self.mpiconflabel)
+            # Return a mpitool object and the mpicommand line
+            mpi, args = self._bootstrap_mpitool(rh, opts)
 
-        # This is actual running command
-        self.spawn(args, opts)
+            # Specific parallel settings
+            mpi.setup(opts, self.mpiconflabel)
 
-        # Specific parallel cleaning
-        mpi.clean(opts)
+            # This is actual running command
+            self.spawn(args, opts)
+
+            # Specific parallel cleaning
+            mpi.clean(opts)
 
 
 @algo_component_deco_mixin_autodoc
@@ -1806,19 +1853,42 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
             io = footprints.proxy.mpibinary(
                 kind=self.ioname,
                 nodes=self.env.VORTEX_IOSERVER_NODES,
-                tasks=self.env.VORTEX_IOSERVER_TASKS or master.tasks,
-                openmp=self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
+                tasks=(self.env.VORTEX_IOSERVER_TASKS or
+                       master.options.get('nnp', master.tasks)),
+                openmp=(self.env.VORTEX_IOSERVER_OPENMP or
+                        master.options.get('openmp', master.openmp)))
             io.options = {x[3:]: opts[x]
                           for x in opts.keys() if x.startswith('io_')}
             io.master = master.master
             io.arguments = master.arguments
+        if not io and int(self.env.get('VORTEX_IOSERVER_COMPANION_TASKS', -1)) >= 0:
+            io = footprints.proxy.mpibinary(
+                kind=self.ioname,
+                nodes=master.options.get('nn', master.nodes),
+                tasks=self.env.VORTEX_IOSERVER_COMPANION_TASKS,
+                openmp=(self.env.VORTEX_IOSERVER_OPENMP or
+                        master.options.get('openmp', master.openmp)))
+            io.options = {x[3:]: opts[x]
+                          for x in opts.keys() if x.startswith('io_')}
+            io.master = master.master
+            io.arguments = master.arguments
+            if master.group is not None:
+                # The master binary is already in a group ! Use it.
+                io.group = master.group
+            else:
+                io.group = 'auto_masterwithio'
+                master.group = 'auto_masterwithio'
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_TASKS', None) is not None:
+            if hasattr(master, 'incore_iotasks'):
+                master.incore_iotasks = self.env.VORTEX_IOSERVER_INCORE_TASKS
         if io:
             rh.append(rh[0])
-            if 'nn' in master.options:
-                master.options['nn'] = master.options['nn'] - io.options['nn']
-            else:
-                logger.warning('The "nn" option is not available in the master binary ' +
-                               'mpi options. Consequently it can be fixed...')
+            if master.group is None:
+                if 'nn' in master.options:
+                    master.options['nn'] = master.options['nn'] - io.options['nn']
+                else:
+                    logger.warning('The "nn" option is not available in the master binary ' +
+                                   'mpi options. Consequently it can be fixed...')
             if self.iolocation >= 0:
                 bins.insert(self.iolocation, io)
             else:

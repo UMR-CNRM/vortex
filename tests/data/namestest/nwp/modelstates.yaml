@@ -71,6 +71,11 @@ todo:
               scenario:
                 - null
                 - RCP6.0
+            - member: 5
+              namespace: oper.archive.fr
+              suite: oper
+              vconf: pearp
+
     # Historic
     -   commons:
             kind: historic

@@ -298,7 +298,7 @@ class WamGridPost(GenvModelResource):
                 values = ['wam_grid_post'],
             ),
             gvar = dict(
-                default = '[model]_interpWave',
+                default = 'namelist_[model]_interp',
             ),
         )
     )

@@ -45,8 +45,7 @@ class TestInitialCondition(unittest.TestCase):
         answer = 'ic.surf-arpege.tl798-c24.fa'
         res = fp.proxy.resource(filling='surf', ** fpcommon)
         self.assertEqual(res.olive_basename(), 'ICMSHARPE+0000')
-        with self.assertRaises(NotImplementedError):
-            res.archive_basename()
+        self.assertEqual(res.archive_basename(), 'ICFC_(memberfix:member)')
         self.assertEqual(self.vb.pack_basename(res.namebuilding_info()), answer)
 
 

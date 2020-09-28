@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: StoreGlue
    :show-inheritance:
    :members:

@@ -63,6 +63,9 @@ class TestTntNamAdapter(unittest.TestCase):
                             nadapt.check_blocks(nampath))
         nadapt.merge(BronxNamelistAdapter('&NAM_PREP_WATFLUX LWAT_SBL=T, /'))
         self.assertIs(nadapt['NAM_PREP_WATFLUX']['LWAT_SBL'], True)
+        self.assertIn('NAM_TOTO', nadapt)
+        nadapt.squeeze()
+        self.assertNotIn('NAM_TOTO', nadapt)
 
 
 if __name__ == "__main__":

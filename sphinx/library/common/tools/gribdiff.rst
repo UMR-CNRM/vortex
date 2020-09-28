@@ -15,7 +15,7 @@ Package
 
 Classes
 -------
-   
+
 .. autoclass:: GRIBDIFF_Plus
    :show-inheritance:
    :members:
