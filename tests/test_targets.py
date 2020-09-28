@@ -16,8 +16,11 @@ TARGETS_COMMON_SECTIONS = set([u'drhook', u'drhookprof', u'lfi', u'odbtools',
                                u'mpitool-mplbased', u'srun'])
 
 TARGET_TEST_SECTIONS = set(('stores', 'generic_nodes', 'mpitool',
-                            'mpitool-fullsrun', 'mpienv-fullsrun',
-                            'mpitool-fullspecific', 'mpienv-fullspecific'))
+                            'mpienv', 'mpienv:srun', 'mpienv:srun:intelmpi',
+                            'mpitool-fullsrun',
+                            'mpienv-fullsrun', 'mpienv-fullsrun:srun',
+                            'mpitool-fullspecific',
+                            'mpienv-fullspecific'))
 
 
 class TestTargetsResearch(unittest.TestCase):

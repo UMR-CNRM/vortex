@@ -13,6 +13,7 @@ if __name__ == '__main__':
 
 from .test_generic import _BaseDataContentTest
 
+from bronx.stdtypes import date as bdate
 from common.data import logs
 
 
@@ -188,6 +189,27 @@ class UtRhListContent(_BaseDataContentTest):
             ct.uniquefilter(role='gruik')
         f2 = ct.uniquefilter(role='the guess')
         self.assertEqual(len(f2), 1)
+        f3 = ct.filter(genv=['al42_arome-op2.36', 'cy42_op2.69'])
+        self.assertEqual(len(f3), 2)
+        f4 = ct.filter(filename=1)
+        self.assertEqual(len(f4), 0)
+        f5 = ct.filter(term=bdate.Time(3))
+        self.assertEqual(len(f5), 1)
+        f5 = ct.filter(term=[bdate.Time(0), bdate.Time(3), bdate.Time(6)])
+        self.assertEqual(len(f5), 1)
+        f6 = ct.filter(term=lambda x: 0 < bdate.Time(x) < 4)
+        self.assertEqual(f5, f6)
+        # Basedate mechanism
+        f6 = ct.filter(baseterm=bdate.Time(3))
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(3), basedate='201805210000')
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate='201805210300')
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate=bdate.Date('201805210300'))
+        self.assertEqual(f5, f6)
+        f6 = ct.filter(baseterm=bdate.Time(0), basedate='201805210000/PT3H')
+        self.assertEqual(f5, f6)
 
     def test_attributes(self):
         ct = logs.SectionsJsonListContent()

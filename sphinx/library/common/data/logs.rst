@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: Listing
    :show-inheritance:
    :members:
@@ -56,7 +56,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: SectionsList
    :show-inheritance:
    :members:

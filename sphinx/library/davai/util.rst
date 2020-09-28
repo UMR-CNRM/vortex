@@ -20,6 +20,8 @@ Functions
 
 .. autofunction:: send_task_to_DAVAI_server
 
+.. autofunction:: guess_packname
+
 
 Exceptions
 ----------

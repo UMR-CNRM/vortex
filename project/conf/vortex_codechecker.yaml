@@ -6,7 +6,7 @@ checkconfigs:
                  # the checker class as keyword arguments
          - type: pycodestyle
            max_line_length: 120
-           ignore: &PEP8IGN [E401, E402, W504]
+           ignore: &PEP8IGN [E401, E402, W503, W504, E741]
    pylong:
       label: "code "
       checkers:

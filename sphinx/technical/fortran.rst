@@ -203,14 +203,14 @@ class are available in the :class:`~common.data.namelists.NamelistContent` and
 compatibility is ensured.
 
 However, some extra methods are added in order to work with Vortex's resource and
-container but also to include a list of predefined macros. 
+container but also to include a list of predefined macros.
 
 Combining namelist content and resource container
 =================================================
 
 Instead of starting from scratch, it is obviously possible to merge from a dictionnary of
 already defined :class:`~bronx.datagrip.namelist.NamelistBlock` values, but is also possible
-to provide the :class:`~common.data.namelists.NamelistContent` with a 
+to provide the :class:`~common.data.namelists.NamelistContent` with a
 :class:`vortex.data.containers.Container` derived object:
 
 .. code-block:: python
@@ -236,7 +236,7 @@ to provide the :class:`~common.data.namelists.NamelistContent` with a
   >>> nc['NAMPAR0'].mp_type = 1
   >>> nc.rewrite(fc)
   >>> fc.close()
-  
+
 
 Advanced methods
 ================
@@ -260,7 +260,6 @@ of the macro to any block using it:
    /
 
 The :meth:`~common.data.namelists.NamelistContent.merge` method is abled to merge a
-:class:`~common.data.namelists.NamelistContent` object with another 
-:class:`~common.data.namelists.NamelistContent` or with a raw 
+:class:`~common.data.namelists.NamelistContent` object with another
+:class:`~common.data.namelists.NamelistContent` or with a raw
 :class:`~bronx.datagrip.namelist.NamelistSet` object.
- 

@@ -461,6 +461,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         if len(scripts) > 1:
             raise AlgoComponentError("More than one purpose={} ioassign_script found in resources.")
         elif len(scripts) == 1:
+            self.system.xperm(scripts[0], force=True)
             return scripts[0]
         else:
             return None

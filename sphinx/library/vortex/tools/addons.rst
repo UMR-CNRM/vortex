@@ -34,5 +34,5 @@ Classes
 
 Decorators
 ----------
- 
+
 .. autofunction:: require_external_addon

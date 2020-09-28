@@ -33,7 +33,7 @@ __all__ = [
 models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
-    'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha',
+    'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha', 'eps',
 ])
 
 #: Possible values for the most common binaries.
@@ -49,7 +49,7 @@ knownfmt = set([
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
-    'obslocationpack', 'obsfirepack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
+    'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr'
 ])
 
 #: Default attributes excluded from `repr` display

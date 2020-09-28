@@ -12,11 +12,11 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 
 Interface
 ---------
- 
+
 .. autofunction:: actualgenv
 
 .. autofunction:: as_rawstr
@@ -32,6 +32,6 @@ Interface
 .. autofunction:: handler
 
 .. autofunction:: nicedump
-    
+
 .. autofunction:: register
 

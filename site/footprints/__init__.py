@@ -28,7 +28,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.6.4'
+__version__ = '1.7.1'
 
 __tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
 
@@ -732,8 +732,12 @@ class DecorativeFootprint(Footprint):
     def __init__(self, *args, **kw):
         super(DecorativeFootprint, self).__init__(*args, **kw)
         self._decorators = list()
+        for a in args:
+            if isinstance(a, DecorativeFootprint):
+                self._decorators.extend(a.decorators)
         if 'decorator' in kw:
-            self._decorators = kw['decorator'] if isinstance(kw['decorator'], list) else [kw['decorator'], ]
+            self._decorators.extend(kw['decorator'] if isinstance(kw['decorator'], list)
+                                    else [kw['decorator'], ])
             if not all([callable(d) for d in self._decorators]):
                 raise ValueError("Class decorators must be callables")
 

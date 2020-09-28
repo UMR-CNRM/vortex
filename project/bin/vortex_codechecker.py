@@ -79,9 +79,11 @@ class VortexPythonCode(object):
         self._shortpath = shortpath
         self._fpdetect = fpdetect
         self._code = None
+        self._codelist = None
         self._p_astroid = None
         self._fplines = None
         self._expanded_fplines = None
+        self._slices_locations = None
 
     @property
     def code(self):
@@ -90,6 +92,13 @@ class VortexPythonCode(object):
             with io.open(self._path, 'r', encoding='utf-8') as fhcode:
                 self._code = fhcode.read()
         return self._code
+
+    @property
+    def codelist(self):
+        """Return the source code as an array of one-line strings."""
+        if self._codelist is None:
+            self._codelist = self.code.split('\n')
+        return self._codelist
 
     @property
     def p_astroid(self):
@@ -146,6 +155,25 @@ class VortexPythonCode(object):
             for fplines in [range(s, e + 1) for (s, e) in self._fplines]:
                 self._expanded_fplines.update(fplines)
 
+    def _slices_recurse(self, asttree):
+        slices = set()
+        for node in asttree.get_children():
+            if isinstance(node, astroid.Slice):
+                slices.add((node.fromlineno, node.tolineno))
+            else:
+                slices.update(self._slices_recurse(node))
+        return slices
+
+    @property
+    def slices_locations(self):
+        """
+        Return a set of tuple that indicate line interval where slice
+        definitions are detected.
+        """
+        if self._slices_locations is None:
+            self._slices_locations = self._slices_recurse(self.p_astroid)
+        return self._slices_locations
+
 
 # DEFINITON OF CHECKER CLASSES -----------------------------------------------
 
@@ -195,11 +223,24 @@ class PycodestyleChecker(object):
         """Print the error messages but filter footprint related messages first."""
         errors = list()
         for message in result.rawmessages:
-            if (message[0] not in vpycode.expanded_fplines or
-                    message[2] not in ['E221', 'E251']):
-                errors.append((message[0], self._RESFMT.format(label, message[2],
-                                                               message[0], message[1],
-                                                               message[3],)))
+            # Ignore some errors while working in footprints
+            if (message[2] in ['E221', 'E251'] and
+                    message[0] in vpycode.expanded_fplines):
+                continue
+            # PyCodeStyle detects false positive in slices.
+            # See: https://github.com/psf/black/blob/master/README.md#line-breaks--binary-operators
+            # This is anoying... try to prevent this issue
+            if (message[2] in ['E203'] and
+                    (any([message[0] in set(range(lines[0], lines[1] + 1))
+                          for lines in vpycode.slices_locations])) and
+                    not (any([message[0] == lines[1]
+                              for lines in vpycode.slices_locations]) and
+                         re.match(r'[^:]*:[^]]*$',
+                                  vpycode.codelist[message[0] - 1][message[1]:]))):
+                continue
+            errors.append((message[0], self._RESFMT.format(label, message[2],
+                                                           message[0], message[1],
+                                                           message[3],)))
         return errors
 
     def __call__(self, vpycode: VortexPythonCode, label: str) -> CheckerErrorsList:

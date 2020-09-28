@@ -36,7 +36,7 @@ Base Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: ObserverBoard
    :show-inheritance:
    :members:

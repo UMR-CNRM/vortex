@@ -160,7 +160,7 @@ class PostPeriodicStats(GeoFlowResource):
                     default = 'netcdf',
                 ),
                 run_eval = dict(
-                    values = ['first_level', 'stats', 'base'],
+                    values = ['first_level', 'stats', 'base', 'daily'],
                     remap = dict(base = 'stats'),
                 ),
             )

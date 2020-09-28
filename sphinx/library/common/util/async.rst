@@ -19,3 +19,5 @@ Functions
 .. autofunction:: system_ftput
 .. autofunction:: system_cp
 .. autofunction:: system_scp
+.. autofunction:: system_noop
+

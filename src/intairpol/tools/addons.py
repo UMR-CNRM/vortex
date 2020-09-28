@@ -23,9 +23,9 @@ class MocageAddonsGroup(AddonGroup):
         info = 'Default Mocage Addons',
         attr = dict(
             kind = dict(
-                values = ['mocage', ],
+                values = ['mocage'],
             ),
         )
     )
 
-    _addonslist = ('iopoll_mocage', )  # IO polling
+    _addonslist = ('iopoll_mocage', 'iopoll_mocacc')  # IO polling
