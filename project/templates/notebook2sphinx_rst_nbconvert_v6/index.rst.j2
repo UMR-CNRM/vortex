@@ -1,23 +1,15 @@
-{%- extends 'rst.tpl' -%}
+{%- extends 'rst/index.rst.j2' -%}
 
-{% block input %}
-{%- if cell.input.strip() -%}
-.. code:: python
-
-{{ cell.input | indent }}
-{%- endif %}
-{% endblock input %}
-
-{% block pyerr %}
+{% block error %}
 .. raw:: html
 
     <div class="nb2sphinx-tb">
 {%- for line in output.traceback -%}
-{{ line | strip_ansi | indent(4) }}
-{%- endfor %}
+{{ line | strip_ansi | trim | indent(4) }}
+{%- endfor -%}
     </div>
 
-{% endblock pyerr %}
+{% endblock error %}
 
 {% block stream %}
 .. raw:: html

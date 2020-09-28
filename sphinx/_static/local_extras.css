@@ -1,44 +1,31 @@
 div.nb2sphinx-stdout {
     white-space: pre;
-    padding: 0px 5px 5px 20px;
+    margin: 5px 0px 0px 35px;
+    padding: 4px 4px 4px 4px;
     overflow-x: auto;
-    margin-top: -1em;
     font-family: monospace;
     font-size: 1em;
+    background-color: #f0f0f0;
 }
 div.nb2sphinx-output {
     white-space: pre;
-    padding: 0px 5px 5px 20px;
+    margin: 5px 0px 0px 35px;
+    padding: 4px 4px 4px 4px;
     overflow-x: auto;
-    margin-top: -1em;
     font-family: monospace;
     font-size: 1em;
     font-style: italic;
 }
 div.nb2sphinx-tb {
     white-space: pre;
-    padding: 0px 5px 5px 20px;
+    margin: 0px 0px 0px 35px;
+    padding: 0px 4px 4px 4px;
     overflow-x: auto;
-    margin-top: -1em;
     font-family: monospace;
     font-size: 1em;
+    background-color: #efa000;
 }
 span.output_indicator {
     color: darkred;
     font-weight: bold;
-}
-span.ansigreen {
-    color: green;
-}
-span.ansired {
-    color: darkred;
-}
-span.ansiyellow {
-    color: chocolate;
-}
-span.ansicyan {
-    color: darkcyan;
-}
-span.ansiblue {
-    color: blue;
 }
