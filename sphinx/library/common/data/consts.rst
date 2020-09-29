@@ -42,6 +42,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AtlasEmissivityGeneric
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: AtlasEmissivityInstrument
    :show-inheritance:
    :members:
