@@ -299,6 +299,22 @@ class MocaccForecast(AbstractMocaccRoot):
                 type     = bool,
                 info     = "with ctbto outputs (inverse transport only)"
             ),
+            nxmpi = dict(
+                type     = int,
+                info     = "mpi tasks along x-axis"
+            ),
+            nympi = dict(
+                type     = int,
+                info     = "mpi tasks along y-axis"
+            ),
+            nxomp = dict(
+                type     = int,
+                info     = "openmp along x-axis"
+            ),
+            nyomp = dict(
+                type     = int,
+                info     = "openmp along y-axis"
+            ),
             flyargs = dict(
                 default  = fp.FPTuple(('HM',)),
             ),
@@ -417,6 +433,11 @@ class MocaccForecast(AbstractMocaccRoot):
         self._fix_nam_macro(namrh, "NHCY", inputs_period_in_hours)
         self._fix_nam_macro(namrh, "TRANSINV", self.transinv)
         self._fix_nam_macro(namrh, "LLCTBTO", self.llctbto)
+
+        self._fix_nam_macro(namrh, "NXMPI", self.nxmpi)
+        self._fix_nam_macro(namrh, "NYMPI", self.nympi)
+        self._fix_nam_macro(namrh, "NXOMP", self.nxomp)
+        self._fix_nam_macro(namrh, "NYOMP", self.nyomp)
 
         self._fix_nam_macro(namrh, "SRC_PROFILE", ct_extra_conf.source_vertical_profile)
 
