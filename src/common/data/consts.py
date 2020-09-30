@@ -97,7 +97,6 @@ class BatorAveragingMask(GenvModelResource):
                 values  = ['avgmask', ]
             ),
             sensor = dict(
-                values  = ['atms', 'ssmis']
             ),
             clscontents = dict(
                 default = TextContent,
