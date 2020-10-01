@@ -16,6 +16,8 @@ Iterator functions
 
 .. autofunction:: izip_pcn
 
+.. autofunction:: interleave
+
 
 .. hints
 .. .. autodata:: XXX
