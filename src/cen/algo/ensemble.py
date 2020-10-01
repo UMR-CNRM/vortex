@@ -20,7 +20,6 @@ from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
 
 import six
-from utils.FileException import FileNameException
 
 
 logger = loggers.getLogger(__name__)
@@ -35,7 +34,7 @@ with echecker:
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils import S2M_standard_file
-    from snowtools.utils.FileException import TimeListException
+    from snowtools.utils.FileException import TimeListException, FileNameException
 
 
 class _S2MWorker(VortexWorkerBlindRun):
