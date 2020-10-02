@@ -375,7 +375,10 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
                     np1[nstr] = effective_nprocs
                     namw = True
         # Deal with partitioning macros
-        namw_p = setup_partitioning_in_namelist(namcontents, effective_nprocs, namlocal)
+        namw_p = setup_partitioning_in_namelist(namcontents,
+                                                effective_nprocs,
+                                                self.options.get('openmp', 1),
+                                                namlocal)
         namw = namw or namw_p
         # Incore IO tasks
         if self.incore_iotasks is not None:

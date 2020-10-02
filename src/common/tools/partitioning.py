@@ -175,19 +175,26 @@ class Rectangular2DPartitioner(AbstratctPartitioner):
 _PARTITIONERS_CACHE = dict()
 
 
-def setup_partitioning_in_namelist(namcontents, effective_nprocs, namlocal=None):
+def setup_partitioning_in_namelist(namcontents,
+                                   effective_tasks,
+                                   effective_threads,
+                                   namlocal=None):
     """Look in a namelist Content object and replace the macros related to partitioning.
 
     :param common.data.namelists.NamelistContent namcontents: The namelist's Content
                                                               object to work with
-    :param int effective_nprocs: The number of tasks that will be used to compute
-                                 the partitioning
+    :param int effective_tasks: The number of tasks that will be used when computing
+                                the partitioning
+    :param int effective_threads: The number of threads that will be used when computing
+                                  the partitioning
     :param str namlocal: The namelist's file name
     :return: ``True`` if the namelist's Contents object has been modified
     :rtype: bool
 
-    This function will detect namelist macros like ``PART2D_X_SQUARE`` where:
+    This function will detect namelist macros like ``PART_TASKS2D_X_SQUARE`` where:
 
+    * ``TASKS`` tells that **effective_tasks** will be used to compute the
+      decomposition (alternatively, ``THREADS`` can be used.
     * ``2D`` tells that the :class:`Rectangular2DPartitioner` class will be used
       to compute the partitioning. For now, ``2D`` is the only available option.
     * ``X`` tells that the user wants to get the X value of the computed partioning.
@@ -196,7 +203,9 @@ def setup_partitioning_in_namelist(namcontents, effective_nprocs, namlocal=None)
       partitioning class. Any value that is accepted by the partitioning class is
       fine.
     """
-    macrovalid = re.compile('PART(?P<cls>2D)_(?P<dim>[XY])_(?P<def>.*)$')
+    macrovalid = re.compile('PART_' +
+                            '(?P<what>TASKS|THREADS)(?P<cls>2D)_' +
+                            '(?P<dim>[XY])_(?P<def>.*)$')
     partitioning_classes = {'2D': Rectangular2DPartitioner}
     namw = False
     # Find the list of existing macros
@@ -211,7 +220,9 @@ def setup_partitioning_in_namelist(namcontents, effective_nprocs, namlocal=None)
             if cache_key not in _PARTITIONERS_CACHE:
                 partitioning_class = partitioning_classes[macroname_re.group('cls')]
                 _PARTITIONERS_CACHE[cache_key] = partitioning_class(macroname_re.group('def'))
-            part_x, part_y = _PARTITIONERS_CACHE[cache_key](effective_nprocs)
+            effective_n = dict(TASKS=effective_tasks,
+                               THREADS=effective_threads)[macroname_re.group('what')]
+            part_x, part_y = _PARTITIONERS_CACHE[cache_key](effective_n)
             final_result = part_x if macroname_re.group('dim') == 'X' else part_y
             if namlocal:
                 logger.info('Setup macro %s=%s in %s', macroname, final_result, namlocal)

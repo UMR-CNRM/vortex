@@ -49,39 +49,43 @@ class UtPartitioning(unittest.TestCase):
         # Working scenarios
         cont = self._get_namcontents("""
             &NAMTRUC
-                N_EW=__PART2D_X_XCLOSETO_2__,
-                N_NS=__PART2D_Y_XCLOSETO_2__,
+                N_EW=__PART_TASKS2D_X_XCLOSETO_2__,
+                N_NS=__PART_TASKS2D_Y_XCLOSETO_2__,
+                N_OMPX=__PART_THREADS2D_X_XCLOSETO_2__,
+                N_OMPY=__PART_THREADS2D_Y_XCLOSETO_2__,
             /""")
-        self.assertTrue(setup_partitioning_in_namelist(cont, 16, 'fake'))
-        self.assertEqual(cont.macros()['PART2D_X_XCLOSETO_2'], 2)
-        self.assertEqual(cont.macros()['PART2D_Y_XCLOSETO_2'], 8)
+        self.assertTrue(setup_partitioning_in_namelist(cont, 16, 8, 'fake'))
+        self.assertEqual(cont.macros()['PART_TASKS2D_X_XCLOSETO_2'], 2)
+        self.assertEqual(cont.macros()['PART_TASKS2D_Y_XCLOSETO_2'], 8)
+        self.assertEqual(cont.macros()['PART_THREADS2D_X_XCLOSETO_2'], 2)
+        self.assertEqual(cont.macros()['PART_THREADS2D_Y_XCLOSETO_2'], 4)
         cont = self._get_namcontents("""
             &NAMTRUC
-                N_EW=__PART2D_X_SQUARE__,
-                N_NS=__PART2D_Y_SQUARE__,
+                N_EW=__PART_TASKS2D_X_SQUARE__,
+                N_NS=__PART_TASKS2D_Y_SQUARE__,
             /""")
-        self.assertTrue(setup_partitioning_in_namelist(cont, 16))
-        self.assertEqual(cont.macros()['PART2D_X_SQUARE'], 4)
-        self.assertEqual(cont.macros()['PART2D_Y_SQUARE'], 4)
+        self.assertTrue(setup_partitioning_in_namelist(cont, 16, 8))
+        self.assertEqual(cont.macros()['PART_TASKS2D_X_SQUARE'], 4)
+        self.assertEqual(cont.macros()['PART_TASKS2D_Y_SQUARE'], 4)
         cont = self._get_namcontents("""
             &NAMTRUC
-                N_EW=__PART2D_X_ASPECT_3_1__,
-                N_NS=__PART2D_Y_ASPECT_3_1__,
+                N_EW=__PART_TASKS2D_X_ASPECT_3_1__,
+                N_NS=__PART_TASKS2D_Y_ASPECT_3_1__,
             /""")
-        self.assertTrue(setup_partitioning_in_namelist(cont, 32))
-        self.assertEqual(cont.macros()['PART2D_X_ASPECT_3_1'], 8)
-        self.assertEqual(cont.macros()['PART2D_Y_ASPECT_3_1'], 4)
+        self.assertTrue(setup_partitioning_in_namelist(cont, 32, 8))
+        self.assertEqual(cont.macros()['PART_TASKS2D_X_ASPECT_3_1'], 8)
+        self.assertEqual(cont.macros()['PART_TASKS2D_Y_ASPECT_3_1'], 4)
         # Correct but nothing to do...
         cont = self._get_namcontents("""
                 &NAMTRUC
                     N_EW=__NBPROC__,
                     N_NS=1,
                 /""")
-        self.assertFalse(setup_partitioning_in_namelist(cont, 16))
+        self.assertFalse(setup_partitioning_in_namelist(cont, 16, 8))
         # Wrong partitioning method name
         cont = self._get_namcontents("""
             &NAMTRUC
-                N_EW=__PART2D_X_DUMMY__,
+                N_EW=__PART_TASKS2D_X_DUMMY__,
             /""")
         with self.assertRaises(PartitioningError):
-            setup_partitioning_in_namelist(cont, 16)
+            setup_partitioning_in_namelist(cont, 16, 8)
