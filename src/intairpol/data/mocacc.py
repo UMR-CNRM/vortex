@@ -15,7 +15,7 @@ from vortex.syntax.stdattrs import term_deco
 from bronx.stdtypes import date
 
 
-class MocaccInputs(ModelResource):
+class MocaccInputs(FlowResource):
     """Tar with emission config file and nwp gribs"""
 
     # fmt: off
