@@ -56,6 +56,7 @@ import footprints
 import vortex
 import vortex.layout.jobs
 import  iga.tools.op
+import $package.$task as todo
 
 ja = footprints.proxy.jobassistant(kind = 'op_default',
                                    modules = footprints.stdtypes.FPSet(($loadedmods)),
@@ -66,7 +67,6 @@ ja = footprints.proxy.jobassistant(kind = 'op_default',
 for pkind in ($loadedjaplugins):
     ja.add_plugin(pkind)
 
-import $package.$task as todo
 
 try:
     t, e, sh = ja.setup(actual=locals())
