@@ -225,18 +225,18 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                     default = None
                 ),
                 populate_filter_file = dict(
-                    info = """File of files to be filtered at populate time.
-                              Special values:
-                              '__inconfig__' will read according file in config of ia4h_scm package;
-                              '__inview__' will read according file in Git view""",
+                    info = ("File of files to be filtered at populate time. " +
+                            "Special values: " +
+                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
                 ),
                 link_filter_file = dict(
-                    info = """File of symbols to be filtered at link time.
-                              Special values:
-                              '__inconfig__' will read according file in config of ia4h_scm package;
-                              '__inview__' will read according file in Git view""",
+                    info = ("File of symbols to be filtered at link time. " +
+                            "Special values: " +
+                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
                 ),
@@ -276,37 +276,37 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
                     default = None
                 ),
                 populate_filter_file = dict(
-                    info = """File of files to be filtered at populate time.
-                              Special values:
-                              '__inconfig__' will read according file in config of ia4h_scm package;
-                              '__inview__' will read according file in Git view""",
+                    info = ("File of files to be filtered at populate time. " +
+                            "Special values: " +
+                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
                 ),
                 link_filter_file = dict(
-                    info = """File of symbols to be filtered at link time.
-                              Special values:
-                              '__inconfig__' will read according file in config of ia4h_scm package;
-                              '__inview__' will read according file in Git view""",
+                    info = ("File of symbols to be filtered at link time. " +
+                            "Special values: " +
+                            "'__inconfig__' will read according file in config of ia4h_scm package; "
+                            "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
                 ),
                 bundle_cache_dir = dict(
-                    info = """Cache directory in which to download/update repositories.
-                              Defaults to the temporary directory of execution, which may not be optimal.""",
+                    info = ("Cache directory in which to download/update repositories. " +
+                            "Defaults to the temporary directory of execution, which may not be optimal."),
                     optional = True,
                     default = None,
                 ),
                 update_git_repositories = dict(
-                    info = """If False, take git repositories as they are,
-                              without trying to update (fetch/checkout/pull)""",
+                    info = ("If False, take git repositories as they are, " +
+                            "without trying to update (fetch/checkout/pull)"),
                     optional = True,
                     type = bool,
                     default = True
                 ),
                 bundle_download_threads = dict(
-                    info = """Number of parallel threads to download (clone/fetch) repositories.
-                              0 turns into an auto-determined number.""",
+                    info = ("Number of parallel threads to download (clone/fetch) repositories. " +
+                            "0 turns into an auto-determined number."),
                     optional = True,
                     type = int,
                     default = 1
