@@ -6,6 +6,8 @@ DAVAI sources build (branch export, compilation&link) AlgoComponents.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import tempfile
+from contextlib import contextmanager
+import subprocess
 
 import footprints
 from footprints import FPDict
@@ -50,6 +52,7 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
         self.env['GMKROOT'] = gmk_installdir
         prefix = self.system.glove.user + '.gmktmp.'
         self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
+        del self.env['HOMEBIN']  # may cause broken links, because WORKDIR is not defined
 
     def _gmkpack_finalise(self, opts):  # @UnusedVariable
         try:
@@ -73,6 +76,34 @@ class GitDecoMixin(AlgoComponentDecoMixin):
             ),
             repository=dict(
                 info="The git repository to be used (on the target machine).",
+            ),
+            # Below: tunneling
+            ssh_tunnel_relay_machine=dict(
+                info="If not None, activate SSH tunnel through this relay machine.",
+                optional=True,
+                default=None
+            ),
+            ssh_tunnel_entrance_port=dict(
+                info="Entrance port of the tunnel, in case of a tunnel. If None, search for a free one.",
+                optional=True,
+                type=int,
+                default=None
+            ),
+            ssh_tunnel_target_host=dict(
+                info="Target host of the tunnel.",
+                optional=True,
+                default='mirage7.meteo.fr'
+            ),
+            ssh_tunnel_output_port=dict(
+                info="The output port of the tunnel.",
+                optional=True,
+                type=int,
+                default=9418
+            ),
+            path_to_repo=dict(
+                info="Path to repo on relay machine (git://relay:port/{path_to_repo}).",
+                optional=True,
+                default='arpifs'
             )
         )
     ),)
@@ -86,6 +117,32 @@ class GitDecoMixin(AlgoComponentDecoMixin):
                                                               'git-core')
 
     _MIXIN_PREPARE_HOOKS = (_set_git, )
+
+    @contextmanager
+    def _with_potential_ssh_tunnel(self):
+        if self.ssh_tunnel_relay_machine:
+            # tunneling is required
+            sshobj = self.system.ssh(self.ssh_tunnel_relay_machine)
+            with sshobj.tunnel(self.ssh_tunnel_target_host, self.ssh_tunnel_output_port,
+                               entranceport=self.ssh_tunnel_entrance_port) as tunnel:
+                # entering the contextmanager
+                # save origin remote URL, and temporarily replace with tunnel entrance
+                origin_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'],
+                                                     cwd=self.repository).decode('utf-8')
+                temp_url = 'git://localhost:{}/{}'.format(tunnel.entranceport, self.path_to_repo)
+                logger.info("Temporarily switching remote.origin.url to SSH tunnel entrance: {}".format(temp_url))
+                subprocess.check_call(['git', 'config', '--replace-all', 'remote.origin.url', temp_url],
+                                      cwd=self.repository)
+                # give hand back to inner context
+                try:
+                    yield
+                finally:
+                    # getting out of contextmanager : set origin remote URL back to what it was
+                    logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url)))
+                    subprocess.check_call(['git', 'config', '--replace-all', 'remote.origin.url', origin_url],
+                                          cwd=self.repository)
+        else:
+            yield
 
 
 class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
@@ -136,15 +193,16 @@ class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMix
 
     def execute(self, rh, kw):  # @UnusedVariable
         from ia4h_scm.algos import IA4H_gitref_to_incrpack  # @UnresolvedImport
-        IA4H_gitref_to_incrpack(self.repository,
-                                self.git_ref,
-                                self.compiler_label,
-                                packname=self.packname,
-                                compiler_flag=self.compiler_flag,
-                                preexisting_pack=self.preexisting_pack,
-                                clean_if_preexisting=self.cleanpack,
-                                rootpack=self.rootpack,
-                                homepack=self.homepack)
+        with self._with_potential_ssh_tunnel():
+            IA4H_gitref_to_incrpack(self.repository,
+                                    self.git_ref,
+                                    self.compiler_label,
+                                    packname=self.packname,
+                                    compiler_flag=self.compiler_flag,
+                                    preexisting_pack=self.preexisting_pack,
+                                    clean_if_preexisting=self.cleanpack,
+                                    rootpack=self.rootpack,
+                                    homepack=self.homepack)
 
 
 class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
@@ -188,13 +246,14 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
 
     def execute(self, rh, kw):  # @UnusedVariable
         from ia4h_scm.algos import IA4H_gitref_to_main_pack  # @UnresolvedImport
-        IA4H_gitref_to_main_pack(self.repository,
-                                 self.git_ref,
-                                 self.compiler_label,
-                                 compiler_flag=self.compiler_flag,
-                                 homepack=self.homepack,
-                                 populate_filter_file=self.populate_filter_file,
-                                 link_filter_file=self.link_filter_file)
+        with self._with_potential_ssh_tunnel():
+            IA4H_gitref_to_main_pack(self.repository,
+                                     self.git_ref,
+                                     self.compiler_label,
+                                     compiler_flag=self.compiler_flag,
+                                     homepack=self.homepack,
+                                     populate_filter_file=self.populate_filter_file,
+                                     link_filter_file=self.link_filter_file)
 
 
 class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
