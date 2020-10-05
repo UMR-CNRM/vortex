@@ -34,7 +34,7 @@ with echecker:
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
     from snowtools.utils import S2M_standard_file
-    from snowtools.utils.FileException import TimeListException
+    from snowtools.utils.FileException import TimeListException, FileNameException
 
 
 class _S2MWorker(VortexWorkerBlindRun):
@@ -905,11 +905,17 @@ class SurfexWorker(_S2MWorker):
                     print("FORCING AGGREGATION")
                     forcinglist = []
                     for massif in self.geometry:
-                        dateforcbegin, dateforcend = get_file_period(
-                            "FORCING",
-                            forcingdir + "/" + massif,
-                            datebegin_this_run,
-                            self.dateend)
+                        try:
+                            dateforcbegin, dateforcend = get_file_period(
+                                "FORCING",
+                                forcingdir + "/" + massif,
+                                datebegin_this_run,
+                                self.dateend)
+                        except FileNameException:
+                            deterministic = self.subdir == "mb035"
+                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" + massif, deterministic, self.subdir,
+                                                            datebegin_this_run, self.dateend)
+                            return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
                         forcinglist.append(forcingname)
@@ -927,11 +933,17 @@ class SurfexWorker(_S2MWorker):
                 else:
                     # Get the first file covering part of the whole simulation period
                     print("LOOK FOR FORCING")
-                    dateforcbegin, dateforcend = get_file_period(
-                        "FORCING",
-                        forcingdir,
-                        datebegin_this_run,
-                        self.dateend)
+                    try:
+                        dateforcbegin, dateforcend = get_file_period(
+                            "FORCING",
+                            forcingdir,
+                            datebegin_this_run,
+                            self.dateend)
+                    except FileNameException:
+                        deterministic = self.subdir == "mb035"
+                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir, deterministic, self.subdir,
+                                                        datebegin_this_run, self.dateend)
+                        return rdict
                     print("FORCING FOUND")
 
                     if self.geometry[0] in ["alp", "pyr", "cor"]:
