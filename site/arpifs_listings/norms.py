@@ -28,7 +28,9 @@ __all__ = ['Norms', 'Norm', 'NormsComparison', 'compare_norms']
 patterns = {'spectral norms': 'SPECTRAL NORMS -',
             'gpnorms partA': 'GPNORM',
             'gpnorms partB': 'GPNORMS OF FIELDS TO BE WRITTEN OUT ON FILE :',
-            'fullpos gpnorms': 'FULL-POS GPNORMS', }
+            'fullpos gpnorms': 'FULL-POS GPNORMS',
+            'gpnorms partA complete': re.compile(r'GPNORM (?P<fld>.*)\s+AVERAGE\s+MINIMUM\s+MAXIMUM\s*$')
+            }
 _re_openfa = r'(?P<subroutine>OPENFA)'
 _re_cnt34 = r'(?P<subroutine>CNT[3-4]((TL)|(AD))*)'
 _re_comment = r'(?P<comment>(\s\w+)+)'
@@ -150,7 +152,7 @@ class NormsSet(object):
             lineno = steps[i].pop('lineno')
             i0 = lineno
             if i == len(steps) - 1:  # last one
-                i1 = -1
+                i1 = None
             else:
                 i1 = steps[i + 1]['lineno']
             extract = lines[i0:i1]
@@ -286,19 +288,24 @@ class Norms(object):
         while True:
             sub_extract = sub_extract[start:]
             (idx, line) = find_line_containing(patterns['gpnorms partA'], sub_extract)
-            if idx is not None and line.split()[0] == patterns['gpnorms partA']:  # signature of part A
-                fld = line.split()[1]
+            match = patterns['gpnorms partA complete'].match(line.strip())
+            if idx is not None and match:
+                # signature of part A with field name
+                fld = match.group('fld').strip()
                 if fld == 'OUTPUT':
+                    # name is on the above line
                     fld = sub_extract[idx - 1].strip()
-                if fld == 'SOILB   3 FIELDS':  # dirty fix
+                if fld == 'SOILB   3 FIELDS':
+                    # dirty fix
                     for ii in range(1, 4):
                         fldii = fld + ' ({}/3)'.format(ii)
                         vals = {'average': sub_extract[idx + 1 + (ii - 1) * 3].split()[1],
                                 'minimum': sub_extract[idx + 1 + (ii - 1) * 3].split()[2],
                                 'maximum': sub_extract[idx + 1 + (ii - 1) * 3].split()[3]}
-                        start = idx + 1 + 6
                         self.gpnorms[fldii] = vals
+                    start = idx + 1 + 6
                 else:
+                    # regular
                     vals = {'average': sub_extract[idx + 1].split()[1],
                             'minimum': sub_extract[idx + 1].split()[2],
                             'maximum': sub_extract[idx + 1].split()[3]}
