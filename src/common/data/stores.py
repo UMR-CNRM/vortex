@@ -6,14 +6,13 @@
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
-
 from vortex.data.abstractstores import Store
 from vortex.syntax.stdattrs import compressionpipeline
 
@@ -87,10 +86,10 @@ class BdpeStore(Store):
             bdpe_date = date.Date(str_date).ymdhms
         bdpe_term = date.Time(str_term).fmtraw
         args = [
-            productid,       # id
-            bdpe_date,       # date: yyyymmddhhmmss
-            bdpe_term,       # term: HHHHmm
-            local,           # local filename
+            productid,  # id
+            bdpe_date,  # date: yyyymmddhhmmss
+            bdpe_term,  # term: HHHHmm
+            local,      # local filename
         ]
         extraenv = dict(
             BDPE_CIBLE_PREFEREE=p_target,
@@ -110,7 +109,7 @@ class BdpeStore(Store):
 
         logger.debug('lirepe_cmd: %s', " ".join(args))
 
-        with self.system.env.delta_context(** extraenv):
+        with self.system.env.delta_context(**extraenv):
             rc = self.system.spawn(args, output=False, fatal=False)
         rc = rc and self.system.path.exists(local)
 
@@ -118,7 +117,7 @@ class BdpeStore(Store):
         if not rc:
             logger.warning('Something went wrong with the following command: %s',
                            " ".join(args))
-        if not rc or bdpe_date=='/':
+        if not rc or bdpe_date == '/':
             if self.system.path.exists(diagfile):
                 logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)

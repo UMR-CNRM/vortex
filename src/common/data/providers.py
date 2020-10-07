@@ -5,16 +5,15 @@
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 
 from bronx.fancies import loggers
-
-from vortex.data.providers import Provider
-from vortex.util.config import GenericConfigParser
-from vortex.syntax.stdattrs import namespacefp, DelayedEnvValue, Namespace
 from bronx.stdtypes.date import Time
+from vortex.data.providers import Provider
+from vortex.syntax.stdattrs import DelayedEnvValue, Namespace, namespacefp
+from vortex.util.config import GenericConfigParser
 
 #: No automatic export
 __all__ = []
