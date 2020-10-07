@@ -49,6 +49,9 @@ class BdpeProvider(Provider):
 
     Canvas of a complete url:
         bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
+
+    When a resource has no ``date`` attribute, the most recent data
+    is extracted from the BDPE (might be used for Alert Models).
     """
 
     _footprint = [
@@ -122,8 +125,12 @@ class BdpeProvider(Provider):
 
     def pathname(self, resource):
         """Something like 'PREFERRED_FORBIDDEN_ARCHIVE/date/'."""
+        try:
+            requested_date = resource.date.vortex()
+        except AttributeError:
+            requested_date = 'most_recent'
         return '{}_{}_{}/{}'.format(self.preferred_target, self.forbidden_target,
-                                    self.allow_archive, resource.date.vortex())
+                                    self.allow_archive, requested_date)
 
     def uri(self, resource):
         """

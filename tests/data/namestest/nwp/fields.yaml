@@ -37,6 +37,18 @@ todo:
                     - INT
             -   prefered_target: INT
                 forbidden_target: OPER
+    # Most recent date BDPE access
+    -   commons:
+            bdpeid: 43
+            unknown: True
+            namespace: bdpe.archive.fr
+            preferred_target: OPER
+            forbidden_target: INT
+            allow_archive: False
+        tests:
+            -   term:
+                    - null
+                    - 42
     # RawFields DSI
     -   commons:
             kind: rawfields

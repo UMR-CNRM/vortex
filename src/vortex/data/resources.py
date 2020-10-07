@@ -17,7 +17,7 @@ from bronx.stdtypes.dictionaries import LowerCaseDict
 
 import footprints
 
-from vortex.syntax.stdattrs import nativefmt_deco, notinrepr
+from vortex.syntax.stdattrs import nativefmt_deco, notinrepr, term_deco
 from .contents import DataContent, UnknownContent, FormatAdapter
 
 #: Export Resource and associated Catalog classes.
@@ -178,6 +178,15 @@ class Unknown(Resource):
         if self.nativefmt in ('auto', 'autoconfig', 'foo', 'unknown'):
             del bdict['fmt']
         return bdict
+
+
+class UnknownWithTerm(Unknown):
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'Unknown assumed NWP Resource but with term (development only !)',
+        ),
+    ]
 
 
 # Activate the footprint's fasttrack on the resources collector
