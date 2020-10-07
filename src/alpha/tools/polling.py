@@ -36,10 +36,11 @@ class IO_Poll_Alpha(addons.Addon):
         )
     )
 
-    def iopoll_alpha(self, vconf):  # @UnusedVariable
+    def iopoll_alpha(self, prefix, domain):  # @UnusedVariable
         """Do the actual job of polling files prefixed by ``prefix``."""
         logger.info("IOPOLL Alpha execution")
+        cmd = ['--domain', domain]
         # Catch the processed files in the stdout flux of the script
-        rawout = self._spawn([vconf])
+        rawout = self._spawn(cmd)
         # Cumulative results
         return rawout

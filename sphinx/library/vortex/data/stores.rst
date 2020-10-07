@@ -28,7 +28,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Finder
    :show-inheritance:
    :members:

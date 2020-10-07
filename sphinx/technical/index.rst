@@ -28,7 +28,7 @@ Detailed documentation on some technical aspects:
    actions
 
 Some quasi-philosophical considerations on the Vortex toolbox (in french):
-  
+
 .. toctree::
    :maxdepth: 1
 

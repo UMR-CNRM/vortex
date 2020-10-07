@@ -20,7 +20,7 @@ Pre-defined attributes as abstract decorative footprints
 
 A :class:`DecorativeFootprint` include the footprint's definition for a given
 attribute or set of attributes (see above) but also takes care of changing the
-class behaviour. 
+class behaviour.
 
 Examples:
 

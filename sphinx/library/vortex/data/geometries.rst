@@ -109,4 +109,3 @@ Utility function
 ----------------
 
 .. autofunction:: load
-   

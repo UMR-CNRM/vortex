@@ -1,43 +1,40 @@
-:mod:`vortex.data.flow` --- Resources produced in the flow
-==========================================================
+:mod:`davai.algo.build` --- Build executables Algos
+===================================================
 
-.. automodule:: vortex.data.flow
-   :synopsis: Base class for resources produced in the flow of an experiment
+.. automodule:: davai.algo.build
+   :synopsis: DAVAI sources build (branch export, compilation&link) AlgoComponents.
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.2.1
-
-
-Package
--------
+.. versionadded:: 1.7.1
 
 .. autodata:: __all__
+
 
 Classes
 -------
 
-.. autoclass:: FlowResource
+.. autoclass:: IA4H_gitref_to_MainPack
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GeoFlowResource
+.. autoclass:: PackBuildExecutables
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: UnknownFlow
+.. autoclass:: GitDecoMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: PeriodFlowResource
+.. autoclass:: IA4H_gitref_to_IncrementalPack
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: GeoPeriodFlowResource
+.. autoclass:: GmkpackDecoMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical

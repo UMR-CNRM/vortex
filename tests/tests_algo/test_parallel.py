@@ -128,7 +128,7 @@ class TestParallel(unittest.TestCase):
         # Tweak the target object
         self.testconf = os.path.join(DATAPATHTEST, 'target-test.ini')
         self.t.sh.target(inifile=self.testconf, sysname='Linux')
-        # Local environement
+        # Local environment
         self.locenv = self.t.env.clone()
         # Clean things up
         trash = [k for k in self.locenv.keys() if k.startswith('VORTEX_')]

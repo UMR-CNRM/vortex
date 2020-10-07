@@ -55,7 +55,7 @@ Avant la première utilisation
 * initialisation des répertoires::
 
       uget.py bootstrap_hack [user]
-    
+
   Ex::
 
       uget.py bootstrap_hack mary
@@ -94,21 +94,21 @@ chez qui on veut récupérer le cycle::
 
 Il s'agit d'un sorte de convention avec *uget* : ``genv blabla``
 correspond à un cycle GCO dénommé ``blabla`` alors qu'une notation du type
-``env blabla@quelqu'un`` désigne un cycle *uget/uenv* dénommé ``blabla`` 
-hébergé chez ``quelqu'un``. 
+``env blabla@quelqu'un`` désigne un cycle *uget/uenv* dénommé ``blabla``
+hébergé chez ``quelqu'un``.
 
 
 Modification du cycle cloné
 ---------------------------
 
-Pour chaque élément du fichier de conf du cycle cloné (obtenu à l'étape 
-:ref:`uget-clone-existant`), on peut modifier la ressource (i.e. ce qui 
-est à droite du signe ``=``), en pointant vers le "GCO official store", 
+Pour chaque élément du fichier de conf du cycle cloné (obtenu à l'étape
+:ref:`uget-clone-existant`), on peut modifier la ressource (i.e. ce qui
+est à droite du signe ``=``), en pointant vers le "GCO official store",
 chez un collègue ou chez soi (sous ``$HOME/.vortexrc/hack/uget/$USER/data/``).
 
 On peut panacher ainsi les éléments d'un *uenv*...
 
-Ex: 
+Ex:
     | Je suis l'user ``mary``, l'élément:
     |    ``CLIM_FRANMG_01KM30=clim_franmg.01km30.03`` (chez GCO)
     | peut être remplacé par:
@@ -147,10 +147,10 @@ ou::
 
     uget.py hack data al42_arome-dble.01.nam.tgz@faure into al42_arome-op2.16.nam.tgz@mary
 
-La convention utilisée ici par *uget* est cohérente avec celle utilisée 
+La convention utilisée ici par *uget* est cohérente avec celle utilisée
 précédement : ``gdata blabla`` correspond à une donnée GCO dénommé ``blabla``
 alors qu'une notation du type ``data blabla@quelqu'un`` désigne une donnée gérée
-par *uget/uenv* dénommé ``blabla``  hébergé chez ``quelqu'un``. 
+par *uget/uenv* dénommé ``blabla``  hébergé chez ``quelqu'un``.
 
 Historisation
 -------------
@@ -276,10 +276,10 @@ Remarques et Bonnes pratiques
 * sur hendrix, les *uenv* et éléments sont archivées sous une arborescence
   "éclatée" et arbitraire. On peut se demander pourquoi et râler de ne pas y
   retrouver ses petits à la main:
-  
+
     1. raison de performance sur Hendrix
     2. c'est aussi une incitation à ne plus y toucher après *push* ! et à
-       passer par ``uget.py`` pour les récupérer proprement. Uget, une amie 
+       passer par ``uget.py`` pour les récupérer proprement. Uget, une amie
        qui vous veut du bien.
 
 * tant qu'on n'a pas fait de *push*, mes *uenv* et éléments ne sont
@@ -299,7 +299,7 @@ Notion d'utilisateur par défaut
 
 Il peut être assez pénible d'avoir à préciser son nom d'utilisateur (``@mary``)
 à chaque fois que l'on manipule un cycle *uget/uenv*. Il a donc été prévu de
-pouvoir définir un utilisateur par défaut:: 
+pouvoir définir un utilisateur par défaut::
 
    uget.py set location mary
 
@@ -308,11 +308,11 @@ Une fois ce réglage effectué, il est possible de taper simplement::
 
    uget.py check env al42_arome-dble.02
 
-ou:: 
+ou::
 
    uget.py diff env al42_arome-dble.02 wrt env al42_arome-dble.01@faure
 
-(Au lieu, de ``uget.py check env al42_arome-dble.02@mary`` et 
+(Au lieu, de ``uget.py check env al42_arome-dble.02@mary`` et
 ``uget.py diff env al42_arome-dble.02@mary wrt env al42_arome-dble.01@faure``)
 
 Attention, ça ne vous dispensera toutefois pas de mettre l'utilisateur (e.g. ``@mary``)
@@ -325,30 +325,30 @@ Dans les exemples précédents, l'utilisation de ``uget.py`` s'est faite
 exclusivement par le biais d'une succession de commandes shell indépendantes. Un
 autre mode d'utilisation existe pour ``uget.py`` : il s'agit d'une utilisation
 en mode "invite de commande". Pour cela, il lancer simplement ``uget.py`` (sans
-arguments) ; cela ouvrira une invite de commande (que l'on peut quitter avec 
+arguments) ; cela ouvrira une invite de commande (que l'on peut quitter avec
 ``Ctrl-D``) dans laquelle on peut saisir les commandes évoquées ci-dessus::
 
       $ uget.py
       Vortex 1.2.2 loaded ( Monday 05. March 2018, at 14:07:13 )
       (Cmd) list env from mary
-      
+
       al42_test.02
       [...]
       cy43t2_clim-op1.05
       cy43t2_climARP.01
-      
+
       (Cmd) pull env cy43t2_clim-op1.05@mary
-      
+
       ARPREANALYSIS_SURFGEOPOTENTIAL=uget:Arp-reanalysis.surfgeopotential.bin@mary
       [...]
       UGAMP_OZONE=uget:UGAMP.ozone.ascii@mary
       USNAVY_SOIL_CLIM=uget:US-Navy.soil_clim.bin@mary
-      
+
       (Cmd) check env cy43t2_clim-op1.05@mary
-      
+
       Hack   : MISSING (/home/meunierlf/.vortexrc/hack/uget/mary/env/cy43t2_clim-op1.05)
       Archive: Ok      (meunierlf@hendrix.meteo.fr:~mary/uget/env/f/cy43t2_clim-op1.05)
-      
+
       Digging into this particular Uenv:
         [...]
         ARPREANALYSIS_SURFGEOPOTENTIAL: Archive  (uget:Arp-reanalysis.surfgeopotential.bin@mary)
@@ -366,10 +366,10 @@ arguments) ; cela ouvrira une invite de commande (que l'on peut quitter avec
         UGAMP_OZONE                   : Archive  (uget:UGAMP.ozone.ascii.m11@mary for month: 11)
         UGAMP_OZONE                   : Archive  (uget:UGAMP.ozone.ascii.m12@mary for month: 12)
         USNAVY_SOIL_CLIM              : Archive  (uget:US-Navy.soil_clim.bin@mary)
-      
+
       (Cmd) [Ctrl-D]
       Vortex 1.2.2 completed ( Monday 05. March 2018, at 14:09:06 )
-      $ 
+      $
 
 Cela peut présenter quelques avantages :
 
@@ -379,8 +379,8 @@ Cela peut présenter quelques avantages :
    * Au sein d'une session de l'invite de commande, il est possible de naviguer
      dans l'historique des commandes (en modes Emacs ou vi selon la configuration
      de votre shell)
- 
- 
+
+
 Pense-bête
 ==========
 

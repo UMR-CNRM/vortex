@@ -195,7 +195,7 @@ usually enough:
    * A technical documentation (intended for developers): :ref:`env-interface`
    * The notebooks related to "Session, Context and Environment concept" in the
      :ref:`stepbystep-index` tutorial.
-   
+
 
 Running complex programs
 ========================

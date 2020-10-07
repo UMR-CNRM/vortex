@@ -7,7 +7,7 @@ head_author=Louis-François Meunier - vortex.support@meteo.fr
 {% macro run_core_description(text) -%}
 <div class="row" style="display:flex; flex-flow:row nowrap;">
     <div class="column" style="flex:0 0 16.5em;">
-        <pre style="width: 25em; margin: 0 0 0 0;"><code class="language-python hljs"># A cloned environment will be bound 
+        <pre style="width: 25em; margin: 0 0 0 0;"><code class="language-python hljs"># A cloned environment will be bound
 # to the OS
 self.env = self.context.env.clone()
 with self.env:
@@ -22,7 +22,7 @@ with self.env:
     self.fscheck(kw)                #4
     self.postfix(rh, kw)            #5
     self.dumplog(kw)                #6
-    self.delayed_exceptions(kw)     #7  
+    self.delayed_exceptions(kw)     #7
 </code></pre>
 
     </div>
@@ -144,7 +144,7 @@ def run(self, rh=None, **kw):
         self.fscheck(kw)                #4
         self.postfix(rh, kw)            #5
         self.dumplog(kw)                #6
-        self.delayed_exceptions(kw)     #7  
+        self.delayed_exceptions(kw)     #7
 
     # Free local references
     self.env = None
@@ -297,7 +297,7 @@ l'utilisateur. Le vrai travail de génération de la ligne de commande MPI se
 fait via les classes définies dans le module **vortex.algo.mpitools** qui est
 auto-documenté.
 * **TaylorRun** permet de lancer des tâches élémentaires en parallèle en
-utilisant le package externe **taylorism** (qui repose sur 
+utilisant le package externe **taylorism** (qui repose sur
 le package standard **multiprocessing**). Si la tâche élémentaire à
 lancer utilise un script ou un binaire, on se reportera sur les classes
   **ParaExpresso** ou **ParaBlindRun**.
@@ -357,7 +357,7 @@ class MonAlgoComponent(AlgoComponentMere):
     def prepare(self, rh, opts):
         super(MonAlgoComponent, self).prepare(rh, opts)  # Methode mere
         # Ici votre contenu...
-        # - Manipulation de l'environement -> self.env
+        # - Manipulation de l'environnement -> self.env
         # - Acces au systeme -> self.system
         # - Acces a la sequence -> self.context.sequence
 

@@ -931,6 +931,8 @@ class Task(Node):
                 t.env.default(VORTEX_IOSERVER_TASKS=self.conf.io_tasks)
         elif 'io_companions' in self.conf:
             t.env.default(VORTEX_IOSERVER_COMPANION_TASKS=self.conf.io_companions)
+        elif 'io_incore_tasks' in self.conf:
+            t.env.default(VORTEX_IOSERVER_INCORE_TASKS=self.conf.io_incore_tasks)
         if 'io_openmp' in self.conf:
             t.env.default(VORTEX_IOSERVER_OPENMP=self.conf.io_openmp)
         if triggered:

@@ -2,17 +2,16 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+SURGES HYCOM.
 """
-
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
-
+import footprints
 from bronx.fancies import loggers
-
-from vortex.algo.components import Parallel
-
+from collections import defaultdict
+from vortex.algo.components import Parallel, ParaBlindRun
+from vortex.tools.parallelism import VortexWorkerBlindRun
 #: No automatic export
 __all__ = []
 
@@ -33,6 +32,12 @@ class WithoutCouplingForecasts(Parallel):
             io_poll_med = dict(
                 values = ['med_io_poll'],
             ),
+            pollingdir = dict(
+                type = footprints.FPList,
+                default = footprints.FPList(['RES0.', ]),
+                optional = True,
+
+            ),
         )
     )
 
@@ -43,14 +48,14 @@ class WithoutCouplingForecasts(Parallel):
             self.export('mpitool')
 
         if self.promises:
-            self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage)
+            self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage, pollingdir=self.pollingdir)
             self.flyput = True
         else:
             self.flyput = False
 
 
 class SurgesCouplingForecasts(Parallel):
-    """TODO: Class documentation."""
+    """Surges Coupling."""
 
     _footprint = dict(
         attr = dict(
@@ -89,16 +94,19 @@ class SurgesCouplingForecasts(Parallel):
                 optional = True,
             ),
             flyargs = dict(
-                default = ('ASUR', 'PSUR',),
+                default  = ('ASUR', 'PSUR',),
             ),
             flypoll = dict(
-                default = 'iopoll_marine',
+                default  = 'iopoll_marine',
             ),
             dir_exec = dict(
-                default = 'EXEC_OASIS',
+                default  = 'EXEC_OASIS',
+            ),
+            pollingdir = dict(
+                type     = footprints.FPList,
+                default  = footprints.FPList(['RES0.', ]),
                 optional = True,
             ),
-
         )
     )
 
@@ -107,7 +115,7 @@ class SurgesCouplingForecasts(Parallel):
         super(Parallel, self).prepare(rh, opts)
         if opts.get('mpitool', True):
             self.export('mpitool')
-
+        r = rh
         # Tweak the pseudo hycom namelists New version  !
         for namsec in self.context.sequence.effective_inputs(role=re.compile('FileConfig')):
 
@@ -134,7 +142,8 @@ class SurgesCouplingForecasts(Parallel):
                 mode_map = dict(fc='PR', an='AA')
                 dico["anapre"] = mode_map.get(xp, xp)
                 dico["nmatm"] = str(self.freq_forcage)
-                dico["codmod"] = self.codmod
+                if r.provider.vconf not in ['oin@fcaro', 'oin@ancep']:
+                    dico["codmod"] = self.codmod
                 dico["imodel"] = str(self.numod)
                 dico["kmodel"] = self.config_name
 
@@ -146,7 +155,7 @@ class SurgesCouplingForecasts(Parallel):
 
         # Promises should be nicely managed by a co-process
         if self.promises:
-            self.io_poll_kwargs = dict(model=rh.resource.model, forcage=rh.resource.forcage)
+            self.io_poll_kwargs = dict(model=r.resource.model, forcage=r.resource.forcage, pollingdir=self.pollingdir)
             self.flyput = True
         else:
             self.flyput = False
@@ -168,3 +177,93 @@ class SurgesCouplingInterp(SurgesCouplingForecasts):
             ),
         )
     )
+
+
+class Grib2tauxParallel(ParaBlindRun):
+    """Algo for parallel grib2taux."""
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs serial binary grib2taux',
+        attr = dict(
+            kind = dict(
+                values   = ['Grib2tauxParaBlindRun'],
+            ),
+            verbose=dict(
+                default  =True,
+            ),
+            ntasks=dict(
+                default  = 10,
+            ),
+        )
+    )
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        scheduler_instructions = defaultdict(list)
+        sh = self.system
+        workdir = sh.pwd()
+
+        file_out = 'forcing.mslprs.b'
+        for zone in ['zone1', 'zone2', 'zone3', 'zone4']:
+
+            with sh.cdcontext(zone, create=False):
+
+                if not self.system.path.exists('grib2taux'):
+                    sh.softlink(sh.path.join(workdir, 'grib2taux'),
+                                'grib2taux')
+
+                if sh.path.exists(file_out):  # rustine car continue a boucler apres 4 iter
+                    logger.info('output cree  execute on arrete ! %s', file_out)
+                    break
+
+                scheduler_instructions['name'].append('{:s}'.format(zone))
+                scheduler_instructions['progname'].append(sh.path.join(workdir, zone, 'grib2taux'))
+                scheduler_instructions['base'].append(zone)
+                scheduler_instructions['subdir'].append(zone)
+
+        self._default_pre_execute(rh, opts)
+        # Update the common instructions
+        common_i = self._default_common_instructions(rh, opts)
+        logger.info("common_i %s", common_i)
+        common_i.update(dict(workdir=workdir, ))
+        self._add_instructions(common_i, scheduler_instructions)
+        logger.info('scheduler_instruction %s', scheduler_instructions)
+        print('Intermediate report:', self._boss.get_report())
+        self._boss.wait_till_finished()
+
+
+class Grib2tauxWorker(VortexWorkerBlindRun):
+    """Transform wind and pressure"""
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['Grib2tauxParaBlindRun'],
+            ),
+            subdir = dict(
+                info = 'work in this particular subdirectory',
+                optional = True
+            ),
+        )
+    )
+
+    def vortex_task(self, **kwargs):
+        """TODO: documentation."""
+        logger.info("self.subdir %s", self.subdir)
+        file_out = 'forcing.mslprs.b'
+        logger.info("file_out %s", file_out)
+
+        rundir = self.system.getcwd()
+        thisdir = self.system.path.join(rundir, self.subdir)
+        logger.info('thisdir %s', thisdir)
+        with self.system.cdcontext(thisdir, create=False):
+            self.local_spawn('stdout.listing')
+            if self.system.path.exists(file_out):
+                logger.info('output cree %s', file_out)
+                # Deal with promised resources
+                expected = [x for x in self.context.sequence.outputs()
+                            if (x.rh.provider.expected and
+                                x.rh.container.localpath() == file_out)]
+                for thispromise in expected:
+                    thispromise.put(incache=True)
+            else:
+                logger.warning('Missing some output for %s', file_out)

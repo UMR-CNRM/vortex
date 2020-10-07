@@ -1,6 +1,6 @@
 .. _env-interface:
 
-**********************************   
+**********************************
 Understanding environment features
 **********************************
 
@@ -13,10 +13,10 @@ of four classes of objects :
 * an active context :class:`vortex.layout.contexts.Context`.
 * an active environment binded to the operating system :class:`vortex.tools.env.Environment`.
 
-A session Ticket always holds a root context that includes a root environment. A Glove 
-is associated to any session Ticket. Whether a ticket, context or environment remains 
+A session Ticket always holds a root context that includes a root environment. A Glove
+is associated to any session Ticket. Whether a ticket, context or environment remains
 active, and what "active" means, is an other  matter and depends of the current usage.
-For the time being, let say that at any time during a vortex experiment, one could be 
+For the time being, let say that at any time during a vortex experiment, one could be
 aware of the current session, context and environment.
 
 
@@ -41,7 +41,7 @@ time and should not be changed. It is the actual OS environment at launch time.
   >>> vortex.rootenv
   <vortex.tools.env.Environment object at 0x1284ad0>
 
-A default session ticket (tagged *root*) is also defined. It could be retrieved 
+A default session ticket (tagged *root*) is also defined. It could be retrieved
 through the :func:`ticket` function:
 
 .. code-block:: python
@@ -82,7 +82,7 @@ but is not the same object:
   >>> s.context.env
   <vortex.tools.env.Environment object at 0x127ac50>
 
-Therefore, if we ask to the :mod:`vortex.tools.env` module which environment is 
+Therefore, if we ask to the :mod:`vortex.tools.env` module which environment is
 the active one, the root context's one will be returned, not the :envvar:`rootenv`:
 
 .. code-block:: python
@@ -118,15 +118,15 @@ Vortex sessions
 ===============
 
 Using most of the Vortex toolbox features could be achieved through the root session
-defined at import time (see the previous section). Nevertheless, the user or the 
-developer could easily benefit from advanced features defined in the module 
+defined at import time (see the previous section). Nevertheless, the user or the
+developer could easily benefit from advanced features defined in the module
 :mod:`vortex.sessions`.
 
 
 Creating a new session
 ======================
 
-New sessions should only be defined through the interface function :func:`vortex.sessions.get` 
+New sessions should only be defined through the interface function :func:`vortex.sessions.get`
 (the function :func:`vortex.ticket` is a shortcut to this function).
 
 If no ``tag`` argument is provided, or if tag is set to ``current``, the current
@@ -164,8 +164,8 @@ As soon as a non-existent ``tag`` is provided, a new ticket session is returned:
   ['foo', 'root']
 
 ``topenv`` or ``glove`` attributes may be given to the get function. If none of
-them is provided the current active environment and the current sesssion's glove 
-will  be used. 
+them is provided the current active environment and the current sesssion's glove
+will  be used.
 
 This section is not activated by default:
 
@@ -186,7 +186,7 @@ This section is not activated by default:
 Setting an active session
 =========================
 
-The active character of a session could be defined at creation time through the 
+The active character of a session could be defined at creation time through the
 appropriate ``active`` boolean argument:
 
 .. code-block:: python
@@ -226,8 +226,8 @@ at any time through the :func:`vortex.sessions.switch` mechanism:
 Other session's features
 ========================
 
-A :class:`vortex.tools.systems.System` object is associated with a 
-:class:`vortex.sessions.Ticket` object. It's created once when the 
+A :class:`vortex.tools.systems.System` object is associated with a
+:class:`vortex.sessions.Ticket` object. It's created once when the
 ticket's :meth:`vortex.sessions.Ticket.system` method is called.
 
 .. code-block:: python
@@ -250,7 +250,7 @@ to smoothly changes the behaviour of global configurations appears.
 The default glove
 =================
 
-A default glove always pre-exists to any user action. It is the glove in which the 
+A default glove always pre-exists to any user action. It is the glove in which the
 initial vortex import action has been performed:
 
 .. code-block:: python
@@ -259,7 +259,7 @@ initial vortex import action has been performed:
   >>> vortex.ticket(tag='root').glove
   <vortex.gloves.ResearchGlove object at 0xd6bc90>
 
-It could be more convenient to access this information through the 
+It could be more convenient to access this information through the
 :mod:`vortex.sessions` module interface:
 
 .. code-block:: python
@@ -280,7 +280,7 @@ Creating a new glove
 There is no way to avoid the definition of this default glove which is associated
 to the ``root`` session.
 
-As a :class:`footprints.FootprintBase` class, the :class:`vortex.gloves.Glove` 
+As a :class:`footprints.FootprintBase` class, the :class:`vortex.gloves.Glove`
 child classes could be instantiated through the footprint's proxy. This is a bad
 practice unless you really want to enforce the creation of a new glove.
 
@@ -294,7 +294,7 @@ It is strongly recommended to go through the :mod:`vortex.sessions` module inter
    >>> sessions.getglove(tag='foo')
    <vortex.gloves.ResearchGlove object at 0x19df9d0>
 
-Doing so, one could combined a new glove declaration and the activation of a 
+Doing so, one could combined a new glove declaration and the activation of a
 new session using this glove:
 
 .. code-block:: python
@@ -326,17 +326,17 @@ new session using this glove:
 Vortex contexts
 ===============
 
-:class:`vortex.layout.contexts.Context` objects track events 
-that occurs during a Vortex run (such as the creation of a new 
+:class:`vortex.layout.contexts.Context` objects track events
+that occurs during a Vortex run (such as the creation of a new
 :class:`vortex.layout.dataflow.Section` object, a call to a store, ...).
 
-A context is bound to a specific session and only one can be active at a time 
+A context is bound to a specific session and only one can be active at a time
 (this unique active context records events). When a new session is created, a
 new context is automatically created :
 
 .. code-block:: python
 
-   >>> # First, let's have a look at the default session 
+   >>> # First, let's have a look at the default session
    ... default_t = vortex.ticket()
    >>> default_t.context.tag
    'root'
@@ -360,7 +360,7 @@ new context is automatically created :
 The first element of the context's path is the session's tag. When switching
 from one session to another, the active context is changed accordingly.
 
-An :class:`vortex.tools.env.Environment` object is always associated with a 
+An :class:`vortex.tools.env.Environment` object is always associated with a
 context. The current active environment can be retrieved, clones of this environment
 can be made, ... (see the next section for more details).
 
@@ -371,7 +371,7 @@ can be made, ... (see the next section for more details).
    <vortex.tools.env.Environment object at 0x7f5c0b7e3d90>
    >>> with default_t.context.env.clone():
    ...     default_t.context.env
-   ... 
+   ...
    <vortex.tools.env.Environment object at 0x7f5c0e5fb3d0>
    >>> default_t.context.env
    <vortex.tools.env.Environment object at 0x7f5c0b7e3d90>
@@ -380,9 +380,9 @@ can be made, ... (see the next section for more details).
 Subcontexts
 ===========
 
-In a unique Vortex session, a user may want to perform several independent tasks: 
+In a unique Vortex session, a user may want to perform several independent tasks:
 In such a case, several Contexts have to be created in order to enforce a logical
-separation between tasks. During the vortex run, it is be possible to switch 
+separation between tasks. During the vortex run, it is be possible to switch
 between the Contexts. Here is an example:
 
 .. code-block:: python
@@ -416,7 +416,7 @@ between the Contexts. Here is an example:
    1
 
 .. note: There is no limit to the context imbrication, a subcontext can itself
-         contain subcontexts, ... 
+         contain subcontexts, ...
 
 
 Details on context switching
@@ -427,7 +427,7 @@ to jump from one context to another. On a given :class:`vortex.layout.contexts.C
 object, calling the ``activate`` method will achieve the same goal.
 
 When switching from one context to another:
-  * the context that looses the focus saves the current active environment and 
+  * the context that looses the focus saves the current active environment and
     the current working directory (only if the ``cocoon`` method was once called).
   * the context that gains the focus activate its latest saved environment and
     restores the working directory (only if the ``cocoon`` method was once called).
@@ -441,8 +441,8 @@ object that belongs to an inactive session (such an attempt will trigger a
 More on Vortex environment variables
 ====================================
 
-Many features of the class dealing with the environment variables have been 
-encountered in the previous sections. However, here are some example of 
+Many features of the class dealing with the environment variables have been
+encountered in the previous sections. However, here are some example of
 utilisation.
 
 
@@ -483,8 +483,8 @@ But one could also "ask" to the current active session:
    >>>
 
 The stack of :class:`vortex.tools.env.Environment` objects could be obtained with
-the ``osstack`` method. If we continue the previous example, this stack should 
-contains the ``rootenv`` defined at import time and the environ associated to 
+the ``osstack`` method. If we continue the previous example, this stack should
+contains the ``rootenv`` defined at import time and the environ associated to
 the current context:
 
 .. code-block:: python
@@ -499,8 +499,8 @@ the current context:
 Cloning and activating Environments
 ===================================
 
-Within a context, it might be useful to create a clone of the current active 
-environment, activate it, make a lot of changes in it, and eventually revert 
+Within a context, it might be useful to create a clone of the current active
+environment, activate it, make a lot of changes in it, and eventually revert
 back to the original environment. Here is an example:
 
 .. code-block:: python
@@ -530,8 +530,8 @@ back to the original environment. Here is an example:
    ... e.LOGNAME
    'meunierlf'
 
-It is relatively painful to call the ``activate`` method that much times, so it is 
-recommended to use the cloned environment as a Python's context managers. The 
+It is relatively painful to call the ``activate`` method that much times, so it is
+recommended to use the cloned environment as a Python's context managers. The
 following example is strictly equivalent to the previous one:
 
 .. code-block:: python
@@ -545,7 +545,7 @@ following example is strictly equivalent to the previous one:
    ...     # Now, we can do whatever we want in this environment
    ...     # (in the real world we would probably launch a binary or something !)
    ...     newenv.LOGNAME='toto'
-   ... 
+   ...
    True
    >>> # As soon as the context manager exits, LOGNAME is restored...
    ... e.active()
@@ -556,9 +556,9 @@ following example is strictly equivalent to the previous one:
 .. note::
    Context's Environment objects and objects  created using the ``clone`` method
    are bound to a specific context. Consequently, it is not allowed to activate
-   an Environment object that belongs to an inactive Context (such an attempt 
+   an Environment object that belongs to an inactive Context (such an attempt
    will trigger a :class:`RuntimeError` exception).
- 
+
 
 Various ways to access to a variable
 ====================================
@@ -590,7 +590,7 @@ A variable can be removed using he usual Python's syntax:
 
 Complex data could be stored in the Environment object. Its shell representation is then accessible
 through the :func:`vortex.tools.env.Environment.native` method:
-    
+
 .. code-block:: python
 
    >>> from vortex import toolbox
@@ -608,9 +608,9 @@ through the :func:`vortex.tools.env.Environment.native` method:
 Extra utilities
 ===============
 
-It's easy to check if a variable contains something that vaguely corresponds to a 
+It's easy to check if a variable contains something that vaguely corresponds to a
 True/False value:
- 
+
 .. code-block:: python
 
    >>> e.thevar=1
@@ -629,9 +629,9 @@ True/False value:
 For PATH like variables, utility methods are provided:
 
 .. code-block:: python
-   
+
    >>> e.PATH
-   '/home/meunierlf/vortex-dev/tools/bin:/home/meunierlf/vortex-dev/tools/script'     
+   '/home/meunierlf/vortex-dev/tools/bin:/home/meunierlf/vortex-dev/tools/script'
    >>> e.setgenericpath('PATH', '/a/prioritary/thing', 0)
    >>> e.PATH
    '/a/prioritary/thing:/home/meunierlf/vortex-dev/tools/bin:/home/meunierlf/vortex-dev/tools/script'
@@ -686,13 +686,13 @@ Actually, a Context Manager can achieve the same goal. It's advised to use it:
    ...     with e.delta_context(newvariable=2):
    ...         print e.newvariable
    ...     print e.newvariable
-   ... 
+   ...
    2
    1
    >>> print 'newvariable' in e
    False
 
-Using a Context Manager you can be guaranteed that the ``rewind`` method is automatically 
+Using a Context Manager you can be guaranteed that the ``rewind`` method is automatically
 called on exit. This way, the code is easier to mantain and less error prompt.
 
 
@@ -700,46 +700,46 @@ Big brother
 ===========
 
 A :class:`vortex.tools.env.Environment` object records everything, it looks scary but can
-be useful for debugging. For example, just after the previous example, we can call the 
+be useful for debugging. For example, just after the previous example, we can call the
 ``tracebacks`` method::
 
-   [ 2016-08-23 10:48:36.188922 ] NEWVARIABLE = 1 
-   
+   [ 2016-08-23 10:48:36.188922 ] NEWVARIABLE = 1
+
      File "<stdin>", line 1, in <module>
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 466, in __enter__
        self._env.delta(** self._delta)
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 295, in delta
        self.setvar(var, value)
-   
-   [ 2016-08-23 10:48:36.189052 ] NEWVARIABLE = 2 
-   
+
+   [ 2016-08-23 10:48:36.189052 ] NEWVARIABLE = 2
+
      File "<stdin>", line 2, in <module>
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 466, in __enter__
        self._env.delta(** self._delta)
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 295, in delta
        self.setvar(var, value)
-   
-   [ 2016-08-23 10:48:36.189138 ] NEWVARIABLE = 1 
-   
+
+   [ 2016-08-23 10:48:36.189138 ] NEWVARIABLE = 1
+
      File "<stdin>", line 3, in <module>
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 469, in __exit__
        self._env.rewind()
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 305, in rewind
        self.setvar(var, value)
-   
-   [ 2016-08-23 10:48:36.189224 ] NEWVARIABLE = !!deleted!! 
-   
+
+   [ 2016-08-23 10:48:36.189224 ] NEWVARIABLE = !!deleted!!
+
      File "<stdin>", line 4, in <module>
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 469, in __exit__
        self._env.rewind()
-   
+
      File "/home/meunierlf/vortex-dev/vortex-current/src/vortex/tools/env.py", line 303, in rewind
        self.delvar(newitems.pop())
 
@@ -747,45 +747,45 @@ Each variable change is logged (with the corresponding time stamp).
 
 
 ===============================
-A final example and its diagram 
+A final example and its diagram
 ===============================
 
 .. code-block:: python
-   
+
    import vortex
    from vortex import sessions
-   
-   # The root session, context and environement are automaticaly created by vortex
+
+   # The root session, context and environment are automaticaly created by vortex
    t = vortex.ticket()
    print 'Rootenv: {!s}'.format(vortex.rootenv)
-   
+
    t.system().header("The root session object's:")
    print 'Session: {!s} (tag={:s})'.format(t, t.tag)
    print 'Context: {!s} (path={:s})'.format(t.context, t.context.path)
    print 'Env:     {!s}'.format(t.context.env)
-   
+
    # Create the new active session with a new glove but starting from the rootenv
    ng = sessions.getglove(tag='foo', user='toto')
    new_t = vortex.ticket(tag='new_t', topenv=vortex.rootenv, glove=ng, active=True)
-   
+
    new_t.system().header("The new_t session object's:")
    print 'Session: {!s} (tag={:s})'.format(new_t, new_t.tag)
    print 'Context: {!s} (path={:s})'.format(new_t.context, new_t.context.path)
    print 'Env:     {!s}'.format(new_t.context.env)
-   
+
    # Create a subcontext to work an a specific task, and activate it
    subctx1 = new_t.context.newcontext('subctx1', focus=True)
-   
+
    new_t.system().header("The subctx1 context object's:")
    print 'Context: {!s} (path={:s})'.format(new_t.context, new_t.context.path)
    print 'Env:     {!s}'.format(new_t.context.env)
-   
+
    # But we also clone the environment to make local changes
    with new_t.context.env.clone() as newenv:
-       
+
        # !!! The schematic represent the stack of objects at this point !!!
-       
-       newenv.myvariable = 0 
+
+       newenv.myvariable = 0
        print 'newenv:  {!s}'.format(newenv)
        # But it's also accessible via the context (since it's the active environment)
        print 'newenv:  {!s}'.format(new_t.context.env)
@@ -794,6 +794,6 @@ A final example and its diagram
 The following diagram illustrates this code example:
 
 .. figure:: session_context_env.png
- 
+
    The orange boxes highlight the active objects.
 

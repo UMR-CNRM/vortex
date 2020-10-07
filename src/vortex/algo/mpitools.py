@@ -759,13 +759,13 @@ class MpiTool(footprints.FootprintBase):
                 namc.rewrite(namrh.container)
 
     def _logged_env_set(self, k, v):
-        """Set an environement variable *k* and emit a log message."""
-        logger.info('Setting the "%s" environement variable to "%s"', k.upper(), v)
+        """Set an environment variable *k* and emit a log message."""
+        logger.info('Setting the "%s" environment variable to "%s"', k.upper(), v)
         self.env[k] = v
 
     def _logged_env_del(self, k):
-        """Delete the environement variable *k* and emit a log message."""
-        logger.info('Deleting the "%s" environement variable', k.upper())
+        """Delete the environment variable *k* and emit a log message."""
+        logger.info('Deleting the "%s" environment variable', k.upper())
         del self.env[k]
 
     def _environment_substitution_dict(self, opts, conflabel):  # @UnusedVariable
@@ -823,7 +823,7 @@ class MpiTool(footprints.FootprintBase):
                 try:
                     v = six.text_type(v).format(** envsub)
                 except KeyError:
-                    logger.warning("Substitution failed for the environement " +
+                    logger.warning("Substitution failed for the environment " +
                                    "variable %s. Ignoring it.", k)
                 else:
                     self._logged_env_set(k, v)
@@ -1127,7 +1127,7 @@ class MpiBinaryIOServer(MpiBinaryDescription):
             self.openmp = thisenv.VORTEX_IOSERVER_OPENMP
 
     def expanded_options(self):
-        """The number of IO nodes may be 0: accoutn for that."""
+        """The number of IO nodes may be 0: account for that."""
         if self.nprocs == 0:
             return dict()
         else:
