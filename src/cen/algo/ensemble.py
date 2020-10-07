@@ -914,8 +914,9 @@ class SurfexWorker(_S2MWorker):
                                 self.dateend)
                         except FileNameException:
                             deterministic = self.subdir == "mb035"
-                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" + massif, deterministic,
-                                                            self.subdir, datebegin_this_run, self.dateend)
+                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
+                                                            massif, deterministic, self.subdir, datebegin_this_run,
+                                                            self.dateend)
                             return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
@@ -942,8 +943,9 @@ class SurfexWorker(_S2MWorker):
                             self.dateend)
                     except FileNameException:
                         deterministic = self.subdir == "mb035"
-                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir, deterministic,
-                                                        self.subdir, datebegin_this_run, self.dateend)
+                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
+                                                        deterministic, self.subdir, datebegin_this_run,
+                                                        self.dateend)
                         return rdict
                     print("FORCING FOUND")
 
