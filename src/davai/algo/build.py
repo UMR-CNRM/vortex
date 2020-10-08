@@ -7,7 +7,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import tempfile
 from contextlib import contextmanager
-import subprocess
 
 import footprints
 from footprints import FPDict
@@ -127,20 +126,22 @@ class GitDecoMixin(AlgoComponentDecoMixin):
                                entranceport=self.ssh_tunnel_entrance_port) as tunnel:
                 # entering the contextmanager
                 # save origin remote URL, and temporarily replace with tunnel entrance
-                origin_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'],
-                                                     cwd=self.repository).decode('utf-8').strip()
                 temp_url = 'git://localhost:{}/{}'.format(tunnel.entranceport, self.path_to_repo)
                 logger.info("Temporarily switching remote.origin.url to SSH tunnel entrance: {}".format(temp_url))
-                subprocess.check_call(['git', 'config', '--replace-all', 'remote.origin.url', temp_url],
-                                      cwd=self.repository)
+                with self.system.cdcontext(self.repository):
+                    origin_url = self.system.spawn(['git', 'config', '--get', 'remote.origin.url'],
+                                                   output=True)
+                    self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', temp_url],
+                                      output=False)
                 # give hand back to inner context
                 try:
                     yield
                 finally:
                     # getting out of contextmanager : set origin remote URL back to what it was
                     logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url)))
-                    subprocess.check_call(['git', 'config', '--replace-all', 'remote.origin.url', origin_url],
-                                          cwd=self.repository)
+                    with self.system.cdcontext(self.repository):
+                        self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', origin_url],
+                                          output=False)
         else:
             yield
 
