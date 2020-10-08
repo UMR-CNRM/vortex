@@ -128,7 +128,7 @@ class GitDecoMixin(AlgoComponentDecoMixin):
                 # entering the contextmanager
                 # save origin remote URL, and temporarily replace with tunnel entrance
                 origin_url = subprocess.check_output(['git', 'config', '--get', 'remote.origin.url'],
-                                                     cwd=self.repository).decode('utf-8')
+                                                     cwd=self.repository).decode('utf-8').strip()
                 temp_url = 'git://localhost:{}/{}'.format(tunnel.entranceport, self.path_to_repo)
                 logger.info("Temporarily switching remote.origin.url to SSH tunnel entrance: {}".format(temp_url))
                 subprocess.check_call(['git', 'config', '--replace-all', 'remote.origin.url', temp_url],
@@ -161,6 +161,11 @@ class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMix
                 ),
                 compiler_flag = dict(
                     info = "Gmkpack compiler flag.",
+                    optional = True,
+                    default = None
+                ),
+                start_ref = dict(
+                    info = "Git ref to make diff with, to compute the increment (careful).",
                     optional = True,
                     default = None
                 ),
@@ -197,6 +202,7 @@ class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMix
             IA4H_gitref_to_incrpack(self.repository,
                                     self.git_ref,
                                     self.compiler_label,
+                                    start_ref=self.start_ref,
                                     packname=self.packname,
                                     compiler_flag=self.compiler_flag,
                                     preexisting_pack=self.preexisting_pack,
