@@ -47,7 +47,7 @@ class IO_Poll_Marine(addons.Addon):
 
         logger.info("cmd: %s", cmd)
         strpollingdir = ','.join(x for x in pollingdir)
-        cmd.extend(['--pollingdir',strpollingdir])
+        cmd.extend(['--pollingdir', strpollingdir])
         logger.info("cmd: %s", cmd)
         # Catch the processed file
         rawout = self._spawn(cmd)
