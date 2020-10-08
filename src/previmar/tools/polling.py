@@ -36,16 +36,19 @@ class IO_Poll_Marine(addons.Addon):
         )
     )
 
-    def iopoll_marine(self, prefix, model=None, forcage=None):
+    def iopoll_marine(self, prefix, model=None, forcage=None, pollingdir=['RES0.']):
         """Do the actual job of polling files prefixed by ``prefix``."""
         logger.info("Execution IOPOLL Marine")
-        cmd = ['--prefix', prefix]
-        if model is not None:
-            cmd.extend(['--model', model])
-        if forcage is not None:
-            cmd.extend(['--forcage', forcage])
-        logger.info("cmd: %s", cmd)
+        if model and forcage is not None:
+            cmd = ['--model', model, '--forcage', forcage]
+        else:
+            cmd = []
+        cmd.extend(['--prefix', prefix])
 
+        logger.info("cmd: %s", cmd)
+        strpollingdir = ','.join(x for x in pollingdir)
+        cmd.extend(['--pollingdir',strpollingdir])
+        logger.info("cmd: %s", cmd)
         # Catch the processed file
         rawout = self._spawn(cmd)
         # Cumulative results
