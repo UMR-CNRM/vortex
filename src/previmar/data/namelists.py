@@ -38,6 +38,11 @@ class BlkdatNamFiles(ModelResource):
                 param = dict(
                     values  = ['full_prv', 'full_ana', 'ms', 'full'],
                 ),
+		forcage = dict(
+                    values   = ['aro', 'cep', 'arp', 'aoc', ],
+                    optional = True,
+                    default  = '',
+                ),
                 date = dict(
                     type     = Date,
                     optional = True,
