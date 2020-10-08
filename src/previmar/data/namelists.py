@@ -39,7 +39,7 @@ class BlkdatNamFiles(ModelResource):
                     values  = ['full_prv', 'full_ana', 'ms', 'full'],
                 ),
 		forcage = dict(
-                    values   = ['aro', 'cep', 'arp', 'aoc', ],
+                    values   = ['aro', 'cep', 'arp', 'aoc',],
                     optional = True,
                     default  = '',
                 ),
@@ -47,7 +47,7 @@ class BlkdatNamFiles(ModelResource):
                     type     = Date,
                     optional = True,
                 ),
-                clscontents=dict(
+                clscontents = dict(
                     default = SurgeTemplate
                 ),
             )
