@@ -124,7 +124,8 @@ class OpJobAssistantTest(JobAssistant):
                 rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
-                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst':
+                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
+                   or t.env.OP_VCONF == 'altana':
                     rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
 
             t.env.OP_RUNDATE = rundate
