@@ -338,7 +338,7 @@ class OOPSParallel(Parallel,
         defaults = {
             IfsCycle('cy1'): {
                 'BOOST_TEST_CATCH_SYSTEM_ERRORS': 'no',
-                'BOOST_TEST_DETECT_FP_EXCEPTIONS': 'yes',
+                'BOOST_TEST_DETECT_FP_EXCEPTIONS': 'no',
                 'BOOST_TEST_LOG_FORMAT': 'XML',
                 'BOOST_TEST_LOG_LEVEL': 'message',
                 'BOOST_TEST_OUTPUT_FORMAT': 'XML',
