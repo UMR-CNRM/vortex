@@ -27,3 +27,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: UnknownWithTerm
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
