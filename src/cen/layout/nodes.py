@@ -226,6 +226,9 @@ class S2MTaskMixIn(object):
             if not hasattr(self.conf, "previ"):
                 self.conf.previ = False
 
+            if not hasattr(self.conf, 'rundate'):
+                return meteo, self.get_block_safran_from_geometry()
+
             if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
                 return "s2m", "meteo"
             else:
