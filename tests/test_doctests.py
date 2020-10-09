@@ -9,11 +9,12 @@ import unittest
 from vortex import sessions
 from vortex.data import geometries
 from vortex.tools import delayedactions
+from common.tools import partitioning
 
 from intairpol.tools import conftools
 
 
-class utDocTests(unittest.TestCase):
+class UtDocTests(unittest.TestCase):
 
     def assert_doctests(self, module, **kwargs):
         rc = doctest.testmod(module, **kwargs)
@@ -24,6 +25,7 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(geometries)
         try:
             self.assert_doctests(delayedactions)
+            self.assert_doctests(partitioning)
         finally:
             # Clean the mess
             t = sessions.current()

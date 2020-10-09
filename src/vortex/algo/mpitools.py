@@ -86,6 +86,7 @@ import footprints
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
+from vortex.tools.arm import ArmForgeTool
 from vortex.tools import env
 from vortex.util import config
 
@@ -181,14 +182,14 @@ class MpiTool(footprints.FootprintBase):
     _wrapstd_wrapper_name = './global_wrapstd_wrapper.py'
     _envelope_rank_var = 'MPIRANK'
     _default_mpibind_topology = 'numapacked'
-    _supports_binary_groups = False
+    _supports_manual_ranks_mapping = False
     _needs_mpilib_specific_mpienv = True
 
     def __init__(self, *args, **kw):
         """After parent initialization, set master, options and basics to undefined."""
         logger.debug('Abstract mpi tool init %s', self.__class__)
         super(MpiTool, self).__init__(*args, **kw)
-        self._launcher = self.mpilauncher or self.mpiname
+        self._launcher = self.mpilauncher or self.generic_mpiname
         self._binaries = []
         self._envelope = []
         self._sources = []
@@ -202,6 +203,10 @@ class MpiTool(footprints.FootprintBase):
     @property
     def realkind(self):
         return 'mpitool'
+
+    @property
+    def generic_mpiname(self):
+        return self.mpiname.split('-')[0]
 
     @property
     def _actual_mpibind_topology(self):
@@ -311,13 +316,18 @@ class MpiTool(footprints.FootprintBase):
     def _set_binaries(self, value):
         """Set the list of :class:`MpiBinaryDescription` objects associated with this instance."""
         if not (isinstance(value, collections_abc.Iterable) and
-                all([isinstance(b, MpiBinaryDescription) for b in value])):
-            raise ValueError('This should be an Iterable of MpiBinaryDescription instances.')
+                all([isinstance(b, MpiBinary) for b in value])):
+            raise ValueError('This should be an Iterable of MpiBinary instances.')
         has_bin_groups = not all([b.group is None for b in value])
-        if not (self._supports_binary_groups or not has_bin_groups):
+        if not (self._supports_manual_ranks_mapping or not has_bin_groups):
             raise ValueError('Binary groups are not supported by this MpiTool class')
+        has_bin_distribution = not all([b.distribution is None for b in value])
+        if not (self._supports_manual_ranks_mapping or not has_bin_distribution):
+            raise ValueError('Binary distribution option is not supported by this MpiTool class')
         self._binaries = value
         if not self.envelope and self.bindingmethod == 'vortex':
+            self._set_envelope_from_binaries()
+        elif not self.envelope and (has_bin_groups or has_bin_distribution):
             self._set_envelope_from_binaries()
         self._set_binaries_hack(self._binaries)
         if self.envelope:
@@ -388,10 +398,26 @@ class MpiTool(footprints.FootprintBase):
             return None
         if self._mpilib_identification_cache is None:
             mpi_lib, mpi_tools_dir = self._mpilib_data()
+            ld_libs_extra = set()
             sh = self.system
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
-                rc = sh.spawn([mpirun_path, '--version'], output=True, fatal=False)
+                libs = sh.ldd(mpirun_path)
+
+                if any([libname is None for libname in libs.values()]):
+                    libscache = dict()
+                    for binary in self.binaries:
+                        for lib, libpath in sh.ldd(binary.master).items():
+                            if libpath:
+                                libscache[lib] = sh.path.dirname(libpath)
+                    for missing_lib in [lib for lib, libname in libs.items()
+                                        if libname is None]:
+                        if missing_lib in libscache:
+                            ld_libs_extra.add(libscache[missing_lib])
+                with self.env.clone() as localenv:
+                    for libpath in ld_libs_extra:
+                        localenv.setgenericpath('LD_LIBRARY_PATH', libpath)
+                    rc = sh.spawn([mpirun_path, '--version'], output=True, fatal=False)
                 if rc:
                     id_res = self._mpilib_match_result(
                         re.compile(r'^.*Intel.*MPI.*Version\s+(\d+)\s+Update\s+(\d+)',
@@ -402,10 +428,12 @@ class MpiTool(footprints.FootprintBase):
                                    re.IGNORECASE),
                         rc, 'openmpi')
                     if id_res:
-                        self._mpilib_identification_cache = tuple([mpi_lib, mpi_tools_dir] +
+                        ld_libs_extra = tuple(sorted(ld_libs_extra))
+                        self._mpilib_identification_cache = tuple([mpi_lib, mpi_tools_dir, ld_libs_extra] +
                                                                   id_res)
             if self._mpilib_identification_cache is None:
-                self._mpilib_identification_cache = (mpi_lib, mpi_tools_dir, 'unknown')
+                ld_libs_extra = tuple(sorted(ld_libs_extra))
+                self._mpilib_identification_cache = (mpi_lib, mpi_tools_dir, ld_libs_extra, 'unknown')
         return self._mpilib_identification_cache
 
     def _get_sources(self):
@@ -431,15 +459,15 @@ class MpiTool(footprints.FootprintBase):
         for optdef in shlex.split(self._actual_mpiopts()):
             if optdef.startswith('-'):
                 optdef = optdef.lstrip('-')
-                options[optdef] = None
+                options[optdef] = []
                 klast = optdef
             elif klast is not None:
-                options[klast] = optdef
+                options[klast].append(optdef)
             else:
                 raise MpiException('Badly shaped mpi option around %s', optdef)
         return options
 
-    def _hook_binary_mpiopts(self, options):
+    def _hook_binary_mpiopts(self, binary, options):
         """A nasty hook to modify binaries' mpiopts on the fly."""
         return options
 
@@ -447,11 +475,17 @@ class MpiTool(footprints.FootprintBase):
     def _ranks_mapping(self):
         """When group are defined, associate each MPI rank with a "real" slot."""
         if self._ranks_map_cache is None:
-            self._complex_ranks_map = True  # A conservative default value...
+            self._complex_ranks_map = False
+            if not self.envelope:
+                raise RuntimeError('Ranks mapping shoudl always be used within an envelope.')
+            # First deal with bingroups
             ranks_map = dict()
             has_bin_groups = not all([b.group is None for b in self.binaries])
             cursor = 0  # The MPI rank we are currently processing
             if has_bin_groups:
+                if not self._supports_manual_ranks_mapping:
+                    raise RuntimeError('This MpiTool class does not supports ranks mapping.')
+                self._complex_ranks_map = True
                 cursor0 = 0  # The first available "real" slot
                 group_cache = collections.defaultdict(list)
                 for a_bin in self.binaries:
@@ -489,11 +523,52 @@ class MpiTool(footprints.FootprintBase):
                     cursor += a_bin.nprocs
             else:
                 # Just do nothing...
-                self._complex_ranks_map = False
                 for a_bin in self.binaries:
                     for rank in range(a_bin.nprocs):
                         ranks_map[rank + cursor] = rank + cursor
                     cursor += a_bin.nprocs
+            # Then deal with distribution
+            do_bin_distribution = not all([b.distribution in (None, "continuous")
+                                           for b in self.binaries])
+            if do_bin_distribution:
+                if not self._supports_manual_ranks_mapping:
+                    raise RuntimeError('This MpiTool class does not supports ranks mapping.')
+                self._complex_ranks_map = True
+                if all(['nn' in b.options and 'nnp' in b.options for b in self.envelope]):
+                    # Extract node information
+                    node_cursor = 0
+                    nodes_id = list()
+                    for e_bit in self.envelope:
+                        for _ in range(e_bit.options['nn']):
+                            nodes_id.extend([node_cursor, ] * e_bit.options['nnp'])
+                            node_cursor += 1
+                    # Re-order ranks given the distribution
+                    cursor = 0
+                    for a_bin in self.binaries:
+                        if a_bin.distribution == "roundrobin":
+                            # The current list of ranks
+                            actual_ranks = [ranks_map[i]
+                                            for i in range(cursor, cursor + a_bin.nprocs)]
+                            # Find the node number associated with each rank
+                            nodes_dict = collections.defaultdict(collections.deque)
+                            for rank in actual_ranks:
+                                nodes_dict[nodes_id[rank]].append(rank)
+                            # Create a new list of ranks in a round-robin manner
+                            actual_ranks = list()
+                            iter_nodes = itertools.cycle(sorted(nodes_dict.keys()))
+                            for _ in range(a_bin.nprocs):
+                                av_ranks = None
+                                while not av_ranks:
+                                    av_ranks = nodes_dict[next(iter_nodes)]
+                                actual_ranks.append(av_ranks.popleft())
+                            # Inject the result back
+                            for i in range(a_bin.nprocs):
+                                ranks_map[cursor + i] = actual_ranks[i]
+                        cursor += a_bin.nprocs
+                else:
+                    logger.warning('Cannot enforce binary distribution if the envelope' +
+                                   'does not contain nn/nnp information')
+            # Cache the final result !
             self._ranks_map_cache = ranks_map
         return self._ranks_map_cache
 
@@ -537,7 +612,7 @@ class MpiTool(footprints.FootprintBase):
             if len(bin_obj.expanded_options()):
                 if effective > 0 and self.binsep:
                     cmdl.append(self.binsep)
-                e_options = self._hook_binary_mpiopts(bin_obj.expanded_options())
+                e_options = self._hook_binary_mpiopts(bin_obj, bin_obj.expanded_options())
                 for k in sorted(e_options.keys()):
                     if k in self.optmap:
                         cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
@@ -578,27 +653,30 @@ class MpiTool(footprints.FootprintBase):
                 ranksidx += bin_obj.nprocs
         return todostack, ranks_bsize
 
+    def _envelope_mkwrapper_cpu_dispensers(self):
+        # Dispensers map
+        ranks_idx = 0
+        dispensers_map = dict()
+        for e_bit in self.envelope:
+            if 'nn' in e_bit.options and 'nnp' in e_bit.options:
+                for i_node in range(e_bit.options['nn']):
+                    cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
+                    if not cpu_disp:
+                        raise MpiException('Unable to detect the CPU layout with topology: {:s}'
+                                           .format(self._actual_vortexbind_topology, ))
+                    for _ in range(e_bit.options['nnp']):
+                        dispensers_map[ranks_idx] = (cpu_disp, i_node)
+                        ranks_idx += 1
+            else:
+                logger.error("Cannot compute a proper binding without nn/nnp information")
+                raise MpiException("Vortex binding error.")
+        return dispensers_map
+
     def _envelope_mkwrapper_bindingstack(self, ranks_bsize):
         binding_stack = dict()
         binding_node = dict()
-        if self.bindingmethod == 'vortex':
-
-            # Dispensers map
-            ranks_idx = 0
-            dispensers_map = dict()
-            for e_bit in self.envelope:
-                if 'nn' in e_bit.options and 'nnp' in e_bit.options:
-                    for i_node in range(e_bit.options['nn']):
-                        cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
-                        if not cpu_disp:
-                            raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                               .format(self._actual_vortexbind_topology,))
-                        for _ in range(e_bit.options['nnp']):
-                            dispensers_map[ranks_idx] = (cpu_disp, i_node)
-                            ranks_idx += 1
-                else:
-                    logger.error("Cannot compute a proper binding without nn/nnp information")
-                    raise MpiException("Vortex binding error.")
+        if self.bindingmethod:
+            dispensers_map = self._envelope_mkwrapper_cpu_dispensers()
             # Actually generate the binding map
             ranks_idx = 0
             for e_bit in self.envelope:
@@ -606,7 +684,14 @@ class MpiTool(footprints.FootprintBase):
                     for _ in range(e_bit.options['nnp']):
                         cpu_disp, i_node = dispensers_map[self._ranks_mapping[ranks_idx]]
                         if ranks_bsize.get(ranks_idx, 1) != -1:
-                            binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
+                            try:
+                                binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
+                            except (StopIteration, IndexError):
+                                # When CPU dispensers are exhausted (it might happened if more tasks
+                                # than available CPUs are requested).
+                                dispensers_map = self._envelope_mkwrapper_cpu_dispensers()
+                                cpu_disp, i_node = dispensers_map[self._ranks_mapping[ranks_idx]]
+                                binding_stack[ranks_idx] = cpu_disp(ranks_bsize.get(ranks_idx, 1))
                         else:
                             binding_stack[ranks_idx] = set(self.system.cpus_info.cpus.keys())
                         binding_node[ranks_idx] = i_node
@@ -640,8 +725,8 @@ class MpiTool(footprints.FootprintBase):
         env_info_head = '{:5s} {:24s} {:4s}'.format('#rank', 'binary_name', '#OMP')
         env_info_fmt = '{:5d} {:24s} {:4s}'
         if bindingstack:
-            env_info_head += ' {:5s} {:s}'.format('#node', 'bindings_list')
-            env_info_fmt2 = ' {:5d} {:s}'
+            env_info_head += ' {:5s}   {:s}'.format('#node', 'bindings_list')
+            env_info_fmt2 = ' {:5d}   {:s}'
         binding_str = [env_info_head]
         for i_rank in sorted(todostack):
             entry_str = env_info_fmt.format(i_rank,
@@ -675,7 +760,7 @@ class MpiTool(footprints.FootprintBase):
         for effective, e_bit in enumerate(self.envelope):
             if effective > 0 and self.binsep:
                 cmdl.append(self.binsep)
-            e_options = self._hook_binary_mpiopts(e_bit.expanded_options())
+            e_options = self._hook_binary_mpiopts(e_bit, e_bit.expanded_options())
             for k in sorted(e_options.keys()):
                 if k in self.optmap:
                     cmdl.append(self.optprefix + six.text_type(self.optmap[k]))
@@ -697,8 +782,8 @@ class MpiTool(footprints.FootprintBase):
         cmdl = [self.launcher, ]
         for k, v in sorted(self._reshaped_mpiopts().items()):
             cmdl.append(self.optprefix + six.text_type(k))
-            if v is not None:
-                cmdl.append(six.text_type(v))
+            for a_value in v:
+                cmdl.append(six.text_type(a_value))
         if self.envelope:
             self._envelope_mkcmdline(cmdl)
         else:
@@ -719,7 +804,7 @@ class MpiTool(footprints.FootprintBase):
                             self.system.subtitle('rank {:d}: stdout/err'.format(rank))
                         print(l.rstrip('\n'))
                 self.system.remove(outf)
-        if self.envelope:
+        if self.envelope and self.system.path.exists(self._envelope_wrapper_name):
             self.system.remove(self._envelope_wrapper_name)
         if self.mpiwrapstd:
             self.system.remove(self._wrapstd_wrapper_name)
@@ -786,19 +871,19 @@ class MpiTool(footprints.FootprintBase):
         sections_stack = list()
         all_sections = self.target.sections()
         for main_entry in ('mpienv',
-                           'mpienv:{:s}'.format(self.mpiname),
+                           'mpienv:{:s}'.format(self.generic_mpiname),
                            'mpienv-{!s}'.format(conflabel),
-                           'mpienv-{!s}:{:s}'.format(conflabel, self.mpiname),):
+                           'mpienv-{!s}:{:s}'.format(conflabel, self.generic_mpiname),):
             if main_entry in all_sections:
                 sections_stack.append(main_entry)
             if mpi_infos:
-                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[2])
+                lib_entry = '{:s}:{:s}'.format(main_entry, mpi_infos[3])
                 if not lib_entry.endswith('unknown') and lib_entry in all_sections:
                     sections_stack.append(lib_entry)
                 v_tuples = {tuple([int(d) for d in e[len(lib_entry) + 1:].split('.')]): e
                             for e in [s for s in all_sections
                                       if s.startswith(lib_entry + ':')]}
-                my_version = tuple(mpi_infos[3:])
+                my_version = tuple(mpi_infos[4:])
                 v_candidates = [v for v in v_tuples if v <= my_version]
                 if v_candidates:
                     sections_stack.append(v_tuples[max(v_candidates)])
@@ -854,22 +939,24 @@ class ConfigurableMpiTool(MpiTool):
     @property
     def mpitool_conf(self):
         """Return the mpiauto configuration."""
-        if self.target.config.has_section(self.mpiname):
-            return dict(self.target.config.items(self.mpiname))
+        if self.target.config.has_section(self.generic_mpiname):
+            return dict(self.target.config.items(self.generic_mpiname))
         else:
             return dict()
 
     def _actual_mpiopts(self):
         """Possibly read the mpiopts in the config file."""
         if self.mpiopts is None:
-            return self.mpitool_conf.get('mpiopts' + self._conf_suffix, '')
+            return self.mpitool_conf.get('mpiopts' + self._conf_suffix,
+                                         self.mpitool_conf.get('mpiopts', ''))
         else:
             return self.mpiopts
 
     def _actual_mpiextraenv(self):
         """Possibly read the mpi extra environment variables in the config file."""
         new_envvar = dict()
-        for kv in self.mpitool_conf.get('mpiextraenv' + self._conf_suffix, '').split(','):
+        for kv in self.mpitool_conf.get('mpiextraenv' + self._conf_suffix,
+                                        self.mpitool_conf.get('mpiextraenv', '')).split(','):
             if kv:
                 skv = kv.split('%', 1)
                 if len(skv) == 2:
@@ -879,7 +966,8 @@ class ConfigurableMpiTool(MpiTool):
     def _actual_mpidelenv(self):
         """Possibly read the mpi extra environment variables in the config file."""
         return [v
-                for v in self.mpitool_conf.get('mpidelenv' + self._conf_suffix, '').split(',')
+                for v in self.mpitool_conf.get('mpidelenv' + self._conf_suffix,
+                                               self.mpitool_conf.get('mpidelenv', '')).split(',')
                 if v]
 
     @property
@@ -887,7 +975,8 @@ class ConfigurableMpiTool(MpiTool):
         """The topology to be used with the Vortex' binding method."""
         if self.mpibind_topology is None:
             return self.mpitool_conf.get('mpibind_topology' + self._conf_suffix,
-                                         self._default_mpibind_topology)
+                                         self.mpitool_conf.get('mpibind_topology',
+                                                               self._default_mpibind_topology))
         else:
             return self.mpibind_topology
 
@@ -906,6 +995,7 @@ class MpiBinaryDescription(footprints.FootprintBase):
     """Root class for any :class:`MpiBinaryDescription` subclass."""
 
     _collector = ('mpibinary',)
+    _abstract = True
     _footprint = dict(
         info = 'Holds information about a given MPI binary',
         attr = dict(
@@ -1078,7 +1168,20 @@ class MpiEnvelopeBit(MpiBinaryDescription):
     )
 
 
-class MpiBinaryBasic(MpiBinaryDescription):
+class MpiBinary(MpiBinaryDescription):
+
+    _footprint = dict(
+        attr = dict(
+            distribution=dict(
+                info="Describes how the various nodes are distributed accross nodes",
+                values=['continuous', 'roundrobin'],
+                optional=True,
+            ),
+        )
+    )
+
+
+class MpiBinaryBasic(MpiBinary):
     """Set NPROC and NBPROC in namelists given the MPI distribution."""
 
     _footprint = dict(
@@ -1101,7 +1204,7 @@ class MpiBinaryBasic(MpiBinaryDescription):
         return namw
 
 
-class MpiBinaryIOServer(MpiBinaryDescription):
+class MpiBinaryIOServer(MpiBinary):
     """Standard binary description for IO Server binaries."""
 
     _footprint = dict(
@@ -1205,7 +1308,7 @@ class SRun(ConfigurableMpiTool):
 
     _envelope_nodelist_name = './global_envelope_nodelist'
     _envelope_rank_var = 'SLURM_PROCID'
-    _supports_binary_groups = True
+    _supports_manual_ranks_mapping = True
 
     @property
     def _actual_slurmversion(self):
@@ -1285,12 +1388,12 @@ class SRun(ConfigurableMpiTool):
         # Simple case, only one envelope description
         has_bin_groups = not all([b.group is None for b in self.binaries])
         openmps = set([b.options.get('openmp', 1) for b in self.binaries])
-        if len(self.envelope) == 1 and not has_bin_groups and len(openmps) == 1:
+        if len(self.envelope) == 1 and not self._complex_ranks_mapping and len(openmps) == 1:
             self._build_cpumask(cmdl, self.envelope, openmps.pop())
             super(SRun, self)._envelope_mkcmdline(cmdl)
         # Multiple entries... use the nodelist stuff :-(
         else:
-            # Find all the available nodes adn ranks
+            # Find all the available nodes and ranks
             base_nodelist = []
             totaltasks = 0
             availnodes = itertools.cycle(xlist_strings(self.env.SLURM_NODELIST
@@ -1363,7 +1466,7 @@ class SRun(ConfigurableMpiTool):
         super(SRun, self).setup_environment(opts, conflabel)
         if (self._complex_ranks_mapping and
                 self._mpilib_identification() and
-                self._mpilib_identification()[2] == 'intelmpi'):
+                self._mpilib_identification()[3] == 'intelmpi'):
             logger.info('(Sadly) with IntelMPI, I_MPI_SLURM_EXT=0 is needed when a complex arbitrary' +
                         'ranks distribution is used. Exporting it !')
             self.env['I_MPI_SLURM_EXT'] = 0
@@ -1384,3 +1487,250 @@ class SRun(ConfigurableMpiTool):
                     unwanted.add(k)
         for k in unwanted:
             self.env.delvar('SLURM_{:s}'.format(k))
+
+
+class SRunDDT(SRun):
+    """SLURM's srun launcher with ARM's DDT."""
+
+    _footprint = dict(
+        attr = dict(
+            mpiname = dict(
+                values  = ['srun-ddt', ],
+            ),
+        )
+    )
+
+    _conf_suffix = '-ddt'
+
+    def mkcmdline(self):
+        """Add the DDT prefix command to the command line"""
+        cmdl = super(SRunDDT, self).mkcmdline()
+        armtool = ArmForgeTool(self.ticket)
+        for extra_c in reversed(armtool.ddt_prefix_cmd(
+            sources=self.sources,
+            workdir=self.system.path.dirname(self.binaries[0].master)
+        )):
+            cmdl.insert(0, extra_c)
+        return cmdl
+
+
+class OmpiMpiRun(ConfigurableMpiTool):
+    """OpenMPI's mpirun launcher."""
+
+    _footprint = dict(
+        attr = dict(
+            sysname = dict(
+                values  = ['Linux', 'UnitTestLinux']
+            ),
+            mpiname = dict(
+                values  = ['openmpi', ],
+            ),
+            optsep=dict(
+                default = '',
+            ),
+            optprefix=dict(
+                default = '-',
+            ),
+            optmap=dict(
+                default = footprints.FPDict(np='np', nnp='npernode', xopenmp='x')
+            ),
+            binsep=dict(
+                default = ':',
+            ),
+            mpiwrapstd=dict(
+                default = True,
+            ),
+            bindingmethod = dict(
+                info            = 'How to bind the MPI processes',
+                values          = ['native', 'vortex', ],
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.ADVANCED,
+                doc_zorder      = -90,
+            ),
+        )
+    )
+
+    _envelope_rankfile_name = './global_envelope_rankfile'
+    _envelope_rank_var = 'OMPI_COMM_WORLD_RANK'
+    _supports_manual_ranks_mapping = True
+
+    def _get_launcher(self):
+        """Returns the name of the mpi tool to be used."""
+        if self.mpilauncher:
+            return self.mpilauncher
+        else:
+            mpi_data = self._mpilib_data()
+            if mpi_data:
+                return self.system.path.join(mpi_data[1], 'mpirun')
+            else:
+                return self._launcher
+
+    launcher = property(_get_launcher, ConfigurableMpiTool._set_launcher)
+
+    def _set_binaries_hack(self, binaries):
+        if not self.envelope and self.bindingmethod == 'native':
+            self._set_envelope_from_binaries()
+
+    def _valid_envelope(self, value):
+        """Tweak the envelope description values."""
+        for e in value:
+            if not ('nn' in e and 'nnp' in e):
+                raise MpiException("OpenMPI/mpirun needs a nn/nnp specification " +
+                                   "to build the envelope.")
+
+    def _hook_binary_mpiopts(self, binary, options):
+        openmp = options.pop('openmp', None)
+        if openmp is not None:
+            options['xopenmp'] = 'OMP_NUM_THREADS={:d}'.format(openmp)
+        return options
+
+    def _simple_mkcmdline(self, cmdl):
+        """Builds the MPI command line when no envelope is used.
+
+        :param list[str] args: the command line as a list
+        """
+        if self.bindingmethod is not None:
+            raise RuntimeError('If bindingmethod is set, an enveloppe should allways be used.')
+        super(OmpiMpiRun, self)._simple_mkcmdline(cmdl)
+
+    def _create_rankfile(self, rankslist, nodeslist, slotslist):
+        rf_strings = []
+
+        def _dump_slot_string(slot_strings, s_start, s_end):
+            if s_start == s_end:
+                slot_strings.append('{:d}'.format(s_start))
+            else:
+                slot_strings.append('{:d}-{:d}'.format(s_start, s_end))
+
+        for rank, node, slot in zip(rankslist, nodeslist, slotslist):
+            slot_strings = list()
+            if slot:
+                slot = sorted(slot)
+                s_end = s_start = slot[0]
+                for s in slot[1:]:
+                    if s_end + 1 == s:
+                        s_end = s
+                    else:
+                        _dump_slot_string(slot_strings, s_start, s_end)
+                        s_end = s_start = s
+                _dump_slot_string(slot_strings, s_start, s_end)
+            rf_strings.append(
+                'rank {:d}={:s} slot={:s}'.format(rank,
+                                                  node,
+                                                  ','.join(slot_strings))
+            )
+        logger.debug('Here is the rankfile content:\n%s', '\n'.join(rf_strings))
+        with io.open(self._envelope_rankfile_name, mode='w') as tmp_rf:
+            tmp_rf.write('\n'.join(rf_strings))
+        return self._envelope_rankfile_name
+
+    def _envelope_nodelist(self):
+        """Create the relative nodelist based on the envelope"""
+        base_nodelist = []
+        totalnodes = 0
+        for e_bit in self.envelope:
+            for i_node in range(e_bit.options['nn']):
+                logger.debug('Node #%5d is: +n%d', i_node, totalnodes)
+                base_nodelist.extend(['+n{:d}'.format(totalnodes), ] *
+                                     e_bit.options['nnp'])
+                totalnodes += 1
+        return base_nodelist
+
+    def _envelope_mkcmdline(self, cmdl):
+        """Builds the MPI command line when an envelope is used.
+
+        :param list[str] args: the command line as a list
+        """
+        cmdl.append(self.optprefix + 'oversubscribe')
+        if self.bindingmethod in (None, 'native'):
+            # Generate the dictionary that associate rank numbers and programs
+            todostack, ranks_bsize = self._envelope_mkwrapper_todostack()
+            # Generate the binding stuff
+            bindingstack, _ = self._envelope_mkwrapper_bindingstack(ranks_bsize)
+            # Generate a relative nodelist
+            base_nodelist = self._envelope_nodelist()
+            # Generate the rankfile
+            ranks = sorted(todostack)
+            nodes = [base_nodelist[self._ranks_mapping[r]] for r in ranks]
+            if bindingstack:
+                slots = [bindingstack[r] for r in ranks]
+            else:
+                slots = [sorted(self.system.cpus_info.cpus.keys()), ] * len(ranks)
+            rfile = self._create_rankfile(ranks, nodes, slots)
+            # Add the rankfile on the command line
+            cmdl.append(self.optprefix + 'rankfile')
+            cmdl.append(rfile)
+            # Add the "usual" call to binaries and setup OMP_NUM_THREADS values
+            wrapstd = self._wrapstd_mkwrapper()
+            for i_bin, a_bin in enumerate(self.binaries):
+                if i_bin > 0:
+                    cmdl.append(self.binsep)
+                openmp = a_bin.options.get('openmp', None)
+                if openmp:
+                    cmdl.append(self.optprefix + 'x')
+                    cmdl.append('OMP_NUM_THREADS={!s}'.format(openmp))
+                cmdl.append(self.optprefix + 'np')
+                cmdl.append(str(a_bin.nprocs))
+                if wrapstd:
+                    cmdl.append(wrapstd)
+                cmdl.append(a_bin.master)
+                cmdl.extend(a_bin.arguments)
+        else:
+            # Generate a host file but let vortex deal with the rest...
+            base_nodelist = self._envelope_nodelist()
+            ranks = list(range(len(base_nodelist)))
+            rfile = self._create_rankfile(ranks,
+                                          [base_nodelist[self._ranks_mapping[r]] for r in ranks],
+                                          [sorted(self.system.cpus_info.cpus.keys()), ]
+                                          * len(base_nodelist))
+            # Generate wrappers
+            self._envelope_mkwrapper(cmdl)
+            wrapstd = self._wrapstd_mkwrapper()
+            # Update the command line
+            cmdl.append(self.optprefix + 'rankfile')
+            cmdl.append(rfile)
+            cmdl.append(self.optprefix + 'np')
+            cmdl.append(str(len(base_nodelist)))
+            if wrapstd:
+                cmdl.append(wrapstd)
+            cmdl.append(self.envelope[0].master)
+
+    def clean(self, opts=None):
+        """post-execution cleaning."""
+        super(OmpiMpiRun, self).clean(opts)
+        if self.envelope:
+            self.system.remove(self._envelope_rankfile_name)
+
+    def setup_environment(self, opts, conflabel):
+        """Tweak the environment with some srun specific settings."""
+        super(OmpiMpiRun, self).setup_environment(opts, conflabel)
+        if self.bindingmethod == 'native' and 'OMP_PROC_BIND' not in self.env:
+            self._logged_env_set('OMP_PROC_BIND', 'true')
+        for libpath in self._mpilib_identification()[2]:
+            logger.info('Adding "%s" to LD_LIBRARY_PATH', libpath)
+            self.env.setgenericpath('LD_LIBRARY_PATH', libpath)
+
+
+class OmpiMpiRunDDT(OmpiMpiRun):
+    """SLURM's srun launcher with ARM's DDT."""
+
+    _footprint = dict(
+        attr = dict(
+            mpiname = dict(
+                values  = ['openmpi-ddt', ],
+            ),
+        )
+    )
+
+    _conf_suffix = '-ddt'
+
+    def mkcmdline(self):
+        """Add the DDT prefix command to the command line"""
+        cmdl = super(OmpiMpiRun, self).mkcmdline()
+        armtool = ArmForgeTool(self.ticket)
+        for extra_c in reversed(armtool.ddt_prefix_cmd(
+            sources=self.sources,
+            workdir=self.system.path.dirname(self.binaries[0].master)
+        )):
+            cmdl.insert(0, extra_c)
+        return cmdl

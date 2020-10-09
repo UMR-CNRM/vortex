@@ -3,7 +3,6 @@
 
 .. automodule:: footprints.util
    :synopsis: Utilities for footprint mecanisms
-   :members:
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

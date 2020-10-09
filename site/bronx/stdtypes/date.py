@@ -267,7 +267,7 @@ def daterangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     Except when ``fmt`` or ``prefix`` are specified, a list of :class:`Date`
     objects is returned.
 
-    :func:`daterange` accepts many arguments combinations::
+    :func:`daterangex` accepts many arguments combinations::
 
         >>> daterangex('2017010100', '2017013100', 'P14D')
         [Date(2017, 1, 1, 0, 0), Date(2017, 1, 15, 0, 0), Date(2017, 1, 29, 0, 0)]

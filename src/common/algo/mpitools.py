@@ -13,11 +13,11 @@ import six
 
 from bronx.fancies import loggers
 import footprints
-import io
 
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
-from vortex.util import config
+from vortex.tools.arm import ArmForgeTool
+from common.tools.partitioning import setup_partitioning_in_namelist
 
 #: No automatic export
 __all__ = []
@@ -78,27 +78,27 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
-        options['init-timeout-restart'] = self.timeoutrestart
+        options['init-timeout-restart'] = (self.timeoutrestart, )
         if self.sublauncher == 'srun':
-            options['use-slurm-mpi'] = None
+            options['use-slurm-mpi'] = ()
         elif self.sublauncher == 'libspecific':
-            options['no-use-slurm-mpi'] = None
+            options['no-use-slurm-mpi'] = ()
         if self.bindingmethod:
             for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
                       for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:
                 options.pop(k, None)
             if self.bindingmethod == 'arch':
-                options['use-arch-bind'] = None
+                options['use-arch-bind'] = ()
             elif self.bindingmethod == 'launcherspecific' and self.sublauncher == 'srun':
-                options['no-use-arch-bind'] = None
-                options['use-slurm-bind'] = None
+                options['no-use-arch-bind'] = ()
+                options['use-slurm-bind'] = ()
             elif self.bindingmethod == 'launcherspecific':
-                options['no-use-arch-bind'] = None
+                options['no-use-arch-bind'] = ()
                 for k in ['use-{:s}-bind'.format(t)
                           for t in ('slurm', 'intelmpi', 'openmpi')]:
-                    options[k] = None
+                    options[k] = ()
             elif self.bindingmethod == 'vortex':
-                options['no-use-arch-bind'] = None
+                options['no-use-arch-bind'] = ()
         return options
 
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
@@ -134,7 +134,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     envelope = property(mpitools.MpiTool._get_envelope, _set_envelope)
 
-    def _hook_binary_mpiopts(self, options):
+    def _hook_binary_mpiopts(self, binary, options):
         tuned = options.copy()
         # Regular MPI tasks count (the usual...)
         if 'nnp' in options and 'nn' in options:
@@ -198,6 +198,10 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
 
 class MpiAutoDDT(MpiAuto):
+    """
+    MpiTools that uses mpiauto as a proxy to several MPI implementations
+    with DDT support.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -208,17 +212,6 @@ class MpiAutoDDT(MpiAuto):
     )
 
     _conf_suffix = '-ddt'
-    _ddt_session_file_name = 'armforge-vortex-session-file.ddt'
-
-    def _dump_ddt_session(self):
-        bin_directory = self.system.path.dirname(self.binaries[0].master)
-        tpl = config.load_template(self.ticket, '@armforge-session-conf.tpl', encoding='utf-8')
-        sconf = tpl.substitute(sourcedirs='\n'.join(['        <directory>{:s}</directory>'.format(d)
-                                                     for d in self.sources]))
-        sfile = self.system.path.join(bin_directory, 'armforge-vortex-session-file.ddt')
-        with io.open(sfile, 'w') as fhs:
-            fhs.write(sconf)
-        return sfile
 
     def _reshaped_mpiopts(self):
         options = super(MpiAutoDDT, self)._reshaped_mpiopts()
@@ -226,19 +219,11 @@ class MpiAutoDDT(MpiAuto):
             raise mpitools.MpiException('It is not allowed to start DDT with another ' +
                                         'prefix_mpirun command defined: "{:s}"'
                                         .format(options))
-        ddtpath = self.env.get('VORTEX_ARM_DDT_PATH', None)
-        if ddtpath is None:
-            forgepath = self.env.get('VORTEX_ARM_FORGE_DIR', None)
-            if forgepath is None and self.target.config.has_option('armtools', 'forgedir'):
-                forgepath = self.target.config.get('armtools', 'forgedir')
-            else:
-                raise mpitools.MpiException('DDT requested but the DDT path is not configured.')
-            ddtpath = self.system.path.join(forgepath, 'bin', 'ddt')
-        if self.sources:
-            options['prefix-mpirun'] = '{:s} --session={:s} --connect'.format(ddtpath,
-                                                                              self._dump_ddt_session())
-        else:
-            options['prefix-mpirun'] = '{:s} --connect'.format(ddtpath)
+        armtool = ArmForgeTool(self.ticket)
+        options['prefix-mpirun'] = (' '.join(armtool.ddt_prefix_cmd(
+            sources=self.sources,
+            workdir=self.system.path.dirname(self.binaries[0].master)
+        )), )
         return options
 
 
@@ -389,6 +374,13 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
                     logger.info('Setup %s=%s in NAMPAR1 %s', nstr, effective_nprocs, namlocal)
                     np1[nstr] = effective_nprocs
                     namw = True
+        # Deal with partitioning macros
+        namw_p = setup_partitioning_in_namelist(namcontents,
+                                                effective_nprocs,
+                                                self.options.get('openmp', 1),
+                                                namlocal)
+        namw = namw or namw_p
+        # Incore IO tasks
         if self.incore_iotasks is not None:
             self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
         return namw
