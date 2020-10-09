@@ -66,7 +66,10 @@ class AbstractMocageRoot(Parallel):
                 ),
                 mpiconflabel = dict(
                     default  = 'mocage'
-                )
+                ),
+                binarysingle = dict(
+                    default  = 'mocagebasic'
+                ),
             )
         )
     ]

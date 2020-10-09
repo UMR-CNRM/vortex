@@ -20,6 +20,11 @@ Class decorators
 Classes
 -------
 
+.. autoclass:: MpiMocage
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiMocagePalm
    :show-inheritance:
    :members:

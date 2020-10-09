@@ -241,6 +241,9 @@ class AbstractMocaccRoot(Parallel):
                 mpiconflabel = dict(
                     default  = 'mocage'
                 ),
+                binarysingle=dict(
+                    default  = 'mocagebasic'
+                ),
             )
         )
     ]
@@ -300,18 +303,22 @@ class MocaccForecast(AbstractMocaccRoot):
                 info     = "with ctbto outputs (inverse transport only)"
             ),
             nxmpi = dict(
+                optional = True,
                 type     = int,
                 info     = "mpi tasks along x-axis"
             ),
             nympi = dict(
+                optional = True,
                 type     = int,
                 info     = "mpi tasks along y-axis"
             ),
             nxomp = dict(
+                optional = True,
                 type     = int,
                 info     = "openmp along x-axis"
             ),
             nyomp = dict(
+                optional = True,
                 type     = int,
                 info     = "openmp along y-axis"
             ),
@@ -434,10 +441,14 @@ class MocaccForecast(AbstractMocaccRoot):
         self._fix_nam_macro(namrh, "TRANSINV", self.transinv)
         self._fix_nam_macro(namrh, "LLCTBTO", self.llctbto)
 
-        self._fix_nam_macro(namrh, "NXMPI", self.nxmpi)
-        self._fix_nam_macro(namrh, "NYMPI", self.nympi)
-        self._fix_nam_macro(namrh, "NXOMP", self.nxomp)
-        self._fix_nam_macro(namrh, "NYOMP", self.nyomp)
+        if self.nxmpi is not None:
+            self._fix_nam_macro(namrh, "NXMPI", self.nxmpi)
+        if self.nympi is not None:
+            self._fix_nam_macro(namrh, "NYMPI", self.nympi)
+        if self.nxomp is not None:
+            self._fix_nam_macro(namrh, "NXOMP", self.nxomp)
+        if self.nyomp is not None:
+            self._fix_nam_macro(namrh, "NYOMP", self.nyomp)
 
         self._fix_nam_macro(namrh, "SRC_PROFILE", ct_extra_conf.source_vertical_profile)
 
