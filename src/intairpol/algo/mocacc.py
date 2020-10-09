@@ -241,6 +241,9 @@ class AbstractMocaccRoot(Parallel):
                 mpiconflabel = dict(
                     default  = 'mocage'
                 ),
+                binarysingle=dict(
+                    default  = 'mocagebasic'
+                ),
             )
         )
     ]
@@ -298,6 +301,26 @@ class MocaccForecast(AbstractMocaccRoot):
             llctbto = dict(
                 type     = bool,
                 info     = "with ctbto outputs (inverse transport only)"
+            ),
+            nxmpi = dict(
+                optional = True,
+                type     = int,
+                info     = "mpi tasks along x-axis"
+            ),
+            nympi = dict(
+                optional = True,
+                type     = int,
+                info     = "mpi tasks along y-axis"
+            ),
+            nxomp = dict(
+                optional = True,
+                type     = int,
+                info     = "openmp along x-axis"
+            ),
+            nyomp = dict(
+                optional = True,
+                type     = int,
+                info     = "openmp along y-axis"
             ),
             flyargs = dict(
                 default  = fp.FPTuple(('HM',)),
@@ -372,7 +395,8 @@ class MocaccForecast(AbstractMocaccRoot):
         return sorted(
             set(
                 [sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs]
-            ), reverse=self.transinv
+            ),
+            reverse=self.transinv,
         )
 
     @property
@@ -417,6 +441,15 @@ class MocaccForecast(AbstractMocaccRoot):
         self._fix_nam_macro(namrh, "TRANSINV", self.transinv)
         self._fix_nam_macro(namrh, "LLCTBTO", self.llctbto)
 
+        if self.nxmpi is not None:
+            self._fix_nam_macro(namrh, "NXMPI", self.nxmpi)
+        if self.nympi is not None:
+            self._fix_nam_macro(namrh, "NYMPI", self.nympi)
+        if self.nxomp is not None:
+            self._fix_nam_macro(namrh, "NXOMP", self.nxomp)
+        if self.nyomp is not None:
+            self._fix_nam_macro(namrh, "NYOMP", self.nyomp)
+
         self._fix_nam_macro(namrh, "SRC_PROFILE", ct_extra_conf.source_vertical_profile)
 
         self._fix_nam_macro(namrh, "POLLSLST", polls)
@@ -458,6 +491,7 @@ class MocaccForecast(AbstractMocaccRoot):
         MOCAGE_ZERO = 1.0e-30
 
         from common.util import usepygram
+
         if not usepygram.epygram_checker.is_available():
             raise AlgoComponentError("Epygram needs to be available")
 
@@ -639,7 +673,9 @@ class PostMocacc(AlgoComponent):
 
         # netcdf files from forecast
         ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
-        transinv = True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        transinv = (
+            True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        )
 
         # overwrite ncrh by the ascending sort of the ncrh list
         # or descinding if inverse transport
@@ -736,3 +772,64 @@ class PostMocacc(AlgoComponent):
 
                 # To allow flying routing via hook on promise
                 promised_sec.put(incache=True)
+
+
+class PostCtbto(AlgoComponent):
+    """
+    Post-processing of Mocage accident CTBTO.
+
+    Netcdf files produced by Forecast are converted into txt files,
+    according to the format asked by CTBTO.
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Post-processing of CTBTO",
+            attr = dict(
+                kind = dict(
+                    values   = ["post_ctbto"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "post_ctbto"
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+        sh = self.system
+        seq = self.context.sequence
+
+        import importlib
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+
+        rh_extra_conf = self.context.sequence.effective_inputs(role="ExtraConf")[0].rh
+
+        ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        ncrh.sort(key=lambda s: s.rh.resource.term, reverse=True)
+
+        myfunc(
+            [nc.rh.container.localpath() for nc in ncrh],
+            rh_extra_conf.container.localpath(),
+        )

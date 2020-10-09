@@ -38,4 +38,18 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ExtraConfMocaccCtbto
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExtraConfMocaccCtbtoContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CtbtoOuputs
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 

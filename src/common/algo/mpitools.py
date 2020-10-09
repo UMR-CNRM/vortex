@@ -17,6 +17,7 @@ import footprints
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.tools.arm import ArmForgeTool
+from common.tools.partitioning import setup_partitioning_in_namelist
 
 #: No automatic export
 __all__ = []
@@ -373,6 +374,13 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
                     logger.info('Setup %s=%s in NAMPAR1 %s', nstr, effective_nprocs, namlocal)
                     np1[nstr] = effective_nprocs
                     namw = True
+        # Deal with partitioning macros
+        namw_p = setup_partitioning_in_namelist(namcontents,
+                                                effective_nprocs,
+                                                self.options.get('openmp', 1),
+                                                namlocal)
+        namw = namw or namw_p
+        # Incore IO tasks
         if self.incore_iotasks is not None:
             self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
         return namw

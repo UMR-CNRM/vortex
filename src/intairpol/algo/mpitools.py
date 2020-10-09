@@ -10,11 +10,30 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 
 from vortex.algo import mpitools
+from common.tools.partitioning import setup_partitioning_in_namelist
 
 #: No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
+
+class MpiMocage(mpitools.MpiBinaryBasic):
+    """The kind of binaries used in Mocage's forecasts."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['mocagebasic', ]),
+        ),
+    )
+
+    def setup_namelist_delta(self, namcontents, namlocal):
+        """Setup partitioning on local namelist ``namlocal`` with contents namcontents."""
+        namw = setup_partitioning_in_namelist(namcontents,
+                                              self.nprocs,
+                                              self.options.get('openmp', 1),
+                                              namlocal)
+        return namw
 
 
 def mocage_omplist_binarydeco(omp_variables):
@@ -48,7 +67,7 @@ def mocage_omplist_binarydeco(omp_variables):
 @mocage_omplist_binarydeco(('MOCAGE_OMP_NUM_THREADS',
                             'DAIMON_B_OMP_NUM_THREADS',
                             'DAIMON_H_OMP_NUM_THREADS'))
-class MpiMocagePalm(mpitools.MpiBinaryBasic):
+class MpiMocagePalm(MpiMocage):
     """The kind of binaries used in Mocage's Palm assimilation."""
 
     _footprint = dict(

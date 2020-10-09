@@ -50,3 +50,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JobAssistantAppWideLockPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
