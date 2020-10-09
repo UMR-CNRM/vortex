@@ -8,6 +8,7 @@ default:
             namespace: vortex.multi.fr
             cycle: hycom02_hycom@ang-main.04
             gnamespace: 'gco.multi.fr'
+            forcage : aro
             vapp: hycom
             vconf: ang@fcaro 
 
