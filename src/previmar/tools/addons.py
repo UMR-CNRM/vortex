@@ -28,5 +28,5 @@ class MarineAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_marine',  # IO polling
+    _addonslist = ('iopoll_marine', 'iopoll_waves'  # IO polling
                    )
