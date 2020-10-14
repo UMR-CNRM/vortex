@@ -23,7 +23,7 @@ class IO_Poll_Marine(addons.Addon):
         info = 'Default io_poll marine system interface',
         attr = dict(
             kind = dict(
-                values  = ['iopoll_marine','iopoll_waves'],
+                values  = ['iopoll_marine', 'iopoll_waves'],
             ),
             interpreter = dict(
                 values  = ['bash', 'sh'],
