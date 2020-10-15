@@ -204,7 +204,7 @@ class Request(object):
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with io.open(self._dumpfiles[-1] + '.tmp', 'wb') as fd:
+        with io.open(self._dumpfiles[-1] + '.tmp', 'w') as fd:
             json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
         shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True
