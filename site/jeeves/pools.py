@@ -212,7 +212,7 @@ class Request(object):
     def show(self, *args):
         """Display specified attributes values or all of them."""
         if not args:
-            args = self.__dict__.keys() + ['last']
+            args = list(self.__dict__.keys()) + ['last']
         for attr in sorted([x for x in args if not x.startswith('_')]):
             print(' *', attr, '=', getattr(self, attr))
 
