@@ -12,6 +12,8 @@ from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
 # vortex.syntax.stdattrs.models
+
+
 __all__ = []
 # %% Generic
 
@@ -35,12 +37,13 @@ class _Hycom3dGeoResource(GenvModelGeoResource):
 # %% Parameters
 
 class Hycom3dConsts(_Hycom3dGeoResource):
-    
+
     _footprint = dict(
         info="Hycom3d constant tar file",
         attr=dict(
             kind=dict(values=["hycom3d_consts"]),
             gvar=dict(default="hycom3d_consts_tar"),
+            rank=dict(default=0, type=int, optional=True),
         ),
     )
 
@@ -164,7 +167,7 @@ class Hycom3dRiversr(Resource):
     def realkind(self):
         return f'{self.rivers}'
 
-    
+
 class HycomAtmFrcOuta(Resource):
     _footprint = [
         dict(
@@ -178,8 +181,8 @@ class HycomAtmFrcOuta(Resource):
                     default = 'unknown'
                 ),
                 fields       = dict(
-                    values = ['shwflx', 'radflx', 
-                                    'precip', 'preatm', 'airtmp', 
+                    values = ['shwflx', 'radflx',
+                                    'precip', 'preatm', 'airtmp',
                                     'wndspd', 'tauewd', 'taunwd', 'vapmix'],
                     default = 'unknown'
                 ),
@@ -205,8 +208,8 @@ class HycomAtmFrcOutb(Resource):
                     default = 'b'
                 ),
                 fields       = dict(
-                    values = ['shwflx', 'radflx', 
-                                    'precip', 'preatm', 'airtmp', 
+                    values = ['shwflx', 'radflx',
+                                    'precip', 'preatm', 'airtmp',
                                     'wndspd', 'tauewd', 'taunwd', 'vapmix'],
                     default = 'unknown'
                 ),
@@ -231,8 +234,8 @@ class Hycom3dMaskInterpWeights(_Hycom3dGeoResource):
     @property
     def realkind(self):
         return "mask_interp_weights"
-    
-    
+
+
 class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
     _footprint = dict(
         info="Hycom3d atmospheric forcing interpolation weights nc file",
@@ -245,8 +248,8 @@ class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
     @property
     def realkind(self):
         return "atmfrc_interp_weights"
-    
-    
+
+
 # %% Model outputs
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
