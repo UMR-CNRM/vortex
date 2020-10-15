@@ -7,19 +7,20 @@ TODO module description.
 
 from __future__ import print_function
 
+import io
+import json
 import os
 import pwd
 import shutil
-import io
-import zipfile
-import json
 import time
-from glob import glob
+import zipfile
 from datetime import datetime, timedelta
+from glob import glob
 
-from bronx.patterns import getbytag
+import six
+
 import footprints
-
+from bronx.patterns import getbytag
 
 #: No automatic export
 __all__ = []
@@ -415,5 +416,6 @@ class Deposit(getbytag.GetByTag):
 
 if __name__ == '__main__':
     import doctest
+
     result = doctest.testmod(verbose=False)
     print('{}/{} tests passed.'.format(result.attempted - result.failed, result.attempted))
