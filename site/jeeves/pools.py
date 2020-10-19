@@ -7,19 +7,20 @@ TODO module description.
 
 from __future__ import print_function
 
+import io
+import json
 import os
 import pwd
 import shutil
-import io
-import zipfile
-import json
 import time
-from glob import glob
+import zipfile
 from datetime import datetime, timedelta
+from glob import glob
 
-from bronx.patterns import getbytag
+import six
+
 import footprints
-
+from bronx.patterns import getbytag
 
 #: No automatic export
 __all__ = []
@@ -204,7 +205,7 @@ class Request(object):
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with io.open(self._dumpfiles[-1] + '.tmp', 'wb') as fd:
+        with io.open(self._dumpfiles[-1] + '.tmp', 'wb' if six.PY2 else 'w') as fd:
             json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
         shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True
@@ -212,7 +213,7 @@ class Request(object):
     def show(self, *args):
         """Display specified attributes values or all of them."""
         if not args:
-            args = self.__dict__.keys() + ['last']
+            args = list(self.__dict__.keys()) + ['last']
         for attr in sorted([x for x in args if not x.startswith('_')]):
             print(' *', attr, '=', getattr(self, attr))
 
@@ -415,5 +416,6 @@ class Deposit(getbytag.GetByTag):
 
 if __name__ == '__main__':
     import doctest
+
     result = doctest.testmod(verbose=False)
     print('{}/{} tests passed.'.format(result.attempted - result.failed, result.attempted))
