@@ -127,6 +127,8 @@ class OpJobAssistantTest(JobAssistant):
                 if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
                    or t.env.OP_VCONF == 'altana':
                     rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
+                elif t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'surfana':
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
