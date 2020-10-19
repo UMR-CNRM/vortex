@@ -23,7 +23,7 @@ class IO_Poll_Marine(addons.Addon):
         info = 'Default io_poll marine system interface',
         attr = dict(
             kind = dict(
-                values  = ['iopoll_marine'],
+                values  = ['iopoll_marine', 'iopoll_waves'],
             ),
             interpreter = dict(
                 values  = ['bash', 'sh'],
@@ -49,6 +49,21 @@ class IO_Poll_Marine(addons.Addon):
         strpollingdir = ','.join(x for x in pollingdir)
         cmd.extend(['--pollingdir', strpollingdir])
         logger.info("cmd: %s", cmd)
+        # Catch the processed file
+        rawout = self._spawn(cmd)
+        # Cumulative results
+        return rawout
+
+    def iopoll_waves(self, prefix, model=None, forcage=None):
+        """Do the actual job of polling files prefixed by ``prefix``."""
+        logger.info("Execution IOPOLL Marine")
+        cmd = ['--prefix', prefix]
+        if model is not None:
+            cmd.extend(['--model', model])
+        if forcage is not None:
+            cmd.extend(['--forcage', forcage])
+        logger.info("cmd: %s", cmd)
+
         # Catch the processed file
         rawout = self._spawn(cmd)
         # Cumulative results
