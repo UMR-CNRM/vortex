@@ -178,6 +178,7 @@ def batch_main(common_instructions=dict(),
                 print(taskheader)
                 print('-' * len(taskheader))
                 print_report(r['report'])
+            return report
 
 
 # MAIN CLASSES
