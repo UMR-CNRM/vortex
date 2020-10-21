@@ -138,10 +138,11 @@ class GitDecoMixin(AlgoComponentDecoMixin):
                     yield
                 finally:
                     # getting out of contextmanager : set origin remote URL back to what it was
-                    logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url)))
-                    with self.system.cdcontext(self.repository):
-                        self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', origin_url],
-                                          output=False)
+                    if origin_url:
+                        logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url[0])))
+                        with self.system.cdcontext(self.repository):
+                            self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', origin_url[0]],
+                                              output=False)
         else:
             yield
 
