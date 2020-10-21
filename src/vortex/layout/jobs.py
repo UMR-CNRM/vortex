@@ -947,6 +947,8 @@ class JobAssistantEpygramPlugin(JobAssistantPlugin):
                     t.env.ECCODES_DIR = edir_path
                 else:
                     logger.info('ECCODES_DIR environment variable left unconfigured')
+            # In any case, run with the Agg matplotlib backend
+            t.env.MPLBACKEND = 'Agg'
 
 
 class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
