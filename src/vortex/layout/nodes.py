@@ -17,6 +17,7 @@ from bronx.fancies import loggers
 from bronx.patterns import getbytag
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
+from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
@@ -586,7 +587,7 @@ class Node(getbytag.GetByTag, NiceLayout):
             for binary in tbx:
                 try:
                     tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
-                except Exception as e:
+                except (Exception, SignalInterruptError, KeyboardInterrupt) as e:
                     mask_delayed, f_infos = self.filter_execution_error(e)
                     if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
                         logger.warning("The delayed exception is masked:\n%s", str(f_infos))
