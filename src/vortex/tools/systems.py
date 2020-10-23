@@ -1972,7 +1972,26 @@ class OSExtended(System):
         return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
-    def _copydatatree(self, src, dst):
+    def _validate_symlink_below(self, symlink, valid_below):
+        """
+        Check that **symlink** is relative and that its target is below
+        the **valid_below** directory.
+        """
+        link_to = self._os.readlink(symlink)
+        # Is it relative ?
+        if re.match('^([^{0:s}]|..{0:s}|.{0:s})'.format(re.escape(os.path.sep)),
+                    link_to):
+            symlink_dir = self.path.abspath(self.path.dirname(symlink))
+            abspath_to = self.path.normpath(self.path.join(symlink_dir, link_to))
+            # Valid ?
+            abspath_valid_below = self.path.abspath(valid_below)
+            valid = self.path.commonprefix([abspath_valid_below, abspath_to]) == abspath_valid_below
+            return (self.path.relpath(abspath_to, start=symlink_dir)
+                    if valid else None)
+        else:
+            return None
+
+    def _copydatatree(self, src, dst, keep_symlinks_below=None):
         """Recursively copy a directory tree using copyfile.
 
         This is a variant of shutil's copytree. But, unlike with copytree,
@@ -1982,6 +2001,7 @@ class OSExtended(System):
         """
         self.stderr('_copydatatree', src, dst)
         with self.mute_stderr():
+            keep_symlinks_below = keep_symlinks_below or src
             names = self._os.listdir(src)
             self._os.makedirs(dst)
             errors = []
@@ -1990,7 +2010,14 @@ class OSExtended(System):
                 dstname = self._os.path.join(dst, name)
                 try:
                     if self.path.isdir(srcname):
-                        self._copydatatree(srcname, dstname)
+                        self._copydatatree(srcname, dstname,
+                                           keep_symlinks_below=keep_symlinks_below)
+                    elif self._os.path.islink(srcname):
+                        linkto = self._validate_symlink_below(srcname, keep_symlinks_below)
+                        if linkto is not None:
+                            self._os.symlink(linkto, dstname)
+                        else:
+                            rc = self._sh.copyfile(srcname, dstname)
                     else:
                         # Will raise a SpecialFileError for unsupported file types
                         self._sh.copyfile(srcname, dstname)
@@ -2141,7 +2168,8 @@ class OSExtended(System):
             rc = self.path.samefile(source, destination)
         return rc
 
-    def hardlink(self, source, destination, readonly=True, securecopy=True):
+    def hardlink(self, source, destination,
+                 readonly=True, securecopy=True, keep_symlinks_below=None):
         """Create hardlinks for both single files or directories.
 
         :param bool readonly: ensure that all of the created links are readonly
@@ -2149,10 +2177,14 @@ class OSExtended(System):
                         (because of a "Too many links" OS error), create
                         a temporary filename and move it afterward to the
                         *destination*: longer but safer.
+        :param str keep_symlinks_below: Preserve relative symlinks that have
+                                        a target below the **keep_symlinks_below**
+                                        directory (if omitted, **source** is used)
         """
         if self.path.isdir(source):
             self.stderr('hardlink', source, destination,
                         '#', 'directory,', 'readonly={!s}'.format(readonly))
+            keep_symlinks_below = keep_symlinks_below or source
             with self.mute_stderr():
                 # Mimics 'cp -al'
                 names = self._os.listdir(source)
@@ -2162,11 +2194,17 @@ class OSExtended(System):
                     srcname = self._os.path.join(source, name)
                     dstname = self._os.path.join(destination, name)
                     if self._os.path.islink(srcname):
-                        linkto = self._os.readlink(srcname)
-                        self._os.symlink(linkto, dstname)
+                        linkto = self._validate_symlink_below(srcname, keep_symlinks_below)
+                        if linkto is None:
+                            rc = self._safe_hardlink(self.path.join(self.path.dirname(srcname),
+                                                                    self._os.readlink(srcname)),
+                                                     dstname, securecopy=securecopy)
+                        else:
+                            self._os.symlink(linkto, dstname)
                     elif self.path.isdir(srcname):
                         rc = self.hardlink(srcname, dstname,
-                                           readonly=readonly, securecopy=securecopy)
+                                           readonly=readonly, securecopy=securecopy,
+                                           keep_symlinks_below=keep_symlinks_below)
                     else:
                         rc = self._safe_hardlink(srcname, dstname, securecopy=securecopy)
                         if readonly and rc:
@@ -2542,17 +2580,21 @@ class OSExtended(System):
             if output_setting and output_txt:
                 logger.info('Untar command output:\n%s', '\n'.join(output_txt))
             unpacked = self.glob('*')
+            unpacked_prefix = '.'
             # If requested, ignore the first level of directory
             if (uniquelevel_ignore and len(unpacked) == 1 and
                     self.path.isdir(self.path.join(unpacked[0]))):
-                logger.info('Moving contents one level up: %s', unpacked[0])
-                unpacked = self.glob(self.path.join(unpacked[0], '*'))
+                unpacked_prefix = unpacked[0]
+                logger.info('Moving contents one level up: %s', unpacked_prefix)
+                with self.cdcontext(unpacked_prefix):
+                    unpacked = self.glob('*')
             for untaritem in unpacked:
-                itemtarget = self.path.basename(untaritem)
-                if self.path.exists('../' + itemtarget):
+                itemtarget = self.path.join('..', self.path.basename(untaritem))
+                if self.path.exists(itemtarget):
                     logger.error('Some previous item exists before untar [%s]', untaritem)
                 else:
-                    self.mv(untaritem, '../' + itemtarget)
+                    self.mv(self.path.join(unpacked_prefix, untaritem),
+                            itemtarget)
         return unpacked
 
     def is_tarname(self, objname):

@@ -17,7 +17,7 @@ from unittest import TestCase, main
 
 import vortex
 from vortex import sessions, toolbox
-from vortex.data.abstractstores import _CACHE_GET_INTENT_DEFAULT
+from vortex.data.abstractstores import CACHE_GET_INTENT_DEFAULT
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource
 from vortex.data.providers import VortexStd
@@ -94,7 +94,7 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
     def incacheearlyget(self, remote, local, options):
         rc = self.cache.earlyretrieve(
             remote['path'], local,
-            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', CACHE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
             tarextract=options.get('auto_tarextract', False),
@@ -108,7 +108,7 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
         rc = self.cache.finaliseretrieve(
             result_id,
             remote['path'], local,
-            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', CACHE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
             tarextract=options.get('auto_tarextract', False),
