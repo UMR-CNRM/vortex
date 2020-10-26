@@ -302,7 +302,7 @@ class FullPosServer(IFSParallel):
             logger.info('%s copied as %s.',
                         sourcepath, inputs_mapping[sourcepath])
         if self.append_domain:
-            outputpath = o_raw_fmt.format(self.append_domain, i)
+            outputpath = o_raw_fmt.format(self.append_domain, i, '')
             self.system.cp(sourcepath, outputpath, intent='inout', fmt=irh.container.actualfmt)
             logger.info('output file prepared: %s copied (rw) to %s.', sourcepath, outputpath)
 
@@ -328,7 +328,8 @@ class FullPosServer(IFSParallel):
                 m_re = out_re.match(thisdata)
                 if m_re:
                     mappeddata = (sh.path.join(sh.path.dirname(thisdata),
-                                               data[0].format(m_re.group('fpdom'))),
+                                               data[0].format(m_re.group('fpdom'),
+                                                              m_re.group('suffix'))),
                                   data[1])
                     break
             if mappeddata is None:
@@ -351,7 +352,8 @@ class FullPosServer(IFSParallel):
                 m_re = out_re.match(sh.path.basename(thisdata))
                 if m_re:
                     mappeddata = (sh.path.join(sh.path.dirname(thisdata),
-                                               data[0].format(m_re.group('fpdom'))),
+                                               data[0].format(m_re.group('fpdom'),
+                                                              m_re.group('suffix'))),
                                   data[1])
                     break
             if mappeddata is None:
@@ -468,21 +470,21 @@ class FullPosServer(IFSParallel):
                  'd}')
         o_raw_fmt = ('{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) + '{:s}+' +
                      '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
-                     'd}')
+                     'd}{:s}')
         o_raw_re_fmt = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
                         r'(?P<fpdom>\w+)\+' +
                         '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
-                        'd}$')
+                        r'd}(?P<suffix>(?:\.sfx)?)$')
         o_grb_re_fmt = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
                         r'(?P<fpdom>\w+)\+' +
                         '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
-                        'd}$')
+                        r'd}(?P<suffix>(?:\.sfx)?)$')
         o_init_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
-                     r'(?P<fpdom>\w+)INIT$')
+                     r'(?P<fpdom>\w+)INIT(?P<suffix>(?:\.sfx)?)$')
         o_initgrb_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
-                        r'(?P<fpdom>\w+)INIT$')
-        o_suffix = '.{:s}.out'
-        o_grb_suffix = '.{:s}.grib.out'
+                        r'(?P<fpdom>\w+)INIT(?P<suffix>(?:\.sfx)?)$')
+        o_suffix = '.{:s}{:s}.out'
+        o_grb_suffix = '.{:s}{:s}.grib.out'
 
         # Input and Output mapping
         inputs_mapping = dict()
