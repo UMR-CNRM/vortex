@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from bronx.fancies import loggers
 
-from common.data.consts import GenvModelGeoResource
+from common.data.consts import GenvModelGeoResource, GenvModelResource
 from gco.syntax.stdattrs import gdomain
 
 #: No automatic export
@@ -179,3 +179,4 @@ class Prosnow_SetUp_Resort(GenvModelResource):
     @property
     def realkind(self):
         return self.kind
+

@@ -29,7 +29,7 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract, forcinput_changedates
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -1101,7 +1101,11 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_other_forcing:
 
-                forcingdir = rundir
+                # Change for PROSNOW (TBC!) -> 1/2
+                ###########
+#                 forcingdir = rundir
+                forcingdir = self.forcingdir(rundir, thisdir)
+                ###########
 
                 if len(self.geometry_in) > 1:
                     print("FORCING AGGREGATION")
@@ -1143,7 +1147,12 @@ class PrepareForcingWorker(TaylorVortexWorker):
             need_other_run = dateend_this_run < self.dateend
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
-                save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+
+                # Change for PROSNOW (TBC!) -> 2/2
+                ###########
+#                 save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+                save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
+                ###########
 
         return rdict
 
@@ -1697,7 +1706,7 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
         ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             if attribute in ['datebegin', 'dateend']:
-                ddict[attribute] = getattr(self, attribute)[0][0]               
+                ddict[attribute] = getattr(self, attribute)[0][0]        
             else:
                 ddict[attribute] = getattr(self, attribute)
 
@@ -1756,7 +1765,7 @@ class ExtractForcingWorker(PrepareForcingWorker):
         dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_'  + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_4 = rundir                           + '/SRU.txt'        
-        
+
         # ------------------- #
 
         # A) Init, Analysis, ST:
@@ -1768,25 +1777,25 @@ class ExtractForcingWorker(PrepareForcingWorker):
         # B) LT - Climatology:              
                         
         # Change dates of the climatology to the current season
-#         if self.forcingdir(rundir, thisdir) == thisdir:
-#             if self.forecasttype() == 'LT':
-#                 if int(self.datebegin.strftime('%m')) >= 8:
-#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')),8,1,6,0)
-#                 else:
-#                     datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y'))-1,8,1,6,0)  
-#                 forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
+        if self.forcingdir(rundir, thisdir) == thisdir:
+            if self.forecasttype() == 'LT':
+                if int(self.datebegin.strftime('%m')) >= 8:
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')),8,1,6,0)
+                else:
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y'))-1,8,1,6,0)  
+                forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
 
         # C) LT - Hindcast:
 
         # Projection of forcing files on the slopes, creation of LAT,LOT
-        rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+#         rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
 
         # D) Whenever necessary:
          
-        # Extraction of SRU geometry
-#         forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
-#         self.system.mv(dir_file_1, dir_file_3)
-#         self.system.mv(dir_file_2, dir_file_1)
+        # Extraction of SRU geometry       
+        forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
+        self.system.mv(dir_file_1, dir_file_3)
+        self.system.mv(dir_file_2, dir_file_1)
 
         # ------------------- #
 
