@@ -49,7 +49,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: SingleFile
    :show-inheritance:
    :members:

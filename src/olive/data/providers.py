@@ -292,8 +292,13 @@ class OpArchive(Provider):
 
         if self.member is not None:
             run = 'RUN' + "%d" % self.member
-            if re.match(r'pearp', self.igakey) and resource.realkind == 'gridpoint':
-                return '/'.join((self.igakey, suite, dd, rr))
+            if re.match(r'pearp', self.igakey):
+                if resource.realkind == 'gridpoint':
+                    return '/'.join((self.igakey, suite, dd, rr))
+                if resource.realkind == 'ic':
+                    return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr))
+                else:
+                    return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run))
             else:
                 return '/'.join((self.igakey, suite, rinfo['cutoff'], yyyy, mm, dd, rr, run))
         else:

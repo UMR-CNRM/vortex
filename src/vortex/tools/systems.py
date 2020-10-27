@@ -2697,7 +2697,7 @@ class OSExtended(System):
         """
         self._sighandler.deactivate()
 
-    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*([^\s]+)\s+\(0x.+\)$')
+    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*(?:([^\s]+)\s+\(0x.+\)|not found)$')
 
     def ldd(self, filename):
         """Call ldd on **filename**.
@@ -2709,7 +2709,7 @@ class OSExtended(System):
             libs = dict()
             for ldd_match in [self._LDD_REGEX.match(l) for l in ldd_out]:
                 if ldd_match is not None:
-                    libs[ldd_match.group(1)] = ldd_match.group(2)
+                    libs[ldd_match.group(1)] = ldd_match.group(2) or None
             return libs
         else:
             raise ValueError('{} is not a regular file'.format(filename))
@@ -2762,6 +2762,78 @@ class OSExtended(System):
             path = self._os.path.dirname(path)
 
         return path
+
+    @property
+    def _appwide_lockbase(self):
+        """Compute the path to the application wide locks base directory."""
+        if self.glove is not None:
+            myglove = self.glove
+            rcdir = myglove.configrc
+            lockdir = self.path.join(rcdir,
+                                     'appwide_locks',
+                                     '{0.vapp:s}-{0.vconf:s}'.format(myglove))
+            self.mkdir(lockdir)
+            return lockdir
+        else:
+            raise RuntimeError("A glove must be defined")
+
+    def _appwide_lockdir_path(self, label):
+        """Compute the path to the lock directory."""
+        return self.path.join(self._appwide_lockbase, label)
+
+    def appwide_lock(self, label, blocking=False, timeout=300, sleeptime=2):
+        """Pseudo-lock mechanism based on atomic directory creation: acquire lock.
+
+        The lock is located in a directory that depends on the vapp and vconf
+        attributes of the current glove. The user must provide a **label** that
+        helps to identify the lock purpose (it may include the xpid, ...).
+
+        :param str label: The name of the desired lock
+        :param bool blocking: Block (at most **timeout** seconds) until the
+                              lock can be acquired
+        :param float timeout: Block at most timeout seconds (if **blocking** is True)
+        :param float sleeptime: When blocking, wait **sleeptime** seconds between to
+                                attempts to acquire the lock.
+        """
+        ldir = self._appwide_lockdir_path(label)
+        rc = None
+        t0 = time.time()
+        while rc is None or (not rc and blocking and time.time() - t0 < timeout):
+            if rc is not None:
+                self.sleep(sleeptime)
+            try:
+                # Important note: os' original mkdir function is used on purpose
+                # since we need to get an error if the target directory already
+                # exists
+                self._os.mkdir(ldir)
+            # Note: OSError + errno check is used to be compatible with Python2.7
+            #       in Python3, it will be wiser to catch directly FileExistsError
+            except OSError as os_e:
+                # To be safe, check the error code carefully
+                if os_e.errno == errno.EEXIST:
+                    rc = False
+                else:
+                    raise
+            else:
+                rc = True
+        return rc
+
+    def appwide_unlock(self, label):
+        """Pseudo-lock mechanism based on atomic directory creation: release lock.
+
+        :param str label: The name of the desired lock
+        """
+        ldir = self._appwide_lockdir_path(label)
+        try:
+            self.rmdir(ldir)
+        # Note: OSError + errno check is used to be compatible with Python2.7
+        #       in Python3, it will be wiser to catch directly FileNotFoundError
+        except OSError as os_e:
+            if os_e.errno == errno.ENOENT:
+                # If the directory was already deleted, ok ignore the error
+                logger.warning("'%s' did not exists... that's odd", ldir)
+            else:
+                raise
 
 
 _python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',

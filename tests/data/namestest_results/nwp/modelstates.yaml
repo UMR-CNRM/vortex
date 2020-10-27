@@ -992,6 +992,46 @@
       experiment: abcd
       filling: null
       kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: null
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: grib
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: null
+      kind: ic
       model: surfex
       namespace: olive.multi.fr
       nativefmt: null
@@ -1436,6 +1476,46 @@
       experiment: abcd
       filling: atm
       kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: null
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: grib
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: atm
+      kind: ic
       model: surfex
       namespace: olive.multi.fr
       nativefmt: null
@@ -1874,6 +1954,46 @@
       location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/sRCP6.0/mb002/ic/ic.surf-arome.frangp0025.grib
     - default: *id004
       location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/sRCP6.0/mb002/ic/ic.surf-arpege.glob05.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: null
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: ic
+      experiment: abcd
+      filling: surf
+      kind: ic
+      member: 5
+      namespace: oper.archive.fr
+      nativefmt: grib
+      suite: oper
+      vconf: pearp
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.archive.fr/arome/oper/assim/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id002
+      location: op://oper.archive.fr/pearp/oper/assim/2018/01/01/r0/ICFC_005
+    - default: *id003
+      location: op://oper.archive.fr/arome/oper/production/2018/01/01/r0/RUN5/ICFC_005
+    - default: *id004
+      location: op://oper.archive.fr/pearp/oper/production/2018/01/01/r0/ICFC_005
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: ic

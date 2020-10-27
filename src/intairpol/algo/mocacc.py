@@ -238,6 +238,12 @@ class AbstractMocaccRoot(Parallel):
                     optional = True,
                     default  = None,
                 ),
+                mpiconflabel = dict(
+                    default  = 'mocage'
+                ),
+                binarysingle=dict(
+                    default  = 'mocagebasic'
+                ),
             )
         )
     ]
@@ -369,7 +375,8 @@ class MocaccForecast(AbstractMocaccRoot):
         return sorted(
             set(
                 [sec.rh.resource.date + sec.rh.resource.term for sec in self._fm_inputs]
-            )
+            ),
+            reverse=self.transinv,
         )
 
     @property
@@ -401,7 +408,7 @@ class MocaccForecast(AbstractMocaccRoot):
         # List of (geom, associated list of fm validities)
         fms_validities = self._sorted_inputs_validities
         starts_at = date.Date(self.basedate)
-        ends_at = max(fms_validities)
+        ends_at = fms_validities[-1]
 
         inputs_period_in_hours = (fms_validities[1] - fms_validities[0]).length // 3600
 
@@ -455,6 +462,7 @@ class MocaccForecast(AbstractMocaccRoot):
         MOCAGE_ZERO = 1.0e-30
 
         from common.util import usepygram
+
         if not usepygram.epygram_checker.is_available():
             raise AlgoComponentError("Epygram needs to be available")
 
@@ -636,8 +644,13 @@ class PostMocacc(AlgoComponent):
 
         # netcdf files from forecast
         ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        transinv = (
+            True if ncrh[-1].rh.resource.term < ncrh[0].rh.resource.term else False
+        )
+
         # overwrite ncrh by the ascending sort of the ncrh list
-        ncrh.sort(key=lambda s: s.rh.resource.term)
+        # or descinding if inverse transport
+        ncrh.sort(key=lambda s: s.rh.resource.term, reverse=transinv)
 
         latest_by_geom = dict()
 
@@ -668,7 +681,7 @@ class PostMocacc(AlgoComponent):
 
             # wont work with concurrency or parallelism as previous resource is expected
             # for the same geometry, for temporal integration
-            if r.resource.geometry in latest_by_geom:
+            if r.resource.geometry in latest_by_geom and not transinv:
                 logger.info(
                     "Time integration using {0!s} as initial state".format(
                         latest_by_geom[r.resource.geometry]
@@ -698,7 +711,9 @@ class PostMocacc(AlgoComponent):
                 gribs = []
 
                 for (term, gribs_by_term) in done_grib_by_term.items():
-                    if term <= r.resource.term:
+                    if term <= r.resource.term and not transinv:
+                        gribs += gribs_by_term
+                    elif term >= r.resource.term and transinv:
                         gribs += gribs_by_term
 
                 # Alerte.json may be missing
@@ -728,3 +743,64 @@ class PostMocacc(AlgoComponent):
 
                 # To allow flying routing via hook on promise
                 promised_sec.put(incache=True)
+
+
+class PostCtbto(AlgoComponent):
+    """
+    Post-processing of Mocage accident CTBTO.
+
+    Netcdf files produced by Forecast are converted into txt files,
+    according to the format asked by CTBTO.
+
+    This post-processing is done with an external python module.
+    """
+
+    # fmt: off
+    _footprint = [
+        model,
+        dict(
+            info = "Post-processing of CTBTO",
+            attr = dict(
+                kind = dict(
+                    values   = ["post_ctbto"]
+                ),
+                engine = dict(
+                    values   = ["custom"]
+                ),
+                model = dict(
+                    values   = ["mocage"]
+                ),
+                extern_module = dict(
+                    info     = "External module to be used"
+                ),
+                extern_func = dict(
+                    info     = "Function within external module to call"
+                ),
+            ),
+        ),
+    ]
+    # fmt: on
+
+    @property
+    def realkind(self):
+        return "post_ctbto"
+
+    def execute(self, rh, opts):
+        """Standard execution."""
+        sh = self.system
+        seq = self.context.sequence
+
+        import importlib
+
+        mymodule = importlib.import_module(self.extern_module)
+        myfunc = getattr(mymodule, self.extern_func)
+
+        rh_extra_conf = self.context.sequence.effective_inputs(role="ExtraConf")[0].rh
+
+        ncrh = self.context.sequence.effective_inputs(role="NetcdfForecast")
+        ncrh.sort(key=lambda s: s.rh.resource.term, reverse=True)
+
+        myfunc(
+            [nc.rh.container.localpath() for nc in ncrh],
+            rh_extra_conf.container.localpath(),
+        )

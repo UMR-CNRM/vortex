@@ -42,7 +42,7 @@ class OpJobAssistantTest(JobAssistant):
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
 
-        t.sh.subtitle('Setting up a new glove')
+        t.sh.header('Setting up a new glove')
 
         opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
@@ -69,7 +69,7 @@ class OpJobAssistantTest(JobAssistant):
         """OP session's environment setup."""
         super(OpJobAssistantTest, self)._env_setup(t, **kw)
 
-        t.sh.subtitle('OP setup')
+        t.sh.header('OP env setup')
 
         # Symlink to job's last execution log in op's resul directory
         if "SLURM_JOB_NAME" in t.env():
@@ -108,13 +108,11 @@ class OpJobAssistantTest(JobAssistant):
         else:
             t.env.setvar("OP_DISP_NAME", None)
 
-        t.sh.header('Setting up the MPI Environment')
-
+        t.sh.highlight('Setting up the MPI Environment')
         mpi, u_rkw = swissknife.slurm_parameters(t, **kw)  # @UnusedVariable
         t.env.OP_MPIOPTS = mpi
 
-        t.sh.header('Setting up the rundate')
-
+        t.sh.highlight('Setting up the rundate')
         if t.env.OP_RUNDATE:
             if not isinstance(t.env.OP_RUNDATE, bronx.stdtypes.date.Date):
                 t.env.OP_RUNDATE = bronx.stdtypes.date.Date(t.env.OP_RUNDATE)
@@ -126,31 +124,33 @@ class OpJobAssistantTest(JobAssistant):
                 rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
-                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
+                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
+                   or t.env.OP_VCONF == 'altana':
                     rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
+                elif t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'surfana':
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
         logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
-        t.sh.header('Setting up suitebg')
-
+        t.sh.highlight('Setting up suitebg')
         if t.env.OP_SUITEBG is None:
             t.env.OP_SUITEBG = t.env.get('OP_XPID', None)
 
-        t.sh.header("Setting up the member's number")
+        t.sh.highlight("Setting up the member's number")
         if not t.env.OP_MEMBER and t.env.get('DMT_ECHEANCE'):
             t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
-        t.sh.header("Setting up the s2m path")
+        t.sh.highlight("Setting up the s2m path")
         t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
 
-        t.sh.subtitle('Setting up the actual running directory')
+        t.sh.highlight('Setting up the actual running directory')
 
         t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
         t.sh.cd(t.env.RUNDIR, create=True)
@@ -171,7 +171,7 @@ class OpJobAssistantTest(JobAssistant):
         """Setup the OP action dispatcher."""
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
-        t.sh.subtitle('Setting up OP Actions')
+        t.sh.highlight('Setting up OP Actions')
         import iga.tools.services  # @UnusedImport
         import iga.tools.actions  # @UnusedImport
 
@@ -183,11 +183,11 @@ class OpJobAssistantTest(JobAssistant):
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
 
         # ----------------------------------------------------------------------
-        t.sh.header('START message to op MESSDAYF reporting file')
+        t.sh.highlight('START message to op MESSDAYF reporting file')
         ad.report(kind='dayfile', mode='DEBUT')
 
         # ----------------------------------------------------------------------
-        t.sh.header('ECFLOW Settings')
+        t.sh.highlight('ECFLOW Settings')
         ad.ecflow_info()
         ad.ecflow_off()
 

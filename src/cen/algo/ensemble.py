@@ -684,7 +684,8 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), 'liste_obs*')
+            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                            'liste_obs*')
         self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
 
         super(SytistWorker, self).postfix()
@@ -913,8 +914,9 @@ class SurfexWorker(_S2MWorker):
                                 self.dateend)
                         except FileNameException:
                             deterministic = self.subdir == "mb035"
-                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" + massif, deterministic, self.subdir,
-                                                            datebegin_this_run, self.dateend)
+                            rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir + "/" +
+                                                            massif, deterministic, self.subdir, datebegin_this_run,
+                                                            self.dateend)
                             return rdict  # Note than in the other case return rdict is at the end
                         forcingname = "FORCING_" + massif + ".nc"
                         self.system.mv("FORCING.nc", forcingname)
@@ -941,8 +943,9 @@ class SurfexWorker(_S2MWorker):
                             self.dateend)
                     except FileNameException:
                         deterministic = self.subdir == "mb035"
-                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir, deterministic, self.subdir,
-                                                        datebegin_this_run, self.dateend)
+                        rdict['rc'] = S2MExecutionError("missing forcing file in directory " + forcingdir,
+                                                        deterministic, self.subdir, datebegin_this_run,
+                                                        self.dateend)
                         return rdict
                     print("FORCING FOUND")
 
@@ -1480,7 +1483,7 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus", "E2open"],
+                values = ["E1", "E2", "Crocus", "E2open", "E2MIP", "E2tartes", "E2MIPtartes"],
                 optional = True,
             ),
             geometry = dict(

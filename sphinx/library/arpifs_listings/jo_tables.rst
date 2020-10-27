@@ -23,27 +23,27 @@ Exceptions
 
 Classes
 -------
-   
+
 .. autoclass:: JoTables
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: JoTable
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: JoObstype
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: JoSensor
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: JoVariable
    :show-inheritance:
    :members:

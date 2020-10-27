@@ -57,10 +57,6 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-.. autoclass:: CanariClosestModelClimName
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: InitialContionsName
    :show-inheritance:

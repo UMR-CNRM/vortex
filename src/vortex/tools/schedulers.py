@@ -7,6 +7,7 @@ Interface to SMS commands.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 import functools
 import six
 
@@ -41,6 +42,7 @@ class Scheduler(Service):
 
     @property
     def env(self):
+        """Return the current active environment."""
         return self.sh.env
 
     def cmd_rename(self, cmd):
@@ -80,6 +82,11 @@ class EcmwfLikeScheduler(Scheduler):
 
     _KNOWN_CMD = ()
 
+    def __init__(self, *args, **kw):
+        logger.debug('Scheduler init %s', self.__class__)
+        super(Scheduler, self).__init__(*args, **kw)
+        self._inside_child_session = False
+
     def conf(self, kwenv):
         """Possibly export the provided variables and return a dictionary of positioned variables."""
         if kwenv:
@@ -99,6 +106,29 @@ class EcmwfLikeScheduler(Scheduler):
         """By default call the :meth:`info` method."""
         return self.info()
 
+    @contextlib.contextmanager
+    def child_session_setup(self):
+        """This may be customised in order to setup session related stuff."""
+        yield True
+
+    @contextlib.contextmanager
+    def child_session(self):
+        """Prepare the environment and possibly setup the session.
+
+        It will only clone the environment and call child_session_setup
+        once (even if child is called again from within the first child call).
+        """
+        if not self._inside_child_session:
+            self._inside_child_session = True
+            try:
+                with self.env.clone():
+                    with self.child_session_setup() as setup_rc:
+                        yield setup_rc
+            finally:
+                self._inside_child_session = False
+        else:
+            yield True
+
     def setup_default(self, *args):
         """Fake method for any missing callback, ie: setup_init, setup_abort, etc."""
         return True
@@ -107,13 +137,10 @@ class EcmwfLikeScheduler(Scheduler):
         """Fake method for any missing callback, ie: close_init, close_abort, etc."""
         return True
 
-    def wrap_in(self):
+    @contextlib.contextmanager
+    def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        return True
-
-    def wrap_out(self):
-        """Restore execution state as before :meth:`wrap_in`."""
-        pass
+        yield True
 
     def child(self, cmd, *options, **kwoptions):
         """Miscellaneous sms/ecflow child sub-command."""
@@ -122,20 +149,25 @@ class EcmwfLikeScheduler(Scheduler):
         if cmd in self.muteset:
             logger.warning('%s mute command [%s]', self.kind, cmd)
         else:
-            if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
-                with self.env.clone():
-                    rc = self.wrap_in()
-                    if rc:
+            with self.child_session() as session_rc:
+                if session_rc:
+                    if getattr(self, 'setup_' + cmd, self.setup_default)(*options):
+                        wrapp_rc = False
                         try:
-                            rc = self._actual_child(cmd, options, ** kwoptions)
+                            with self.wrap_actual_child_command(kwoptions) as wrapp_rc:
+                                if wrapp_rc:
+                                    rc = self._actual_child(cmd, options, **kwoptions)
+                                else:
+                                    logger.warning('Actual [%s %s] command wrap failed', self.kind, cmd)
                         finally:
-                            self.wrap_out()
-                            getattr(self, 'close_' + cmd, self.close_default)(*options)
+                            if wrapp_rc:
+                                getattr(self, 'close_' + cmd, self.close_default)(*options)
                     else:
-                        logger.warning('Actual [%s %s] command wrap_in failed', self.kind, cmd)
-            else:
-                logger.warning('Actual [%s %s] command skipped due to setup action',
-                               self.kind, cmd)
+                        logger.warning('Actual [%s %s] command skipped due to setup action',
+                                       self.kind, cmd)
+                else:
+                    logger.warning('Actual [%s %s] command skipped session setup failure',
+                                   self.kind, cmd)
         return rc
 
     def _actual_child(self, cmd, options, critical=True):
@@ -147,7 +179,7 @@ class EcmwfLikeScheduler(Scheduler):
         if name in self._KNOWN_CMD:
             return functools.partial(self.child, name)
         else:
-            return super(EcmwfLikeScheduler, self).__getattr__(name)
+            raise AttributeError(name)
 
 
 class SMS(EcmwfLikeScheduler):
@@ -215,20 +247,32 @@ class SMS(EcmwfLikeScheduler):
         """Return actual binary path to SMS commands."""
         return self._actual_rootdir
 
-    def wrap_in(self):
+    @contextlib.contextmanager
+    def child_session_setup(self):
+        """Setup the path to the SMS client."""
+        with super(SMS, self).child_session_setup() as setup_rc:
+            self.env.SMSACTUALPATH = self._actual_rootdir
+            yield setup_rc
+
+    @contextlib.contextmanager
+    def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        rc = super(SMS, self).wrap_in()
-        self.env.SMSACTUALPATH = self._actual_rootdir
-        return rc
+        with super(SMS, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+            upd_env = dict()
+            if not kwoptions.get('critical', True):
+                upd_env['SMSDENIED'] = 1
+                if self.non_critical_timeout:
+                    upd_env['SMSTIMEOUT'] = self.non_critical_timeout
+            if upd_env:
+                with self.env.delta_context(** upd_env):
+                    yield wrapp_rc
+            else:
+                yield wrapp_rc
 
     def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous smschild subcommand."""
         args = [self.cmdpath(cmd)]
         args.extend(options)
-        if not critical:
-            self.env.SMSDENIED = 1
-            if self.non_critical_timeout:
-                self.env.SMSTIMEOUT = self.non_critical_timeout
         return self.sh.spawn(args, output=False, fatal=critical)
 
 
@@ -246,11 +290,12 @@ class SMSColor(SMS):
         )
     )
 
-    def wrap_in(self):
+    @contextlib.contextmanager
+    def wrap_actual_child_command(self, kwoptions):
         """Last minute wrap before binary child command."""
-        rc = super(SMSColor, self).wrap_in()
-        print("SMS COLOR")
-        return rc
+        with super(SMSColor, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+            print("SMS COLOR")
+            yield wrapp_rc
 
 
 class EcFlow(EcmwfLikeScheduler):
@@ -283,7 +328,6 @@ class EcFlow(EcmwfLikeScheduler):
         logger.debug('EcFlow scheduler client init %s', self)
         super(EcFlow, self).__init__(*args, **kw)
         self._actual_clientpath = self.clientpath
-        self._tunnel = None
 
     def path(self):
         """Return the actual binary path to the EcFlow client."""
@@ -300,47 +344,59 @@ class EcFlow(EcmwfLikeScheduler):
             logger.warning('No ecFlow client found at init time [path:%s]>', self._actual_clientpath)
         return self._actual_clientpath
 
-    def wrap_in(self):
-        """When running on an node without network access create an SSH tunnel."""
-        rc = super(EcFlow, self).wrap_in()
-        if not self.sh.default_target.isnetworknode:
-            # wait and retries from config
-            thistarget = self.sh.default_target
-            sshwait = thistarget.get('ecflow:sshproxy_wait', 6)
-            sshretries = thistarget.get('ecflow:sshproxy_retries', 2)
-            sshretrydelay = thistarget.get('ecflow:sshproxy_retrydelay', 1)
-            # Build up an SSH tunnel to convey the EcFlow command
-            ecconf = self.conf(dict())
-            echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)
-            ecport = ecconf.get('{:s}PORT'.format(self.env_pattern), None)
-            if not (echost and ecport):
-                rc = False
-            else:
-                sshobj = self.sh.ssh('network', virtualnode=True, mandatory_hostcheck=False,
-                                     maxtries=sshretries, triesdelay=sshretrydelay)
-                self._tunnel = sshobj.tunnel(echost, int(ecport), maxwait=sshwait)
-                if not self._tunnel:
-                    rc = False
+    @contextlib.contextmanager
+    def child_session_setup(self):
+        """Setup a SSH tunnel if necessary."""
+        with super(EcFlow, self).child_session_setup() as setup_rc:
+            if setup_rc and not self.sh.default_target.isnetworknode:
+                tunnel = None
+                # wait and retries from config
+                thistarget = self.sh.default_target
+                sshwait = float(thistarget.get('ecflow:sshproxy_wait', 6))
+                sshretries = float(thistarget.get('ecflow:sshproxy_retries', 2))
+                sshretrydelay = float(thistarget.get('ecflow:sshproxy_retrydelay', 1))
+                # Build up an SSH tunnel to convey the EcFlow command
+                ecconf = self.conf(dict())
+                echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)
+                ecport = ecconf.get('{:s}PORT'.format(self.env_pattern), None)
+                if not (echost and ecport):
+                    setup_rc = False
                 else:
-                    newvars = {'{:s}HOST'.format(self.env_pattern): 'localhost',
-                               '{:s}PORT'.format(self.env_pattern): self._tunnel.entranceport}
-                    self.env.update(** newvars)
-                    rc = True
-        return rc
+                    sshobj = self.sh.ssh('network', virtualnode=True, mandatory_hostcheck=False,
+                                         maxtries=sshretries, triesdelay=sshretrydelay)
+                    tunnel = sshobj.tunnel(echost, int(ecport), maxwait=sshwait)
+                    if not tunnel:
+                        setup_rc = False
+                    else:
+                        newvars = {'{:s}HOST'.format(self.env_pattern): 'localhost',
+                                   '{:s}PORT'.format(self.env_pattern): tunnel.entranceport}
+                        self.env.update(**newvars)
+                try:
+                    yield setup_rc
+                finally:
+                    # Close the SSH tunnel regardless of the exit status
+                    if tunnel:
+                        tunnel.close()
+            else:
+                yield setup_rc
 
-    def wrap_out(self):
-        """Close the tunnel and restore the environment."""
-        if self._tunnel:
-            self._tunnel.close()
-            self._tunnel = None
-        super(EcFlow, self).wrap_out()
+    @contextlib.contextmanager
+    def wrap_actual_child_command(self, kwoptions):
+        """Last minute wrap before binary child command."""
+        with super(EcFlow, self).wrap_actual_child_command(kwoptions) as wrapp_rc:
+            upd_env = dict()
+            if not kwoptions.get('critical', True):
+                upd_env['{:s}DENIED'.format(self.env_pattern)] = 1
+                if self.non_critical_timeout:
+                    upd_env['{:s}TIMEOUT'.format(self.env_pattern)] = self.non_critical_timeout
+            if upd_env:
+                with self.env.delta_context(** upd_env):
+                    yield wrapp_rc
+            else:
+                yield wrapp_rc
 
     def _actual_child(self, cmd, options, critical=True):
         """Miscellaneous ecFlow sub-command."""
-        if not critical:
-            self.env['{:s}DENIED'.format(self.env_pattern)] = 1
-            if self.non_critical_timeout:
-                self.env['{:s}TIMEOUT'.format(self.env_pattern)] = self.non_critical_timeout
         args = [self.path(), ]
         if options:
             args.append('--{:s}={!s}'.format(cmd, options[0]))

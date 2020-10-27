@@ -34,3 +34,7 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PostCtbto
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

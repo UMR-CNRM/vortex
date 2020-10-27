@@ -230,8 +230,14 @@ class SopranoProvider(Provider):
             info['model'] = 'aromepi'
         elif self.vapp == 'arome' and self.vconf == 'aefrance':
             info['model'] = 'aromeaefr'
-        elif self.vapp == 'mocage':
+        elif self.vapp == 'mocage' and self.vconf == 'surfana':
             info['model'] = 'macc'
+        elif self.vapp == 'mocage' and self.vconf == 'ctbto':
+            info['level_one'] = 'serv'
+            info['level_two'] = 'env'
+            info['level_three'] = 'ctbto'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
         elif self.vapp == 'arpege' and resource.model == 'ifs':
             info['model'] = 'restart_cep'
         elif self.vapp == 'pprod':

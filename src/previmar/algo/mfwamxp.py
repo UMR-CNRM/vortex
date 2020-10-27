@@ -84,7 +84,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
                 default = ('MPP', 'APP',),
             ),
             flypoll = dict(
-                default = 'iopoll_marine',
+                default = 'iopoll_waves',
             ),
         )
     )

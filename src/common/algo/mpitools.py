@@ -8,15 +8,16 @@ General interest and NWP specific MPI launchers.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
+import math
 import six
 
 from bronx.fancies import loggers
 import footprints
-import io
 
 from vortex.algo import mpitools
 from vortex.syntax.stdattrs import DelayedEnvValue
-from vortex.util import config
+from vortex.tools.arm import ArmForgeTool
+from common.tools.partitioning import setup_partitioning_in_namelist
 
 #: No automatic export
 __all__ = []
@@ -77,27 +78,27 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
-        options['init-timeout-restart'] = self.timeoutrestart
+        options['init-timeout-restart'] = (self.timeoutrestart, )
         if self.sublauncher == 'srun':
-            options['use-slurm-mpi'] = None
+            options['use-slurm-mpi'] = ()
         elif self.sublauncher == 'libspecific':
-            options['no-use-slurm-mpi'] = None
+            options['no-use-slurm-mpi'] = ()
         if self.bindingmethod:
             for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
                       for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:
                 options.pop(k, None)
             if self.bindingmethod == 'arch':
-                options['use-arch-bind'] = None
+                options['use-arch-bind'] = ()
             elif self.bindingmethod == 'launcherspecific' and self.sublauncher == 'srun':
-                options['no-use-arch-bind'] = None
-                options['use-slurm-bind'] = None
+                options['no-use-arch-bind'] = ()
+                options['use-slurm-bind'] = ()
             elif self.bindingmethod == 'launcherspecific':
-                options['no-use-arch-bind'] = None
+                options['no-use-arch-bind'] = ()
                 for k in ['use-{:s}-bind'.format(t)
                           for t in ('slurm', 'intelmpi', 'openmpi')]:
-                    options[k] = None
+                    options[k] = ()
             elif self.bindingmethod == 'vortex':
-                options['no-use-arch-bind'] = None
+                options['no-use-arch-bind'] = ()
         return options
 
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
@@ -133,7 +134,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
     envelope = property(mpitools.MpiTool._get_envelope, _set_envelope)
 
-    def _hook_binary_mpiopts(self, options):
+    def _hook_binary_mpiopts(self, binary, options):
         tuned = options.copy()
         # Regular MPI tasks count (the usual...)
         if 'nnp' in options and 'nn' in options:
@@ -197,6 +198,10 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
 
 
 class MpiAutoDDT(MpiAuto):
+    """
+    MpiTools that uses mpiauto as a proxy to several MPI implementations
+    with DDT support.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -207,17 +212,6 @@ class MpiAutoDDT(MpiAuto):
     )
 
     _conf_suffix = '-ddt'
-    _ddt_session_file_name = 'armforge-vortex-session-file.ddt'
-
-    def _dump_ddt_session(self):
-        bin_directory = self.system.path.dirname(self.binaries[0].master)
-        tpl = config.load_template(self.ticket, '@armforge-session-conf.tpl', encoding='utf-8')
-        sconf = tpl.substitute(sourcedirs='\n'.join(['        <directory>{:s}</directory>'.format(d)
-                                                     for d in self.sources]))
-        sfile = self.system.path.join(bin_directory, 'armforge-vortex-session-file.ddt')
-        with io.open(sfile, 'w') as fhs:
-            fhs.write(sconf)
-        return sfile
 
     def _reshaped_mpiopts(self):
         options = super(MpiAutoDDT, self)._reshaped_mpiopts()
@@ -225,55 +219,18 @@ class MpiAutoDDT(MpiAuto):
             raise mpitools.MpiException('It is not allowed to start DDT with another ' +
                                         'prefix_mpirun command defined: "{:s}"'
                                         .format(options))
-        ddtpath = self.env.get('VORTEX_ARM_DDT_PATH', None)
-        if ddtpath is None:
-            forgepath = self.env.get('VORTEX_ARM_FORGE_DIR', None)
-            if forgepath is None and self.target.config.has_option('armtools', 'forgedir'):
-                forgepath = self.target.config.get('armtools', 'forgedir')
-            else:
-                raise mpitools.MpiException('DDT requested but the DDT path is not configured.')
-            ddtpath = self.system.path.join(forgepath, 'bin', 'ddt')
-        if self.sources:
-            options['prefix-mpirun'] = '{:s} --session={:s} --connect'.format(ddtpath,
-                                                                              self._dump_ddt_session())
-        else:
-            options['prefix-mpirun'] = '{:s} --connect'.format(ddtpath)
+        armtool = ArmForgeTool(self.ticket)
+        options['prefix-mpirun'] = (' '.join(armtool.ddt_prefix_cmd(
+            sources=self.sources,
+            workdir=self.system.path.dirname(self.binaries[0].master)
+        )), )
         return options
-
-
-def arpifs_commons_binarydeco(cls):
-    """Handle usual IFS/Arpege namelist tweaking.
-
-    Note: This is a class decorator for class somehow based on MpiBinaryDescription
-    """
-    orig_setup_namelist_delta = getattr(cls, 'setup_namelist_delta')
-
-    def setup_namelist_delta(self, namcontents, namlocal):
-        namw = orig_setup_namelist_delta(self, namcontents, namlocal)
-        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
-            namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or self.nprocs))
-            namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
-            namw = True
-        if 'NAMPAR1' in namcontents:
-            np1 = namcontents['NAMPAR1']
-            for nstr in [x for x in ('NSTRIN', 'NSTROUT') if x in np1]:
-                if isinstance(np1[nstr], (int, float)) and np1[nstr] > self.nprocs:
-                    logger.info('Setup %s=%s in NAMPAR1 %s', nstr, self.nprocs, namlocal)
-                    np1[nstr] = self.nprocs
-                    namw = True
-        return namw
-
-    if hasattr(orig_setup_namelist_delta, '__doc__'):
-        setup_namelist_delta.__doc__ = orig_setup_namelist_delta.__doc__
-
-    setattr(cls, 'setup_namelist_delta', setup_namelist_delta)
-    return cls
 
 
 # Some IFS/Arpege specific things :
 
 def arpifs_obsort_nprocab_binarydeco(cls):
-    """Handle usual IFS/Arpege environement tweaking for OBSORT (nproca & nprocb).
+    """Handle usual IFS/Arpege environment tweaking for OBSORT (nproca & nprocb).
 
     Note: This is a class decorator for class somehow based on MpiBinaryDescription
     """
@@ -294,8 +251,148 @@ def arpifs_obsort_nprocab_binarydeco(cls):
     return cls
 
 
-@arpifs_commons_binarydeco
-class MpiNWP(mpitools.MpiBinaryBasic):
+class _NWPIoServerMixin(object):
+
+    _NWP_IOSERV_PATTERNS = ('io_serv.*.d', )
+
+    def _nwp_ioserv_setup_namelist(self, namcontents, namlocal, total_iotasks):
+        """Applying IO Server profile on local namelist ``namlocal`` with contents namcontents."""
+        if 'NAMIO_SERV' in namcontents:
+            namio = namcontents['NAMIO_SERV']
+        else:
+            namio = namcontents.newblock('NAMIO_SERV')
+
+        namio.nproc_io = total_iotasks
+
+        if 'VORTEX_IOSERVER_METHOD' in self.env:
+            namio.nio_serv_method = self.env.VORTEX_IOSERVER_METHOD
+
+        if 'VORTEX_IOSERVER_BUFMAX' in self.env:
+            namio.nio_serv_buf_maxsize = self.env.VORTEX_IOSERVER_BUFMAX
+
+        if 'VORTEX_IOSERVER_MLSERVER' in self.env:
+            namio.nmsg_level_server = self.env.VORTEX_IOSERVER_MLSERVER
+
+        if 'VORTEX_IOSERVER_MLCLIENT' in self.env:
+            namio.nmsg_level_client = self.env.VORTEX_IOSERVER_MLCLIENT
+
+        if 'VORTEX_IOSERVER_PROCESS' in self.env:
+            namio.nprocess_level = self.env.VORTEX_IOSERVER_PROCESS
+
+        if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
+            namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
+
+        self.system.subtitle('Parallel io server namelist for {:s}'.format(namlocal))
+        print(namio.dumps())
+
+        return True
+
+    def _nwp_ioserv_iodirs(self):
+        """Return an ordered list of directories matching the ``pattern`` attribute."""
+        found = []
+        for pattern in self._NWP_IOSERV_PATTERNS:
+            found.extend(self.system.glob(pattern))
+        return sorted(found)
+
+    def _nwp_ioserv_clean(self):
+        """Post-execution cleaning for io server."""
+
+        # Old fashion way to make clear that some polling is needed.
+        self.system.touch('io_poll.todo')
+
+        # Get a look inside io server output directories according to its own pattern
+        ioserv_filelist = set()
+        ioserv_prefixes = set()
+        logfmt = '%24s: %32s %s'
+        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
+        for iodir in self._nwp_ioserv_iodirs():
+            self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
+            for iofile in self.system.listdir(iodir):
+                zf = iofile_re.match(iofile)
+                if zf:
+                    logger.info(logfmt, iodir, iofile, ':-)')
+                    ioserv_filelist.add((zf.group(1), zf.group(2)))
+                    ioserv_prefixes.add(zf.group(2))
+                else:
+                    logger.info(logfmt, iodir, iofile, 'UFO')
+
+        if 'GRIBPF' in ioserv_prefixes:
+            # If GRIB are requested, do not bother with old FA PF files
+            ioserv_prefixes.discard('PF')
+            ioserv_filelist = set([(f, p) for f, p in ioserv_filelist if p != 'PF'])
+
+        # Touch the output files
+        for tgfile, _ in ioserv_filelist:
+            self.system.touch(tgfile)
+
+        # Touch the io_poll.todo.PREFIX
+        for prefix in ioserv_prefixes:
+            self.system.touch('io_poll.todo.{:s}'.format(prefix))
+
+
+class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
+    """The kind of binaries used in IFS/Arpege."""
+
+    _abstract = True
+
+    def __init__(self, * kargs, **kwargs):
+        super(_AbstractMpiNWP, self).__init__(*kargs, **kwargs)
+        self._incore_iotasks = None
+
+    @property
+    def incore_iotasks(self):
+        """The number of tasks dedicated to the IO server"""
+        return self._incore_iotasks
+
+    @incore_iotasks.setter
+    def incore_iotasks(self, value):
+        """The number of tasks dedicated to the IO server"""
+        if isinstance(value, six.string_types) and value.endswith('%'):
+            value = math.ceil(self.nprocs * float(value[:-1]) / 100)
+        self._incore_iotasks = int(value)
+
+    def setup_namelist_delta(self, namcontents, namlocal):
+        """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
+        namw = False
+        effective_nprocs = self.nprocs
+        if self.incore_iotasks is not None:
+            effective_nprocs -= self.incore_iotasks
+        nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
+        if any([n in namcontents.macros() for n in nprocs_macros]):
+            for n in nprocs_macros:
+                logger.info('Setup macro %s=%s in %s', n, effective_nprocs, namlocal)
+                namcontents.setmacro(n, effective_nprocs)
+            namw = True
+        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
+            namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or effective_nprocs))
+            namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
+            namw = True
+        if 'NAMPAR1' in namcontents:
+            np1 = namcontents['NAMPAR1']
+            for nstr in [x for x in ('NSTRIN', 'NSTROUT') if x in np1]:
+                if isinstance(np1[nstr], (int, float)) and np1[nstr] > effective_nprocs:
+                    logger.info('Setup %s=%s in NAMPAR1 %s', nstr, effective_nprocs, namlocal)
+                    np1[nstr] = effective_nprocs
+                    namw = True
+        # Deal with partitioning macros
+        namw_p = setup_partitioning_in_namelist(namcontents,
+                                                effective_nprocs,
+                                                self.options.get('openmp', 1),
+                                                namlocal)
+        namw = namw or namw_p
+        # Incore IO tasks
+        if self.incore_iotasks is not None:
+            self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
+        return namw
+
+    def clean(self, opts=None):
+        """Finalise the IO server run."""
+        super(_AbstractMpiNWP, self).clean(opts=opts)
+        if self.incore_iotasks:
+            self._nwp_ioserv_clean()
+
+
+class MpiNWP(_AbstractMpiNWP):
     """The kind of binaries used in IFS/Arpege."""
 
     _footprint = dict(
@@ -306,8 +403,7 @@ class MpiNWP(mpitools.MpiBinaryBasic):
 
 
 @arpifs_obsort_nprocab_binarydeco
-@arpifs_commons_binarydeco
-class MpiNWPObsort(mpitools.MpiBinaryBasic):
+class MpiNWPObsort(_AbstractMpiNWP):
     """The kind of binaries used in IFS/Arpege when the ODB OBSSORT code needs to be run."""
 
     _footprint = dict(
@@ -328,90 +424,20 @@ class MpiObsort(mpitools.MpiBinaryBasic):
     )
 
 
-class MpiNWPIO(mpitools.MpiBinaryIOServer):
+class MpiNWPIO(mpitools.MpiBinaryIOServer, _NWPIoServerMixin):
     """Standard IFS/Arpege NWP IO server."""
 
     _footprint = dict(
         attr = dict(
-            kind = dict(
-                values = ['nwpioserv', ],
-            ),
-            pattern = dict(
-                optional = True,
-                default  = 'io_serv.*.d',
-            ),
-            polling = dict(
-                type     = bool,
-                optional = True,
-                default  = False,
-                access   = 'rwx',
-            )
+            kind = dict(values = ['nwpioserv', ]),
         )
     )
 
     def setup_namelist_delta(self, namcontents, namlocal):
-        """Applying IO Serveur profile on local namelist ``namlocal`` with contents namcontents."""
-        if 'NAMIO_SERV' in namcontents:
-            namio = namcontents['NAMIO_SERV']
-        else:
-            namio = namcontents.newblock('NAMIO_SERV')
-
-        namio.nproc_io = self.nprocs
-
-        if 'VORTEX_IOSERVER_METHOD' in self.env:
-            namio.nio_serv_method = self.env.VORTEX_IOSERVER_METHOD
-
-        if 'VORTEX_IOSERVER_BUFMAX' in self.env:
-            namio.nio_serv_buf_maxsize = self.env.VORTEX_IOSERVER_BUFMAX
-
-        if 'VORTEX_IOSERVER_MLSERVER' in self.env:
-            namio.nmsg_level_server = self.env.VORTEX_IOSERVER_MLSERVER
-
-        if 'VORTEX_IOSERVER_MLCLIENT' in self.env:
-            namio.nmsg_level_client = self.env.VORTEX_IOSERVER_MLCLIENT
-
-        if 'VORTEX_IOSERVER_PROCESS' in self.env:
-            namio.nprocess_level = self.env.VORTEX_IOSERVER_PROCESS
-
-        if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
-            namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
-
-        self.system.subtitle('Parallel io namelist')
-        print(namio.dumps())
-
-        return True
-
-    def iodirs(self):
-        """Return an ordered list of directories matching the ``pattern`` attribute."""
-        return sorted(self.system.glob(self.pattern))
+        """Setup the IO Server."""
+        self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.nprocs)
 
     def clean(self, opts=None):
-        """Post-execution cleaning for io server."""
-        self.polling = True
-
-        # Old fashion way to make clear that some polling is needed.
-        self.system.touch('io_poll.todo')
-
-        # Get a look inside io server output directories according to its own pattern
-        ioserv_filelist = set()
-        ioserv_prefixes = set()
-        logfmt = '%24s: %32s %s'
-        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
-        for iodir in self.iodirs():
-            self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
-            for iofile in self.system.listdir(iodir):
-                zf = iofile_re.match(iofile)
-                if zf:
-                    logger.info(logfmt, iodir, iofile, ':-)')
-                    ioserv_filelist.add(zf.group(1))
-                    ioserv_prefixes.add(zf.group(2))
-                else:
-                    logger.info(logfmt, iodir, iofile, 'UFO')
-
-        # Touch the output files
-        for tgfile in ioserv_filelist:
-            self.system.touch(tgfile)
-
-        # Touch the io_poll.todo.PREFIX
-        for prefix in ioserv_prefixes:
-            self.system.touch('io_poll.todo.{:s}'.format(prefix))
+        """Finalise the IO server run."""
+        super(MpiNWPIO, self).clean(opts=opts)
+        self._nwp_ioserv_clean()

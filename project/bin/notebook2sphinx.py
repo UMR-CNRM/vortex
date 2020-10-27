@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 Automatically convert notebooks to a set of RST files.
@@ -93,8 +93,12 @@ class DefaultExporter(object):
     def _ipynb_convert(self, a_file):
         """Actually convert the notebook."""
         myname = os.path.splitext(os.path.basename(a_file))[0]
-        exporter = RSTExporter(template_path=[_NBCONVERT_TEMPLATES, ],
-                               template_file=rst_tplfile)
+        if int(tplversion) >= 6:
+            exporter = RSTExporter(extra_template_basedirs=[_NBCONVERT_TEMPLATES, ],
+                                   template_name=rst_tplfile)
+        else:
+            exporter = RSTExporter(template_path=[_NBCONVERT_TEMPLATES, ],
+                                   template_file=rst_tplfile)
         rst, resources = exporter.from_filename(a_file,
                                                 resources=dict(unique_key=myname))
         logger.debug("%s exported. Name=%s, Outputs=%s",

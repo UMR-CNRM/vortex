@@ -205,6 +205,9 @@ class AlgoComponentDecoMixin(object):
                 executed after the original prepare method. Such methods receive
                 the same arguments list than the original decorated method.
 
+              * :data:`_MIXIN_EXECUTE_FINALISE_HOOKS`: Tuple of method that will
+                be executed after any execution (even if the execution failed).
+
               * :data:`_MIXIN_FAIL_EXECUTE_HOOKS`: Tuple of method that will
                 be executed if the execution fails (the original exception
                 will be re-raised afterwards)
@@ -240,6 +243,7 @@ class AlgoComponentDecoMixin(object):
 
     _MIXIN_PREPARE_PREHOOKS = ()
     _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_EXECUTE_FINALISE_HOOKS = ()
     _MIXIN_FAIL_EXECUTE_HOOKS = ()
     _MIXIN_POSTFIX_PREHOOKS = ()
     _MIXIN_POSTFIX_HOOKS = ()
@@ -310,6 +314,9 @@ class AlgoComponentDecoMixin(object):
                                                      False),
                                                     ('fail_execute',
                                                      cls._MIXIN_FAIL_EXECUTE_HOOKS, (),
+                                                     False),
+                                                    ('execute_finalise',
+                                                     cls._MIXIN_EXECUTE_FINALISE_HOOKS, (),
                                                      False),
                                                     ('postfix',
                                                      cls._MIXIN_POSTFIX_HOOKS,
@@ -1533,6 +1540,7 @@ class Parallel(xExecutableAlgoComponent):
         if not act_mpiname:
             raise ValueError('Unabled to find an appropriate mpiname.')
         options = dict(mpiname=act_mpiname)
+        config_mpiname = act_mpiname.split('-')[0]
         # Find ither generic options
         generic_options = set(('mpilauncher',
                                'mpiopts',
@@ -1540,21 +1548,21 @@ class Parallel(xExecutableAlgoComponent):
                                'mpibind_topology'))
 
         def _generic_options_from_mapping(mapping, options, checkvalue=False):
-            optprefix = '{:s}_'.format(act_mpiname)
+            optprefix = '{:s}_'.format(config_mpiname)
             for k, v in mapping.items():
                 if k.startswith(optprefix) and k[len(optprefix):] in generic_options:
                     if not checkvalue or v:
                         options[k[len(optprefix):]] = v
 
         _generic_options_from_mapping(conf_dict, options, checkvalue=True)
-        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(act_mpiname, k[11:].lower()): v
+        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(config_mpiname, k[11:].lower()): v
                                        for k, v in self.env.items()
                                        if k.startswith('VORTEX_MPI_')}, options)
         _generic_options_from_mapping(opts, options)
         # Find other specific options (not listed in generic_options)
 
         def _specific_options_from_mapping(mapping, options, checkvalue=False):
-            optprefix = '{:s}_opt_'.format(act_mpiname)
+            optprefix = '{:s}_opt_'.format(config_mpiname)
             for k, v in mapping.items():
                 if (k.startswith(optprefix) and
                         k[len(optprefix):] not in generic_options and
@@ -1652,17 +1660,21 @@ class Parallel(xExecutableAlgoComponent):
 
             # The main program
             allowbind = mpi_opts.pop('allowbind', True)
+            distribution = mpi_opts.pop('distribution',
+                                        self.env.get('VORTEX_MPIBIN_DEF_DISTRIBUTION', None))
             if use_envelope:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
                     ranks=envelope_ntasks,
                     openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None),
-                    allowbind=allowbind)
+                    allowbind=allowbind,
+                    distribution=distribution)
             else:
                 master = footprints.proxy.mpibinary(
                     kind=self.binarysingle,
                     nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
                     allowbind=allowbind,
+                    distribution=distribution,
                     **mpi_desc)
             master.options = mpi_opts
             master.master = self.absexcutable(rh[0].container.localpath())
@@ -1697,12 +1709,16 @@ class Parallel(xExecutableAlgoComponent):
             # Create MpiBinaryDescription objects
             bins = list()
             allowbinds = mpi_opts.pop('allowbind', [True, ] * len(rh))
+            distributions = mpi_opts.pop('distribution',
+                                         [self.env.get('VORTEX_MPIBIN_DEF_DISTRIBUTION', None), ]
+                                         * len(rh))
             for i, r in enumerate(rh):
                 if use_envelope:
                     bins.append(
                         footprints.proxy.mpibinary(
                             kind=bnames[i],
-                            allowbind=allowbinds[i]
+                            allowbind=allowbinds[i],
+                            distribution=distributions[i],
                         )
                     )
                 else:
@@ -1711,6 +1727,7 @@ class Parallel(xExecutableAlgoComponent):
                             kind=bnames[i],
                             nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
                             allowbind=allowbinds[i],
+                            distribution=distributions[i],
                             **mpi_desc
                         )
                     )
@@ -1871,6 +1888,9 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
             else:
                 io.group = 'auto_masterwithio'
                 master.group = 'auto_masterwithio'
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_TASKS', None) is not None:
+            if hasattr(master, 'incore_iotasks'):
+                master.incore_iotasks = self.env.VORTEX_IOSERVER_INCORE_TASKS
         if io:
             rh.append(rh[0])
             if master.group is None:

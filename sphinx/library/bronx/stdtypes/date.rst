@@ -86,8 +86,6 @@ Utility functions
 
 .. autofunction:: guess
 
-.. autofunction:: daterange
-
 
 Utility classes
 ---------------

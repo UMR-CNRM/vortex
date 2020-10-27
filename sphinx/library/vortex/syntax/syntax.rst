@@ -12,5 +12,5 @@ Package
 -------
 
 .. autodata:: __all__
-  
+
 * :mod:`vortex.syntax.stdattrs`

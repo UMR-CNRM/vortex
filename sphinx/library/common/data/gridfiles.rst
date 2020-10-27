@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
-   
+
 .. autoclass:: GridPointFullPos
    :show-inheritance:
    :members:
@@ -26,7 +26,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: FilteredGridPointExport
    :show-inheritance:
    :members:
@@ -41,7 +41,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: GridPointMap
    :show-inheritance:
    :members:
@@ -54,7 +54,7 @@ Abstract classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: GridPoint
    :show-inheritance:
    :members:

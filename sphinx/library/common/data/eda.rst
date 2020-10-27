@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: RawFiles
    :show-inheritance:
    :members:

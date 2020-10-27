@@ -95,12 +95,12 @@ class PPCamsBDAP(BlindRun):
             # Copy global attributes
             output_file.setncatts({k: example_file.getncattr(k) for k in example_file.ncattrs()})
             # Copy the dimensions
-            for dim_name, dim_values in example_file.dimensions.iteritems():
+            for dim_name, dim_values in example_file.dimensions.items():
                 output_file.createDimension(dim_name,
                                             len(dim_values) if not dim_values.isunlimited()
                                             else None)
             # Process each variable
-            for var_name, var_values in example_file.variables.iteritems():
+            for var_name, var_values in example_file.variables.items():
                 var_dim = len(var_values.dimensions)
                 # 1D and 2D variables are just copied in the output files
                 if var_dim < 3:
@@ -150,7 +150,7 @@ class PPCamsBDAP(BlindRun):
                 raise ValueError()
             geometries = (None, )
         else:
-            geometries = map(lambda n: re.match(template_multi, n.rh.container.localpath()), namelists)
+            geometries = list(map(lambda n: re.match(template_multi, n.rh.container.localpath()), namelists))
             if not all(geometries):
                 message = 'If there is more than 1 Namelist, they must be named "namelistgrib2_DOM.nam" .  STOP'
                 logger.critical(message)

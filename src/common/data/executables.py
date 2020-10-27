@@ -117,6 +117,7 @@ class Prep(BlackBox):
     """A tool to interpolate Surfex files."""
 
     _footprint = [
+        arpifs_cycle,
         gvar,
         dict(
             info = 'Prep utility to interpolate Surfex files',

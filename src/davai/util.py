@@ -5,7 +5,7 @@ Functions and classes used by other modules from package.
 """
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from six.moves.urllib import error as urlerror
+from six.moves.urllib import error as urlerror  # @UnresolvedImport
 
 from footprints import proxy as fpx
 
@@ -42,9 +42,65 @@ def default_experts(excepted=[]):
     default = [dict(kind='drHookMax'),
                dict(kind='rss',
                     ntasks_per_node=sessions.current().env['VORTEX_SUBMIT_TASKS']),
-               dict(kind='setup'),
+               dict(kind='setup', fatal_exceptions=False),
                ]
     return [e for e in default if e['kind'] not in excepted]
+
+
+def guess_packname(git_ref,
+                   compiler_label,
+                   packtype,
+                   compiler_flag=None,
+                   abspath=False,
+                   homepack=None,
+                   to_bin=False):
+    """
+    Guess pack name from a number of arguments.
+
+    :param git_ref: Git reference to be exported to pack
+    :param compiler_label: gmkpack compiler label
+    :param packtype: type of pack, among ('incr', 'main')
+    :param compiler_flag: gmkpack compiler flag
+    :param abspath: True if the absolute path to pack is requested (instead of basename)
+    :param homepack: home of pack
+    :param to_bin: True if the path to binaries subdirectory is requested
+    """
+    from ia4h_scm.algos import guess_packname  # @UnresolvedImport
+    return guess_packname(git_ref,
+                          compiler_label,
+                          packtype,
+                          compiler_flag=compiler_flag,
+                          abspath=abspath,
+                          homepack=homepack,
+                          to_bin=to_bin)
+
+
+def bundle_guess_packname(bundle,
+                          compiler_label,
+                          packtype,
+                          compiler_flag=None,
+                          abspath=False,
+                          homepack=None,
+                          to_bin=False):
+    """
+    Guess pack name from a number of arguments.
+
+    :param bundle: bundle file (yaml)
+    :param compiler_label: gmkpack compiler label
+    :param packtype: type of pack, among ('incr', 'main')
+    :param compiler_flag: gmkpack compiler flag
+    :param abspath: True if the absolute path to pack is requested (instead of basename)
+    :param homepack: home of pack
+    :param to_bin: True if the path to binaries subdirectory is requested
+    """
+    from ia4h_scm.algos import bundle_guess_packname  # @UnresolvedImport
+    return bundle_guess_packname(bundle,
+                                 compiler_label,
+                                 packtype,
+                                 compiler_flag=compiler_flag,
+                                 abspath=abspath,
+                                 homepack=homepack,
+                                 to_bin=to_bin)
 
 
 def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,

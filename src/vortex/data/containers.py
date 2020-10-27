@@ -70,7 +70,7 @@ class Container(footprints.FootprintBase):
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),
             encoding = dict(
-                info            = "When openned in text mode, the encoding that will be used.",
+                info            = "When opened in text mode, the encoding that will be used.",
                 optional        = True,
                 doc_visibility  = footprints.doc.visibility.ADVANCED,
             ),

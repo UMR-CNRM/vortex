@@ -46,7 +46,10 @@ class FPSet(set):
 
     def footprint_export(self):
         """A set is not jsonable so it will be converted to a list."""
-        return list(self)
+        try:
+            return sorted(self)
+        except TypeError:
+            return list(self)
 
 
 class FPTuple(tuple):
