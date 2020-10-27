@@ -1093,6 +1093,9 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
         return rdict
 
+    def forcingdir(self, rundir, thisdir):
+        return rundir
+
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
         need_other_run = True
@@ -1104,11 +1107,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_other_forcing:
 
-                # Change for PROSNOW (TBC!) -> 1/2
-                ###########
-#                 forcingdir = rundir
                 forcingdir = self.forcingdir(rundir, thisdir)
-                ###########
 
                 if len(self.geometry_in) > 1:
                     print("FORCING AGGREGATION")
@@ -1150,12 +1149,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
             need_other_run = dateend_this_run < self.dateend
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
-
-                # Change for PROSNOW (TBC!) -> 2/2
-                ###########
-#                 save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
                 save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
-                ###########
 
         return rdict
 
@@ -1561,7 +1555,7 @@ class PrepareForcingComponent(TaylorRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['prepareforcing','extractforcing']
+                values = ['prepareforcing', 'extractforcing']
             ),
             engine = dict(
                 values = ['s2m']),
@@ -1614,8 +1608,6 @@ class PrepareForcingComponent(TaylorRun):
         pass
 
     def get_subdirs(self, rh, opts):
-        print(type(self.datebegin))
-        print(self.datebegin)
 
         return [begin.year for begin in self.datebegin]
 
@@ -1692,7 +1684,7 @@ class SurfexComponentMultiDates(SurfexComponent):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingComponentForecast(PrepareForcingComponent):
-    
+
     ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
 
     _footprint = dict(
@@ -1703,13 +1695,13 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
             )
         )
     )
-        
+
     def _default_common_instructions(self, rh, opts):
 
         ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
         for attribute in self.footprint_attributes:
             if attribute in ['datebegin', 'dateend']:
-                ddict[attribute] = getattr(self, attribute)[0][0]        
+                ddict[attribute] = getattr(self, attribute)[0][0]
             else:
                 ddict[attribute] = getattr(self, attribute)
 
@@ -1722,7 +1714,7 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
         subdirs = self.get_subdirs(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs))
         self._default_post_execute(rh, opts)
-    
+
     def get_subdirs(self, rh, opts):
 
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
@@ -1736,7 +1728,7 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorker(PrepareForcingWorker):
-    
+
     ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
 
     _footprint = dict(
@@ -1747,45 +1739,39 @@ class ExtractForcingWorker(PrepareForcingWorker):
             ),
         )
     )
-    
+
     def forecasttype(self):
-        
+
         forecast_type = 'determ'
         return forecast_type
 
-    def forcingdir(self, rundir, thisdir):
-        
-        return rundir
-
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
-        print ("PROSNOW: using SRU geometry")
-        
         datebegin_str = self.datebegin.strftime('%Y%m%d%H')
         dateend_str   = self.dateend.strftime('%Y%m%d%H')
-        
+
         dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_'     + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_'  + datebegin_str + '_' + dateend_str + '.nc'
-        dir_file_4 = rundir                           + '/SRU.txt'        
+        dir_file_4 = rundir                           + '/SRU.txt'
 
         # ------------------- #
 
         # A) Init, Analysis, ST:
-                
+
         # Projection of forcing files on the slopes, creation of LAT,LOT
-        if self.forecasttype() != 'LT':        
+        if self.forecasttype() != 'LT':
             rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
 
-        # B) LT - Climatology:              
-                        
+        # B) LT - Climatology:
+
         # Change dates of the climatology to the current season
         if self.forcingdir(rundir, thisdir) == thisdir:
             if self.forecasttype() == 'LT':
                 if int(self.datebegin.strftime('%m')) >= 8:
-                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')),8,1,6,0)
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')), 8, 1, 6, 0)
                 else:
-                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y'))-1,8,1,6,0)  
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')) - 1, 8, 1, 6, 0)
                 forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
 
         # C) LT - Hindcast:
@@ -1794,8 +1780,8 @@ class ExtractForcingWorker(PrepareForcingWorker):
 #         rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
 
         # D) Whenever necessary:
-         
-        # Extraction of SRU geometry       
+
+        # Extraction of SRU geometry
         forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
         self.system.mv(dir_file_1, dir_file_3)
         self.system.mv(dir_file_2, dir_file_1)
@@ -1807,7 +1793,7 @@ class ExtractForcingWorker(PrepareForcingWorker):
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
-    
+
     ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
 
     _footprint = dict(
@@ -1820,18 +1806,18 @@ class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
     )
 
     def forcingdir(self, rundir, thisdir):
-        
+
         return thisdir
-    
+
     def forecasttype(self):
-        
+
         forecast_type = 'ST'
         return forecast_type
 
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
-    
+
     ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
 
     _footprint = dict(
@@ -1844,11 +1830,10 @@ class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
     )
 
     def forcingdir(self, rundir, thisdir):
-        
+
         return thisdir
-    
+
     def forecasttype(self):
-        
+
         forecast_type = 'LT'
         return forecast_type
-

@@ -134,7 +134,7 @@ class GridTarget(GenvModelGeoResource):
 
 class Prosnow_SetUp_Global(GenvModelResource):
     ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
-    
+
     _footprint = dict(
         attr = dict(
             kind = dict(
@@ -155,9 +155,9 @@ class Prosnow_SetUp_Global(GenvModelResource):
 
 
 class Prosnow_SetUp_Resort(GenvModelResource):
-    
+
     ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
-    
+
     _footprint = dict(
         attr = dict(
             kind = dict(
@@ -167,7 +167,7 @@ class Prosnow_SetUp_Resort(GenvModelResource):
                 values  = ['ascii', 'netcdf'],
             ),
             resort = dict(
-                values = ['saisies', 'plagne', 'soldeu', '1993', '1994', '1995', '1996', '1997', '1998', '1999', '2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016'],
+                values = ['saisies', 'plagne', 'soldeu'],
             ),
             gvar = dict(
                 default = '[kind]_[resort]',
@@ -175,8 +175,6 @@ class Prosnow_SetUp_Resort(GenvModelResource):
         ),
     )
 
-
     @property
     def realkind(self):
         return self.kind
-

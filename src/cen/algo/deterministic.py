@@ -315,7 +315,7 @@ class Interpol_Forcing(Parallel):
 
 @echecker.disabled_if_unavailable
 class Prosnow_Parallel(Surfex_Parallel):
-    
+
     ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
 
     _footprint = dict(
@@ -330,34 +330,31 @@ class Prosnow_Parallel(Surfex_Parallel):
     )
 
     def prosnow_modify_namelist(self):
-  
-        print ('PROSNOW: insertion of water consumption in namelist')
 
-        new_nam = update_namelist_var("OPTIONS_unmodified.nam","water.txt")
+        new_nam = update_namelist_var("OPTIONS_unmodified.nam", "water.txt")
 
         return new_nam
 
     def prosnow_modify_prep(self):
-  
-        print ('PROSNOW: insertion of snow height in prep')
-  
+
         dateend_str = self.dateend.strftime('%Y%m%d%H')
-        my_name_OBS = 'OBS_'+dateend_str+'.nc'
-        my_name_PREP = 'PREP_'+dateend_str+'.nc'
+        my_name_OBS = 'OBS_' + dateend_str + '.nc'
+        my_name_PREP = 'PREP_' + dateend_str + '.nc'
 
         old_prep = prep_tomodify(my_name_PREP)
         new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc', 'prep_fillup_5.nc', 'variables', my_name_PREP)
- 
+
         return new_prep
-    
+
     def execute(self, rh, opts):
-    
+
             # Insert water consumption in namelist (before running surfex)
             self.prosnow_modify_namelist()
-                
+
             # Call execute of Surfex_Parallel
+            # Note that modify_namelist and modify_prep methods of the mother class
+            # still have to be called in the following instruction
             super(Prosnow_Parallel, self).execute(rh, opts)
-                
+
             # Insert snow height in prep (after running surfex)
             self.prosnow_modify_prep()
-
