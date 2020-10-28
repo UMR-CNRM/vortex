@@ -45,7 +45,7 @@ class FullPosServerFlyPollPersistantState(object):
         self.found = collections.defaultdict(list)
 
 
-def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.'), **kwargs):  # @UnusedVariable
+def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.', ), **kwargs):  # @UnusedVariable
     """Check sub-**directories** to determine wether new output files are available or not."""
     new = list()
     for directory in directories:
@@ -203,6 +203,7 @@ class FullPosServer(IFSParallel):
     def __init__(self, *args, **kw):
         super(FullPosServer, self).__init__(*args, **kw)
         self._flyput_mapping_d = dict()
+        self._inputs_discover_cache = None
 
     def flyput_outputmapping(self, item):
         """Map an output file to its final name."""
@@ -213,76 +214,73 @@ class FullPosServer(IFSParallel):
                 return sh.path.join(sh.path.dirname(item),
                                     data[0].format(m_re.group('fpdom')))
 
-    def _setmacro(self, rh, macro, value):
-        """Set a namelist macro and log it!"""
-        rh.contents.setmacro(macro, value)
-        logger.info('%s: Setting up the %s macro to %s',
-                    str(rh.container.iotarget()), macro, value)
-
-    def _actual_suffixlen(self, tododata, minlen):
+    @staticmethod
+    def _actual_suffixlen(tododata, minlen):
         """Find out the required suffixlen given the **todorh** list of  Rhs to porcess."""
         return max(minlen,
                    int(math.floor(math.log10(len(tododata)))))
 
     def _inputs_discover(self):
         """Retrieve the lists in input sections/ResourceHandlers."""
-        # Initial conditions
-        inisec = self.context.sequence.effective_inputs(role=self._INITIALCONDITION_ROLE)
-        inidata = dict()
-        if inisec:
-            for s in inisec:
-                iprefix = ((self._INITIALCONDITION_ROLE.match(s.role) or
-                            self._INITIALCONDITION_ROLE.match(s.atlernate)).group(1) or
-                           self._MODELSIDE_INPUTPREFIX1)
-                fprefix = self._MODELSIDE_INPUTPREFIX0 + iprefix
-                if fprefix in inidata:
-                    raise AlgoComponentError('Only one Initial Condition is allowed.')
+        if self._inputs_discover_cache is None:
+            # Initial conditions
+            inisec = self.context.sequence.effective_inputs(role=self._INITIALCONDITION_ROLE)
+            inidata = dict()
+            if inisec:
+                for s in inisec:
+                    iprefix = ((self._INITIALCONDITION_ROLE.match(s.role) or
+                                self._INITIALCONDITION_ROLE.match(s.atlernate)).group(1) or
+                               self._MODELSIDE_INPUTPREFIX1)
+                    fprefix = self._MODELSIDE_INPUTPREFIX0 + iprefix
+                    if fprefix in inidata:
+                        raise AlgoComponentError('Only one Initial Condition is allowed.')
+                    else:
+                        inidata[fprefix] = s
+
+            # Model states
+            todosec0 = self.context.sequence.effective_inputs(role=self._INPUTDATA_ROLE)
+            todosec1 = collections.defaultdict(list)
+            tododata = list()
+            outprefix = None
+            informat = 'fa'
+            anyexpected = any([isec.rh.is_expected() for isec in todosec0])
+            if todosec0:
+                for iseq, s in enumerate(todosec0):
+                    rprefix = ((self._INPUTDATA_ROLE.match(s.role) or
+                                self._INPUTDATA_ROLE.match(s.atlernate)).group(1) or
+                               self._MODELSIDE_INPUTPREFIX1)
+                    todosec1[rprefix].append(s)
+                    if iseq == 0:
+                        outprefix = rprefix
+                        informat = s.rh.container.actualfmt
+                iprefixes = sorted(todosec1.keys())
+                if len(iprefixes) == 1:
+                    tododata = list()
+                    for s in sorted(todosec0,
+                                    key=lambda isec: (isec.rh.resource.term
+                                                      if hasattr(isec.rh.resource, 'term')
+                                                      else None)):
+                        tododata.append({self._MODELSIDE_INPUTPREFIX0 + iprefixes[0]: s})
                 else:
-                    inidata[fprefix] = s
+                    if len(set([len(secs) for secs in todosec1.values()])) > 1:
+                        raise AlgoComponentError('Inconsistent number of input data.')
+                    for sections in zip(* [iter(todosec1[i]) for i in iprefixes]):
+                        tododata.append({self._MODELSIDE_INPUTPREFIX0 + k: v
+                                         for k, v in zip(iprefixes, sections)})
 
-        # Model states
-        todosec0 = self.context.sequence.effective_inputs(role=self._INPUTDATA_ROLE)
-        todosec1 = collections.defaultdict(list)
-        tododata = list()
-        outprefix = None
-        informat = 'fa'
-        anyexpected = any([isec.rh.is_expected() for isec in todosec0])
-        if todosec0:
-            for iseq, s in enumerate(todosec0):
-                rprefix = ((self._INPUTDATA_ROLE.match(s.role) or
-                            self._INPUTDATA_ROLE.match(s.atlernate)).group(1) or
-                           self._MODELSIDE_INPUTPREFIX1)
-                todosec1[rprefix].append(s)
-                if iseq == 0:
-                    outprefix = rprefix
-                    informat = s.rh.container.actualfmt
-            iprefixes = sorted(todosec1.keys())
-            if len(iprefixes) == 1:
-                tododata = list()
-                for s in sorted(todosec0,
-                                key=lambda isec: (isec.rh.resource.term
-                                                  if hasattr(isec.rh.resource, 'term')
-                                                  else None)):
-                    tododata.append({self._MODELSIDE_INPUTPREFIX0 + iprefixes[0]: s})
-            else:
-                if len(set([len(secs) for secs in todosec1.values()])) > 1:
-                    raise AlgoComponentError('Inconsistent number of input data.')
-                for sections in zip(* [iter(todosec1[i]) for i in iprefixes]):
-                    tododata.append({self._MODELSIDE_INPUTPREFIX0 + k: v
-                                     for k, v in zip(iprefixes, sections)})
+            # Selection namelists
+            namxxrh = collections.defaultdict(dict)
+            for isec in self.context.sequence.effective_inputs(role='FullPosSelection',
+                                                               kind='namselect'):
+                lpath = isec.rh.container.localpath()
+                dpath = self.system.path.dirname(lpath)
+                namxxrh[dpath][isec.rh.resource.term] = isec.rh
 
-        # Selection namelists
-        namxxrh = collections.defaultdict(dict)
-        for isec in self.context.sequence.effective_inputs(role='FullPosSelection',
-                                                           kind='namselect'):
-            lpath = isec.rh.container.localpath()
-            dpath = self.system.path.dirname(lpath)
-            namxxrh[dpath][isec.rh.resource.term] = isec.rh
+            inputsminlen = self._MODELSIDE_INE_SUFFIXLEN_MIN.get(informat,
+                                                                 self._MODELSIDE_IND_SUFFIXLEN_MIN)
+            self._inputs_discover_cache = (inidata, tododata, namxxrh, anyexpected, outprefix, inputsminlen)
 
-        inputsminlen = self._MODELSIDE_INE_SUFFIXLEN_MIN.get(informat,
-                                                             self._MODELSIDE_IND_SUFFIXLEN_MIN)
-
-        return inidata, tododata, namxxrh, anyexpected, outprefix, inputsminlen
+        return self._inputs_discover_cache
 
     def _link_input(self, iprefix, irh, i, inputs_mapping, outputs_mapping,
                     i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt, o_suffix, o_grb_suffix,
@@ -419,7 +417,7 @@ class FullPosServer(IFSParallel):
         else:
             logger.info("No selection namelists detected. That's fine")
 
-        # Link in the intial condition file (if necessary)
+        # Link in the initial condition file (if necessary)
         for iprefix, isec in inidata.items():
             i_init = '{:s}{:s}INIT'.format(iprefix, self.xpname)
             if isec.rh.container.basename != i_init:
@@ -428,32 +426,36 @@ class FullPosServer(IFSParallel):
                 logger.info('Initial condition file %s copied as %s.',
                             isec.rh.container.localpath(), i_init)
 
-        # Prepare the namelist
-        self.system.subtitle('Setting 903 namelist settings')
-        namrhs = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                       kind='namelist')]
-        for namrh in namrhs:
-            if self.outputid:
-                self._setmacro(namrh, 'OUTPUTID', self.outputid)
-            # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
-            if anyexpected:
-                self._setmacro(namrh, 'SERVERSYNC_SCRIPT',
-                               self.system.path.join('.', self.serversync_medium))
-            else:
-                # Do not harass the filesystem...
-                self._setmacro(namrh, 'SERVERSYNC_SCRIPT', ' ')
-            # With cy43: &NAMCT0 CFPNCF=__IOPOLL_WHITNESSFILE__, /
-            self._setmacro(namrh, 'IOPOLL_WHITNESSFILE', self._MODELSIDE_TERMFILE)
-            # With cy43: No matching namelist key
-            # a/c cy44: &NAMFPIOS NFPDIGITS=__SUFFIXLEN__, /
-            self._setmacro(namrh, 'SUFFIXLEN',
-                           self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN))
-            # No matching namelist yet
-            self._setmacro(namrh, 'INPUT_SUFFIXLEN',
-                           self._actual_suffixlen(tododata, inputsminlen))
-            # With cy43: &NAMCT0 NFRPOS=__INPUTDATALEN__, /
-            self._setmacro(namrh, 'INPUTDATALEN', len(tododata))
-            namrh.save()
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        return [x.rh
+                for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                kind='namelist')]
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        super(FullPosServer, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        _, tododata, _, anyexpected, _, inputsminlen = self._inputs_discover()
+        if self.outputid:
+            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
+        # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
+        if anyexpected:
+            self._set_nam_macro(namcontents, namlocal, 'SERVERSYNC_SCRIPT',
+                                self.system.path.join('.', self.serversync_medium))
+        else:
+            # Do not harass the filesystem...
+            self._set_nam_macro(namcontents, namlocal, 'SERVERSYNC_SCRIPT', ' ')
+        # With cy43: &NAMCT0 CFPNCF=__IOPOLL_WHITNESSFILE__, /
+        self._set_nam_macro(namcontents, namlocal, 'IOPOLL_WHITNESSFILE', self._MODELSIDE_TERMFILE)
+        # With cy43: No matching namelist key
+        # a/c cy44: &NAMFPIOS NFPDIGITS=__SUFFIXLEN__, /
+        self._set_nam_macro(namcontents, namlocal, 'SUFFIXLEN',
+                            self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN))
+        # No matching namelist yet
+        self._set_nam_macro(namcontents, namlocal, 'INPUT_SUFFIXLEN',
+                            self._actual_suffixlen(tododata, inputsminlen))
+        # With cy43: &NAMCT0 NFRPOS=__INPUTDATALEN__, /
+        self._set_nam_macro(namcontents, namlocal, 'INPUTDATALEN', len(tododata))
+        return True
 
     def execute(self, rh, opts):
         """Server still or Normal execution depending on the input sequence."""
