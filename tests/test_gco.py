@@ -10,11 +10,14 @@ import footprints as fp
 
 import vortex
 from vortex.tools.net import uriparse
+import iga.data.stores
 from gco.data.stores import UgetArchiveStore
 from gco.tools import genv, uenv
 from gco.syntax.stdattrs import UgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
+
+assert iga.data.stores
 
 tloglevel = 'error'
 
@@ -237,6 +240,49 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assert_mantra('file1')
             self.assertNotEqual(self.sh.stat(file1incache).st_ino,
                                 self.sh.stat('file1').st_ino)
+
+    def test_iga_gco_store(self):
+        frozencache = os.path.join(self.tmpdir, 'cache')
+        datapath = self.sh.path.join(DATAPATHTEST, 'freezed_op_cycle_testdata.tar.bz2')
+        with self.sh.cdcontext(frozencache, create=True):
+            self.sh.untar(datapath, verbose=False)
+        try:
+            st = fp.proxy.store(scheme='gget', netloc='opgco.cache.fr', rootdir='auto')
+            self.assertEqual(st.locate(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'), dict()),
+                             self.sh.path.join(frozencache, 'gco', 'tampon', 'fake_resource.01'))
+            self.assertEqual(st.check(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'), dict()).st_size,
+                             6)
+            self.assertSetEqual(set(st.list(uriparse('gget://opgco.cache.fr/tampon/'), dict())),
+                                set(['extract.mars.ifs.01.tgz',
+                                     'extract.mars.ifs.01',
+                                     'fake_resource.01',
+                                     'al43t2_arome@ifs-op5.01.nam']))
+            self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/fake_resource.01'),
+                                   'fake1', dict()))
+            with io.open('fake1') as fhf:
+                self.assertEqual(fhf.read(), 'opgco\n')
+            self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/extract.mars.ifs.01.tgz'),
+                                   self.sh.path.join('sub1', 'extract.mars.ifs.01.tgz'), dict()))
+            for what in ('extr_fc_00_vv', 'extr_fc_06_vv', 'extr_fc_12_vv', 'extr_fc_18_vv'):
+                self.assertTrue(self.sh.path.isfile(self.sh.path.join('sub1', what)))
+                self.assertFalse(self.sh.wperm(self.sh.path.join('sub1', what)))
+            self.assertTrue(self.sh.path.exists(self.sh.path.join('sub1', 'extract.mars.ifs.01.tgz')))
+            self.assertTrue(st.get(
+                uriparse('gget://opgco.cache.fr/tampon/al43t2_arome@ifs-op5.01.nam?extract=namel_diag'),
+                'nam_diag', dict()))
+            self.assertTrue(self.sh.path.isfile('nam_diag'))
+            self.assertFalse(self.sh.wperm('nam_diag'))
+            self.assertTrue(st.get(
+                uriparse('gget://opgco.cache.fr/tampon/al43t2_arome@ifs-op5.01.nam?extract=namel_prep'),
+                'nam_prep', dict(intent='inout')))
+            self.assertTrue(self.sh.path.isfile('nam_prep'))
+            self.assertTrue(self.sh.wperm('nam_prep'))
+        finally:
+            # Because ggetall enforce very strict rights...
+            self.sh.wperm(self.sh.path.join(frozencache, 'gco', 'tampon', 'al43t2_arome@ifs-op5.01.nam'),
+                          force=True)
+            self.sh.wperm(self.sh.path.join(frozencache, 'gco', 'tampon', 'extract.mars.ifs.01'),
+                          force=True)
 
 
 @loggers.unittestGlobalLevel(tloglevel)
