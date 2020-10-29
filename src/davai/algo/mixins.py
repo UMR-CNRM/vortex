@@ -55,6 +55,8 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             ref_status = ref_summary.get('Status')
             if ref_status['symbol'].startswith('X'):
                 status = task_status['X=R']
+        elif len(ref_summary) == 0:  # if reference crashed, the summary is not available in archive
+            status = task_status.get('X:R?', task_status['X'])
         # then write summary in promise
         summary = {'Status': status,
                    'Exception': str(e),
