@@ -339,8 +339,12 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                                                          for item_s in [self.system.path.split(item)
                                                                         for item in indexed]])
                                         for item in firstlevel:
+                                            localdest = self.system.path.join(localdir, item)
+                                            # Create the target directory if needed
+                                            self.system.mkdir(self.system.path.dirname(localdest))
+                                            # Actually copy each item
                                             self.system.mv(self.system.path.join(tmpdir, item),
-                                                           self.system.path.join(localdir, item))
+                                                           localdest)
                             finally:
                                 self.system.rm(tmpdir)
                         else:
