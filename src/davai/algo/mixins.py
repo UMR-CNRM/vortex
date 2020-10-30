@@ -12,7 +12,7 @@ from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
 from common.algo.oopsroot import OOPSMinim
-from common.algo.assim import (Screening, Minim)
+from common.algo.assim import (Screening, Minim, Canari)
 from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
@@ -141,4 +141,8 @@ class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
 
 
 class Coupling_CrashWitness(Coupling, _CrashWitnessDecoMixin):
+    pass
+
+
+class Canari_CrashWitness(Canari, _CrashWitnessDecoMixin):
     pass
