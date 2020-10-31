@@ -26,7 +26,7 @@ from vortex.data.abstractstores import Store, ArchiveStore, MultiStore, CacheSto
     ConfigurableArchiveStore, CACHE_GET_INTENT_DEFAULT, ARCHIVE_GET_INTENT_DEFAULT
 from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser
-from gco.syntax.stdattrs import UgetId
+from gco.syntax.stdattrs import AbstractUgetId
 
 #: No automatic export
 __all__ = []
@@ -753,7 +753,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        f_uuid = UgetId('uget:' + xpath[2])
+        f_uuid = AbstractUgetId('uget:' + xpath[2])
         remote['path'] = self.system.path.join(self.storehead, xpath[1],
                                                self._hashdir(f_uuid.id), f_uuid.id)
         if 'root' not in remote:
@@ -765,14 +765,14 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         rlist = []
         xpath = remote['path'].split('/')
         if re.match(r'^@(\w+)$', xpath[2]):
-            f_uuid = UgetId('uget:fake' + xpath[2])
+            f_uuid = AbstractUgetId('uget:fake' + xpath[2])
             for h in range(16):
                 a_remote = copy.copy(remote)
                 a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
                                                          re.sub('0x(.)', r'\1', hex(h)))
                 rlist.append(a_remote)
         else:
-            f_uuid = UgetId('uget:' + xpath[2])
+            f_uuid = AbstractUgetId('uget:' + xpath[2])
             a_remote = copy.copy(remote)
             a_remote['path'] = self.system.path.join(self.storehead, xpath[1],
                                                      self._hashdir(f_uuid.id), f_uuid.id)
@@ -902,7 +902,7 @@ class _UgetCacheStoreMixin(object):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        f_uuid = UgetId('uget:' + xpath[2])
+        f_uuid = AbstractUgetId('uget:' + xpath[2])
         remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
         return remote
 
@@ -911,10 +911,10 @@ class _UgetCacheStoreMixin(object):
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
         if re.match(r'^@(\w+)$', xpath[2]):
-            f_uuid = UgetId('uget:fake' + xpath[2])
+            f_uuid = AbstractUgetId('uget:fake' + xpath[2])
             remote['path'] = self.system.path.join(f_uuid.location, xpath[1])
         else:
-            f_uuid = UgetId('uget:' + xpath[2])
+            f_uuid = AbstractUgetId('uget:' + xpath[2])
             remote['path'] = self.system.path.join(f_uuid.location, xpath[1], f_uuid.id)
         return remote
 

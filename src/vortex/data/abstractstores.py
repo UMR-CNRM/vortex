@@ -1183,6 +1183,7 @@ class PromiseStore(footprints.FootprintBase):
                 alias    = ('protocol',)
             ),
             netloc = dict(
+                type     = Namespace,
                 alias    = ('domain', 'namespace')
             ),
             storetrack = dict(
@@ -1191,6 +1192,7 @@ class PromiseStore(footprints.FootprintBase):
                 optional = True,
             ),
             prstorename = dict(
+                type     = Namespace,
                 optional = True,
                 default  = 'promise.cache.fr',
             ),

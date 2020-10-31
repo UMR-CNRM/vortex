@@ -38,7 +38,7 @@ from vortex.tools.net import uriparse
 from vortex.tools.systems import ExecutionError
 
 from gco.data.stores import UgetStore
-from gco.syntax.stdattrs import UgetId
+from gco.syntax.stdattrs import AbstractUgetId, UgetId
 from gco.tools import genv, uenv
 
 vortex.logger.setLevel(logging.WARNING)
@@ -549,7 +549,7 @@ class UGetShell(cmd.Cmd):
                     return False
                 outlist = list()
                 for k, v in sorted(myenv.items()):
-                    if isinstance(v, UgetId):
+                    if isinstance(v, AbstractUgetId):
                         chkres = {stname: self._instore_check(st, v)
                                   for stname, st in self._storelist}
                         rstack = self._single_check(chkres)
@@ -795,7 +795,7 @@ class UGetShell(cmd.Cmd):
                 if not myenv:
                     return False
                 for _, v in sorted(myenv.items()):
-                    if isinstance(v, UgetId):
+                    if isinstance(v, AbstractUgetId):
                         chkres = self._instore_check(self._storehack, v)
                         if len(chkres) == 1 and chkres[0][0]:
                             # "Simple" non-monthly case

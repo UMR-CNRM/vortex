@@ -17,3 +17,4 @@ Included Modules
 ----------------
 
 * :mod:`sandbox.algo.stdpost`
+* :mod:`sandbox.algo.stdpost_script`

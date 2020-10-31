@@ -17,7 +17,8 @@ from bronx.fancies import loggers
 import footprints
 from footprints import proxy as fpx
 
-from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, scenario, member, block
+from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, \
+    demosuites, scenario, member, block
 from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
 from vortex.tools import net, names
 
@@ -361,7 +362,7 @@ class VortexStd(Vortex):
             info = 'Vortex provider for casual experiments with an Olive XPID',
             attr = dict(
                 experiment = dict(
-                    outcast = opsuites,
+                    outcast = opsuites | demosuites,
                 ),
             ),
         ),

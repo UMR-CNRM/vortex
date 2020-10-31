@@ -78,7 +78,7 @@ try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
     sh.ftraw = True # To activate ftserv
 
-    opts = dict(jobassistant=ja, fullplay=True)
+    opts = dict(jobassistant=ja, play=True)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()

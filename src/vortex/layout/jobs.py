@@ -16,6 +16,7 @@ import importlib
 import re
 import string
 import sys
+import tempfile
 import traceback
 
 from bronx.fancies import loggers
@@ -55,6 +56,8 @@ def _guess_vapp_vconf_xpid(t, path=None):
         path = t.sh.pwd()
     lpath = path.split('/')
     if lpath[-1] in ('demo', 'gco', 'genv', 'jobs', 'logs', 'src', 'tasks', 'vortex'):
+        lpath.pop()
+    if re.match('jobs_[^' + t.sh.path.sep + ']+', lpath[-1]):
         lpath.pop()
     return _JobBasicConf('/'.join(lpath), *lpath[-3:])
 
@@ -706,7 +709,7 @@ class JobAssistantPlugin(footprints.FootprintBase):
 
 class JobAssistantTmpdirPlugin(JobAssistantPlugin):
 
-    _conflicts = ['mtool', ]
+    _conflicts = ['mtool', 'autodir']
     _footprint = dict(
         info = 'JobAssistant TMPDIR Plugin',
         attr = dict(
@@ -721,12 +724,77 @@ class JobAssistantTmpdirPlugin(JobAssistantPlugin):
         myrundir = kw.get('rundir', None) or t.env.TMPDIR
         if myrundir:
             t.rundir = kw.get('rundir', myrundir)
-            print('+ Current rundir <%s>' % (t.rundir,))
+            print('+ Current rundir < {:s} >'.format(t.rundir,))
+
+
+class JobAssistantAutodirPlugin(JobAssistantPlugin):
+
+    _conflicts = ['mtool', 'tmpdir']
+    _footprint = dict(
+        info = 'JobAssistant Automatic Directory Plugin',
+        attr = dict(
+            kind = dict(
+                values = ['autodir', ]
+            ),
+            appbase = dict(
+                info="The directory where the application lies.",
+            ),
+            jobname = dict(
+                info="The current job name.",
+            ),
+            cleanup = dict(
+                info = "Remove the workind directory when the job is done.",
+                type = bool,
+                optional = True,
+                default = True,
+            ),
+        ),
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(JobAssistantAutodirPlugin, self).__init__(*kargs, **kwargs)
+        self._joblabel = None
+
+    def _autodir_tmpdir(self, t):
+        tmpbase = t.sh.path.join(self.appbase, 'run', 'tmp')
+        if self._joblabel is None:
+            with t.sh.cdcontext(tmpbase, create=True):
+                self._joblabel = t.sh.path.basename(tempfile.mkdtemp(
+                    prefix='{:s}_{:s}_'.format(self.jobname, date.now().iso8601()),
+                    dir='.'
+                ))
+        return t.sh.path.join(tmpbase, self._joblabel)
+
+    def _autodir_abort(self, t):
+        abortbase = t.sh.path.join(self.appbase, 'run', 'abort')
+        if self._joblabel is None:
+            self._autodir_tmpdir(t)
+        abortdir = t.sh.path.join(abortbase, self._joblabel)
+        t.sh.mkdir(abortdir)
+        return abortdir
+
+    def plugable_extra_session_setup(self, t, **kw):
+        """Set the rundir according to the TMPDIR variable."""
+        t.rundir = self._autodir_tmpdir(t)
+        print('+ Current rundir < {:s} >'.format(t.rundir,))
+
+    def plugable_finalise(self, t):
+        """Should be called when a job finishes successfully"""
+        if self.cleanup:
+            print('+ Removing the rundir < {:s} >'.format(t.rundir,))
+            t.sh.cd(t.env.HOME)
+            t.sh.rm(self._autodir_tmpdir(t))
+
+    def plugable_rescue(self, t):
+        """Called at the end of a job when something went wrong."""
+        t.sh.cd(self._autodir_tmpdir(t))
+        if self.masterja.subjob_tag is None:
+            vortex.toolbox.rescue(bkupdir=self._autodir_abort(t))
 
 
 class JobAssistantMtoolPlugin(JobAssistantPlugin):
 
-    _conflicts = ['tmpdir', ]
+    _conflicts = ['tmpdir', 'autodir']
 
     _footprint = dict(
         info = 'JobAssistant MTOOL Plugin',
@@ -769,7 +837,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         """Set the rundir according to MTTOL's spool."""
         t.rundir = t.env.MTOOL_STEP_SPOOL
         t.sh.cd(t.rundir)
-        print('+ Current rundir <{:s}>'.format(t.rundir))
+        print('+ Current rundir < {:s} >'.format(t.rundir))
         # Load the session's data store
         if self.step > 1 and self.masterja.subjob_tag is None:
             t.datastore.pickle_load()
@@ -780,7 +848,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
             logdir = t.sh.path.dirname(logfile)
             if not t.sh.path.isdir(logdir):
                 t.sh.mkdir(logdir)
-            print('+ Current logfile <{:s}>'.format(logfile))
+            print('+ Current logfile < {:s} >'.format(logfile))
         # Only allow subjobs in compute steps
         self.masterja.subjob_allowed = self.stepid == 'compute'
 

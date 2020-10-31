@@ -148,8 +148,11 @@ class GgetId(six.text_type):
         return six.text_type.__new__(cls, value)
 
 
-class UgetId(six.text_type):
+class AbstractUgetId(six.text_type):
     """Basestring wrapper for Uget Ids."""
+
+    _ALLOWED_LOCATIONS = ()
+    _OUTCAST_LOCATIONS = ()
 
     def __new__(cls, value):
         vmatch = uget_id_regex_only.match(value)
@@ -158,6 +161,10 @@ class UgetId(six.text_type):
         me = six.text_type.__new__(cls, value)
         me._id = vmatch.group('id')
         me._location = vmatch.group('location')
+        if me._location in set(cls._OUTCAST_LOCATIONS):
+            raise ValueError('Invalid UgetId (got "{:s}"). Outcast Location.'.format(value))
+        if cls._ALLOWED_LOCATIONS and me._location not in set(cls._ALLOWED_LOCATIONS):
+            raise ValueError('Invalid UgetId (got "{:s}"). Disallowed location'.format(value))
         return me
 
     @property
@@ -174,3 +181,8 @@ class UgetId(six.text_type):
 
     def monthlyshort(self, month):
         return self._id + '.m{:02d}'.format(month) + '@' + self._location
+
+
+class UgetId(AbstractUgetId):
+
+    _OUTCAST_LOCATIONS = ('demo', )

@@ -51,6 +51,9 @@ _ExportXML
 .project
 .pydevproject
 
+# Pycharm unwanted files
+.idea
+
 # Kate unwanted file
 *.kate-swp
 
