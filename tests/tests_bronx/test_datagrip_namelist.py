@@ -91,7 +91,6 @@ NAMBLOCK1 = """\
 &MyNamelistTest
 M1=$MYMACRO1,
 M1b='MYMACRO1',
-M1c=__MYMACRO1__,
 M1d='__MYMACRO1__',
 M2=MYMACRO2,
 M3=__SOMETHINGNEW__,
@@ -202,10 +201,10 @@ class UtFortranNamelist(TestCase):
         nb_res = np.parse(NAMBLOCK1).as_dict()['MYNAMELISTTEST']
         # Inspect the newly created object
         self.assertEqual(nb_res.name, 'MYNAMELISTTEST')
-        self.assertEqual(len(nb_res), 10)
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
+        self.assertEqual(len(nb_res), 9)
+        self.assertEqual(['M1', 'M1B', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res))  # Iterator test
-        self.assertEqual(['M1', 'M1B', 'M1C', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
+        self.assertEqual(['M1', 'M1B', 'M1D', 'M2', 'M3', 'M3B', 'TRAP', 'M4', 'A'],
                          list(nb_res.keys()))
         self.assertEqual(nb_res.A, [25, 30, 15])
         self.assertEqual(nb_res["A"], [25, 30, 15])
@@ -222,7 +221,7 @@ class UtFortranNamelist(TestCase):
         self.assertEqual(nb_res["B"], 1.2)
         nb_res["B"] = 1.2
         self.assertEqual(nb_res["B"], 1.2)
-        self.assertEqual(len(nb_res), 11)
+        self.assertEqual(len(nb_res), 10)
         del nb_res.B
         self.assertFalse('B' in nb_res)
         self.assertIs(nb_res.get('B', None), None)
@@ -231,7 +230,6 @@ class UtFortranNamelist(TestCase):
  &MYNAMELISTTEST
    M1='Toto',
    M1B='Toto',
-   M1C='Toto',
    M1D='Toto',
    M2=MYMACRO2,
    M3=__SOMETHINGNEW__,
@@ -249,7 +247,6 @@ class UtFortranNamelist(TestCase):
  &MYNAMELISTTEST
    M1='Toto',
    M1B='Toto',
-   M1C='Toto',
    M1D='Toto',
    M2=MYMACRO2,
    M3=1,

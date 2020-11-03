@@ -787,15 +787,10 @@ class NamelistBlock(collections_abc.MutableMapping):
         else:
             return None
 
-    def nice(self, item, literal=None):
-        """Nice encoded value of the item, possibly substitute with macros."""
-        if literal is None:
-            if self._literal is None:
-                self.__dict__['_literal'] = LiteralParser()
-            literal = self._literal
+    def _xdetect_macroname(self, item):
         if isinstance(item, six.string_types):
             itemli = item[:]
-            # Ignore quote and double-quote when mathing macro's name
+            # Ignore quote and double-quote when matching macro's name
             if ((itemli.startswith("'") and itemli.endswith("'")) or
                     (itemli.startswith('"') and itemli.endswith('"'))):
                 itemli = itemli[1:-1]
@@ -804,7 +799,15 @@ class NamelistBlock(collections_abc.MutableMapping):
                 itemli = itemli[1:]
         else:
             itemli = item
-        macroname = self.possible_macroname(itemli)
+        return self.possible_macroname(itemli)
+
+    def nice(self, item, literal=None):
+        """Nice encoded value of the item, possibly substitute with macros."""
+        if literal is None:
+            if self._literal is None:
+                self.__dict__['_literal'] = LiteralParser()
+            literal = self._literal
+        macroname = self._xdetect_macroname(item)
         if macroname is not None:
             if self._subs.get(macroname, None) is None:
                 return item
@@ -827,7 +830,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         has_macros = False
         for v in self.values():
             for item in v:
-                macroname = self.possible_macroname(item)
+                macroname = self._xdetect_macroname(item)
                 if macroname and self._subs.get(macroname, None) is not None:
                     has_macros = True
                     break
