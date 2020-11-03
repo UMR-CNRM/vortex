@@ -663,7 +663,7 @@ class MpiTool(footprints.FootprintBase):
                     cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
                     if not cpu_disp:
                         raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                           .format(self._actual_vortexbind_topology, ))
+                                           .format(self._actual_mpibind_topology, ))
                     for _ in range(e_bit.options['nnp']):
                         dispensers_map[ranks_idx] = (cpu_disp, i_node)
                         ranks_idx += 1

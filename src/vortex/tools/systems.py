@@ -2980,7 +2980,7 @@ class Garbage(OSExtended):
         info = 'Garbage base system',
         attr = dict(
             sysname = dict(
-                outcast = ['Linux', 'Darwin', 'UnitTestLinux']
+                outcast = ['Linux', 'Darwin', 'UnitTestLinux', 'UnitTestable']
             )
         ),
         priority = dict(

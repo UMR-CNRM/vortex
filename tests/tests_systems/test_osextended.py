@@ -23,7 +23,7 @@ class TestableOSExtended(OSExtended):
                 default  = 'unittestlogin001',
             ),
             sysname = dict(
-                default  = 'Linux',
+                values  = ['UnitTestable'],
             ),
         )
     )
@@ -42,9 +42,10 @@ class TestOSExtendedBasics(unittest.TestCase):
         self.create_testfile()
         # Create the system
         gl = fp.proxy.glove()
-        self.sh = TestableOSExtended(glove=gl)
+        self.sh = TestableOSExtended(glove=gl, sysname='UnitTestable')
         self.sh.target(inetname='unittest',
-                       inifile=os.path.join(DATAPATHTEST, 'target-test.ini'))
+                       inifile=os.path.join(DATAPATHTEST, 'target-test.ini'),
+                       sysname='Linux')
 
     def create_testfile(self):
         with io.open(self._TESTFILE_DEFAULT, 'w') as fhtest:
