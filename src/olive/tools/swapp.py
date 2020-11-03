@@ -7,6 +7,7 @@ Various tools to interact with the SWAPP system.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 import six
 import io
 import re
@@ -241,6 +242,26 @@ def olive_enforce_oneshot(identifier):
     return go
 
 
+@contextlib.contextmanager
+def _olive_readonly_gnam_context(sh, container):
+    """If the container is readonly, move the file first."""
+    is_readonly = (isinstance(container.iotarget(), six.string_types) and
+                   not sh.wperm(container.localpath()))
+    if is_readonly:
+        tmp_ro_file = container.localpath() + sh.safe_filesuffix()
+        sh.move(container.localpath(), tmp_ro_file)
+        try:
+            yield
+            sh.readonly(container.localpath())
+        except Exception:
+            sh.move(tmp_ro_file, container.localpath())
+            raise
+        else:
+            sh.rm(tmp_ro_file)
+    else:
+        yield
+
+
 def olive_gnam_hook_factory(nickname, nam_delta, env=None):
     """Hook functions factory to apply namelist delta on a given ressource."""
     if env is not None:
@@ -259,7 +280,8 @@ def olive_gnam_hook_factory(nickname, nam_delta, env=None):
                       'to namelist {}'.format(nickname, namrh.container.localpath()))
         print(namdelta_l.dumps())
         namrh.contents.merge(namdelta_l)
-        namrh.save()
+        with _olive_readonly_gnam_context(t.sh, namrh.container):
+            namrh.save()
 
     return olive_gnam_hook
 

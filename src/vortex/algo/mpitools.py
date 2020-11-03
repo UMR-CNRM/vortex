@@ -841,7 +841,9 @@ class MpiTool(footprints.FootprintBase):
             for bin_obj in self.binaries:
                 changed = bin_obj.setup_namelist_delta(namc, namrh.container.actualpath()) or changed
             if changed:
-                namc.rewrite(namrh.container)
+                if namc.dumps_needs_update:
+                    logger.info('Rewritting the %s namelists file.', namrh.container.actualpath())
+                    namc.rewrite(namrh.container)
 
     def _logged_env_set(self, k, v):
         """Set an environment variable *k* and emit a log message."""
@@ -1195,8 +1197,13 @@ class MpiBinaryBasic(MpiBinary):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
+        # List of macros actualy used in the namelist
+        nam_macros = set()
+        for nam_block in namcontents.values():
+            nam_macros.update(nam_block.macros())
+        # Look for relevant once
         nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
-        if any([n in namcontents.macros() for n in nprocs_macros]):
+        if any([n in nam_macros for n in nprocs_macros]):
             for n in nprocs_macros:
                 logger.info('Setup macro %s=%s in %s', n, self.nprocs, namlocal)
                 namcontents.setmacro(n, self.nprocs)
@@ -1362,7 +1369,7 @@ class SRun(ConfigurableMpiTool):
                                                       hexmask=True)
                 if not ids:
                     raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                       .format(self._actual_vortexbind_topology,))
+                                       .format(self._actual_mpibind_topology,))
                 masklist = [m for _, m in zip(range(what[0].options['nnp']),
                                               itertools.cycle(ids))]
                 cmdl.append('mask_cpu:' + ','.join(masklist))

@@ -35,11 +35,11 @@ logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
-_CACHE_PUT_INTENT = 'in'
-_CACHE_GET_INTENT_DEFAULT = 'in'
+CACHE_PUT_INTENT = 'in'
+CACHE_GET_INTENT_DEFAULT = 'in'
 
-_ARCHIVE_PUT_INTENT = 'in'
-_ARCHIVE_GET_INTENT_DEFAULT = 'in'
+ARCHIVE_PUT_INTENT = 'in'
+ARCHIVE_GET_INTENT_DEFAULT = 'in'
 
 
 def observer_board(obsname=None):
@@ -221,7 +221,7 @@ class Store(footprints.FootprintBase):
         options = options.copy() if options is not None else dict()
         options['obs_notify'] = False
         options['fmt'] = 'ascii'
-        options['intent'] = _CACHE_GET_INTENT_DEFAULT
+        options['intent'] = CACHE_GET_INTENT_DEFAULT
         options['auto_tarextract'] = False
         options['auto_dirextract'] = False
         return options
@@ -375,6 +375,9 @@ class MultiStore(footprints.FootprintBase):
                     optional = True,
                     default  = None,
                 ),
+                storetube=dict(
+                    optional=True,
+                ),
             ),
         )
     ]
@@ -443,7 +446,8 @@ class MultiStore(footprints.FootprintBase):
         while loading alternates stores.
         """
         return [
-            dict(system=self.system, storehash=self.storehash, storage=self.storage,
+            dict(system=self.system, storehash=self.storehash,
+                 storage=self.storage, storetube=self.storetube,
                  store_compressed=self.store_compressed,
                  scheme=x, netloc=y)
             for x in self.alternates_scheme()
@@ -547,8 +551,8 @@ class MultiStore(footprints.FootprintBase):
                         logger.info('Refill back in writeable store [%s].', restore)
                         try:
                             refill_in_progress = ((restore.put(local, remote.copy(), options) and
-                                                   (options.get('intent', _CACHE_GET_INTENT_DEFAULT) !=
-                                                    _CACHE_PUT_INTENT)) or
+                                                   (options.get('intent', CACHE_GET_INTENT_DEFAULT) !=
+                                                    CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
                         except (ExecutionError, IOError, OSError) as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
@@ -748,7 +752,7 @@ class ArchiveStore(Store):
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.retrieve(
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -761,7 +765,7 @@ class ArchiveStore(Store):
                      self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.earlyretrieve(
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -775,7 +779,7 @@ class ArchiveStore(Store):
         rc = self.archive.finaliseretrieve(
             result_id,
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -788,7 +792,7 @@ class ArchiveStore(Store):
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.insert(
             self._inarchiveformatpath(remote), local,
-            intent=_ARCHIVE_PUT_INTENT,
+            intent=ARCHIVE_PUT_INTENT,
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler'),
             logname=remote['username'],
@@ -1128,7 +1132,7 @@ class CacheStore(Store):
         rc = self.cache.retrieve(
             remote['path'],
             local,
-            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', CACHE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
             tarextract=options.get('auto_tarextract', False),
@@ -1148,7 +1152,7 @@ class CacheStore(Store):
         rc = self.cache.insert(
             remote['path'],
             local,
-            intent=_CACHE_PUT_INTENT,
+            intent=CACHE_PUT_INTENT,
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
         )

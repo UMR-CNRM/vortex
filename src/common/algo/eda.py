@@ -165,8 +165,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
                                                                              namcontents,
                                                                              namlocal)
         if self.actual_nbe is not None:
-            namcontents.setmacro('NBE', self.actual_nbe)
-            logger.info('Setup macro NBE=%s in %s', self.actual_nbe, namlocal)
+            self._set_nam_macro(namcontents, namlocal, 'NBE', self.actual_nbe)
             nam_updated = True
         return nam_updated
 
@@ -331,8 +330,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                                                                                            namcontents,
                                                                                            namlocal)
         if self.actual_nresx is not None:
-            namcontents.setmacro('NRESX', self.actual_nresx)
-            logger.info('Setup macro NRESX=%s in %s', self.actual_nresx, namlocal)
+            self._set_nam_macro(namcontents, namlocal, 'NRESX', self.actual_nresx)
             nam_updated = True
         return nam_updated
 

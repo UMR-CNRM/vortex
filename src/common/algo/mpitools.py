@@ -351,22 +351,34 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
             value = math.ceil(self.nprocs * float(value[:-1]) / 100)
         self._incore_iotasks = int(value)
 
+    def _set_nam_macro(self, namcontents, namlocal, macro, value):
+        """Set a namelist macro and log it!"""
+        namcontents.setmacro(macro, value)
+        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
+
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
+        # List of macros actualy used in the namelist
+        nam_macros = set()
+        for nam_block in namcontents.values():
+            nam_macros.update(nam_block.macros())
+        # The actual number of tasks involved in computations
         effective_nprocs = self.nprocs
         if self.incore_iotasks is not None:
             effective_nprocs -= self.incore_iotasks
+        # Set up the effective_nprocs related macros
         nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
-        if any([n in namcontents.macros() for n in nprocs_macros]):
+        if any([n in nam_macros for n in nprocs_macros]):
             for n in nprocs_macros:
-                logger.info('Setup macro %s=%s in %s', n, effective_nprocs, namlocal)
-                namcontents.setmacro(n, effective_nprocs)
+                self._set_nam_macro(namcontents, namlocal, n, effective_nprocs)
             namw = True
-        if 'NBPROC' in namcontents.macros() or 'NPROC' in namcontents.macros():
-            namcontents.setmacro('NCPROC', int(self.env.VORTEX_NPRGPNS or effective_nprocs))
-            namcontents.setmacro('NDPROC', int(self.env.VORTEX_NPRGPEW or 1))
-            namw = True
+            if any([n in nam_macros for n in ('NCPROC', 'NDPROC')]):
+                self._set_nam_macro(namcontents, namlocal, 'NCPROC',
+                                    int(self.env.VORTEX_NPRGPNS or effective_nprocs))
+                self._set_nam_macro(namcontents, namlocal, 'NDPROC',
+                                    int(self.env.VORTEX_NPRGPEW or 1))
+                namw = True
         if 'NAMPAR1' in namcontents:
             np1 = namcontents['NAMPAR1']
             for nstr in [x for x in ('NSTRIN', 'NSTROUT') if x in np1]:
@@ -382,7 +394,8 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
         namw = namw or namw_p
         # Incore IO tasks
         if self.incore_iotasks is not None:
-            self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
+            namw_io = self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
+            namw = namw or namw_io
         return namw
 
     def clean(self, opts=None):

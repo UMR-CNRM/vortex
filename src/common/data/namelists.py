@@ -75,6 +75,11 @@ class NamelistContent(AlmostDictContent):
         self._data.setmacro(item, value)
         self._macros[item] = value
 
+    @property
+    def dumps_needs_update(self):
+        """Tells wether something as changed in the namelist's dump."""
+        return self._data.dumps_needs_update
+
     def dumps(self, sorting=NO_SORTING):
         """
         Returns the namelist contents as a string.

@@ -172,7 +172,8 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         self._fix_nam_macro(namrh, 'LLVRP', self.model == 'varpack')
         self._fix_nam_macro(namrh, 'LLCAN', self.stage == 'surf')
 
-        namrh.contents.rewrite(namrh.container)
+        if namrh.contents.dumps_needs_update:
+            namrh.contents.rewrite(namrh.container)
         namrh.container.cat()
 
     def postfix(self, rh, opts):

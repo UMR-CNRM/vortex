@@ -89,14 +89,6 @@ class C923(IFSParallel):
 
     def prepare(self, rh, opts):
         super(C923, self).prepare(rh, opts)
-        # Namelist
-        nam = self.context.sequence.effective_inputs(role=('Namelist',))
-        self.algoassert(len(nam) == 1,
-                        "One and only one namelist necessary as input.")
-        nam = nam[0].rh
-        nam.contents['NAMMCC']['N923'] = self.step
-        nam.contents.setmacro('LPGD', self.orog_in_pgd)
-        nam.save()
         # check PGD if needed
         if self.orog_in_pgd:
             pgd = self.context.sequence.effective_inputs(role=('Pgd',))
@@ -112,6 +104,19 @@ class C923(IFSParallel):
                     format(self.input_orog_name))
             elif pgd.resource.nativefmt == 'lfi':
                 raise NotImplementedError('CY43T2 onwards: lfi PGD should not be used.')
+
+    def find_namelists(self, opts=None):
+        namrh_list = [x.rh
+                      for x in self.context.sequence.effective_inputs(role=('Namelist',))]
+        self.algoassert(len(namrh_list) == 1,
+                        "One and only one namelist necessary as input.")
+        return namrh_list
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        super(C923, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        namcontents['NAMMCC']['N923'] = self.step
+        namcontents.setmacro('LPGD', self.orog_in_pgd)
+        return True
 
 
 class FinalizePGD(AlgoComponent):
