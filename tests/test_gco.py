@@ -121,6 +121,10 @@ class TestGcoGget(PrivateCocoonGcoTest):
         self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01?extract=file4'),
                                'extracted', dict()))
         self.assert_mantra('extracted')
+        # Directory with extract
+        self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01?extract=file5'),
+                               'extracted_bis', dict()))
+        self.assert_mantra('extracted_bis')
         # Tar file
         self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakearchive.01.tgz'),
                                'fulltoto', dict()))

@@ -569,15 +569,8 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
         if options is None:
             options = dict()
         fmt = options.get('fmt', 'foo')
-        # Tweak the Gget command according to extract
         extract = remote['query'].get('extract', None)
-        if extract:
-            fullcmd = gcmd + ['-extract', '-subdir=no', gname, extract[0]]
-            actual_target = extract[0]
-        else:
-            fullcmd = gcmd + [gname]
-            actual_target = gname
-        # Run the Gget command
+        # Run the Gget command in a temporary directory
         if isinstance(local, six.string_types):
             localdir = self.system.path.dirname(local)
             self.system.mkdir(localdir)
@@ -585,9 +578,26 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
             localdir = '.'
         tmpdir = tempfile.mkdtemp(dir=localdir, prefix='gco_autoextract_')
         try:
-            actual_target = sh.path.join(tmpdir, actual_target)
             with sh.cdcontext(tmpdir):
-                rc = self._gspawn(fullcmd)
+                # Tweak the Gget command according to extract
+                if extract:
+                    actual_target = extract[0]
+                    retrycount = 0
+                    while retrycount < 10:
+                        rc = self._gspawn(gcmd + ['-extract', '-subdir=no', gname, actual_target])
+                        if rc and not sh.path.exists(actual_target) and sh.path.islink(actual_target):
+                            new_target = sh.readlink(actual_target)
+                            logger.info("< %s > is a symlink. Retrying with the link target < %s >",
+                                        actual_target, new_target)
+                            sh.rm(actual_target)
+                            actual_target = new_target
+                            retrycount += 1
+                        else:
+                            break
+                else:
+                    actual_target = gname
+                    rc = self._gspawn(gcmd + [gname])
+            actual_target = sh.path.join(tmpdir, actual_target)
             if rc and sh.path.exists(actual_target):
                 rc = rc and (not isinstance(local, six.text_type) or sh.filecocoon(local))
                 rc = rc and sh.mv(actual_target, local, fmt=fmt)
