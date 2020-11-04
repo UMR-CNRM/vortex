@@ -1216,6 +1216,16 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
                     rc = False
         return rc
 
+    def ugetput(self, local, remote, options):
+        """Proxy to :meth:`incacheput`."""
+        remote = self.universal_remap(remote)
+        extract = remote['query'].get('extract', None)
+        if extract:
+            logger.warning('Skip cache put with extracted %s', extract)
+            return False
+        else:
+            return self.incacheput(local, remote, options)
+
     def ugetdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
         remote = self.universal_remap(remote)
