@@ -48,6 +48,32 @@ class Hycom3dConsts(_Hycom3dGeoResource):
     def realkind(self):
         return "hycom3d_consts"
 
+class Hycom3dMaskInterpWeights(_Hycom3dGeoResource):
+    _footprint = dict(
+        info="Hycom3d mask interpolation weights nc file",
+        attr=dict(
+            kind=dict(values=["mask_interp_weights"]),
+            nativefmt=dict(values=['nc']),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "mask_interp_weights"
+
+
+class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
+    _footprint = dict(
+        info="Hycom3d atmospheric forcing interpolation weights nc file",
+        attr=dict(
+            kind=dict(values=["atmfrc_interp_weights"]),
+            nativefmt=dict(values=['nc']),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "atmfrc_interp_weights"
 
 # %% Binaries
 
@@ -122,13 +148,13 @@ class Hycom3dRiversInput(GeoFlowResource):
             info = 'Rivers input',
             attr = dict(
                 kind = dict(
-                    values = ["RiversIn"],
+                    values = ["RiversInput"],
                 ),
-                model=dict(
-                    values=["cmems"],
+                nativefmt = dict( 
+                    values=['tar']
                 ),
-                nativefmt = dict(
-                    values  = ['tar.gz.tmp','unknown'],
+                model = dict(
+                    values = ['cmems'],
                 ),
             )
         )
