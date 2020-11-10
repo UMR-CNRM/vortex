@@ -585,13 +585,17 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
                     retrycount = 0
                     while retrycount < 10:
                         rc = self._gspawn(gcmd + ['-extract', '-subdir=no', gname, actual_target])
-                        if rc and not sh.path.exists(actual_target) and sh.path.islink(actual_target):
-                            new_target = sh.readlink(actual_target)
-                            logger.info("< %s > is a symlink. Retrying with the link target < %s >",
-                                        actual_target, new_target)
-                            sh.rm(actual_target)
-                            actual_target = new_target
-                            retrycount += 1
+                        if rc and sh.path.islink(actual_target):
+                            if sh.path.exists(actual_target):
+                                actual_target = sh.path.relpath(sh.path.realpath(actual_target))
+                                break
+                            else:
+                                new_target = sh.readlink(actual_target)
+                                logger.info("< %s > is a symlink. Retrying with the link target < %s >",
+                                            actual_target, new_target)
+                                sh.rm(actual_target)
+                                actual_target = new_target
+                                retrycount += 1
                         else:
                             break
                 else:

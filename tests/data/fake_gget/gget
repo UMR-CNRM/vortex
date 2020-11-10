@@ -39,6 +39,10 @@ def fakedir01_ext():
 def fakedir01_ext2():
     os.symlink('file4', 'file5')
 
+def fakedir01_ext3():
+    fakedir01_ext()
+    os.symlink('file4', 'file6')
+
 def fakearch01():
     tfobj = tarfile.open(name='fakearchive.01.tgz', mode='w:gz')
     try:
@@ -70,6 +74,7 @@ _AUTHORIZED = {('fakefile.01', ): fakefile01,
                ('fakedir.02', ): fakedir02,
                ('-extract', '-subdir=no', 'fakedir.01', 'file4'): fakedir01_ext,
                ('-extract', '-subdir=no', 'fakedir.01', 'file5'): fakedir01_ext2,
+               ('-extract', '-subdir=no', 'fakedir.01', 'file6'): fakedir01_ext3,
                ('fakearchive.01.tgz', ): fakearch01}
 
 
