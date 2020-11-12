@@ -3,7 +3,7 @@
 """
 Created on Thu Apr  4 17:32:49 2019 by sraynaud
 """
-import os
+import os, sys
 import tarfile
 
 from bronx.stdtypes.date import daterange, Period, daterangex, Date
@@ -15,7 +15,7 @@ from vortex.algo.components import (
 
 import xarray as xr, numpy as np
 
-from sloop.times import convert_to_julian_day
+from sloop.times import convert_to_julian_day, running_time
 from sloop.filters import erode_coast, erode_coast_vec
 from sloop.interp import interp_time, Regridder
 from sloop.models.hycom3d import (
@@ -307,7 +307,9 @@ class Hycom3dRiversFlowRate(AlgoComponent):
             attr=dict(
                 kind=dict(values=["RiversFlowRate"]),
                 nc_out=dict(optional=True, default="{river}.flx.nc"),
-                dates=dict(type=list),
+                begindate=dict(type=str),
+                maxterm=dict(type=str),
+                step=dict(type=str),
                 engine=dict(values=["current" ], default="current"),                
             ),
         ),
@@ -330,12 +332,14 @@ class Hycom3dRiversFlowRate(AlgoComponent):
     def execute(self, rh, opts):
         super(Hycom3dRiversFlowRate, self).execute(rh, opts)
         
+        time = running_time(start=self.begindate, 
+                            maxterm=self.maxterm, 
+                            step=self.step)
+
         for river in self.rivers.keys():
             for platform in self.rivers[river]['platform']['Id']:
                 ds = interp_time(self.platforms[platform]['dataset'],
-                                 self.dates,
-                                 time_name='time',
-                                 flag=True)
+                                 time)
                 ds.update({'RVFL': ds['RVFL']*self.rivers[river]['platform'][platform]['debcoef']})
                 ds.update({'flag': ds['flag']/len(self.rivers[river]['platform']['Id'])})
                 if self.rivers[river]['dataset']:
@@ -359,7 +363,6 @@ class Hycom3dRiversTempSaln(AlgoComponent):
                 kind=dict(values=["RiversTempSaln"]),
                 nc_in=dict(optional=True, default="{river}.flx.nc"),
                 nc_out=dict(optional=True, default="{river}.flx.ts.nc"),
-                dates=dict(type=list),
                 engine=dict(values=["current" ], default="current"),                
             ),
         ),
@@ -399,7 +402,6 @@ class Hycom3dRiversOut(AlgoComponent):
             attr=dict(
                 kind=dict(values=["RiversOut"]),
                 nc_in=dict(optional=True, default="{river}.flx.ts.nc"),
-                dates=dict(type=list),
                 freq=dict(optional=True, default=1),
                 engine=dict(values=["current" ], default="current"),                
             ),
@@ -428,7 +430,9 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                 kind=dict(values=["hycom3d_time_interpolation",
                                   "AtmFrcTime"]),
                 nc_out=dict(optional=True, default="atmfrc.time.nc"),
-                dates=dict(type=list),
+                begindate=dict(type=str),
+                maxterm=dict(type=str),
+                step=dict(type=str),
                 engine=dict(values=["current" ], default="current"),                
             ),
         ),
@@ -450,12 +454,11 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
 
         self.cumul = AtmFrc().decumul(self.cumul)
-        self.cumul = interp_time(self.cumul, 
-                                 self.dates, 
-                                 time_name='time')
-        self.insta = interp_time(self.insta, 
-                                 self.dates,
-                                 time_name='time')
+        time = running_time(start=self.begindate, 
+                            maxterm=self.maxterm, 
+                            step=self.step)
+        self.cumul = interp_time(self.cumul, time)
+        self.insta = interp_time(self.insta, time)
         self.atmfrc = xr.merge([self.cumul, self.insta], 
                                combine_attrs='override',
                                compat='override')
