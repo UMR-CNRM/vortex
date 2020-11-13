@@ -12,6 +12,8 @@ from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
 # vortex.syntax.stdattrs.models
+
+
 __all__ = []
 # %% Generic
 
@@ -35,12 +37,13 @@ class _Hycom3dGeoResource(GenvModelGeoResource):
 # %% Parameters
 
 class Hycom3dConsts(_Hycom3dGeoResource):
-    
+
     _footprint = dict(
         info="Hycom3d constant tar file",
         attr=dict(
             kind=dict(values=["hycom3d_consts"]),
             gvar=dict(default="hycom3d_consts_tar"),
+            rank=dict(default=0, type=int, optional=True),
         ),
     )
 
@@ -97,6 +100,10 @@ class Hycom3dIBCIniconBinary(vde.Binary):
     def realkind(self):
         return "hycom3d_ibc_inicon_binary"
 
+    def commandline(self, **opts):
+        return ("{sshfile} {tempfile} {salnfile} {nx} {ny} {nz} {cmoy} "
+                "{sshmin} {cstep}").format(**opts)
+
 
 class Hycom3dIBCRegridcdfBinary(vde.Binary):
     """Binary that regrids initial conditions netcdf files"""
@@ -116,6 +123,12 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
     @property
     def realkind(self):
         return "hycom3d_ibc_regridcdf_binary"
+
+    def commandline(self, **opts):
+        varname = opts["varname"]
+        method = opts.get("methode", 0)
+        cstep = int(opts.get("cstep", 1))
+        return f"{varname} {method} {cstep:03d}"
 
 
 class Hycom3dModelBinary(vde.Binary):
@@ -190,7 +203,7 @@ class Hycom3dRiversr(Resource):
     def realkind(self):
         return f'{self.rivers}'
 
-    
+
 class HycomAtmFrcOuta(Resource):
     _footprint = [
         dict(
@@ -204,8 +217,8 @@ class HycomAtmFrcOuta(Resource):
                     default = 'unknown'
                 ),
                 fields       = dict(
-                    values = ['shwflx', 'radflx', 
-                                    'precip', 'preatm', 'airtmp', 
+                    values = ['shwflx', 'radflx',
+                                    'precip', 'preatm', 'airtmp',
                                     'wndspd', 'tauewd', 'taunwd', 'vapmix'],
                     default = 'unknown'
                 ),
@@ -231,8 +244,8 @@ class HycomAtmFrcOutb(Resource):
                     default = 'b'
                 ),
                 fields       = dict(
-                    values = ['shwflx', 'radflx', 
-                                    'precip', 'preatm', 'airtmp', 
+                    values = ['shwflx', 'radflx',
+                                    'precip', 'preatm', 'airtmp',
                                     'wndspd', 'tauewd', 'taunwd', 'vapmix'],
                     default = 'unknown'
                 ),
@@ -257,8 +270,8 @@ class Hycom3dMaskInterpWeights(_Hycom3dGeoResource):
     @property
     def realkind(self):
         return "mask_interp_weights"
-    
-    
+
+
 class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
     _footprint = dict(
         info="Hycom3d atmospheric forcing interpolation weights nc file",
@@ -271,8 +284,8 @@ class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
     @property
     def realkind(self):
         return "atmfrc_interp_weights"
-    
-    
+
+
 # %% Model outputs
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
