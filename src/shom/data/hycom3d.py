@@ -74,6 +74,10 @@ class Hycom3dIBCIniconBinary(vde.Binary):
     def realkind(self):
         return "hycom3d_ibc_inicon_binary"
 
+    def commandline(self, **opts):
+        return ("{sshfile} {tempfile} {salnfile} {nx} {ny} {nz} {cmoy} "
+                "{sshmin} {cstep}").format(**opts)
+
 
 class Hycom3dIBCRegridcdfBinary(vde.Binary):
     """Binary that regrids initial conditions netcdf files"""
@@ -93,6 +97,12 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
     @property
     def realkind(self):
         return "hycom3d_ibc_regridcdf_binary"
+
+    def commandline(self, **opts):
+        varname = opts["varname"]
+        method = opts.get("methode", 0)
+        cstep = int(opts.get("cstep", 1))
+        return f"{varname} {method} {cstep:03d}"
 
 
 class Hycom3dModelBinary(vde.Binary):
