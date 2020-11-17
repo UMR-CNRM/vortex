@@ -3,7 +3,7 @@
 """
 Created on Thu Apr  4 17:32:49 2019 by sraynaud
 """
-import os, sys
+import os
 import tarfile
 
 from bronx.stdtypes.date import daterange, Period, daterangex, Date
@@ -13,7 +13,7 @@ import vortex.tools.date as vdate
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun)
 
-import xarray as xr, numpy as np
+import xarray as xr, numpy as np, pandas as pd
 
 from sloop.times import convert_to_julian_day, running_time
 from sloop.filters import erode_coast, erode_coast_vec
@@ -340,15 +340,15 @@ class Hycom3dRiversFlowRate(AlgoComponent):
         time = running_time(start=self.begindate,
                             maxterm=self.maxterm,
                             step=self.step)
-
         for river in self.rivers.keys():
             for platform in self.rivers[river]['platform']['Id']:
                 ds = interp_time(self.platforms[platform]['dataset'],
-                                 time)
+                                 time, keep_flag=True)
                 ds.update({'RVFL': ds['RVFL']*self.rivers[river]['platform'][platform]['debcoef']})
                 ds.update({'flag': ds['flag']/len(self.rivers[river]['platform']['Id'])})
                 if self.rivers[river]['dataset']:
-                    self.rivers[river]['dataset'] += ds
+                    for var in ['RVFL','flag']:
+                        self.rivers[river]['dataset'][var] += ds[var]
                 else:
                     self.rivers[river]['dataset'] = ds
         for river in self.rivers.keys():
@@ -381,18 +381,15 @@ class Hycom3dRiversTempSaln(AlgoComponent):
         for river in rivers.keys():
             ds_river = xr.open_dataset(self.nc_in.format(**locals()))
             for var in ['temperature','salinity']:
-                Tmax = []
-                tmax = vdate.Date(str(ds_river.time.values[0])[:4]+
-                                  rivers[river][var]['datemax'])
-                Tmax.extend([tmax]*len(self.dates))
-                DeltaT = np.asarray(Tmax) - np.asarray(self.dates)
-                for ite in range(len(DeltaT)):
-                    DeltaT[ite] = DeltaT[ite].export_dict()
-                    DeltaT[ite] = float(DeltaT[ite][0])+float(DeltaT[ite][1])/86400.
-                VAR = rivers[river][var]['avg']+rivers[river][var]['amp']*const*DeltaT
+                tmax = xr.DataArray(vdate.Date(str(ds_river.time.values[0])[:4]+
+                                  rivers[river][var]['datemax']),
+                                    name="tmax")
+                DeltaT = tmax-ds_river["time"]
+                DeltaT = DeltaT.astype('float')/(86400.0*1e9)*const      
+                VAR = rivers[river][var]['avg']+rivers[river][var]['amp']*DeltaT
                 xa = xr.DataArray(VAR, coords=[ds_river.time], dims=["time"], name=var)
                 ds_river = xr.merge([ds_river,xa])
-            ds_river = convert_to_julian_day(ds_river)
+
             ds_river.to_netcdf(self.nc_out.format(**locals()))
 
 
@@ -454,7 +451,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         self.cumul, self.insta = AtmFrc(insta_files=insta_files,
                                         cumul_files=cumul_files,
                                         ).grib2dataset()
-
+        
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
 
@@ -497,7 +494,6 @@ class Hycom3dAtmFrcParameters(AlgoComponent):
         ds = windstress(ds, method='Speich')
         ds = radiativeflux(ds)
         ds = watervapormixingratio(ds)
-        ds = convert_to_julian_day(ds)
         ds.to_netcdf(self.nc_out)
 
     @property
@@ -602,8 +598,7 @@ class Hycom3dAtmFrcFinal(AlgoComponent):
                 kind=dict(values=["AtmFrcFinal"]),
                 nc_in=dict(optional=True, default="atmfrc.space.nc"),
                 nc_out=dict(optional=True, default="atmfrc.final.nc"),
-                dates=dict(type=list),
-                engine=dict(values=["current" ], default="current"),
+                engine=dict(values=["current" ], default="current"),                
             ),
         ),
     ]
@@ -628,7 +623,6 @@ class Hycom3dAtmFrcOut(AlgoComponent):
             attr=dict(
                 kind=dict(values=["AtmFrcOut"]),
                 nc_in=dict(optional=True, default="atmfrc.final.nc"),
-                dates=dict(type=list),
                 freq=dict(optional=True, default=1),
                 engine=dict(values=["current" ], default="current"),
             ),
