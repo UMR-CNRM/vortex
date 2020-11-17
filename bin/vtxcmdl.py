@@ -71,6 +71,7 @@ Some of the defaults can be changed by means of environment variables:
   * --vconf default is controlled by VORTEX_VCONF
 
 '''
+import importlib
 
 # Automatically set the python path
 vortexbase = re.sub(os.path.sep + 'bin$', '',
@@ -96,7 +97,7 @@ class ExtraArgumentError(Exception):
         super(ExtraArgumentError, self).__init__(msg)
 
 
-def vortex_delayed_init(t):
+def vortex_delayed_init(t, loadedmods=None):
     """Setup footprints"""
     import common, olive, gco
     # Load shell addons
@@ -106,6 +107,9 @@ def vortex_delayed_init(t):
     assert any([common, olive, gco, vortex.tools.folder, vortex.tools.grib])
     vortex.proxy.addon(kind='allfolders', shell=t.sh)
     vortex.proxy.addon(kind='grib', shell=t.sh)
+    if loadedmods:
+        for m in loadedmods:
+            importlib.import_module(m)
 
 
 def actual_action(action, t, args, fatal=True):
@@ -190,6 +194,12 @@ def process_remaining(margs, rargs):
     return margs
 
 
+def clist(ss):
+    """Convert a string with comma to a list of strings"""
+    if ss:
+        return ss.split(",")
+
+
 def main():
     """Process command line options."""
 
@@ -225,6 +235,8 @@ def main():
     parser.add_argument("--nativefmt", dest="nativefmt", action="store",
                         default='[format]',
                         help="nativefmt attribute used in some resources [default: %(default)s]")
+    parser.add_argument("--loadedmods", type=clist,
+                        help="comma-separated list of modules to be imported to setup more footprints [default: %(default)s]")
     parser.add_argument('--any_attribute', dest='dummyattribute',
                         metavar='any_value...', action='append')
 
@@ -276,7 +288,7 @@ def main():
 
     try:
         with interrupt.SignalInterruptHandler(emitlogs=False):
-            vortex_delayed_init(t)
+            vortex_delayed_init(t, loadedmods=args.loadedmods)
             if action == 'get' and prestage:
                 actual_action('prestage', t, args, fatal=fatal)
             actual_action(action, t, args, fatal=fatal)
