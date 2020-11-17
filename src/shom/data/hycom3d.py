@@ -90,7 +90,7 @@ class Hycom3dIBCIniconBinary(vde.Binary):
         dict(
             info="Binary that computes initial condictions for HYCOM",
             attr=dict(
-                gvar=dict(default="hycom3d_master_ibc_inicon"),
+                gvar=dict(default="hycom3d_ibc_inicon_binary"),
                 kind=dict(values=["hycom3d_ibc_inicon_binary"],),
             ),
         ),
@@ -114,7 +114,7 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
         dict(
             info="Binary that regrids initial conditions netcdf files",
             attr=dict(
-                gvar=dict(default="hycom3d_master_ibc_regridcdf"),
+                gvar=dict(default="hycom3d_ibc_regridcdf_binary"),
                 kind=dict(values=["hycom3d_ibc_regridcdf_binary"],),
             ),
         ),
@@ -138,9 +138,8 @@ class Hycom3dModelBinary(vde.Binary):
         dict(
             info = "Binary of the model",
             attr = dict(
-                kind = dict(
-                    values = ['hycom3d_model'],
-                ),
+                gvar = dict(values=['hycom3d_model_binary']),
+                kind = dict(values=['hycom3d_model_binary']),
                 nativefmt = dict(
                     values  = ['binary'],
                 ),
@@ -150,7 +149,7 @@ class Hycom3dModelBinary(vde.Binary):
 
     @property
     def realkind(self):
-        return 'hycom3d_model'
+        return 'hycom3d_model_binary'
 
 
 # %% Model inputs
@@ -163,7 +162,7 @@ class Hycom3dRiversInput(GeoFlowResource):
                 kind = dict(
                     values = ["RiversInput"],
                 ),
-                nativefmt = dict( 
+                nativefmt = dict(
                     values=['tar']
                 ),
                 model = dict(
