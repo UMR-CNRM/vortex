@@ -17,6 +17,7 @@ from bronx.fancies import loggers
 from bronx.patterns import getbytag
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.iterators import izip_pcn
+from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
@@ -578,23 +579,25 @@ class Node(getbytag.GetByTag, NiceLayout):
                 mpiopts[stuff] = [int(v) for v in mpiopts[stuff]]
             else:
                 mpiopts[stuff] = int(mpiopts[stuff])
+
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
             tbx = zip(*tbx)
         with self.env.delta_context(**env_update):
-            for binary in tbx:
-                try:
-                    tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
-                except Exception as e:
-                    mask_delayed, f_infos = self.filter_execution_error(e)
-                    if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
-                        logger.warning("The delayed exception is masked:\n%s", str(f_infos))
-                        self.report_execution_warning(e, **f_infos)
-                    else:
-                        logger.error("Un-filtered execution error:\n%s", str(f_infos))
-                        self.report_execution_error(e, **f_infos)
-                        raise
+            with self.sh.default_target.algo_run_context(self.ticket, self.conf):
+                for binary in tbx:
+                    try:
+                        tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
+                    except (Exception, SignalInterruptError, KeyboardInterrupt) as e:
+                        mask_delayed, f_infos = self.filter_execution_error(e)
+                        if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
+                            logger.warning("The delayed exception is masked:\n%s", str(f_infos))
+                            self.report_execution_warning(e, **f_infos)
+                        else:
+                            logger.error("Un-filtered execution error:\n%s", str(f_infos))
+                            self.report_execution_error(e, **f_infos)
+                            raise
 
 
 class Family(Node):

@@ -8,6 +8,7 @@ hosting a specific execution. Target objects use the :mod:`footprints` mechanism
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
 import logging
 import re
 import platform
@@ -253,6 +254,11 @@ class Target(fp.FootprintBase):
     def spawn_hook(self, sh):
         """Specific target hook before any serious execution."""
         pass
+
+    @contextlib.contextmanager
+    def algo_run_context(self, ticket, *kmappings):
+        """Specific target hook before any componnent run."""
+        yield
 
     def _init_supernodes(self, main_re, rangeid='range', baseid='base',):
         """Read the configuration file in order to initialize the specialnodes
