@@ -22,19 +22,19 @@ from sloop.models.hycom3d import (
     HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE,
     HYCOM3D_SIGMA_TO_STMT_FNS,
     HYCOM3D_MASK_FILE,
-    HYCOM3D_GRID_AFILE, HYCOM3D_GRID_BFILE,
+    HYCOM3D_GRID_AFILE,
     check_grid_dimensions,
     setup_stmt_fns,
     HYCOM3D_SIGMA_TO_STMT_FNS,
     format_ds,
-    rename_atmfrc_vars,
     read_regional_grid,
     AtmFrc,
-    Rivers,
-    read_inicfg_files,
+    Rivers
 )
 from sloop.phys import (windstress, radiativeflux, celsius2kelvin,
                         watervapormixingratio)
+
+from ..util.config import config_to_env_vars
 
 import sys
 __all__ = []
@@ -52,17 +52,19 @@ class Hycom3dCompilator(Expresso):
     _footprint = dict(
         info="Compile inicon",
         attr=dict(
+            kind=dict(values=["hycom_3d_compilator"]),
             compilation_script=dict(
                 info="Shell script that makes the compilation.",
                 optional=False,
-                # default = HYCOM_IBC_COMPILE_SCRIPT,
             ),
-            env_vars=dict(
+            env_config=dict(
                 info="Environment variables and options for compilation",
                 option=True,
                 type=dict,
                 default={},
             ),
+            env_context=dict(info="hycom3d context",
+                             values=["prepost", "model"])
         ),
     )
 
@@ -72,11 +74,13 @@ class Hycom3dCompilator(Expresso):
     def prepare(self, rh, kw):
         super(Hycom3dCompilator, self).prepare(rh, kw)
         self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
+        env_vars = config_to_env_vars(self.env_config)
+        for name, value in env_vars.items():
+            print(f'SETTING ENV: {name}={value}')
+            self.env[name] = value
 
     def execute(self, rh, kw):
         # super(Hycom3dCompilator, self).execute(rh, kw)
-        for name, value in self.env_vars.items():
-            self.env[name.upper()]=value
         print(self.spawn([self.compilation_script], {"outsplit": False}))
 
     @property
@@ -89,7 +93,7 @@ class Hycom3dIBCCompilator(Hycom3dCompilator):
     _footprint = dict(
         info="Compile IBC executables",
         attr=dict(
-            #            kind=dict(values=['hycom3d_ibc_compilator']),
+            kind=dict(values=['hycom3d_ibc_compilator']),
             sigma=dict(
                 info="sigma value",
                 optional=False,
@@ -99,7 +103,7 @@ class Hycom3dIBCCompilator(Hycom3dCompilator):
     )
 
     def prepare(self, rh, kw):
-        super(Hycom3dCompilator, self).prepare(rh, kw)
+        super().prepare(rh, kw)
 
         # Setup the stmt_fns.h file
         for context in "ibc_hor", "ibc_ver":
