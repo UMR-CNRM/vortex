@@ -165,8 +165,10 @@ class Hycom3dIBCRunTime(AlgoComponent):
             info="Run the initial and boundary conditions time interpolator",
             attr=dict(
                 kind=dict(values=["hycom3d_ibc_run_time"]),
-                # ncfmt_out=dict(optional=True, default="ibc.time-%Y%m%dT%H%M.nc"),
-                rank=dict(default=0, type=int, optional=True)
+                ncout=dict(default="forecast.nc", optional=True),
+                rank=dict(default=0, type=int, optional=True),
+                xypad=dict(default=1, type=int),
+                step=dict(),
             ),
         ),
     ]
@@ -175,16 +177,16 @@ class Hycom3dIBCRunTime(AlgoComponent):
         super(Hycom3dIBCRunTime, self).prepare(rh, opts)
 
         # Input netcdf files
-        ncinputs = self.context.sequence.effective_inputs(role="ibc_input")
+        ncinputs = self.context.sequence.effective_inputs(role=["IBCInput"])
         self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
 
         # Read hycom grid extents
         from sloop.models.hycom3d import read_regional_grid_b
         from sloop.grid import GeoSelector
-        rg = read_regional_grid_b(f"PARAMATERS{self.rank}./regional.grid.b")
-        self._geo_selector = GeoSelector(lon=(rg["plon_min"], rg["plon_max"]),
-                                         lat=(rg["plat_min"], rg["plat_max"]),
-                                         pad=self.conf.ibc_pad)
+        rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
+        self._geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
+                                         (rg["plat_min"], rg["plat_max"]),
+                                         pad=self.xypad)
 
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
@@ -192,7 +194,7 @@ class Hycom3dIBCRunTime(AlgoComponent):
         from sloop.interp import nc_interp_at_freq_to_nc
         # Interpolate in time
         nc_interp_at_freq_to_nc(
-            self._ncfiles, self.freq, ncfmt=self.ncfmt_out,
+            self._ncfiles, self.step, ncout=self.ncout,
             preproc=self._geo_selector, postproc=format_ds)
 
 
@@ -228,7 +230,7 @@ class Hycom3dIBCRunHoriz(BlindRun):
         self.csteps = range(1, len(resfiles[self.varnames[0]])+1)
 
         # Constant files
-        cdir = f"PARAMATERS{self.rank}."
+        cdir = f"FORCING{self.rank}."
         for cfile in "regional.grid.a", "regional.grid.b", "regional.depth.a":
             if not os.path.exists(cfile):
                 os.symlink(os.path.join(cdir, cfile), cfile)
@@ -385,7 +387,7 @@ class Hycom3dRiversTempSaln(AlgoComponent):
                                   rivers[river][var]['datemax']),
                                     name="tmax")
                 DeltaT = tmax-ds_river["time"]
-                DeltaT = DeltaT.astype('float')/(86400.0*1e9)*const      
+                DeltaT = DeltaT.astype('float')/(86400.0*1e9)*const
                 VAR = rivers[river][var]['avg']+rivers[river][var]['amp']*DeltaT
                 xa = xr.DataArray(VAR, coords=[ds_river.time], dims=["time"], name=var)
                 ds_river = xr.merge([ds_river,xa])
@@ -451,7 +453,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         self.cumul, self.insta = AtmFrc(insta_files=insta_files,
                                         cumul_files=cumul_files,
                                         ).grib2dataset()
-        
+
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
 
@@ -598,7 +600,7 @@ class Hycom3dAtmFrcFinal(AlgoComponent):
                 kind=dict(values=["AtmFrcFinal"]),
                 nc_in=dict(optional=True, default="atmfrc.space.nc"),
                 nc_out=dict(optional=True, default="atmfrc.final.nc"),
-                engine=dict(values=["current" ], default="current"),                
+                engine=dict(values=["current" ], default="current"),
             ),
         ),
     ]

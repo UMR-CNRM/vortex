@@ -7,8 +7,6 @@ from vortex.data.flow import Resource
 from vortex.data.geometries import hgeometry_deco
 from vortex.syntax.stdattrs import model_deco, date_deco, term_deco
 
-# from vortex.syntax.stddeco import namebuilding_append
-
 
 class MercatorSingleFileDailyForecast(Resource):
 
@@ -38,7 +36,7 @@ class MercatorDailyForecast(MercatorSingleFileDailyForecast):
             info="Mercator daily forecast run",
             attr=dict(
                 kind=dict(values=["mercator_daily_forecast"]),
-                nativefmt=dict(values=["netcdf", "nc"], default="nc"),
+                nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
             ),
         ),
     ]
