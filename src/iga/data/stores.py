@@ -2,12 +2,17 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 import footprints
 
-from vortex.data.stores     import Store, Finder
+from vortex.data.abstractstores import Store
+from vortex.data.stores import Finder
 from vortex.syntax.stdattrs import DelayedEnvValue, hashalgo_avail_list
 
 from gco.data.stores import GcoCacheStore
@@ -69,7 +74,7 @@ class IgaFinder(Finder):
                 }
             ),
             rootdir = dict(
-                alias    = [ 'opdata', 'datadir' ],
+                alias    = ['opdata', 'datadir'],
                 optional = True,
                 default  = DelayedEnvValue('DATADIR'),
             ),
@@ -184,8 +189,8 @@ class SopranoStore(Store):
             local,
             self.fullpath(remote),
             # ftp control
-            hostname = self.hostname(),
-            logname  = remote['username'],
-            fmt      = options.get('fmt')
+            hostname=self.hostname(),
+            logname=remote['username'],
+            fmt=options.get('fmt')
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)

@@ -2,6 +2,10 @@
 # -*- coding:Utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
@@ -13,7 +17,7 @@ import re
 
 from bronx.fancies import loggers
 
-from vortex.data.stores import Store, ArchiveStore, MultiStore, CacheStore,\
+from vortex.data.abstractstores import Store, ArchiveStore, MultiStore, CacheStore,\
     ConfigurableArchiveStore
 from vortex.tools.env import vartrue
 from vortex.util.config import GenericConfigParser
@@ -153,8 +157,18 @@ class GcoCentralStore(Store):
     def _actual_garchive(self):
         garchive = self.ggetarchive
         if garchive is None:
-            garchive = self.system.default_target.get('gco:ggetarchive', 'hendrix')
+            darchive = ('hendrix' if self.system.glove is None
+                        else self.system.glove.default_fthost)
+            garchive = self.system.default_target.get('gco:ggetarchive', darchive)
         return garchive
+
+    @property
+    def _actual_guser(self):
+        guser = None
+        if self.system.glove is not None:
+            guser = self.system.glove.getftuser(self._actual_garchive,
+                                                defaults_to_user=False)
+        return guser
 
     @property
     def _actual_gcache(self):
@@ -170,6 +184,8 @@ class GcoCentralStore(Store):
         gname = lpath.pop()
         cmd = [self.system.path.join(self._actual_gpath, self._actual_gcmd),
                '-host', self._actual_garchive]
+        if self._actual_guser is not None:
+            cmd.extend(['-user', self._actual_guser])
         if not self._actual_gcache:
             cmd.append('-no-cache')
         return (cmd, gname)

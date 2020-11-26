@@ -46,7 +46,10 @@ class FPSet(set):
 
     def footprint_export(self):
         """A set is not jsonable so it will be converted to a list."""
-        return list(self)
+        try:
+            return sorted(self)
+        except TypeError:
+            return list(self)
 
 
 class FPTuple(tuple):
@@ -74,6 +77,7 @@ class FPRegex(object):
         return new
 
     def footprint_export(self):
+        """Convert the Regex to a tuple."""
         return (self._re.pattern, self._re.flags)
 
     def __str__(self):

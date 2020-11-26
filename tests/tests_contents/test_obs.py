@@ -3,7 +3,7 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from unittest import main
+from unittest import main, skipUnless
 import os
 import sys
 
@@ -14,8 +14,14 @@ from .test_generic import _BaseDataContentTest
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
+from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.data.containers import DataSizeTooBig, InCore
 from common.data import obs
+
+# Numpy is not mandatory
+npchecker = ExternalCodeImportChecker('numpy')
+with npchecker as npregister:
+    import numpy as np  # @UnusedImport
 
 
 class _FakeResource(object):
@@ -28,7 +34,7 @@ class _FakeResource(object):
 
 VBC_T = """VARBC_cycle.version005
 MINI  20000101         0
-      1624     10980
+         1     10980
 ix=1
 class=rad
 key=4 3 4
@@ -46,6 +52,7 @@ class UtVarBCContentLimited(_BaseDataContentTest):
     _data = (VBC_T, )
     _container_limit = 50  # This limit is intentionally very small
 
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
     def test_indexedtable_basic(self):
         resource = _FakeResource()
         ct = obs.VarBCContent()
@@ -55,17 +62,26 @@ class UtVarBCContentLimited(_BaseDataContentTest):
         self.assertTrue(ct.metadata_check(resource, delta=dict(date='-PT6H')))
         # The VarBC file size is too big wrt _container_limit : it fails...
         with self.assertRaises(DataSizeTooBig):
-            print(len(ct))
+            len(ct.data)
 
 
 class UtVarBCContent(_BaseDataContentTest):
 
     _data = (VBC_T, )
 
-    def test_indexedtable_basic2(self):
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
+    def test_varbc_basic1(self):
         ct = obs.VarBCContent()
         ct.slurp(self.insample[0])
-        self.assertEqual(len(ct), 13)  # This time _container_limit is big enough
+        self.assertEqual(ct.metadata['version'], 5)
+
+    @skipUnless(npchecker.is_available(), "The Numpy package is unavailable")
+    def test_varbc_basic2(self):
+        ct = obs.VarBCContent()
+        ct.slurp(self.insample[0])
+        self.assertEqual(ct.size, 721)
+        self.assertTrue(ct.data[1], 'MINI  20000101         0')
+        self.assertTrue(len(ct.parsed_data[1].params), 8)
 
 
 REFDATA_T = """conv     OBSOUL   conv             20170410  0    14176    179636 5    0 20170409210000 20170410025900  SYNOP                   TEMP  PILOT

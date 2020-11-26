@@ -16,6 +16,8 @@ Functions
 
 .. autofunction:: str2dict
 
+.. autofunction:: xlist_strings
+
 Classes
 -------
 

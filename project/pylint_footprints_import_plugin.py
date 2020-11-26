@@ -1,15 +1,23 @@
+"""
+A pylint plugin to support footprints.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
+
+import six
 
 from astroid import MANAGER
 from astroid import scoped_nodes
 from astroid import Instance
 
-import __builtin__
+if six.PY3:
+    import builtins
+else:
+    import __builtin__ as builtins
 
 import io
 import glob
 import os
-import six
 import sys
 import json
 
@@ -64,13 +72,15 @@ def _footprint_members_add(cls):
 
             # If it's a builtin type that's good !
             else:
-                module = __builtin__
+                module = builtins
                 theclass = thetype
+                if six.PY3 and theclass == 'unicode':
+                    theclass = 'str'
                 try:
                     theclass = getattr(module, theclass)
                 except AttributeError:
                     # That's bad: go ahead but does nothing
-                    sys.stderr.write('{:s} not found in {!r}\n'.format(theclass, module))
+                    sys.stderr.write('{:s} not found in {!r}. For {!s}.\n'.format(theclass, module, thefp))
                     continue
                 ast_class = MANAGER.ast_from_class(theclass)
                 # Register the new AST node
@@ -85,4 +95,4 @@ def transform(cls):
             break
 
 
-MANAGER.register_transform(scoped_nodes.Class, transform)
+MANAGER.register_transform(scoped_nodes.ClassDef, transform)

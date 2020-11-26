@@ -305,9 +305,7 @@ class MakeLAMDomain(AlgoComponent):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -323,7 +321,6 @@ class MakeLAMDomain(AlgoComponent):
         self.algoassert(epygram_checker.is_available(version=ev), "Epygram >= " + ev +
                         " is needed here")
         self._check_geometry()
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _check_geometry(self):
         if self.mode == 'center_dims':
@@ -354,8 +351,8 @@ class MakeLAMDomain(AlgoComponent):
         # build geometry
         geometry = build_func(interactive=False, **self.geom_params)
         # summary, plot, namelists:
-        with open(self.geometry.tag + '_summary.txt', 'w') as o:
-            o.write(dm.output.summary(geometry))
+        with io.open(self.geometry.tag + '_summary.txt', 'w') as o:
+            o.write(six.text_type(dm.output.summary(geometry)))
         if self.illustration:
             dm.output.plot_geometry(geometry,
                                     lonlat_included=lonlat_included,
@@ -469,9 +466,7 @@ class MakeGaussGeometry(Parallel):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -484,9 +479,22 @@ class MakeGaussGeometry(Parallel):
                         " is needed here")
         self._complete_dimensions()
         self._unit = 4
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def _complete_dimensions(self):
+        from common.util.usepygram import epygram_checker
+        if epygram_checker.is_available(version='1.4.4'):
+            from epygram.geometries.SpectralGeometry import complete_gridpoint_dimensions
+            longitudes, latitudes = complete_gridpoint_dimensions(self.longitudes,
+                                                                  self.latitudes,
+                                                                  self.truncation,
+                                                                  self.grid,
+                                                                  self.stretching)
+            self._attributes['longitudes'] = longitudes
+            self._attributes['latitudes'] = latitudes
+        else:
+            self._old_internal_complete_dimensions()
+
+    def _old_internal_complete_dimensions(self):
         from epygram.geometries.SpectralGeometry import gridpoint_dims_from_truncation
         if self.latitudes is None and self.longitudes is None:
             dims = gridpoint_dims_from_truncation({'max': self.truncation},
@@ -518,6 +526,23 @@ class MakeGaussGeometry(Parallel):
 
     def postfix(self, rh, opts):
         """Complete and write namelists."""
+        from common.util.usepygram import epygram_checker
+        if epygram_checker.is_available(version='1.4.4'):
+            from epygram.geometries.domain_making.output import gauss_rgrid2namelists
+            gauss_rgrid2namelists('fort.{!s}'.format(self._unit),
+                                  self.geometry.tag,
+                                  self.latitudes,
+                                  self.longitudes,
+                                  self.truncation,
+                                  self.stretching,
+                                  self.orography_grid,
+                                  self.pole)
+        else:
+            self._old_internal_postfix(rh, opts)
+        super(MakeGaussGeometry, self).postfix(rh, opts)
+
+    def _old_internal_postfix(self, rh, opts):
+        """Complete and write namelists."""
         import math
         from epygram.geometries.SpectralGeometry import truncation_from_gridpoint_dims
         # complete scalar parameters
@@ -544,27 +569,37 @@ class MakeGaussGeometry(Parallel):
         nam_pgd['NAMGEM'].delvar('NSTTYP')
         nam_pgd['NAMDIM'].delvar('NSMAX')
         nam_pgd['NAMDIM'].delvar('NDLON')
-        with open('.'.join([self.geometry.tag,
-                            'namel_buildpgd',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_buildpgd',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam_pgd.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C923 namelist
         del nam['NAM_PGD_GRID']
-        with open('.'.join([self.geometry.tag,
-                            'namel_c923',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c923',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # subtruncated grid for orography
-        trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
-                                                      'max_lon_number': self.longitudes},
-                                                     grid=self.orography_grid)['max']
+        from common.util.usepygram import epygram_checker
+        ev = '1.4.4'
+        if epygram_checker.is_available(version=ev):
+            trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
+                                                          'max_lon_number': self.longitudes},
+                                                         grid=self.orography_grid,
+                                                         stretching_coef=self.stretching
+                                                         )['max']
+        else:
+            trunc_nsmax = truncation_from_gridpoint_dims({'lat_number': self.latitudes,
+                                                          'max_lon_number': self.longitudes},
+                                                         grid=self.orography_grid
+                                                         )['max']
         nam['NAMDIM']['NSMAX'] = trunc_nsmax
-        with open('.'.join([self.geometry.tag,
-                            'namel_c923_orography',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c923_orography',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
         # C927 (fullpos) namelist
         nam = namelist.NamelistSet()
@@ -581,12 +616,11 @@ class MakeGaussGeometry(Parallel):
         nrgri = [v for _, v in sorted(namrgri['NAMRGRI'].items())]
         for i in range(len(nrgri)):
             nam['NAMFPG']['NFPRGRI({:>4})'.format(i + 1)] = nrgri[i]
-        with open('.'.join([self.geometry.tag,
-                            'namel_c927',
-                            'geoblocks']),
-                  'w') as out:
+        with io.open('.'.join([self.geometry.tag,
+                               'namel_c927',
+                               'geoblocks']),
+                     'w') as out:
             out.write(nam.dumps(sorting=namelist.SECOND_ORDER_SORTING))
-        super(MakeGaussGeometry, self).postfix(rh, opts)
 
 
 class MakeBDAPDomain(AlgoComponent):
@@ -643,9 +677,7 @@ class MakeBDAPDomain(AlgoComponent):
                 info = "Plot geometry parameters.",
                 type = footprints.FPDict,
                 optional = True,
-                default = footprints.FPDict({'gisquality': 'i',
-                                             'bluemarble': 0.,
-                                             'background': True})
+                default = footprints.FPDict({'background': True})
             ),
         )
     )
@@ -670,7 +702,6 @@ class MakeBDAPDomain(AlgoComponent):
             self.algoassert(self.sh.path.exists(self.model_clim))
             if self.boundaries is not None:
                 logger.info('attribute *boundaries* ignored')
-        self.plot_params['bluemarble'] = 0.  # FIXME:? JPEG decoder not available on beaufix
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -727,7 +758,7 @@ class AddPolesToGLOB(TaylorRun):
                         " is needed here")
 
     def execute(self, rh, opts):  # @UnusedVariable
-        """Convert SURFGEOPOTENTIEL from clim to SFX.ZS in pgd."""
+        """Add poles to a GLOB* regular FA Lon/Lat file that do not contain them."""
         self._default_pre_execute(rh, opts)
         common_i = self._default_common_instructions(rh, opts)
         clims = self.context.sequence.effective_inputs(role=('Clim',))
@@ -826,12 +857,14 @@ class Festat(Parallel):
             self.system.mkdir(diastat_dir_name)
             for file in list_diag_stat:
                 self.system.mv(file, diastat_dir_name + "/")
+            self.system.tar(diastat_dir_name + ".tar", diastat_dir_name)
         list_diag_expl = self.system.glob("expl*y")
         if len(list_diag_expl) > 0:
             diaexpl_dir_name = "dia.expl.ncases_{ncases}".format(ncases=self._nb_input_files)
             self.system.mkdir(diaexpl_dir_name)
             for file in list_diag_expl:
                 self.system.mv(file, diaexpl_dir_name + "/")
+            self.system.tar(diaexpl_dir_name + ".tar", diaexpl_dir_name)
         # Call the superclass
         super(Festat, self).postfix(rh, opts)
 
@@ -857,5 +890,6 @@ class Fediacov(Parallel):
             self.system.mkdir("diag")
             for file in list_diag:
                 self.system.mv(file, "diag/")
+            self.system.tar("diag.tar", "diag")
         # Call the superclass
         super(Fediacov, self).postfix(rh, opts)

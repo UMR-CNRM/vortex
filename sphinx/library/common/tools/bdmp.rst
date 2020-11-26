@@ -32,7 +32,7 @@ Exceptions
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BDMPGetError
    :show-inheritance:
    :members:

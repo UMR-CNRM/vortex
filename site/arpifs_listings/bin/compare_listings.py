@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A command line tool that compares two Arpege/IFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import argparse
+import io
 import os
 import re
 import sys
@@ -76,7 +81,7 @@ if __name__ == '__main__':
     if args.out is None:
         out = sys.stdout
     else:
-        out = open(args.out, 'w')
+        out = io.open(args.out, 'w', encoding='utf-8')
     # TODO: add TL/AD comparisons
     arpifs_listings.compare_files(args.listings[0], args.listings[1],
                                   mode=args.mode,

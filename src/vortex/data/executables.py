@@ -1,6 +1,19 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+Abstract for any "Resource" class that deal with some kind of :class:`Script` or
+:class:`Binary` executable.
+
+Mode specialised version are also provided for various physical models:
+
+    * :class:`NWPModel`;
+    * :class:`OceanographicModel`;
+    * :class:`SurfaceModel`;
+    * :class:`ChemistryModel`.
+
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
@@ -126,6 +139,7 @@ class GnuScript(Executable):
 
 class Binary(Executable):
     """Basic compiled executable."""
+
     _abstract = True
     _footprint = dict(
         attr = dict(
@@ -151,6 +165,10 @@ class Binary(Executable):
     @property
     def realkind(self):
         return 'binary'
+
+    def guess_binary_sources(self, provider):  # @UnusedVariable
+        """A list of path that contains source files (for debugging purposes)."""
+        return []
 
 
 class BlackBox(Binary):
@@ -223,7 +241,7 @@ class OceanographicModel(Binary):
 
 class SurfaceModel(Binary):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Model used for the Safran-Surfex-Mepra chain.',
         attr = dict(
@@ -246,7 +264,7 @@ class SurfaceModel(Binary):
 
 class ChemistryModel(Binary):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Base class for Chemistry models.',
         attr = dict(

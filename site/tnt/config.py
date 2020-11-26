@@ -4,17 +4,20 @@ directives.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+import six
 
+import collections
 import io
 import os
+import pprint
+import re
 import string
 import sys
-
-import six
 
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
+from .namadapter import BronxNamelistAdapter
 
 tntlog = loggers.getLogger('tntlog')
 
@@ -134,8 +137,8 @@ class TntDirective(object):
 
     def _process_set_of_blocks(self, val, realname):
         if (isinstance(val, collections_abc.Iterable) and
-              not isinstance(val, six.string_types) and
-              all([isinstance(v, six.string_types) for v in val])):
+                not isinstance(val, six.string_types) and
+                all([isinstance(v, six.string_types) for v in val])):
             return set(val)
         elif isinstance(val, six.string_types):
             return set([val, ])
@@ -184,7 +187,7 @@ def read_directives(filename):
     if os.path.splitext(filename)[1] in ('.yaml', '.yml'):
         import yaml
         with io.open(filename, 'r') as yamlfh:
-            return TntDirective(**yaml.load(yamlfh))
+            return TntDirective(**yaml.load(yamlfh, Loader=yaml.SafeLoader))
     else:
         prev_bytecode_flag = sys.dont_write_bytecode
         try:
@@ -323,10 +326,148 @@ class TntStackDirective(object):
         return self._todolist
 
 
+class TntRecipeSyntaxError(ValueError):
+    """Raised when a syntax error is detected in the recipe file."""
+    pass
+
+
+class TntRecipe(object):
+    """
+    A YAML Recipe reader, that collects namelists and possibly filter them,
+    in sight of finally merging them.
+    """
+
+    _ingredient_name_re = re.compile(r'(?P<nam>[^/]+)(?:/(?P<filter>(?:-|\+)))?$')
+    _ingredient_item_re = re.compile(r'(?P<block>[^/]+)/(?P<filter>(?:-|\+))$')
+
+    def __init__(self, recipe_filename, sourcenam_directory=None):
+        """
+        :param recipe_filename: filepath to the YAML recipe
+        :param sourcenam_directory: an optional external directory in which to
+            pick the ingredient namelists
+        """
+        self.sourcenam_directory = sourcenam_directory
+        self._load_recipe(recipe_filename)
+
+    def _throw_syntax_err(self, entry, wholeentry, msg):
+        """Deal with a syntax error."""
+        tntlog.critical("Syntax error in the '%s' entry: %s.", entry, msg)
+        if wholeentry is not None:
+            tntlog.critical("The '%s' entry content is:\n%s.", entry,
+                            pprint.pformat(wholeentry, indent=2))
+        raise TntRecipeSyntaxError('Syntax error in the {:s} entry of the Recipe file.'
+                                   .format(entry))
+
+    def _read_init_final_elements(self, what, ingredient):
+        """Read '__initial__' or '__final__' step **ingredient**."""
+        if ingredient is not None:
+            if isinstance(ingredient, six.string_types):
+                # external namelist
+                if self.sourcenam_directory:
+                    ingredient = os.path.join(self.sourcenam_directory, ingredient)
+                nam = BronxNamelistAdapter(ingredient, macros=self.macros)
+            elif isinstance(ingredient, dict):
+                # internal dict/yaml namelist
+                nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+                nam.add_blocks(list(ingredient.keys()))
+                keys_to_add = {}
+                for b, kv in ingredient.items():
+                    if kv is not None:
+                        if isinstance(kv, dict):
+                            for k, v in ingredient[b].items():
+                                keys_to_add[(b, k)] = v
+                        else:
+                            self._throw_syntax_err(what, ingredient,
+                                                   "'{!s}': should be 'null' or a dictionary"
+                                                   .format(b))
+                nam.add_keys(keys_to_add)
+            else:
+                self._throw_syntax_err(what, ingredient,
+                                       "Should be 'null', a string or a dictionary")
+        else:
+            nam = BronxNamelistAdapter(six.StringIO(), macros=self.macros)
+        return nam
+
+    def _process_ingredient(self, input_nam, blocks):
+        """Preprocess ingredient: read according namelist and filter it."""
+        # Check input_nam
+        input_nam_m = self._ingredient_name_re.match(input_nam)
+        if not input_nam_m:
+            self._throw_syntax_err(input_nam, None, "Invalid ingredient name.")
+        # read namelist
+        input_nam_filename = input_nam_m.group('nam')
+        if self.sourcenam_directory:
+            input_nam_filename = os.path.join(self.sourcenam_directory,
+                                              input_nam_filename)
+        ingredient = BronxNamelistAdapter(input_nam_filename,
+                                          macros=self.macros)
+        # prepare filtering elements
+        blocks_filter = collections.defaultdict(list)
+        keys_filter = collections.defaultdict(dict)
+        # Process the various blocks provided by the user
+        if isinstance(blocks, (list, tuple, set)):
+            for b in blocks:
+                if isinstance(b, six.string_types):
+                    blocks_filter[input_nam_m.group('filter')].append(b)
+                if isinstance(b, dict) and len(b) == 1:
+                    bname, blist = list(b.items())[0]
+                    bname_m = self._ingredient_item_re.match(bname)
+                    if bname_m:
+                        if not isinstance(blist, (list, tuple, set)):
+                            self._throw_syntax_err(input_nam, blocks,
+                                                   "'{:s}' is not a list".format(blist))
+                        keys_filter[bname_m.group('filter')][bname_m.group('block')] = set(blist)
+                    else:
+                        self._throw_syntax_err(input_nam, blocks,
+                                               "invalid namelist block definition: '{!s}'"
+                                               .format(bname))
+            if input_nam_m.group('filter') == '+':  # Include only case
+                authorized_blocks = set(blocks_filter['+'])
+                for a_keys_filter in keys_filter.values():
+                    authorized_blocks.update(a_keys_filter.keys())
+                blocks_filter['-'] = list(set(ingredient) - authorized_blocks)
+        elif isinstance(blocks, six.string_types) and blocks == '__all__':
+            pass  # Ok, includes everything
+        else:
+            self._throw_syntax_err(input_nam, blocks, 'invalid ingredient description')
+        # then filter
+        # blocks that are not requested
+        ingredient.remove_blocks(blocks_filter['-'])
+        # keys that are excluded
+        for b, keys in keys_filter['-'].items():
+            ingredient.remove_keys([(b, k) for k in keys])
+        # keys that are not requested
+        for b, keys in keys_filter['+'].items():
+            to_remove = [(b, k) for k in ingredient[b] if k not in keys]
+            ingredient.remove_keys(to_remove)
+        return ingredient
+
+    def _load_recipe(self, recipe_filename):
+        """Read YAML file and preprocess ingredients."""
+        from bronx.datagrip.misc import load_ordered_yaml
+        # load yaml
+        recipe = load_ordered_yaml(recipe_filename)
+        if not isinstance(recipe, collections.OrderedDict):
+            raise TntRecipeSyntaxError('The recipe must be a dictionary.')
+        # specific cases: initialization, finalization, macros
+        self.macros = recipe.pop('__macros__', {})
+        initial = self._read_init_final_elements('__initial__',
+                                                 recipe.pop('__initial__', None))
+        final = self._read_init_final_elements('__final__',
+                                               recipe.pop('__final__', None))
+        self.ingredients = []
+        # convert each ingredient into a namelist to be merged
+        for input_nam, blocks in recipe.items():
+            self.ingredients.append(self._process_ingredient(input_nam, blocks))
+        self.ingredients.insert(0, initial)
+        self.ingredients.append(final)
+
+
 # Utility function that deals with template files
 #
 
 def get_template(tplname, encoding=None):
+    """Retrieve a template file in the dedicated directory."""
     tplfile = os.path.join(TPL_DIRECTORY, tplname)
     with io.open(tplfile, 'r', encoding=encoding) as fhtpl:
         tpl = string.Template(fhtpl.read())

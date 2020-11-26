@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+AlgoComponents for the next generation of Fullpos runs (based on the 903
+configuration).
+"""
 
-"""
-AlgoComponents for the next generation of Fullpos runs (based on the 903 configuration).
-"""
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 
@@ -40,8 +41,8 @@ class FullPosServerFlyPollPersistantState(object):
     """Persistent storage object for Fullpos's polling method."""
 
     def __init__(self):
-        self.cursor = Time(-9999)
-        self.found = list()
+        self.cursor = collections.defaultdict(functools.partial(Time, -9999))
+        self.found = collections.defaultdict(list)
 
 
 def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.'), **kwargs):  # @UnusedVariable
@@ -66,11 +67,13 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.'), **kwar
                     candidates = [pre.match(f) for f in sh.listdir()]
                     lnew = list()
                     for candidate in filterfalse(lambda c: c is None, candidates):
+                        if candidate.group(0).endswith('.d'):
+                            continue
                         ctime = Time(candidate.group(1))
-                        if ctime > fpoll_st.cursor and ctime <= cursor:
+                        if ctime > fpoll_st.cursor[outputprefix] and ctime <= cursor:
                             lnew.append(candidate.group(0))
-                    fpoll_st.cursor = cursor
-                    fpoll_st.found.extend(lnew)
+                    fpoll_st.cursor[outputprefix] = cursor
+                    fpoll_st.found[outputprefix].extend(lnew)
                     new.extend([sh.path.normpath(sh.path.join(directory, anew))
                                 for anew in lnew])
             finally:
@@ -81,12 +84,23 @@ def fullpos_server_flypoll(sh, outputprefix, termfile, directories=('.'), **kwar
 class FullPosServer(IFSParallel):
     """Fullpos Server for geometry transforms & post-processing in IFS-like Models.
 
+    Input/Output files are labelled as follows:
+
+        * Let ``INPUTFILE_0`` denote an input file name (the user can choose
+          whichever name she/he wants provided that the associated input's
+          section has the "ModelState" role).
+        * For FA files: the corresponding output file will be
+          ``NPUTFILE_0.domain.out`` where ``domain`` is the domain name chosen
+          by the user in the namelist.
+        * For GRIB files: the corresponding output file will be
+          ``NPUTFILE_0.domain.grib.out``.
+
     :note: To use this algocomponent, the c903's server needs to be activated
            in the namelist (NFPSERVER != 0).
 
-    :note: With the current IFS/Arpege code an ``ECHFP`` have to be incremented
-           by the server, in each of the output directories, in order for the
-           output's polling to work properly.
+    :note: With the current IFS/Arpege code, in order for the output's polling
+           to work properly,  an ``ECHFP`` whiteness file have to be incremented
+           by the server, in each of the output directories.
 
     :note: Climatology files are not managed (only few sanity checks are
            performed). The user needs to name the input climatology file
@@ -108,6 +122,7 @@ class FullPosServer(IFSParallel):
     _MODELSIDE_INPUTPREFIX0 = 'ICM'
     _MODELSIDE_INPUTPREFIX1 = 'SH'
     _MODELSIDE_OUTPUTPREFIX = 'PF'
+    _MODELSIDE_OUTPUTPREFIX_GRIB = 'GRIBPF'
     _MODELSIDE_TERMFILE = './ECHFP'
     _MODELSIDE_OUT_SUFFIXLEN_MIN = 4
     _MODELSIDE_IND_SUFFIXLEN_MIN = 4
@@ -130,6 +145,12 @@ class FullPosServer(IFSParallel):
                 info     = "The list of possible output directories.",
                 type     = footprints.stdtypes.FPList,
                 default  = footprints.stdtypes.FPList(['.', ]),
+                optional = True,
+            ),
+            append_domain = dict(
+                info     = ("If defined, the output file for domain append_domain " +
+                            "will be made a copy of the input file (prior to the " +
+                            "server run"),
                 optional = True,
             ),
             xpname = dict(
@@ -167,6 +188,11 @@ class FullPosServer(IFSParallel):
             flypoll = dict(
                 default  = 'internal',
             ),
+            defaultformat = dict(
+                info = "Format for the legacy output files.",
+                default = 'fa',
+                optional = True
+            )
         )
     )
 
@@ -201,7 +227,7 @@ class FullPosServer(IFSParallel):
     def _inputs_discover(self):
         """Retrieve the lists in input sections/ResourceHandlers."""
         # Initial conditions
-        inisec = self.context.sequence.effective_inputs(role = self._INITIALCONDITION_ROLE)
+        inisec = self.context.sequence.effective_inputs(role=self._INITIALCONDITION_ROLE)
         inidata = dict()
         if inisec:
             for s in inisec:
@@ -215,7 +241,7 @@ class FullPosServer(IFSParallel):
                     inidata[fprefix] = s
 
         # Model states
-        todosec0 = self.context.sequence.effective_inputs(role = self._INPUTDATA_ROLE)
+        todosec0 = self.context.sequence.effective_inputs(role=self._INPUTDATA_ROLE)
         todosec1 = collections.defaultdict(list)
         tododata = list()
         outprefix = None
@@ -247,8 +273,8 @@ class FullPosServer(IFSParallel):
 
         # Selection namelists
         namxxrh = collections.defaultdict(dict)
-        for isec in self.context.sequence.effective_inputs(role = 'FullPosSelection',
-                                                           kind = 'namselect'):
+        for isec in self.context.sequence.effective_inputs(role='FullPosSelection',
+                                                           kind='namselect'):
             lpath = isec.rh.container.localpath()
             dpath = self.system.path.dirname(lpath)
             namxxrh[dpath][isec.rh.resource.term] = isec.rh
@@ -259,21 +285,28 @@ class FullPosServer(IFSParallel):
         return inidata, tododata, namxxrh, anyexpected, outprefix, inputsminlen
 
     def _link_input(self, iprefix, irh, i, inputs_mapping, outputs_mapping,
-                    i_fmt, o_raw_re_fmt, o_suffix, outprefix):
+                    i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt, o_suffix, o_grb_suffix,
+                    outprefix):
         """Link an input file and update the mappings dictionaries."""
         sourcepath = irh.container.localpath()
         inputs_mapping[sourcepath] = i_fmt.format(iprefix, i)
         self.system.cp(sourcepath, inputs_mapping[sourcepath], intent='in', fmt=irh.container.actualfmt)
         if iprefix == self._MODELSIDE_INPUTPREFIX0 + outprefix:
             outputs_mapping[re.compile(o_raw_re_fmt.format(i))] = (self.system.path.basename(sourcepath) +
-                                                                   o_suffix,
-                                                                   irh.container.actualfmt)
-            logger.info('%s copied as %s -> Output %s mapped as %s.',
+                                                                   o_suffix, self.defaultformat)
+            outputs_mapping[re.compile(o_grb_re_fmt.format(i))] = (self.system.path.basename(sourcepath) +
+                                                                   o_grb_suffix, 'grib')
+            logger.info('%s copied as %s -> Output %s mapped as %s. Output %s mapped as %s',
                         sourcepath, inputs_mapping[sourcepath],
-                        o_raw_re_fmt.format(i), sourcepath + o_suffix)
+                        o_raw_re_fmt.format(i), sourcepath + o_suffix,
+                        o_grb_re_fmt.format(i), sourcepath + o_grb_suffix)
         else:
             logger.info('%s copied as %s.',
                         sourcepath, inputs_mapping[sourcepath])
+        if self.append_domain:
+            outputpath = o_raw_fmt.format(self.append_domain, i)
+            self.system.cp(sourcepath, outputpath, intent='inout', fmt=irh.container.actualfmt)
+            logger.info('output file prepared: %s copied (rw) to %s.', sourcepath, outputpath)
 
     def _link_xxt(self, todorh, i, xxtmapping):
         """If necessary, link in the appropriate xxtNNNNNNMM file."""
@@ -397,9 +430,11 @@ class FullPosServer(IFSParallel):
 
         # Prepare the namelist
         self.system.subtitle('Setting 903 namelist settings')
-        namrhs = [x.rh for x in self.context.sequence.effective_inputs(role = 'Namelist',
-                                                                       kind = 'namelist')]
+        namrhs = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                       kind='namelist')]
         for namrh in namrhs:
+            if self.outputid:
+                self._setmacro(namrh, 'OUTPUTID', self.outputid)
             # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
             if anyexpected:
                 self._setmacro(namrh, 'SERVERSYNC_SCRIPT',
@@ -429,13 +464,23 @@ class FullPosServer(IFSParallel):
         i_fmt = ('{:s}' + '{:s}+'.format(self.xpname) +
                  '{:0' + str(self._actual_suffixlen(tododata, inputsminlen)) +
                  'd}')
+        o_raw_fmt = ('{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) + '{:s}+' +
+                     '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
+                     'd}')
         o_raw_re_fmt = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
+                        r'(?P<fpdom>\w+)\+' +
+                        '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
+                        'd}$')
+        o_grb_re_fmt = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
                         r'(?P<fpdom>\w+)\+' +
                         '{:0' + str(self._actual_suffixlen(tododata, self._MODELSIDE_OUT_SUFFIXLEN_MIN)) +
                         'd}$')
         o_init_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX, self.xpname) +
                      r'(?P<fpdom>\w+)INIT$')
+        o_initgrb_re = ('^{:s}{:s}'.format(self._MODELSIDE_OUTPUTPREFIX_GRIB, self.xpname) +
+                        r'(?P<fpdom>\w+)INIT$')
         o_suffix = '.{:s}.out'
+        o_grb_suffix = '.{:s}.grib.out'
 
         # Input and Output mapping
         inputs_mapping = dict()
@@ -449,7 +494,9 @@ class FullPosServer(IFSParallel):
                 sourcepath = isec.rh.container.basename
                 if iprefix == self._MODELSIDE_INPUTPREFIX0 + outprefix:
                     outputs_mapping[re.compile(o_init_re)] = (sourcepath + o_suffix,
-                                                              isec.rh.container.actualfmt)
+                                                              self.defaultformat)
+                    outputs_mapping[re.compile(o_initgrb_re)] = (sourcepath + o_grb_suffix,
+                                                                 'grib')
                 i_init = '{:s}{:s}INIT'.format(iprefix, self.xpname)
                 if isec.rh.container.basename != i_init:
                     self.system.cp(sourcepath, i_init,
@@ -461,17 +508,27 @@ class FullPosServer(IFSParallel):
                 # Just in case the INIT file is transformed
                 outputs_mapping[re.compile(o_init_re)] = (self._MODELSIDE_INPUTPREFIX0 +
                                                           outprefix + self.xpname + 'INIT' + o_suffix,
-                                                          tododata[0][self._MODELSIDE_INPUTPREFIX0 +
-                                                                      outprefix].rh.container.actualfmt)
+                                                          self.defaultformat)
+                outputs_mapping[re.compile(o_initgrb_re)] = (self._MODELSIDE_INPUTPREFIX0 +
+                                                             outprefix + self.xpname + 'INIT' + o_grb_suffix,
+                                                             'grib')
         # Initialise the flying stuff
         self.flyput = False  # Do not use flyput every time...
-        self.io_poll_args = tuple([self._MODELSIDE_OUTPUTPREFIX, ])
+        flyprefixes = set()
+        for s in self.promises:
+            lpath = s.rh.container.localpath()
+            if lpath.endswith('.grib.out'):
+                flyprefixes.add(self._MODELSIDE_OUTPUTPREFIX_GRIB)
+            elif lpath.endswith('.out'):
+                flyprefixes.add(self._MODELSIDE_OUTPUTPREFIX)
+        self.io_poll_args = tuple(flyprefixes)
         self.io_poll_kwargs = dict(directories=tuple(set(self.outdirectories)))
         for directory in set(self.outdirectories):
             sh.mkdir(directory)  # Create possible output directories
         if self.flypoll == 'internal':
             self.io_poll_method = functools.partial(fullpos_server_flypoll, sh)
             self.io_poll_kwargs['termfile'] = sh.path.basename(self._MODELSIDE_TERMFILE)
+        self.flymapping = True
         self._flyput_mapping_d = outputs_mapping
 
         if anyexpected:
@@ -538,7 +595,8 @@ class FullPosServer(IFSParallel):
                         for iprefix, isec in istuff.items():
                             self._link_input(iprefix, isec.rh, current_i,
                                              inputs_mapping, outputs_mapping,
-                                             i_fmt, o_raw_re_fmt, o_suffix, outprefix)
+                                             i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt,
+                                             o_suffix, o_grb_suffix, outprefix)
                         self._link_xxt(istuff[self._MODELSIDE_INPUTPREFIX0 + outprefix].rh,
                                        current_i, namxx)
 
@@ -595,18 +653,20 @@ class FullPosServer(IFSParallel):
             for i, iinputs in enumerate(tododata):
                 for iprefix, isec in iinputs.items():
                     self._link_input(iprefix, isec.rh, i, inputs_mapping, outputs_mapping,
-                                     i_fmt, o_raw_re_fmt, o_suffix, outprefix)
+                                     i_fmt, o_raw_fmt, o_raw_re_fmt, o_grb_re_fmt,
+                                     o_suffix, o_grb_suffix, outprefix)
                 self._link_xxt(iinputs[self._MODELSIDE_INPUTPREFIX0 + outprefix].rh,
                                i, namxx)
 
             # On the fly ?
             if self.promises:
                 self.flyput = True
-                self.flymapping = True
 
             # Let's roll !
             super(FullPosServer, self).execute(rh, opts)
 
         # Map all outputs to destination (using io_poll)
+        self.io_poll_args = tuple([self._MODELSIDE_OUTPUTPREFIX,
+                                   self._MODELSIDE_OUTPUTPREFIX_GRIB, ])
         self._init_poll_and_move(outputs_mapping)
         self._poll_and_move(outputs_mapping)

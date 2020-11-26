@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -12,13 +16,12 @@ logger = loggers.getLogger(__name__)
 
 
 def tramsmet_file(filename, filename_transmet, blocksize=67108864):
-    """"Add the original file into the 'filename_transmet'
+    """Add the original file into the 'filename_transmet'.
 
     :param str filename: original file name
     :param str filename_transmet: transmet file name
     :param int blocksize: the blocksize for I/O operations
     """
-
     with io.open(filename_transmet, 'ab') as f_header:
         f_header.write(b'\n\n')
         with io.open(filename, 'rb') as f:
@@ -30,7 +33,7 @@ def tramsmet_file(filename, filename_transmet, blocksize=67108864):
 
 
 def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
-    """Complete command line that runs 'entete_fichier_transmet'
+    """Complete command line that runs 'entete_fichier_transmet'.
 
     :param ~vortex.tools.systems.OSExtended sh: The vortex shell that will be used
     :param str transmet_cmd: Key in the configuration file that holds the script name
@@ -39,7 +42,6 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
     :return: command line
     :rtype: str
     """
-
     options = ''
     for k, w in six.iteritems(transmet_dict):
         options += '{}={} '.format(k, w)
@@ -53,7 +55,7 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
 
 
 def execute_cmd_sh(sh, cmd):
-    """execute shell command
+    """Execute shell command.
 
     :param sh: The vortex shell that will be used
     :param cmd: commmand
@@ -66,7 +68,7 @@ def execute_cmd_sh(sh, cmd):
 
 
 def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir, header_infile):
-    """"create a file with transmet header and returns the filename used for routing.
+    """Create a file with transmet header and returns the filename used for routing.
 
     :param ~vortex.tools.systems.OSExtended sh: The vortex shell that will be used
     :param str transmet_cmd: Key in the configuration file that holds the script name
@@ -77,7 +79,6 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir,
     :return: 'transmet' filename
     :rtype: str
     """
-
     cmd = ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir)
     filename_ttaaii = execute_cmd_sh(sh, cmd)[0]
     filename_ttaaii = sh.path.join(sh.path.dirname(filename), filename_ttaaii)

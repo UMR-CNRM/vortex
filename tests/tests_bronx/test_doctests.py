@@ -6,11 +6,16 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import doctest
 import unittest
 
-from bronx.datagrip import namelist
-from bronx.fancies import display, loggers
+from bronx.datagrip import namelist, varbcheaders
+from bronx.fancies import display, language, loggers
 from bronx.patterns import getbytag, observer
 from bronx.stdtypes import date, history, tracking, xtemplates
-from bronx.syntax import iterators, minieval
+from bronx.syntax import externalcode, iterators, minieval, parsing
+
+# Numpy is not mandatory
+npchecker = externalcode.ExternalCodeImportChecker('numpy')
+with npchecker as npregister:
+    import numpy as np  # @UnusedImport
 
 
 class utDocTests(unittest.TestCase):
@@ -22,7 +27,9 @@ class utDocTests(unittest.TestCase):
 
     def test_doctests(self):
         self.assert_doctests(namelist)
+        self.assert_doctests(varbcheaders)
         self.assert_doctests(display)
+        self.assert_doctests(language)
         self.assert_doctests(loggers)
         self.assert_doctests(getbytag)
         self.assert_doctests(observer)
@@ -32,6 +39,12 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(xtemplates)
         self.assert_doctests(iterators)
         self.assert_doctests(minieval)
+        self.assert_doctests(parsing)
+
+    @unittest.skipUnless(npchecker.is_available(), "The numpy package is unavailable.")
+    def test_doctests_w_numpy(self):
+        from bronx.meteo import thermo
+        self.assert_doctests(thermo)
 
 
 if __name__ == '__main__':

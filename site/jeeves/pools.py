@@ -1,21 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO module description.
+"""
+
 from __future__ import print_function
 
+import io
+import json
 import os
 import pwd
 import shutil
-import io
-import zipfile
-import json
 import time
-from glob import glob
+import zipfile
 from datetime import datetime, timedelta
+from glob import glob
 
-from bronx.patterns import getbytag
+import six
+
 import footprints
-
+from bronx.patterns import getbytag
 
 #: No automatic export
 __all__ = []
@@ -103,9 +108,11 @@ def duration_to_seconds(value):
 
 
 def clean_older_files(logger, path, timelimit, pattern='*'):
-    """Remove files in this path matching the glob pattern and
-       older than timelimit seconds (not recursive).
-       See :py:func:`duration_to_seconds` for the timelimit accepted forms.
+    """
+    Remove files in this path matching the glob pattern and older than timelimit
+    seconds (not recursive).
+
+    See :py:func:`duration_to_seconds` for the timelimit accepted forms.
     """
     seconds = duration_to_seconds(timelimit)
     rightnow = time.time()
@@ -118,9 +125,10 @@ def clean_older_files(logger, path, timelimit, pattern='*'):
 
 
 def parent_mkdir(path, mode=0o755):
-    """mkdir -p : creates parent directories if necessary.
-       Does not change the mode of existing directories.
-       Return True if at least one directory was created.
+    """Like ``mkdir -p``: creates parent directories if necessary.
+
+    Does not change the mode of existing directories. Return ``True`` if at
+    least one directory was created.
     """
     try:
         os.makedirs(path, mode=mode)
@@ -197,7 +205,7 @@ class Request(object):
     def dump(self):
         """Dump request as a json file."""
         self._dumpfiles.append(self.filename())
-        with io.open(self._dumpfiles[-1] + '.tmp', 'wb') as fd:
+        with io.open(self._dumpfiles[-1] + '.tmp', 'wb' if six.PY2 else 'w') as fd:
             json.dump(self.as_dict(), fd, sort_keys=True, indent=4)
         shutil.move(self._dumpfiles[-1] + '.tmp', self._dumpfiles[-1])
         return True
@@ -205,7 +213,7 @@ class Request(object):
     def show(self, *args):
         """Display specified attributes values or all of them."""
         if not args:
-            args = self.__dict__.keys() + ['last']
+            args = list(self.__dict__.keys()) + ['last']
         for attr in sorted([x for x in args if not x.startswith('_')]):
             print(' *', attr, '=', getattr(self, attr))
 
@@ -229,18 +237,18 @@ class Deposit(getbytag.GetByTag):
     def __init__(self, logger=None, path=None, active=False, target=None,
                  cleaning=True, maxitems=128, maxtime='24H', keepzip='10d',
                  periodclean='15mn', minclean='48H'):
-        self._logger      = logger
-        self._target      = target
-        self._path        = self.tag if path is None else path
-        self.active       = active
-        self._cleaning    = bool(cleaning)
-        self._maxitems    = int(maxitems)
-        self._maxtime     = duration_to_seconds(maxtime)
-        self._keepzip     = duration_to_seconds(keepzip)
+        self._logger = logger
+        self._target = target
+        self._path = self.tag if path is None else path
+        self.active = active
+        self._cleaning = bool(cleaning)
+        self._maxitems = int(maxitems)
+        self._maxtime = duration_to_seconds(maxtime)
+        self._keepzip = duration_to_seconds(keepzip)
         self._periodclean = duration_to_seconds(periodclean)
-        self._tryclean    = None
-        self._lastclean   = None
-        self._minclean    = duration_to_seconds(minclean)
+        self._tryclean = None
+        self._lastclean = None
+        self._minclean = duration_to_seconds(minclean)
         self._first_clean()
 
     @property
@@ -408,5 +416,6 @@ class Deposit(getbytag.GetByTag):
 
 if __name__ == '__main__':
     import doctest
+
     result = doctest.testmod(verbose=False)
     print('{}/{} tests passed.'.format(result.attempted - result.failed, result.attempted))

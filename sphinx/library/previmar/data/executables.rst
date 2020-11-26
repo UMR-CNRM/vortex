@@ -30,12 +30,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: FiltrageGrib
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: ConversionGrib2Taux
    :show-inheritance:
    :members:
@@ -45,19 +45,38 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: SurScriptSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: FusionGrib
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: InterpolationSurges
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Filteralti
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FiltrageGribWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: InterpWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MasterWaves
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

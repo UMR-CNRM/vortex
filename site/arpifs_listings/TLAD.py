@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals with part of the Arpege/IFS listings related to the
+tests of the Tangent Linear and Adjoint models.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re

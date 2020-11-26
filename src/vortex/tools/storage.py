@@ -322,7 +322,7 @@ class Storage(footprints.FootprintBase):
 class Cache(Storage):
     """Root class for any :class:Cache subclasses."""
 
-    _abstract  = True
+    _abstract = True
     _collector = ('cache',)
     _footprint = dict(
         info = 'Default cache description',
@@ -697,8 +697,8 @@ class Archive(Storage):
             item,
             local,
             # Ftp control
-            hostname = hostname,
-            logname = kwargs.get('username', None),
+            hostname=hostname,
+            logname=kwargs.get('username', None),
             ** extras
         )
         return rc, extras
@@ -711,12 +711,12 @@ class Archive(Storage):
         cpipeline = kwargs.get('compressionpipeline', None)
         if self.sh.rawftget_worthy(item, local, cpipeline):
             return self.context.delayedactions_hub.register((item, kwargs.get('fmt', 'foo')),
-                                                            kind = 'archive',
-                                                            storage = self.actual_storage,
-                                                            goal = 'get',
-                                                            tube = 'ftp',
-                                                            raw = True,
-                                                            logname = kwargs.get('username', None))
+                                                            kind='archive',
+                                                            storage=self.actual_storage,
+                                                            goal='get',
+                                                            tube='ftp',
+                                                            raw=True,
+                                                            logname=kwargs.get('username', None))
         else:
             return None
 
@@ -750,9 +750,9 @@ class Archive(Storage):
                 local,
                 item,
                 # Ftp control
-                hostname = hostname,
-                logname = kwargs.get('username', None),
-                sync = kwargs.get('enforcesync', False),
+                hostname=hostname,
+                logname=kwargs.get('username', None),
+                sync=kwargs.get('enforcesync', False),
                 ** extras
             )
         else:
@@ -767,13 +767,13 @@ class Archive(Storage):
             if port is not None:
                 extras['port'] = port
             rc = ad.jeeves(
-                hostname = hostname,
-                logname = kwargs.get('username', None),
-                todo = 'ftput',
-                rhandler = kwargs.get('info', None),
-                source = tempo(local),
-                destination = item,
-                original = self.sh.path.abspath(local),
+                hostname=hostname,
+                logname=kwargs.get('username', None),
+                todo='ftput',
+                rhandler=kwargs.get('info', None),
+                source=tempo(local),
+                destination=item,
+                original=self.sh.path.abspath(local),
                 ** extras
             )
         return rc, extras
@@ -798,7 +798,7 @@ class Archive(Storage):
 
 class FixedEntryCache(Cache):
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Default cache description (with a fixed entry point)',
         attr = dict(
@@ -937,7 +937,7 @@ class MarketPlaceCache(Cache):
         conf['register'] = dict()
         conf['locations'] = list()
         conf['externalconfigs'] = defaultdict(lambda: dict(restrict=None,
-                                                           seen = False))
+                                                           seen=False))
         # If no configuration section is available... that's fine just do nothing
         main_sname = '{0.kind:s}-{0.actual_headdir:s}'.format(self)
         if maincfg.has_section(main_sname):
@@ -1085,13 +1085,13 @@ class MtoolCache(FixedEntryCache):
             e = self.sh.env
             if e.MTOOL_STEP_CACHE and self.sh.path.isdir(e.MTOOL_STEP_CACHE):
                 cache = e.MTOOL_STEP_CACHE
-                logger.debug('Using %s mtool step cache %s', self, cache)
+                logger.debug('Using mtool step cache %s', cache)
             elif e.MTOOLDIR and self.sh.path.isdir(e.MTOOLDIR):
                 cache = self.sh.path.join(e.MTOOLDIR, 'cache')
-                logger.debug('Using %s mtool dir cache %s', self, cache)
+                logger.debug('Using mtool dir cache %s', cache)
             elif e.FTDIR or e.WORKDIR:
                 cache = self.sh.path.join(e.FTDIR or e.WORKDIR, self.kind, 'cache')
-                logger.debug('Using %s default cache %s', self, cache)
+                logger.debug('Using default cache %s', cache)
             else:
                 logger.error('Unable to find an appropriate location for the cache space.')
                 logger.error('Tip: Set either the MTOOLDIR, FTDIR or WORKDIR environment variables ' +

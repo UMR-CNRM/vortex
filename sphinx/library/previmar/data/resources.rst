@@ -65,3 +65,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: GenericWaveSatelliteData
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SARdataWave
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WaveAltidata
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WaveInit
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

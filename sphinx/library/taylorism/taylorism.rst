@@ -34,7 +34,7 @@ Actors
 
 Abstract Scheduler Classes
 --------------------------
- 
+
 .. autoclass:: BaseScheduler
    :show-inheritance:
    :members:
@@ -45,10 +45,10 @@ Abstract Scheduler Classes
    :members:
    :member-order: alphabetical
 
-   
+
 Generic Scheduler Classes
 -------------------------
-   
+
 .. autoclass:: NewLaxistScheduler
    :show-inheritance:
    :members:
@@ -149,7 +149,7 @@ Worker classes used in the examples
 .. autoclass:: Logarithmer
    :members:
    :private-members: _task
-   
+
 .. autoclass:: Summer
    :members:
    :private-members: _task

@@ -80,8 +80,11 @@ class OpMail(Action):
         return super(OpMail, self).service_info(**kw)
 
     def execute(self, *args, **kw):
-        """Perform the action through a service. Extraneous arguments (not included in the footprint)
-        are collected and explicitely transmitted to the service in a dictionary."""
+        """
+        Perform the action through a service. Extraneous arguments (not included
+        in the footprint) are collected and explicitely transmitted to the service
+        in a dictionary.
+        """
         rc = None
         service = self.get_active_service(**kw)
         if service:
@@ -108,8 +111,10 @@ class OpPhase(Action):
 
     @staticmethod
     def actions():
-        """Create Actions to handle the several Phase configurations
-           described in the configuration file target-xxx.ini."""
+        """
+        Create Actions to handle the several Phase configurations described in
+        the `target-xxx.ini` configuration file.
+        """
         target = sessions.system().default_target
         if 'phase' in target.sections():
             active_actions = target.getx(key='phase:active_actions', aslist=True)
@@ -131,7 +136,8 @@ class OpPhase(Action):
 
     def tune(self, section=None, **kw):
         """Add options to override the .ini file configuration.
-           ``section`` is a specific section name, or ``None`` for all.
+
+        ``section`` is a specific section name, or ``None`` for all.
         """
         if section is None or section == self._section:
             self._tuning.update(kw)
@@ -176,11 +182,11 @@ class OpPhase(Action):
         return True
 
     def execute(self, *args, **kw):
-        """Perform the action:
+        """Perform the requested action.
 
-            * Accepts lists of resource handlers (any iterable, nested ot not)
-            * In immediate mode (or if given flush=True), do it now.
-            * Else keep track of resources for a later call to flush()
+        * Accepts lists of resource handlers (any iterable, nested ot not)
+        * In immediate mode (or if given flush=True), do it now.
+        * Else keep track of resources for a later call to flush()
         """
 
         def isiterable(item):
@@ -247,7 +253,7 @@ class OpPhase(Action):
         """
         paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]
-        if first_path is '':
+        if first_path == '':
             raise ValueError('No access from a cache to the resource')
         incache_path = self.sh.path.abspath(first_path)
 

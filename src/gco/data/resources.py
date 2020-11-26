@@ -1,13 +1,17 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import StaticResource
 from gco.syntax.stdattrs import gvar
 
 #: Automatic export of MiscGenv
-__all__ = [ 'MiscGenv' ]
+__all__ = ['MiscGenv', ]
 
 
 class MiscGenv(StaticResource):

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 TODO: Module documentation
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 import io
@@ -21,19 +21,21 @@ from intairpol.basics import AirTool
 logger = loggers.getLogger(__name__)
 
 SIMULATION_LEVELS = dict(
-    EXERCICE = 0,
-    ACCIDENT = 1,
-    TEST     = 2,
+    EXERCICE=0,
+    ACCIDENT=1,
+    TEST=2,
 )
 
 EMISSION_TYPES = dict(
-    radiologic = 'radiologique',
-    chemical   = 'chimique',
-    volcanic   = 'volcanic',
+    radiologic='radiologique',
+    chemical='chimique',
+    volcanic='volcanic',
 )
 
 
 class SimulationLevel(six.text_type):
+    """TODO: Class documentation."""
+
     def __new__(cls, value):
         value = six.text_type(value).upper()
         for k in SIMULATION_LEVELS.keys():
@@ -53,6 +55,8 @@ class SimulationLevel(six.text_type):
 
 
 class EmissionType(six.text_type):
+    """TODO: Class documentation."""
+
     def __new__(cls, value):
         value = six.text_type(value).lower()
         for k in EMISSION_TYPES.keys():
@@ -72,6 +76,7 @@ class EmissionType(six.text_type):
 
 
 class PerleTool(AirTool):
+    """TODO: Class documentation."""
 
     _abstract = True
     _footprint = dict(
@@ -89,6 +94,7 @@ class PerleTool(AirTool):
 
 
 class PerleLauncher(PerleTool):
+    """TODO: Class documentation."""
 
     _abstract = True
     _footprint = dict(
@@ -177,6 +183,7 @@ class PerleLauncher(PerleTool):
 
 
 class OldPerleLauncher(PerleLauncher):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         info = 'PERLE launcher old style',
@@ -336,12 +343,12 @@ class OldPerleLauncher(PerleLauncher):
         with io.open(filename, 'w') as fd:
             fd.write(six.text_type(''.join([
                 x + '\n' for x in [getattr(self, 'dump_' + p, self.dump_void)(getattr(self, p, ''))
-                                   for p in self.config['simulation_params'] ] if len(x) > 0
+                                   for p in self.config['simulation_params']] if len(x) > 0
             ])))
 
         logger.info('Job config written <file:%s> <size:%d>', filename, self.sh.size(filename))
 
-        self.sh.yaml_dump(dict(simulations_params=[{p: getattr(self, p, '') }
+        self.sh.yaml_dump(dict(simulations_params=[{p: getattr(self, p, '')}
                                                    for p in self.config['simulation_params']
                                                    ]
                                ), 'perle.yml'
@@ -358,12 +365,12 @@ class OldPerleLauncher(PerleLauncher):
                 for a in self.footprint_attributes if 'local_' not in a
             ])))
             fd.write(six.text_type('\n'.join([
-                'PERLE_VERSION='     + self.get_family_tag(),
-                'PERLE_XTAG='        + self.xtag,
+                'PERLE_VERSION=' + self.get_family_tag(),
+                'PERLE_XTAG=' + self.xtag,
                 'PERLE_REMOTE_HOST=' + self.sh.hostname,
                 'PERLE_REMOTE_USER=' + self.env.USER,
                 'PERLE_REMOTE_PATH=' + self.sh.pwd(),
-                'PERLE_REMOTE_TMP='  + self.sh.path.abspath(self.local_tmp),
+                'PERLE_REMOTE_TMP=' + self.sh.path.abspath(self.local_tmp),
             ])))
             fd.write('\n')
 

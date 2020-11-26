@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import StaticResource
@@ -29,7 +33,7 @@ class RawFields(StaticResource):
                     values = ['bdm', 'nesdis', 'ostia', 'psy4', 'bdpe', 'safosi']
                 ),
                 fields = dict(
-                    values = ['sst', 'seaice', 'ocean']
+                    values = ['sst', 'seaice', 'ocean', 'seaice_conc', 'seaice_thick']
                 ),
             )
         )
@@ -69,7 +73,7 @@ class GeoFields(GeoFlowResource):
                     values  = ['geofields']
                 ),
                 fields = dict(
-                    values  = ['sst', 'seaice', 'ocean']
+                    values  = ['sst', 'seaice', 'ocean', 'seaice_conc', 'seaice_thick']
                 ),
                 nativefmt = dict(
                     values  = ['fa'],

@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+Various Resources for constant files used in NWP.
+"""
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import footprints
-
-from vortex.data.outflow    import StaticResource, ModelResource, ModelGeoResource
-from vortex.data.geometries import LonlatGeometry, GaussGeometry
-from vortex.data.contents   import TextContent, JsonDictContent
+from gco.syntax.stdattrs import gvar
+from vortex.data.contents import JsonDictContent, TextContent
+from vortex.data.geometries import GaussGeometry, LonlatGeometry
+from vortex.data.outflow import ModelGeoResource, ModelResource, StaticResource
 from vortex.syntax.stdattrs import month_deco
-from vortex.syntax.stddeco  import namebuilding_append, namebuilding_delete, namebuilding_insert
-
-
-from gco.syntax.stdattrs    import gvar
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 #: No automatic export
 __all__ = []
@@ -21,15 +22,15 @@ __all__ = []
 class GenvModelResource(ModelResource):
     """Abstract class for gget driven resources."""
 
-    _abstract  = True
-    _footprint = [ gvar, ]
+    _abstract = True
+    _footprint = [gvar, ]
 
 
 class GenvModelGeoResource(ModelGeoResource):
     """Abstract class for gget driven resources."""
 
-    _abstract  = True
-    _footprint = [ gvar, ]
+    _abstract = True
+    _footprint = [gvar, ]
 
 
 class GPSList(GenvModelResource):
@@ -93,10 +94,9 @@ class BatorAveragingMask(GenvModelResource):
         info = 'Definition file for the bator averaging',
         attr = dict(
             kind = dict(
-                values  = [ 'avgmask', ]
+                values  = ['avgmask', ]
             ),
             sensor = dict(
-                values  = [ 'atms', 'ssmis', ]
             ),
             clscontents = dict(
                 default = TextContent,
@@ -117,7 +117,7 @@ class AtmsMask(BatorAveragingMask):
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values   = [ 'atms', 'atmsmask', ],
+                values   = ['atms', 'atmsmask'],
                 remap    = dict(atms='atmsmask'),
             ),
             sensor = dict(
@@ -140,7 +140,7 @@ class RtCoef(GenvModelResource):
         info = 'Set of satellite  coefficients',
         attr = dict(
             kind = dict(
-                values  = [ 'rtcoef' ]
+                values  = ['rtcoef', ]
             ),
             gvar = dict(
                 default = 'rtcoef_tgz'
@@ -162,7 +162,7 @@ class RRTM(GenvModelResource):
         info = 'Coefficients of RRTM scheme',
         attr = dict(
             kind = dict(
-                values  = [ 'rrtm' ]
+                values  = ['rrtm', ]
             ),
             gvar = dict(
                 default = 'rrtm_const'
@@ -334,7 +334,7 @@ class CstLim(GenvModelResource):
         info = 'Coefficients for some purpose... but which one ?',
         attr = dict(
             kind = dict(
-                values   = ['cstlim', 'cst_lim' ],
+                values   = ['cstlim', 'cst_lim'],
                 remap    = dict(autoremap = 'first'),
             ),
             scope = dict(
@@ -362,7 +362,7 @@ class RszCoef(GenvModelResource):
         info = 'Coefficients for some purpose... but which one ?',
         attr = dict(
             kind = dict(
-                values  = ['rszcoef', 'rsz_coef' ],
+                values  = ['rszcoef', 'rsz_coef'],
                 remap   = dict(autoremap = 'first'),
             ),
             gvar = dict(
@@ -447,13 +447,13 @@ class AtlasEmissivity(GenvModelResource):
     """
     Abstract class for any Emissivity atlas.
     """
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values   = ['atlas_emissivity', 'atlasemissivity', 'atlasemiss', 'emiss',
-                            'emissivity_atlas'],
-                remap    = dict(autoremap = 'first'),
+                values  = ['atlas_emissivity', 'atlasemissivity', 'atlasemiss', 'emiss',
+                           'emissivity_atlas'],
+                remap   = dict(autoremap = 'first'),
             ),
         )
     )
@@ -461,6 +461,31 @@ class AtlasEmissivity(GenvModelResource):
     @property
     def realkind(self):
         return 'atlas_emissivity'
+
+
+class AtlasEmissivityGeneric(AtlasEmissivity):
+    """
+    A yearly emissivity atlas from a specific source.
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'Yearly emissivity atlas from a given source.',
+        attr = dict(
+            source = dict(
+                values         = ['uwir'],
+            ),
+            gvar = dict(
+                default        = '[source]_emis_atlas'
+            ),
+            month = dict(
+                # This is a fake attribute that avoid warnings...
+                values         = [None, ],
+                optional       = True,
+                default        = None,
+                doc_visibility = footprints.doc.visibility.GURU,
+            )
+        )
+    )
 
 
 class AtlasEmissivityInstrument(AtlasEmissivity):
@@ -472,17 +497,17 @@ class AtlasEmissivityInstrument(AtlasEmissivity):
         info = 'Yearly emissivity atlas for a given instrument(s).',
         attr = dict(
             instrument = dict(
-                values  = ['seviri', 'ssmis', 'iasi', 'amsua', 'amsub', 'an1', 'an2'],
-                remap   = dict(an1='amsua', an2='amsub')
+                values         = ['seviri', 'ssmis', 'iasi', 'amsua', 'amsub', 'an1', 'an2'],
+                remap          = dict(an1='amsua', an2='amsub')
             ),
             gvar = dict(
-                default = 'emissivity_atlas_[instrument]'
+                default        = 'emissivity_atlas_[instrument]'
             ),
             month = dict(
                 # This is a fake attribute that avoid warnings...
-                values = [None, ],
-                optional = True,
-                default = None,
+                values         = [None, ],
+                optional       = True,
+                default        = None,
                 doc_visibility = footprints.doc.visibility.GURU,
             )
         )
@@ -560,8 +585,8 @@ class ODBRaw(GenvModelResource):
                     'RSTBIAS', 'COUNTRYRSTRHBIAS', 'SONDETYPERSTRHBIAS',
                 ],
                 remap   = dict(
-                    RSTBIAS = 'rstbias',
-                    COUNTRYRSTRHBIAS = 'countryrstrhbias',
+                    RSTBIAS            = 'rstbias',
+                    COUNTRYRSTRHBIAS   = 'countryrstrhbias',
                     SONDETYPERSTRHBIAS = 'sondetyperstrhbias',
                 ),
             ),
@@ -629,8 +654,8 @@ class WaveletTable(GenvModelGeoResource):
         info = 'Wavelet covariance operators',
         attr = dict(
             kind = dict(
-                values = ['wtable', 'wavelettable', 'wavelet_table', 'rtable', 'rtabwavelet'],
-                remap  = dict(autoremap = 'first'),
+                values   = ['wtable', 'wavelettable', 'wavelet_table', 'rtable', 'rtabwavelet'],
+                remap    = dict(autoremap = 'first'),
             ),
             gvar = dict(
                 default  = 'RTABLE_WAVELET'
@@ -730,7 +755,7 @@ class FilteringRequest(GenvModelResource):
             filtername = dict(
             ),
             nativefmt = dict(
-                values = ['json', ],
+                values  = ['json', ],
                 default = 'json',
             ),
             clscontents = dict(
@@ -761,14 +786,14 @@ class GribAPIConfig(StaticResource):
             info='Grib-API configuration files',
             attr=dict(
                 kind=dict(
-                    values=['gribapiconf', ],
+                    values  = ['gribapiconf', ],
                 ),
                 target = dict(
-                    values=['samples', 'def', 'definitions'],
-                    remap=dict(definitions='def'),
+                    values  = ['samples', 'def', 'definitions'],
+                    remap   = dict(definitions='def'),
                 ),
                 gvar=dict(
-                    default='grib_api_[target]'
+                    default = 'grib_api_[target]'
                 ),
             )
         )
@@ -789,7 +814,7 @@ class StdPressure(GenvModelGeoResource):
         info = 'Standard pressure profile',
         attr = dict(
             kind = dict(
-                values = ['stdpressure'],
+                values   = ['stdpressure'],
             ),
             level = dict(
                 type     = int,
@@ -818,10 +843,10 @@ class TruncObj(GenvModelGeoResource):
         info = 'Standard error truncation',
         attr = dict(
             kind = dict(
-                values = ['truncobj', 'stderr_trunc'],
+                values  = ['truncobj', 'stderr_trunc'],
             ),
             gvar = dict(
-                default  = 'trunc_obj'
+                default = 'trunc_obj'
             ),
         )
     )
@@ -841,7 +866,7 @@ class InterChannelsCorrelations(GenvModelResource):
         info = 'Inter channel correlations for a given instrument.',
         attr = dict(
             kind = dict(
-                values = ['correlations', ],
+                values  = ['correlations', ],
             ),
             instrument = dict(
                 values  = ['cris', 'iasi', ],

@@ -40,6 +40,23 @@ todo:
               experiment: abcd
               block: ''
               namebuild: cen
+    # PGD new...
+    -   commons:
+            kind: pgd
+            block: clim
+        tests:
+            - genv: '[cycle]'
+              geometry:
+                  - franmgsp
+                  - global1198
+            - namespace:
+                  - olive.multi.fr
+                  - vortex.multi.fr
+              experiment: abcd
+            - nativefmt:
+                - fa
+                - netcdf
+              experiment: abcd
     # ecoclimap
     -   commons:
             kind: coverparams

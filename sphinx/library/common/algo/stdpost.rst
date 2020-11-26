@@ -70,7 +70,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: Reverser
    :show-inheritance:
    :members:

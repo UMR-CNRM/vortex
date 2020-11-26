@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Generate a script based on the Vortex and Application configuration files."""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import argparse
@@ -20,7 +23,7 @@ vortex_path = os.path.join(appbase, 'vortex')
 if not os.path.exists(vortex_path):
     vortex_path = os.path.dirname(os.path.dirname(sys.argv[0]))
 
-pathdirs    = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
+pathdirs = [os.path.join(vortex_path, xpath) for xpath in ('site', 'src', )]
 
 for d in pathdirs:
     if os.path.isdir(d):
@@ -85,8 +88,8 @@ def parse_command_line():
         job = make_cmdline(args.job)
         jobs.append(job)
         if args.write:
-            with open(args.file, 'a') as fp:
-                fp.write(args.job + "\n")
+            with io.open(args.file, 'a') as fp:
+                fp.write(six.text_type(args.job) + "\n")
 
     if args.add:
         newparams = make_cmdline(args.add)
@@ -116,7 +119,7 @@ def make_cmdline(description):
 def list_variables():
     t = vortex.ticket()
     core = load_template(t, '@opjob-variables.tpl')
-    with open(core.srcfile, 'r') as f:
+    with io.open(core.srcfile, 'r') as f:
         for line in f:
             print(line)
 
@@ -165,7 +168,7 @@ def makejob(job):
     def _wrap_launch(jobfile):
         """Launch the **jobfile** script using **extra_wrapper*."""
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
-                   if isinstance(tplconf['rundate'], basestring) else '.')
+                   if isinstance(tplconf['rundate'], six.string_types) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
                                                   tstamp=bronx.stdtypes.date.now().ymdhms,
                                                   appbase=tplconf['appbase'],

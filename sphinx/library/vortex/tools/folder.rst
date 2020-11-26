@@ -58,6 +58,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: WavesBCShell
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FolderShellsGroup
    :show-inheritance:
    :members:

@@ -1,21 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A handful of abstract and generic :class:`DataContent` classes designed to access
+and modify data of a given "Resource".
+
+These classes are not meant to be used directly. To retrieve a
+:class:`DataContent` object on a given "Resource", please use the
+:data:`vortex.data.handlers.Handler.contents` property.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
 
 import collections
 from string import Template
-import copy
-import re
 
 from bronx.fancies import loggers
 import footprints
 from bronx.stdtypes.dictionaries import ReadOnlyDict
 from bronx.stdtypes.xtemplates import DefaultTemplate
 from bronx.syntax.decorators import secure_getattr
-from bronx.stdtypes.date import Date
 
 from vortex import sessions
 
@@ -36,10 +42,10 @@ class DataContent(object):
     _diffable = False
 
     def __init__(self, **kw):
-        self._datafmt   = None
-        self._data      = None
-        self._metadata  = ReadOnlyDict()
-        self._size      = 0
+        self._datafmt = None
+        self._data = None
+        self._metadata = ReadOnlyDict()
+        self._size = 0
         for k, v in six.iteritems(kw):
             self.__dict__['_' + k] = v
 
@@ -274,22 +280,12 @@ class AlmostListContent(DataContent):
 
     # The very simple diff method form DataContent should do the job.
     _diffable = True
-    # Delayed slurp
-    _delayed_slurp = False
 
     def __init__(self, **kw):
         self._maxprint = kw.pop('maxprint', 20)
         super(AlmostListContent, self).__init__(**kw)
-        self._do_delayed_slurp = None
         if self._data is None:
             self._data = list()
-
-    @property
-    def data(self):
-        """The internal data encapsulated."""
-        if self._do_delayed_slurp is not None:
-            self._actual_slurp(self._do_delayed_slurp)
-        return self._data
 
     def __delitem__(self, idx):
         del(self.data[idx])
@@ -337,20 +333,12 @@ class AlmostListContent(DataContent):
     def clear(self):
         """Clear all internal data contents."""
         self._data[:] = []
-        self._do_delayed_slurp = None
-
-    def _actual_slurp(self, container):
-        with container.preferred_decoding(byte=False):
-            self._data.extend(container.readlines())
-            self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     def slurp(self, container):
         """Get data from the ``container``."""
-        if self._delayed_slurp:
-            self._do_delayed_slurp = container
-        else:
-            self._actual_slurp(container)
+        with container.preferred_decoding(byte=False):
+            self._data.extend(container.readlines())
+            self._size = container.totalsize
 
     def rewrite(self, container):
         """Write the list contents in the specified container."""
@@ -398,11 +386,10 @@ class TextContent(AlmostListContent):
             catlist = self[:]
         return '\n'.join([six.text_type(x) for x in catlist])
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             self._data.extend([x.split() for x in container if not x.startswith('#')])
             self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     def formatted_data(self, item):
         """Return a formatted string according to optional internal fmt."""
@@ -430,7 +417,7 @@ class DataRaw(AlmostListContent):
             data = collections.deque(maxlen=window)
         super(DataRaw, self).__init__(data=data, window=window, fmt=fmt)
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             container.rewind()
             end = False
@@ -439,7 +426,6 @@ class DataRaw(AlmostListContent):
                 self._data.append(data)
                 if self._window and len(self._data) >= self._window:
                     end = True
-        self._do_delayed_slurp = None
 
 
 class DataTemplate(DataContent):
@@ -488,10 +474,10 @@ class FormatAdapter(DataContent):
         """
         t = sessions.current()
         t.env.delta(
-            LFI_HNDL_SPEC   = ':1',
-            DR_HOOK_SILENT  = 1,
-            DR_HOOK_NOT_MPI = 1,
-            OMP_NUM_THREADS = 1,
+            LFI_HNDL_SPEC=':1',
+            DR_HOOK_SILENT=1,
+            DR_HOOK_NOT_MPI=1,
+            OMP_NUM_THREADS=1,
         )
         return self
 
@@ -505,16 +491,16 @@ class FormatAdapter(DataContent):
         if self.datafmt:
             with self:
                 self._data = footprints.proxy.dataformat(
-                    filename       = container.abspath,
-                    openmode       = 'r',
-                    fmtdelayedopen = True,
-                    format         = container.actualfmt.upper(),
+                    filename=container.abspath,
+                    openmode='r',
+                    fmtdelayedopen=True,
+                    format=container.actualfmt.upper(),
                 )
                 # Look for a metadatareader object
                 if self._data is not None and footprints.proxy.metadatareaders is not None:
                     mreader = footprints.proxy.metadatareader(
-                        format        = container.actualfmt.upper(),
-                        _emptywarning = False,
+                        format=container.actualfmt.upper(),
+                        _emptywarning=False,
                     )
                     if mreader is not None:
                         mreader.content_init(self._data)
@@ -529,7 +515,7 @@ class MetaDataReader(footprints.FootprintBase):
     container is actually read.
     """
 
-    _abstract  = True
+    _abstract = True
     _collector = ('metadatareader',)
     _footprint = dict(
         info = 'Abstract MetaDataReader',

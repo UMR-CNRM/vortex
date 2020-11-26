@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
-import six
 import io
 import re
 
+import six
+
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-
-from gco.tools import genv
 from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
-
+from gco.tools import genv
 
 #: No automatic export
 __all__ = []
@@ -59,18 +62,87 @@ def slurm_parameters(t, **kw):
     return slurm, kw
 
 
-def gget_resource_exists(t, ggetfile, monthly=False, verbose=False):
+class MonthlyItem(object):
+    r"""
+    Describe a loop-generated family of files for gget.
+
+    The real gget command includes a description of what genv values are monthly (concept
+    extended to any family of loop-generated names), and how to generate all family names.
+    E.g. the line::
+
+        /^clim_\w+\.[\w\-]+\.\b[0-9]+\b$/       .m{01..12}
+
+    means that a genv value matching the RE part ``r'clim_\w+\.[\w\-]+\.\b[0-9]+\b'``,
+    say ``'clim_reunion.t127.01'`` would have the gget command get the 12 files named
+    ``clim_reunion.t127.01.m01`` ``clim_reunion.t127.01.m02`` .. ``clim_reunion.t127.01.m12``.
+    """
+    LOOP_RE = re.compile(r'^(?P<before>.*){(?P<start>\d+)\.\.(?P<stop>\d+)}(?P<after>.*)$')
+
+    def __init__(self, regex, loopdef):
+        if regex[0] == '/':
+            regex = regex[1:]
+        if regex[-1] == '/':
+            regex = regex[:-1]
+        self.regex = re.compile(regex)
+
+        loopmatch = self.LOOP_RE.match(loopdef)
+        if loopmatch is None:
+            raise ValueError('bad loop definition: "{}"'.format(loopdef))
+
+        loopdict = loopmatch.groupdict()
+        start = loopdict['start']
+        stop = loopdict['stop']
+        width = max(len(start), len(stop))
+        self.start = int(start)
+        self.stop = int(stop)
+        self.fmt = loopdict['before'] + '{:0' + str(width) + 'd}' + loopdict['after']
+
+    def is_monthly(self, value):
+        return self.regex.match(value)
+
+    def names(self, value):
+        for num in range(self.start, self.stop + 1):
+            yield value + self.fmt.format(num)
+
+
+class MonthlyHandler(object):
+    """
+    Deal with gget monthly definitions (See also ``MonthlyItem``).
+
+    The configuration is directly taken from the gget command::
+
+        ~martinezs/apps/gco_toolbox/default/conf/gget/extension.conf
+
+    """
+
+    def __init__(self, configuration):
+        conf = configuration.get('monthly', 'gget_monthly').split()
+        self.mdefs = [MonthlyItem(regex, loopdef)
+                      for (regex, loopdef) in zip(conf[0::2], conf[1::2])]
+
+    def mdef(self, value):
+        """
+        Return the first ``MonthlyItem`` matching the value, if any.
+        """
+        for mdef in self.mdefs:
+            if mdef.is_monthly(value):
+                return mdef
+        return None
+
+
+def gget_resource_exists(t, ggetfile, monthly_handler, verbose=False):
     """Check whether a gget resource exists in the current path or not."""
 
     if t.sh.path.exists(ggetfile):
         return True
 
-    if not monthly:
+    # is it a loop-generated resource ?
+    mdef = monthly_handler.mdef(ggetfile)
+    if mdef is None:
         return False
 
     # all monthly files must be present
-    months = [ggetfile + '.m{:02d}'.format(m) for m in range(1, 13)]
-    missing = [month for month in months if not t.sh.path.isfile(month)]
+    missing = [name for name in mdef.names(ggetfile) if not t.sh.path.isfile(name)]
     if missing:
         if verbose:
             print('missing :', missing)
@@ -88,10 +160,12 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
     sh = t.sh
     tg = sh.default_target
     defs = genv.autofill(cycle)
+
     # Configuration handler (untar specific options)
     ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
+    monthly_handler = MonthlyHandler(ggetconfig)
 
-    # Save genv raw output in specified `genvpath` folder
+    # Save the genv raw output in the specified `genvpath` folder
     sh.mkdir(genvpath)
     genvconf = sh.path.join(genvpath, cycle + '.genv')
     with io.open(genvconf, mode='w', encoding='utf-8') as fp:
@@ -112,20 +186,13 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     # Build a list of unique resource names
     ggetnames = set()
-    monthly = set()
-    for (k, v) in six.iteritems(defs):
-        ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
+    for v in defs.values():
         if ' ' in v:
-            vset = set(v.split())
-            ggetnames |= vset
-            if ismonthly:
-                monthly |= vset
+            ggetnames |= set(v.split())
         else:
             ggetnames.add(v)
-            if ismonthly:
-                monthly.add(v)
 
-    # Perform gget on all resources to target directory
+    # Perform a gget on all resources to the target directory
     gcmd = tg.get('gco:ggetcmd', 'gget')
     gpath = tg.get('gco:ggetpath', '')
     ghost = tg.get('gco:ggetarchive', 'hendrix.meteo.fr')
@@ -140,7 +207,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
             if verbose:
                 print(t.line)
                 print(name, '...', end=' ')
-            if gget_resource_exists(t, name, name in monthly, verbose):
+            if gget_resource_exists(t, name, monthly_handler, verbose):
                 if verbose:
                     print('already there')
                     sh.ll(name + '*')
@@ -152,16 +219,17 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
                     sh.spawn([gtool, '-host', ghost, name], output=False)
                     increase += sh.size(name)
                     details['retrieved'].append(name)
-                    if name in monthly:
-                        for month in range(1, 13):
-                            sh.readonly('{}.m{:02d}'.format(name, month))
+                    mdef = monthly_handler.mdef(name)
+                    if mdef is not None:
+                        for generated_name in mdef.names(name):
+                            sh.readonly(generated_name)
                     else:
                         sh.readonlytree(name)
                     if verbose:
                         print('ok')
                         sh.ll(name + '*')
 
-                    if sh.is_tarname(name):
+                    if mdef is None and sh.is_tarname(name):
                         radix = sh.tarname_radix(name)
                         untaropts = ggetconfig.key_untar_properties(name)
                         if verbose:
@@ -203,11 +271,15 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
 
 def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopath='gco/tampon', logpath=None):
-    """
+    r"""
     Remove a frozen cycle: undoes what freeze_cycle did, but without removing
     any file in use by any of the other frozen cycles ("\*.genv" in genvpath).
     """
     sh = t.sh
+
+    # Monthly (loop-generated) configuration handler
+    ggetconfig = GcoStoreConfig(GGET_DEFAULT_CONFIGFILE)
+    monthly_handler = MonthlyHandler(ggetconfig)
 
     def genv_contents(cycle):
         """Return all files and level 0 directories for a cycle."""
@@ -222,16 +294,15 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
 
         # corresponding files or directories
         contents = set()
-        for (k, names) in six.iteritems(genvdict):
-            ismonthly = k.startswith('CLIM_') or k.endswith('_MONTHLY')
+        for names in genvdict.values():
             if ' ' in names:
                 names = names.split()
             else:
                 names = [names]
             for name in names:
-                if ismonthly:
-                    assert isinstance(name, six.string_types)
-                    contents |= {name + '.m{:02d}'.format(m) for m in range(1, 13)}
+                mdef = monthly_handler.mdef(name)
+                if mdef is not None:
+                    contents |= set(mdef.names(name))
                 else:
                     contents.add(name)
                     if sh.is_tarname(name):

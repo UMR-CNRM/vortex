@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import os
@@ -8,8 +12,8 @@ import os
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
-from vortex.data.providers  import Provider
-from vortex.util.config     import GenericConfigParser
+from vortex.data.providers import Provider
+from vortex.util.config import GenericConfigParser
 from vortex.syntax.stdattrs import a_suite, member, namespacefp
 from gco.data.providers import GEnv
 
@@ -226,23 +230,60 @@ class SopranoProvider(Provider):
             info['model'] = 'aromepi'
         elif self.vapp == 'arome' and self.vconf == 'aefrance':
             info['model'] = 'aromeaefr'
-        elif self.vapp == 'mocage':
+        elif self.vapp == 'mocage' and self.vconf == 'surfana':
             info['model'] = 'macc'
+        elif self.vapp == 'mocage' and self.vconf == 'ctbto':
+            info['level_one'] = 'serv'
+            info['level_two'] = 'env'
+            info['level_three'] = 'ctbto'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
+        elif self.vapp == 'arpege' and resource.model == 'ifs':
+            info['model'] = 'restart_cep'
+        elif self.vapp == 'pprod':
+            info['level_one'] = 'previ'
+            info['level_two'] = 'previ_amont'
+            info['level_three'] = 'alpha'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
+
+        elif self.vapp in ('mfwam', 'ww3'):
+            info['level_one'] = 'previ'
+            info['level_two'] = 'mar'
+            if resource.realkind in ('AltidataWave', 'SARdataWave'):
+                if self.vconf == 'globalcep01':
+                    info['level_three'] = 'alti_mfwam'
+                elif self.vconf in ('globalarp02', 'globalarpc02'):
+                    info['level_three'] = 'alti_mfwamarp'
+                sopranomaptag = 'soprano'
+            elif resource.realkind == 'forcing':
+                sopranomaptag = 'soprano@mfwam_forcing'
+                if resource.filling == 'wind':
+                    info['level_three'] = self.vapp
+                    info['level_four'] = self.vconf
+                elif resource.filling == 'currents':
+                    info['level_three'] = 'servbdap'
+                    info['level_four'] = 'courantpps4_mfwamglocep01'
+
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)
+
         else:
             info['model'] = self.vapp
+
         if info['model'] in ATM_LIST_ONE:
-            info['level_one']   = 'modele'
-            info['level_two']   = suite_map.get(self.suite, self.suite)
+            info['level_one'] = 'modele'
+            info['level_two'] = suite_map.get(self.suite, self.suite)
             info['level_three'] = info['model']
         elif info['model'] in ATM_LIST_TWO:
-            info['level_one']   = 'serv'
-            info['level_two']   = 'env'
+            info['level_one'] = 'serv'
+            info['level_two'] = 'env'
             info['level_three'] = info['sys_prod']
 
         elif info['model'] in ATM_LIST_THREE:
             info['level_one'] = 'copernicus'
             if info['cutoff'] == 'production' and info['nativefmt'] == 'grib':
-                info['level_two']  = 'EXT_BDAP_MOCAGE_MACC'
+                info['level_two'] = 'EXT_BDAP_MOCAGE_MACC'
                 info['level_three'] = ''
             elif info['cutoff'] == 'assim' and info['nativefmt'] == 'grib':
                 info['level_two'] = 'EXT_BDAP_MOCAGE_MACC_00'

@@ -219,7 +219,7 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
     def lines(self):
         """Return an array populated with the listing file lines."""
         if self._lines is None:
-            with io.open(self.filename, self.openmode) as f:
+            with io.open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
                 self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
         return self._lines
 

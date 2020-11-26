@@ -1,30 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.data.flow import GeoFlowResource
+import footprints
+
+from vortex.data.flow import GeoFlowResource, GeoPeriodFlowResource
 from vortex.syntax.stdattrs import term_deco
-from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert, overwrite_realkind
 
 #: No automatic export
 __all__ = []
 
 
 class ISP(GeoFlowResource):
+    """Class for Forecasted Satellite Image resource. Obsolete."""
 
-    """
-    Class for Forecasted Satellite Image resource. Obsolete.
-    Used to be an ``isp`` !
-    """
     _footprint = dict(
         info = 'Forecasted Satellite Image',
         attr = dict(
             kind = dict(
-                values = [ 'isp', 'fsi' ]
+                values = ['isp', 'fsi']
             ),
             nativefmt = dict(
-                values = [ 'foo' ],
+                values = ['foo', ],
                 default = 'foo',
             ),
         )
@@ -54,13 +57,13 @@ class _DDHcommon(GeoFlowResource):
         info = 'Diagnostic on Horizontal Domains',
         attr = dict(
             kind = dict(
-                values = [ 'ddh', 'dhf' ],
-                remap = dict( dhf = 'ddh' )
+                values = ['ddh', 'dhf'],
+                remap = dict(dhf='ddh')
             ),
             nativefmt = dict(),
             scope = dict(
-                values = [ 'limited', 'dlimited', 'global', 'zonal' ],
-                remap = dict( limited = 'dlimited' )
+                values = ['limited', 'dlimited', 'global', 'zonal'],
+                remap = dict(limited='dlimited')
             ),
         )
     )
@@ -77,7 +80,7 @@ class DDH(_DDHcommon):
             info = 'Diagnostic on Horizontal Domains',
             attr = dict(
                 nativefmt = dict(
-                    values = [ 'lfi', 'lfa' ],
+                    values = ['lfi', 'lfa'],
                     default = 'lfi',
                 ),
             )
@@ -106,7 +109,7 @@ class DDHpack(_DDHcommon):
         info = 'Diagnostic on Horizontal Domains packed in a single directory',
         attr = dict(
             nativefmt = dict(
-                values = [ 'ddhpack', ],
+                values = ['ddhpack', ],
             ),
         )
     )
@@ -118,3 +121,37 @@ class DDHpack(_DDHcommon):
     @property
     def realkind(self):
         return 'ddhpack'
+
+
+_surfex_diag_decofp = footprints.DecorativeFootprint(
+    info='Diagnostic files outputed by surfex during a model run',
+    attr=dict(
+        kind=dict(
+            values=['diagnostics', ]
+        ),
+        scope=dict(
+        ),
+        model=dict(
+            values=['surfex', ]
+        ),
+        nativefmt=dict(
+            values=['netcdf', 'grib', ],
+            default='netcdf',
+            optional=True
+        ),
+    ),
+    decorator=[namebuilding_append('src', lambda s: s.scope),
+               overwrite_realkind('diagnostics')]
+)
+
+
+class SurfexDiagnostics(GeoFlowResource):
+    """Diagnostic files outputed by surfex during a model run (date/term version)."""
+
+    _footprint = [_surfex_diag_decofp, term_deco]
+
+
+class SurfexPeriodDiagnostics(GeoPeriodFlowResource):
+    """Diagnostic files outputed by surfex during a model run (period version)."""
+
+    _footprint = [_surfex_diag_decofp, ]

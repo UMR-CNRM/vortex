@@ -2,18 +2,19 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+TODO: Module documentation.
+"""
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-import footprints
-
-from vortex.data.stores import Store
+from vortex.data.abstractstores import Store
 from vortex.syntax.stdattrs import compressionpipeline
-
-from common.tools.agt import agt_actual_command
 
 #: No automatic export
 __all__ = []
@@ -48,7 +49,8 @@ class BdpeStore(Store):
 
     def bdpelocate(self, remote, options):
         """Reasonably close to whatever 'remote location' could mean.
-           e.g.: bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
+
+        e.g.: ``bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term``
         """
         return self.scheme + '://' + self.netloc + remote['path']
 
@@ -78,33 +80,48 @@ class BdpeStore(Store):
         _, targetmix, str_date, more = remote['path'].split('/')
         p_target, f_target, s_archive = targetmix.split('_')
         productid, str_term = more[5:].split('+')
-        args = '{id} {date} {term} {local}'.format(
-            id    = productid,
-            date  = date.Date(str_date).ymdhms,  # yyyymmddhhmmss
-            term  = date.Time(str_term).fmtraw,  # HHHHmm
-            local = local,
-        )
+        if str_date == 'most_recent':
+            bdpe_date = '/'
+        else:
+            bdpe_date = date.Date(str_date).ymdhms
+        bdpe_term = date.Time(str_term).fmtraw
+        args = [
+            productid,  # id
+            bdpe_date,  # date: yyyymmddhhmmss
+            bdpe_term,  # term: HHHHmm
+            local,      # local filename
+        ]
         extraenv = dict(
             BDPE_CIBLE_PREFEREE=p_target,
             BDPE_CIBLE_INTERDITE=f_target
         )
         if s_archive == 'True':
             extraenv['BDPE_LECTURE_ARCHIVE_AUTORISEE'] = 'oui'
-        actual_command = agt_actual_command(self.system, 'agt_lirepe', args, extraenv=extraenv)
 
-        logger.debug('lirepe_cmd: %s', actual_command)
+        wsinterpreter = self.system.default_target.get('bdpe:wsclient_interpreter', None)
+        wscommand = self.system.default_target.get('bdpe:wsclient_path', None)
+        if wscommand is None:
+            raise RuntimeError('bdpe:wsclient_path has to be set in the target config')
 
-        rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
+        args.insert(0, wscommand)
+        if wsinterpreter is not None:
+            args.insert(0, wsinterpreter)
+
+        logger.debug('lirepe_cmd: %s', " ".join(args))
+
+        with self.system.env.delta_context(**extraenv):
+            rc = self.system.spawn(args, output=False, fatal=False)
         rc = rc and self.system.path.exists(local)
 
         diagfile = local + '.diag'
         if not rc:
             logger.warning('Something went wrong with the following command: %s',
-                           actual_command)
+                           " ".join(args))
+        if not rc or bdpe_date == '/':
             if self.system.path.exists(diagfile):
                 logger.warning('The %s file is:', diagfile)
                 self.system.cat(diagfile)
-        elif self._actual_cpipeline:
+        if rc and self._actual_cpipeline:
             # Deal with compressed files in the BDPE using the optional attribute
             # store_compressed of the BDPE store.
             tempfile = local + self._actual_cpipeline.suffix
@@ -113,6 +130,9 @@ class BdpeStore(Store):
             rc = rc and self.system.path.exists(local)
             if not rc:
                 logger.warning('Something went wrong while uncompressing the file %s.', tempfile)
+
+        # Final step : deal with format specific packing
+        rc = rc and self.system.forceunpack(local, fmt=options.get('fmt'))
 
         if self.system.path.exists(diagfile):
             self.system.remove(diagfile)

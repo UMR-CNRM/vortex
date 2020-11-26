@@ -1,16 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+"""
+TODO: Module documentation.
+"""
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 
 from bronx.fancies import loggers
-
-from vortex.data.providers import Provider
-from vortex.util.config import GenericConfigParser
-from vortex.syntax.stdattrs import namespacefp, DelayedEnvValue, Namespace
 from bronx.stdtypes.date import Time
+from vortex.data.providers import Provider
+from vortex.syntax.stdattrs import DelayedEnvValue, Namespace, namespacefp
+from vortex.util.config import GenericConfigParser
 
 #: No automatic export
 __all__ = []
@@ -45,6 +48,9 @@ class BdpeProvider(Provider):
 
     Canvas of a complete url:
         bdpe://bdpe.archive.fr/EXPE/date/BDPE_num+term
+
+    When a resource has no ``date`` attribute, the most recent data
+    is extracted from the BDPE (might be used for Alert Models).
     """
 
     _footprint = [
@@ -118,12 +124,17 @@ class BdpeProvider(Provider):
 
     def pathname(self, resource):
         """Something like 'PREFERRED_FORBIDDEN_ARCHIVE/date/'."""
+        try:
+            requested_date = resource.date.vortex()
+        except AttributeError:
+            requested_date = 'most_recent'
         return '{}_{}_{}/{}'.format(self.preferred_target, self.forbidden_target,
-                                    self.allow_archive, resource.date.vortex())
+                                    self.allow_archive, requested_date)
 
     def uri(self, resource):
-        """Overridden to check the resource attributes against
-           the BDPE product description from the .ini file.
+        """
+        Overridden to check the resource attributes against
+        the BDPE product description from the .ini file.
         """
         # check that the product is described in the configuration file
         if not self._actual_config.has_section(self.bdpeid):

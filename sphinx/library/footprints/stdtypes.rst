@@ -42,4 +42,3 @@ Basic types
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   

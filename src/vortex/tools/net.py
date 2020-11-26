@@ -13,6 +13,7 @@ import collections
 import ftplib
 import functools
 import io
+import itertools
 import operator
 import random
 import re
@@ -24,7 +25,9 @@ from collections import namedtuple
 from datetime import datetime
 
 import six
+from six.moves.urllib import request as urlrequest
 from six.moves.urllib import parse as urlparse
+
 
 from bronx.fancies import loggers
 from bronx.net.netrc import netrc
@@ -41,14 +44,13 @@ DEFAULT_FTP_PORT = ftplib.FTP_PORT
 def uriparse(uristring):
     """Parse the specified ``uristring`` as a dictionary including keys:
 
-     * scheme
-     * netloc
-     * port
-     * query
-     * username
-     * password
+    * scheme
+    * netloc
+    * port
+    * query
+    * username
+    * password
     """
-
     (realscheme, other) = uristring.split(':', 1)
     rp = urlparse.urlparse('http:' + other)
     uridict = rp._asdict()
@@ -77,6 +79,37 @@ def uriparse(uristring):
 def uriunparse(uridesc):
     """Delegates to :mod:`urlparse` the job to unparse the given description (as a dictionary)."""
     return urlparse.urlunparse(uridesc)
+
+
+def http_post_data(url, data, ok_statuses=(), proxies=None, headers={}):
+    """Make a http POST request, encoding **data**."""
+    if not isinstance(data, bytes if six.PY3 else str):
+        data = urlparse.urlencode(data).encode('utf-8')
+    handlers = []
+    if isinstance(proxies, dict):
+        handlers.append(urlrequest.ProxyHandler(proxies))
+    if isinstance(proxies, (list, tuple)):
+        handlers.append(urlrequest.ProxyHandler({'http': proxies}))
+    opener = urlrequest.build_opener(* handlers)
+    req = urlrequest.Request(url=url, data=data, headers=headers)
+    try:
+        req_f = opener.open(req)
+    except Exception as e:
+        try:  # ignore UnboundLocalError if req_f has not been created yet
+            req_f.close()
+        finally:
+            raise e
+    else:
+        try:
+            req_rc = req_f.getcode()
+            req_info = req_f.info()
+            req_data = req_f.read().decode('utf-8')
+            if ok_statuses:
+                return req_rc in ok_statuses, req_rc, req_info, req_data
+            else:
+                return 200 <= req_rc < 400, req_rc, req_info, req_data
+        finally:
+            req_f.close()
 
 
 def netrc_lookup(logname, hostname, nrcfile=None):
@@ -214,8 +247,9 @@ class ExtendedFtplib(object):
     def close(self):
         """Proxy to ftplib :meth:`ftplib.FTP.close`."""
         self.stderr('close')
+        rc = True
         if not self.closed:
-            rc = self._ftplib.close()
+            rc = self._ftplib.close() or True
             self._closed = True
             self._deleted = datetime.now()
         return rc
@@ -598,7 +632,7 @@ class StdFtp(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
         self.close()
 
 
@@ -698,7 +732,7 @@ class AutoRetriesFtp(StdFtp):
         Wraps the *func* function in order to implement a retry on failure
         mechanism.
 
-        :param object func: Any callable that should be wrapped (usually a function)
+        :param callable func: Any callable that should be wrapped (usually a function)
         :param int retrycount: The wanted retry count (`self.retrycount_default` if omitted)
         :param int retrydelay: The delay between retries (`self.retrydelay_default` if omitted)
         :param list exceptions_extras: Extra exceptions to be catch during the retry
@@ -1040,7 +1074,8 @@ class Ssh(object):
 
     def cocoon(self, destination):
         """Create the remote directory to contain ``destination``.
-           Return False on failure.
+
+        Return ``False`` on failure.
         """
         remote_dir = self.sh.path.dirname(destination)
         if remote_dir == '':
@@ -1090,7 +1125,7 @@ class Ssh(object):
         return source, destination
 
     def scpput(self, source, destination, scpopts=''):
-        """Send ``source`` to ``destination``.
+        r"""Send ``source`` to ``destination``.
 
         - ``source`` is a single file or a directory, not a pattern (no '\*.grib').
         - ``destination`` is the remote name, unless it ends with '/', in
@@ -1140,7 +1175,7 @@ class Ssh(object):
         return rc
 
     def scpget(self, source, destination, scpopts='', isadir=False):
-        """Send ``source`` to ``destination``.
+        r"""Send ``source`` to ``destination``.
 
         - ``source`` is the remote name, not a pattern (no '\*.grib').
         - ``destination`` is a single file or a directory, unless it ends with
@@ -1180,8 +1215,9 @@ class Ssh(object):
         return rc
 
     def get_permissions(self, source):
-        """Convenience method to retrieve the permissions
-           of a file/dir (in a form suitable for chmod).
+        """
+        Convenience method to retrieve the permissions of a file/dir (in a form
+        suitable for chmod).
         """
         mode = self.sh.stat(source).st_mode
         return stat.S_IMODE(mode)
@@ -1310,7 +1346,7 @@ class ActiveSshTunnel(object):
     def __init__(self, sh, activeprocess, entranceport, finaldestination, finalport):
         """
         :param Popen activeprocess: The active tunnel process.
-        :param int entraceport: Tunnel's entrance port.
+        :param int entranceport: Tunnel's entrance port.
         :param str finaldestination: Tunnel's final destination.
         :param int finalport: Tunnel's destination port.
 
@@ -1348,7 +1384,7 @@ class ActiveSshTunnel(object):
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # @UnusedVariable
         self.close()
 
 
@@ -1478,13 +1514,16 @@ class AssistedSsh(Ssh):
         >>> print(ssh3, ssh3.remote)  # Pick one randomly
         'beaufixlogin0'
         >>> ssh3.execute("false")
-        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:00][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=2/3)...
-        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:01][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=3/3)...
-        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (3) was reached...
         False
@@ -1493,7 +1532,8 @@ class AssistedSsh(Ssh):
 
         >>> ssh4 = AssistedSsh(sh, 'network', virtualnode=True,  fatal=True)
         >>> ssh4.execute("false")
-        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]: Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+        # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
+            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (1) was reached...
         RuntimeError: Could not execute the SSH command.
@@ -1509,7 +1549,7 @@ class AssistedSsh(Ssh):
 
     def __init__(self, sh, hostname, logname=None, sshopts=None, scpopts=None,
                  maxtries=1, triesdelay=1, virtualnode=False, permut=True,
-                 fatal=False, mandatory_hostcheck=False):
+                 fatal=False, mandatory_hostcheck=True):
         """
         :param System sh: The :class:`System` object that is to be used.
         :param hostname: The target hostname(s).
@@ -1526,11 +1566,13 @@ class AssistedSsh(Ssh):
                             being used.
         :param bool fatal: If True, a RuntimeError exception is raised whenever
                            something fails.
-        :param mandatory_hostcheck: If True, the hostname is always checked
-                                    prior to being used for the real Ssh command.
+        :param mandatory_hostcheck: If True and several host names are provided,
+                                    the hostname is always checked prior to being
+                                    used for the real Ssh command. When a single
+                                    host name is provided, such a check is never
+                                    performed.
         """
         super(AssistedSsh, self).__init__(sh, hostname, logname, sshopts, scpopts)
-        self._maxtries = maxtries
         self._triesdelay = triesdelay
         self._virtualnode = virtualnode
         self._permut = permut
@@ -1543,6 +1585,12 @@ class AssistedSsh(Ssh):
         self._fatal_in_progress = False
         self._retries = 0
         self._targets = self._setup_targets()
+        self._targets_iter = itertools.cycle(self._targets)
+        if not self._mandatory_hostcheck and len(self._targets) > 1:
+            # Try at least one time with each of the possible targets
+            self._maxtries = maxtries + len(self._targets) - 1
+        else:
+            self._maxtries = maxtries
         self._chosen_target = None
 
     def _setup_targets(self):
@@ -1574,21 +1622,25 @@ class AssistedSsh(Ssh):
     @_check_fatal
     @_tryagain
     def remote(self):
-        """hostname to use for this kind of remote execution."""
-        if len(self.targets) == 1 and not self._mandatory_hostcheck:
+        """Hostname to use for this kind of remote execution."""
+        if len(self.targets) == 1:
             # This is simple enough, do not bother testing...
             self._chosen_target = self.targets[0]
-        if self._chosen_target is None:
-            for guess in self.targets:
-                cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
-                try:
-                    self.sh.spawn(cmd, output=False, silent=True)
-                except Exception:
-                    pass
-                else:
-                    self._chosen_target = guess
-                    break
-        return self._chosen_target
+        # Ok, let's take self._mandatory_hostcheck into account
+        if self._mandatory_hostcheck:
+            if self._chosen_target is None:
+                for guess in self.targets:
+                    cmd = [self._sshcmd, ] + self._sshopts + [guess, 'true', ]
+                    try:
+                        self.sh.spawn(cmd, output=False, silent=True)
+                    except Exception:
+                        pass
+                    else:
+                        self._chosen_target = guess
+                        break
+            return self._chosen_target
+        else:
+            return next(self._targets_iter)
 
 
 _ConnectionStatusAttrs = ('Family', 'LocalAddr', 'LocalPort', 'DestAddr', 'DestPort', 'Status')
@@ -1608,14 +1660,18 @@ class AbstractNetstats(object):
 
     @abc.abstractmethod
     def tcp_netstats(self):
-        """Informations on active TCP connections (returns a list of
-        :class:`TcpConnectionStatus` objects.)"""
+        """Informations on active TCP connections.
+
+        Returns a list of :class:`TcpConnectionStatus` objects.
+        """
         pass
 
     @abc.abstractmethod
     def udp_netstats(self):
-        """Informations on active UDP connections (returns a list of
-        :class:`UdpConnectionStatus` objects.)"""
+        """Informations on active UDP connections.
+
+        Returns a list of :class:`UdpConnectionStatus` objects.
+        """
         pass
 
     def available_localport(self):
@@ -1676,10 +1732,14 @@ class LinuxNetstats(AbstractNetstats):
             netstats.readline()  # Skip the header line
             tmpports[self._LINUX_AF_INET4] = [re.split(r':\b|\s+', x.strip())[1:6]
                                               for x in netstats.readlines()]
-        with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
-            netstats.readline()  # Skip the header line
-            tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
-                                              for x in netstats.readlines()]
+        try:
+            with io.open(self._LINUX_PORTS_V6[proto], 'r') as netstats:
+                netstats.readline()  # Skip the header line
+                tmpports[self._LINUX_AF_INET6] = [re.split(r':\b|\s+', x.strip())[1:6]
+                                                  for x in netstats.readlines()]
+        except IOError:
+            # Apparently, no IPv6 support on this machine
+            tmpports[self._LINUX_AF_INET6] = []
         tmpports = [[rclass(family,
                             self._ip_from_hex(l[0], family), int(l[1], 16),
                             self._ip_from_hex(l[2], family), int(l[3], 16),

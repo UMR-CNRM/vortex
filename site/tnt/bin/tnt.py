@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
 """
 TNT - The Namelist Tool: a namelist updater.
 """
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import argparse
 import io
@@ -46,12 +46,17 @@ if __name__ == '__main__':
                             type=str,
                             help='path to a file that contains a namelist delta.')
     directives.add_argument('-c',
-                        dest='check_namelist',
-                        action='store_true',
-                        help='check that the namelist is ok and do a first order sorting. \
-                              This option is equivalent to. \
-                              "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
-                        default=False)
+                            dest='check_namelist',
+                            action='store_true',
+                            help='check that the namelist is ok and do a first order sorting. \
+                                  This option is equivalent to. \
+                                  "tnt.py -d void.py -S NAMELIST" with an empty void.py directive file.',
+                            default=False)
+    directives.add_argument('--squeeze',
+                            dest='squeeze',
+                            action='store_true',
+                            help='squeeze the namelist: remove empty blocks.',
+                            default=False)
     parser.add_argument('-i',
                         action='store_true',
                         dest='in_place',
@@ -121,17 +126,18 @@ if __name__ == '__main__':
         if args.directives:
             directives = tnt.config.read_directives(args.directives)
         else:
-            if args.check_namelist:
+            if args.check_namelist or args.squeeze:
                 directives = tnt.config.TntDirective()
             else:
                 with io.open(args.namdelta, 'r') as fhnam:
                     directives = tnt.config.TntDirective(namdelta=fhnam.read())
         for nam in args.namelists:
-            tnt.util.set_verbose(args.verbose, nam)
-            tnt.util.process_namelist(nam, directives,
-                                      sorting=sorting,
-                                      in_place=args.in_place,
-                                      outfilename=args.outfilename,
-                                      blocks_ref=args.blocks_ref,
-                                      doctor=args.doctor,
-                                      keep_index=args.keep_index)
+            with tnt.util.set_verbose(args.verbose, nam):
+                tnt.util.process_namelist(nam, directives,
+                                          sorting=sorting,
+                                          in_place=args.in_place,
+                                          outfilename=args.outfilename,
+                                          blocks_ref=args.blocks_ref,
+                                          doctor=args.doctor,
+                                          keep_index=args.keep_index,
+                                          squeeze=args.squeeze)

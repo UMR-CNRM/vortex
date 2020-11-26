@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents to work with Observational DataBases.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 import six
 
@@ -17,15 +21,15 @@ from bronx.system.memory import convert_bytes_in_unit
 import footprints
 from taylorism import Boss
 
-from vortex.tools.systems   import ExecutionError
+from vortex.tools.systems import ExecutionError
 
 from vortex.algo.components import Parallel, ParaBlindRun
 from vortex.tools.parallelism import VortexWorkerBlindRun
 
 from gco.syntax.stdattrs import arpifs_cycle
 
-from common.data.obs        import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
-from common.tools           import odb, drhook
+from common.data.obs import ObsMapContent, ObsMapItem, ObsRefContent, ObsRefItem
+from common.tools import odb, drhook
 
 
 #: No automatic export
@@ -107,9 +111,10 @@ class Bateur(VortexWorkerBlindRun):
                                   mem_real=realMem,
                                   mem_ratio=memRatio,
                                   time_expected=self.expected_time,
-                                  time_start = start_time,
+                                  time_start=start_time,
                                   time_real=real_time,
-                                  time_ratio=(real_time / float(self.expected_time)) if self.expected_time > 0 else None,
+                                  time_ratio=(real_time / float(self.expected_time)
+                                              if self.expected_time > 0 else None),
                                   sched_id=self.scheduler_ticket,
                                   )
 
@@ -172,6 +177,15 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 optional = True,
                 type     = int,
             ),
+            dataid = dict(
+                info     = ("The ODB databases created by Bator contain an identifier " +
+                            "that is specified as a command-line argument. This " +
+                            "switch tweaks the way the command-line argument is " +
+                            "generated."),
+                values   = ['empty', 'hh'],
+                default  = 'hh',
+                optional = True
+            ),
             ntasks = dict(
                 info     = ("The maximum number of allowed concurrent task for "
                             "parallel execution."),
@@ -217,12 +231,12 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
 
     def input_obs(self):
         """Find out which are the usable observations."""
-        obsall = [x for x in self.context.sequence.effective_inputs(kind = 'observations')]
+        obsall = [x for x in self.context.sequence.effective_inputs(kind='observations')]
         obsall.sort(key=lambda s: s.rh.resource.part)
 
         # Looking for valid raw observations
         sizemin = self.env.VORTEX_OBS_SIZEMIN or 80
-        obsok   = list()
+        obsok = list()
         for secobs in obsall:
             rhobs = secobs.rh
             if rhobs.resource.nativefmt == 'odb':
@@ -251,7 +265,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
     def _retrieve_refdatainfo(self, obslist):
         """Look for refdata resources and link their content with the obslist."""
         refmap = dict()
-        refall = list(self.context.sequence.effective_inputs(kind = 'refdata'))
+        refall = list(self.context.sequence.effective_inputs(kind='refdata'))
         for rdata in refall:
             logger.info('Inspect refdata ' + rdata.rh.container.localpath())
             self.system.subtitle(rdata.role)
@@ -262,7 +276,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         # Build actual refdata
         for obs in obslist:
             thispart = obs.rh.resource.part
-            thisfmt  = obs.rh.container.actualfmt.lower()
+            thisfmt = obs.rh.container.actualfmt.lower()
             logger.info(' '.join(('Building information for [', thisfmt, '/', thispart, ']')))
 
             # Gather equivalent refdata lines
@@ -316,7 +330,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
 
         # Looking for obs maps
         mapitems = list()
-        for omsec in self.context.sequence.effective_inputs(kind = 'obsmap'):
+        for omsec in self.context.sequence.effective_inputs(kind='obsmap'):
             logger.info(' '.join(('Gathering information from map',
                                   omsec.rh.container.localpath())))
             sh.subtitle(omsec.role)
@@ -378,13 +392,13 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         # Let ancestors handling most of the env setting
         super(Raw2ODBparallel, self).prepare(rh, opts)
         self.env.update(
-            BATOR_NBPOOL = self.npool,
-            BATODB_NBPOOL = self.npool,
-            BATOR_NBSLOT = self.slots.nslot,
-            BATODB_NBSLOT = self.slots.nslot, )
+            BATOR_NBPOOL=self.npool,
+            BATODB_NBPOOL=self.npool,
+            BATOR_NBSLOT=self.slots.nslot,
+            BATODB_NBSLOT=self.slots.nslot,)
         self.env.default(
-            TIME_INIT_YYYYMMDD = self.date.ymd,
-            TIME_INIT_HHMMSS   = self.date.hm + '00', )
+            TIME_INIT_YYYYMMDD=self.date.ymd,
+            TIME_INIT_HHMMSS=self.date.hm + '00',)
         if self.lamflag:
             for lamvar in ('BATOR_LAMFLAG', 'BATODB_LAMFLAG'):
                 logger.info('Setting env %s = %d', lamvar, 1)
@@ -395,6 +409,13 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 nam.rh.contents.setmacro('MEMBER', self.member)
                 logger.info('Setup macro MEMBER=%s in %s', self.member, nam.rh.container.actualpath())
                 nam.rh.save()
+
+    def spawn_command_options(self):
+        """Any data useful to build the command line."""
+        opts_dict = super(Raw2ODBparallel, self).spawn_command_options()
+        opts_dict['dataid'] = self.dataid
+        opts_dict['date'] = self.date
+        return opts_dict
 
     def _default_pre_execute(self, rh, opts):
         """Change default initialisation to use LongerFirstScheduler"""
@@ -407,13 +428,15 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         self._boss.make_them_work()
 
     def execute(self, rh, opts):
-        """For each base, a directory is created such that each worker works in his directory.
-        Symlinks are created into these working directories. """
+        """
+        For each base, a directory is created such that each worker works in his
+        directory. Symlinks are created into these working directories.
+        """
 
         sh = self.system
         cycle = rh.resource.cycle
 
-        batnam = [x.rh for x in self.context.sequence.effective_inputs(role = 'NamelistBatodb')]
+        batnam = [x.rh for x in self.context.sequence.effective_inputs(role='NamelistBatodb')]
         # Give a glance to the actual namelist
         if batnam:
             sh.subtitle('Namelist Raw2ODB')
@@ -481,7 +504,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                 else:
                     pconst = (999999., 1.)
                     offsets = (0., 0.)
-                bTime = (odb_input_size * pconst[1]  / 1048576) + offsets[1]
+                bTime = (odb_input_size * pconst[1] / 1048576) + offsets[1]
                 bMemory = odb_input_size * pconst[0] + (offsets[0] * 1024 * 1024)
                 bMemory = bMemory / 1024. / 1024.
                 if bMemory > self.effective_maxmem:
@@ -522,6 +545,9 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
                           if (sh.path.isdir('ECMA.' + x.odb) and
                               sh.path.isdir('ECMA.' + x.odb + '/1'))]
 
+        # At least one non-empty database is needed...
+        self.algoassert(self.obsmapout, "At least one non-empty ODB database is expected")
+
         # Generate the output bator_map
         with io.open('batodb_map.out', 'w') as fd:
             for x in sorted(self.obsmapout):
@@ -530,7 +556,7 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         # Generate a global refdata (if cycle allows it and if possible)
         if rh.resource.cycle < 'cy42_op1':
             rdrh_dict = {y.rh.resource.part: y.rh
-                         for y in self.context.sequence.effective_inputs(kind = 'refdata')
+                         for y in self.context.sequence.effective_inputs(kind='refdata')
                          if y.rh.resource.part != 'all'}
             with io.open('refdata_global', 'w') as rdg:
                 for x in sorted(self.obsmapout):
@@ -608,6 +634,9 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
                 optional = True,
                 default  = 'mask4x4.txt',
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -644,9 +673,9 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
 
         # Some extra settings
         self.env.update(
-            TO_ODB_CANARI            = 0,
-            TO_ODB_REDUC             = self.env.TO_ODB_REDUC or 1,
-            TO_ODB_SETACTIVE         = 1,
+            TO_ODB_CANARI=0,
+            TO_ODB_REDUC=self.env.TO_ODB_REDUC or 1,
+            TO_ODB_SETACTIVE=1,
         )
 
         # Let ancesters handling most of the env setting
@@ -655,20 +684,20 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     def spawn_command_options(self):
         """Prepare command line options to binary."""
         return dict(
-            dbin     = self.layout_in,
-            dbout    = self.layout_new,
-            npool    = self.npool,
-            nslot    = self.slots.nslot,
-            date     = self.date,
-            masksize = 4,
+            dbin=self.layout_in,
+            dbout=self.layout_new,
+            npool=self.npool,
+            nslot=self.slots.nslot,
+            date=self.date,
+            masksize=4,
         )
 
     def execute(self, rh, opts):
-        """ to mask input."""
+        """To mask input."""
 
         sh = self.system
 
-        mask = [x.rh for x in self.context.sequence.effective_inputs(kind = 'atmsmask')]
+        mask = [x.rh for x in self.context.sequence.effective_inputs(kind='atmsmask')]
         if not mask:
             raise ValueError('Could not find any MASK input')
 
@@ -698,6 +727,64 @@ class OdbAverage(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         super(OdbAverage, self).postfix(rh, opts)
 
 
+class OdbCompress(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
+    """Take a screening ODB ECMA database and create the compressed CCMA database."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['odbcompress'],
+            ),
+            ioassign = dict(),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
+        )
+    )
+
+    def prepare(self, rh, opts):
+        """Find any ODB candidate in input files and fox ODB env accordingly."""
+
+        obsall = [x for x in self.lookupodb() if x.rh.resource.layout.lower() == 'ecma']
+        if len(obsall) > 1:
+            obsvirtual = [o for o in obsall if o.rh.resource.part == 'virtual']
+            if len(obsvirtual) != 1:
+                raise ValueError('One and only one virtual database must be provided')
+            ecma = obsvirtual[0]
+        elif len(obsall) == 1:
+            ecma = obsall[0]
+        else:
+            raise ValueError('No ECMA database provided')
+
+        # First create a fake CCMA
+        self.layout_new = 'ccma'
+        ccma_path = self.odb_create_db(self.layout_new)
+        self.odb.fix_db_path(self.layout_new, ccma_path)
+
+        self.layout_in = ecma.rh.resource.layout.upper()
+        ecma_path = self.system.path.abspath(ecma.rh.container.localpath())
+        self.odb.fix_db_path(self.layout_in, ecma_path)
+
+        self.odb.ioassign_gather(ecma_path, ccma_path)
+
+        self.odb.create_poolmask(self.layout_new, ccma_path)
+
+        self.odb_rw_or_overwrite_method(* obsall)
+
+        # Let ancesters handling most of the env setting
+        super(OdbCompress, self).prepare(rh, opts)
+
+    def spawn_command_options(self):
+        """Prepare command line options to binary."""
+        return dict(
+            dbin=self.layout_in,
+            dbout=self.layout_new,
+            npool=self.npool,
+            nslot=self.slots.nslot,
+            date=self.date,
+        )
+
+
 class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Report some information from post-minim CCMA to post-screening ECMA base."""
 
@@ -711,6 +798,9 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
                 value    = ['ecma', 'ccma', 'CCMA', 'ECMA'],
                 remap    = dict(CCMA ='ccma', ECMA = 'ecma'),
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -742,7 +832,7 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         # Set actual layout and path
         ecma = obsscr_virtual.pop(0)
         ccma = obscompressed.pop(0)
-        self.layout_screening  = ecma.rh.resource.layout
+        self.layout_screening = ecma.rh.resource.layout
         self.layout_compressed = ccma.rh.resource.layout
         self.layout_fcma = (self.layout_compressed if self.fcmalayout is None
                             else self.fcmalayout)
@@ -766,12 +856,12 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     def spawn_command_options(self):
         """Prepare command line options to binary."""
         return dict(
-            dbin     = self.layout_compressed,
-            dbout    = self.layout_screening,
-            npool    = self.npool,
-            nslot    = self.slots.nslot,
-            date     = self.date,
-            fcma     = self.layout_fcma,
+            dbin=self.layout_compressed,
+            dbout=self.layout_screening,
+            npool=self.npool,
+            nslot=self.slots.nslot,
+            date=self.date,
+            fcma=self.layout_fcma,
         )
 
 
@@ -784,6 +874,9 @@ class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
             kind = dict(
                 values = ['flagscomp'],
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         ),
     )
 
@@ -791,8 +884,8 @@ class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         """Spawn the binary for each of the input databases."""
         # Look for the input databases
         input_databases = self.context.sequence.effective_inputs(
-            role = 'ECMA',
-            kind = 'observations',
+            role='ECMA',
+            kind='observations',
         )
         # Check that there is at least one database
         if len(input_databases) < 1:

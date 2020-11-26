@@ -8,6 +8,7 @@
         cutoff: assim
         cycle: hycom02_hycom@ang-main.04
         date: 2018010100
+        forcage: aro
         geometry: hycomang2
         gnamespace: gco.multi.fr
         model: hycom

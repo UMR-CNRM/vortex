@@ -65,13 +65,13 @@ def drawingfunction(options):
     else:
         raise FunctionStoreCallbackError("no resource handler here :-(")
     # NB: The result have to be a file like object !
-    outdict = dict(vapp = rhdict['provider'].get('vapp', None),
-                   vconf = rhdict['provider'].get('vconf', None),
-                   cutoff = rhdict['resource'].get('cutoff', None),
-                   date = rhdict['resource'].get('date', None),
-                   resource_kind = rhdict['resource'].get('kind', None),
-                   drawing = tirage,
-                   population = population)
+    outdict = dict(vapp=rhdict['provider'].get('vapp', None),
+                   vconf=rhdict['provider'].get('vconf', None),
+                   cutoff=rhdict['resource'].get('cutoff', None),
+                   date=rhdict['resource'].get('date', None),
+                   resource_kind=rhdict['resource'].get('kind', None),
+                   drawing=tirage,
+                   population=population)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
     return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))
@@ -103,7 +103,7 @@ def _checkingfunction_dict(options):
             raise FunctionStoreCallbackError('checkrole is not properly formatted')
         try:
             return helpers.colorfull_input_checker(nbmin, checklist, mandatory=mandatorylist,
-                                                   fakecheck = options.get('fakecheck', False))
+                                                   fakecheck=options.get('fakecheck', False))
         except helpers.InputCheckerError as e:
             raise FunctionStoreCallbackError('The input checher failed ({!s})'.format(e))
     else:
@@ -128,12 +128,12 @@ def checkingfunction(options):
     """
     rhdict = options.get('rhandler', None)
     avail_list = _checkingfunction_dict(options)
-    outdict = dict(vapp = rhdict['provider'].get('vapp', None),
-                   vconf = rhdict['provider'].get('vconf', None),
-                   cutoff = rhdict['resource'].get('cutoff', None),
-                   date = rhdict['resource'].get('date', None),
-                   resource_kind = rhdict['resource'].get('kind', None),
-                   population = avail_list)
+    outdict = dict(vapp=rhdict['provider'].get('vapp', None),
+                   vconf=rhdict['provider'].get('vconf', None),
+                   cutoff=rhdict['resource'].get('cutoff', None),
+                   date=rhdict['resource'].get('date', None),
+                   resource_kind=rhdict['resource'].get('kind', None),
+                   population=avail_list)
     if rhdict['provider'].get('experiment', None) is not None:
         outdict['experiment'] = rhdict['provider']['experiment']
     return six.BytesIO(json.dumps(outdict, indent=4).encode(encoding='utf_8'))

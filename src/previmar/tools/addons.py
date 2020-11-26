@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.addons import AddonGroup
@@ -24,5 +28,5 @@ class MarineAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_marine',  # IO polling
+    _addonslist = ('iopoll_marine', 'iopoll_waves',  # IO polling
                    )

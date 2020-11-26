@@ -12,7 +12,11 @@
 Iterator functions
 ------------------
 
+.. autofunction:: pcn
+
 .. autofunction:: izip_pcn
+
+.. autofunction:: interleave
 
 
 .. hints

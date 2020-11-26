@@ -37,12 +37,12 @@ def set_after(visibilityref, *args):
         visibility.insert(tag=newpriority, after=visibilityref)
 
 
-def _formating_basic(fp, abstractfpobj = False):  # @UnusedVariable
+def _formating_basic(fp, abstractfpobj=False):  # @UnusedVariable
     """Just use the default TxTDumper to generate a raw documentation."""
     return "\n\n    Footprint::\n\n" + fp.nice()
 
 
-def _formating_sphinx_v1(fp, abstractfpobj = False):
+def _formating_sphinx_v1(fp, abstractfpobj=False):
     """Create a docstring that will hopefully be nice in Sphinx."""
     indent = ' ' * 4  # Default indentation
     dumper = dump.OneLineTxtDumper(tag='sphinxdumper')
@@ -143,4 +143,4 @@ _formating_styles = {1: _formating_basic,
 
 def format_docstring(fp, formating_style, abstractfpobj=False):
     """Call the appropriate formatting function given *formating_style*."""
-    return _formating_styles.get(formating_style, 1)(fp, abstractfpobj)
+    return _formating_styles.get(formating_style, _formating_basic)(fp, abstractfpobj)

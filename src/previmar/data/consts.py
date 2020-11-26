@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -36,7 +41,7 @@ class GenvUsageModelResource(GenvModelResource):
             if re.search('(_TGZ$)', self.gvar):
                 usage_key = re.sub('(_TGZ$)', ('_' + self.usage + '_TGZ').upper(), self.gvar)
             else:
-                usage_key = ( self.gvar + '_' + self.usage).upper()
+                usage_key = (self.gvar + '_' + self.usage).upper()
         else:
             usage_key = self.gvar
         return usage_key
@@ -103,7 +108,7 @@ class SurgesNativeGrid(GenvModelResource):
             info = 'Static grid forcing for a surges model and BottomFriction if variable',
             attr = dict(
                 kind = dict(
-                    values  = [ 'SurgesNativeGrid', 'SurgesForcingData', 'BottomFriction'],
+                    values  = ['SurgesNativeGrid', 'SurgesForcingData', 'BottomFriction'],
                 ),
                 gvar = dict(
                     default = '[model]_[fields]_[gdomain]_tgz',
@@ -228,3 +233,76 @@ class CouplingGridOasis(GenvUsageModelResource):
     @property
     def realkind(self):
         return 'CouplingGridOasis'
+
+
+class AltimetryPreproc(GenvModelResource):
+    """Thresholds for altimeter preprocessing."""
+    _footprint = dict(
+        info = 'Thresholds for altimeter preprocessing',
+        attr = dict(
+            nativefmt = dict(
+                values = ['ascii', 'foo', 'unknown'],
+            ),
+            kind = dict(
+                values = ['preprocalti'],
+            ),
+            gvar = dict(
+                default = '[model]_[fields]',
+            ),
+            fields = dict(
+                values = ['filtrevalue', 'bathyref', 'fort_alti', 'cst_alti'],
+                remap = {
+                    'filtrevalue': 'fort_alti',
+                    'bathyref': 'cst_alti',
+                },
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'preprocalti'
+
+
+class WamPreproc(GenvModelResource):
+    """Constant files for MFWAM."""
+    _footprint = dict(
+        info = 'Constant files for MFWAM',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_preproc'],
+            ),
+            gvar = dict(
+                default = '[model]_preproc_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'
+
+
+class WamGridPost(GenvModelResource):
+    """Information on a grid for MFWAM post-processing."""
+    _footprint = dict(
+        info = 'Grid information for MFWAM post-processing',
+        attr = dict(
+            nativefmt = dict(
+                default = 'foo',
+            ),
+            kind = dict(
+                values = ['wam_grid_post'],
+            ),
+            gvar = dict(
+                default = 'namelist_[model]_interp',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'wampreproc'

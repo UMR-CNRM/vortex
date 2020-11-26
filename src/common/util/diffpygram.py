@@ -171,8 +171,8 @@ class FieldBundle(object):
     def read_grib(self, filename):
         """Read in a GRIB file."""
         with usepygram.epy_env_prepare(sessions.current()):
-            gribdata = footprints.proxy.dataformat(filename = filename,
-                                                   openmode = 'r', format = 'GRIB')
+            gribdata = footprints.proxy.dataformat(filename=filename,
+                                                   openmode='r', format='GRIB')
             fld = gribdata.iter_fields(get_info_as_json=(six.text_type('centre'),
                                                          six.text_type('subCentre')))
             while fld:
@@ -213,8 +213,8 @@ class EpyGribDiff(FieldBundles):
     _FMT_COUNTER = '[{:04d}] '
     _HEAD_COUNTER = ' ' * len(_FMT_COUNTER.format(0))
 
-    _FMT_SHORT = "#{n:>4d} id={id:14s} l={level:<6d} c={centre:<3d},{scentre:3d}"
-    _HEAD_SHORT = "Mess. ParamId/ShortN    Level    Centre,S "
+    _FMT_SHORT = "#{n:>4d} id={id:16s} l={level:<6d} c={centre:<3d},{scentre:3d}"
+    _HEAD_SHORT = "Mess. ParamId/ShortN      Level    Centre,S "
 
     _FMT_MIDDLE = " | {0:1s} {1:1s} {2:1s} {3:6s} | "
     _HEAD_MIDDLE = " | {:1s} {:1s} {:1s}  {:5s} | "
@@ -287,10 +287,17 @@ class EpyGribDiff(FieldBundles):
     @classmethod
     def _str_field_summary(cls, n, field):
         """Returns a string that summarise a field properties."""
-        sid = six.text_type(field.fid['paramId']) + '/' + field.fid['shortName']
-        if len(sid) > 14:  # Truncate if the string is too long
-            sid = sid[:13] + '*'
-        return cls._FMT_SHORT.format(n=n, id=sid, level= field.fid['level'],
+        if 'paramId' in field.fid:
+            # GRIB1
+            sid = six.text_type(field.fid['paramId']) + '/' + field.fid['shortName']
+        else:
+            # GRIB2
+            sid = (six.text_type(field.fid['parameterCategory']) + '-' +
+                   six.text_type(field.fid['parameterNumber']) + '/' +
+                   field.fid['shortName'])
+        if len(sid) > 16:  # Truncate if the string is too long
+            sid = sid[:15] + '*'
+        return cls._FMT_SHORT.format(n=n, id=sid, level=field.fid.get('level', -99),
                                      centre=field.fid['centre'],
                                      scentre=field.fid.get('subCentre', -99))
 

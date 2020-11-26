@@ -9,7 +9,7 @@
 .. versionadded:: 0.2.0
 
 .. todo::
-   
+
       Nothing written for :mod:`vortex.tools.net` handling yet !
 
 
@@ -24,6 +24,8 @@ Functions
 .. autofunction:: uriparse
 
 .. autofunction:: uriunparse
+
+.. autofunction:: http_post_data
 
 .. autofunction:: netrc_lookup
 
@@ -93,7 +95,7 @@ Network related stuff
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: UdpConnectionStatus
    :show-inheritance:
    :members:
@@ -103,4 +105,3 @@ Network related stuff
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 

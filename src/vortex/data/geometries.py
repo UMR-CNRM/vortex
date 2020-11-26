@@ -128,10 +128,10 @@ class Geometry(bronx.patterns.getbytag.GetByTag):
 
         .. note:: This is an abstract class, do not instantiate.
         """
-        self.info    = 'anonymous'
+        self.info = 'anonymous'
         self.inifile = None
         self.__dict__.update(kw)
-        self.kind    = 'abstract'
+        self.kind = 'abstract'
         self._init_attributes = {k: v for k, v in kw.items() if v is not None}
         logger.debug('Abstract Geometry init kw=%s', str(kw))
 
@@ -196,23 +196,25 @@ class HorizontalGeometry(Geometry):
         .. note:: This is an abstract class, do not instantiate.
         """
         desc = dict(
-            info = 'anonymous',
-            gridtype = None,
-            area = None,
-            nlon = None,
-            nlat = None,
-            ni = None,
-            nj = None,
-            resolution = 0.,
-            runit = None,
-            truncation = None,
-            truncationtype = None,
-            stretching = None,
-            nmassif = None,
-            nposts = None,
-            lam = True,
-            lonmin = None,
-            latmin = None,
+            info='anonymous',
+            gridtype=None,
+            area=None,
+            nlon=None,
+            nlonmax=None,
+            nlat=None,
+            ni=None,
+            nj=None,
+            resolution=0.,
+            expected_resolution=0.,
+            runit=None,
+            truncation=None,
+            truncationtype=None,
+            stretching=None,
+            nmassif=None,
+            nposts=None,
+            lam=True,
+            lonmin=None,
+            latmin=None,
         )
         desc.update(kw)
         super(HorizontalGeometry, self).__init__(**desc)
@@ -309,7 +311,7 @@ class HorizontalGeometry(Geometry):
     def coordinates(self):
         if any([getattr(self, x) is None for x in ('lonmin', 'latmin', 'nlat', 'nlon', 'resolution')]):
             return
-        coordinates = dict(lonmin = self.lonmin, latmin = self.latmin)
+        coordinates = dict(lonmin=self.lonmin, latmin=self.latmin)
         coordinates['latmax'] = self.latmin + self.resolution * (self.nlat - 1)
         coordinates['lonmax'] = self.lonmin + self.resolution * (self.nlon - 1)
         return coordinates
@@ -544,12 +546,53 @@ class CurvlinearGeometry(UnstructuredGeometry):
         return fmts.format(self.kind, self.rnice, self.area, self.nlon, self.nlat)
 
 
+class RedgridGeometry(HorizontalGeometry):
+    """Spherical or LAM reduced grid (the number of longitude decreases toward the pole)."""
+
+    _tag_topcls = False
+
+    def __init__(self, **kw):
+        """
+        :param str tag: The geometry's name (if no **tag** attributes is provided,
+                        the first positional attribute is considered to be the tag
+                        name)
+        :param str info: A free description of the geometry
+        :param int nlonmax: Maximum number of longitude points in the grid
+        :param int nlat: Number of latitude points in the grid
+        :param int expected_resolution: the real resolution for
+                                        ``longitudes = expected_resolution * cos(lat)``
+        :param str area: The grid location (needed if **lam** is *True*)
+        """
+        kw.setdefault('runit', 'dg')
+        kw.setdefault('lam', False)
+        super(RedgridGeometry, self).__init__(**kw)
+        self.kind = 'redgrid'
+
+    def _check_attributes(self):
+        if self.nlonmax is None or self.nlat is None or self.resolution is None:
+            raise AttributeError("Some mandatory arguments are missing")
+        super(RedgridGeometry, self)._check_attributes()
+        if self.lam is False:
+            self.area = 'global'
+
+    def __str__(self):
+        """Standard formatted print representation."""
+        return '<{0:s} area=\'{1:s}\' r=\'{2:s}\'>'.format(self.strheader(),
+                                                           self.area,
+                                                           self.rnice)
+
+    def doc_export(self):
+        """Relevant informations to print in the documentation."""
+        fmts = 'kind={0:s}, r={1:s}, area={2:s}, nlonmax={3!s}, nlat={4!s}'
+        return fmts.format(self.kind, self.rnice, self.area, self.nlonmax, self.nlat)
+
+
 # Pre-defined footprint attribute for any HorizontalGeometry
 
 #: Usual definition of the ``geometry`` attribute.
 a_hgeometry = dict(
-    info = "The resource's horizontal geometry.",
-    type = HorizontalGeometry,
+    info="The resource's horizontal geometry.",
+    type=HorizontalGeometry,
 )
 
 
@@ -564,7 +607,7 @@ def _add_geo2basename_info(cls):
                                     self.geometry.short_gridtype)}, ]
             if add_stretching:
                 lgeo.append({'stretching': self.geometry.stretching})
-        elif isinstance(self.geometry, ProjectedGeometry):
+        elif isinstance(self.geometry, (ProjectedGeometry, RedgridGeometry)):
             lgeo = [self.geometry.area, self.geometry.rnice]
         else:
             lgeo = self.geometry.area  # Default: always defined
@@ -576,16 +619,16 @@ def _add_geo2basename_info(cls):
 
 
 #: Abstract footprint definition of the ``geometry`` attribute.
-hgeometry = footprints.Footprint(info = 'Abstract Horizontal Geometry',
-                                 attr = dict(geometry = a_hgeometry))
+hgeometry = footprints.Footprint(info='Abstract Horizontal Geometry',
+                                 attr=dict(geometry=a_hgeometry))
 
 #: Abstract footprint definition of the ``geometry`` attribute with decorators
 #: that alter the ``namebuilding_info`` method
 hgeometry_deco = footprints.DecorativeFootprint(
     hgeometry,
-    decorator = [_add_geo2basename_info,
-                 namebuilding_insert('geo', lambda self: self._geo2basename_info()),
-                 generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
+    decorator=[_add_geo2basename_info,
+               namebuilding_insert('geo', lambda self: self._geo2basename_info()),
+               generic_pathname_insert('geometry', lambda self: self.geometry, setdefault=True)])
 
 
 # Load default geometries when the module is first imported

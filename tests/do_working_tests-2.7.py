@@ -88,6 +88,6 @@ if __name__ == '__main__':
 
     suite = build_suite(testmodules)
     results = unittest.TextTestRunner(verbosity=2, buffer=True).run(suite)
- 
+
     if results.failures or results.errors:
         exit(1)

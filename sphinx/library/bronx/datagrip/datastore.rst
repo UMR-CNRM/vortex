@@ -13,7 +13,7 @@
 
 Classes
 -------
-   
+
 .. autoclass:: DataStore
    :show-inheritance:
    :members:

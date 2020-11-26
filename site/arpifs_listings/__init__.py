@@ -12,7 +12,7 @@ import sys
 
 from . import util, norms, jo_tables, listings
 
-__version__ = '1.0.10'
+__version__ = '1.1.3'
 
 
 def compare_files(file_test, file_ref,
@@ -45,7 +45,6 @@ def compare_files(file_test, file_ref,
         :param bw: Black & White flag
 
     """
-
     test = listings.OutputListing(file_test, pattern_type=pattern)
     if test.look_for_end():
         test.parse_patterns()

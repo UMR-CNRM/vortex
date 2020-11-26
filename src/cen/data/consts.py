@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
-from common.data.consts import GenvModelGeoResource
+from common.data.consts import GenvModelGeoResource, GenvModelResource
 from gco.syntax.stdattrs import gdomain
 from vortex.data.resources import Resource
 
@@ -25,10 +29,10 @@ class List(GenvModelGeoResource):
                 kind = dict(
                     values = ['listem', 'lystem', 'listeo', 'lysteo', 'listeml', 'lysteml',
                               'carpost', 'rsclim', 'icrccm', 'NORELot', 'NORELmt', 'blacklist',
-                              'metadata', 'NORELo', 'NORELm'],
+                              'metadata', 'NORELo', 'NORELm', 'shapefile'],
                 ),
                 nativefmt = dict(
-                    values  = ['ascii'],
+                    values  = ['ascii', 'shp'],
                     default = 'ascii',
                 ),
                 gvar = dict(
@@ -53,6 +57,7 @@ class Params(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc', 'ascii'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -78,6 +83,7 @@ class climTG(GenvModelGeoResource):
             nativefmt = dict(
                 values  = ['netcdf', 'nc'],
                 default = 'netcdf',
+                remap   = dict(nc='netcdf'),
             ),
             gvar = dict(
                 default = '[kind]',
@@ -96,10 +102,83 @@ class climTG(GenvModelGeoResource):
         nbi = super(climTG, self).namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
-            cen_rawbasename = (self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
+            cen_rawbasename=(self.realkind + "." + self._extension_remap.get(self.nativefmt, self.nativefmt)),
             # With the standard provider, the usual keys will be used.
         )
         return nbi
+
+
+class GridTarget(GenvModelGeoResource):
+    """
+    Resource describing a grid for interpolation of data based on massifs geometry
+    """
+
+    _footprint = [
+        gdomain,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values = ["interpolgrid"],
+                ),
+                nativefmt = dict(
+                    values  = ['netcdf', 'nc'],
+                    default = 'netcdf',
+                    remap   = dict(nc='netcdf'),
+                ),
+                gvar = dict(
+                    default = '[kind]_[gdomain]',
+                ),
+            )
+        )
+    ]
+
+
+class Prosnow_SetUp_Global(GenvModelResource):
+    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['prep_fillup_5', 'prep_fillup_50', 'variables'],
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf'],
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
+
+
+class Prosnow_SetUp_Resort(GenvModelResource):
+
+    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['sru', 'sru_flat', 'pgd_spinup', 'prep_spinup', 'water', 'snow_nogro', 'snow_nosm', 'snow_noobs', 'obs_empty'],
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf'],
+            ),
+            resort = dict(
+                values = ['saisies', 'plagne', 'soldeu'],
+            ),
+            gvar = dict(
+                default = '[kind]_[resort]',
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
 
 
 class ConfFile(Resource):

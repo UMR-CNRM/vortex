@@ -1,8 +1,8 @@
-:mod:`previmar.algo` --- Specific algo components for PreviMAR 
+:mod:`previmar.algo` --- Specific algo components for PreviMAR
 ==============================================================
 
 .. automodule:: previmar.algo
-   :synopsis: Specific algo components for PreviMAR 
+   :synopsis: Specific algo components for PreviMAR
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -16,4 +16,5 @@ Package
 Included Modules
 ----------------
 
-* :mod:`previmar.algo.forecast`
+* :mod:`previmar.algo.forecasts`
+* :mod:`previmar.algo.mfwamxp`

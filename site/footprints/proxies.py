@@ -71,7 +71,7 @@ class FootprintProxy(getbytag.GetByTag):
 
     def objectsmap(self):
         """Return a dictionary of instances sorted by collectors entries."""
-        return dict([ (k + 's', c.instances()) for k, c in collectors.items() ])
+        return dict([(k + 's', c.instances()) for k, c in collectors.items()])
 
     def exists(self, tag):
         """Check if a given ``tag`` of objects is tracked or not."""

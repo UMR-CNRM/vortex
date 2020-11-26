@@ -30,4 +30,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
+.. autoclass:: Grib2tauxParallel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Grib2tauxWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

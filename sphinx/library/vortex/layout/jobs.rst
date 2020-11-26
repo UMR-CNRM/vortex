@@ -45,3 +45,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JobAssistantEpygramPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: JobAssistantAppWideLockPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

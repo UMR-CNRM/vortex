@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
@@ -71,7 +75,7 @@ class MasterSurges(OceanographicModel):
             name_simu_arg = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
         else:
             name_simu_arg = [self.rundir] * 3
-        name_simu_arg += [six.text_type( self.num_exp ), ]
+        name_simu_arg += [six.text_type(self.num_exp), ]
         cmd = ' '.join(name_simu_arg)
         return cmd
 
@@ -110,10 +114,10 @@ class InterpolationSurges(MasterSurges):
     ]
 
     def command_line(self, **opts):
-        name_simu_arg  = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
-        name_simu_arg += [six.text_type( self.num_exp ), ]
+        name_simu_arg = [self.rundir, self.coupling_exec, six.text_type(self.coupling_nprocs)]
+        name_simu_arg += [six.text_type(self.num_exp), ]
         name_simu_arg += [self.version, self.version_cible]
-        name_simu_arg += [six.text_type( self.bloc_increment ), ]
+        name_simu_arg += [six.text_type(self.bloc_increment), ]
 
         cmd = ' '.join(name_simu_arg)
         return cmd
@@ -174,7 +178,7 @@ class IniZeroSurges(BlackBox):
 
 
 class FiltrageGrib(Script):
-    """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid"""
+    """Base class for Filtering Grib (Pmer, U,V 10-meters wind) on Model Grid."""
     _footprint = [
         gvar,
         dict(
@@ -183,10 +187,13 @@ class FiltrageGrib(Script):
                 kind = dict(
                     values = ['FilteringGrib']
                 ),
+                model = dict(
+                    values = ['hycom'],
+                ),
                 gvar = dict(
                     default  = 'pesurcote_filtrage_grib',
                     values   = ['pesurcote_filtrage_grib', 'filtrage_grib'],
-                    remap    = {'filtrage_grib': 'pesurcote_filtrage_grib' },
+                    remap    = {'filtrage_grib': 'pesurcote_filtrage_grib'},
                 ),
             )
         )
@@ -197,8 +204,31 @@ class FiltrageGrib(Script):
         return 'filteringGrib'
 
 
+class FiltrageGribWave(FiltrageGrib):
+    """Base class."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Filtering Grib input',
+            attr = dict(
+                model = dict(
+                    values = ['mfwam'],
+                ),
+                gvar = dict(
+                    default  = 'filtrage_grib',
+                    values   = ['wave_filtrage_grib', 'filtrage_grib'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'filteringGribWave'
+
+
 class FusionGrib(Script):
-    """Base class for Grib Fusion (Pmer, U,V 10-meters wind) on 2 different Model Grid"""
+    """Base class for Grib Fusion (Pmer, U,V 10-meters wind) on 2 different Model Grid."""
     _footprint = [
         gvar,
         dict(
@@ -210,7 +240,7 @@ class FusionGrib(Script):
                 gvar = dict(
                     default  = 'pesurcote_fusion_grib',
                     values   = ['pesurcote_fusion_grib', 'fusion_grib'],
-                    remap    = {'fusion_grib': 'pesurcote_fusion_grib' },
+                    remap    = {'fusion_grib': 'pesurcote_fusion_grib'},
                 ),
             )
         )
@@ -222,7 +252,7 @@ class FusionGrib(Script):
 
 
 class ConversionGrib2Taux(BlackBox):
-    """A tool to convert Wind fields to Stress"""
+    """A tool to convert Wind fields to Stress."""
     _footprint = [
         gvar,
         gdomain,
@@ -290,7 +320,7 @@ class SurScriptSurges(BlackBox):
             info = 'SurScript Surges used on double binaries execution',
             attr = dict(
                 kind = dict(
-                    values = [ 'SurScriptBinary'],
+                    values = ['SurScriptBinary', ],
                 ),
                 gvar = dict(
                     default  = '[model]_shell_select_binary',
@@ -302,3 +332,82 @@ class SurScriptSurges(BlackBox):
     @property
     def realkind(self):
         return 'SurScriptBinary'
+
+
+class MasterWaves(OceanographicModel):
+    """Master MFWAM executable."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Master wave',
+            attr = dict(
+                kind = dict(
+                    values = ['MasterWaves'],
+                ),
+                model = dict(
+                    value = ['mfwam', ],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WaveChief'
+
+
+class Filteralti(BlackBox):
+    """Altimeter data filtering."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Altimeter data filtering',
+            attr = dict(
+                kind = dict(
+                    values = ['Filteralti'],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_filter_alti_[satellite]',
+                ),
+                satellite = dict(
+                    values = ['jason2', 'saral', 'cryosat2'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'Filteralti'
+
+    def command_line(self, begindate, enddate):
+        """Build command line for execution as a single string."""
+        return ' '.join([begindate.ymdhms, enddate.ymdhms])
+
+
+class InterpWave(BlackBox):
+    """MFWAM output post-processing."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'MFWAM output post-processing',
+            attr = dict(
+                kind = dict(
+                    values = ['InterpWave'],
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_interp',
+                ),
+                model = dict(
+                    value = ['mfwam', ],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'InterpWave'

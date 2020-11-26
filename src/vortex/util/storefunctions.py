@@ -42,7 +42,9 @@ def mergecontents(options):
         ctx = sessions.current().context
         sections = list()
         for a_role in todo:
-            sections.extend(ctx.sequence.filtered_inputs(role=a_role))
+            sections.extend(ctx.sequence.effective_inputs(role=a_role))
+        if len(sections) == 0:
+            raise FunctionStoreCallbackError("Nothing to store: the effective inputs sequence is void.")
         newcontent = helpers.merge_contents(sections)
         if sort:
             newcontent.sort()
@@ -51,6 +53,12 @@ def mergecontents(options):
     # Create a Virtual container and dump the new content inside it
     virtualcont = fpx.container(incore=True)
     newcontent.rewrite(virtualcont)
+    virtualcont.rewind()
+    # Force the new container to be in bytes mode
+    if virtualcont.actualmode and 'b' not in virtualcont.actualmode:
+        virtualcont_b = fpx.container(incore=True, mode='w+b')
+        virtualcont_b.write(virtualcont.read().encode(encoding='utf-8'))
+        virtualcont = virtualcont_b
     return virtualcont
 
 

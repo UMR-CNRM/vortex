@@ -53,12 +53,12 @@ class FootprintTestOne(FootprintBase):
             info = 'Test class',
             attr = dict(
                 kind = dict(
-                    values = [ 'hip', 'hop' ],
+                    values = ['hip', 'hop'],
                     alias = ('stuff',),
                     remap = dict(foo='hop')
                 ),
                 somestr = dict(
-                    values = [ 'this', 'or', 'that'],
+                    values = ['this', 'or', 'that'],
                     optional = True,
                     default = 'this'
                 )
@@ -72,7 +72,7 @@ class FootprintTestOne(FootprintBase):
                 ),
                 someMixedCase = dict(
                     optional = True,
-                    values = [ 'why ?', 'toto' ],
+                    values = ['why ?', 'toto'],
                 )
             )
         )
@@ -89,7 +89,7 @@ class FootprintTestTwo(FootprintTestOne):
         info = 'Another test class',
         attr = dict(
             kind = dict(
-                values = [ 'hip', 'hop', 'poom' ],
+                values = ['hip', 'hop', 'poom'],
             ),
             somefoo = dict(
                 type = Foo
@@ -146,7 +146,7 @@ class FootprintTestFpAttr(FootprintTestOne):
             ),
             somestr = dict(
                 optional = False,
-                values = [1, 2 ],
+                values = [1, 2],
                 type = int
             )
         )
@@ -169,13 +169,13 @@ def capture(command, *args, **kwargs):
         sys.stdout = out
 
 
-expected_keys = """ * blop                     
- * kind                     
- * scrontch                 
+expected_keys = """ * blop
+ * kind
+ * scrontch
  * someMixedCase            [optional]
- * somefoo                  
- * someint                  
- * somestr                  
+ * somefoo
+ * someint
+ * somestr
  * somestr                  [optional]
 """
 
@@ -185,67 +185,67 @@ class utFootprint(TestCase):
 
     def setUp(self):
         self.fp = dict(
-            attr = dict(),
-            bind = [],
-            info = 'Not documented',
-            only = dict(),
-            priority = dict(
-                level = priorities.top.DEFAULT
+            attr=dict(),
+            bind=[],
+            info='Not documented',
+            only=dict(),
+            priority=dict(
+                level=priorities.top.DEFAULT
             ),
         )
 
         self.fpbis = Footprint(
-            attr = dict(
-                stuff1 = dict(
-                    alias = ('arg1',)
+            attr=dict(
+                stuff1=dict(
+                    alias=('arg1',)
                 ),
-                stuff2 = dict(
-                    optional = True,
-                    default = 'foo'
+                stuff2=dict(
+                    optional=True,
+                    default='foo'
                 ),
             ),
-            info = 'Some nice stuff'
+            info='Some nice stuff'
         )
 
         self.fpter = DecorativeFootprint(
-            attr = dict(
-                stuff1 = dict(
-                    alias = ('arg1',)
+            attr=dict(
+                stuff1=dict(
+                    alias=('arg1',)
                 ),
-                stuff2 = dict(
-                    type = int,
-                    optional = True,
-                    default = 1
+                stuff2=dict(
+                    type=int,
+                    optional=True,
+                    default=1
                 ),
             ),
-            info = 'Some nice stuff',
-            decorator = easy_decorator
+            info='Some nice stuff',
+            decorator=easy_decorator
         )
 
     def test_footprint_basics(self):
         fp = Footprint(nodefault=True)
         self.assertIsInstance(fp, Footprint)
         self.assertIsInstance(fp.as_dict(), dict)
-        self.assertDictEqual(fp.as_dict(), dict(attr = dict()))
+        self.assertDictEqual(fp.as_dict(), dict(attr=dict()))
         self.assertEqual(str(fp), '{}')
 
         fp = Footprint(dict(
-            info = 'Some stuff there',
-            attr = dict(stuff = dict(remap=dict(autoremap='no')))
+            info='Some stuff there',
+            attr=dict(stuff=dict(remap=dict(autoremap='no')))
         ))
         self.assertIsInstance(fp, Footprint)
         self.assertEqual(fp.info, 'Some stuff there')
         self.assertDictEqual(fp.attr, dict(
-            stuff = dict(
-                access = 'rxx',
-                alias = set(),
-                default = None,
-                optional = False,
-                remap = dict(),
-                values = set(),
-                outcast = set(),
-                doc_visibility = doc.visibility.DEFAULT,
-                doc_zorder = 0,
+            stuff=dict(
+                access='rxx',
+                alias=set(),
+                default=None,
+                optional=False,
+                remap=dict(),
+                values=set(),
+                outcast=set(),
+                doc_visibility=doc.visibility.DEFAULT,
+                doc_zorder=0,
             )
         ))
 
@@ -306,15 +306,15 @@ class utFootprint(TestCase):
 
     def test_footprint_deepcopy(self):
         fp1 = Footprint(
-            attr = dict(
-                stuff = dict(
-                    type = int,
-                    values = list(range(2)),
-                    default = 1,
-                    optional = True
+            attr=dict(
+                stuff=dict(
+                    type=int,
+                    values=list(range(2)),
+                    default=1,
+                    optional=True
                 )
             ),
-            info = 'Some nice stuff'
+            info='Some nice stuff'
         )
 
         fp2 = copy.deepcopy(fp1)
@@ -345,22 +345,22 @@ class utFootprint(TestCase):
         guess, inputattr = fp._firstguess(dict(weird='hello'))
         self.assertSetEqual(inputattr, set())
         self.assertDictEqual(guess, dict(
-            stuff1 = None,
-            stuff2 = 'foo',
+            stuff1=None,
+            stuff2='foo',
         ))
 
         guess, inputattr = fp._firstguess(dict(stuff1='hello'))
         self.assertSetEqual(inputattr, set(['stuff1']))
         self.assertDictEqual(guess, dict(
-            stuff1 = 'hello',
-            stuff2 = 'foo',
+            stuff1='hello',
+            stuff2='foo',
         ))
 
         guess, inputattr = fp._firstguess(dict(arg1='hello'))
         self.assertSetEqual(inputattr, set(['stuff1']))
         self.assertDictEqual(guess, dict(
-            stuff1 = 'hello',
-            stuff2 = 'foo',
+            stuff1='hello',
+            stuff2='foo',
         ))
         olddflt = copy.copy(footprints.setup.defaults)
         try:
@@ -368,8 +368,8 @@ class utFootprint(TestCase):
             guess, inputattr = fp._firstguess(dict())
             self.assertSetEqual(inputattr, set(['stuff1']))
             self.assertDictEqual(guess, dict(
-                stuff1 = 'hello',
-                stuff2 = 'foo',
+                stuff1='hello',
+                stuff2='foo',
             ))
         finally:
             footprints.setup.defaults = olddflt
@@ -473,9 +473,9 @@ class utFootprint(TestCase):
 
     def test_footprint_replattr(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                somefoo = dict(
-                    type = Foo,
+            attr=dict(
+                somefoo=dict(
+                    type=Foo,
                 )
             )
         ))
@@ -493,7 +493,7 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:value]', stuff2='foo', somefoo=thisfoo))
         self.assertSetEqual(todo, set(['stuff1', 'stuff2', 'somefoo']))
 
-        todo = [ 'stuff1' ]
+        todo = ['stuff1']
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_2', stuff2='foo', somefoo=thisfoo))
@@ -533,13 +533,13 @@ class utFootprint(TestCase):
         self.assertDictEqual(guess, dict(stuff1='misc_[somefoo:justdoit]', stuff2='foo'))
         self.assertSetEqual(todo, set(['stuff1', 'stuff2']))
 
-        todo = [ 'stuff1' ]
+        todo = ['stuff1']
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_done_2', stuff2='foo'))
 
         guess, u_inputattr = fp._firstguess(dict(stuff1='misc_[somefoo:justdoit:upper]', somefoo=thisfoo))
-        todo = [ 'stuff1' ]
+        todo = ['stuff1']
         rv = fp._replacement(nbpass, 'stuff1', True, guess, extras, todo, list(), set())
         self.assertTrue(rv)
         self.assertDictEqual(guess, dict(stuff1='misc_DONE_2', stuff2='foo'))
@@ -613,11 +613,11 @@ class utFootprint(TestCase):
 
     def test_resolve_unknown(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                someint = dict(
-                    type = int,
-                    optional = True,
-                    default = None,
+            attr=dict(
+                someint=dict(
+                    type=int,
+                    optional=True,
+                    default=None,
                 )
             )
         ))
@@ -644,8 +644,8 @@ class utFootprint(TestCase):
 
     def test_resolve_fast(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                kind = dict(type=int)
+            attr=dict(
+                kind=dict(type=int)
             )
         ))
 
@@ -660,8 +660,8 @@ class utFootprint(TestCase):
         self.assertSetEqual(attr_seen, set(['kind']))
 
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff3 = dict(type=int)
+            attr=dict(
+                stuff3=dict(type=int)
             )
         ))
 
@@ -695,8 +695,8 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1='True', stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff3 = dict(type=Foo)
+            attr=dict(
+                stuff3=dict(type=Foo)
             )
         ))
 
@@ -705,9 +705,9 @@ class utFootprint(TestCase):
 
     def test_resolve_remap(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff1 = dict(
-                    remap = dict(two='four')
+            attr=dict(
+                stuff1=dict(
+                    remap=dict(two='four')
                 )
             )
         ))
@@ -719,9 +719,9 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1='four', stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff1 = dict(
-                    remap = dict(two='four', four='six')
+            attr=dict(
+                stuff1=dict(
+                    remap=dict(two='four', four='six')
                 )
             )
         ))
@@ -734,10 +734,10 @@ class utFootprint(TestCase):
 
     def test_resolve_isclass(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff3 = dict(
-                    type = Foo,
-                    isclass = True,
+            attr=dict(
+                stuff3=dict(
+                    type=Foo,
+                    isclass=True,
                 )
             )
         ))
@@ -756,9 +756,9 @@ class utFootprint(TestCase):
 
     def test_resolve_values(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff1 = dict(
-                    values = ('one', 'two'),
+            attr=dict(
+                stuff1=dict(
+                    values=('one', 'two'),
                 )
             )
         ))
@@ -774,9 +774,9 @@ class utFootprint(TestCase):
 
     def test_resolve_outcast(self):
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff1 = dict(
-                    outcast = ['one', 'two'],
+            attr=dict(
+                stuff1=dict(
+                    outcast=['one', 'two'],
                 )
             )
         ))
@@ -788,10 +788,10 @@ class utFootprint(TestCase):
         self.assertDictEqual(rv, dict(stuff1=None, stuff2='foo'))
 
         fp = Footprint(self.fpbis, dict(
-            attr = dict(
-                stuff1 = dict(
-                    values = ['one', 'four'],
-                    outcast = ['one', 'two'],
+            attr=dict(
+                stuff1=dict(
+                    values=['one', 'four'],
+                    outcast=['one', 'two'],
                 )
             )
         ))
@@ -814,8 +814,8 @@ class utFootprint(TestCase):
     def test_resolve_only(self):
         # Only -> exact match
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                rdate = datetime.date(2013, 11, 2)
+            only=dict(
+                rdate=datetime.date(2013, 11, 2)
             )
         ))
 
@@ -839,8 +839,8 @@ class utFootprint(TestCase):
         self.assertTrue(rv)
 
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                rdate = (datetime.date(2013, 11, 2), datetime.date(2013, 11, 5))
+            only=dict(
+                rdate=(datetime.date(2013, 11, 2), datetime.date(2013, 11, 5))
             )
         ))
 
@@ -867,8 +867,8 @@ class utFootprint(TestCase):
 
         # Only -> 'after' match
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                after_rdate = datetime.date(2013, 11, 2)
+            only=dict(
+                after_rdate=datetime.date(2013, 11, 2)
             )
         ))
 
@@ -888,8 +888,8 @@ class utFootprint(TestCase):
 
         # Only -> 'before' match
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                before_rdate = datetime.date(2013, 11, 2)
+            only=dict(
+                before_rdate=datetime.date(2013, 11, 2)
             )
         ))
 
@@ -909,9 +909,9 @@ class utFootprint(TestCase):
 
         # Only -> 'after' and 'before' match
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                after_rdate = datetime.date(2013, 11, 2),
-                before_rdate = datetime.date(2013, 11, 28)
+            only=dict(
+                after_rdate=datetime.date(2013, 11, 2),
+                before_rdate=datetime.date(2013, 11, 28)
             )
         ))
 
@@ -938,9 +938,9 @@ class utFootprint(TestCase):
 
         # Only -> 'regex' match
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                stuff1 = [footprints.FPRegex(r'toto\d\.txt'),
-                          footprints.FPRegex(r'machine?\.txt')]
+            only=dict(
+                stuff1=[footprints.FPRegex(r'toto\d\.txt'),
+                        footprints.FPRegex(r'machine?\.txt')]
             )
         ))
 
@@ -957,8 +957,8 @@ class utFootprint(TestCase):
             self.assertTrue(rv)
 
         fp = Footprint(self.fpbis, dict(
-            only = dict(
-                rstuff1 = footprints.FPRegex(r'toto\d\.txt')
+            only=dict(
+                rstuff1=footprints.FPRegex(r'toto\d\.txt')
             )
         ))
 
@@ -983,22 +983,22 @@ class utFootprint(TestCase):
         self.assertEqual(fptmp.as_dict(), self.fpter.as_dict())
         # Decorative but useless...
         fpuseless = DecorativeFootprint(
-            attr = dict(
-                stuff1 = dict(
+            attr=dict(
+                stuff1=dict(
                 ),
             ),
-            info = 'Some nice stuff',
+            info='Some nice stuff',
         )
         self.assertListEqual(fpuseless.decorators, [])
         # Not cool...
         with self.assertRaises(ValueError):
             DecorativeFootprint(
-                attr = dict(
-                    stuff1 = dict(
+                attr=dict(
+                    stuff1=dict(
                     ),
                 ),
-                info = 'Some nice stuff',
-                decorator = [easy_decorator, 'toto', ]
+                info='Some nice stuff',
+                decorator=[easy_decorator, 'toto', ]
             )
 
 
@@ -1021,11 +1021,11 @@ class utFootprintBase(TestCase):
         self.assertEqual(FootprintTestMeta.__doc__, 'Not documented yet.')
         self.assertListEqual(FootprintTestMeta.footprint_mandatory(), list())
         self.assertDictEqual(FootprintTestMeta._footprint.as_dict(), dict(
-            attr = dict(),
-            bind = list(),
-            info = 'Not documented',
-            only = dict(),
-            priority = dict(level = priorities.top.DEFAULT)
+            attr=dict(),
+            bind=list(),
+            info='Not documented',
+            only=dict(),
+            priority=dict(level=priorities.top.DEFAULT)
         ))
 
         with self.assertRaises(KeyError):
@@ -1058,20 +1058,21 @@ class utFootprintBase(TestCase):
         del FootprintTestMeta
 
     def test_metaclass_inheritance_and_merging(self):
+
         class testA(FootprintBase):
             _footprint = dict(
-                attr = dict(
-                    att1 = dict(default = 'toto',
-                                optional = True,
-                                values = ['toto', 'titi']),
-                    att2 = dict(type=int),
+                attr=dict(
+                    att1=dict(default='toto',
+                              optional=True,
+                              values=['toto', 'titi']),
+                    att2=dict(type=int),
                 )
             )
 
         fpatt3 = Footprint(
-            info = 'Abstract att1',
-            attr = dict(
-                att3 = dict(default = 'scrontch', optional = True),
+            info='Abstract att1',
+            attr=dict(
+                att3=dict(default='scrontch', optional=True),
             )
         )
 
@@ -1081,16 +1082,16 @@ class utFootprintBase(TestCase):
             _footprint = [
                 fpatt3_deco,
                 dict(
-                    attr = dict(
-                        att1 = dict(default = 'titi'),
+                    attr=dict(
+                        att1=dict(default='titi'),
                     )
                 )
             ]
 
         class testC(testB, testA):
             _footprint = dict(
-                attr = dict(
-                    att2 = dict(values = [1, 2, 3])
+                attr=dict(
+                    att2=dict(values=[1, 2, 3])
                 )
             )
 
@@ -1142,41 +1143,41 @@ class utFootprintBase(TestCase):
         self.assertListEqual(fp1.footprint_attributes,
                              ['kind', 'someMixedCase', 'someint', 'somestr'])
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-            kind = 'hip',
-            someint = 7,
-            somestr = 'this',
-            someMixedCase = 'why ?',
+            kind='hip',
+            someint=7,
+            somestr='this',
+            someMixedCase='why ?',
         ))
         self.assertTrue(fp1.footprint_compatible(dict(
-            kind = 'hip',
-            someint = 7,
-            somestr = 'this',
-            someMixedCase = 'why ?',
+            kind='hip',
+            someint=7,
+            somestr='this',
+            someMixedCase='why ?',
         )))
         self.assertFalse(fp1.footprint_compatible(dict(
-            kind = 'hip',
-            someint = 7,
+            kind='hip',
+            someint=7,
         )))
         self.assertFalse(fp1.footprint_compatible(dict(
-            kind = 'hip',
-            someint = 7,
-            someMixedCase = 'not possible',
+            kind='hip',
+            someint=7,
+            someMixedCase='not possible',
         )))
         self.assertFalse(fp1.footprint_compatible(dict(
-            kind = 'hip',
-            nope = True,
+            kind='hip',
+            nope=True,
         )))
         self.assertFalse(fp1.footprint_compatible(dict(
-            kind = 'hip',
-            someint = 8,
+            kind='hip',
+            someint=8,
         )))
 
         fp1 = FootprintTestOne(stuff='foo', someint='7')
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-            kind = 'hop',
-            someint = 7,
-            somestr = 'this',
-            someMixedCase = None,
+            kind='hop',
+            someint=7,
+            somestr='this',
+            someMixedCase=None,
         ))
 
         footprints.logger.setLevel(logging.CRITICAL)
@@ -1184,16 +1185,16 @@ class utFootprintBase(TestCase):
             with self.assertRaises(AttributeError):
                 fp1 = FootprintTestOne(stuff='foo', someint='7', checked=True)
                 self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-                    stuff = 'foo',
-                    someint = '7',
+                    stuff='foo',
+                    someint='7',
                 ))
         finally:
             footprints.logger.setLevel(logging.WARNING)
 
         fp1 = FootprintTestOne(kind='foo', someint='7', checked=True)
         self.assertDictEqual(fp1.footprint_as_shallow_dict(), dict(
-            kind = 'foo',
-            someint = '7',
+            kind='foo',
+            someint='7',
         ))
 
     def test_baseclass_fp2(self):
@@ -1229,11 +1230,11 @@ class utFootprintBase(TestCase):
                              ['kind', 'someMixedCase', 'somefoo', 'someint', 'somestr'])
         self.assertEqual(fp2.footprint_info, 'Another test class')
         self.assertDictEqual(fp2.footprint_as_shallow_dict(), dict(
-            kind = 'hip',
-            someint = 5,
-            somestr = 'this',
-            somefoo = thefoo,
-            someMixedCase = None,
+            kind='hip',
+            someint=5,
+            somestr='this',
+            somefoo=thefoo,
+            someMixedCase=None,
         ))
         # Because of mkshort
         self.assertEqual(fp2.toto, 2)
@@ -1450,7 +1451,7 @@ class utCollector(TestCase):
     def test_collector_methods(self):
         col = collectors.get()
         with capture(col.show_attrkeys) as output:
-            self.assertEqual("\n".join([l for l in output.split("\n")
+            self.assertEqual("\n".join([l.rstrip(' ') for l in output.split("\n")
                                         if not re.search(r' (the|very)', l)]),
                              expected_keys)
 

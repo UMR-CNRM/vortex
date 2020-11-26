@@ -58,7 +58,7 @@ def items():
 
 def current():
     """Return the current active session."""
-    return get(tag = Ticket.tag_focus())
+    return get(tag=Ticket.tag_focus())
 
 
 def prompt():
@@ -78,7 +78,7 @@ def getglove(**kw):
 
 def system(**kw):
     """Returns the system associated to the current ticket."""
-    return get(tag = kw.pop('tag', Ticket.tag_focus())).system(**kw)
+    return get(tag=kw.pop('tag', Ticket.tag_focus())).system(**kw)
 
 
 # noinspection PyShadowingBuiltins
@@ -89,7 +89,7 @@ def exit():
     tags.remove(xtag)
     tags.append(xtag)
     ok = True
-    for s in [ get(tag=x) for x in tags ]:
+    for s in [get(tag=x) for x in tags]:
         ok = s.exit() and ok
     return ok
 
@@ -102,18 +102,18 @@ class Ticket(getbytag.GetByTag):
     _tag_default = 'root'
 
     def __init__(self,
-                 active = False,
-                 topenv = None,
-                 glove = None,
-                 context = None,
-                 datastore = None,
-                 prompt = 'Vortex:'):
+                 active=False,
+                 topenv=None,
+                 glove=None,
+                 context=None,
+                 datastore=None,
+                 prompt='Vortex:'):
         self.prompt = prompt
-        self.line   = "\n" + '-' * 100 + "\n"
+        self.line = "\n" + '-' * 100 + "\n"
 
         self._started = date.now()
-        self._closed  = 0
-        self._system  = None
+        self._closed = 0
+        self._system = None
 
         if topenv:
             self._topenv = topenv
@@ -127,7 +127,7 @@ class Ticket(getbytag.GetByTag):
 
         logger.debug('New session system is %s', self.system())
 
-        self._rundir  = self.sh.getcwd()
+        self._rundir = self.sh.getcwd()
 
         logger.debug('Open session %s %s', self.tag, self)
 
@@ -249,13 +249,13 @@ class Ticket(getbytag.GetByTag):
 
     @property
     def path(self):
-        return '/'  + self.tag
+        return '/' + self.tag
 
     @property
     def subcontexts(self):
         """The current contexts binded to this session."""
         rootpath = self.path + '/'
-        return [ x for x in contexts.values() if x.path.startswith(rootpath) ]
+        return [x for x in contexts.values() if x.path.startswith(rootpath)]
 
     def exit(self):
         """Exit from the current session."""

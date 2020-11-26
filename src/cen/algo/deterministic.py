@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -17,12 +21,14 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.update_namelist import update_surfex_namelist_object, update_namelist_var
     from snowtools.tools.initTG import generate_clim
+    from snowtools.tools.massif_diags import massif_simu
 
 
 @echecker.disabled_if_unavailable
 class Surfex_PreProcess(AlgoComponent):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -69,8 +75,8 @@ class Surfex_PreProcess(AlgoComponent):
             newcontent = update_surfex_namelist_object(
                 namelist.contents,
                 self.datebegin,
-                forcing = self.forcingname,
-                dateend = self.dateend
+                forcing=self.forcingname,
+                dateend=self.dateend
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
             newcontent.rewrite(newnam)
@@ -79,6 +85,7 @@ class Surfex_PreProcess(AlgoComponent):
 
 @echecker.disabled_if_unavailable
 class Generate_Clim_TG(AlgoComponent):
+    """TODO: Class documentation."""
 
     _footprint = dict(
         attr = dict(
@@ -101,8 +108,10 @@ class Generate_Clim_TG(AlgoComponent):
 
 
 class Pgd_Parallel_from_Forcing(Parallel):
-    """This algo component is designed to run PGD with MPI parallelization and using
-    a FORCING.nc as input for topography."""
+    """
+    This algo component is designed to run PGD with MPI parallelization and using
+    a FORCING.nc as input for topography.
+    """
     _footprint = dict(
         info = 'This algo component is designed to run PGD with MPI parallelization '
                'and using a FORCING.nc as input for topography.',
@@ -127,8 +136,10 @@ class Pgd_Parallel_from_Forcing(Parallel):
 
 @echecker.disabled_if_unavailable
 class Surfex_Parallel(Parallel):
-    """This algo component is designed to run SURFEX experiments over large domains
-    with MPI parallelization."""
+    """
+    This algo component is designed to run SURFEX experiments over large domains
+    with MPI parallelization.
+    """
 
     _footprint = dict(
         info = 'AlgoComponent designed to run SURFEX experiments over large domains '
@@ -202,7 +213,20 @@ class Surfex_Parallel(Parallel):
 
             # Rename outputs with the dates
             save_file_date(".", "SURFOUT", dateend_this_run, newprefix="PREP")
+
+            # Post-process
+            pro = massif_simu("ISBA_PROGNOSTIC.OUT.nc", openmode='a')
+            pro.massif_natural_risk()
+            pro.dataset.GlobalAttributes()
+            pro.dataset.add_standard_names()
+            pro.close()
+
             save_file_period(".", "ISBA_PROGNOSTIC.OUT", datebegin_this_run, dateend_this_run, newprefix="PRO")
+
+            if self.system.path.isfile("ISBA_DIAGNOSTICS.OUT.nc"):
+                save_file_period(".", "ISBA_DIAGNOSTICS.OUT", datebegin_this_run, dateend_this_run, newprefix="DIAG")
+            if self.system.path.isfile("ISBA_DIAG_CUMUL.OUT.nc"):
+                save_file_period(".", "ISBA_DIAG_CUMUL.OUT", datebegin_this_run, dateend_this_run, newprefix="CUMUL")
 
             if need_other_forcing:
                 # Remove the symbolic link for next iteration
@@ -230,7 +254,7 @@ class Surfex_Parallel(Parallel):
             newcontent = update_surfex_namelist_object(
                 namelist.contents,
                 datebegin,
-                dateend = dateend,
+                dateend=dateend,
                 updateloc=False
             )
             newnam = footprints.proxy.container(filename=namelist.container.basename)
@@ -238,8 +262,10 @@ class Surfex_Parallel(Parallel):
             newnam.close()
 
     def modify_prep(self, datebegin_this_run):
-        """The PREP file needs to be modified if the init date differs from the starting date
-         or if a threshold needs to be applied on snow water equivalent."""
+        """
+        The PREP file needs to be modified if the init date differs from the
+        starting date or if a threshold needs to be applied on snow water equivalent.
+        """
 
         modif_swe = self.threshold > 0 and datebegin_this_run.month == 8 and datebegin_this_run.day == 1
         modif_date = datebegin_this_run == self.datebegin and self.datebegin != self.dateinit
@@ -259,3 +285,77 @@ class Surfex_Parallel(Parallel):
             prep.close()
         else:
             print("DO NOT CHANGE THE PREP FILE.")
+
+
+class Interpol_Forcing(Parallel):
+    """
+    This algo component is designed to interpolate SAFRAN forcings on regular grid
+    with MPI parallelization.
+    """
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to interpolate SAFRAN forcings on regular grid '
+               'with MPI parallelization.',
+        attr = dict(
+            binary = dict(
+                values = ['INTERPOL'],
+            ),
+
+        )
+    )
+
+    def execute(self, rh, opts):
+
+        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(kind='forcing')]
+
+        for forcing in list_forcings:
+            self.system.mv(forcing.rh.container.filename, 'input.nc')
+            super(Interpol_Forcing, self).execute(rh, opts)
+            self.system.mv('output.nc', forcing.rh.container.filename)
+
+
+@echecker.disabled_if_unavailable
+class Prosnow_Parallel(Surfex_Parallel):
+
+    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
+        attr = dict(
+            insert_data = dict(
+                default = 'prosnow_insert_data',
+                type = str,
+                optional = False,
+            )
+        )
+    )
+
+    def prosnow_modify_namelist(self):
+
+        new_nam = update_namelist_var("OPTIONS_unmodified.nam", "water.txt")
+
+        return new_nam
+
+    def prosnow_modify_prep(self):
+
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
+        my_name_OBS = 'OBS_' + dateend_str + '.nc'
+        my_name_PREP = 'PREP_' + dateend_str + '.nc'
+
+        old_prep = prep_tomodify(my_name_PREP)
+        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc', 'prep_fillup_5.nc', 'variables', my_name_PREP)
+
+        return new_prep
+
+    def execute(self, rh, opts):
+
+            # Insert water consumption in namelist (before running surfex)
+            self.prosnow_modify_namelist()
+
+            # Call execute of Surfex_Parallel
+            # Note that modify_namelist and modify_prep methods of the mother class
+            # still have to be called in the following instruction
+            super(Prosnow_Parallel, self).execute(rh, opts)
+
+            # Insert snow height in prep (after running surfex)
+            self.prosnow_modify_prep()

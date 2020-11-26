@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+A system addon to support the "sfxtools" utility program.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
@@ -25,11 +29,11 @@ class SFX_Tool(addons.Addon):
     Interface to the sfxtools command.
     """
 
-    LFI_HNDL_SPEC   = ':1'
-    DR_HOOK_SILENT  = 1
+    LFI_HNDL_SPEC = ':1'
+    DR_HOOK_SILENT = 1
     DR_HOOK_NOT_MPI = 1
-    OMP_STACKSIZE         = '32M'
-    KMP_STACKSIZE         = '32M'
+    OMP_STACKSIZE = '32M'
+    KMP_STACKSIZE = '32M'
     KMP_MONITOR_STACKSIZE = '32M'
 
     _footprint = dict(

@@ -39,19 +39,19 @@ class utFootprintBuiltins(TestCase):
         self.assertEqual(d['foo'], 2)
         self.assertSequenceEqual(list(d.keys()), ['foo'])
 
-        l = FPList(['one', 'two', 3])
-        self.assertIsInstance(l, FPList)
-        self.assertIsInstance(l, list)
-        self.assertListEqual(l, ['one', 'two', 3])
-        self.assertSequenceEqual(l.items(), ['one', 'two', 3])
-        self.assertEqual(l[1], 'two')
-        l.append(4)
-        self.assertListEqual(l[:], ['one', 'two', 3, 4])
+        fpl = FPList(['one', 'two', 3])
+        self.assertIsInstance(fpl, FPList)
+        self.assertIsInstance(fpl, list)
+        self.assertListEqual(fpl, ['one', 'two', 3])
+        self.assertSequenceEqual(fpl.items(), ['one', 'two', 3])
+        self.assertEqual(fpl[1], 'two')
+        fpl.append(4)
+        self.assertListEqual(fpl[:], ['one', 'two', 3, 4])
 
-        l = FPList([3])
-        self.assertIsInstance(l, FPList)
-        self.assertIsInstance(l, list)
-        self.assertListEqual(l, [3])
+        fpl = FPList([3])
+        self.assertIsInstance(fpl, FPList)
+        self.assertIsInstance(fpl, list)
+        self.assertListEqual(fpl, [3])
 
         s = FPSet(['one', 'two', 3])
         self.assertIsInstance(s, FPSet)
@@ -70,10 +70,10 @@ class utFootprintBuiltins(TestCase):
 
     def test_builtins_usage(self):
         rv = footprints.proxy.garbage(
-            thedict  = FPDict(foo=2),
-            thelist  = FPList(['one', 'two', 3]),
-            theset   = FPSet([1, 2, 'three']),
-            thetuple = FPTuple(('one', 'two', 3))
+            thedict=FPDict(foo=2),
+            thelist=FPList(['one', 'two', 3]),
+            theset=FPSet([1, 2, 'three']),
+            thetuple=FPTuple(('one', 'two', 3))
         )
 
         self.assertIsInstance(rv, FootprintTestBuiltins)

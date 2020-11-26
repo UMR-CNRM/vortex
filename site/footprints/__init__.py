@@ -28,7 +28,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.6.1'
+__version__ = '1.7.2'
 
 __tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
 
@@ -153,15 +153,15 @@ class Footprint(object):
         """Initialisation and checking of a given set of footprint."""
         myclsname = kw.pop('myclsname', 'unknown class')
         if kw.pop('nodefault', False):
-            fp = dict(attr = dict())
+            fp = dict(attr=dict())
         else:
             fp = dict(
-                attr = dict(),
-                bind = list(),
-                info = 'Not documented',
-                only = dict(),
-                priority = dict(
-                    level = priorities.top.DEFAULT  # @UndefinedVariable
+                attr=dict(),
+                bind=list(),
+                info='Not documented',
+                only=dict(),
+                priority=dict(
+                    level=priorities.top.DEFAULT  # @UndefinedVariable
                 )
             )
         typescheck = collections.defaultdict(list)
@@ -313,7 +313,7 @@ class Footprint(object):
         aliases = []
         for x in attrs:
             aliases.extend(fpa[x]['alias'])
-        return [ a for a in desc if a in attrs or a in aliases ]
+        return [a for a in desc if a in attrs or a in aliases]
 
     def optional(self, a):
         """Returns whether the given attribute ``a`` is optional or not in the current footprint."""
@@ -322,7 +322,7 @@ class Footprint(object):
     def mandatory(self):
         """Returns the list of mandatory attributes in the current footprint."""
         fpa = self._fp['attr']
-        return [ x for x in fpa.keys() if not fpa[x]['optional'] ]
+        return [x for x in fpa.keys() if not fpa[x]['optional']]
 
     def _firstguess(self, desc, resolvecache=None):
         """Produces a complete guess of the actual footprint according to actual description ``desc``."""
@@ -528,11 +528,10 @@ class Footprint(object):
         if item in values:
             return True
         else:
-            return bool([ x for x in values if x == item ])
+            return bool([x for x in values if x == item])
 
     def resolve(self, desc, **kw):
         """Try to guess how the given description ``desc`` could possibly match the current footprint."""
-
         opts = dict(fatal=setup.fatal, fast=setup.fastmode)
         opts.update(kw)
         opts_fatal = opts['fatal']  # Shortcut for faster execution
@@ -613,7 +612,7 @@ class Footprint(object):
                     diags[k] = True
                     guess[k] = None
 
-            if ( opts_fast or kfast ) and guess[k] is None:
+            if (opts_fast or kfast) and guess[k] is None:
                 # logger.debug(' > Fast exit from resolve on key "%s" (fast=%s, fastkey=%s)',
                 #              k, str(opts_fast), str(kfast))
                 break
@@ -733,8 +732,12 @@ class DecorativeFootprint(Footprint):
     def __init__(self, *args, **kw):
         super(DecorativeFootprint, self).__init__(*args, **kw)
         self._decorators = list()
+        for a in args:
+            if isinstance(a, DecorativeFootprint):
+                self._decorators.extend(a.decorators)
         if 'decorator' in kw:
-            self._decorators = kw['decorator'] if isinstance(kw['decorator'], list) else [kw['decorator'], ]
+            self._decorators.extend(kw['decorator'] if isinstance(kw['decorator'], list)
+                                    else [kw['decorator'], ])
             if not all([callable(d) for d in self._decorators]):
                 raise ValueError("Class decorators must be callables")
 
@@ -846,9 +849,9 @@ class FootprintBase(object):
     """
 
     _footprint = Footprint()
-    _abstract  = True
-    _explicit  = True
-    _reusable  = True
+    _abstract = True
+    _explicit = True
+    _reusable = True
     _collector = ('garbage',)
 
     def __init__(self, *args, **kw):
@@ -966,7 +969,7 @@ class FootprintBase(object):
             attrs.update(extra)
         objcp = self.__class__(**attrs)
         if full:
-            for a in [ x for x in self.__dict__.keys() if not x.startswith('_') ]:
+            for a in [x for x in self.__dict__.keys() if not x.startswith('_')]:
                 setattr(objcp, a, getattr(self, a))
         return objcp
 

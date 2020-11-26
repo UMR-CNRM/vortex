@@ -4,9 +4,9 @@
 .. raw:: html
 
     <div class="nb2sphinx-tb">
-{%- for line in output.traceback %}
-{{ line | ansi2html | indent(4) }}
-{%- endfor %}
+{%- for line in output.traceback -%}
+{{ line | strip_ansi | trim | indent(4) }}
+{%- endfor -%}
     </div>
 
 {% endblock error %}
@@ -14,9 +14,7 @@
 {% block stream %}
 .. raw:: html
 
-    <div class="nb2sphinx-stdout">
-{{ output.text | escape | trim | indent(4) }}
-    </div>
+    <div class="nb2sphinx-stdout">{{ output.text | escape | indent(4) | trim }}</div>
 
 {% endblock stream %}
 
@@ -28,10 +26,10 @@
     {%- if loop.first -%}
         {%- set outheader = '<span class="output_indicator">Out: </span>' -%}
     {%- else -%}
-        {%- set outheader = '     ' -%}
-    {%- endif %}
-{{ outheader | indent }}{{ line | escape }}
-{%- endfor %}
+        {%- set outheader = '         ' -%}
+    {%- endif -%}
+    {{ outheader }}{{ line | escape }}
+{%- endfor -%}
     </div>
 
 {% endblock data_text %}

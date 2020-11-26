@@ -19,6 +19,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MocageAssim
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: TestRestart
    :show-inheritance:
    :members:
@@ -45,6 +50,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: ExecCorromegasurf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: HMSPLITGRIB2
    :show-inheritance:
    :members:
    :member-order: alphabetical

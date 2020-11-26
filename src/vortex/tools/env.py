@@ -80,11 +80,11 @@ class Environment(object):
         """
         self.__dict__['_history'] = PrivateHistory() if history else None
         self.__dict__['_verbose'] = verbose
-        self.__dict__['_frozen']  = collections.deque()
-        self.__dict__['_pool']    = dict()
-        self.__dict__['_mods']    = set()
-        self.__dict__['_sh']      = None
-        self.__dict__['_os']      = list()
+        self.__dict__['_frozen'] = collections.deque()
+        self.__dict__['_pool'] = dict()
+        self.__dict__['_mods'] = set()
+        self.__dict__['_sh'] = None
+        self.__dict__['_os'] = list()
         if env is not None and isinstance(env, Environment):
             self._env_clone_internals(env, contextlock)
             if verbose:
@@ -534,7 +534,7 @@ collections_abc.Mapping.register(Environment)
 
 
 class EnvironmentDeltaContext():
-    """Context that will apply a delta on the Environnement and rewind it on exit."""
+    """Context that will apply a delta on the Environment and rewind it on exit."""
 
     def __init__(self, env, **kw):
         """

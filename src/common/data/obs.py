@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources to handle observations files in various formats.
+"""
+
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import six
@@ -11,18 +15,18 @@ from collections import namedtuple
 
 
 import footprints
-from bronx.fancies               import loggers
-from bronx.stdtypes.date         import Date
-from bronx.stdtypes.dictionaries import ReadOnlyDict
+from bronx.datagrip.varbcheaders import VarbcHeadersFile
+from bronx.fancies import loggers
+from bronx.syntax.decorators import nicedeco
 
-from vortex.data.flow     import GeoFlowResource, FlowResource
+from vortex.data.flow import GeoFlowResource, FlowResource
 from vortex.data.contents import TextContent, AlmostListContent
-from vortex.syntax        import stdattrs, stddeco
+from vortex.syntax import stdattrs, stddeco
 
-from gco.syntax.stdattrs  import gvar, GenvKey
+from gco.syntax.stdattrs import gvar, GenvKey
 
 #: Automatic export of Observations class
-__all__ = [ 'Observations' ]
+__all__ = ['Observations', ]
 
 logger = loggers.getLogger(__name__)
 
@@ -35,7 +39,7 @@ class Observations(GeoFlowResource):
     Abstract observation resource.
     """
 
-    _abstract  = True
+    _abstract = True
     _footprint = dict(
         info = 'Observations file',
         attr = dict(
@@ -60,11 +64,25 @@ class Observations(GeoFlowResource):
         return 'observations'
 
 
+class ObsProcessed(Observations):
+    """Pre-Processed or Processed observations."""
+
+    _footprint = dict(
+        info = 'Pre-Processed observations.',
+        attr = dict(
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf', 'hdf5'],
+            ),
+            stage = dict(
+                values   = ['preprocessing', ],
+            ),
+        )
+    )
+
+
 @stddeco.namebuilding_insert('layout', lambda s: s.layout)
 class ObsODB(Observations):
-    """
-    TODO.
-    """
+    """Observations in ODB format associated to a given stage."""
 
     _footprint = dict(
         info = 'Packed observations (ODB, CCMA, etc.)',
@@ -72,8 +90,8 @@ class ObsODB(Observations):
             nativefmt = dict(
                 values   = ['odb', 'odb/split', 'odb/compressed'],
                 remap    = {
-                    'odb/split'      : 'odb',
-                    'odb/compressed' : 'odb'
+                    'odb/split': 'odb',
+                    'odb/compressed': 'odb'
                 },
             ),
             layout = dict(
@@ -254,29 +272,61 @@ class ObsFlags(FlowResource):
         return 'BDM_CQ'
 
 
+@nicedeco
+def needs_slurp(mtd):
+    """Call _actual_slurp before anything happens."""
+
+    def new_stuff(self):
+        if self._do_delayed_slurp is not None:
+            self._actual_slurp(self._do_delayed_slurp)
+        return mtd(self)
+
+    return new_stuff
+
+
 class VarBCContent(AlmostListContent):
 
     # The VarBC file is too big: revert to the good old diff
     _diffable = False
-    # Do a delayed init to avoid crashes on big VarBC files
-    _delayed_slurp = True
+
+    def __init__(self, **kw):
+        super(VarBCContent, self).__init__(**kw)
+        self._parsed_data = None
+        self._do_delayed_slurp = None
+
+    @property
+    @needs_slurp
+    def data(self):
+        """The internal data encapsulated."""
+        return self._data
+
+    @property
+    @needs_slurp
+    def size(self):
+        """The internal data size."""
+        return self._size
+
+    @property
+    def parsed_data(self):
+        """The data as a :class:`VarbcFile` object."""
+        if self._parsed_data is None:
+            # May fail if Numpy is not installed...
+            from bronx.datagrip.varbc import VarbcFile
+            self._parsed_data = VarbcFile(self.data)
+        return self._parsed_data
+
+    def _actual_slurp(self, container):
+        with container.preferred_decoding(byte=False):
+            self._size = container.totalsize
+            self._data.extend(container.readlines())
+        self._do_delayed_slurp = None
 
     def slurp(self, container):
-        """Get data from the ``container`` and find the metadata."""
-        super(VarBCContent, self).slurp(container)
-        tmpdata = container.head(2)
-        mdata = {}
-        # First we look for the version of the VarBC file
-        mobj = re.match(r'\w+\.version(\d+)', tmpdata[0])
-        if mobj:
-            mdata['version'] = int(mobj.group(1))
-            # Then we fetch the date of the file
-            mobj = re.match(r'\s*\w+\s+(\d{8})\s+(\d+)', tmpdata[1])
-            if mobj:
-                mdata['date'] = Date('{:s}{:06d}'.format(mobj.group(1),
-                                                         int(mobj.group(2))))
-                # The metadata are updated only if both version and data are here
-                self._metadata = ReadOnlyDict(mdata)
+        """Get data from the ``container``."""
+        self._do_delayed_slurp = container
+        with container.preferred_decoding(byte=False):
+            container.rewind()
+            self._metadata = VarbcHeadersFile([container.readline() for _ in range(3)])
 
 
 @stddeco.namebuilding_append('src', lambda s: [s.stage, ])
@@ -388,7 +438,7 @@ class BlackList(FlowResource):
     def iga_pathinfo(self):
         """Standard path information for IGA inline cache."""
         return dict(
-            model = self.model
+            model=self.model
         )
 
     def archive_map(self):
@@ -415,11 +465,10 @@ class ObsRefContent(TextContent):
         """Append the specified ``item`` to internal data contents."""
         self.data.append(ObsRefItem(*item))
 
-    def _actual_slurp(self, container):
+    def slurp(self, container):
         with container.preferred_decoding(byte=False):
             self._data.extend([ObsRefItem(*x.split()[:5]) for x in container if not x.startswith('#')])
             self._size = container.totalsize
-        self._do_delayed_slurp = None
 
     @classmethod
     def formatted_data(self, item):
@@ -501,8 +550,6 @@ class ObsMapContent(TextContent):
       with *te* or *ta* that would usualy be inserted in the *conv* database.
     * ``only=FPSet(('conv',))`` -> Only *conv* ODB database will be used.
     """
-
-    _delayed_slurp = False
 
     def __init__(self, **kw):
         kw.setdefault('discarded', set())

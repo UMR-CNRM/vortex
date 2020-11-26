@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.tools.addons import AddonGroup
@@ -19,9 +23,9 @@ class MocageAddonsGroup(AddonGroup):
         info = 'Default Mocage Addons',
         attr = dict(
             kind = dict(
-                values = ['mocage', ],
+                values = ['mocage'],
             ),
         )
     )
 
-    _addonslist = ('iopoll_mocage', )  # IO polling
+    _addonslist = ('iopoll_mocage', 'iopoll_mocacc')  # IO polling

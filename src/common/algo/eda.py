@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to the Ensemble Data Assimilation
+system.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -62,10 +67,12 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         info='Base class for any EDA related task',
         attr=dict(
             nbmember = dict(
+                info = "The number of members to deal will (auto-detected if omitted)",
                 type = int,
                 optional = True,
             ),
             nbmin = dict(
+                info = "The minimum number of input members that is mandatory to go one",
                 type = int,
                 optional = True,
                 default = 2,
@@ -79,43 +86,84 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
 
     @property
     def actual_nbe(self):
+        """The effective number of members."""
         return self._actual_nbe
 
-    def modelstate_numbering(self, rh):
-        eff_sections = self.context.sequence.effective_inputs(role = self._INPUTS_ROLE)
-        eff_members = set([sec.rh.provider.member for sec in eff_sections])
-        eff_formats = set([sec.rh.container.actualfmt for sec in eff_sections])
+    @property
+    def actual_totalnumber(self):
+        """The total number of members (=! actual_nbe for lagged ensembles. see below)."""
+        return self.actual_nbe
+
+    @property
+    def actual_nbmin(self):
+        """The minimum number of effective members that are mandatory to go one."""
+        return self.nbmin
+
+    def _members_effective_inputs(self):
+        """The list of effective sections representing input data."""
+        return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
+                      key=attrgetter('rh.provider.member'))
+
+    def _check_members_list_numbering(self, rh, mlist, mformats):
+        """Check if, for the **mlist** members list, some renaming id needed."""
+        if len(set(mlist)) != len(mlist):
+            logger.warning("Some members are duplicated. That's very strange...")
         if self.nbmember is None:
-            self.algoassert(len(eff_formats) <= 1, 'Mixed formats are not allowed !')
-        elif self.nbmember and len(eff_formats) > 1:
+            self.algoassert(len(mformats) <= 1, 'Mixed formats are not allowed !')
+        elif self.nbmember and len(mformats) > 1:
             logger.info('%s have mixed formats... please correct that.', self._INPUTS_ROLE)
-        if eff_members and self.nbmember is not None:
+        if mlist and self.nbmember is not None:
             # Consistency check
-            if len(eff_members) != self.nbmember:
+            if len(mlist) != self.nbmember:
                 logger.warning('Discrepancy between *nbmember* and effective input files...' +
                                ' sticking with *nbmember*')
             else:
-                logger.info("The input files number checks out !")
+                logger.info("The input files member numbers checks out !")
             return False  # Ok, apparently the user knows what she/he is doing
-        elif self.nbmember and not eff_members:
+        elif self.nbmember and not mlist:
             return False  # Ok, apparently the user knows what she/he is doing
-        elif eff_members and self.nbmember is None:
-            self._actual_nbe = len(eff_members)
-            innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh, actualfmt=eff_formats.pop())
-            checkfiles = [m for m in range(1, self.actual_nbe + 1)
+        elif mlist and self.nbmember is None:
+            innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                          totalnumber=self.actual_totalnumber,
+                                          actualfmt=mformats.pop())
+            checkfiles = [m for m in range(1, len(mlist) + 1)
                           if self.system.path.exists(innc(number=m))]
-            if len(checkfiles) == self._actual_nbe:
+            if len(checkfiles) == len(mlist):
                 logger.info("The input files numbering checks out !")
                 return False  # Ok, apparently the user knows what she/he is doing
             elif len(checkfiles) == 0:
                 return True
             else:
-                raise AlgoComponentError('Members renumbering is needed but some files are blocking the way !')
-        elif len(eff_members) == 0 and self.nbmember is None:
+                raise AlgoComponentError('Members renumbering is needed but some ' +
+                                         'files are blocking the way !')
+        elif len(mlist) == 0 and self.nbmember is None:
             raise AlgoComponentError('No input files where found !')
 
+    def modelstate_needs_renumbering(self, rh):
+        """Check if, for the **mlist** members list, some renaming id needed."""
+        eff_sections = self._members_effective_inputs()
+        eff_members = [sec.rh.provider.member for sec in eff_sections]
+        eff_formats = set([sec.rh.container.actualfmt for sec in eff_sections])
+        if eff_members and self.nbmember is None:
+            self._actual_nbe = len(eff_members)
+        return self._check_members_list_numbering(rh, eff_members, eff_formats)
+
+    def modelstate_renumbering(self, rh, mlist):
+        """Actualy rename the effective inputs."""
+        eff_format = mlist[0].rh.container.actualfmt
+        innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                      totalnumber=self.actual_totalnumber,
+                                      actualfmt=eff_format)
+        for i, s in enumerate(mlist, start=1):
+            logger.info("Soft-Linking %s to %s",
+                        s.rh.container.localpath(), innc(number=i))
+            self.system.softlink(s.rh.container.localpath(), innc(number=i))
+
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        nam_updated = super(IFSEdaAbstractAlgo, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        """Update the namelists with EDA related macros."""
+        nam_updated = super(IFSEdaAbstractAlgo, self).prepare_namelist_delta(rh,
+                                                                             namcontents,
+                                                                             namlocal)
         if self.actual_nbe is not None:
             namcontents.setmacro('NBE', self.actual_nbe)
             logger.info('Setup macro NBE=%s in %s', self.actual_nbe, namlocal)
@@ -123,22 +171,170 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         return nam_updated
 
     def prepare(self, rh, opts):
-        # Check if member's renumbering is needed
+        """Check the input files and act on it."""
         self.system.subtitle('Solving the input files nightmare...')
-        if self.modelstate_numbering(rh):
-            eff_sections = sorted(self.context.sequence.effective_inputs(role = self._INPUTS_ROLE),
-                                  key=attrgetter('rh.provider.member'))
-            logger.info("Starting input files renumbering. %d members found", len(eff_sections))
-            if len(eff_sections) < self.nbmin:
+        if self.modelstate_needs_renumbering(rh):
+            eff_sections = self._members_effective_inputs()
+            if len(eff_sections) < self.actual_nbmin:
                 raise AlgoComponentError('Not enough input files to continue...')
-            eff_format = eff_sections[0].rh.container.actualfmt
-            innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh, actualfmt=eff_format)
-            for i, s in enumerate(eff_sections):
-                logger.info("Copying (intent=in) %s to %s", s.rh.container.localpath(), innc(number=i + 1))
-                self.system.cp(s.rh.container.localpath(), innc(number=i + 1),
-                               fmt=eff_format, intent='in')
+            logger.info("Starting input files renumbering. %d effective members found",
+                        len(eff_sections))
+            self.modelstate_renumbering(rh, eff_sections)
         self.system.subtitle('Other IFS related settings')
         super(IFSEdaEnsembleAbstractAlgo, self).prepare(rh, opts)
+
+
+class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
+    """Base class for any EDA related task wrapped into an IFS/Arpege binary.
+
+    This extends the :class:`IFSEdaEnsembleAbstractAlgo` with a *nblag* attribute
+    and the ability to detect the input files and re-number them (in order to be
+    able to deal with missing members).
+    """
+
+    _PADDING_ROLE = 'PaddingModelState'
+
+    _abstract = True
+    _footprint = dict(
+        info='Base class for any EDA related task',
+        attr=dict(
+            nblag = dict(
+                info = "The number of lagged dates (auto-detected if omitted)",
+                type = int,
+                optional = True,
+            ),
+            padding = dict(
+                info = "Fill the gaps with some kind of climatological data",
+                type = bool,
+                optional = True,
+                default = False,
+            )
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(IFSEdaLaggedEnsembleAbstractAlgo, self).__init__(*kargs, **kwargs)
+        self._actual_nresx = self.nblag
+
+    @property
+    def actual_nresx(self):
+        """The effective number of lagged dates."""
+        return self._actual_nresx
+
+    @property
+    def actual_totalnumber(self):
+        """The total number of members."""
+        return self.actual_nbe * self.actual_nresx if self.padding else self.actual_nbe
+
+    @property
+    def actual_nbmin(self):
+        """The minimum number of effective members that are mandatory to go one."""
+        return self.nbmin * self.actual_nresx if self.padding else self.nbmin
+
+    def _members_effective_inputs(self):
+        """The list of effective sections representing input data."""
+        return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
+                      key=attrgetter('rh.resource.date', 'rh.provider.member'))
+
+    def _members_all_inputs(self):
+        """The list of sections representing input data."""
+        return sorted(self.context.sequence.filtered_inputs(role=self._INPUTS_ROLE),
+                      key=attrgetter('rh.resource.date', 'rh.provider.member'))
+
+    def modelstate_needs_renumbering(self, rh):
+        """Check if, for the **mlist** members list, some renaming id needed."""
+        all_sections = self._members_all_inputs()
+        eff_sections = self._members_effective_inputs()
+
+        # Look for available dates (lagged ensemble)
+        all_dates = set([sec.rh.resource.date for sec in all_sections])
+        if all_dates and self.nblag is not None:
+            # Consistency check
+            if len(all_dates) != self.nblag:
+                logger.warning('Discrepancy between *nblag* and input files...' +
+                               ' sticking with *nblag*')
+        elif all_dates and self.nblag is None:
+            self._actual_nresx = len(all_dates)
+
+        # Fetch the effective members list
+        if self.padding:
+            # For each date, check the member's list
+            d_blocks = dict()
+            for a_date in all_dates:
+                d_sections = [sec for sec in all_sections if sec.rh.resource.date == a_date]
+                d_members = sorted([sec.rh.provider.member for sec in d_sections])
+                d_formats = set([sec.rh.container.actualfmt for sec in d_sections])
+                d_blocks[a_date] = (d_members, d_formats)
+            a_date, (eff_members, eff_formats) = d_blocks.popitem()
+            for a_date, a_data in d_blocks.items():
+                self.algoassert(a_data[0] == eff_members, "Inconsistent members list.")
+                self.algoassert(a_data[1] == eff_formats, "Inconsistent formats list.")
+            if eff_members and self.nbmember is None:
+                # Here, NBE is the number of members for one date
+                self._actual_nbe = len(eff_members)
+            # Generate a complete list off input files
+            eff_members = []
+            for a_date, a_data in sorted(d_blocks.items()):
+                for member in a_data[0]:
+                    eff_members.append((a_date, member))
+        else:
+            eff_members = [(sec.rh.resource.date, sec.rh.provider.member)
+                           for sec in eff_sections]
+            eff_formats = set([sec.rh.container.actualfmt for sec in eff_sections])
+            if eff_members and self.nbmember is None:
+                # Here, NBE is the number of members for all dates
+                self._actual_nbe = len(eff_members)
+
+        return self._check_members_list_numbering(rh, eff_members, eff_formats)
+
+    def modelstate_renumbering(self, rh, mlist):
+        """Actualy rename the effective inputs."""
+        if self.padding:
+            eff_format = mlist[0].rh.container.actualfmt
+            innc = self.naming_convention(kind='edainput', variant=self.kind, rh=rh,
+                                          totalnumber=self.actual_totalnumber,
+                                          actualfmt=eff_format)
+            all_sections = self._members_all_inputs()
+            paddingstuff = self.context.sequence.effective_inputs(role=self._PADDING_ROLE)
+            for i, s in enumerate(all_sections, start=1):
+                if s.stage == 'get' and s.rh.container.exists():
+                    logger.info("Soft-Linking %s to %s", s.rh.container.localpath(),
+                                innc(number=i))
+                    self.system.softlink(s.rh.container.localpath(), innc(number=i))
+                else:
+                    mypadding = None
+                    for p in paddingstuff:
+                        if getattr(p.rh.resource, 'ipert',
+                                   getattr(p.rh.resource, 'number', None) == i):
+                            mypadding = p
+                            break
+                        else:
+                            if (getattr(p.rh.resource, 'date', None) == s.rh.resource.date and
+                                    getattr(p.rh.provider, 'member', None) == s.rh.provider.member):
+                                mypadding = p
+                                break
+                    if mypadding is not None:
+                        logger.warning("Soft-Linking Padding data %s to %s",
+                                       mypadding.rh.container.localpath(),
+                                       innc(number=i))
+                        self.system.softlink(mypadding.rh.container.localpath(),
+                                             innc(number=i))
+                    else:
+                        raise AlgoComponentError('No padding data where found for i= {:d}: {!s}'
+                                                 .format(i, s))
+        else:
+            super(IFSEdaLaggedEnsembleAbstractAlgo, self).modelstate_renumbering(rh, mlist)
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        """Update the namelists with EDA related macros."""
+        nam_updated = super(IFSEdaLaggedEnsembleAbstractAlgo, self).prepare_namelist_delta(rh,
+                                                                                           namcontents,
+                                                                                           namlocal)
+        if self.actual_nresx is not None:
+            namcontents.setmacro('NRESX', self.actual_nresx)
+            logger.info('Setup macro NRESX=%s in %s', self.actual_nresx, namlocal)
+            nam_updated = True
+        return nam_updated
 
 
 class IFSEdaFemars(IFSEdaAbstractAlgo):
@@ -198,7 +394,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
         eff_terms = None
         for role in roles:
             eterm = set([sec.rh.resource.term for sec
-                         in self.context.sequence.effective_inputs(role = role)])
+                         in self.context.sequence.effective_inputs(role=role)])
             if eterm:
                 if eff_terms is None:
                     eff_terms = eterm
@@ -209,7 +405,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
 
     def _link_stuff_in(self, role, actualterm, targetnc, targetintent='in', wastebasket=None):
         estuff = [sec
-                  for sec in self.context.sequence.effective_inputs(role = role)
+                  for sec in self.context.sequence.effective_inputs(role=role)
                   if sec.rh.resource.term == actualterm]
         if len(estuff) > 1:
             logger.warning('Multiple %s  for the same date ! Going on...', role)
@@ -273,7 +469,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                                         inputkind='clim_model')
                 # Deal with useless stuff... SADLY !
                 useless = [sec
-                           for sec in self.context.sequence.effective_inputs(role = 'Useless')
+                           for sec in self.context.sequence.effective_inputs(role='Useless')
                            if (sec.rh.resource.term == actualterm and
                                self._USELESS_MATCH.match(sec.rh.container.localpath()))]
                 for a_useless in useless:
@@ -299,7 +495,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                     self.system.mkdir(self._RUNSTORE)
                     # Freeze the current output
                     shelf_label = self.system.path.join(self._RUNSTORE, outnc(number=1, term=actualterm))
-                    self.system.move(outnc(number=1, term=Time(0)), shelf_label, fmt = 'fa')
+                    self.system.move(outnc(number=1, term=Time(0)), shelf_label, fmt='fa')
                     self._outputs_shelf.append(shelf_label)
                     # Some cleaning
                     for afile in wastebasket:
@@ -363,7 +559,7 @@ class IFSEnsembleMean(IFSEdaEnsembleAbstractAlgo):
     )
 
 
-class IFSCovB(IFSEdaEnsembleAbstractAlgo):
+class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
     """Operations around the background error covariance matrix."""
 
     _footprint = dict(
@@ -372,27 +568,29 @@ class IFSCovB(IFSEdaEnsembleAbstractAlgo):
             kind=dict(
                 values=['covb', ],
             ),
-            nblag = dict(
-                type = int,
+            hybrid = dict(
+                type = bool,
                 optional = True,
+                default = False,
             ),
         )
     )
 
-    def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        nam_updated = super(IFSCovB, self).prepare_namelist_delta(rh, namcontents, namlocal)
-        if self.nblag is not None:
-            namcontents.setmacro('NRESX', self.nblag)
-            logger.info('Setup macro NRESX=%s in %s', self.nblag, namlocal)
-            nam_updated = True
-        return nam_updated
+    _HYBRID_CLIM_ROLE = 'ClimatologicalModelState'
+
+    @property
+    def actual_totalnumber(self):
+        """The total number of members (times 2 if hybrid...)."""
+        parent_totalnumber = super(IFSCovB, self).actual_totalnumber
+        return parent_totalnumber * 2 if self.hybrid else parent_totalnumber
 
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
         super(IFSCovB, self).prepare(rh, opts)
-
-        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'Rawfiles'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')), start = 1):
+        # Legacy...
+        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='Rawfiles'),
+                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
             for filename in self.system.listdir(repname):
@@ -400,10 +598,23 @@ class IFSCovB(IFSEdaEnsembleAbstractAlgo):
                 if level is not None:
                     self.system.softlink(self.system.path.join(repname, filename),
                                          radical.format(num, level.group(1)))
-
-        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role = 'LaggedEnsemble'),
-                                         key = attrgetter('rh.resource.date', 'rh.provider.member')),
-                                  start = 1):
+        # Legacy...
+        for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='LaggedEnsemble'),
+                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                  start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))
+        # Requesting Hybrid cimputations ?
+        if self.hybrid:
+            hybstuff = self.context.sequence.effective_inputs(role=self._HYBRID_CLIM_ROLE)
+            hybformat = hybstuff[0].rh.container.actualfmt
+            totalnumber = self.actual_nbe * self.actual_nresx if self.padding else self.actual_nbe
+            for i, tnum in enumerate(range(totalnumber + 1, 2 * totalnumber + 1)):
+                innc = self.naming_convention(kind='edainput', variant=self.kind,
+                                              totalnumber=self.actual_totalnumber,
+                                              rh=rh, actualfmt=hybformat)
+                logger.info("Soft-Linking %s to %s",
+                            hybstuff[i].rh.container.localpath(), innc(number=tnum))
+                self.system.softlink(hybstuff[i].rh.container.localpath(),
+                                     innc(number=tnum))

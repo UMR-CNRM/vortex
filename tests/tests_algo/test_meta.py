@@ -7,7 +7,7 @@ from bronx.fancies.loggers import unittestGlobalLevel
 import footprints
 
 import vortex
-from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 
 tloglevel = 'ERROR'
 
@@ -45,6 +45,7 @@ class BaseTestAlgoComponnentForMeta(AlgoComponent):
         return rv
 
 
+@algo_component_deco_mixin_autodoc
 class BaseTestMixin(AlgoComponentDecoMixin):
 
     def _prepare_hook(self, rh, opts):
@@ -85,8 +86,8 @@ class TestAlgoMetaClass(unittest.TestCase):
         with self.assertRaises(AssertionError):
             # Because _MIXIN_EXTRA_FOOTPRINTS is not a valid footprints
             class A_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin):
-                _footprint = dict(attr = dict(
-                    kind = dict(values = ['a_base_test_algo_for_meta', ]),
+                _footprint = dict(attr=dict(
+                    kind=dict(values=['a_base_test_algo_for_meta', ]),
                 ))
 
         A_TestMixin.MIXIN_AUTO_FPTWEAK = False
@@ -94,22 +95,22 @@ class TestAlgoMetaClass(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             # Because two mixin class with _MIXIN_EXECUTE_OVERWRITE are provided
             class B_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin, BaseTestMixin):
-                _footprint = dict(attr = dict(
-                    kind = dict(values = ['b_base_test_algo_for_meta', ]),
+                _footprint = dict(attr=dict(
+                    kind=dict(values=['b_base_test_algo_for_meta', ]),
                 ))
 
         with self.assertRaises(RuntimeError):
             # Because execute is already defined
             class C_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin):
-                _footprint = dict(attr = dict(
-                    kind = dict(values = ['c_base_test_algo_for_meta', ]),
+                _footprint = dict(attr=dict(
+                    kind=dict(values=['c_base_test_algo_for_meta', ]),
                 ))
 
                 def execute(self, rh, opts):
                     pass
 
         class Fake(object):
-                pass
+            pass
 
         with self.assertRaises(RuntimeError):
             # Fake is not an AlgoComponnent
@@ -134,16 +135,16 @@ class TestAlgoMetaClass(unittest.TestCase):
 
             _MIXIN_EXTRA_FOOTPRINTS = [
                 footprints.Footprint(
-                    attr = dict(
-                        fakeattr = dict()
+                    attr=dict(
+                        fakeattr=dict()
                     )
                 )
             ]
 
         class Full_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, Full_TestMixin):
 
-            _footprint = dict(attr = dict(
-                kind = dict(values = ['full_base_test_algo_for_meta', ]),
+            _footprint = dict(attr=dict(
+                kind=dict(values=['full_base_test_algo_for_meta', ]),
             ))
 
             def prepare(self, rh, opts):
@@ -151,8 +152,8 @@ class TestAlgoMetaClass(unittest.TestCase):
                 self.prepare_stack.append('inter')
 
         algot = Full_TestAlgoComponnentForMeta(kind='full_base_test_algo_for_meta',
-                                               engine = 'algo',
-                                               fakeattr = 'gruik')
+                                               engine='algo',
+                                               fakeattr='gruik')
         self.assertTrue(hasattr(algot, 'fakeattr'))
         self.assertTrue('fakeattr' in algot.footprint_retrieve().attr)
         self.assertEqual(algot.fakeattr, 'gruik')
@@ -171,13 +172,13 @@ class TestAlgoMetaClass(unittest.TestCase):
 
         class Half_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, Half_TestMixin):
 
-            _footprint = dict(attr = dict(
-                kind = dict(values = ['half_base_test_algo_for_meta', ]),
+            _footprint = dict(attr=dict(
+                kind=dict(values=['half_base_test_algo_for_meta', ]),
             ))
 
         algot = Half_TestAlgoComponnentForMeta(kind='half_base_test_algo_for_meta',
-                                               engine = 'algo',
-                                               fakeattr = 'gruik')
+                                               engine='algo',
+                                               fakeattr='gruik')
         self.assertTrue(not hasattr(algot, 'fakeattr'))
 
         self._run_algo(algot)

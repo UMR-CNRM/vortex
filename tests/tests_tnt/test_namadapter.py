@@ -48,7 +48,7 @@ class TestTntNamAdapter(unittest.TestCase):
         nadapt.remove_blocks(['nam_PREP_ISBA', ])
         nadapt.add_blocks(['NAM_TOTO'])
         nadapt.move_blocks({'NAM_FILE_NAMES': 'NAM_FILENAMES',
-                            'NAM_IO_OFFLINE': 'NAM_IO' })
+                            'NAM_IO_OFFLINE': 'NAM_IO'})
         nadapt.move_keys({('NAM_FILENAMES', 'CINIFILE'): ('NAM_IO', 'CINIFILEBIS')})
         nadapt.move_keys({('NAM_IO', 'LPRINT'): ('NAM_IO', 'NPRINT')}, doctor=True)
         nadapt.move_keys({('NAM_IO', 'CPREPFILE'): ('NAM_IO', 'GLURP')}, keep_index=True)
@@ -63,6 +63,9 @@ class TestTntNamAdapter(unittest.TestCase):
                             nadapt.check_blocks(nampath))
         nadapt.merge(BronxNamelistAdapter('&NAM_PREP_WATFLUX LWAT_SBL=T, /'))
         self.assertIs(nadapt['NAM_PREP_WATFLUX']['LWAT_SBL'], True)
+        self.assertIn('NAM_TOTO', nadapt)
+        nadapt.squeeze()
+        self.assertNotIn('NAM_TOTO', nadapt)
 
 
 if __name__ == "__main__":

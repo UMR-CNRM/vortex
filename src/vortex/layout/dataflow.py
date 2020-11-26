@@ -21,6 +21,7 @@ from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
 from bronx.syntax.pretty import EncodedPrettyPrinter
+import footprints
 from footprints.util import mktuple
 
 from vortex.util.roles import setrole
@@ -51,18 +52,51 @@ IXOTuple = namedtuple('IXOTuple', ['INPUT', 'OUTPUT', 'EXEC'])
 ixo = IXOTuple(INPUT=1, OUTPUT=2, EXEC=3)
 
 #: Arguments specific to a section (to be striped away from a resource handler description)
-section_args = [ 'role', 'alternate', 'intent', 'fatal', 'coherentgroup' ]
+section_args = ['role', 'alternate', 'intent', 'fatal', 'coherentgroup']
 
 
 def stripargs_section(**kw):
     """
-    Utility function to separate the named arguments in two parts: the one that describe section options
-    and any other ones. Return a tuple with ( section_options, other_options ).
+    Utility function to separate the named arguments in two parts: the one that
+    describe section options and any other ones. Return a tuple with
+    ( section_options, other_options ).
     """
     opts = dict()
-    for opt in [ x for x in section_args if x in kw ]:
+    for opt in [x for x in section_args if x in kw]:
         opts[opt] = kw.pop(opt)
     return (opts, kw)
+
+
+class _ReplaceSectionArgs(object):
+    """
+    Trigger the footprint's replacement mechanism on some of the section arguments.
+    """
+
+    _REPL_TODO = ('coherentgroup', )
+
+    def __init__(self):
+        self._fptmp = footprints.Footprint(attr={k: dict(optional=True)
+                                                 for k in self._REPL_TODO})
+
+    def __call__(self, rh, opts):
+        if any({footprints.replattr.search(opts[k])
+                for k in self._REPL_TODO if k in opts}):
+            # The "description"
+            desc = opts.copy()
+            if rh is not None:
+                desc.update(rh.options)
+                desc['container'] = rh.container
+                desc['provider'] = rh.provider
+                desc['resource'] = rh.resource
+            # Resolve
+            resolved, _, _ = self._fptmp.resolve(desc, fatal=False, fast=False)
+            # ok, let's use the resolved values
+            for k in self._REPL_TODO:
+                if resolved[k] is not None:
+                    opts[k] = resolved[k]
+
+
+_default_replace_section_args = _ReplaceSectionArgs()
 
 
 class Section(object):
@@ -73,18 +107,22 @@ class Section(object):
         self.kind = ixo.INPUT
         self.intent = intent.INOUT
         self.fatal = True
+        # Fetch the ResourceHandler
+        self._rh = kw.pop('rh', None)
+        # We realy need a ResourceHandler...
+        if self.rh is None:
+            raise AttributeError("A proper rh attribute have to be provided")
+        # Call the footprint's replacement mechanism if needed
+        _default_replace_section_args(self._rh, kw)
+        # Process the remaining options
         self._role = setrole(kw.pop('role', 'anonymous'))
         self._alternate = setrole(kw.pop('alternate', None))
         self._coherentgroups = kw.pop('coherentgroup', None)
         self._coherentgroups = set(self._coherentgroups.split(',')
                                    if self._coherentgroups else [])
         self._coherentgroups_opened = {g: True for g in self._coherentgroups}
-        self._rh = kw.pop('rh', None)
-        self.stages = [ kw.pop('stage', 'load') ]
+        self.stages = [kw.pop('stage', 'load'), ]
         self.__dict__.update(kw)
-        # We realy need a ResourceHandler...
-        if self.rh is None:
-            raise AttributeError("A proper rh attribute have to be provided")
         # If alternate is specified role have to be removed
         if self._alternate:
             self._role = None
@@ -350,7 +388,7 @@ class Sequence(observer.Observer):
         """Section factory wrapping a given ``rh`` (Resource Handler)."""
         rhset = kw.get('rh', list())
         if type(rhset) != list:
-            rhset = [ rhset ]
+            rhset = [rhset, ]
         ralter = kw.get('alternate', kw.get('role', 'anonymous'))
         newsections = list()
         for rh in rhset:
@@ -409,7 +447,7 @@ class Sequence(observer.Observer):
             )]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
-            inkind = [ x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind) ]
+            inkind = [x for x in sections if self._fuzzy_match(x.rh.resource.realkind, selectkind)]
         return inrole or inkind
 
     def inputs(self):
@@ -435,7 +473,7 @@ class Sequence(observer.Observer):
         """
         return self._section_list_filter(
             [x for x in self.inputs()
-             if ( x.stage == 'get' or x.stage == 'expected' ) and x.rh.container.exists()
+             if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()
              ],
             **kw)
 
@@ -1000,8 +1038,12 @@ class LocalTracker(defaultdict):
         :param filename: Path to the JSON file.
         """
         outdict = {loc: entry.dump_as_dict() for loc, entry in six.iteritems(self)}
-        with io.open(filename, 'w', encoding='utf-8') as fpout:
-            json.dump(outdict, fpout, indent=2, sort_keys=True)
+        if six.PY2:
+            with io.open(filename, 'wb') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
+        else:
+            with io.open(filename, 'w', encoding='utf-8') as fpout:
+                json.dump(outdict, fpout, indent=2, sort_keys=True)
 
     def json_load(self, filename=_default_json_filename):
         """Restore the object using a JSON file.

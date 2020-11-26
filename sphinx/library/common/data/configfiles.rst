@@ -19,12 +19,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AsciiConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: JsonConfig
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: OopsJsonConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Bundle
    :show-inheritance:
    :members:
    :member-order: alphabetical

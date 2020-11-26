@@ -12,6 +12,7 @@ from bronx.stdtypes.date import yesterday, Date, Period, Time
 
 
 class S2MTaskMixIn(object):
+    """Usefull addtions for any S2M task."""
 
     nightruntime = Time(hour=3, minute=0)
     firstassimruntime = Time(hour=6, minute=0)
@@ -61,7 +62,9 @@ class S2MTaskMixIn(object):
 
     def get_period(self):
 
-        if self.conf.rundate.hour == self.nightruntime.hour:
+        if self.conf.rundate.hour == self.monthly_analysis_time.hour:
+            dateendanalysis = self.conf.rundate.replace(hour=6) - Period(days=4)
+        elif self.conf.rundate.hour == self.nightruntime.hour:
             dateendanalysis = yesterday(self.conf.rundate.replace(hour=6))
         else:
             dateendanalysis = self.conf.rundate.replace(hour=6)
@@ -82,7 +85,7 @@ class S2MTaskMixIn(object):
                     year = self.conf.rundate.year - 1
                 else:
                     year = self.conf.rundate.year
-                datebegin = Date(year, 7, 31, 6)
+                datebegin = Date(year, 8, 1, 6)
             else:
                 # The daytime runs perform a 1 day analysis
                 datebegin = dateend - Period(days=1)
@@ -122,9 +125,12 @@ class S2MTaskMixIn(object):
                 # First alternate for 06h run, second alternate for 09h run: 03h run
                 alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour), "assimilation"))
             # Very last alternates (and only one for 03h run: forecast J+4 of day J-4
-            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=4), "production"))
-            alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) - Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) -
+                               Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) -
+                               Period(days=4), "production"))
+            alternates.append((self.conf.rundate.replace(hour=self.nightruntime.hour) -
+                               Period(days=4), "production"))
 
         else:
             if self.conf.rundate.hour == self.monthly_analysis_time.hour:
@@ -151,8 +157,10 @@ class S2MTaskMixIn(object):
 
             else:
                 rundate_prep = self.conf.rundate.replace(hour=self.nightruntime.hour)
-                alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) - Period(days=1), "assimilation"))
-                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) - Period(days=1), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.secondassimruntime.hour) -
+                                   Period(days=1), "assimilation"))
+                alternates.append((self.conf.rundate.replace(hour=self.firstassimruntime.hour) -
+                                   Period(days=1), "assimilation"))
 
         return rundate_prep, alternates
 
@@ -168,20 +176,31 @@ class S2MTaskMixIn(object):
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
 
+    def split_geo_interpol(self):
+        geoin, geoout = self.conf.geometry.list.split(":")
+        return geoin, geoout
+
     def get_list_geometry(self, meteo="safran"):
 
-        source_safran, block_safran = self.get_source_safran(meteo=meteo)
+        if not hasattr(self.conf, "interpol"):
+            self.conf.interpol = False
 
-        list_suffix = ['_allslopes', '_flat']
-        if source_safran == "safran":
-            if self.conf.geometry.area == "postes":
-                return self.conf.geometry.list.split(",")
-            else:
-                for suffix in list_suffix:
-                    if suffix in self.conf.geometry.area:
-                        return [self.conf.geometry.area.replace(suffix, '')]
+        if self.conf.interpol:
+            return [self.conf.geoin]
         else:
-            return [self.conf.geometry.area]
+            source_safran, block_safran = self.get_source_safran(meteo=meteo)
+
+            list_suffix = ['_allslopes', '_flat']
+            if source_safran == "safran":
+                if self.conf.geometry.area == "postes":
+                    return self.conf.geometry.list.split(",")
+                else:
+                    for suffix in list_suffix:
+                        if suffix in self.conf.geometry.area:
+                            return [self.conf.geometry.area.replace(suffix, '')]
+                    return [self.conf.geometry.area]  # for cases with meteo=safran but unknown area
+            else:
+                return [self.conf.geometry.area]
 
     def get_alternate_safran(self):
         if self.conf.geometry.area == 'postes':
@@ -189,19 +208,31 @@ class S2MTaskMixIn(object):
         else:
             return "safran", "massifs", [self.conf.geometry.area[0:3]]
 
+    def get_block_safran_from_geometry(self):
+        if self.conf.geometry.area == 'postes':
+            return 'postes'
+        else:
+            return 'massifs'
+
     def get_source_safran(self, meteo="safran"):
 
-        if meteo == "safran":
+        if hasattr(self.conf, 'blockin'):
+            if meteo == "safran":
+                return meteo, self.conf.blockin + '/' + self.get_block_safran_from_geometry()
+            else:
+                return meteo, self.conf.blockin
+
+        elif meteo == "safran":
             if not hasattr(self.conf, "previ"):
                 self.conf.previ = False
+
+            if not hasattr(self.conf, 'rundate'):
+                return meteo, self.get_block_safran_from_geometry()
 
             if self.conf.rundate.hour != self.nightruntime.hour and self.conf.previ:
                 return "s2m", "meteo"
             else:
-                if self.conf.geometry.area == 'postes':
-                    return "safran", "postes"
-                else:
-                    return "safran", "massifs"
+                return "safran", self.get_block_safran_from_geometry()
         else:
             return meteo, "meteo"
 
@@ -215,7 +246,7 @@ class S2MTaskMixIn(object):
             datebegin_input = Date(datebegin.year - 1, 8, 1, 6, 0, 0)
         dateend_input = datebegin_input
         while dateend_input < dateend:
-            dateend_input = datebegin_input.replace(year = datebegin_input.year + 1)
+            dateend_input = datebegin_input.replace(year=datebegin_input.year + 1)
             list_dates_begin_input.append(datebegin_input)
             datebegin_input = dateend_input
 

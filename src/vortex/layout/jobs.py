@@ -67,7 +67,7 @@ def _mkjob_opts_detect_1(t, ** opts):
     # Things guessed from the directory name
     opset = _guess_vapp_vconf_xpid(t)
     appbase = opts.pop('appbase', opset.appbase)
-    target_appbase  = opts.get('target_appbase', opset.appbase)
+    target_appbase = opts.get('target_appbase', opset.appbase)
     xpid = opts.get('xpid', opset.xpid)
     vapp = opts.pop('vapp', opset.vapp)
     vconf = opts.pop('vconf', opset.vconf)
@@ -148,7 +148,8 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     def opts_plus_job_plus_tpl(what, default):
         """
         Function that look up in command line options, then in job's conf,
-        then in template's conf."""
+        then in template's conf.
+        """
         return opts.pop(what, p_jobconf.get(what, p_tplconf.get(what, default)))
 
     # A last chance for these super-stars : they may be set in job's conf...
@@ -194,7 +195,8 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     rundates = opts_plus_job_plus_tpl('rundates', None)
 
     # Lists...
-    for explist in ('loadedmods', 'loadedaddons', 'ldlibs', 'extrapythonpath'):
+    for explist in ('loadedmods', 'loadedaddons', 'loadedjaplugins',
+                    'ldlibs', 'extrapythonpath'):
         val = opts_plus_job_plus_tpl(explist, None)
         if val:
             tr_opts[explist] = ','.join(["'{:s}'".format(x)
@@ -292,8 +294,8 @@ def _mkjob_opts_autoexport(auto_opts):
 def mkjob(t, **kw):
     """Build a complete job file according to a template and some parameters."""
     opts = dict(
-        inifile   = '@job-default.ini',
-        wrap      = False,
+        inifile='@job-default.ini',
+        wrap=False,
     )
     opts.update(kw)
 
@@ -421,6 +423,7 @@ class JobAssistant(footprints.FootprintBase):
         # By default, no error code is thrown away
         self.unix_exit_code = 0
         self._plugins = list()
+        self._special_variables = dict()
 
     @property
     def plugins(self):
@@ -454,15 +457,12 @@ class JobAssistant(footprints.FootprintBase):
         locprint('Path directory', t.glove.sitesrc)
         locprint('Conf directory', t.glove.siteconf)
 
-        t.sh.header('Session description')
+        t.sh.header('Session & Target description')
 
         locprint('Session Ticket', t)
         locprint('Session Glove', t.glove)
         locprint('Session System', t.sh)
         locprint('Session Env', t.env)
-
-        t.sh.header('Target description')
-
         tg = t.sh.default_target
         locprint('Target name', tg.hostname)
         locprint('Target system', tg.sysname)
@@ -471,7 +471,6 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _print_toolbox_settings(self, t):
         """Display the toolbox settings."""
-        t.sh.header('Toolbox module settings')
         vortex.toolbox.show_toolbox_settings()
 
     @classmethod
@@ -480,7 +479,7 @@ class JobAssistant(footprints.FootprintBase):
         prefix = prefix.upper()
         filtered = sorted([x for x in t.env.keys() if x.startswith(prefix)])
         if filtered:
-            t.sh.header('{:s} environment variables'.format(prefix if prefix else 'All'))
+            t.sh.highlight('{:s} environment variables'.format(prefix if prefix else 'All'))
             maxlen = max([len(x) for x in filtered])
             for var_name in filtered:
                 print(cls._P_ENVVAR_FMT.format(var_name.ljust(maxlen),
@@ -493,16 +492,23 @@ class JobAssistant(footprints.FootprintBase):
         prefix = prefix or self.special_prefix
         # Suffixed variables
         specials = kw.get('actual', dict())
-        filtered = {k: v for k, v in specials.items() if k.startswith(prefix)}
+        self._special_variables = {k[len(prefix):].lower(): v
+                                   for k, v in specials.items() if k.startswith(prefix)}
         # Auto variables
         auto = kw.get('auto_options', dict())
         for k, v in auto.items():
-            filtered.setdefault(prefix + k, v)
+            self._special_variables.setdefault(k.lower(), v)
         # Summarise
-        if filtered:
-            t.sh.header('Copying actual {:s} variables to the environment or auto_options'.format(prefix))
+        if self._special_variables:
+            filtered = {prefix + k: v for k, v in self._special_variables.items()}
+            print('Copying actual {:s} variables to the environment or auto_options'
+                  .format(prefix))
             t.env.update(filtered)
             self.print_somevariables(t, prefix=prefix)
+
+    @property
+    def special_variables(self):
+        return self._special_variables
 
     @_extendable
     def _modules_preload(self, t):
@@ -523,7 +529,7 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
-        t.sh.header("Session's basic setup")
+        t.sh.header("Session and system basic setup")
         print('+ Setting "stack" and "memlock" limits to unlimited.')
         t.sh.setulimit('stack')
         t.sh.setulimit('memlock')
@@ -534,8 +540,9 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
+        t.sh.header("Session's early setup")
         specials = kw.get('actual', dict())
-        t.glove.vapp  = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
+        t.glove.vapp = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
         t.glove.vconf = kw.get('vconf', specials.get(self.special_prefix + 'vconf', None))
         # Ensure that the script's path is an absolute path
         sys.argv[0] = t.sh.path.abspath(sys.argv[0])
@@ -544,6 +551,7 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _extra_session_setup(self, t, **kw):
         """Additional setup for the session."""
+        t.sh.header("Session's final setup")
         if self.subjob_tag is not None:
             t.datastore.pickle_load(subjobs._DSTORE_IN.format(self.subjob_fsid))
             print(('+ The datastore was read from disk: ' + subjobs._DSTORE_IN).format(self.subjob_fsid))
@@ -551,12 +559,14 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _env_setup(self, t, **kw):
         """Session's environment setup."""
+        t.sh.header("Environment variables setup")
         t.env.verbose(True, t.sh)
         self._add_specials(t, **kw)
 
     @_extendable
     def _toolbox_setup(self, t, **kw):
         """Toolbox default setup."""
+        t.sh.header('Toolbox module settings')
         vortex.toolbox.active_verbose = True
         vortex.toolbox.active_now = True
         vortex.toolbox.active_clear = True
@@ -564,7 +574,7 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def _actions_setup(self, t, **kw):
         """Setup the action dispatcher."""
-        pass
+        t.sh.header('Actions setup')
 
     def _subjob_detect(self, t):
         if 'VORTEX_SUBJOB_ACTIVATED' in t.env:
@@ -577,6 +587,7 @@ class JobAssistant(footprints.FootprintBase):
         # We need the root session
         t = vortex.ticket()
         t.system().prompt = t.prompt
+        t.sh.subtitle("Starting JobAssistant's setup")
         # Am I a subjob ?
         self._subjob_detect(t)
         # But a new session can be created here:
@@ -593,6 +604,7 @@ class JobAssistant(footprints.FootprintBase):
         self._actions_setup(t, **kw)  # Setup the actionDispatcher
         # Begin signal handling
         t.sh.signal_intercept_on()
+        print()
         return t, t.env, t.sh
 
     @_extendable
@@ -620,8 +632,9 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def complete(self):
         """Should be called when a job finishes successfully"""
+        t = vortex.ticket()
+        t.sh.subtitle("Executing JobAssistant's complete actions")
         if self.subjob_tag is not None:
-            t = vortex.ticket()
             t.datastore.pickle_dump(subjobs._DSTORE_OUT.format(self.subjob_fsid, self.subjob_tag))
             print(('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT)
                   .format(self.subjob_fsid, self.subjob_tag))
@@ -630,10 +643,10 @@ class JobAssistant(footprints.FootprintBase):
     def fulltraceback(self, latest_error=None):
         """Produce some nice traceback at the point of failure.
 
-        :param Exception last_error: The latest caught exception.
+        :param Exception latest_error: The latest caught exception.
         """
         t = vortex.ticket()
-        t.sh.title('Handling exception')
+        t.sh.subtitle('Handling exception')
         (exc_type, exc_value, exc_traceback) = sys.exc_info()  # @UnusedVariable
         print('Exception type: {!s}'.format(exc_type))
         print('Exception info: {!s}'.format(latest_error))
@@ -644,16 +657,20 @@ class JobAssistant(footprints.FootprintBase):
     @_extendable
     def rescue(self):
         """Called at the end of a job when something went wrong."""
+        t = vortex.ticket()
+        t.sh.subtitle("Executing JobAssistant's rescue actions")
         self.unix_exit_code = 1
 
     @_extendable
     def finalise(self):
         """Called whenever a job finishes (either successfully or badly)."""
-        pass
+        t = vortex.ticket()
+        t.sh.subtitle("Executing JobAssistant's finalise actions")
 
     def close(self):
         """This must be the last called method whenever a job finishes."""
         t = vortex.ticket()
+        t.sh.subtitle("Executing JobAssistant's close")
         t.sh.signal_intercept_off()
         t.close()
         if self.unix_exit_code:
@@ -667,7 +684,7 @@ class JobAssistant(footprints.FootprintBase):
 class JobAssistantPlugin(footprints.FootprintBase):
 
     _conflicts = []
-    _abstract  = True
+    _abstract = True
     _collector = ('jobassistant_plugin',)
     _footprint = dict(
         info = 'Abstract JobAssistant Plugin',
@@ -683,7 +700,7 @@ class JobAssistantPlugin(footprints.FootprintBase):
         super(JobAssistantPlugin, self).__init__(*kargs, **kwargs)
         # Check for potential conflicts
         for conflicting in self._conflicts:
-            if conflicting in self.masterja.plugins:
+            if conflicting in [p.kind for p in self.masterja.plugins]:
                 raise RuntimeError('"{:s}" conflicts with "{:s}"'.format(self.kind, conflicting))
 
 
@@ -861,7 +878,7 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
             confdict.setdefault('ECF_RID', rid)
             ad.flow_conf(confdict)
 
-            t.sh.header('Flow Scheduler ({:s}) Settings'.format(self.backend))
+            t.sh.highlight('Flow Scheduler ({:s}) Settings'.format(self.backend))
             ad.flow_info()
             print('')
             print('Flow scheduler client path: {:s}'.format(ad.flow_path()))
@@ -896,3 +913,148 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
         """Called at the end of a job when something went wrong."""
         if self.masterja.subjob_tag is None:
             ad.flow_abort("An exception was caught")
+
+
+class JobAssistantEpygramPlugin(JobAssistantPlugin):
+
+    _footprint = dict(
+        info = 'JobAssistant Plugin to perform the epygram setup',
+        attr = dict(
+            kind = dict(
+                values      = ['epygram_setup', ]
+            ),
+        ),
+    )
+
+    def plugable_env_setup(self, t, **kw):  # @UnusedVariable
+        # Is epygram here ?
+        epygram_re = re.compile(r'.*epygram$')
+        epygram_path = [bool(epygram_re.match(p)) for p in sys.path]
+        if any(epygram_path):
+            # Add eccodes and site subdirectories if necessary
+            i_epygram = epygram_path.index(True)
+            logger.info('Epygram package found in path: %s', sys.path[i_epygram])
+            for spath in ('eccodes_python', 'site'):
+                full_spath = t.sh.path.join(sys.path[i_epygram], spath)
+                if full_spath not in sys.path:
+                    logger.info('Extending python path with: %s', full_spath)
+                    sys.path.insert(i_epygram + 1, full_spath)
+            # Python3, ECCODES_DIR is needed
+            if sys.version_info.major == 3:
+                edir_path = t.sh.path.join(sys.path[i_epygram], 'eccodes_dir')
+                if t.sh.path.exists(edir_path):
+                    logger.info('ECCODES_DIR environment variable setup to %s', edir_path)
+                    t.env.ECCODES_DIR = edir_path
+                else:
+                    logger.info('ECCODES_DIR environment variable left unconfigured')
+
+
+class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
+    """Manage an application wide lock.
+
+    If **acquire** is True, the lock will be acquired when the job starts (if
+    the lock is already taken, it will fail). If **release** is True, the
+    lock will be released at the end of the job. In any case, the lock will
+    be released whenever the job crashes.
+
+    The lock mechanism that is used is :meth:`vortex.tools.systems.OSExtended.appwide_lock`.
+
+    Prior to being used, the **label** will be formated by the string's format
+    method using any rd|op_* variable in the submitted job. For exemple::
+
+        >>> label = 'my_lock_{xpid:s}'
+
+    This class is not usable one its own. It must be subclassed in the target
+    application (in the python module that holds the job's driver):
+
+        * **kind** must be provided with a unique authorised value;
+        * **label** must be set optional and given a default value;
+        * **acquire** and **release** default values may be changed depending
+          on ones needs.
+    """
+
+    _abstract = True
+    _footprint = dict(
+        info='JobAssistant to deal with application wide locks.',
+        attr = dict(
+            label=dict(
+                info="The name of the lock.",
+            ),
+            acquire=dict(
+                info="Acquire the lock during the setup phase.",
+                type=bool,
+                optional=True,
+                default=False,
+            ),
+            release=dict(
+                info="Release the lock at the end.",
+                type=bool,
+                optional=True,
+                default=False,
+            ),
+            blocking=dict(
+                info="Block when acquiring the lock.",
+                type=bool,
+                optional=True,
+                default=False,
+            ),
+            blocking_timeout=dict(
+                info="Block at most N seconds.",
+                type=int,
+                optional=True,
+                default=300,
+            ),
+        ),
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(JobAssistantAppWideLockPlugin, self).__init__(*kargs, **kwargs)
+        self._appwide_lock_saved_mtplug = 0
+        self._appwide_lock_label = None
+        self._appwide_lock_acquired = None
+
+    @property
+    def _appwide_lock_mtool_plugin(self):
+        """Return the MTOOL plugin (if present)."""
+        if self._appwide_lock_saved_mtplug == 0:
+            self._appwide_lock_saved_mtplug = None
+            for p in self.masterja.plugins:
+                if p.kind == 'mtool':
+                    self._appwide_lock_saved_mtplug = p
+        return self._appwide_lock_saved_mtplug
+
+    def plugable_extra_session_setup(self, t, **kw):
+        """Acquire the lock on job startup."""
+        self._appwide_lock_label = self.label.format(** self.masterja.special_variables)
+        if self.acquire:
+            mtplug = self._appwide_lock_mtool_plugin
+            if (mtplug and mtplug.step == 1) or mtplug is None:
+                logger.info("Acquiring the '%s' application wide lock",
+                            self._appwide_lock_label)
+                self._appwide_lock_acquired = t.sh.appwide_lock(self._appwide_lock_label,
+                                                                blocking=self.blocking,
+                                                                timeout=self.blocking_timeout)
+                if not self._appwide_lock_acquired:
+                    logger.error("Acquiring the '%s' application wide lock failed.",
+                                 self._appwide_lock_label)
+                    raise RuntimeError("Unable to acquire the '{:s}' application wide lock."
+                                       .format(self._appwide_lock_label))
+
+    def _appwide_lock_release(self, t):
+        """Actualy release the lock."""
+        if self._appwide_lock_label:
+            logger.info("Releasing the '%s' application wide lock",
+                        self._appwide_lock_label)
+            t.sh.appwide_unlock(self._appwide_lock_label)
+
+    def plugable_complete(self, t):
+        """Should be called when a job finishes successfully."""
+        if self.release:
+            mtplug = self._appwide_lock_mtool_plugin
+            if (mtplug and mtplug.stepid == mtplug.lastid) or mtplug is None:
+                self._appwide_lock_release(t)
+
+    def plugable_rescue(self, t):
+        """Should be called when a job fails."""
+        if self._appwide_lock_acquired is not False:
+            self._appwide_lock_release(t)

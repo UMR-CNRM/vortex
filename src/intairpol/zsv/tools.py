@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, print_function, division, unicode_literals
-
 """
 TODO: Module documentation
 """
+
+from __future__ import absolute_import, print_function, division, unicode_literals
 
 import six
 import io
@@ -25,6 +25,7 @@ logger = loggers.getLogger(__name__)
 
 
 class ZSVDriver(AirTool):
+    """Driver for processing ZSV sites data."""
 
     _footprint = dict(
         info = 'Driver for processing ZSV sites data',
@@ -116,7 +117,7 @@ class ZSVDriver(AirTool):
     def setup_dates(self):
         """Check coherency of begin and end dates."""
         self.date_begin = date.lastround(base=self.date_begin)
-        self.date_end   = date.lastround(base=self.date_end)
+        self.date_end = date.lastround(base=self.date_end)
 
         if date.utcnow() < self.date_end:
             logger.warning('End date is in future <date:%s>', self.date_end.ymdhm)
@@ -145,7 +146,7 @@ class ZSVDriver(AirTool):
             for s in self.sites:
                 if s not in self.sites_ordered:
                     logger.warning('Unknown <site:%s>', s)
-            self.sites = [ s for s in self.sites_ordered if s in self.sites ]
+            self.sites = [s for s in self.sites_ordered if s in self.sites]
         elif self.sites_ordered:
             self.sites = self.sites_ordered[:]
         else:
@@ -185,6 +186,7 @@ class ZSVDriver(AirTool):
 
 
 class ZSVQualityStats(ZSVDriver):
+    """ZSV quality indices statistic computations."""
 
     _footprint = dict(
         info = 'ZSV quality indices statistic computations',
@@ -233,11 +235,11 @@ class ZSVQualityStats(ZSVDriver):
             logger.info('Retrieved site list:\n%s', "\n".join(deflist))
             self.sites_map = {
                 xs['name']: xs
-                for xs in [ dict(zip(self.sites_labels, s.split())) for s in deflist ]
+                for xs in [dict(zip(self.sites_labels, s.split())) for s in deflist]
             }
             for xmap in self.sites_map.values():
                 xmap['dfirst'] = date.Date(xmap['dfirst'])
-                xmap['dlast']  = date.Date(xmap['dlast'])
+                xmap['dlast'] = date.Date(xmap['dlast'])
             logger.debug('Actual sites map: %s', footprints.dump.lightdump(self.sites_map))
             for s in self.sites[:]:
                 if s not in self.sites_map:
@@ -295,14 +297,14 @@ class ZSVQualityStats(ZSVDriver):
 
         logger.info('Obs report <file:%s> <size:%s>', obsfile, self.sh.size(obsfile))
         obsreport = dict(timeline=dict())
-        datebloc  = False
+        datebloc = False
 
         for l in self.sh.cat(obsfile, output=True):
-            guess = [ x.strip() for x in l.split(':') ]
+            guess = [x.strip() for x in l.split(':')]
             if l.startswith('Valide'):
                 data = l.split()
                 obsreport['valid_begin'] = date.Date(data[2] + 'T' + data[3])
-                obsreport['valid_end']   = date.Date(data[6] + 'T' + data[7])
+                obsreport['valid_end'] = date.Date(data[6] + 'T' + data[7])
             elif len(guess) == 1 and guess[0] and datebloc:
                 # store real values
                 data = guess[0].split()
@@ -325,9 +327,9 @@ class ZSVQualityStats(ZSVDriver):
         if site not in self._actual_dates:
 
             # set actual begin and end dates
-            info  = self.sites_map[site]
+            info = self.sites_map[site]
             start = self.date_begin
-            stop  = self.date_end
+            stop = self.date_end
 
             logger.info('Begin date <actual:%s> <requested:%s>',
                         info['dfirst'].ymdhm, self.date_begin.ymdhm)
@@ -358,7 +360,7 @@ class ZSVQualityStats(ZSVDriver):
     def iqs(self):
         if self._iqs is None:
             self._iqs = tuple([iq.lower() for iq in sorted(self.obsreport_map.values())
-                               if iq.lower().startswith('iq') ])
+                               if iq.lower().startswith('iq')])
         return self._iqs
 
     def extract(self, site):
@@ -463,7 +465,8 @@ class ZSVQualityStats(ZSVDriver):
             for n, site in enumerate(self.sites):
                 fd.write(u'{0:d};{1:s};{2:s}\n'.
                          format(n + 1, site,
-                                ';'.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6)).replace('.', ',')
+                                ';'.join([six.text_type(round(self._stats[site][iq].get('P' + ival, 0), 6))
+                                          .replace('.', ',')
                                           for iq in self.iqs for ival in ('A', 'B', 'C')])))
 
     def stats_dump(self):

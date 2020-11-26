@@ -59,6 +59,7 @@ from bronx.stdtypes.history import History
 from bronx.system.interrupt import SignalInterruptHandler, SignalInterruptError
 from bronx.system.cpus import LinuxCpusInfo
 from bronx.system.memory import LinuxMemInfo
+from bronx.system.numa import LibNumaNodesInfo
 from bronx.syntax.decorators import secure_getattr
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from vortex.gloves import Glove
@@ -149,6 +150,11 @@ def _kw2spawn(func):
 
 class ExecutionError(RuntimeError):
     """Go through exception for internal :meth:`OSExtended.spawn` errors."""
+    pass
+
+
+class CopyTreeError(OSError):
+    """An error raised during the recursive copy of a directory."""
     pass
 
 
@@ -505,9 +511,9 @@ class System(footprints.FootprintBase):
         finally:
             self.trace = oldtrace
 
-    def echo(self, args):
+    def echo(self, *args):
         """Joined **args** are echoed."""
-        print('>>>', ' '.join(args))
+        print('>>>', ' '.join([str(arg) for arg in args]))
 
     def title(self, textlist, tchar='=', autolen=96):
         """Formated title output.
@@ -745,6 +751,7 @@ class OSExtended(System):
         super(OSExtended, self).__init__(*args, **kw)
         # Initialise possibly missing objects
         self.__dict__['_cpusinfo'] = None
+        self.__dict__['_numainfo'] = None
         self.__dict__['_memoryinfo'] = None
         self.__dict__['_netstatsinfo'] = None
 
@@ -1268,7 +1275,7 @@ class OSExtended(System):
 
     @property
     def cpus_info(self):
-        """Return an object of a subclass of  :class:`bronx.system.cpus.CpusInfo`.
+        """Return an object of a subclass of :class:`bronx.system.cpus.CpusInfo`.
 
         Such objects are designed to get informations on the platform's CPUs.
 
@@ -1276,6 +1283,22 @@ class OSExtended(System):
             implemented)
         """
         return self._cpusinfo
+
+    def cpus_ids_per_blocks(self, blocksize=1, topology='raw', hexmask=False):  # @UnusedVariable
+        """Get the list of CPUs IDs ordered for subsequent binding.
+
+        :param int blocksize: The number of thread consumed by one task
+        :param str topology: The task distribution scheme
+        :param bool hexmask: Return a list of CPU masks in hexadecimal
+        """
+        return []
+
+    def cpus_ids_dispenser(self, topology='raw'):
+        """Get a dispenser of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param str topology: The task distribution scheme
+        """
+        return None
 
     def cpus_affinity_get(self, taskid, blocksize=1, method='default', topology='raw'):  # @UnusedVariable
         """Get the necessary command/environment to set the CPUs affinity.
@@ -1288,6 +1311,17 @@ class OSExtended(System):
             list: Starting command prefix, dict: Environment update)
         """
         return (False, list(), dict())
+
+    @property
+    def numa_info(self):
+        """Return an object of a subclass of :class:`bronx.system.numa.NumaNodesInfo`.
+
+        Such objects are designed to get informations on the platform's NUMA layout
+
+        :note: *None* might be returned on some platforms (if numainfo is not
+            implemented)
+        """
+        return self._numainfo
 
     @property
     def memory_info(self):
@@ -1579,9 +1613,13 @@ class OSExtended(System):
                     extras.extend(['-u', logname])
                 if specialshell:
                     extras.extend(['-s', specialshell])
+                # Remove ~/ and ~logname/ from the destinations' path
+                actual_dest = re.sub('^~/+', '', destination)
+                if logname:
+                    actual_dest = re.sub('^~{:s}/+'.format(logname), '', actual_dest)
                 rc = self.spawn([ftcmd,
                                  '-o', 'mkdir', ] +  # Automatically create subdirectories
-                                extras + [source, destination], output=False)
+                                extras + [source, actual_dest], output=False)
             else:
                 raise IOError('No such file or directory: {!s}'.format(source))
         else:
@@ -1934,6 +1972,38 @@ class OSExtended(System):
         return '.'.join((date.now().strftime('_%Y%m%d_%H%M%S_%f'),
                          self.hostname, 'p{0:06d}'.format(self._os.getpid()),))
 
+    def _copydatatree(self, src, dst):
+        """Recursively copy a directory tree using copyfile.
+
+        This is a variant of shutil's copytree. But, unlike with copytree,
+        only data are copied (the permissions, access times, ... are ignored).
+
+        The destination directory must not already exist.
+        """
+        self.stderr('_copydatatree', src, dst)
+        with self.mute_stderr():
+            names = self._os.listdir(src)
+            self._os.makedirs(dst)
+            errors = []
+            for name in names:
+                srcname = self._os.path.join(src, name)
+                dstname = self._os.path.join(dst, name)
+                try:
+                    if self.path.isdir(srcname):
+                        self._copydatatree(srcname, dstname)
+                    else:
+                        # Will raise a SpecialFileError for unsupported file types
+                        self._sh.copyfile(srcname, dstname)
+                # catch the Error from the recursive copytree so that we can
+                # continue with other files
+                except CopyTreeError as err:
+                    errors.extend(err.args[0])
+                except OSError as why:
+                    errors.append((srcname, dstname, str(why)))
+            if errors:
+                raise CopyTreeError(errors)
+        return dst
+
     def rawcp(self, source, destination):
         """Perform a simple ``copyfile`` or ``copytree`` command depending on **source**.
 
@@ -1945,7 +2015,7 @@ class OSExtended(System):
         self.stderr('rawcp', source, destination)
         tmp = destination + self.safe_filesuffix()
         if self.path.isdir(source):
-            self.copytree(source, tmp)
+            self._copydatatree(source, tmp)
             # Warning: Not an atomic portion of code (sorry)
             do_cleanup = self.path.exists(destination)
             if do_cleanup:
@@ -2366,8 +2436,7 @@ class OSExtended(System):
         self.stderr('listdir', *args)
         return self._os.listdir(self.path.expanduser(args[0]))
 
-    # noinspection PyPep8
-    def l(self, *args):  # @IgnorePep8
+    def pyls(self, *args):
         """
         Proxy to globbing after removing any option. A bit like the
         :meth:`ls` method except that that shell's ``ls`` command is not actually
@@ -2376,7 +2445,7 @@ class OSExtended(System):
         rl = [x for x in args if not x.startswith('-')]
         if not rl:
             rl.append('*')
-        self.stderr('l', *rl)
+        self.stderr('pyls', *rl)
         return self.glob(*rl)
 
     def ldirs(self, *args):
@@ -2511,6 +2580,16 @@ class OSExtended(System):
         ext = objname.replace(radix, '')
         return (radix, ext)
 
+    @fmtshcmd
+    def forcepack(self, source, destination=None):  # @UnusedVariable
+        """Return the path to a "packed" data (i.e. a ready to send single file)."""
+        return source
+
+    @fmtshcmd
+    def forceunpack(self, source):  # @UnusedVariable
+        """Unpack the data "inplace" (if needed, depending on the format)."""
+        return True
+
     def blind_dump(self, gateway, obj, destination, bytesdump=False, **opts):
         """
         Use **gateway** for a blind dump of the **obj** in file **destination**,
@@ -2618,7 +2697,7 @@ class OSExtended(System):
         """
         self._sighandler.deactivate()
 
-    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*([^\s]+)\s+\(0x.+\)$')
+    _LDD_REGEX = re.compile(r'^\s*([^\s]+)\s+=>\s*(?:([^\s]+)\s+\(0x.+\)|not found)$')
 
     def ldd(self, filename):
         """Call ldd on **filename**.
@@ -2630,7 +2709,7 @@ class OSExtended(System):
             libs = dict()
             for ldd_match in [self._LDD_REGEX.match(l) for l in ldd_out]:
                 if ldd_match is not None:
-                    libs[ldd_match.group(1)] = ldd_match.group(2)
+                    libs[ldd_match.group(1)] = ldd_match.group(2) or None
             return libs
         else:
             raise ValueError('{} is not a regular file'.format(filename))
@@ -2684,11 +2763,83 @@ class OSExtended(System):
 
         return path
 
+    @property
+    def _appwide_lockbase(self):
+        """Compute the path to the application wide locks base directory."""
+        if self.glove is not None:
+            myglove = self.glove
+            rcdir = myglove.configrc
+            lockdir = self.path.join(rcdir,
+                                     'appwide_locks',
+                                     '{0.vapp:s}-{0.vconf:s}'.format(myglove))
+            self.mkdir(lockdir)
+            return lockdir
+        else:
+            raise RuntimeError("A glove must be defined")
 
-_python27_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python27 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('2.7.0'),
-                                        before_python = PythonSimplifiedVersion('3.4.0')
+    def _appwide_lockdir_path(self, label):
+        """Compute the path to the lock directory."""
+        return self.path.join(self._appwide_lockbase, label)
+
+    def appwide_lock(self, label, blocking=False, timeout=300, sleeptime=2):
+        """Pseudo-lock mechanism based on atomic directory creation: acquire lock.
+
+        The lock is located in a directory that depends on the vapp and vconf
+        attributes of the current glove. The user must provide a **label** that
+        helps to identify the lock purpose (it may include the xpid, ...).
+
+        :param str label: The name of the desired lock
+        :param bool blocking: Block (at most **timeout** seconds) until the
+                              lock can be acquired
+        :param float timeout: Block at most timeout seconds (if **blocking** is True)
+        :param float sleeptime: When blocking, wait **sleeptime** seconds between to
+                                attempts to acquire the lock.
+        """
+        ldir = self._appwide_lockdir_path(label)
+        rc = None
+        t0 = time.time()
+        while rc is None or (not rc and blocking and time.time() - t0 < timeout):
+            if rc is not None:
+                self.sleep(sleeptime)
+            try:
+                # Important note: os' original mkdir function is used on purpose
+                # since we need to get an error if the target directory already
+                # exists
+                self._os.mkdir(ldir)
+            # Note: OSError + errno check is used to be compatible with Python2.7
+            #       in Python3, it will be wiser to catch directly FileExistsError
+            except OSError as os_e:
+                # To be safe, check the error code carefully
+                if os_e.errno == errno.EEXIST:
+                    rc = False
+                else:
+                    raise
+            else:
+                rc = True
+        return rc
+
+    def appwide_unlock(self, label):
+        """Pseudo-lock mechanism based on atomic directory creation: release lock.
+
+        :param str label: The name of the desired lock
+        """
+        ldir = self._appwide_lockdir_path(label)
+        try:
+            self.rmdir(ldir)
+        # Note: OSError + errno check is used to be compatible with Python2.7
+        #       in Python3, it will be wiser to catch directly FileNotFoundError
+        except OSError as os_e:
+            if os_e.errno == errno.ENOENT:
+                # If the directory was already deleted, ok ignore the error
+                logger.warning("'%s' did not exists... that's odd", ldir)
+            else:
+                raise
+
+
+_python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('2.7.0'),
+                                        before_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 
@@ -2720,10 +2871,53 @@ class Python27(object):
             logger.error('Bad function path name <%s>' % funcname)
         return thisfunc
 
+    def which(self, cmd, mode=os.F_OK | os.X_OK, path=None):
+        """Given a command, mode, and a PATH string, return the path which
+        conforms to the given mode on the PATH, or None if there is no such
+        file.
 
-_python34_fp = footprints.Footprint(info = 'An abstract footprint to be used with the Python34 Mixin',
-                                    only = dict(
-                                        after_python = PythonSimplifiedVersion('3.4.0')
+        `mode` defaults to os.F_OK | os.X_OK. `path` defaults to the result
+        of os.environ.get("PATH"), or can be overridden with a custom search
+        path.
+
+        :note: this is a copy of the Python3.7 code (with the Windows part
+               removed)
+        """
+        # Check that a given file can be accessed with the correct mode.
+        def _access_check(fn, mode):
+            return (self.path.exists(fn) and self.access(fn, mode) and
+                    not self.path.isdir(fn))
+
+        # If we're given a path with a directory part, look it up directly rather
+        # than referring to PATH directories. This includes checking relative to the
+        # current directory, e.g. ./script
+        if self.path.dirname(cmd):
+            if _access_check(cmd, mode):
+                return cmd
+            return None
+
+        if path is None:
+            path = self.env.get("PATH", self.defpath)
+        if not path:
+            return None
+        path = path.split(self.pathsep)
+        files = [cmd]
+
+        seen = set()
+        for adir in path:
+            normdir = self.path.normcase(adir)
+            if normdir not in seen:
+                seen.add(normdir)
+                for thefile in files:
+                    name = self.path.join(adir, thefile)
+                    if _access_check(name, mode):
+                        return name
+        return None
+
+
+_python34_fp = footprints.Footprint(info='An abstract footprint to be used with the Python34 Mixin',
+                                    only=dict(
+                                        after_python=PythonSimplifiedVersion('3.4.0')
                                     ))
 
 
@@ -2744,7 +2938,7 @@ class Garbage(OSExtended):
         info = 'Garbage base system',
         attr = dict(
             sysname = dict(
-                outcast = ['Linux', 'Darwin']
+                outcast = ['Linux', 'Darwin', 'UnitTestLinux']
             )
         ),
         priority = dict(
@@ -2800,12 +2994,72 @@ class Linux(OSExtended):
         self._psopts = kw.pop('psopts', ['-w', '-f', '-a'])
         super(Linux, self).__init__(*args, **kw)
         self.__dict__['_cpusinfo'] = LinuxCpusInfo()
+        try:
+            self.__dict__['_numainfo'] = LibNumaNodesInfo()
+        except (OSError, NotImplementedError):
+            # On very few Linux systems, libnuma is not available...
+            pass
         self.__dict__['_memoryinfo'] = LinuxMemInfo()
         self.__dict__['_netstatsinfo'] = LinuxNetstats()
 
     @property
     def realkind(self):
         return 'linux'
+
+    def cpus_ids_per_blocks(self, blocksize=1, topology='raw', hexmask=False):
+        """Get the list of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param int blocksize: the number of thread consumed by one task
+        :param str topology: The task distribution scheme
+        :param bool hexmask: Return a list of CPU masks in hexadecimal
+        """
+        if topology.startswith('numa'):
+            if topology.endswith('_discardsmt'):
+                topology = topology[:-11]
+                smtlayout = None
+            else:
+                smtlayout = self.cpus_info.physical_cores_smtthreads
+            try:
+                cpulist = getattr(self.numa_info,
+                                  topology + '_cpulist')(blocksize,
+                                                         smtlayout=smtlayout)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        else:
+            try:
+                cpulist = getattr(self.cpus_info, topology + '_cpulist')(blocksize)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+            cpulist = list(cpulist)
+            cpulist = [[cpulist[(taskid * blocksize + i)]
+                        for i in range(blocksize)]
+                       for taskid in range(len(cpulist) // blocksize)]
+        if hexmask:
+            cpulist = [hex(sum([1 << i for i in item])) for item in cpulist]
+        return cpulist
+
+    def cpus_ids_dispenser(self, topology='raw'):
+        """Get a dispenser of CPUs IDs for nicely ordered for subsequent binding.
+
+        :param str topology: The task distribution scheme
+        """
+        if topology.startswith('numa'):
+            if topology.endswith('_discardsmt'):
+                topology = topology[:-11]
+                smtlayout = None
+            else:
+                smtlayout = self.cpus_info.physical_cores_smtthreads
+            try:
+                cpudisp = getattr(self.numa_info,
+                                  topology + '_cpu_dispenser')(smtlayout=smtlayout)
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        else:
+            try:
+                cpudisp = getattr(self.cpus_info, topology + '_cpu_dispenser')()
+            except AttributeError:
+                raise ValueError('Unknown topology ({:s}).'.format(topology))
+        return cpudisp
 
     def cpus_affinity_get(self, taskid, blocksize=1, topology='socketpacked', method='taskset'):
         """Get the necessary command/environment to set the CPUs affinity.
@@ -2817,25 +3071,25 @@ class Linux(OSExtended):
         :return: A 3-elements tuple. (bool: BindingPossible,
             list: Starting command prefix, dict: Environment update)
         """
-        if method not in ('taskset', 'gomp'):
+        if method not in ('taskset', 'gomp', 'omp', 'ompverbose'):
             raise ValueError('Unknown binding method ({:s}).'.format(method))
         if method == 'taskset':
             if not self.which('taskset'):
                 logger.warning("The taskset is program is missing. Going on without binding.")
                 return (False, list(), dict())
-        try:
-            cpulist = getattr(self.cpus_info, topology + '_cpulist')(blocksize)
-        except AttributeError:
-            raise ValueError('Unknown topology ({:s}).'.format(topology))
-        cpulist = list(cpulist)
-        cpus = [cpulist[(taskid * blocksize + i) % len(cpulist)]
-                for i in range(blocksize)]
+        cpulist = self.cpus_ids_per_blocks(blocksize=blocksize, topology=topology)
+        cpus = cpulist[taskid % len(cpulist)]
         cmdl = list()
         env = dict()
         if method == 'taskset':
             cmdl += ['taskset', '--cpu-list', ','.join([six.text_type(c) for c in cpus])]
         elif method == 'gomp':
             env['GOMP_CPU_AFFINITY'] = ' '.join([six.text_type(c) for c in cpus])
+        elif method.startswith('omp'):
+            env['OMP_PLACES'] = ','.join(['{{{:d}}}'.format(c) for c in cpus])
+            if method.endswith('verbose'):
+                env['OMP_DISPLAY_ENV'] = 'TRUE'
+                env['OMP_DISPLAY_AFFINITY'] = 'TRUE'
         return (True, cmdl, env)
 
 

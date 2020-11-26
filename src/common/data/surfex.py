@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Various resources to handle climatology files used in the Surfex model.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from vortex.data.outflow import ModelGeoResource
@@ -43,8 +47,8 @@ class PGDRaw(ModelGeoResource):
         nbi = super(PGDRaw, self).namebuilding_info()
         nbi.update(
             # will work only with the @cen namebuilder:
-            cen_rawbasename = ('PGD_' + self.geometry.area + '.' +
-                               self._extension_remap.get(self.nativefmt, self.nativefmt))
+            cen_rawbasename=('PGD_' + self.geometry.area + '.' +
+                             self._extension_remap.get(self.nativefmt, self.nativefmt))
             # With the standard provider, the usual keys will be used...
         )
         return nbi
@@ -102,6 +106,49 @@ class PGDNC(PGDRaw):
             )
         )
     )
+
+
+@namebuilding_delete('src')
+class PGDWithGeo(ModelGeoResource):
+    """
+    SURFEX climatological resource.
+    A Genvkey can be provided.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Surfex climatological file',
+            attr = dict(
+                kind = dict(
+                    values  = ['pgd', ],
+                ),
+                nativefmt = dict(
+                    values = ['fa', 'lfi', 'netcdf'],
+                    default = 'fa',
+                ),
+            )
+        )
+    ]
+    _extension_remap = dict(netcdf='nc')
+
+    @property
+    def realkind(self):
+        return 'pgd'
+
+    def olive_basename(self):
+        """OLIVE specific naming convention."""
+        return 'PGDFILE-' + self.geometry.area + '.' + self.nativefmt
+
+    def genv_basename(self):
+        """Customise the Genv key..."""
+        if self.gvar:
+            return gvar
+        else:
+            if self.geometry.lam:
+                geotag = '{0.area}_{0.rnice}'.format(self.geometry)
+            else:
+                geotag = 't{0.truncation:d}'.format(self.geometry)
+            return 'pgd_{:s}_{:s}'.format(geotag, self.nativefmt)
 
 
 class CoverParams(ModelGeoResource):

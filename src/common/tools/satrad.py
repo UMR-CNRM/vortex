@@ -11,7 +11,7 @@ import re
 
 from bronx.fancies import loggers
 
-from vortex.algo.components import AlgoComponentDecoMixin
+from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 
 #: No automatic export
 __all__ = []
@@ -19,6 +19,7 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
+@algo_component_deco_mixin_autodoc
 class SatRadDecoMixin(AlgoComponentDecoMixin):
     """RTTOV settings + Satellites related stuffs.
 
@@ -44,7 +45,7 @@ class SatRadDecoMixin(AlgoComponentDecoMixin):
     def setchannels(self):
         """Look up for channels namelists in effective inputs."""
         namchan = [
-            x.rh for x in self.context.sequence.effective_inputs(kind = 'namelist')
+            x.rh for x in self.context.sequence.effective_inputs(kind='namelist')
             if 'channel' in x.rh.options
         ]
         for thisnam in namchan:

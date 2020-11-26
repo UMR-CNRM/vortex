@@ -16,7 +16,7 @@ Package
 
 Classes
 -------
- 
+
 .. autoclass:: PerturbedState
    :show-inheritance:
    :members:
@@ -41,7 +41,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: Sample
    :show-inheritance:
    :members:
@@ -56,7 +56,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: MultiphysicsSample
    :show-inheritance:
    :members:
@@ -66,7 +66,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: GeneralCluster
    :show-inheritance:
    :members:

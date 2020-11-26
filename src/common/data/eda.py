@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Resources needed to build the Ensemble Data Assimilation system.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
-from vortex.data.flow       import GeoFlowResource
-from common.data.assim      import _BackgroundErrorInfo
+from vortex.data.flow import GeoFlowResource
+from common.data.assim import _BackgroundErrorInfo
 from vortex.syntax.stdattrs import term_deco
-from vortex.syntax.stddeco  import namebuilding_insert
-from gco.syntax.stdattrs    import gvar
+from vortex.syntax.stddeco import namebuilding_insert
+from gco.syntax.stdattrs import gvar
 
 #: Automatic export off
 __all__ = []

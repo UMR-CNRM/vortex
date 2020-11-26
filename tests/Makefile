@@ -1,23 +1,21 @@
 
-EXTRAPATH    := $(PWD)/../src:$(PWD)/../site:$(PWD)/../project:$(PYTHONPATH)
+VORTEXBASE  := $(shell pwd)/..
+EXTRAPATH   := $(VORTEXBASE)/src:$(VORTEXBASE)/site:$(VORTEXBASE)/project:$(VORTEXBASE)/tests:$(PYTHONPATH)
 export PYTHONPATH = $(EXTRAPATH)
 
 PYTHON        = python2.7
 NOSE          = nosetests-2.7
 
 PYTHON3       = python3
-NOSE3list     = nosetests-3.5 nosetests-3.4 nosetests3
+NOSE3list     = nosetests-3.7 nosetests-3.6 nosetests-3.5 nosetests-3.4 nosetests3
 NOSE3         = $(shell for p in $(NOSE3list) ; do if which $$p >/dev/null 2>&1 ; then echo $$p ; break ; fi ; done)
 
 NOSE_OPTS     = --verbosity=2 --no-byte-compile
 
-COVER_PACK    = footprints,vortex,common,olive,gco,iga,taylorism,arpifs_listings,bronx,tnt,ecmwf
+COVER_PACK    = footprints,bronx,tnt,taylorism,arpifs_listings,vortex,common,olive,gco,iga,alpha,cen,davai,ecmwf,intairpol,previmar
 COVER_OUT	  = coverage_report
 COVER_OPTS    = --no-byte-compile --with-coverage --cover-package=$(COVER_PACK) --cover-branch --cover-html --cover-html-dir=$(shell pwd)/$(COVER_OUT)
 
-PY3READY      = tests_bronx tests_footprints tests_arpifs_listings tests_tnt test_taylorism \
-				test_cfgparser test_iosponge test_sessions_stuff test_layoutnodes \
-				test_syntax test_toolsodb test_vortexnames test_import
 
 all: check
 

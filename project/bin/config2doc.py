@@ -52,13 +52,23 @@ logger = loggers.getLogger(__name__)
 
 def default_section_cb(parser, section, comment, ckeys):
     """Generate bits of ReST code for a given section."""
-    outstr = ':{}:\n'.format(section)
-    outstr += '    *{}*\n\n'.format(comment if comment else 'Not documented yet')
-    maxk = max([len(k) for k, v in parser.items(section)])
-    for k, v in parser.items(section):
-        outstr += '    ``{} = {}``  {}\n\n'.format(k.ljust(maxk), v,
-                                                   '(`{}`)'.format(ckeys[k]) if ckeys.get(k, None) else '')
-    outstr += '    |'
+    outstr = ':{}: *{}*\n\n'.format(section,
+                                    comment if comment else 'Not documented yet')
+
+    maxk = max(max([len(k) for k in parser.options(section)]), 3)
+    maxv = max(max([len(parser.get(section, k)) for k in parser.options(section)]), 5)
+    maxck = max(max([len(ckeys.get(k, None) or '') for k in parser.options(section)]), 8)
+    outstr += '    ' + '=' * maxk + ' ' + '=' * maxv + ' ' + '=' * maxck + "\n"
+    outstr += '    ' + 'Key'.ljust(maxk) + ' ' + 'Value'.ljust(maxv) + ' ' + 'Comment'.ljust(maxck) + "\n"
+    outstr += '    ' + '=' * maxk + ' ' + '=' * maxv + ' ' + '=' * maxck + "\n"
+
+    tablerows = list()
+    for k in parser.options(section):
+        tablerows.append('    ' + k.ljust(maxk) + ' ' +
+                         parser.get(section, k).ljust(maxv) + ' ' +
+                         (ckeys.get(k, None) or '').ljust(maxck) + "\n")
+    outstr += ('    ' + '-' * maxk + ' ' + '-' * maxv + ' ' + '-' * maxck + "\n").join(tablerows)
+    outstr += '    ' + '=' * maxk + ' ' + '=' * maxv + ' ' + '=' * maxck + "\n\n"
     return outstr
 
 
@@ -70,8 +80,10 @@ def geometry_easydump(parser, section, comment, ckeys):
 
 
 class RstConfigFileParser(object):
+    """Read and Process the configuration file to document."""
 
-    _RST_COMMENT_LINE = re.compile(r'^[#;]R ?(.*)$')
+    _RST_COMMENT_LINE = re.compile(r'^[#;]R\s+(.*)$')
+    _RST_COMMENT_LINEABOVE = re.compile(r'^[#;]Rabove\s+(.*)$')
     _RST_SECTION = re.compile(r's*\[(.*)\]\s+')
     _RST_CONFKEY = re.compile(r's*([-_\w]+)\s+=')
     _RST_SECTION_COMMENT = re.compile(r'^.*\s+;R (.*)$')
@@ -85,7 +97,7 @@ class RstConfigFileParser(object):
         """
         self._conffile = conffile
         self._section_cb = section_cb
-        self._fp = open(conffile, 'r')
+        self._fp = io.open(conffile, 'r', encoding='utf-8')
         self._parser = GenericConfigParser(conffile)
 
     def __del__(self):
@@ -113,32 +125,52 @@ class RstConfigFileParser(object):
             rematch = self._RST_SECTION.match(line)
             if rematch:
                 cur_section = rematch.group(1)
-                if cur_section == 'DEFAULT':  # We donot want to display DEFAULT
+                if cur_section == 'DEFAULT':  # We do not want to display DEFAULT
                     cur_section = None
                     continue
                 else:
                     rstfeed.append('#R {}'.format(cur_section))
+                cur_key = None
                 # Look for a comment
                 sections_comment[cur_section] = None
                 sections_keys[cur_section] = dict()
                 rematch = self._RST_SECTION_COMMENT.match(line)
                 if rematch:
                     sections_comment[cur_section] = rematch.group(1)
+                else:
+                    sections_comment[cur_section] = ''
                 logger.info('Found section:{} comment:{}'.format(cur_section,
                                                                  sections_comment[cur_section]))
                 continue
             # Keys
             rematch = (cur_section is not None and self._RST_CONFKEY.match(line))
             if rematch:
-                cur_key = rematch.group(1)
+                cur_key = rematch.group(1).lower()
                 sections_keys[cur_section][cur_key] = None
                 rematch = self._RST_SECTION_COMMENT.match(line)
                 if rematch:
                     sections_keys[cur_section][cur_key] = rematch.group(1)
+                else:
+                    sections_keys[cur_section][cur_key] = ''
                 logger.info('Found key:{} section:{} comment:{}'.format(cur_key,
                                                                         cur_section,
                                                                         sections_keys[cur_section][cur_key]))
                 continue
+            # Section's comments
+            if cur_section and cur_key is None:
+                rematch = self._RST_COMMENT_LINEABOVE.match(line)
+                if rematch:
+                    sections_comment[cur_section] += (('\n' if sections_comment[cur_section] else '') +
+                                                      rematch.group(1))
+                    continue
+            # Key's comments
+            if cur_section and cur_key:
+                rematch = self._RST_COMMENT_LINEABOVE.match(line)
+                if rematch:
+                    sections_keys[cur_section][cur_key] += ((' ' if sections_keys[cur_section][cur_key] else '') +
+                                                            rematch.group(1))
+                    continue
+
         # The build the ReST for the sections
         rstdoc = []
         for element in rstfeed:
@@ -157,7 +189,7 @@ class RstConfigFileParser(object):
 def default_rst(infile, outfile, verbose=0):
     """Default parser."""
     rstparse = RstConfigFileParser(infile)
-    with open(outfile, 'w') as outfh:
+    with io.open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 
@@ -174,7 +206,7 @@ def geometry_rst(outfile, verbose=0):
     logger.debug('The default geometry file was reloaded')
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(geofile, section_cb=geometry_easydump)
-    with open(outfile, 'w') as outfh:
+    with io.open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 
@@ -200,7 +232,7 @@ def configtable_rst(indata, outfile, verbose=0):
 
     # We are now parsing the ini file manually to find RST code
     rstparse = RstConfigFileParser(c_parser.config.file, section_cb=tableitem_easydump)
-    with io.open(outfile, 'w') as outfh:
+    with io.open(outfile, 'w', encoding='utf-8') as outfh:
         outfh.write(rstparse.parse())
         logger.debug('Resulting ReST written in: {}'.format(outfile))
 

@@ -2,9 +2,38 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
+"""
+Abstract class for any AlgoComponent (:class:`AlgoComponent`) or AlgoComponent's
+Mixins (:class:`AlgoComponentDecoMixin`).
+
+Some very generic concrete AlgoComponent classes are also provided:
+
+    * :class:`Expresso`: launch a simple script;
+    * :class:`BlindRun`: launch a simple executable (no MPI);
+    * :class:`Parallel`: launch an MPI application.
+
+Additional abstract classes provide multiprocessing support (through the
+:mod:`taylorism` package):
+
+    * :class:`TaylorRun`: launch a piece of Python code on several processes;
+    * :class:`ParaExpresso`: launch a script multiple times (in parallel);
+    * :class:`ParaBlindRun`: launch an executable multiple times (in parallel).
+
+Such classes are based on the :mod:`taylorism` (the developer should be familiar
+with this package) and uses "Worker" classes provided in the
+:mod:`vortex.tools.parallelism` package.
+
+When class inheritance is not applicable or ineffective, The AlgoComponent's
+Mixins are a powerful tool to mutualise some pieces of code. See the
+:class:`AlgoComponentDecoMixin` class documentation for more details.
+"""
+
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import contextlib
+import copy
 import locale
+import logging
 import multiprocessing
 import shlex
 import sys
@@ -79,6 +108,61 @@ def _clsmtd_mixin_locked(f):
     return wrapped_clsmethod
 
 
+def algo_component_deco_mixin_autodoc(cls):
+    """
+    Decorator that adds an automatic documentation on any :class:`AlgoComponentDecoMixin`
+    class.
+    """
+    extradoc = ''
+
+    # Document extra footprints
+    if cls.MIXIN_AUTO_FPTWEAK and cls._MIXIN_EXTRA_FOOTPRINTS:
+        extradoc += '\nThe following footprints will be applied to the target classes:\n\n'
+        for fp in cls._MIXIN_EXTRA_FOOTPRINTS:
+            if isinstance(fp, footprints.Footprint):
+                extradoc += footprints.doc.format_docstring(fp,
+                                                            footprints.setup.docstrings,
+                                                            abstractfpobj=True)
+                extradoc += '\n'
+
+    # Document decorating classes
+    if cls.MIXIN_AUTO_DECO:
+        for what, desc in (('PREPARE_PREHOOKS', 'before the original ``prepare`` method'),
+                           ('PREPARE_HOOKS', 'after the original ``prepare`` method'),
+                           ('POSTFIX_PREHOOKS', 'before the original ``postfix`` method'),
+                           ('POSTFIX_HOOKS', 'after the original ``postfix`` method'),
+                           ('SPAWN_HOOKS', 'after the original ``spawn_hook`` method'),
+                           ('CLI_OPTS_EXTEND', 'to alter the result of the ``spawn_command_options`` method'),
+                           ('STDIN_OPTS_EXTEND', 'to alter the result of the ``spawn_stdin_options`` method'),
+                           ('_MIXIN_EXECUTE_OVERWRITE', 'instead of the original ``execute`` method'),
+                           ('MPIBINS_HOOKS', 'to alter the result of the ``_bootstrap_mpibins_hack`` method'),
+                           ('MPIENVELOPE_HOOKS', 'to alter the result of the ``_bootstrap_mpienvelope_hack`` method')):
+            what = '_MIXIN_{:s}'.format(what)
+            if getattr(cls, what, ()):
+                extradoc += '\nThe following method(s) will be called {:s}:\n\n'.format(desc)
+                extradoc += '\n'.join('    * {!r}'.format(cb) for cb in getattr(cls, what))
+                extradoc += '\n'
+
+    if extradoc:
+        extradoc = ('\n    .. note:: The following documentation is automatically generated. ' +
+                    'From a developer point of view, using the present mixin class ' +
+                    'will result in the following actions:\n' +
+                    ' \n'.join(['        ' + t if t else ''
+                                for t in extradoc.split('\n')]))
+
+        # This is a trick... create a fake __new__ method in order to be able
+        # to update its documentation.
+        orig_new = cls.__new__
+
+        def __new__(thecls, *args, **kwargs):
+            return orig_new(thecls, *args, **kwargs)
+
+        __new__.__doc__ = extradoc
+        cls.__new__ = classmethod(__new__)
+
+    return cls
+
+
 class AlgoComponentDecoMixin(object):
     """
     This is the base class for any Mixin class targeting :class:`AlgoComponent`
@@ -113,27 +197,39 @@ class AlgoComponentDecoMixin(object):
           by default) and a bunch of other class variables containing tuples.
           They are described below:
 
-              * :data:`_MIXIN_PREPARE_PREHOOKS`: Tuple of method that will be
-                executed before the original prepare method.
+              * :data:`_MIXIN_PREPARE_PREHOOKS`: Tuple of methods that will be
+                executed before the original prepare method. Such methods receive
+                the same arguments list than the original decorated method.
 
-              * :data:`_MIXIN_PREPARE_HOOKS`: Tuple of method that will be
-                executed after the original prepare method.
+              * :data:`_MIXIN_PREPARE_HOOKS`: Tuple of methods that will be
+                executed after the original prepare method. Such methods receive
+                the same arguments list than the original decorated method.
 
-              * :data:`_MIXIN_POSTFIX_PREHOOKS`: Tuple of method that will be
-                executed before the original postfix method.
+              * :data:`_MIXIN_EXECUTE_FINALISE_HOOKS`: Tuple of method that will
+                be executed after any execution (even if the execution failed).
 
-              * :data:`_MIXIN_POSTFIX_HOOKS`: Tuple of method that will be
-                executed after the original postfix method.
+              * :data:`_MIXIN_FAIL_EXECUTE_HOOKS`: Tuple of method that will
+                be executed if the execution fails (the original exception
+                will be re-raised afterwards)
 
-              * :data:`_MIXIN_SPAWN_HOOKS`: Tuple of method that will be
-                executed after the original spawn_hook method.
+              * :data:`_MIXIN_POSTFIX_PREHOOKS`: Tuple of methods that will be
+                executed before the original postfix method. Such methods receive
+                the same arguments list than the original decorated method.
 
-              * :data:`_MIXIN_CLI_OPTS_EXTEND`: Tuple of method that will be
+              * :data:`_MIXIN_POSTFIX_HOOKS`: Tuple of methods that will be
+                executed after the original postfix method. Such methods receive
+                the same arguments list than the original decorated method.
+
+              * :data:`_MIXIN_SPAWN_HOOKS`: Tuple of methods that will be
+                executed after the original spawn_hook method. Such methods receive
+                the same arguments list than the original decorated method.
+
+              * :data:`_MIXIN_CLI_OPTS_EXTEND`: Tuple of methods that will be
                 executed after the original ``spawn_command_options`` method. Such
                 method will receive one argument (``self`` set aside): the value
                 returned by the original ``spawn_command_options`` method.
 
-              * :data:`_MIXIN_STDIN_OPTS_EXTEND`: Tuple of method that will be
+              * :data:`_MIXIN_STDIN_OPTS_EXTEND`: Tuple of methods that will be
                 executed after the original ``spawn_stdin_options`` method. Such
                 method will receive one argument (``self`` set aside): the value
                 returned by the original ``spawn_stdin_options`` method.
@@ -147,6 +243,8 @@ class AlgoComponentDecoMixin(object):
 
     _MIXIN_PREPARE_PREHOOKS = ()
     _MIXIN_PREPARE_HOOKS = ()
+    _MIXIN_EXECUTE_FINALISE_HOOKS = ()
+    _MIXIN_FAIL_EXECUTE_HOOKS = ()
     _MIXIN_POSTFIX_PREHOOKS = ()
     _MIXIN_POSTFIX_HOOKS = ()
     _MIXIN_SPAWN_HOOKS = ()
@@ -214,6 +312,12 @@ class AlgoComponentDecoMixin(object):
                                                      cls._MIXIN_PREPARE_HOOKS,
                                                      cls._MIXIN_PREPARE_PREHOOKS,
                                                      False),
+                                                    ('fail_execute',
+                                                     cls._MIXIN_FAIL_EXECUTE_HOOKS, (),
+                                                     False),
+                                                    ('execute_finalise',
+                                                     cls._MIXIN_EXECUTE_FINALISE_HOOKS, (),
+                                                     False),
                                                     ('postfix',
                                                      cls._MIXIN_POSTFIX_HOOKS,
                                                      cls._MIXIN_POSTFIX_PREHOOKS,
@@ -236,6 +340,73 @@ class AlgoComponentDecoMixin(object):
     @_clsmtd_mixin_locked
     def mixin_execute_overwrite(cls):
         return cls._MIXIN_EXECUTE_OVERWRITE
+
+
+class AlgoComponentMpiDecoMixin(AlgoComponentDecoMixin):
+    """
+    This is the base class for Mixin class targeting :class:`Parallel`
+    classes.
+
+    It inherits all the behaviour of the :class:`AlgoComponentDecoMixin` base
+    class. But in addition, it allows to decorate additional :class:`Parallel`'s
+    methods using the following class variables:
+
+      * :data:`_MIXIN_MPIBINS_HOOKS`: Tuple of methods that will be
+        executed after the original ``_bootstrap_mpibins_hack`` method. Such
+        methods will receive five arguments (``self`` set aside):
+
+            * The list of :class:`mpitools.MpiBinaryDescription` objects returned
+              by the original ``_bootstrap_mpibins_hack`` method;
+            * The list of :class:`mpitools.MpiBinaryDescription` objects as
+              provided by the first caller;
+            * The list of binary ResourceHandlers as provided to the ``run``
+              method;
+            * A dictionary of options as provided to the ``run`` method;
+            * A boolean indicating if an MPI envelope is provided by the user.
+
+      * :data:`_MIXIN_MPIENVELOPE_HOOKS`: Tuple of methods that will be
+        executed after the original ``_bootstrap_mpienvelope_hack`` method. Such
+        methods will receive four arguments (``self`` set aside):
+
+            * The list of dictionaries describing the envelope returned
+              by the original``_bootstrap_mpienvelope_hack`` method;
+            * The list of dictionaries describing the envelope as
+              provided by the first caller;
+            * The list of binary ResourceHandlers as provided to the ``run``
+              method;
+            * A dictionary of options as provided to the ``run`` method;
+            * The :class:`mpitools.MpiTool` that is used to generate the
+              MPI command line
+
+    """
+
+    _MIXIN_MPIBINS_HOOKS = ()
+    _MIXIN_MPIENVELOPE_HOOKS = ()
+    _MIXIN_MPIENVELOPE_POSTHOOKS = ()
+
+    @classmethod
+    @_clsmtd_mixin_locked
+    def mixin_algo_deco(cls, targetcls):
+        """
+        Applies all the necessary decorators to the **targetcls**
+        :class:`AlgoComponent` class.
+        """
+        targetcls = AlgoComponentDecoMixin.mixin_algo_deco(targetcls)
+        if not issubclass(targetcls, Parallel):
+            raise RuntimeError('This class can only be mixed in Parallel classes.')
+        for targetmtd, hooks, prehooks, reenter in [('_bootstrap_mpibins_hack',
+                                                     cls._MIXIN_MPIBINS_HOOKS, (),
+                                                     True),
+                                                    ('_bootstrap_mpienvelope_hack',
+                                                     cls._MIXIN_MPIENVELOPE_HOOKS, (),
+                                                     True),
+                                                    ('_bootstrap_mpienvelope_posthack',
+                                                     cls._MIXIN_MPIENVELOPE_POSTHOOKS, (),
+                                                     True), ]:
+            if hooks or prehooks:
+                setattr(targetcls, targetmtd,
+                        cls._get_algo_wrapped(targetcls, targetmtd, hooks, prehooks, reenter))
+        return targetcls
 
 
 class AlgoComponentMeta(footprints.FootprintBaseMeta):
@@ -286,14 +457,14 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
     _SERVERSYNC_RUNONSTARTUP = True
     _SERVERSYNC_STOPONEXIT = True
 
-    _abstract  = True
+    _abstract = True
     _collector = ('component',)
     _footprint = dict(
         info = 'Abstract algo component',
         attr = dict(
             engine = dict(
                 info     = 'The way the executable should be run.',
-                values   = [ 'algo' ]
+                values   = ['algo', ]
             ),
             flyput = dict(
                 info            = 'Activate a background job in charge off on the fly processing.',
@@ -498,6 +669,41 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         """Map output to another filename."""
         return item
 
+    def _flyput_job_internal_search(self, io_poll_method, io_poll_args, io_poll_kwargs):
+        data = list()
+        for arg in io_poll_args:
+            logger.info('Polling check arg %s', arg)
+            rc = io_poll_method(arg, **io_poll_kwargs)
+            try:
+                data.extend(rc.result)
+            except AttributeError:
+                data.extend(rc)
+            data = [x for x in data if x]
+            logger.info('Polling retrieved data %s', str(data))
+        return data
+
+    def _flyput_job_internal_put(self, data):
+        for thisdata in data:
+            if self.flymapping:
+                mappeddata = self.flyput_outputmapping(thisdata)
+                if not mappeddata:
+                    raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
+            else:
+                mappeddata = thisdata
+            candidates = [x for x in self.promises
+                          if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
+            if candidates:
+                logger.info('Polled data is promised <%s>', thisdata)
+                bingo = candidates.pop()
+                if thisdata != mappeddata:
+                    logger.info('Linking <%s> to <%s> (fmt=%s) before put',
+                                thisdata, mappeddata, bingo.rh.container.actualfmt)
+                    self.system.cp(thisdata, mappeddata, intent='in',
+                                   fmt=bingo.rh.container.actualfmt)
+                bingo.put(incache=True)
+            else:
+                logger.warning('Polled data not promised <%s>', thisdata)
+
     def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
                    event_complete, event_free, queue_context):
         """Poll new data resources."""
@@ -512,37 +718,10 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
         while redo and not event_complete.is_set():
             event_free.clear()
-            data = list()
             try:
-                for arg in io_poll_args:
-                    logger.info('Polling check arg %s', arg)
-                    rc = io_poll_method(arg, **io_poll_kwargs)
-                    try:
-                        data.extend(rc.result)
-                    except AttributeError:
-                        data.extend(rc)
-                data = [x for x in data if x]
-                logger.info('Polling retrieved data %s', str(data))
-                for thisdata in data:
-                    if self.flymapping:
-                        mappeddata = self.flyput_outputmapping(thisdata)
-                        if not mappeddata:
-                            raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
-                    else:
-                        mappeddata = thisdata
-                    candidates = [x for x in self.promises
-                                  if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
-                    if candidates:
-                        logger.info('Polled data is promised <%s>', thisdata)
-                        bingo = candidates.pop()
-                        if thisdata != mappeddata:
-                            logger.info('Linking <%s> to <%s> (fmt=%s) before put',
-                                        thisdata, mappeddata, bingo.rh.container.actualfmt)
-                            self.system.cp(thisdata, mappeddata, intent='in',
-                                           fmt=bingo.rh.container.actualfmt)
-                        bingo.put(incache=True)
-                    else:
-                        logger.warning('Polled data not promised <%s>', thisdata)
+                data = self._flyput_job_internal_search(io_poll_method,
+                                                        io_poll_args, io_poll_kwargs)
+                self._flyput_job_internal_put(data)
             except Exception as trouble:
                 logger.error('Polling trouble: %s', str(trouble))
                 redo = False
@@ -598,9 +777,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         queue_ctx = multiprocessing.Queue()
 
         p_io = multiprocessing.Process(
-            name   = self.footprint_clsname(),
-            target = self.flyput_job,
-            args   = (io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
+            name=self.footprint_clsname(),
+            target=self.flyput_job,
+            args=(io_poll_method, io_poll_args, io_poll_kwargs, event_stop, event_free, queue_ctx),
         )
 
         # The co-process is started
@@ -609,28 +788,25 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         return (p_io, event_stop, event_free, queue_ctx)
 
     def manual_flypolling(self):
+        """Call the flyput method and returns the list of newly available files."""
         # Find out a polling method
         io_poll_method = self.flyput_method()
         if not io_poll_method:
             raise AlgoComponentError('Unable to find an io_poll_method')
         # Find out some polling prefixes
-        io_poll_args = self.flyput_args()
+        io_poll_args = self.flyput_check()
         if not io_poll_args:
             raise AlgoComponentError('Unable to find an io_poll_args')
         # Additional named attributes
         io_poll_kwargs = self.flyput_kwargs()
         # Starting polling each of the prefixes
-        data = list()
-        for arg in io_poll_args:
-            logger.info('Polling check arg %s', arg)
-            rc = io_poll_method(arg, **io_poll_kwargs)
-            try:
-                data.extend(rc.result)
-            except AttributeError:
-                data.extend(rc)
-            data = [x for x in data if x]
-            logger.info('Polling retrieved data %s', str(data))
-        return data
+        return self._flyput_job_internal_search(io_poll_method,
+                                                io_poll_args, io_poll_kwargs)
+
+    def manual_flypolling_job(self):
+        """Call the flyput method and deal with promised files."""
+        data = self.manual_flypolling()
+        self._flyput_job_internal_put(data)
 
     def flyput_end(self, p_io, e_complete, e_free, queue_ctx):
         """Wait for the co-process in charge of promises."""
@@ -664,9 +840,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
         """Start a subprocess and run the server in it."""
         self._server_event = multiprocessing.Event()
         self._server_process = multiprocessing.Process(
-            name   = self.footprint_clsname(),
-            target = self.server_job,
-            args   = (rh, opts)
+            name=self.footprint_clsname(),
+            target=self.server_job,
+            args=(rh, opts)
         )
         self._server_process.start()
 
@@ -817,9 +993,9 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                 if self.serversync_method is None:
                     raise ValueError('The serversync_method must be provided.')
                 self._server_synctool = footprints.proxy.serversynctool(
-                    method      = self.serversync_method,
-                    medium      = self.serversync_medium,
-                    raiseonexit = self._SERVERSYNC_RAISEONEXIT,
+                    method=self.serversync_method,
+                    medium=self.serversync_medium,
+                    raiseonexit=self._SERVERSYNC_RAISEONEXIT,
                 )
                 self._server_synctool.set_servercheck_callback(self.server_alive)
                 self.server_begin(rh, opts)
@@ -832,6 +1008,10 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                 self._server_synctool.trigger_run()
         else:
             self.execute_single(rh, opts)
+
+    def fail_execute(self, e, rh, kw):
+        """This method is called if :meth:`execute` raise an exception."""
+        pass
 
     def execute_finalise(self, opts):
         """Abstract method.
@@ -907,8 +1087,11 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             self.fsstamp(kw)                # 2
             try:
                 self.execute(rh, kw)        # 3
+            except Exception as e:
+                self.fail_execute(e, rh, kw)  # 3.1
+                raise
             finally:
-                self.execute_finalise(kw)   # 3.1
+                self.execute_finalise(kw)   # 3.2
             self.fscheck(kw)                # 4
             self.postfix(rh, kw)            # 5
             self.dumplog(kw)                # 6
@@ -1251,7 +1434,9 @@ class ParaBlindRun(TaylorRun):
                 info = "Topology/Method to set up the CPU affinity of the child task.",
                 default = None,
                 optional = True,
-                values = ['raw', 'socketpacked', 'socketpacked_gomp']
+                values = ['{:s}{:s}'.format(t, m)
+                          for t in ('raw', 'socketpacked', 'numapacked')
+                          for m in ('', '_taskset', '_gomp', '_omp', '_ompverbose')]
             ),
             taskset_bsize = dict(
                 info        = 'The number of threads used by one task',
@@ -1309,6 +1494,18 @@ class Parallel(xExecutableAlgoComponent):
                 alias           = ['mpi'],
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
+            mpiconflabel = dict(
+                info            = ('Some extra label used when reading the mpitool' +
+                                   'configuration in the configuration file'),
+                optional        = True,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
+            mpiverbose = dict(
+                info            = 'Boost logging verbosity in mpitools',
+                optional        = True,
+                default         = False,
+                doc_visibility  = footprints.doc.visibility.GURU,
+            ),
             binaries = dict(
                 info            = 'List of MpiBinaryDescription objects',
                 optional        = True,
@@ -1328,38 +1525,69 @@ class Parallel(xExecutableAlgoComponent):
                 default         = footprints.FPList(['basic', ]),
                 doc_visibility  = footprints.doc.visibility.GURU,
             ),
-            ioserver = dict(
-                info            = 'The object used to launch the IOserver part of the binary.',
-                type            = mpitools.MpiBinaryIOServer,
-                optional        = True,
-                default         = None,
-                doc_visibility  = footprints.doc.visibility.GURU,
-            ),
-            ioname = dict(
-                info            = ('The binary_kind of a class in the mpibinary collector ' +
-                                   '(used only if *ioserver* is not provided)'),
-                optional        = True,
-                default         = 'ioserv',
-                doc_visibility  = footprints.doc.visibility.GURU,
-            ),
-            iolocation = dict(
-                info            = 'Location of the IO server within the binary list',
-                type            = int,
-                default         = -1,
-                optional        = True
-            )
         )
     )
 
-    def prepare(self, rh, opts):
-        """Add some defaults env values for mpitool itself."""
-        super(Parallel, self).prepare(rh, opts)
-        if opts.get('mpitool', True):
-            self.export('mpitool')
+    def _mpitool_attributes(self, opts):
+        """Return the dictionary of attributes needed to create the mpitool object."""
+        # Read the appropriate configuration in the target file
+        conf_dict = self.target.items('mpitool')
+        if self.mpiconflabel:
+            conf_dict.update(self.target.items('mpitool-{!s}'.format(self.mpiconflabel)))
+        # Find the mpiname
+        act_mpiname = (opts.get('mpiname', None) or self.mpiname or
+                       self.env.VORTEX_MPI_NAME or conf_dict.get('mpiname', None))
+        if not act_mpiname:
+            raise ValueError('Unabled to find an appropriate mpiname.')
+        options = dict(mpiname=act_mpiname)
+        config_mpiname = act_mpiname.split('-')[0]
+        # Find ither generic options
+        generic_options = set(('mpilauncher',
+                               'mpiopts',
+                               'mpiwrapstd',
+                               'mpibind_topology'))
+
+        def _generic_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_'.format(config_mpiname)
+            for k, v in mapping.items():
+                if k.startswith(optprefix) and k[len(optprefix):] in generic_options:
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _generic_options_from_mapping(conf_dict, options, checkvalue=True)
+        _generic_options_from_mapping({'{:s}_mpi{:s}'.format(config_mpiname, k[11:].lower()): v
+                                       for k, v in self.env.items()
+                                       if k.startswith('VORTEX_MPI_')}, options)
+        _generic_options_from_mapping(opts, options)
+        # Find other specific options (not listed in generic_options)
+
+        def _specific_options_from_mapping(mapping, options, checkvalue=False):
+            optprefix = '{:s}_opt_'.format(config_mpiname)
+            for k, v in mapping.items():
+                if (k.startswith(optprefix) and
+                        k[len(optprefix):] not in generic_options and
+                        k[len(optprefix):] != 'mpiname'):
+                    if not checkvalue or v:
+                        options[k[len(optprefix):]] = v
+
+        _specific_options_from_mapping(conf_dict, options, checkvalue=True)
+        _specific_options_from_mapping(opts, options)
+
+        logger.info('Attributes to create the mpitool: %s', options)
+        return options
 
     def spawn_command_line(self, rh):
         """Split the shell command line of the resource to be run."""
         return [super(Parallel, self).spawn_command_line(r) for r in rh]
+
+    def _bootstrap_mpibins_hack(self, bins, rh, opts, use_envelope):
+        return copy.deepcopy(bins)
+
+    def _bootstrap_mpienvelope_hack(self, envelope, rh, opts, mpi):
+        return copy.deepcopy(envelope)
+
+    def _bootstrap_mpienvelope_posthack(self, envelope, rh, opts, mpi):
+        return None
 
     def _bootstrap_mpitool(self, rh, opts):
         """Initialise the mpitool object and finds out the command line."""
@@ -1371,54 +1599,90 @@ class Parallel(xExecutableAlgoComponent):
         # Find the MPI launcher
         mpi = self.mpitool
         if not mpi:
-            mpi_extras = dict()
-            if self.env.VORTEX_MPI_OPTS is not None:
-                mpi_extras['mpiopts'] = self.env.VORTEX_MPI_OPTS
             mpi = footprints.proxy.mpitool(
-                sysname = self.system.sysname,
-                mpiname = self.mpiname or self.env.VORTEX_MPI_NAME,
-                **mpi_extras
+                sysname=self.system.sysname,
+                ** self._mpitool_attributes(opts)
             )
         if not mpi:
             logger.critical('Component %s could not find any mpitool', self.footprint_clsname())
             raise AttributeError('No valid mpitool attr could be found.')
 
-        # Some MPI presets
-        mpi_desc = dict()
-        for mpi_k in ('tasks', 'openmp'):
-            mpi_kenv = 'VORTEX_SUBMIT_' + mpi_k.upper()
-            if mpi_kenv in self.env:
-                mpi_desc[mpi_k] = self.env.get(mpi_kenv)
+        # Setup various useful things (env, system, ...)
+        mpi.import_basics(self)
+
+        mpi_opts = opts.get('mpiopts', dict())
+
+        envelope = []
+        use_envelope = 'envelope' in mpi_opts
+        if use_envelope:
+            envelope = mpi_opts.pop('envelope')
+            if envelope == 'auto':
+                blockspec = dict(nn=self.env.get('VORTEX_SUBMIT_NODES', 1), )
+                if 'VORTEX_SUBMIT_TASKS' in self.env:
+                    blockspec['nnp'] = self.env.get('VORTEX_SUBMIT_TASKS')
+                else:
+                    raise ValueError("when envelope='auto', VORTEX_SUBMIT_TASKS must be set up.")
+                envelope = [blockspec, ]
+            elif isinstance(envelope, dict):
+                envelope = [envelope, ]
+            elif isinstance(envelope, (list, tuple)):
+                pass
+            else:
+                raise AttributeError('Invalid envelope specification')
+            if envelope:
+                envelope_ntasks = sum([d['nn'] * d['nnp'] for d in envelope])
+            if not envelope:
+                use_envelope = False
+
+        if not use_envelope:
+            # Some MPI presets
+            mpi_desc = dict()
+            for mpi_k in ('tasks', 'openmp'):
+                mpi_kenv = 'VORTEX_SUBMIT_' + mpi_k.upper()
+                if mpi_kenv in self.env:
+                    mpi_desc[mpi_k] = self.env.get(mpi_kenv)
+
+        # Binaries may be grouped together on the same nodes
+        bin_groups = mpi_opts.pop('groups', [])
+
+        # Find out the command line
+        bargs = self.spawn_command_line(rh)
+
+        # Potential Source files
+        sources = []
 
         # The usual case: no indications, 1 binary + a potential ioserver
         if len(rh) == 1 and not self.binaries:
 
-            # The main program
-            master = footprints.proxy.mpibinary(
-                kind=self.binarysingle,
-                nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
-                **mpi_desc)
-            master.options = opts.get('mpiopts', dict())
-            master.master = self.absexcutable(rh[0].container.localpath())
-            bins = [master, ]
+            # In such a case, defining group does not makes sense
+            self.algoassert(not bin_groups,
+                            "With only one binary, groups should not be defined")
 
-            # A potential IO server
-            io = self.ioserver
-            if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
-                io = footprints.proxy.mpibinary(
-                    kind   = self.ioname,
-                    tasks  = self.env.VORTEX_IOSERVER_TASKS  or master.tasks,
-                    openmp = self.env.VORTEX_IOSERVER_OPENMP or master.openmp)
-                io.options = {x[3:]: opts[x]
-                              for x in opts.keys() if x.startswith('io_')}
-                io.master = master.master
-            if io:
-                rh.append(rh[0])
-                master.options['nn'] = master.options['nn'] - io.options['nn']
-                if self.iolocation >= 0:
-                    bins.insert(self.iolocation, io)
-                else:
-                    bins.append(io)
+            # The main program
+            allowbind = mpi_opts.pop('allowbind', True)
+            distribution = mpi_opts.pop('distribution',
+                                        self.env.get('VORTEX_MPIBIN_DEF_DISTRIBUTION', None))
+            if use_envelope:
+                master = footprints.proxy.mpibinary(
+                    kind=self.binarysingle,
+                    ranks=envelope_ntasks,
+                    openmp=self.env.get('VORTEX_SUBMIT_OPENMP', None),
+                    allowbind=allowbind,
+                    distribution=distribution)
+            else:
+                master = footprints.proxy.mpibinary(
+                    kind=self.binarysingle,
+                    nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                    allowbind=allowbind,
+                    distribution=distribution,
+                    **mpi_desc)
+            master.options = mpi_opts
+            master.master = self.absexcutable(rh[0].container.localpath())
+            master.arguments = bargs[0]
+            bins = [master, ]
+            # Source files ?
+            if hasattr(rh[0].resource, 'guess_binary_sources'):
+                sources.extend(rh[0].resource.guess_binary_sources(rh[0].provider))
 
         # Multiple binaries are to be launched: no IO server support here.
         elif len(rh) > 1 and not self.binaries:
@@ -1432,26 +1696,50 @@ class Parallel(xExecutableAlgoComponent):
                 bnames = self.binarymulti
 
             # Check mpiopts shape
-            u_mpiopts = opts.get('mpiopts', dict())
-            for k, v in u_mpiopts.items():
+            for k, v in mpi_opts.items():
                 if not isinstance(v, collections_abc.Iterable):
                     raise ValueError('In such a case, mpiopts must be Iterable')
                 if len(v) != len(rh):
                     raise ParallelInconsistencyAlgoComponentError('mpiopts[{:s}]'.format(k))
+            # Check bin_group shape
+            if bin_groups:
+                if len(bin_groups) != len(rh):
+                    raise ParallelInconsistencyAlgoComponentError('bin_group')
 
             # Create MpiBinaryDescription objects
             bins = list()
+            allowbinds = mpi_opts.pop('allowbind', [True, ] * len(rh))
+            distributions = mpi_opts.pop('distribution',
+                                         [self.env.get('VORTEX_MPIBIN_DEF_DISTRIBUTION', None), ]
+                                         * len(rh))
             for i, r in enumerate(rh):
-                bins.append(
-                    footprints.proxy.mpibinary(
-                        kind  = bnames[i],
-                        nodes = self.env.get('VORTEX_SUBMIT_NODES', 1),
-                        **mpi_desc
+                if use_envelope:
+                    bins.append(
+                        footprints.proxy.mpibinary(
+                            kind=bnames[i],
+                            allowbind=allowbinds[i],
+                            distribution=distributions[i],
+                        )
                     )
-                )
+                else:
+                    bins.append(
+                        footprints.proxy.mpibinary(
+                            kind=bnames[i],
+                            nodes=self.env.get('VORTEX_SUBMIT_NODES', 1),
+                            allowbind=allowbinds[i],
+                            distribution=distributions[i],
+                            **mpi_desc
+                        )
+                    )
                 # Reshape mpiopts
-                bins[i].options = {k: v[i] for k, v in u_mpiopts.items()}
+                bins[i].options = {k: v[i] for k, v in mpi_opts.items()}
+                if bin_groups:
+                    bins[i].group = bin_groups[i]
                 bins[i].master = self.absexcutable(r.container.localpath())
+                bins[i].arguments = bargs[i]
+                # Source files ?
+                if hasattr(r.resource, 'guess_binary_sources'):
+                    sources.extend(r.resource.guess_binary_sources(r.provider))
 
         # Nothing to do: binary descriptions are provided by the user
         else:
@@ -1460,21 +1748,60 @@ class Parallel(xExecutableAlgoComponent):
             bins = self.binaries
             for i, r in enumerate(rh):
                 bins[i].master = self.absexcutable(r.container.localpath())
+                bins[i].arguments = bargs[i]
+
+        # The global envelope
+        envelope = self._bootstrap_mpienvelope_hack(envelope, rh, opts, mpi)
+        if envelope:
+            mpi.envelope = envelope
 
         # The binaries description
-        mpi.binaries = bins
+        mpi.binaries = self._bootstrap_mpibins_hack(bins, rh, opts, use_envelope)
+        upd_envelope = self._bootstrap_mpienvelope_posthack(envelope, rh, opts, mpi)
+        if upd_envelope:
+            mpi.envelope = upd_envelope
 
-        # Find out the command line
-        bargs = self.spawn_command_line(rh)
-        args = mpi.mkcmdline(bargs)
-        for r, a in zip(rh, bargs):
-            logger.info('Run %s in parallel mode. Args: %s', r.container.localpath(), ' '.join(a))
-        logger.info('Full MPI commandline: %s', ' '.join(args))
+        # The source files
+        mpi.sources = sources
+
+        if envelope:
+            # Check the consistency between nranks and the total number of processes
+            envelope_ntasks = sum([d.nprocs for d in mpi.envelope])
+            mpibins_total = sum([m.nprocs for m in mpi.binaries])
+            if not envelope_ntasks == mpibins_total:
+                raise AlgoComponentError(
+                    ("The number of requested ranks ({:d}) must be equal "
+                     "to the number of processes available in the envelope ({:d})").
+                    format(mpibins_total, envelope_ntasks))
+
+        args = mpi.mkcmdline()
+        for b in mpi.binaries:
+            logger.info('Run %s in parallel mode. Args: %s.', b.master, ' '.join(b.arguments))
+        logger.info('Full MPI command line: %s', ' '.join(args))
+
+        # Setup various useful things (env, system, ...)
+        mpi.import_basics(self)
 
         return mpi, args
 
+    @contextlib.contextmanager
+    def _tweak_mpitools_logging(self):
+        if self.mpiverbose:
+            m_loggers = dict()
+            for m_logger_name in [l for l in loggers.lognames if 'mpitools' in l]:
+                m_logger = loggers.getLogger(m_logger_name)
+                m_loggers[m_logger] = m_logger.level
+                m_logger.setLevel(logging.DEBUG)
+            try:
+                yield
+            finally:
+                for m_logger, prev_level in m_loggers.items():
+                    m_logger.setLevel(prev_level)
+        else:
+            yield
+
     def execute_single(self, rh, opts):
-        """Run the specified resource handler through the `mitool` launcher
+        """Run the specified resource handler through the `mpitool` launcher
 
         An argument named `mpiopts` could be provided as a dictionary: it may
         contains indications on the number of nodes, tasks, ...
@@ -1482,17 +1809,241 @@ class Parallel(xExecutableAlgoComponent):
 
         self.system.subtitle('{0:s} : parallel engine'.format(self.realkind))
 
-        # Return a mpitool object and the mpicommand line
-        mpi, args = self._bootstrap_mpitool(rh, opts)
+        with self._tweak_mpitools_logging():
 
-        # Setup various usefull things (env, system, ...)
-        mpi.import_basics(self)
+            # Return a mpitool object and the mpicommand line
+            mpi, args = self._bootstrap_mpitool(rh, opts)
 
-        # Specific parallel settings
-        mpi.setup(opts)
+            # Specific parallel settings
+            mpi.setup(opts, self.mpiconflabel)
 
-        # This is actual running command
-        self.spawn(args, opts)
+            # This is actual running command
+            self.spawn(args, opts)
 
-        # Specific parallel cleaning
-        mpi.clean(opts)
+            # Specific parallel cleaning
+            mpi.clean(opts)
+
+
+@algo_component_deco_mixin_autodoc
+class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
+    """Adds an IOServer capabilities (footprints attributes + MPI bianries alteration)."""
+
+    _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
+        info="Abstract IoServer footprints' attributes.",
+        attr=dict(
+            ioserver=dict(
+                info='The object used to launch the IOserver part of the binary.',
+                type=mpitools.MpiBinaryIOServer,
+                optional=True,
+                default=None,
+                doc_visibility=footprints.doc.visibility.GURU,
+            ),
+            ioname=dict(
+                info=('The binary_kind of a class in the mpibinary collector ' +
+                      '(used only if *ioserver* is not provided)'),
+                optional=True,
+                default='ioserv',
+                doc_visibility=footprints.doc.visibility.GURU,
+            ),
+            iolocation=dict(
+                info='Location of the IO server within the binary list',
+                type=int,
+                default=-1,
+                optional=True
+            )
+        )),
+    ]
+
+    def _bootstrap_mpibins_ioserver_hack(self, bins, bins0, rh, opts, use_envelope):
+        """If requested, adds an extra binary that will act as an IOServer."""
+        master = bins[-1]
+        # A potential IO server
+        io = self.ioserver
+        if not io and int(self.env.get('VORTEX_IOSERVER_NODES', -1)) >= 0:
+            io = footprints.proxy.mpibinary(
+                kind=self.ioname,
+                nodes=self.env.VORTEX_IOSERVER_NODES,
+                tasks=(self.env.VORTEX_IOSERVER_TASKS or
+                       master.options.get('nnp', master.tasks)),
+                openmp=(self.env.VORTEX_IOSERVER_OPENMP or
+                        master.options.get('openmp', master.openmp)))
+            io.options = {x[3:]: opts[x]
+                          for x in opts.keys() if x.startswith('io_')}
+            io.master = master.master
+            io.arguments = master.arguments
+        if not io and int(self.env.get('VORTEX_IOSERVER_COMPANION_TASKS', -1)) >= 0:
+            io = footprints.proxy.mpibinary(
+                kind=self.ioname,
+                nodes=master.options.get('nn', master.nodes),
+                tasks=self.env.VORTEX_IOSERVER_COMPANION_TASKS,
+                openmp=(self.env.VORTEX_IOSERVER_OPENMP or
+                        master.options.get('openmp', master.openmp)))
+            io.options = {x[3:]: opts[x]
+                          for x in opts.keys() if x.startswith('io_')}
+            io.master = master.master
+            io.arguments = master.arguments
+            if master.group is not None:
+                # The master binary is already in a group ! Use it.
+                io.group = master.group
+            else:
+                io.group = 'auto_masterwithio'
+                master.group = 'auto_masterwithio'
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_TASKS', None) is not None:
+            if hasattr(master, 'incore_iotasks'):
+                master.incore_iotasks = self.env.VORTEX_IOSERVER_INCORE_TASKS
+        if io:
+            rh.append(rh[0])
+            if master.group is None:
+                if 'nn' in master.options:
+                    master.options['nn'] = master.options['nn'] - io.options['nn']
+                else:
+                    logger.warning('The "nn" option is not available in the master binary ' +
+                                   'mpi options. Consequently it can be fixed...')
+            if self.iolocation >= 0:
+                bins.insert(self.iolocation, io)
+            else:
+                bins.append(io)
+        return bins
+
+    _MIXIN_MPIBINS_HOOKS = (_bootstrap_mpibins_ioserver_hack, )
+
+
+@algo_component_deco_mixin_autodoc
+class ParallelOpenPalmMixin(AlgoComponentMpiDecoMixin):
+    """Class mixin to be used with OpenPALM programs.
+
+    It will automatically adds the OpenPALM driver binary to the list of
+    binaries. The location of the OpenPALM driver should be automatically
+    detected provided that a section with ``role=OpenPALM Driver`` lies in the
+    input's sequence. Alternatively, the path to the OpenPALM driver can be
+    provided using the **openpalm_driver** footprint's argument.
+    """
+
+    _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
+        info="Abstract OpenPALM footprints' attributes.",
+        attr=dict(
+            openpalm_driver=dict(
+                info=('The path to the OpenPALM driver binary. ' +
+                      'When omitted, the input sequence is looked up ' +
+                      'for section with ``role=OpenPALM Driver``.'),
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
+            openpalm_overcommit=dict(
+                info=('Run the OpenPALM driver on the first node in addition ' +
+                      'to existing tasks. Otherwise dedicated tasks are used.'),
+                type=bool,
+                default=True,
+                optional=True,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
+            openpalm_binddriver=dict(
+                info='Try to bind the OpenPALM driver binary.',
+                type=bool,
+                optional=True,
+                default=False,
+                doc_visibility=footprints.doc.visibility.ADVANCED,
+            ),
+            openpalm_binkind=dict(
+                info='The binary kind for the OpenPALM driver.',
+                optional=True,
+                default='basic',
+                doc_visibility=footprints.doc.visibility.GURU,
+            ),
+        )),
+    ]
+
+    @property
+    def _actual_openpalm_driver(self):
+        """Returns the OpenPALM's driver location."""
+        path = self.openpalm_driver
+        if path is None:
+            drivers = self.context.sequence.effective_inputs(role='OpenPALMDriver')
+            if not drivers:
+                raise AlgoComponentError('No OpenPALM driver was provided.')
+            elif len(drivers) > 1:
+                raise AlgoComponentError('Several OpenPALM driver were provided.')
+            path = drivers[0].rh.container.localpath()
+        else:
+            if not self.system.path.exists(path):
+                raise AlgoComponentError('No OpenPALM driver was provider ({:s} does not exists).'
+                                         .format(path))
+        return path
+
+    def _bootstrap_mpibins_openpalm_hack(self, bins, bins0, rh, opts, use_envelope):
+        """Adds the OpenPALM driver to the binary list."""
+        single_bin = len(bins) == 1
+        master = bins[0]
+        driver = footprints.proxy.mpibinary(
+            kind=self.openpalm_binkind,
+            nodes=1,
+            tasks=self.env.VORTEX_OPENPALM_DRV_TASKS or 1,
+            openmp=self.env.VORTEX_OPENPALM_DRV_OPENMP or 1,
+            allowbind=opts.pop('palmdrv_bind',
+                               self.env.get('VORTEX_OPENPALM_DRV_BIND',
+                                            self.openpalm_binddriver)),
+        )
+        driver.options = {x[8:]: opts[x]
+                          for x in opts.keys() if x.startswith('palmdrv_')}
+        driver.master = self._actual_openpalm_driver
+        self.system.xperm(driver.master, force=True)
+        bins.insert(0, driver)
+        if not self.openpalm_overcommit and single_bin:
+            # Tweak the number of tasks of the master program in order to accommodate
+            # the driver
+            # NB: If multiple binaries are provided, the user must do this by
+            # himself (i.e. leave enough room for the driver's task).
+            if 'nn' in master.options:
+                master.options['nn'] = master.options['nn'] - 1
+            else:
+                # Ok, tweak nprocs instead (an envelope might be defined)
+                try:
+                    nprocs = master.nprocs
+                except mpitools.MpiException:
+                    logger.error('Neither the "nn" option nor the nprocs is ' +
+                                 'available for the master binary. Consequently ' +
+                                 'it can be fixed...')
+                else:
+                    master.options['np'] = nprocs - driver.nprocs
+        return bins
+
+    _MIXIN_MPIBINS_HOOKS = (_bootstrap_mpibins_openpalm_hack, )
+
+    def _bootstrap_mpienvelope_openpalm_posthack(self, env, env0, rh, opts, mpi):
+        """
+        Tweak the MPI envelope in order to execute the OpenPALM driver on the
+        appropriate node.
+        """
+        master = mpi.binaries[1]  # The first "real" program that will be launched
+        driver = mpi.binaries[0]  # The OpenPALM driver
+        if self.openpalm_overcommit:
+            # Execute the driver on the first compute node
+            if env or env0:
+                env = env or copy.deepcopy(env0)
+                # An envelope is already defined... update it
+                if not ('nn' in env[0] and 'nnp' in env[0]):
+                    raise AlgoComponentError("'nn' and 'nnp' must be defined in the envelope")
+                if env[0]['nn'] > 1:
+                    env[0]['nn'] -= 1
+                    newenv = copy.copy(env[0])
+                    newenv['nn'] = 1
+                    newenv['nnp'] += driver.nprocs
+                    env.insert(0, newenv)
+                else:
+                    env[0]['nnp'] += driver.nprocs
+            else:
+                # Setup a new envelope
+                if not ('nn' in master.options and 'nnp' in master.options):
+                    raise AlgoComponentError("'nn' and 'nnp' must be defined for the master executable")
+                env = [dict(nn=1,
+                            nnp=master.options['nnp'] + driver.nprocs,
+                            openmp=master.options.get('openmp', 1))]
+                if master.options['nn'] > 1:
+                    env.append(dict(nn=master.options['nn'] - 1,
+                                    nnp=master.options['nnp'],
+                                    openmp=master.options.get('openmp', 1)))
+                if len(mpi.binaries) > 2:
+                    env.extend([b.options for b in mpi.binaries[2:]])
+        return env
+
+    _MIXIN_MPIENVELOPE_POSTHOOKS = (_bootstrap_mpienvelope_openpalm_posthack, )

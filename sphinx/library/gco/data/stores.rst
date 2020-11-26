@@ -22,7 +22,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
- 
+
 .. autoclass:: GcoCentralStore
    :show-inheritance:
    :members:

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+System Addons to support ECMWF' EcTrans data transfert tool.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six

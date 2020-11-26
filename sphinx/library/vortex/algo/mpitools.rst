@@ -29,7 +29,22 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ConfigurableMpiTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiBinaryDescription
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MpiEnvelopeBit
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MpiBinary
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -45,6 +60,26 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: MpiRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: SRunDDT
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OmpiMpiRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OmpiMpiRunDDT
    :show-inheritance:
    :members:
    :member-order: alphabetical

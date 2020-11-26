@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+AlgoComponents dedicated to computations related to the Ensemble Prediction System.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import collections
@@ -74,10 +78,10 @@ class Combi(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
     def _analysis_cp(self, nb, msg):
         # Copy the analysis
         initsec = self.setlink(initkind='analysis')
+        radical = re.sub(r'^(.*?)\d+$', r'\1', initsec[0].rh.container.localpath())
         for num in footprints.util.rangex(1, nb):
             self.system.cp(initsec[0].rh.container.localpath(),
-                           re.sub('[0-9]*$', '{:03d}'.format(num),
-                                  initsec[0].rh.container.localpath()),
+                           radical + '{:03d}'.format(num),
                            fmt=initsec[0].rh.container.actualfmt, intent=intent.INOUT)
         logger.info("Copy the analysis for the %d %s.", nb, msg)
 
@@ -108,8 +112,8 @@ class CombiPert(Combi):
         super(CombiPert, self).prepare(rh, opts)
 
         # Tweak the namelists
-        for namsec in self.context.sequence.effective_inputs(role = re.compile('Namelist'),
-                                                             kind = 'namelist'):
+        for namsec in self.context.sequence.effective_inputs(role=re.compile('Namelist'),
+                                                             kind='namelist'):
             logger.info("Add the NBPERT coefficient to the NAMENS namelist entry")
             namsec.rh.contents['NAMENS']['NBPERT'] = self.nbpert
             namsec.rh.save()
@@ -166,8 +170,7 @@ class CombiSV(CombiPert):
         self.system.json_dump(nbVect, self.info_fname)
 
         # Tweak the namelists
-        namsecs = self.context.sequence.effective_inputs(role = re.compile('Namelist'), kind = 'namelist')
-        # namsecs = self.setlink(initrole = 'Namelist', initkind = 'namelist', initname = 'namcombi'),  TODO PC qd combi aura 1 seule nam
+        namsecs = self.context.sequence.effective_inputs(role=re.compile('Namelist'), kind='namelist')
         for namsec in namsecs:
             namsec.rh.contents['NAMMOD']['LVS'] = True
             namsec.rh.contents['NAMMOD']['LANAP'] = False
@@ -220,8 +223,10 @@ class CombiSVunit(CombiSV):
 
 
 class CombiSVnorm(CombiSV):
-    """Compute a norm consistent with the background error
-     and combine the normed SV to create the SV perturbations."""
+    """
+    Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -289,8 +294,8 @@ class CombiIC(Combi):
             namcoefvs = namsec[0].rh.contents.newblock('NAMCOEFVS')
             namcoefvs['RCOEFVS'] = sv_sections[0].rh.contents['rcoefvs']
             # The mean value may be present among the SV inputs: remove it
-            svsecs = [sec for sec in self.context.sequence.effective_inputs(role = 'SVPerturbedState') or
-                      [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
+            svsecs = [sec for sec in self.context.sequence.effective_inputs(role='SVPerturbedState') or
+                      [sec for sec in self.context.sequence.effective_inputs(role='PerturbedState')
                        if 'ICHR' in sec.rh.container.filename] if sec.rh.resource.number]
             nbPert = nbPert or len(svsecs)
 
@@ -301,8 +306,8 @@ class CombiIC(Combi):
             logger.info("Add the breeding coefficient to the NAMCOEFBM namelist entry.")
             namcoefbm = namsec[0].rh.contents.newblock('NAMCOEFBM')
             namcoefbm['RCOEFBM'] = bd_sections[0].rh.contents['rcoefbm']
-            nbBd = len(self.context.sequence.effective_inputs(role = 'BreedingPerturbedState') or
-                       [sec for sec in self.context.sequence.effective_inputs(role = 'PerturbedState')
+            nbBd = len(self.context.sequence.effective_inputs(role='BreedingPerturbedState') or
+                       [sec for sec in self.context.sequence.effective_inputs(role='PerturbedState')
                         if 'BMHR' in sec.rh.container.filename])
             # symmetric perturbations except if analysis: one more file
             # or zero if one control ic (hypothesis: odd nbic)
@@ -313,7 +318,7 @@ class CombiIC(Combi):
         # Dealing with initial conditions from the assimilation ensemble
         # the mean value may be present among the AE inputs: remove it
         aesecs = [sec for sec in self.context.sequence.effective_inputs(
-            role = ('AEPerturbedState', 'ModelState')) if sec.rh.resource.number]
+            role=('AEPerturbedState', 'ModelState')) if sec.rh.resource.number]
         nammod['LANAP'] = bool(aesecs)
         nbAe = len(aesecs)
         nbPert = nbPert or nbAe
@@ -347,8 +352,10 @@ class CombiIC(Combi):
 
 
 class CombiBreeding(CombiPert):
-    """Compute a norm consistent with the background error
-    and combine the normed SV to create the SV perturbations."""
+    """
+    Compute a norm consistent with the background error
+    and combine the normed SV to create the SV perturbations.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -370,11 +377,11 @@ class CombiBreeding(CombiPert):
         super(CombiBreeding, self).prepare(rh, opts)
 
         # Consistent naming with the Fortran execution
-        hst_sections = self.context.sequence.effective_inputs(kind = ('pert', 'historic'))
+        hst_sections = self.context.sequence.effective_inputs(kind=('pert', 'historic'))
         for num, hst in enumerate(hst_sections):
-            self.system.softlink(hst.rh.container.localpath(), re.sub('[0-9]*$',
-                                                                      '{:03d}'.format(num + 1),
-                                                                      hst.rh.container.localpath()) + '.grb')
+            self.system.softlink(hst.rh.container.localpath(),
+                                 re.sub(r'^(.*?)\d+$', r'\1', hst.rh.container.localpath()) +
+                                 '{:03d}.grb'.format(num + 1))
             logger.info("Rename the %d grib files consecutively.", num)
 
         # Tweak the namelist
@@ -393,8 +400,10 @@ class CombiBreeding(CombiPert):
 
 
 class SurfCombiIC(BlindRun):
-    """Combine the deterministic surface with the perturbed surface
-    to create the initial surface conditions."""
+    """
+    Combine the deterministic surface with the perturbed surface
+    to create the initial surface conditions.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -412,7 +421,8 @@ class SurfCombiIC(BlindRun):
         """Set some variables according to target definition."""
         super(SurfCombiIC, self).prepare(rh, opts)
 
-        icsec = self.setlink(initrole='SurfaceAnalysis', initkind='ic')
+        icsec = self.setlink(initrole=('SurfaceAnalysis', 'SurfaceInitialCondition'),
+                             initkind='ic')
         actualdate = icsec[0].rh.resource.date
         seed = int(actualdate.ymdh) + (actualdate.hour + 1) * (self.member + 1)
 

@@ -11,10 +11,16 @@ import footprints
 from footprints.util import rangex
 
 from common.tools.conftools import CouplingOffsetConfPrepareError, \
-    CouplingOffsetConfRefillError, CouplingOffsetConfError
+    CouplingOffsetConfRefillError, CouplingOffsetConfError, \
+    TimeSerieInputFinderError
+
+from intairpol.tools.conftools import HHDict, MocageDomainsConfTool, MocageDomainsConfError
 
 tloglevel = 'critical'
 
+
+# ------------------------------------------------------------------------------
+# The generic Arpege/Arome coupling tools
 
 @loggers.unittestGlobalLevel(tloglevel)
 class Coupling3DVConfToolTest(unittest.TestCase):
@@ -247,7 +253,7 @@ class Coupling3DVliteConfToolTest(unittest.TestCase):
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                cplsteps=self._STEPS, cplxpid=self._XPID,
-                                               verbose=False, compute_on_refill = False)
+                                               verbose=False, compute_on_refill=False)
 
     def test_weird_coupling_prepare(self):
         with self.assertRaises(CouplingOffsetConfPrepareError):
@@ -346,7 +352,7 @@ class Coupling3DVSparseConfToolTest(unittest.TestCase):
                                                cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                cplsteps=self._STEPS, cplxpid=self._XPID,
-                                               verbose=False, compute_on_refill = False)
+                                               verbose=False, compute_on_refill=False)
 
     def test_weird_coupling_prepare(self):
         with self.assertRaises(CouplingOffsetConfPrepareError):
@@ -423,19 +429,19 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                                 cplhhbase=self._BASE, cplvapp=self._VAPP,
                                                 cplvconf=self._VCONF, cplcutoff=self._CUTOFF,
                                                 cplsteps=self._STEPS, cplxpid=self._XPID,
-                                                verbose=False, compute_on_refill = False)
+                                                verbose=False, compute_on_refill=False)
         self.wtoolA1 = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._AL1_BASE, cplvapp=self._VAPP,
                                                  cplvconf=self._AL1_VCONF, cplcutoff=self._CUTOFF,
                                                  cplsteps=self._STEPS, cplxpid=self._XPID,
-                                                 verbose=False, compute_on_refill = False)
+                                                 verbose=False, compute_on_refill=False)
         self.wtoolA2 = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._AL2_BASE, cplvapp=self._VAPP,
                                                  cplvconf=self._AL1_VCONF, cplcutoff=self._CUTOFF,
                                                  cplsteps=self._STEPS_A2, cplxpid=self._XPID,
-                                                 verbose=False, compute_on_refill = False)
+                                                 verbose=False, compute_on_refill=False)
         self.wtoolKO = footprints.proxy.conftool(kind='couplingoffset',
                                                  cplhhlist=self._HHLIST,
                                                  cplhhbase=self._BASE, cplvapp=self._VAPP,
@@ -443,24 +449,24 @@ class CouplingAggConfToolTest(unittest.TestCase):
                                                  cplsteps=self._STEPS, cplxpid=self._XPID,
                                                  verbose=False, refill_cutoff='production')
         self.wtoolAggN = footprints.proxy.conftool(kind='aggcouplingoffset',
-                                                   nominal = [self.wtoolN, ],
-                                                   alternate = [self.wtoolA1, self.wtoolA2],
-                                                   use_alternates = False)
+                                                   nominal=[self.wtoolN, ],
+                                                   alternate=[self.wtoolA1, self.wtoolA2],
+                                                   use_alternates=False)
         self.wtoolAggA = footprints.proxy.conftool(kind='aggcouplingoffset',
-                                                   nominal = [self.wtoolN, ],
-                                                   alternate = [self.wtoolA1, self.wtoolA2],
-                                                   use_alternates = True)
+                                                   nominal=[self.wtoolN, ],
+                                                   alternate=[self.wtoolA1, self.wtoolA2],
+                                                   use_alternates=True)
 
     def test_agg_consistency(self):
         footprints.proxy.conftool(kind='aggcouplingoffset',
-                                  nominal = [self.wtoolN, ],
-                                  alternate = [self.wtoolA1, self.wtoolKO],
-                                  use_alternates = False)
+                                  nominal=[self.wtoolN, ],
+                                  alternate=[self.wtoolA1, self.wtoolKO],
+                                  use_alternates=False)
         with self.assertRaises(CouplingOffsetConfError):
             footprints.proxy.conftool(kind='aggcouplingoffset',
-                                      nominal = [self.wtoolN, ],
-                                      alternate = [self.wtoolA1, self.wtoolKO],
-                                      use_alternates = True)
+                                      nominal=[self.wtoolN, ],
+                                      alternate=[self.wtoolA1, self.wtoolKO],
+                                      use_alternates=True)
 
     def test_weird_coupling_prepare_aggn(self):
         self.assertListEqual(self.wtoolAggN.prepare_terms('2017010100', 'production', 'arpege', 'courtfr', xpid='ABCE'),
@@ -645,6 +651,166 @@ class CouplingLargeOffsetConfToolTest(unittest.TestCase):
                              sorted(['2016-12-30T12:00:00Z', '2016-12-31T00:00:00Z']))
         self.assertListEqual(sorted(self.wtool.refill_months('2016123112', 'production', 'arpege', '4dvarfr')),
                              sorted([Month(12, year=2016), Month(1, year=2017)]))
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class TimeSerieConfToolTest(unittest.TestCase):
+
+    def test_timeserie_basics(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D')
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate_i('2018120100', '2018120200')
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010400')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010406'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010700'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i('2019060100', '2019060200'),
+                         Date('2019053100'))
+
+        self.assertEqual(ctool.enddate_i('2019010100', '2019010200'),
+                         Date('2019010400'))
+        self.assertEqual(ctool.enddate_i('2019010100', '2019010406'),
+                         dict(begindate={Date('2019010100'): Date('2019010400'),
+                                         Date('2019010400'): Date('2019010700')}))
+        self.assertEqual(ctool.enddate_i('2019060100', '2019060200'),
+                         Date('2019060300'))
+
+        self.assertEqual(ctool.term_i('2019010100', '2019010200'), Time(72))
+        self.assertEqual(ctool.term_i('2019010100', '2019010406'), Time(72))
+
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate('2018120100', 'PT24H')
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'PT72H'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'P3DT6H'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019010100', 'P6D'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019060100', Time('PT24H')),
+                         Date('2019053100'))
+
+        self.assertEqual(ctool.enddate('2019010100', Time('PT24H')),
+                         Date('2019010400'))
+        self.assertEqual(ctool.enddate('2019010100', 'P3DT6H'),
+                         dict(begindate={Date('2019010100'): Date('2019010400'),
+                                         Date('2019010400'): Date('2019010700')}))
+        self.assertEqual(ctool.enddate('2019060100', 'PT24H'),
+                         Date('2019060300'))
+
+        self.assertEqual(ctool.term('2019010100', Time('P1D')), Time(72))
+        self.assertEqual(ctool.term('2019010100', 'P3DT6H'), Time(72))
+
+    def test_timeserie_no_upper(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D',
+                                          upperbound_included=False)
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010400')),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate_i(Date('2019010100'), Date('2019010500')),
+                         [Date('2019010100'), Date('2019010400')])
+
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        self.assertEqual(ctool.begindate('2019010100', 'PT72H'),
+                         [Date('2019010100'), Date('2019010400')])
+        self.assertEqual(ctool.begindate('2019010100', 'P3DT6H'),
+                         [Date('2019010100'), Date('2019010400')])
+
+    def test_timeserie_single(self):
+        ctool = footprints.proxy.conftool(kind='timeserie',
+                                          timeserie_begin='2019010100',
+                                          timeserie_step='P3D',
+                                          singlefile=True)
+        self.assertEqual(ctool.begindate_i('2019010100', '2019010200'),
+                         Date('2019010100'))
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate_i(Date('2019010100'), Date('2019010500'))
+
+        self.assertEqual(ctool.begindate(Date('2019010100'), Time('PT24H')),
+                         Date('2019010100'))
+        with self.assertRaises(TimeSerieInputFinderError):
+            ctool.begindate('2019010100', 'PT73H')
+
+
+# ------------------------------------------------------------------------------
+# A few tests on the MOCAGE domain config (NB: Most of the test are performed
+# by the doctest).
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class IntairpolHHDictTest(unittest.TestCase):
+
+    def test_HHDict(self):
+        self.assertTrue(issubclass(HHDict, dict))
+        hhd = HHDict({Time(0): '00t', Time(12): '12t', 'default': 'other'})
+        self.assertEqual(hhd['default'], 'other')
+        self.assertEqual(hhd[Time(12)], '12t')
+        self.assertEqual(hhd[12], '12t')
+        self.assertEqual(hhd['00:00'], '00t')
+        self.assertEqual(hhd['01:07'], 'other')
+
+
+@loggers.unittestGlobalLevel(tloglevel)
+class IntairpolMDomainConfToolTest(unittest.TestCase):
+
+    def test_utilities(self):
+        # _item_value_tweak
+        ivt = MocageDomainsConfTool._item_value_tweak  # (value, validcb, validmsg, cast)
+        with self.assertRaises(MocageDomainsConfError):
+            ivt(1, lambda x: False, 'Coucou', cast=None)
+        with self.assertRaises(MocageDomainsConfError):
+            ivt('abcd', None, '', cast=Time)
+        self.assertEqual(ivt(1, lambda x: True, 'Error', cast=Time), Time('01:00'))
+        self.assertEqual(ivt(1, None, '', cast=Time), Time('01:00'))
+        # _item_time_transform
+        itt = MocageDomainsConfTool._item_time_transform  # (item, validcb, validmsg, cast)
+        self.assertEqual(itt({'00': '00t', '06:15': '06t', 'default': 'other'},
+                             None, None, None),
+                         HHDict({Time(0): '00t', Time('06:15'): '06t', 'default': 'other'}))
+        with self.assertRaises(MocageDomainsConfError):
+            itt({'00': '00t', 'foo': '06t', 'default': 'other'}, None, None, None)
+        # _item_transform
+        it = MocageDomainsConfTool._item_transform  # (item, validcb=None, validmsg='Validation Error', cast=None)
+        self.assertEqual(it('Stuff'),
+                         dict(assim=HHDict(default='Stuff'), production=HHDict(default='Stuff')))
+        self.assertEqual(it('01:00', cast=Time),
+                         dict(assim=HHDict(default=Time(1)), production=HHDict(default=Time(1))))
+        self.assertEqual(it('01:00', validcb=lambda t: Time(t) < 24, cast=Time),
+                         dict(assim=HHDict(default=Time(1)), production=HHDict(default=Time(1))))
+        with self.assertRaises(MocageDomainsConfError):
+            it('25:00', validcb=lambda t: Time(t) < 24, cast=Time)
+        self.assertEqual(it(dict(assim='toto', production='titi')),
+                         dict(assim=HHDict(default='toto'), production=HHDict(default='titi')))
+        with self.assertRaises(MocageDomainsConfError):
+            it(dict(assim='toto', production='titi', other='blop'))
+        self.assertEqual(it({'00': 'toto', 'default': 'titi'}),
+                         dict(assim=HHDict({Time(0): 'toto', 'default': 'titi'}),
+                              production=HHDict({Time(0): 'toto', 'default': 'titi'})))
+        self.assertEqual(it(dict(assim={'00': 'toto', 'default': 'titi'},
+                                 production='TOTO')),
+                         dict(assim=HHDict({Time(0): 'toto', 'default': 'titi'}),
+                              production=HHDict({'default': 'TOTO'})))
+        # _post_steps_validation
+        psv = MocageDomainsConfTool._any_steps_validation  # (value)
+        self.assertTrue(psv('0'))
+        self.assertTrue(psv('finalterm'))
+        self.assertTrue(psv('0-15-1'))
+        self.assertTrue(psv('0-finalterm-1'))
+        self.assertTrue(psv('0:15-finalterm-1'))
+        self.assertTrue(psv('0-6-00:15,6:30-finalterm-1'))
+        self.assertFalse(psv('foo'))
+        self.assertFalse(psv('abcd-finalterm'))
 
 
 if __name__ == "__main__":

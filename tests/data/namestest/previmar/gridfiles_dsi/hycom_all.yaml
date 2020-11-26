@@ -1,0 +1,36 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   geometry: hyatl001
+            cutoff:
+                - assim
+                - production
+            model: hycom
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: hycom
+            vconf: atl@fcarp 
+            kind: gridpoint
+            origin:
+                - fcst
+                - ana
+            term: 3
+            namespace:
+               - '[suite].inline.fr'
+               - '[suite].archive.fr'
+
+todo:
+    # Gridpoints
+    -   commons:
+            nativefmt: grib
+            suite: oper
+        tests:
+            -   date:
+                - '2018010100'
+                - '2018010106'
+                - '2018010112'
+                - '2018010118'
+            -   date: '2018010100'
+                vconf: med@anarp

@@ -18,6 +18,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: DomainMonthClimMisc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ChemicalBackup
    :show-inheritance:
    :members:

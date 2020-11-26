@@ -24,7 +24,16 @@
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.intersphinx',
-              'sphinx.ext.todo', 'sphinx.ext.viewcode']
+              'sphinx.ext.todo', 'sphinx.ext.viewcode', ]
+
+try:
+    import IPython
+except ImportError:
+    pass
+else:
+    # Needed with Python3, harmless with Python2
+    extensions.append('IPython.sphinxext.ipython_console_highlighting')
+    extensions.append('IPython.sphinxext.ipython_directive')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -95,6 +104,9 @@ exclude_patterns = []
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
 #show_authors = False
+
+# A list of warning types to suppress arbitrary warning messages.
+suppress_warnings= ['misc.highlighting_failure', ]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

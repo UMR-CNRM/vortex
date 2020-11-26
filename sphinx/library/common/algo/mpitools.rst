@@ -23,7 +23,12 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: MpiObsort
+.. autoclass:: MpiAutoDDT
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: _AbstractMpiNWP
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -38,6 +43,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MpiObsort
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: MpiNWPIO
    :show-inheritance:
    :members:
@@ -46,7 +56,5 @@ Classes
 
 Decorators
 ----------
-
-.. autofunction:: arpifs_commons_binarydeco
 
 .. autofunction:: arpifs_obsort_nprocab_binarydeco

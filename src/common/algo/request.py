@@ -14,6 +14,7 @@ from bronx.stdtypes.date import Time
 import footprints
 
 from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, Expresso, BlindRun
+from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.systems import ExecutionError
 from common.tools.bdap import BDAPrequest_actual_command, BDAPGetError, BDAPRequestConfigurationError
@@ -68,8 +69,8 @@ class GetBDAPResource(AlgoComponent):
 
         # Look for the input queries
         input_queries = self.context.sequence.effective_inputs(
-            role = 'Query',
-            kind = 'bdap_query',
+            role='Query',
+            kind='bdap_query',
         )
 
         rc_all = True
@@ -84,16 +85,16 @@ class GetBDAPResource(AlgoComponent):
 
                 with self.system.cdcontext(local_directory, create=True):
                     # Determine the command to be launched
-                    actual_command = BDAPrequest_actual_command(command = self.command,
-                                                                date = self.date,
-                                                                term = term,
-                                                                query = query_file,
-                                                                int_extraenv = int_bdap)
+                    actual_command = BDAPrequest_actual_command(command=self.command,
+                                                                date=self.date,
+                                                                term=term,
+                                                                query=query_file,
+                                                                int_extraenv=int_bdap)
                     logger.info(' '.join(['BDAP extract command:', actual_command]))
                     logger.info('The %s directive file contains:', query_file)
                     self.system.cat(query_file, output=False)
                     # Launch the BDAP request
-                    rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+                    rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
 
                 if not rc:
                     logger.exception('Problem during the BDAP request of %s.', query_file)
@@ -141,8 +142,8 @@ class GetBDMPResource(AlgoComponent):
 
         # Look for the input queries
         input_queries = self.context.sequence.effective_inputs(
-            role = 'Query',
-            kind = 'bdmp_query',
+            role='Query',
+            kind='bdmp_query',
         )
 
         rc_all = True
@@ -165,7 +166,7 @@ class GetBDMPResource(AlgoComponent):
 
             # Launch the BDMP request
             with self.system.cdcontext(local_directory, create=True):
-                rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+                rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
 
             if not rc:
                 logger.exception('Problem during the BDMP request of %s.', query_file)
@@ -210,8 +211,8 @@ class GetBDCPResource(AlgoComponent):
 
         # Look for the input queries
         input_queries = self.context.sequence.effective_inputs(
-            role = 'Query',
-            kind = 'bdcp_query',
+            role='Query',
+            kind='bdcp_query',
         )
 
         rc_all = True
@@ -229,14 +230,14 @@ class GetBDCPResource(AlgoComponent):
             output_log = 'extract.out.diag'
 
             # Determine the command to be launched
-            actual_command = BDCPrequest_actual_command(command = self.command,
-                                                        query_file = query_file,
-                                                        output_file = output_file)
+            actual_command = BDCPrequest_actual_command(command=self.command,
+                                                        query_file=query_file,
+                                                        output_file=output_file)
             logger.info(' '.join(['BDMP extract command:', actual_command]))
 
             # Launch the BDCP request
             with self.system.cdcontext(local_directory, create=True):
-                rc = self.system.spawn([actual_command, ], shell = True, output = False, fatal = False)
+                rc = self.system.spawn([actual_command, ], shell=True, output=False, fatal=False)
                 # Cat the log file
                 logger.info('Content of the log file:')
                 self.system.cat(output_log, output=False)
@@ -253,27 +254,28 @@ class GetBDCPResource(AlgoComponent):
         return rc_all
 
 
+@algo_component_deco_mixin_autodoc
 class _GetBDMDecoMixin(AlgoComponentDecoMixin):
     """Class variables and methods usefull for BDM extractions."""
 
     _MIXIN_EXTRA_FOOTPRINTS = [footprints.Footprint(
-        attr = dict(
-            date = a_date,
-            pwd_file = dict(
-                default = '/usr/local/sopra/neons_pwd',
-                values = ['/usr/local/sopra/neons_pwd'],
-                optional = True,
+        attr=dict(
+            date=a_date,
+            pwd_file=dict(
+                default='/usr/local/sopra/neons_pwd',
+                values=['/usr/local/sopra/neons_pwd'],
+                optional=True,
             ),
-            fatal = dict(
-                type = bool,
-                default = False,
-                values = [True, False],
-                optional = True,
+            fatal=dict(
+                type=bool,
+                default=False,
+                values=[True, False],
+                optional=True,
             ),
-            defaut_queryname = dict(
-                default = 'vortexdefault_query_name',
-                doc_visibility = footprints.doc.visibility.GURU,
-                optional = True,
+            defaut_queryname=dict(
+                default='vortexdefault_query_name',
+                doc_visibility=footprints.doc.visibility.GURU,
+                optional=True,
             )
         )
     )]
@@ -296,7 +298,7 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
         prev['query'] = self.defaut_queryname
         return prev
 
-    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend)
+    _MIXIN_CLI_OPTS_EXTEND = (_spawn_command_options_extend, )
 
     def _execute_commons(self, rh, opts):
         """Launch the BDM request(s).
@@ -318,13 +320,13 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
             loc_dir = self._local_directory(query_filename)
             # Launch an execution for each input queries in a dedicated directory
             # (to check that the files do not overwrite one another)
-            with self.system.cdcontext(loc_dir, create = True):
+            with self.system.cdcontext(loc_dir, create=True):
                 # Make the links needed
                 self.system.symlink(query_abspath,
                                     self.defaut_queryname)
                 # Cat the query content
                 logger.info('The %s directive file contains:', query_filename)
-                self.system.cat(self.defaut_queryname, output = False)
+                self.system.cat(self.defaut_queryname, output=False)
                 # Launch the BDM request and catch
                 try:
                     super(self.__class__, self).execute(rh, opts)
@@ -335,7 +337,7 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
                         raise BDMGetError('Problem during the BDM request of {}.'.format(query_filename))
                 # Delete the links
                 self.system.rm(self.defaut_queryname)
-                self.system.dir(output = False, fatal = False)
+                self.system.dir(output=False, fatal=False)
 
         if not rc_all:
             logger.error('At least one of the BDM request failed. Please check the logs above.')
@@ -363,18 +365,18 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
             temp_files.append(obsmap_filename)
         # Loop over the directories to concatenate the batormap
         for a_file in temp_files:
-            file_container = footprints.proxy.container(local = a_file)
+            file_container = footprints.proxy.container(local=a_file)
             content_tmp = ObsMapContent()
             content_tmp.slurp(file_container)
             content.append(content_tmp)
         out_content = ObsMapContent()
-        out_content.merge(unique = True, *content)
+        out_content.merge(unique=True, *content)
         out_content.sort()
-        out_container = footprints.proxy.container(local = obsmap_filename)
+        out_container = footprints.proxy.container(local=obsmap_filename)
         out_content.rewrite(out_container)
         out_container.close()
         logger.info('Content of the global batormap:')
-        self.system.cat(out_container.filename, output = False)
+        self.system.cat(out_container.filename, output=False)
 
         # Listing concatenation
         # Initialize the resulting file
@@ -391,7 +393,7 @@ class _GetBDMDecoMixin(AlgoComponentDecoMixin):
             self.system.mv(listing_filename, temp_listing)
             listing_files.append(temp_listing)
         # Concatenate the listings
-        self.system.cat(*listing_files, output = listing_filename)
+        self.system.cat(*listing_files, output=listing_filename)
 
     _MIXIN_POSTFIX_HOOKS = (_postfix_commons, )
 
@@ -435,8 +437,8 @@ class GetBDMBufr(Expresso, _GetBDMDecoMixin):
     def _get_input_queries(self):
         """Returns the list of queries to process."""
         return self.context.sequence.effective_inputs(
-            role = 'Query',
-            kind = 'bdm_query',
+            role='Query',
+            kind='bdm_query',
         )
 
     def prepare(self, rh, opts):
@@ -484,8 +486,8 @@ class GetBDMOulan(BlindRun, _GetBDMDecoMixin):
     def _get_input_queries(self):
         """Returns the list of namelists to process."""
         return self.context.sequence.effective_inputs(
-            role = 'NamelistOulan',
-            kind = 'namutil',
+            role='NamelistOulan',
+            kind='namutil',
         )
 
     def prepare(self, rh, opts):

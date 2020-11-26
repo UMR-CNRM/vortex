@@ -13,10 +13,14 @@ Package
 
 .. autodata:: __all__
 
+Binary Decorator
+----------------
+
+.. autofunction:: gmkpack_bin_deco
 
 Classes
 -------
- 
+
 .. autoclass:: IFSModel
    :show-inheritance:
    :members:
@@ -76,7 +80,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: IOAssign
    :show-inheritance:
    :members:
@@ -111,7 +115,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: LFITools
    :show-inheritance:
    :members:
@@ -161,7 +165,7 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: BDMExecutableOulan
    :show-inheritance:
    :members:

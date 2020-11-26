@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import re
@@ -79,7 +83,7 @@ def contents(cycle, scheme=None, netloc=None):
                     cycle = GgetId(cycle)
                 regcycle[k] = cycle
             else:
-                raise UenvError('Malformed environement file (line {:d}, "{:s}")'
+                raise UenvError('Malformed environment file (line {:d}, "{:s}")'
                                 .format(i + 1, item.rstrip("\n")))
         tmplocal.clear()
     return regcycle

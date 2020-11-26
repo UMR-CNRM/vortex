@@ -1,0 +1,375 @@
+# This file is supposed to be encoded with UTF-8
+
+head_title=Vortex: AlgoComponents
+head_description=Vortex: AlgoComponents (Composants algorothmiques)
+head_author=Louis-François Meunier - vortex.support@meteo.fr
+
+{% macro run_core_description(text) -%}
+<div class="row" style="display:flex; flex-flow:row nowrap;">
+    <div class="column" style="flex:0 0 16.5em;">
+        <pre style="width: 25em; margin: 0 0 0 0;"><code class="language-python hljs"># A cloned environment will be bound
+# to the OS
+self.env = self.context.env.clone()
+with self.env:
+
+    # The actual "run" recipe
+    self.prepare(rh, kw)            #1
+    self.fsstamp(kw)                #2
+    try:
+        self.execute(rh, kw)        #3
+    finally:
+        self.execute_finalise(kw)   #3.1
+    self.fscheck(kw)                #4
+    self.postfix(rh, kw)            #5
+    self.dumplog(kw)                #6
+    self.delayed_exceptions(kw)     #7
+</code></pre>
+
+    </div>
+    <div class="column" style="flex:1 1 auto;">
+        {{ text|indent(width=8) }}
+    </div>
+</div>
+{%- endmacro -%}
+
+# The document/presentation starts here... This is the last comment !
+--md slide
+
+# Vortex: AlgoComponents
+
+**Composants algorithmiques**
+
+Louis-François Meunier
+
+[vortex.support@meteo.fr](mailto:vortex.support@meteo.fr)
+
+--md slide
+
+## Rôle des composants algorithmiques
+
+Lancement d'un programme, appel à un module externe, ...
+
+  * Le rôle premier d'un composant algorithmique est de réaliser une action sur
+    les données d'entrée.
+  * Pour cela, il est souvent nécessaire d'appeler un programme externe mais
+    d'autres variantes existent.
+  * Parfois le lancement est simple ; mais les choses peuvent devenir plus
+    compliquées, par exemple avec MPI. Le composant algorithmique doit prendre en
+    charge cette complexité.
+
+Gérer des spécificités liées à telle ou telle application:
+
+  * Réglage de variables d'environnement;
+  * Modification de certains fichiers de configuration (namelist) ;
+  * Ligne de commande à ajouter lors du lancement du binaire;
+  * Lancement du programme en boucle (échéances, membres, ...).
+
+--md subslide data-transition="zoom"
+
+### Exemple d'utilisation
+
+Du point de vue de l'utilisateur, l'usage d'un objet **AlgoComponent** est très
+simple. Voici l'exemple du lancement d'une prévision Arpège:
+
+```python
+# Recuperation d'un executable
+tbexec = toolbox.executable(kind='ifsmodel', model='arpege')
+
+# Creation de l'AlgoComponent
+tbalgo = toolbox.algo(kind='forecast', engine='parallel',
+                      fcterm=102, timescheme='sli', timestep=360)
+#   - fcterm, timescheme, timestep => specificies Arpege/IFS
+#   - engine => mode de lancement
+
+# Lancement...
+tbalgo.run(tbexec[0], mpiopts=dict(nn=30, nnp=8, openmp=5))
+#   - On remarque la possibilite de passer des options pour l'execution
+#     Cela a beaucoup de sens avec MPI (nombre de noeuds, ...)
+```
+
+*La méthode ``run`` :*
+
+> Il s'agit du point d’entrée dans l'objet **AlgoComponent**, nous allons la
+> regarder en détail
+
+--md slide
+
+## (Petite) plongée dans la classe abstraite...
+
+La méthode ``run`` mentionnée précédement est définie au niveau de la
+classe abstraite ``vortex.algo.components.AlgoComponent`` (dont toutes
+les classes jouant le rôle de composant algorithmique héritent).
+
+Attention:
+
+> Cette méthode très générique ne doit jamais être redéfinie.
+
+Il existe cependant de nombreuses possibilités de personalisation par la
+surcharge de différentes méthodes de la classe abstraite. Inspectons
+le code de la méthode ``run`` pour mieux comprendre cela:
+
+--md subslide
+
+### La méthode ``run``
+
+```python
+def run(self, rh=None, **kw):
+    """Sequence for execution : prepare / execute / postfix."""
+    self._status = True
+
+    # Get instance shorcuts to context and system objects
+    self.ticket  = vortex.sessions.current()
+    self.context = self.ticket.context
+    self.system  = self.context.system
+    self.target  = kw.pop('target', None)
+    if self.target is None:
+        self.target = self.system.default_target
+
+    # Before trying to do anything, check the executable
+    if not self.valid_executable(rh):
+        logger.warning('Resource %s is not a valid executable', rh.resource)
+        return False
+
+    # A cloned environment will be bound to the OS
+    self.env = self.context.env.clone()
+    with self.env:
+
+        # The actual "run" recipe
+        self.prepare(rh, kw)            #1
+        self.fsstamp(kw)                #2
+        try:
+            self.execute(rh, kw)        #3
+        finally:
+            self.execute_finalise(kw)   #3.1
+        self.fscheck(kw)                #4
+        self.postfix(rh, kw)            #5
+        self.dumplog(kw)                #6
+        self.delayed_exceptions(kw)     #7
+
+    # Free local references
+    self.env = None
+    self.system = None
+
+    return self._status
+```
+
+Note:
+Différents blocs de code se détachent, revenons sur chacun d'eux...
+
+--md subslide
+
+##### La méthode ``run`` : les raccourcis
+
+```python
+def run(self, rh=None, **kw):
+    """Sequence for execution : prepare / execute / postfix."""
+    self._status = True
+
+    # Get instance shorcuts to context and system objects
+    self.ticket  = vortex.sessions.current()
+    self.context = self.ticket.context
+    self.system  = self.context.system
+    self.target  = kw.pop('target', None)
+    if self.target is None:
+        self.target = self.system.default_target
+```
+
+La méthode ``run`` fournit un certain nombre de raccourcis que vous pourrez
+utiliser dans vos développements (cela facilite un peu la vie). Il s'agit
+toujours des objets ``Ticket``, ``Context`` et ``System`` actifs au
+moment de l'exécution.
+
+--md subslide
+
+##### La méthode ``run`` : vérification de l'exécutable
+
+```python
+    # Before trying to do anything, check the executable
+    if not self.valid_executable(rh):
+        logger.warning('Resource %s is not a valid executable', rh.resource)
+        return False
+```
+
+La méthode  ``valid_executable`` est appelée pour vérifier si l'attribut
+``rh`` fourni par l'utilisateur lors de l'appel à ``run`` est compatible
+avec l'**AlgoComponent**. Il est possible de surcharger cette méthode si
+vous souhaitez faire des contrôles précis...
+
+--ht subslide
+
+<h5>La méthode <code>run</code> : privatisation de l’environnement</h5>
+
+{% macro prv_content() -%}
+<ul>
+    <li>
+        Une copie de l'environnement est créée (méthode
+<strong>clone</strong>) et activée durant la séquence d'exécution (par
+l'utilisation du <em>context manager</em>) :
+les changements faits dans l'environnement seront donc temporaires et n'auront
+pas de répercution dans le reste du code.</li>
+    <li>
+        La séquence d'exécution démarre... <aside class="notes">Elle
+se présente sous la forme d'une recette de cuisine où différentes méthode de
+l'objet courrant sont successivement appelée.</aside>
+    </li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(prv_content()) }}
+
+--ht subslide
+
+<h5>La méthode <code>run</code> : Les principales méthodes (surchargeables)</h5>
+
+{% macro mtd1_content() -%}
+<ul>
+    <li>
+        <code>prepare</code> : export de variables, namelist, création
+de liens vers certains fichiers, vérification de la cohérence...</li>
+    <li>
+        <code>execute</code> : le lancement du traitement en lui-même
+(on peut notamment y trouver une boucle sur plusieurs échéances, membres...).</li>
+    <aside class="notes"><li>
+        <code>execute_finalise</code> : cette methode est lancee
+systematiquement apres l'execution ce qui permet d'effectuer certaines
+operations de nettoyage, reporting ...</li></aside>
+    <li>
+        <code>postfix</code> : création de fichiers de diagnostic,
+vérification du bon fonctionnement...</li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(mtd1_content()) }}
+
+--ht subslide
+
+<h5>La méthode <code>run</code> : Les autres méthodes (pour information)</h5>
+
+{% macro mtd2_content() -%}
+<ul>
+    <li><code>fsstamp</code>, <code>fscheck</code>, <code>dumplog</code> : les
+fichiers sont scrutés avant et après l'exécution. On détecte les fichiers créés,
+modifiés ou supprimés (voir la <em>property</em> <code>fslog</code> qui permet
+de récupérer cette information).</li>
+    <li><code>delayed_exceptions</code> : Parfois des exceptions sont mises de
+côté durant l'exécution. Si tel est le cas, elles seront levées de nouveau par
+cette méthode.</li>
+</ul>
+{%- endmacro -%}
+{{ run_core_description(mtd2_content()) }}
+
+--md subslide
+
+### Création d'une nouvelle classe AlgoComponent
+
+Dit plus simplement, créer un composant algorithmique revient en général à:
+
+* Hériter d'une classe AlgoComponent existante ;
+* Ajouter de nouveaux attributs aux footprints (ou modifier les attributs
+  existants) ;
+* Ajouter des méthodes "utilitaires" pour satisfaire vos besoins ;
+* Surcharger les méthodes ``prepare``, ``execute``, ``postfix``.
+
+***Surcharge*** est le mot important de cette présentation : lorsque l'on
+personnalise ``prepare``, ``execute`` et ``postfix``, il est
+indispensable d'appeler à un moment donné la méthode mère. Pour
+``execute`` une entorse à la règle est acceptable dans le cas où il
+n'y pas de programme ou script externe à exécuter.
+
+--md slide
+
+## Hiérarchie des différentes classes de base
+
+Classes disponibles via le module **vortex.algo.components** :
+
+![Heritage1](images_auto/HeritageAlgo1.svg)
+
+Notes:
+
+* Il faut a minima hériter de **AlgoComponent**. Ce cas de figure est rare mais,
+si l'on veut utiliser un package Python pour faire un traitement particulier ou
+lancer une commande système (par exemple ``dap3`` pour accéder à la BDAP), cela
+peut avoir du sens.
+* **Expresso** permet l'exécution de scripts dans différents languages (il faut
+alors préciser le nom de l'interpréteur à utiliser)
+* **BlindRun** permet le lancement "simple" d'un exécutable compilé
+* **Parallel** permet de lancer un programme basé sur une  librairie MPI. En soi,
+cet AlgoComponent ne fait que traiter les  différentes options passées par
+l'utilisateur. Le vrai travail de génération de la ligne de commande MPI se
+fait via les classes définies dans le module **vortex.algo.mpitools** qui est
+auto-documenté.
+* **TaylorRun** permet de lancer des tâches élémentaires en parallèle en
+utilisant le package externe **taylorism** (qui repose sur
+le package standard **multiprocessing**). Si la tâche élémentaire à
+lancer utilise un script ou un binaire, on se reportera sur les classes
+  **ParaExpresso** ou **ParaBlindRun**.
+
+--md slide
+
+## Héritage fonctionnel (exemple: Arpège)
+
+Exemple d'arbre d'héritage lié à l'utilisation d'Arpège (non-exhaustif) :
+
+![HeritageArpege](images_auto/HeritageAlgo2.svg)
+
+Notes:
+
+* Au paragraphe précédent, nous avons vu comment l'héritage
+permet de traiter les différentes méthodes de lancement possibles.
+Il paraît donc assez naturel d'utiliser une méthode proche pour gérer
+les spécificités de telle ou telle application.
+* Le diagrame précédent, n'est qu'un exemple qui n'est évidement pas
+transposable directement en dehors du cadre du lancement des différentes
+variantes du modèle Arpège.
+* Dans cet exemple:
+
+    * Les choses très général relatives à tous lancements du modèle Arpège
+      sont regroupés dans **IFSParallel**
+    * La "branche" **IFSODB** permet l'interaction avec des bases de données
+      d'observation (au format *ODB*). Cela permet de construire différents
+      composents algorithmiques liés à l'assimilation d'observations
+    * **FullPosServer** permet le lancement du serveur de post-traitement
+    * **Forecast**, au nom relativement explicite, permet le lancement de
+      prévisions. Une déclinaison, **LAMForecast**, traite le cas particulier
+      des prévisions à aire limitée (pour lesquelles il faut gérer
+      des données de couplage latérale)
+    * La "branche" **IFSEdaAbstractAlgo** regroupe des comportements liés
+      à l'assimilation d'ensemble (EDA) avec un cas particulier,
+     **IFSEdaEnsembleAbstractAlgo**, consistant à traiter simultanément plusieurs
+     membres (par exemple pour réaliser une moyenne d'ensemble).
+
+--md slide
+
+## "Template" d'un composant algorithmique
+
+
+```python
+class MonAlgoComponent(AlgoComponentMere):
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(values = ['mon_traitement_adore', ]),
+            # Ne pas hesiter a ajouter d'autres attributs...
+        )
+    )
+
+    def _ma_methode_utilitaire(self, truc):
+        pass
+
+    def prepare(self, rh, opts):
+        super(MonAlgoComponent, self).prepare(rh, opts)  # Methode mere
+        # Ici votre contenu...
+        # - Manipulation de l'environnement -> self.env
+        # - Acces au systeme -> self.system
+        # - Acces a la sequence -> self.context.sequence
+
+    def execute(self, rh, opts):
+        # On peut lancer le programme plusieur fois par exemple
+        for i in une_liste:
+            # Preparer le terrain (meme objets que ceux decrits plus haut)...
+            super(MonAlgoComponent, self).execute(rh, opts)  # Methode mere
+
+    def postfix(self, rh, opts):
+        super(MonAlgoComponent, self).postfix(rh, opts)  # Methode mere
+        # Ici votre contenu...
+```
+<!-- .element: class="bigpre" -->
+

@@ -119,7 +119,7 @@ do_lfi_addon = False
 do_rawftp = False
 if re.match(r'[lps]x\w+\d+\.cnrm\.meteo.fr', fqdn):
     tmpbase = os.path.join(os.environ['HOME'], 'tmp')
-elif re.match(r'(beaufix|prolix)', fqdn):
+elif re.match(r'(beaufix|prolix|belenos|taranis)', fqdn):
     do_lfi_addon = True
     do_rawftp = True
     tmpbase = (os.environ['TMPDIR'] or
@@ -130,7 +130,6 @@ else:
     tmpbase = os.path.join(os.environ['HOME'], 'tmp')
 
 # Load vortex & co.
-import bronx
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 import footprints as fp

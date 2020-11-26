@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Module that deals any Arpege/IFS listings.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
 import sys
-from collections import OrderedDict
 
-from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE, get_worst
-from .norms import NormsSet, NormsComparison
+from .util import PARSING_ERROR_CODE, FOUND_NAN_ERROR_CODE
+from .norms import NormsSet, compare_normsets
 from .jo_tables import JoTables, DEFAULT_N_THRESHOLD, DEFAULT_JO_THRESHOLD
 from .cost_functions import CostFunctions
 from .TLAD import ADTest, TLTest
@@ -192,7 +195,6 @@ def compare_norms(test, ref,
                    comparison.
                  - if 'plot', plot a graph of differences
     """
-
     assert ref.look_for_end()
     assert test.look_for_end()
     assert ref.pattern_type == 'norms'
@@ -206,101 +208,10 @@ def compare_norms(test, ref,
     assert mode in ('text', 'get_worst', 'get_worst_by_step', 'plot')
     assert which in ('first_and_last_spectral', 'all')
 
-    if not test.normset.steps_equal(ref.normset):
-        st = set([n.format_step() for n in test.normset])
-        sr = set([n.format_step() for n in ref.normset])
-        stepset = st.intersection(sr)
-        test_rm = [i for i in range(len(test.normset))
-                   if test.normset[i].format_step() not in stepset]
-        for off, i in enumerate(test_rm):
-            test.normset.pop(i - off)
-        ref_rm = [i for i in range(len(ref.normset))
-                  if ref.normset[i].format_step() not in stepset]
-        for off, i in enumerate(ref_rm):
-            ref.normset.pop(i - off)
-        assert test.normset.steps_equal(ref.normset)
-    if which == 'first_and_last_spectral':
-        for i in range(len(test.normset)):
-            if len(test.normset[i].spnorms) > 0:
-                steps = (i, None)
-                break
-        for i in sorted(range(len(test.normset)), reverse=True):
-            if len(test.normset[i].spnorms) > 0:
-                steps = (steps[0], i)
-                break
-        if steps[0] == steps[1]:
-            steps = (steps[0],)
-    elif which == 'all':
-        steps = list(range(len(test.normset)))
-
-    if 'get_worst' in mode:
-        worstdigits = []
-    elif mode == 'plot':
-        normsout = OrderedDict()
-    for i in steps:
-        norm_comp = NormsComparison(test.normset[i],
-                                    ref.normset[i])
-        if mode == 'text':
-            out.write(test.normset.norms_at_each_step[i].format_step() + '\n')
-            norm_comp.write(out, onlymaxdiff)
-            out.write('-' * 80 + '\n')
-        elif 'get_worst' in mode:
-            assert onlymaxdiff is True
-            worstdigits.append(norm_comp.get_worst('both'))
-        elif mode == 'plot':
-            norm_comp = NormsComparison(test.normset.norms_at_each_step[i],
-                                        ref.normset.norms_at_each_step[i],
-                                        only='spectral')
-            if len(norm_comp.sp_comp) > 0:
-                normsout[test.normset[i].format_step()] = norm_comp.sp_comp
-    if mode == 'plot':
-        import matplotlib.pyplot as plt
-        fldset = []
-        for n in normsout.values():
-            fldset.extend(n.keys())
-        fldset = sorted(set(fldset))
-        tab_f = {f: [n.get(f, None) for n in normsout.values()] for f in fldset}
-        xlabels = [(i, f) for i, f in enumerate(normsout.keys())]
-        xlen = len(xlabels)
-        tn = 5
-        if xlen > tn:
-            xstep = xlen // tn
-            xlast = xlabels[-1]
-            xlabels = xlabels[::xstep]
-            if (xlast[0] - xlabels[-1][0]) < xstep / 2:
-                xlabels[-1] = xlast
-            else:
-                xlabels.append(xlast)
-        fig, axes = plt.subplots(len(fldset), 1, figsize=(12, 8))
-        for j, f in enumerate(fldset):
-            axes[j].plot(tab_f[f], color='DarkMagenta')
-            axes[j].scatter(0, tab_f[f][0], c='DarkMagenta', s=50, marker='o')
-            axes[j].set_xlim(0, xlen)
-            axes[j].scatter(xlen - 1, tab_f[f][xlen - 1], c='DarkMagenta', s=20, marker='o', edgecolors='face')
-            axes[j].set_xticks([x[0] for x in xlabels])
-            axes[j].set_xticklabels([])
-            axes[j].set_ylim(0, 15)
-            axes[j].set_yticks([0, 5, 10, 15])
-            axes[j].set_yticklabels([0, 5, 10, 15])
-            axes[j].set_ylabel(f, rotation=45., horizontalalignment='right')
-            axes[j].grid()
-        xlabels = [x[1].split() for x in xlabels]
-        for x in xlabels:
-            if len(x) > 2:
-                x.insert(2, '\n')
-        axes[-1].set_xticklabels([''.join(x) for x in xlabels],
-                                 rotation=45., horizontalalignment='right')
-        axes[0].set_title('Norms: number of # digits')
-        pngname = 'norms_diff.png'
-        print('=> Output in: ' + pngname)
-        fig.savefig(pngname, bbox_inches='tight', dpi=300)
-
-    if mode == 'get_worst':
-        return get_worst(worstdigits)
-    elif mode == 'get_worst_by_step':
-        return worstdigits
-    else:
-        return None
+    return compare_normsets(test.normset, ref.normset, mode,
+                            which=which,
+                            out=out,
+                            onlymaxdiff=onlymaxdiff)
 
 
 def compare_jo_tables(test, ref,
@@ -320,7 +231,6 @@ def compare_jo_tables(test, ref,
     :param bw: Black & White flag
     :param onlymaxdiff: Only max difference is printed for each table
     """
-
     assert ref.look_for_end()
     assert test.look_for_end()
     assert ref.pattern_type == 'Jo-tables'

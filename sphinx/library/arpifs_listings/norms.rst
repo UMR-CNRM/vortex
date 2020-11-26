@@ -18,6 +18,8 @@ Functions
 
 .. autofunction:: compare_norms
 
+.. autofunction:: compare_normsets
+
 Classes
 -------
 

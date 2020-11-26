@@ -13,7 +13,7 @@ DATADIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
 
 
 def _find_testfile(fname):
-        return os.path.join(DATADIR, fname)
+    return os.path.join(DATADIR, fname)
 
 
 class TestListingCosts(unittest.TestCase):

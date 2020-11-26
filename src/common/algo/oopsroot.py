@@ -14,6 +14,7 @@ from bronx.fancies.dump import lightdump, fulldump
 from bronx.stdtypes.date import Date, Time
 
 from vortex.algo.components import AlgoComponentError, AlgoComponentDecoMixin, Parallel
+from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.tools import grib
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
 from common.syntax.stdattrs import oops_members_terms_lists
@@ -25,6 +26,7 @@ __all__ = []
 logger = footprints.loggers.getLogger(__name__)
 
 
+@algo_component_deco_mixin_autodoc
 class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
     """Tries to detect a members/terms list using the sequence's inputs
 
@@ -47,22 +49,22 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
                             'SurfaceBackground',)
 
     _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
-        info = "Abstract mbdetect footprint",
-        attr = dict(
-            ens_minsize = dict(
-                info            = "For a multi-member algocomponnent, the minimum of the ensemble.",
-                optional        = True,
-                type            = int
+        info="Abstract mbdetect footprint",
+        attr=dict(
+            ens_minsize=dict(
+                info="For a multi-member algocomponnent, the minimum of the ensemble.",
+                optional=True,
+                type=int
             ),
-            strict_mbdetect = dict(
-                info            = "Performs a strict members/terms detection",
-                type            = bool,
-                optional        = True,
-                default         = True,
-                doc_zorder      = -60,
+            strict_mbdetect=dict(
+                info="Performs a strict members/terms detection",
+                type=bool,
+                optional=True,
+                default=True,
+                doc_zorder=-60,
             )
         )
-    ), )
+    ),)
 
     @staticmethod
     def _stateless_members_detect(smap, basedate, ensminsize=None, utest=False):
@@ -189,6 +191,7 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_PREPARE_HOOKS = (_membersd_setup, )
 
 
+@algo_component_deco_mixin_autodoc
 class OOPSMembersTermsDecoMixin(AlgoComponentDecoMixin):
     """Adds members/terms footprints' attributes and use them in configuration files.
 
@@ -238,6 +241,9 @@ class OOPSParallel(Parallel,
                 default         = footprints.FPDict(),
                 doc_zorder      = -60,
             ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
         )
     )
 
@@ -270,8 +276,9 @@ class OOPSParallel(Parallel,
         self.setchannels()
         # Register all of the config files
         self.set_config_rendering()
-        # Looking for BOOST defaults...
+        # Looking for low-level-libs defaults...
         self.boost_defaults()
+        self.eckit_defaults()
 
     def spawn_hook(self):
         """Perform configuration file rendering before executing the binary."""
@@ -331,7 +338,7 @@ class OOPSParallel(Parallel,
         defaults = {
             IfsCycle('cy1'): {
                 'BOOST_TEST_CATCH_SYSTEM_ERRORS': 'no',
-                'BOOST_TEST_DETECT_FP_EXCEPTIONS': 'yes',
+                'BOOST_TEST_DETECT_FP_EXCEPTIONS': 'no',
                 'BOOST_TEST_LOG_FORMAT': 'XML',
                 'BOOST_TEST_LOG_LEVEL': 'message',
                 'BOOST_TEST_OUTPUT_FORMAT': 'XML',
@@ -347,6 +354,29 @@ class OOPSParallel(Parallel,
         self.algoassert(cydefaults is not None,
                         'BOOST defaults not found for cycle: {!s}'.format(self.oops_cycle))
         logger.info('Setting up BOOST defaults:%s', lightdump(cydefaults))
+        self.env.default(**cydefaults)
+
+    def eckit_defaults(self):
+        """Set defaults for eckit environment variables.
+
+        Do not overwrite pre-initialised ones. The default list of variables
+        depends on the code's cycle number.
+        """
+        defaults = {
+            IfsCycle('cy1'): {
+                'ECKIT_MPI_INIT_THREAD': ('MPI_THREAD_MULTIPLE'
+                                          if int(self.env.get('OMP_NUM_THREADS', '1')) > 1
+                                          else 'MPI_THREAD_SINGLE'),
+            }
+        }
+        cydefaults = None
+        for k, defdict in sorted(defaults.items(), reverse=True):
+            if k < self.oops_cycle:
+                cydefaults = defdict
+                break
+        self.algoassert(cydefaults is not None,
+                        'eckit defaults not found for cycle: {!s}'.format(self.oops_cycle))
+        logger.info('Setting up eckit defaults:%s', lightdump(cydefaults))
         self.env.default(**cydefaults)
 
 
@@ -377,7 +407,7 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
         sh = self.system
 
         # Looking for input observations
-        allodb  = self.lookupodb()
+        allodb = self.lookupodb()
         allcma = [x for x in allodb if x.rh.resource.layout.lower() == self.virtualdb]
         if self.virtualdb.lower() == 'ccma':
             self.algoassert(len(allcma) == 1, 'A unique CCMA database is to be provided.')

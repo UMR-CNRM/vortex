@@ -134,10 +134,10 @@ class TestAutoRetriesFtp(TestStdFtp):
         logger.setLevel(tloglevel)
         self.server = TestFTPServer(self.port, self.tdir,
                                     self.user, self.password,
-                                    pass_seq = (AUTH_FAILURE, AUTH_FAILURE, TOO_MANY_CONNECTIONS, AUTH_FAILURE, True, ),
-                                    retr_seq = (TOO_MANY_CONNECTIONS, True, TOO_MANY_CONNECTIONS),
-                                    stor_seq = (AUTH_FAILURE, TOO_MANY_CONNECTIONS, TOO_MANY_CONNECTIONS,
-                                                TOO_MANY_CONNECTIONS, ),
+                                    pass_seq=(AUTH_FAILURE, AUTH_FAILURE, TOO_MANY_CONNECTIONS, AUTH_FAILURE, True,),
+                                    retr_seq=(TOO_MANY_CONNECTIONS, True, TOO_MANY_CONNECTIONS),
+                                    stor_seq=(AUTH_FAILURE, TOO_MANY_CONNECTIONS, TOO_MANY_CONNECTIONS,
+                                              TOO_MANY_CONNECTIONS,),
                                     )
 
     def new_ftp_client(self):

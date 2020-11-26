@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
@@ -24,6 +28,7 @@ logger = loggers.getLogger(__name__)
 
 
 class OpJobAssistantTest(JobAssistant):
+    """TODO class documentation."""
 
     _footprint = dict(
         info = 'Op Job assistant.',
@@ -37,12 +42,12 @@ class OpJobAssistantTest(JobAssistant):
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
 
-        t.sh.subtitle('Setting up a new glove')
+        t.sh.header('Setting up a new glove')
 
         opd = kw.get('actual', dict())
         gl = vortex.sessions.getglove(
-            tag     = 'opid',
-            profile = opd.get('op_suite', 'oper')
+            tag='opid',
+            profile=opd.get('op_suite', 'oper')
         )
 
         print(gl.idcard())
@@ -50,12 +55,12 @@ class OpJobAssistantTest(JobAssistant):
         # ----------------------------------------------------------------------
         t.sh.header('Activate a new session with previous glove')
 
-        t  = vortex.sessions.get(
-            tag     = 'opview',
-            active  = True,
-            glove   = gl,
-            topenv  = vortex.rootenv,
-            prompt  = vortex.__prompt__
+        t = vortex.sessions.get(
+            tag='opview',
+            active=True,
+            glove=gl,
+            topenv=vortex.rootenv,
+            prompt=vortex.__prompt__
         )
 
         return super(OpJobAssistantTest, self)._early_session_setup(t, **kw)
@@ -64,7 +69,7 @@ class OpJobAssistantTest(JobAssistant):
         """OP session's environment setup."""
         super(OpJobAssistantTest, self)._env_setup(t, **kw)
 
-        t.sh.subtitle('OP setup')
+        t.sh.header('OP env setup')
 
         # Symlink to job's last execution log in op's resul directory
         if "SLURM_JOB_NAME" in t.env():
@@ -103,13 +108,11 @@ class OpJobAssistantTest(JobAssistant):
         else:
             t.env.setvar("OP_DISP_NAME", None)
 
-        t.sh.header('Setting up the MPI Environment')
-
+        t.sh.highlight('Setting up the MPI Environment')
         mpi, u_rkw = swissknife.slurm_parameters(t, **kw)  # @UnusedVariable
         t.env.OP_MPIOPTS = mpi
 
-        t.sh.header('Setting up the rundate')
-
+        t.sh.highlight('Setting up the rundate')
         if t.env.OP_RUNDATE:
             if not isinstance(t.env.OP_RUNDATE, bronx.stdtypes.date.Date):
                 t.env.OP_RUNDATE = bronx.stdtypes.date.Date(t.env.OP_RUNDATE)
@@ -121,31 +124,33 @@ class OpJobAssistantTest(JobAssistant):
                 rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
-                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst':
+                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
+                   or t.env.OP_VCONF == 'altana':
                     rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
+                elif t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'surfana':
+                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
         logger.info('Effective rundate = %s', t.env.OP_RUNDATE.ymdhm)
         logger.info('Effective time    = %s', t.env.OP_RUNTIME)
 
-        t.sh.header('Setting up suitebg')
-
+        t.sh.highlight('Setting up suitebg')
         if t.env.OP_SUITEBG is None:
             t.env.OP_SUITEBG = t.env.get('OP_XPID', None)
 
-        t.sh.header("Setting up the member's number")
+        t.sh.highlight("Setting up the member's number")
         if not t.env.OP_MEMBER and t.env.get('DMT_ECHEANCE'):
             t.env.OP_MEMBER = t.env.get('DMT_ECHEANCE')[-3:]
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
-        t.sh.header("Setting up the s2m path")
+        t.sh.highlight("Setting up the s2m path")
         t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
 
-        t.sh.subtitle('Setting up the actual running directory')
+        t.sh.highlight('Setting up the actual running directory')
 
         t.env.RUNDIR = kw.get('rundir', mkdtemp(prefix=t.glove.tag + '-'))
         t.sh.cd(t.env.RUNDIR, create=True)
@@ -154,10 +159,10 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Current rundir <%s>', t.rundir)
 
     def _toolbox_setup(self, t, **kw):
-        super(OpJobAssistantTest, self)._toolbox_setup( t, **kw)
+        super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
         opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
-            jname = opd.get('op_jeeves', None),
+            jname=opd.get('op_jeeves', None),
             smtpserver='smtp.meteo.fr',
             sender='admin_prod_sc@meteo.fr',
         )
@@ -166,7 +171,7 @@ class OpJobAssistantTest(JobAssistant):
         """Setup the OP action dispatcher."""
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
-        t.sh.subtitle('Setting up OP Actions')
+        t.sh.highlight('Setting up OP Actions')
         import iga.tools.services  # @UnusedImport
         import iga.tools.actions  # @UnusedImport
 
@@ -178,11 +183,11 @@ class OpJobAssistantTest(JobAssistant):
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
 
         # ----------------------------------------------------------------------
-        t.sh.header('START message to op MESSDAYF reporting file')
+        t.sh.highlight('START message to op MESSDAYF reporting file')
         ad.report(kind='dayfile', mode='DEBUT')
 
         # ----------------------------------------------------------------------
-        t.sh.header('ECFLOW Settings')
+        t.sh.highlight('ECFLOW Settings')
         ad.ecflow_info()
         ad.ecflow_off()
 
@@ -192,7 +197,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
-        super(OpJobAssistantTest, self)._system_setup( t, **kw)
+        super(OpJobAssistantTest, self)._system_setup(t, **kw)
         t.sh.allow_cross_users_links = False
 
     def register_cycle(self, cycle):
@@ -341,7 +346,7 @@ class OutputReportContext(_ReportContext):
 
 
 def get_resource_value(r, key):
-    """ this function returns the resource value """
+    """This function returns the resource value."""
     try:
         kw = dict(area=lambda r: r.resource.geometry.area,
                   term=lambda r: r.resource.term,
@@ -352,7 +357,7 @@ def get_resource_value(r, key):
 
 
 def filteractive(r, dic):
-    """ this function returns the filter status """
+    """This function returns the filter status."""
     filter_active = True
     if dic is not None:
         for k, w in six.iteritems(dic):
@@ -382,8 +387,9 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
     def hook_route(t, rh):
         kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
-                      filename=rh.container.abspath, soprano_target=soprano_target,
-                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      filename=rh.container.abspath, filefmt=rh.container.actualfmt,
+                      soprano_target=soprano_target, routingkey=routingkey,
+                      targetname=targetname, transmet=transmet,
                       header_infile=header_infile, **kw)
 
         if selkeyproductid:
@@ -410,8 +416,8 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 def opphase_hook_factory(optfilter=None):
     """Hook functions factory to phase files while the execution is running.
 
-    :param dict optfilter: (used to allow routing) """
-
+    :param dict optfilter: (used to allow routing)
+    """
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
@@ -440,7 +446,7 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
         max_value = int(maxvalue)
         current_value = 0
         if hasattr(rh.resource, 'term') and useterm:
-                current_value = rh.resource.term.hour
+            current_value = rh.resource.term.hour
         if sharedadvance:
             if useterm:
                 if sharedadvance.value < current_value:

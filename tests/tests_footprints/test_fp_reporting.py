@@ -17,7 +17,7 @@ expected_flat_d = {'why: Outcast value': {'attribute: someint': {'FakeClass2': '
                    'why: Could not reclass': {'attribute: thirdint': {'FakeClass2': "args: ('int', 'not_a_number')"}},
                    'why: Not a subclass': {'attribute: otherint': {'FakeClass1': 'args: 11', 'FakeClass2': 'args: 11'}},
                    'why: Not in values': {'attribute: kind': {'FakeClass1': 'args: rock', 'FakeClass2': 'args: rock'}}}
-expected_flat = """- - - - -  
+expected_flat = """- - - - -
 
 FlatReport shuffle ['why', 'attribute']
 {:s}
@@ -76,7 +76,7 @@ expected_xml_last = """<collector name="fake" stamp="2000-01-01T00:00:00">
 expected_xml = ("""<?xml version="1.0" ?>
 <report tag="tests_fp_reporting_fake1">
 """ + "\n".join(['    ' + s for s in expected_xml_last.split("\n")]) +
-"\n</report>\n")
+                "\n</report>\n")
 
 expected_xml_last += "\n"
 
@@ -225,7 +225,9 @@ class utReporting(TestCase):
         flatreport = rv.last.as_flat()
         flatreport.reshuffle([str('why'), str('attribute')], skip=False)
         with capture(flatreport.fulldump) as output:
-            self.assertEqual(output, expected_flat)
+            self.assertEqual("\n".join([o.rstrip(' ') if i < 3 else o
+                                        for i, o in enumerate(output.split("\n"))]),
+                             expected_flat)
 
         # Factorized report
         fr = rv.last.as_tree(ordering=(

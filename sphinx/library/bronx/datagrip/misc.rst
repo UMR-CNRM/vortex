@@ -15,7 +15,7 @@ Functions
 ---------
 
 .. autofunction:: read_dict_in_CSV
-
+.. autofunction:: load_ordered_yaml
 
 .. Exceptions
 .. ----------
@@ -23,4 +23,9 @@ Functions
 
 .. Classes
 .. -------
+
+.. autoclass:: OrderedYAMLLoader
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 

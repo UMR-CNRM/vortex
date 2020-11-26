@@ -8,6 +8,7 @@ Check the documentation and generates missing RST files.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 import inspect
+import io
 import os
 import re
 import string
@@ -44,8 +45,8 @@ _ALT_AUTHORS = {'bronx': "The Vortex Team & many contributors"}
 
 def process_template(tplname, **subdict):
     tplfile = os.path.join(_DOC_TEMPLATES, tplname)
-    with open(tplfile) as fhd:
-            tplobj = fhd.read()
+    with io.open(tplfile, 'r', encoding='utf-8') as fhd:
+        tplobj = fhd.read()
     tplobj = string.Template(tplobj)
     return tplobj.substitute(subdict)
 
@@ -93,7 +94,7 @@ def create_rst(rst, modname, module):
 
     if not os.path.exists(os.path.dirname(rst)):
         os.makedirs(os.path.dirname(rst))
-    with open(rst, 'w') as fdoc:
+    with io.open(rst, 'w', encoding='utf-8') as fdoc:
         fdoc.write(therst)
     return os.path.exists(rst)
 
@@ -104,7 +105,7 @@ def rstfind(pattern, lines):
 
 def inspect_rst(rst, rstloc, report):
     rstnames = set()
-    with open(rst, 'r') as fdrst:
+    with io.open(rst, 'r', encoding='utf-8') as fdrst:
         rstinfo = fdrst.readlines()
         if rstfind('TODO', rstinfo):
             report['todo'].append(rstloc)
@@ -146,7 +147,7 @@ def generate_console_report(report, light=False):
 
 
 def generate_rst_report(rstoutput, report):
-    with open(rstoutput, 'w') as fh:
+    with io.open(rstoutput, 'w', encoding='utf-8') as fh:
         fh.write(process_template('doc_rst_reporthead.tpl'))
         for k, v in sorted(report.items()):
             if k == 'mkrst':
@@ -198,13 +199,16 @@ def main():
 
     parser.add_argument("--discard", dest="discard", action='store', default='taylorism',
                         help="Ignore some of the packages")
+    parser.add_argument("--fail", dest="fail", action="store_true",
+                        help="Return a non-zero error code on failure.")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--light", dest="light", action="store_true",
                        help="Only check for missing stuff...")
     group.add_argument("--mkrst", dest="mkrst", action="store_true",
                        help="Build missing RST files.")
     group.add_argument("--gen-report", dest="genreport", action="store",
-                       help="Generate the report in RST format")
+                       help="Generate the report in RST format.")
+
     args = parser.parse_args()
 
     # Discard may be a list
@@ -215,12 +219,12 @@ def main():
     intro = Sherlock()
 
     report = dict(
-        mkrst = list(),
-        todo = list(),
-        quid = list(),
-        nope = list(),
-        dstr = list(),
-        miss = list(),
+        mkrst=list(),
+        todo=list(),
+        quid=list(),
+        nope=list(),
+        dstr=list(),
+        miss=list(),
     )
 
     for modulename, loaded in sh.vortex_loaded_modules():
@@ -253,6 +257,11 @@ def main():
         generate_rst_report(args.genreport, report)
     else:
         generate_console_report(report, args.mkrst or args.light)
+
+    if args.fail:
+        if report['miss'] or (not (args.light or args.mkrst) and
+                              any([len(item) for item in report.values()])):
+            sys.exit(1)
 
 
 if __name__ == "__main__":

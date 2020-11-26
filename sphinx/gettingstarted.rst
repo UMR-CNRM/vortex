@@ -100,8 +100,8 @@ and :class:`~vortex.data.stores.Store` classes. Flexibility is inherent to this 
 since :class:`~vortex.data.stores.Store` objects may behave differently depending
 on the configuration.
 
-.. seealso::
-   ???
+.. seealso:: The notebooks related to "Resource manipulations" in the
+   :ref:`stepbystep-index` tutorial.
 
 .. _getting-started-context:
 
@@ -191,7 +191,11 @@ usually enough:
    There are 117 environment variables in the current env
 
 .. seealso::
+
    * A technical documentation (intended for developers): :ref:`env-interface`
+   * The notebooks related to "Session, Context and Environment concept" in the
+     :ref:`stepbystep-index` tutorial.
+
 
 Running complex programs
 ========================
@@ -388,7 +392,8 @@ is used to create Resource, Provider, Container and AlgoComponent objects.
 
 .. seealso::
 
-   * A user documentation in french: :ref:`overview-footprints`
+   * A "generic" *footprints* documents: :ref:`footprints_doc`
+   * An "NWP oriented" *footprints* tutorial: :ref:`nbook-01b_ResourceHandlingFootprints`
    * In Vortex, the footprint's catalogue of available *resources*, *providers*, *containers*
      and *algo-componnents* is browsable with `Vortex-Help <_static/vortex-help/index.html#http://>`_
 

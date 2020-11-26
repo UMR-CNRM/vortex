@@ -36,6 +36,7 @@ pollutants-sites-std.rst
 pollutants-elements-std.rst
 checkreport.rst
 geometries.rst
+bdpe-map-resources.rst
 sphinx/notebooks
 _ExportXML
 
@@ -55,3 +56,7 @@ _ExportXML
 
 # Pascal unwanted files
 playground
+
+# Matthieu unwanted files
+tag
+oper_tag

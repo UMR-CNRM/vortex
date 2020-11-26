@@ -2,18 +2,18 @@
 # -*- coding: utf-8 -*-
 
 """
-This example aims at dealing with dates and terms
+This example shows a few typical use cases of dates and terms.
 
 Ok 20180731 - GR
 """
 
-# Load useful packages for the examples
-from __future__ import print_function, division, unicode_literals, absolute_import
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+# load the packages used in this example
 from bronx.stdtypes import date
 from footprints.util import rangex
 
-print("\n-- Dealing with dates --\n")
+print("\n-- Dealing with dates --")
 
 # Create a first date
 print("\nCreate a first date")
@@ -43,11 +43,11 @@ print(my_date_1.ymd)
 print(my_date_1.ymdhms)
 
 # Get the current date
-print("\nToday, we are the:")
+print("\nThe date today is:")
 print(date.today())
 
 # Create a range of terms
-print("\n-- Dealing with terms --\n")
+print("\n\n-- Dealing with terms --")
 
 print("\nA range from 0 to 10")
 my_terms_1 = rangex(0, 10)
@@ -60,3 +60,7 @@ print(my_terms_2)
 print("\nA range from 0 to 10 shifted by 25")
 my_terms_3 = rangex("0-10", shift=25)
 print(my_terms_3)
+
+print("\nFrom 0:30 to 1:45 per quarter of an hour")
+my_terms_4 = rangex("0:30", "1:45", "0:15")
+print(my_terms_4)

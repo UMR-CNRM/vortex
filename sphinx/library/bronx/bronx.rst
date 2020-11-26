@@ -1,4 +1,4 @@
-:mod:`bronx` --- A collection of basic utilities that can be used in many projects 
+:mod:`bronx` --- A collection of basic utilities that can be used in many projects
 ==================================================================================
 
 .. automodule:: bronx

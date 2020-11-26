@@ -16,17 +16,7 @@ Package
 
 Classes
 -------
- 
-.. autoclass:: GridPoint
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
-.. autoclass:: GridPointMap
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-   
 .. autoclass:: GridPointFullPos
    :show-inheritance:
    :members:
@@ -36,8 +26,41 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
-   
+
 .. autoclass:: FilteredGridPointExport
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TimePeriodGridPointExport
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FilteredTimePeriodGridPointExport
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GridPointMap
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Abstract classes
+----------------
+
+.. autoclass:: AbstractGridpoint
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GridPoint
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TimePeriodGridPoint
    :show-inheritance:
    :members:
    :member-order: alphabetical

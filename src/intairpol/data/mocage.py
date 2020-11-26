@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+TODO: Module documentation
+"""
+
 from __future__ import absolute_import, print_function, division, unicode_literals
 
 from bronx.fancies import loggers
@@ -11,7 +15,7 @@ from vortex.syntax.stdattrs import term_deco
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
 #: Automatic export of  class
-__all__ = [ ]
+__all__ = []
 
 logger = loggers.getLogger(__name__)
 
@@ -33,6 +37,10 @@ class ChemicalBoundaryConditions(GeoFlowResource):
                     default  = 'netcdf',
                     optional = True
                 ),
+                oparchive_prefix = dict(
+                    default = 'bc22_',
+                    optional = True
+                ),
             )
         )
     ]
@@ -43,10 +51,9 @@ class ChemicalBoundaryConditions(GeoFlowResource):
 
     def archive_basename(self):
         """OP ARCHIVE specific naming convention."""
-        prefix = 'bc22_'
         actualdate = self.date + self.term
         fmtremap = dict(netcdf='nc')
-        return prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
+        return self.oparchive_prefix + actualdate.ymdh + '.' + fmtremap.get(self.nativefmt, self.nativefmt)
 
 
 @namebuilding_delete('src')
@@ -153,7 +160,7 @@ class PostPeriodicStats(GeoFlowResource):
                     default = 'netcdf',
                 ),
                 run_eval = dict(
-                    values = ['first_level', 'stats', 'base'],
+                    values = ['first_level', 'stats', 'base', 'daily'],
                     remap = dict(base = 'stats'),
                 ),
             )

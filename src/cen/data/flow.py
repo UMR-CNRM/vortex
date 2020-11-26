@@ -1,21 +1,30 @@
 #!/usr/bin/env python
 # -*- coding:Utf-8 -*-
 
+"""
+TODO: Module documentation.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from bronx.fancies           import loggers
-from bronx.stdtypes.date     import Date, Time
-from cen.syntax.stdattrs     import cendateperiod_deco
+from bronx.fancies import loggers
+from bronx.stdtypes.date import Date, Time
+from cen.syntax.stdattrs import cendateperiod_deco
 from common.data.modelstates import InitialCondition
-from common.data.obs         import ObsRaw
+from common.data.obs import ObsRaw
 import footprints
 from footprints.util import rangex
-from vortex.data.flow        import GeoFlowResource
-from vortex.data.geometries  import UnstructuredGeometry, HorizontalGeometry
+from vortex.data.flow import GeoFlowResource
+from vortex.data.geometries import UnstructuredGeometry, HorizontalGeometry
 from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_date
-from vortex.syntax.stddeco   import namebuilding_append, namebuilding_delete, namebuilding_insert
+from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
+from common.data.modelstates import InitialCondition
+from common.data.obs         import ObsRaw
+
+from vortex.syntax.stdattrs import a_date
+from cen.syntax.stdattrs     import cendateperiod_deco
 
 #: No automatic export
 __all__ = []
@@ -103,7 +112,7 @@ class SurfaceIO(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -146,11 +155,9 @@ class SurfaceForcing(SurfaceIO):
                     values = ['safran', 'obs', 's2m', 'adamont'],
                 ),
                 source_app = dict(
-                    values = ['arpege', 'arome', 'ifs', ],
                     optional = True
                 ),
                 source_conf = dict(
-                    values = ['4dvarfr', 'pearp', '3dvarfr', 'pefrance', 'determ', 'eps', 'pearome', 'era40'],
                     optional = True
                 ),
             )
@@ -199,6 +206,7 @@ class Prep(InitialCondition):
                 nativefmt = dict(
                     values = ['ascii', 'netcdf', 'nc'],
                     default = 'netcdf',
+                    remap = dict(nc='netcdf'),
                 ),
                 origin = dict(
                     default = None,
@@ -264,7 +272,7 @@ class SnowObs(GeoFlowResource):
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
-                    remap = dict(autoremap = 'first'),
+                    remap   = dict(nc='netcdf'),
                 ),
                 geometry = dict(
                     info = "The resource's massif geometry.",
@@ -583,19 +591,19 @@ class SafranObsRaw(ObsRaw):
 
 @namebuilding_append('cen_period', lambda self: [{'begindate': self.begindate},
                                                  {'enddate': self.enddate}])
-class SafranPackedObs(GeoFlowResource):
+class SafranPackedFiles(GeoFlowResource):
 
     _footprint = dict(
-        info = 'SAFRAN packed observations covering the given period',
+        info = 'SAFRAN packed files covering a given period',
         attr = dict(
             kind = dict(
-                values = ['packedobs'],
+                values = ['packedobs', 'listobs', 'packedguess', 'packedlisting'],
             ),
             model = dict(
                 values  = ['safran'],
             ),
             nativefmt = dict(
-                values = ['tar'],
+                values = ['tar', 'tar.gz'],
                 default = 'tar'
             ),
             begindate = a_date,
@@ -605,4 +613,4 @@ class SafranPackedObs(GeoFlowResource):
 
     @property
     def realkind(self):
-        return 'observations'
+        return self.kind

@@ -113,7 +113,7 @@ def attr_descriptors(refresh=False, _cache=dict()):
     """Return a dictionary of active descriptors accessible by their ``access_mode``."""
     if refresh or not _cache:
         _cache.clear()
-        _cache.update( dict([
+        _cache.update(dict([
             (xobj.access_mode, xobj) for xobj in globals().values()
             if hasattr(xobj, 'access_mode') and xobj.access_mode is not None
         ]))

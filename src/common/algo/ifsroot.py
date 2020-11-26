@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Abstract base class for any AlgoComponnent leveraging the Arpege/IFS code.
+"""
+
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 import footprints
 
-from vortex.algo.components import Parallel, AlgoComponentError
+from vortex.algo.components import Parallel, ParallelIoServerMixin, AlgoComponentError
 from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
@@ -19,8 +23,8 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
-class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
-                  grib.EcGribDecoMixin):
+class IFSParallel(Parallel, ParallelIoServerMixin,
+                  satrad.SatRadDecoMixin, drhook.DrHookDecoMixin, grib.EcGribDecoMixin):
     """Abstract IFSModel parallel algo components."""
 
     _abstract = True
@@ -96,6 +100,9 @@ class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
                     optional        = True,
                     type            = int,
                 ),
+                mpiconflabel = dict(
+                    default  = 'mplbased'
+                )
             )
         )
     ]
@@ -122,12 +129,12 @@ class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
     def spawn_command_options(self):
         """Dictionary provided for command line factory."""
         return dict(
-            name       = (self.xpname + 'xxxx')[:4].upper(),
-            conf       = self.conf,
-            timescheme = self.timescheme,
-            timestep   = self.timestep,
-            fcterm     = self.fcterm,
-            fcunit     = self.fcunit,
+            name=(self.xpname + 'xxxx')[:4].upper(),
+            conf=self.conf,
+            timescheme=self.timescheme,
+            timestep=self.timestep,
+            fcterm=self.fcterm,
+            fcunit=self.fcunit,
         )
 
     def naming_convention(self, kind, rh, actualfmt=None, **kwargs):
@@ -215,8 +222,8 @@ class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
         self.system.remove(target_name)
 
         logger.info("Linking in the %s file (%s) for month %s.", convkind, target_name, month)
-        rc = self.setlink(initrole = inputrole, initkind = inputkind, inittest = checker,
-                          initname = target_name)
+        rc = self.setlink(initrole=inputrole, initkind=inputkind, inittest=checker,
+                          initname=target_name)
         return target_name if rc else None
 
     def all_localclim_fixer(self, rh, month, convkind='targetclim', actualfmt=None,
@@ -243,7 +250,7 @@ class IFSParallel(Parallel, satrad.SatRadDecoMixin, drhook.DrHookDecoMixin,
         dealtwith = list()
 
         for tclimrh in [x.rh for x in self.context.sequence.effective_inputs(
-                role = inputrole, kind = inputkind,
+                role=inputrole, kind=inputkind,
         ) if x.rh.resource.month == month]:
             thisclim = tclimrh.container.localpath()
             thisname = nc(area=tclimrh.resource.geometry.area)

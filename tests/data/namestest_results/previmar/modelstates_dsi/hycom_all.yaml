@@ -1,0 +1,1448 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@anarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010100
+    - default: &id002 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@fcarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r00
+    - default: &id003 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@fcoin
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r00
+    - default: &id004 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@anarp
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: &id005 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@fcarp
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: &id006 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@fcoin
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010100.gz
+    - default: &id007 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@anarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010100
+    - default: &id008 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@fcarp
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r00
+    - default: &id009 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].inline.fr'
+        vapp: hycom
+        vconf: atl@fcoin
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r00
+    - default: &id010 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@anarp
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: &id011 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@fcarp
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: &id012 !test_names.core.TestParameters
+        cutoff: production
+        cycle: cy42_op2.67
+        geometry: hycomatl2
+        gnamespace: gco.multi.fr
+        model: hycom
+        namespace: '[suite].multi.fr'
+        vapp: hycom
+        vconf: atl@fcoin
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010100.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r06
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r06
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r06
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r06
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r12
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r12
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r12
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r12
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r18
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r18
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.r18
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.r18
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010118.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010100
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rCM
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rCM
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010100.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010100
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rCM
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rCM
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010100.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rSX
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rSX
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rSX
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rSX
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rPM
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rPM
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rPM
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rPM
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: analysis
+      nativefmt: grib
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rDH
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rDH
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.rDH
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.rDH
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010118.gz
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010100.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010100.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010100.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010100.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010100.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010100.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010100.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010100.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010106
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010106
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010106
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010106
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010106
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010106
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010200.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010200.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010200.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010200.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010200.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010200.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010200.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010200.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010200.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010200.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010200.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010200.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010219.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010219.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010219.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010219.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010219.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010219.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010219.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010219.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010219.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010219.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010219.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r0/s_init0_oin_pre.010219.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010106.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010106.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010106.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010106.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010106.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010106.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010112
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010112
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010112
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010112
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010112
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010112
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010206.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010206.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010206.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010206.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010206.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010206.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010206.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010206.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010206.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010206.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010206.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010206.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010301.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010301.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010301.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010301.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010301.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010301.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010301.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010301.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010301.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010301.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010301.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r6/s_init0_oin_pre.010301.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010112.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010112.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010112.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010112.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010112.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010112.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010118
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010118
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010118
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010118
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010118
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010118
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010118.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010212.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010212.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010212.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010212.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010212.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010212.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010212.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010212.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010212.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010212.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010212.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010212.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010307.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010307.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010307.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010307.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010307.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010307.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010307.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010307.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010307.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010307.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010307.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r12/s_init0_oin_pre.010307.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010118.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010118.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010118.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010118.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010118.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010118.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010118.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010200
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010200
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010200
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010200.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010200.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010200.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_ana.2018010200
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_sort_arp_pre.2018010200
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_sort_oin_pre.2018010200
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010200.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010200.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010200.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010218.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010218.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010218.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010218.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010218.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010218.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010218.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010218.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010218.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010218.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010218.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010218.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: assim
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010313.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010313.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010313.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010313.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010313.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010313.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_ana.2018010313.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/fic_day/s_init_arp_pre.2018010313.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/fic_day/s_init_oin_pre.2018010313.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010313.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010313.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/assim/2018/01/01/r18/s_init0_oin_pre.010313.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010100.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010100.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010100.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010100.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010100.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010100.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010100.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010100.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010100.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010100.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010106
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010106
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010106
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010106
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010106
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010200.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010200.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010200.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010200.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010200.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010200.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010200.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010200.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010200.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010200.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010200.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010200.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010100'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010219.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010219.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010219.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010219.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010219.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010219.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010219.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010219.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010219.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_ana.010219.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r0/s_init0_arp_pre.010219.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r0/s_init0_oin_pre.010219.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010106.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010106.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010106.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010106.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010106.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010106.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010106.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010106.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010106.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010106.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010112
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010112
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010112
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010112
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010112
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010206.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010206.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010206.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010206.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010206.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010206.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010206.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010206.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010206.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010206.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010206.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010206.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010106'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010301.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010301.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010301.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010301.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010301.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010301.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010301.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010301.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010301.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_ana.010301.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r6/s_init0_arp_pre.010301.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r6/s_init0_oin_pre.010301.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010112.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010112.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010112.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010112.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010112.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010112.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010112.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010112.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010112.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010112.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010118
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010118
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010118
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010118
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010118
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010118.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010212.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010212.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010212.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010212.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010212.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010212.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010212.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010212.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010212.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010212.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010212.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010212.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010112'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010307.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010307.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010307.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010307.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010307.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010307.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010307.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010307.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010307.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_ana.010307.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r12/s_init0_arp_pre.010307.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r12/s_init0_oin_pre.010307.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 0
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010118.000
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010118.000
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010118.000
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010118.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010118.000
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010118.000
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010118.000
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010118.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010118.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010118.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 6
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010200
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010200
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010200
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010200.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010200.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010200.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_ana.2018010200
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_sort_arp_pre.2018010200
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_sort_oin_pre.2018010200
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010200.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010200.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010200.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010218.024
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010218.024
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010218.024
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010218.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010218.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010218.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010218.024
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010218.024
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010218.024
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010218.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010218.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010218.gz
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cutoff: production
+      date: '2018010118'
+      filling: surf
+      kind: historic
+      nativefmt: grib
+      suite: oper
+      term: 43
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010313.043
+    - default: *id002
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010313.043
+    - default: *id003
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010313.043
+    - default: *id004
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010313.gz
+    - default: *id005
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010313.gz
+    - default: *id006
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010313.gz
+    - default: *id007
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_ana.2018010313.043
+    - default: *id008
+      location: file://oper.inline.fr/vagues/surcotes/oper/data/guess/s_init_arp_pre.2018010313.043
+    - default: *id009
+      location: file://oper.inline.fr/vagues/hycom/oper/data/guess/s_init_oin_pre.2018010313.043
+    - default: *id010
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_ana.010313.gz
+    - default: *id011
+      location: op://oper.multi.fr/surcotes/oper/01/r18/s_init0_arp_pre.010313.gz
+    - default: *id012
+      location: op://oper.multi.fr/hycom/oper/production/2018/01/01/r18/s_init0_oin_pre.010313.gz

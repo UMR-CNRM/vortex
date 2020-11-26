@@ -23,7 +23,7 @@ class ECMWFCrayXC(Target):
         info = 'Cray Supercomputers at ECMWF',
         attr = dict(
             sysname = dict(
-                values = [ 'Linux' ]
+                values = ['Linux', ]
             ),
             inifile = dict(
                 default = '@target-[inetname].ini',

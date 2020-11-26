@@ -34,6 +34,12 @@ with epygram_checker as ec_register:
     except AttributeError:
         hasFA = False
     ec_register.update(needFA=hasFA)
+    try:
+        u_unused = epygram.formats.GRIB
+        hasGRIB = True
+    except AttributeError:
+        hasGRIB = False
+    ec_register.update(needGRIB=hasGRIB)
     logger.info('Epygram %s loaded.', str(epygram.__version__))
 
 
@@ -70,7 +76,7 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
     for source, name in zip(sources, names):
         fx = None
         comprpack = None
-        for fieldname in [ x for x in sorted(tablein) if x.endswith(source) ]:
+        for fieldname in [x for x in sorted(tablein) if x.endswith(source)]:
             newfield = fieldname.replace(source, '') + name
             if not overwrite and newfield in tableout:
                 logger.warning('Field <%s> already in output file', newfield)
@@ -109,9 +115,9 @@ def epy_env_prepare(t):
     if localenv.OMP_NUM_THREADS is None:
         localenv.OMP_NUM_THREADS = 1
     localenv.update(
-        LFI_HNDL_SPEC = ':1',
-        DR_HOOK_SILENT  = 1,
-        DR_HOOK_NOT_MPI = 1,
+        LFI_HNDL_SPEC=':1',
+        DR_HOOK_SILENT=1,
+        DR_HOOK_NOT_MPI=1,
     )
     # Clean trash...
     del localenv.GRIB_SAMPLES_PATH

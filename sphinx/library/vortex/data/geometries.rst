@@ -66,6 +66,11 @@ Concrete geometry classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: RedgridGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 Abstract geometry classes
 -------------------------
@@ -104,4 +109,3 @@ Utility function
 ----------------
 
 .. autofunction:: load
-   

@@ -5,8 +5,12 @@ Test Vortex's Mailing Services
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import base64
+import email
+from email import parser as eparser
+import functools
 import os
 import re
 import tempfile
@@ -59,88 +63,46 @@ Un message tr=C3=A8s simple.""",
 )
 
 _REFS2 = dict(
-    ascii="""Content-Type: multipart/mixed; boundary="{boundary:s}"
+    ascii="""Content-Type: multipart/mixed; boundary="dfgqfgqf5687241=="
 MIME-Version: 1.0
 From: test@unittest.dummy
 To: queue
 Subject: Test message (in english)
 
---{boundary:s}
+--dfgqfgqf5687241==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 
 A very simple message.
---{boundary:s}
+--dfgqfgqf5687241==
 Content-Type: application/octet-stream
 MIME-Version: 1.0
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="{fname:s}"
 
 {b64:s}
---{boundary:s}--""",
-    ascii_alt="""Content-Type: multipart/mixed; boundary="{boundary:s}"
-MIME-Version: 1.0
-From: test@unittest.dummy
-To: queue
-Subject: Test message (in english)
-
---{boundary:s}
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-
-A very simple message.
---{boundary:s}
-Content-Type: application/octet-stream
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="{fname:s}"
-
-{b64:s}
---{boundary:s}--""",
-    french="""Content-Type: multipart/mixed; boundary="{boundary:s}"
+--dfgqfgqf5687241==--""",
+    french="""Content-Type: multipart/mixed; boundary="dfgqfgqf5687241=="
 MIME-Version: 1.0
 From: test@unittest.dummy
 To: queue
 Subject: =?utf-8?q?Message_de_test_=28en_Fran=C3=A7ais=29?=
 
---{boundary:s}
+--dfgqfgqf5687241==
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
 Un message tr=C3=A8s simple.
---{boundary:s}
+--dfgqfgqf5687241==
 Content-Type: application/octet-stream
 MIME-Version: 1.0
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="{fname:s}"
 
 {b64:s}
---{boundary:s}--""",
-    french_alt="""Content-Type: multipart/mixed; boundary="{boundary:s}"
-MIME-Version: 1.0
-From: test@unittest.dummy
-To: queue
-Subject: =?utf-8?q?Message_de_test_=28en_Fran=C3=A7ais=29?=
-
---{boundary:s}
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-
-Un message tr=C3=A8s simple.
---{boundary:s}
-Content-Type: application/octet-stream
-MIME-Version: 1.0
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="{fname:s}"
-
-{b64:s}
---{boundary:s}--""",
+--dfgqfgqf5687241==--""",
 )
 
 _REF_TEMPLATED = """Content-Type: text/plain; charset="utf-8"
@@ -148,7 +110,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 From: test@unittest.dummy
 To: queue@unittest.dummy
-Subject: =?utf-8?q?Some_extras_=28Toto=29_et_du_fran=C3=A7ais_emb=C3=AAtant?=
+Subject: =?utf-8?q?Some_extras_=28Toto=29_et_du_fran=C3=A7ais_emb=C3=AAta?=
+ =?utf-8?q?nt?=
 
 
 Variable prise dans env  : op_suite =3D oper
@@ -177,7 +140,8 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 From: test@unittest.dummy
 To: queue@unittest.dummy
-Subject: =?utf-8?q?Mail_with_xpid=3Dabcd_et_du_fran=C3=A7ais_emb=C3=AAtant?=
+Subject: =?utf-8?q?Mail_with_xpid=3Dabcd_et_du_fran=C3=A7ais_emb=C3=AAtan?=
+ =?utf-8?q?t?=
 
 --
 
@@ -236,9 +200,9 @@ class TestEmailServices(unittest.TestCase):
         self.port = get_email_port_number()
         self.configure_mailserver()
         self.servicedefaults = dict(
-            smtpserver = 'localhost',
-            smtpport = self.port,
-            sender = 'test@unittest.dummy',
+            smtpserver='localhost',
+            smtpport=self.port,
+            sender='test@unittest.dummy',
         )
 
     def tearDown(self):
@@ -249,54 +213,82 @@ class TestEmailServices(unittest.TestCase):
         logger.setLevel(tloglevel)
         self.server = TestMailServer(self.port)
 
+    def _parse_messages(self, ref, messages, **kwargs):
+        mparser = (eparser.FeedParser if six.PY2 else
+                   functools.partial(eparser.BytesFeedParser,
+                                     email.message.EmailMessage,
+                                     policy=email.policy.strict))
+        # Ref message
+        p_ref = mparser()
+        p_ref.feed(b'Received: MpQueueMessageDelivery\n')
+        p_ref.feed((ref.format(**kwargs) if kwargs else ref).encode('ascii'))
+        m_ref = p_ref.close()
+        # New message
+        m = messages.get()
+        p_new = mparser()
+        p_new.feed(b'\n'.join(m))
+        m_new = p_new.close()
+        return m_ref, m_new
+
     def assertMessage(self, messages, ref, igalike=False):
-        m = messages.get()
-        m = [b.decode('ascii') for b in m]
-        if igalike:
-            m = [l for l in m
-                 if not re.match(r'Mail envoy=C3=A9 le .* =C3=A0 .* locales.$', l)]
-        head = "Received: MpQueueMessageDelivery\n"
-        me = "\n".join(m)
-        logger.info('Received:\n%s', me)
-        logger.info('Expecting:\n%s', ref)
-        self.assertEqual(me, head + ref)
-
-    def assertMessagePlusAttach(self, messages, refs, filename, attached):
-        m = messages.get()
-        m = [b.decode('ascii') for b in m]
-        if m[-2] == '':
-            # Python2/Python3 difference but ok, it's equivalent
-            del m[-2]
-        b_m = re.match(r'Content-Type: multipart/mixed; boundary="([^"]+)"$', m[1])
-        if b_m:
-            boundary = b_m.group(1)
-        else:
-            self._raiseFailure("Malformed message.")
-        attached_b64 = base64.b64encode(attached).decode('ascii')
-        me = "\n".join(m)
-        head = "Received: MpQueueMessageDelivery\n"
-        logger.info('Received:\n%s', me)
-
-        for i, ref in enumerate(refs):
-            try:
-                logger.info('Expecting:\n%s', ref.format(boundary=boundary, fname=filename,
-                                                         b64=attached_b64))
-                self.assertEqual(me, head + ref.format(boundary=boundary, fname=filename,
-                                                       b64=attached_b64))
-            except AssertionError:
-                # last one
-                if i == len(refs) - 1:
-                    raise
+        m_ref, m_new = self._parse_messages(ref, messages)
+        # Compare headers
+        h_ref = dict(m_ref.items())
+        h_new = dict(m_new.items())
+        self.assertDictEqual(h_ref, h_new)
+        # Compare bodies
+        if not m_new.is_multipart():
+            if six.PY2:
+                b_ref = m_ref.get_payload(decode=True)
+                b_ref = b_ref.decode(m_ref.get_content_charset('ascii'))
+                b_new = m_new.get_payload(decode=True)
+                b_new = b_new.decode(m_new.get_content_charset('ascii'))
             else:
-                break
+                b_ref = m_ref.get_body().get_content()
+                b_new = m_new.get_body().get_content()
+            if igalike:
+                b_new = '\n'.join([l for l in b_new.split('\n')
+                                   if not re.match('Mail envoyé le .* à .* locales.$', l)])
+            logger.info('Received:\n%s', b_ref)
+            logger.info('Expecting:\n%s', b_new)
+            self.assertEqual(b_ref, b_new)
+        else:
+            raise RuntimeError("This test is ill-designed: no multipart messages allowed here.")
+
+    def assertMessagePlusAttach(self, messages, ref, filename, attached):
+        attached_b64 = base64.b64encode(attached).decode('ascii')
+        m_ref, m_new = self._parse_messages(ref, messages,
+                                            fname=filename, b64=attached_b64)
+        # Compare bodies
+        if m_new.is_multipart():
+            b_ref = [(b_item.get_payload(decode=False).decode(b_item.get_content_charset('ascii'))
+                      if six.PY2 else b_item.get_content())
+                     for b_item in m_ref.walk() if not b_item.is_multipart()]
+            b_new = [(b_item.get_payload(decode=False).decode(b_item.get_content_charset('ascii'))
+                      if six.PY2 else b_item.get_content())
+                     for b_item in m_new.walk() if not b_item.is_multipart()]
+            for a_ref, a_new in zip(b_ref, b_new):
+                logger.info('Received:\n%s', a_ref)
+                logger.info('Expecting:\n%s', a_new)
+                if isinstance(a_ref, six.string_types):
+                    self.assertEqual(a_ref.rstrip('\n'), a_new.rstrip('\n'))
+                else:
+                    self.assertEqual(a_ref, a_new)
+        else:
+            raise RuntimeError("This test is ill-designed: no multipart messages allowed here.")
+        # Compare headers
+        m_ref.set_boundary(m_new.get_boundary())  # The boundary allows changes
+        h_ref = dict(m_ref.items())
+        h_new = dict(m_new.items())
+        self.assertDictEqual(h_ref, h_new)
 
     def test_email_service(self):
         with self.server() as messages:
             for testid in ('ascii', 'french'):
                 eserv = fpx.service(kind="sendmail",
-                                    message = _MSGS[testid],
-                                    subject = _SUBJECTS[testid],
-                                    to = 'queue',
+                                    message=_MSGS[testid],
+                                    subject=_SUBJECTS[testid],
+                                    to='queue',
                                     ** self.servicedefaults)
                 eserv()
                 self.assertMessage(messages, _REFS[testid])
@@ -305,10 +297,10 @@ class TestEmailServices(unittest.TestCase):
                     tmpfh.write(_MSGS[testid].encode(_INPUTMSG_ENCODING))
                     tmpfh.flush()
                     eserv = fpx.service(kind="sendmail",
-                                        filename = tmpfh.name,
-                                        inputs_charset = _INPUTMSG_ENCODING,
-                                        subject = _SUBJECTS[testid],
-                                        to = 'queue',
+                                        filename=tmpfh.name,
+                                        inputs_charset=_INPUTMSG_ENCODING,
+                                        subject=_SUBJECTS[testid],
+                                        to='queue',
                                         ** self.servicedefaults)
                     eserv()
                     self.assertMessage(messages, _REFS[testid])
@@ -317,14 +309,13 @@ class TestEmailServices(unittest.TestCase):
                     tmpfh.write(_BYTES2ATTACH)
                     tmpfh.flush()
                     eserv = fpx.service(kind="sendmail",
-                                        message = _MSGS[testid],
-                                        subject = _SUBJECTS[testid],
-                                        attachments = [tmpfh.name, ],
-                                        to = 'queue',
+                                        message=_MSGS[testid],
+                                        subject=_SUBJECTS[testid],
+                                        attachments=[tmpfh.name, ],
+                                        to='queue',
                                         ** self.servicedefaults)
                     eserv()
-                    self.assertMessagePlusAttach(messages, (_REFS2[testid], _REFS2[testid + '_alt']),
-                                                 tmpfh.name, _BYTES2ATTACH)
+                    self.assertMessagePlusAttach(messages, _REFS2[testid], tmpfh.name, _BYTES2ATTACH)
             # Templated Mails
             eserv = fpx.service(kind="templatedmail",
                                 id="test_base",
@@ -334,7 +325,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
-                                inputs_charset = 'utf-8',
+                                inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'
@@ -349,7 +340,7 @@ class TestEmailServices(unittest.TestCase):
                                 catalog=GenericConfigParser(inifile=os.path.join(_DATAPATHTEST,
                                                                                  'mailtest_inventory.ini'),
                                                             encoding='utf-8'),
-                                inputs_charset = 'utf-8',
+                                inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
                 tenv.OP_SUITE = 'oper'

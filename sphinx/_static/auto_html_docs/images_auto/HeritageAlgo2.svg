@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
+<svg width="42cm" height="23cm" viewBox="-1 -19 829 444" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <g>
+    <rect style="fill: #ffffff" x="380" y="80" width="106.55" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="380" y="80" width="106.55" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="433.275" y="99">IFSParallel</text>
+    <rect style="fill: #ffffff" x="380" y="108" width="106.55" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="380" y="108" width="106.55" height="8"/>
+    <rect style="fill: #ffffff" x="380" y="116" width="106.55" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="380" y="116" width="106.55" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="100" y="180" width="77.5" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="180" width="77.5" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="138.75" y="199">IFSODB</text>
+    <rect style="fill: #ffffff" x="100" y="208" width="77.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="208" width="77.5" height="8"/>
+    <rect style="fill: #ffffff" x="100" y="216" width="77.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="100" y="216" width="77.5" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="560" y="180" width="134.25" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="180" width="134.25" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="627.125" y="199">FullPosServer</text>
+    <rect style="fill: #ffffff" x="560" y="208" width="134.25" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="208" width="134.25" height="8"/>
+    <rect style="fill: #ffffff" x="560" y="216" width="134.25" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="560" y="216" width="134.25" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="720" y="180" width="87.5" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="720" y="180" width="87.5" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="763.75" y="199">Forecast</text>
+    <rect style="fill: #ffffff" x="720" y="208" width="87.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="720" y="208" width="87.5" height="8"/>
+    <rect style="fill: #ffffff" x="720" y="216" width="87.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="720" y="216" width="87.5" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="701" y="280" width="126" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="701" y="280" width="126" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="764" y="299">LAMForecast</text>
+    <rect style="fill: #ffffff" x="701" y="308" width="126" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="701" y="308" width="126" height="8"/>
+    <rect style="fill: #ffffff" x="701" y="316" width="126" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="701" y="316" width="126" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="160" y="280" width="100.35" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="160" y="280" width="100.35" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="210.175" y="299">Screening</text>
+    <rect style="fill: #ffffff" x="160" y="308" width="100.35" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="160" y="308" width="100.35" height="8"/>
+    <rect style="fill: #ffffff" x="160" y="316" width="100.35" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="160" y="316" width="100.35" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="0" y="280" width="129.3" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="280" width="129.3" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="64.65" y="299">IFSODBCCMA</text>
+    <rect style="fill: #ffffff" x="0" y="308" width="129.3" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="308" width="129.3" height="8"/>
+    <rect style="fill: #ffffff" x="0" y="316" width="129.3" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="316" width="129.3" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="0" y="380" width="100.7" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="380" width="100.7" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="50.35" y="399">Trajectory</text>
+    <rect style="fill: #ffffff" x="0" y="408" width="100.7" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="408" width="100.7" height="8"/>
+    <rect style="fill: #ffffff" x="0" y="416" width="100.7" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="0" y="416" width="100.7" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="120" y="380" width="64.95" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="120" y="380" width="64.95" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="152.475" y="399">Minim</text>
+    <rect style="fill: #ffffff" x="120" y="408" width="64.95" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="120" y="408" width="64.95" height="8"/>
+    <rect style="fill: #ffffff" x="120" y="416" width="64.95" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="120" y="416" width="64.95" height="8"/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="361.764,100 140,100 140,180 138.75,180 "/>
+    <polygon style="fill: #ffffff" points="361.764,108 377.764,100 361.764,92 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="361.764,108 377.764,100 361.764,92 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.792,102 619.446,102 619.446,180 619.572,180 "/>
+    <polygon style="fill: #ffffff" points="505.792,94 489.792,102 505.792,110 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.792,94 489.792,102 505.792,110 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.772,102 760,102 760,180 763.75,180 "/>
+    <polygon style="fill: #ffffff" points="505.772,94 489.772,102 505.772,110 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.772,94 489.772,102 505.772,110 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="138.75,243.242 138.75,260 64.65,260 64.65,278.994 "/>
+    <polygon style="fill: #ffffff" points="146.75,243.242 138.75,227.242 130.75,243.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="146.75,243.242 138.75,227.242 130.75,243.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="138.75,243.242 138.75,260 210.175,260 210.175,278.994 "/>
+    <polygon style="fill: #ffffff" points="146.75,243.242 138.75,227.242 130.75,243.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="146.75,243.242 138.75,227.242 130.75,243.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="64.65,343.242 64.65,360 50.35,360 50.35,378.994 "/>
+    <polygon style="fill: #ffffff" points="72.65,343.242 64.65,327.242 56.65,343.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="72.65,343.242 64.65,327.242 56.65,343.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="64.65,343.242 64.65,360 152.475,360 152.475,378.994 "/>
+    <polygon style="fill: #ffffff" points="72.65,343.242 64.65,327.242 56.65,343.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="72.65,343.242 64.65,327.242 56.65,343.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="763.75,243.242 763.75,260 764,260 764,278.994 "/>
+    <polygon style="fill: #ffffff" points="771.75,243.242 763.75,227.242 755.75,243.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="771.75,243.242 763.75,227.242 755.75,243.242 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="394" y="-18" width="78.15" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="394" y="-18" width="78.15" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="433.075" y="1">Parallel</text>
+    <rect style="fill: #ffffff" x="394" y="10" width="78.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="394" y="10" width="78.15" height="8"/>
+    <rect style="fill: #ffffff" x="394" y="18" width="78.15" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="394" y="18" width="78.15" height="8"/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="433.075,45.2417 433.075,61 433.275,61 433.275,78.9944 "/>
+    <polygon style="fill: #ffffff" points="441.075,45.2417 433.075,29.2417 425.075,45.2417 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="441.075,45.2417 433.075,29.2417 425.075,45.2417 "/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="280" y="180" width="188.8" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="280" y="180" width="188.8" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="374.4" y="199">IFSEdaAbstractAlgo</text>
+    <rect style="fill: #ffffff" x="280" y="208" width="188.8" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="280" y="208" width="188.8" height="8"/>
+    <rect style="fill: #ffffff" x="280" y="216" width="188.8" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="280" y="216" width="188.8" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="260" y="380" width="150.7" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="260" y="380" width="150.7" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="335.35" y="399">IFSInflationLike</text>
+    <rect style="fill: #ffffff" x="260" y="408" width="150.7" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="260" y="408" width="150.7" height="8"/>
+    <rect style="fill: #ffffff" x="260" y="416" width="150.7" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="260" y="416" width="150.7" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="360" y="280" width="275.95" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="280" width="275.95" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="497.975" y="299">IFSEdaEnsembleAbstractAlgo</text>
+    <rect style="fill: #ffffff" x="360" y="308" width="275.95" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="308" width="275.95" height="8"/>
+    <rect style="fill: #ffffff" x="360" y="316" width="275.95" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="360" y="316" width="275.95" height="8"/>
+  </g>
+  <g>
+    <rect style="fill: #ffffff" x="460" y="380" width="174.5" height="28"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="460" y="380" width="174.5" height="28"/>
+    <text font-size="16" style="fill: #000000;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="547.25" y="399">IFSEnsembleMean</text>
+    <rect style="fill: #ffffff" x="460" y="408" width="174.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="460" y="408" width="174.5" height="8"/>
+    <rect style="fill: #ffffff" x="460" y="416" width="174.5" height="8"/>
+    <rect style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" x="460" y="416" width="174.5" height="8"/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="433.275,143.242 433.275,160.503 374.4,160.503 374.4,180 "/>
+    <polygon style="fill: #ffffff" points="441.275,143.242 433.275,127.242 425.275,143.242 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="441.275,143.242 433.275,127.242 425.275,143.242 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="374.4,242.236 374.4,260 497.975,260 497.975,280 "/>
+    <polygon style="fill: #ffffff" points="382.4,242.236 374.4,226.236 366.4,242.236 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="382.4,242.236 374.4,226.236 366.4,242.236 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="497.975,342.236 497.975,360 547.25,360 547.25,380 "/>
+    <polygon style="fill: #ffffff" points="505.975,342.236 497.975,326.236 489.975,342.236 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="505.975,342.236 497.975,326.236 489.975,342.236 "/>
+  </g>
+  <g>
+    <polyline style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="374.4,242.236 374.4,260 335.35,260 335.35,379.119 "/>
+    <polygon style="fill: #ffffff" points="382.4,242.236 374.4,226.236 366.4,242.236 "/>
+    <polygon style="fill: none; fill-opacity:0; stroke-width: 2; stroke: #000000" points="382.4,242.236 374.4,226.236 366.4,242.236 "/>
+  </g>
+</svg>
