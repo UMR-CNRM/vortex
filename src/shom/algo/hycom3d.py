@@ -167,7 +167,7 @@ class Hycom3dIBCRunTime(AlgoComponent):
                 kind=dict(values=["hycom3d_ibc_run_time"]),
                 ncout=dict(default="forecast.nc", optional=True),
                 rank=dict(default=0, type=int, optional=True),
-                xypad=dict(default=1, type=int),
+                # xypad=dict(default=1, type=int, optional=True),
                 step=dict(),
             ),
         ),
@@ -177,16 +177,16 @@ class Hycom3dIBCRunTime(AlgoComponent):
         super(Hycom3dIBCRunTime, self).prepare(rh, opts)
 
         # Input netcdf files
-        ncinputs = self.context.sequence.effective_inputs(role=["IBCInput"])
+        ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
 
-        # Read hycom grid extents
-        from sloop.models.hycom3d import read_regional_grid_b
-        from sloop.grid import GeoSelector
-        rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
-        self._geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
-                                         (rg["plat_min"], rg["plat_max"]),
-                                         pad=self.xypad)
+        # # Read hycom grid extents
+        # from sloop.models.hycom3d import read_regional_grid_b
+        # from sloop.grid import GeoSelector
+        # rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
+        # self._geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
+        #                                  (rg["plat_min"], rg["plat_max"]),
+        #                                  pad=self.xypad)
 
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
@@ -194,19 +194,23 @@ class Hycom3dIBCRunTime(AlgoComponent):
         from sloop.interp import nc_interp_at_freq_to_nc
         # Interpolate in time
         nc_interp_at_freq_to_nc(
-            self._ncfiles, self.step, ncout=self.ncout,
-            preproc=self._geo_selector, postproc=format_ds)
+            self._ncfiles,
+            self.step,
+            ncout=self.ncout,
+            # preproc=self._geo_selector,
+            postproc=format_ds)
 
 
 class Hycom3dIBCRunHoriz(BlindRun):
+
     _footprint = [
-        dateperiod_deco,
         dict(
             info="Run the initial and boundary conditions horizontal interpolator",
             attr=dict(
-                nc_out=dict(optional=True, default="ibc.horiz.nc"),
+                kind=dict(values=["hycom3d_ibc_run_horiz"]),
                 rank=dict(default=0, type=int, optional=True),
                 method=dict(default=0, type=int, optional=True),
+                pad=dict(default=1, type=float, optional=True),
             ),
         ),
     ]
@@ -220,14 +224,23 @@ class Hycom3dIBCRunHoriz(BlindRun):
 
         # Input netcdf file
         ncinput = self.context.sequence.effective_inputs(
-            role="ibc_horiz")[0].rh.container.localpath()
+            role="Input")[0].rh.container.localpath()
 
-        # Conversion .res files
-        from sloop.io import nc_to_res
+        # Read hycom grid extents
+        from sloop.models.hycom3d import read_regional_grid_b
+        from sloop.grid import GeoSelector
+        rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
+        geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
+                                   (rg["plat_min"], rg["plat_max"]),
+                                   pad=self.pad)
+
+        # Conversion to .res files
+        from sloop.models.hycom3d import nc_to_res
         resfiles = nc_to_res(
-            [ncinput], outfile_pattern='{var_name}.res{ifile:03d}')
+            [ncinput], outfile_pattern='{var_name}_merc.res{ifile:03d}',
+            preproc=geo_selector)
         self.varnames = list(resfiles.keys())
-        self.csteps = range(1, len(resfiles[self.varnames[0]])+1)
+        self.csteps = range(1, len(resfiles["ssh"])+1)
 
         # Constant files
         cdir = f"FORCING{self.rank}."
@@ -237,11 +250,12 @@ class Hycom3dIBCRunHoriz(BlindRun):
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
+        print("HYCOM>>>", "spawn_command_options"*3,self._clargs)
         return dict(method=self.method, **self._clargs)
 
     def execute(self, rh, opts):
         """We execute several times the executable with different arguments"""
-        for varname in self.varnames:
+        for varname in ["ssh", "saln", "temp"]:
             for cstep in self.csteps:
                 self._clargs = dict(varname=varname, cstep=cstep)
                 super(Hycom3dIBCRunHoriz, self).execute(rh, opts)
@@ -261,6 +275,17 @@ class Hycom3dIBCRunVertical(BlindRun):
     Exe:
     ${repbin}/inicon $repdatahorgrille ssh_hyc.cdf temp_hyc.cdf saln_hyc.cdf "$idm" "$jdm" "$kdm" "$CMOY" "$SSHMIN"
     """
+    _footprint = [
+        dateperiod_deco,
+        dict(
+            info="Run the initial and boundary conditions vertical interpolator",
+            attr=dict(
+                kind=dict(values=["hycom3d_ibc_run_vert"]),
+                rank=dict(default=0, type=int, optional=True),
+            ),
+        ),
+    ]
+
 
     @property
     def realkind(self):
