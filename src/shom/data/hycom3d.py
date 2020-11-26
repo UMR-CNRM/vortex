@@ -11,6 +11,7 @@ from common.data.consts import GenvModelGeoResource
 from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
+from vortex.syntax.stddeco import namebuilding_append
 # vortex.syntax.stdattrs.models
 
 
@@ -100,7 +101,7 @@ class Hycom3dIBCIniconBinary(vde.Binary):
     def realkind(self):
         return "hycom3d_ibc_inicon_binary"
 
-    def commandline(self, **opts):
+    def command_line(self, **opts):
         return ("{sshfile} {tempfile} {salnfile} {nx} {ny} {nz} {cmoy} "
                 "{sshmin} {cstep}").format(**opts)
 
@@ -124,7 +125,8 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
     def realkind(self):
         return "hycom3d_ibc_regridcdf_binary"
 
-    def commandline(self, **opts):
+    def command_line(self, **opts):
+        print('command_line'*10, opts)
         varname = opts["varname"]
         method = opts.get("methode", 0)
         cstep = int(opts.get("cstep", 1))
@@ -150,6 +152,27 @@ class Hycom3dModelBinary(vde.Binary):
     @property
     def realkind(self):
         return 'hycom3d_model_binary'
+
+
+# %% Pre-processing intermdiate files
+
+@namebuilding_append('geo', lambda self: self.field)
+class Hycom3dRegridcdfOutputFile(GeoFlowResource):
+
+    _footprint = [
+        dict(
+            info="Single variable netcdf file created by regridcdf",
+            attr=dict(
+                kind=dict(values=["hycom3d_regridcdf_output_file"]),
+                field=dict(values=["saln", "temp", "thdd", "vaisa", "ssh"]),
+                nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_regridcdf_single_var_file"
 
 
 # %% Model inputs
