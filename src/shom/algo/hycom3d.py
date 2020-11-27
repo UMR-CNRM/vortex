@@ -167,7 +167,6 @@ class Hycom3dIBCRunTime(AlgoComponent):
                 kind=dict(values=["hycom3d_ibc_run_time"]),
                 ncout=dict(default="forecast.nc", optional=True),
                 rank=dict(default=0, type=int, optional=True),
-                # xypad=dict(default=1, type=int, optional=True),
                 step=dict(),
             ),
         ),
@@ -179,14 +178,6 @@ class Hycom3dIBCRunTime(AlgoComponent):
         # Input netcdf files
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
-
-        # # Read hycom grid extents
-        # from sloop.models.hycom3d import read_regional_grid_b
-        # from sloop.grid import GeoSelector
-        # rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
-        # self._geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
-        #                                  (rg["plat_min"], rg["plat_max"]),
-        #                                  pad=self.xypad)
 
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
@@ -246,11 +237,10 @@ class Hycom3dIBCRunHoriz(BlindRun):
         cdir = f"FORCING{self.rank}."
         for cfile in "regional.grid.a", "regional.grid.b", "regional.depth.a":
             if not os.path.exists(cfile):
-                os.symlink(os.path.join(cdir, cfile), cfile)
+                self.system.symlink(os.path.join(cdir, cfile), cfile)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        print("HYCOM>>>", "spawn_command_options"*3,self._clargs)
         return dict(method=self.method, **self._clargs)
 
     def execute(self, rh, opts):
@@ -276,12 +266,13 @@ class Hycom3dIBCRunVertical(BlindRun):
     ${repbin}/inicon $repdatahorgrille ssh_hyc.cdf temp_hyc.cdf saln_hyc.cdf "$idm" "$jdm" "$kdm" "$CMOY" "$SSHMIN"
     """
     _footprint = [
-        dateperiod_deco,
         dict(
             info="Run the initial and boundary conditions vertical interpolator",
             attr=dict(
                 kind=dict(values=["hycom3d_ibc_run_vert"]),
                 rank=dict(default=0, type=int, optional=True),
+                sshmin=dict(),
+                cmoy=dict()
             ),
         ),
     ]
@@ -289,14 +280,14 @@ class Hycom3dIBCRunVertical(BlindRun):
 
     @property
     def realkind(self):
-        return "hycom3d_ibc_run_vertical"
+        return "hycom3d_ibc_run_vert"
 
     def prepare(self, rh, opts):
         super(Hycom3dIBCRunVertical, self).prepare(rh, opts)
 
         # Input netcdf file
         ncfiles = [ei.rh.container.localpath() for ei in
-                   self.context.sequence.effective_inputs(role="ibc_vert")]
+                   self.context.sequence.effective_inputs(role="Input")]
 
         # Constant files
         for cfile in (f"FORCING{self.rank}./regional.grid.a",
@@ -305,23 +296,25 @@ class Hycom3dIBCRunVertical(BlindRun):
                       f"PARAMETERS{self.rank}./blkdat.input",
                       f"PARAMETERS{self.rank}./defstrech.input",
                       f"PARAMETERS{self.rank}./ports.input"):
-            if not os.path.exists(cfile):
-                os.symlink(cfile, os.path.basename(cfile))
+            if not self.system.path.exists(self.system.path.basename(cfile)):
+                self.system.symlink(cfile, self.system.path.basename(cfile))
 
         # Read dimensions
         from sloop.models.hycom3d import read_blkdat_input
         dsb = read_blkdat_input("blkdat.input")
 
         # Command line arguments
-        self._clargs = dict(sshfile=ncfiles[0],
-                            tempfile=ncfiles[1],
-                            salnfile=ncfiles[2],
-                            nx=dsb.idm,
-                            ny=dsb.jdm,
-                            nz=dsb.kdm,
-                            cmoy=self.conf.cmoy,
-                            sshmin=self.conf.sshmin,
-                            cstep=1)
+        self._clargs = dict(
+            datadir="./",
+            sshfile=ncfiles[0],
+            tempfile=ncfiles[1],
+            salnfile=ncfiles[2],
+            nx=int(dsb.idm),
+            ny=int(dsb.jdm),
+            nz=int(dsb.kdm),
+            cmoy=self.cmoy,
+            sshmin=self.sshmin,
+            cstep=1)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""

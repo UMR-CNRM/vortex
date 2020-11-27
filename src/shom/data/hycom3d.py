@@ -82,30 +82,6 @@ class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
 # %% Binaries
 
 
-class Hycom3dIBCIniconBinary(vde.Binary):
-    """Binary that computes initial condictions for HYCOM"""
-
-    _footprint = [
-        gvar,
-        #        hgeometry_deco,
-        dict(
-            info="Binary that computes initial condictions for HYCOM",
-            attr=dict(
-                gvar=dict(default="hycom3d_ibc_inicon_binary"),
-                kind=dict(values=["hycom3d_ibc_inicon_binary"],),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return "hycom3d_ibc_inicon_binary"
-
-    def command_line(self, **opts):
-        return ("{sshfile} {tempfile} {salnfile} {nx} {ny} {nz} {cmoy} "
-                "{sshmin} {cstep}").format(**opts)
-
-
 class Hycom3dIBCRegridcdfBinary(vde.Binary):
     """Binary that regrids initial conditions netcdf files"""
 
@@ -126,11 +102,34 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
         return "hycom3d_ibc_regridcdf_binary"
 
     def command_line(self, **opts):
-        print('command_line'*10, opts)
         varname = opts["varname"]
         method = opts.get("methode", 0)
         cstep = int(opts.get("cstep", 1))
         return f"{varname} {method} {cstep:03d}"
+
+
+class Hycom3dIBCIniconBinary(vde.Binary):
+    """Binary that computes initial condictions for HYCOM"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that computes initial conditions for HYCOM",
+            attr=dict(
+                gvar=dict(default="hycom3d_ibc_inicon_binary"),
+                kind=dict(values=["hycom3d_ibc_inicon_binary"],),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_ibc_inicon_binary"
+
+    def command_line(self, **opts):
+        return ("{datadir} {sshfile} {tempfile} {salnfile} "
+                "{nx} {ny} {nz} {cmoy} "
+                "{sshmin} {cstep}").format(**opts)
 
 
 class Hycom3dModelBinary(vde.Binary):
@@ -163,7 +162,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
         dict(
             info="Single variable netcdf file created by regridcdf",
             attr=dict(
-                kind=dict(values=["hycom3d_regridcdf_output_file"]),
+                kind=dict(values=["hycom3d_regridcdf_output"]),
                 field=dict(values=["saln", "temp", "thdd", "vaisa", "ssh"]),
                 nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
             ),
@@ -172,7 +171,26 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
 
     @property
     def realkind(self):
-        return "hycom3d_regridcdf_single_var_file"
+        return "hycom3d_regridcdf_output"
+
+
+@namebuilding_append('geo', lambda self: self.field)
+class Hycom3dIniconfOutputFile(GeoFlowResource):
+
+    _footprint = [
+        dict(
+            info="Single variable netcdf file created by inicon",
+            attr=dict(
+                kind=dict(values=["hycom3d_inicon_output"]),
+                field=dict(values=["saln", "temp", "th3d", "u", "v", "h"]),
+                nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_inicon_output"
 
 
 # %% Model inputs
