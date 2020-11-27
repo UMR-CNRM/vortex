@@ -52,6 +52,7 @@ class Hycom3dConsts(_Hycom3dGeoResource):
     def realkind(self):
         return "hycom3d_consts"
 
+
 class Hycom3dMaskInterpWeights(_Hycom3dGeoResource):
     _footprint = dict(
         info="Hycom3d mask interpolation weights nc file",
@@ -136,15 +137,12 @@ class Hycom3dModelBinary(vde.Binary):
     """Binary of the 3d model"""
 
     _footprint = [
+        gvar,
         dict(
-            info = "Binary of the model",
-            attr = dict(
-                gvar = dict(values=['hycom3d_model_binary']),
-                kind = dict(values=['hycom3d_model_binary']),
-                nativefmt = dict(
-                    values  = ['binary'],
-                ),
-            )
+            info="Binary of the model",
+            attr= dict(gvar = dict(default='hycom3d_model_binary'),
+                       kind = dict(values=['hycom3d_model_binary']),
+            ),
         )
     ]
 
@@ -195,135 +193,88 @@ class Hycom3dIniconfOutputFile(GeoFlowResource):
 
 # %% Model inputs
 
-class Hycom3dRiversInput(GeoFlowResource):
+class CmemsRivers(GeoFlowResource):
+    """Rivers file from cmems in 'tar' format"""
+
     _footprint = [
         dict(
-            info = 'Rivers input',
-            attr = dict(
-                kind = dict(
-                    values = ["RiversInput"],
-                ),
-                nativefmt = dict(
-                    values=['tar']
-                ),
-                model = dict(
-                    values = ['cmems'],
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'riversinput'
-
-
-class Hycom3dRiversr(Resource):
-    _footprint = [
-        dict(
-            info = 'Hycom Rivers (*.r) Files',
-            attr = dict(
-                kind = dict(
-                    values = ['RiversOut'],
-                ),
-                nativefmt = dict(
-                    values  = ['r','unknown'],
-                    default = 'unknown'
-                ),
-                rivers       = dict(
-                    optional = True,
-                    default = 'unknown'
-                ),
-            )
-        )
-    ]
-
-
-    @property
-    def realkind(self):
-        return f'{self.rivers}'
-
-
-class HycomAtmFrcOuta(Resource):
-    _footprint = [
-        dict(
-            info = "Hycom Atmospheric Forcing 'a' Files",
-            attr = dict(
-                kind = dict(
-                    values = ['ForcingOut'],
-                ),
-                nativefmt = dict(
-                    values  = ['binary','a','unknown'],
-                    default = 'unknown'
-                ),
-                fields       = dict(
-                    values = ['shwflx', 'radflx',
-                                    'precip', 'preatm', 'airtmp',
-                                    'wndspd', 'tauewd', 'taunwd', 'vapmix'],
-                    default = 'unknown'
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return f'forcing.{self.fields}'
-
-
-class HycomAtmFrcOutb(Resource):
-    _footprint = [
-        dict(
-            info = "Hycom Atmospheric Forcing 'b' Files",
-            attr = dict(
-                kind = dict(
-                    values = ['ForcingOut'],
-                ),
-                nativefmt = dict(
-                    values  = ['ascii','b','unknown'],
-                    default = 'b'
-                ),
-                fields       = dict(
-                    values = ['shwflx', 'radflx',
-                                    'precip', 'preatm', 'airtmp',
-                                    'wndspd', 'tauewd', 'taunwd', 'vapmix'],
-                    default = 'unknown'
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return f'forcing.{self.fields}'
-
-
-class Hycom3dMaskInterpWeights(_Hycom3dGeoResource):
-    _footprint = dict(
-        info="Hycom3d mask interpolation weights nc file",
-        attr=dict(
-            kind=dict(values=["mask_interp_weights"]),
-            nativefmt=dict(values=['nc']),
+            info='Rivers tar file from cmems',
+            attr=dict(
+                kind=dict(values=["cmems_rivers"]),
+                nativefmt=dict(values=['tar']),
+                model=dict(values=['cmems']),
+            ),
         ),
-    )
+    ]
 
     @property
     def realkind(self):
-        return "mask_interp_weights"
+        return 'cmems_rivers'
 
 
-class Hycom3dAtmFrcInterpWeights(_Hycom3dGeoResource):
-    _footprint = dict(
-        info="Hycom3d atmospheric forcing interpolation weights nc file",
-        attr=dict(
-            kind=dict(values=["atmfrc_interp_weights"]),
-            nativefmt=dict(values=['nc']),
-        ),
-    )
+@namebuilding_append('src', lambda self: self.river)
+class Hycom3dRiversIn(Resource):
+    """Rivers input '.r' files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info='Hycom Rivers (*.r) Files',
+            attr=dict(kind=dict(values = ['RiversIn']),
+                      nativefmt=dict(values=['r','unknown'], default='unknown'),
+                      river=dict(optional=True, default='unknown', type=list),
+            ),
+        )
+    ]
 
     @property
     def realkind(self):
-        return "atmfrc_interp_weights"
+        return f'{self.river}'
+
+
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dAtmFrcIn(Resource):
+    """Atmospheric forcing input files for the Hycom3d model"""
+    
+    _footprint = [
+        dict(
+            info="Hycom Atmospheric Forcing Input Files",
+            attr=dict(kind=dict(values=['AtmosphericForcingIn']),
+                      field=dict(values=['shwflx', 'radflx','precip', 'preatm',
+                                          'airtmp','wndspd', 'tauewd', 'taunwd',
+                                          'vapmix'], default='unknown'),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return f'forcing.{self.field}'
+
+
+class Hycom3dAtmFrcIna(Hycom3dAtmFrcIn):
+    """Atmospheric forcing input '.a' files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info="Hycom Atmospheric Forcing Input 'a' Files",
+            attr=dict(kind=dict(values=['AtmosphericForcingIna']),
+                      nativefmt=dict(values=['binary','a','unknown'], default='unknown'),
+            ),
+        )
+    ]
+
+
+class Hycom3dAtmFrcInb(Hycom3dAtmFrcIn):
+    """Atmospheric forcing input '.b' files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info="Hycom Atmospheric Forcing Input 'b' Files",
+            attr=dict(kind=dict(values=['AtmosphericForcingInb']),
+                      nativefmt=dict(values=['ascii','b','unknown'], default='unknown'),
+            ),
+        )
+    ]
 
 
 # %% Model outputs
