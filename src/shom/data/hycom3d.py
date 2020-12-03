@@ -289,32 +289,6 @@ class Hycom3dAtmFrcIn(Resource):
         return 'atmfrc'
 
 
-# class Hycom3dAtmFrcIna(Hycom3dAtmFrcIn):
-#     """Atmospheric forcing input '.a' files for the Hycom3d model"""
-
-#     _footprint = [
-#         dict(
-#             info="Hycom Atmospheric Forcing Input 'a' Files",
-#             attr=dict(kind=dict(values=['AtmosphericForcingIna']),
-#                       nativefmt=dict(values=['binary','a',], ),
-#             ),
-#         )
-#     ]
-
-
-# class Hycom3dAtmFrcInb(Hycom3dAtmFrcIn):
-#     """Atmospheric forcing input '.b' files for the Hycom3d model"""
-
-#     _footprint = [
-#         dict(
-#             info="Hycom Atmospheric Forcing Input 'b' Files",
-#             attr=dict(kind=dict(values=['AtmosphericForcingInb']),
-#                       nativefmt=dict(values=['ascii','b','unknown'], default='unknown'),
-#             ),
-#         )
-#     ]
-
-
 # %% Model outputs
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
