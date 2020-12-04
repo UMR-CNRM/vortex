@@ -14,7 +14,7 @@ class CmemsRivers(FlowResource):
             info='Rivers tar file from cmems',
             attr=dict(
                 kind=dict(
-                    values=["rivers"]
+                    values=["observations"]
                 ),
                 nativefmt=dict(
                     values=['tar']
