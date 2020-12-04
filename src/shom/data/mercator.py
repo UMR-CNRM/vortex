@@ -17,7 +17,7 @@ class MercatorSingleFileDailyForecast(Resource):
         dict(
             info="Mercator daily forecast run",
             attr=dict(
-                kind=dict(values=["boundary"]),
+                kind=dict(values=["mercator_single_file_daily_forecast"]),
                 nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
             ),
         ),
