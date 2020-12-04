@@ -37,6 +37,7 @@ from collections import defaultdict
 from datetime import datetime
 import ftplib
 import re
+import time
 
 from bronx.fancies import loggers
 from bronx.stdtypes.history import History
@@ -349,8 +350,19 @@ class Cache(Storage):
                 optional = True,
                 default  = 0,
             ),
+            rtouchdelay = dict(
+                info     = ("Do not perfom a touch if it has already been done in " +
+                            "the last X seconds."),
+                type     = float,
+                optional = True,
+                default  = 600.,  # 10 minutes
+            ),
         )
     )
+
+    def __init__(self, *kargs, **kwargs):
+        super(Cache, self).__init__(*kargs, **kwargs)
+        self._touch_tracker = dict()
 
     @property
     def realkind(self):
@@ -381,17 +393,33 @@ class Cache(Storage):
         """
         raise NotImplementedError()
 
-    def _recursive_touch(self, rc, item):
+    def _xtouch(self, path):
+        """
+        Perform a touch operation only if the last one, on te same path, was
+        less than `self.rtouchdelay` seconds ago.
+        """
+        ts = time.time()
+        ts_delay = ts - self._touch_tracker.get(path, 0)
+        if ts_delay > self.rtouchdelay:
+            logger.debug('Touching: %s (delay was %.2f)', path, ts_delay)
+            self.sh.touch(path)
+            self._touch_tracker[path] = ts
+        else:
+            logger.debug('Skipping touch: %s (delay was %.2f)', path, ts_delay)
+
+    def _recursive_touch(self, rc, item, writing=False):
         """Make recursive touches on parent directories.
 
         It might be useful for cleaning scripts.
         """
         if self.rtouch and (not self.readonly) and rc:
             items = item.lstrip('/').split('/')
-            if len(items) > 2:
-                items = items[:-2]  # It's useless to touch the rightmost directory
-                for index in range(len(items), self.rtouchskip, -1):
-                    self.sh.touch(self._formatted_path(self.sh.path.join(*items[:index])))
+            items = items[:-1]
+            if writing:
+                # It's useless to touch the rightmost directory
+                items = items[:-1] if len(items) > 1 else []
+            for index in range(len(items), self.rtouchskip, -1):
+                self._xtouch(self._formatted_path(self.sh.path.join(*items[:index])))
 
     def _actual_fullpath(self, item, **kwargs):
         """Return the path/URI to the **item**'s storage location."""
@@ -436,7 +464,7 @@ class Cache(Storage):
         else:
             logger.warning('No target location for < %s >', item)
             rc = False
-        self._recursive_touch(rc, item)
+        self._recursive_touch(rc, item, writing=True)
         return rc, dict(intent=intent, fmt=fmt)
 
     def _actual_retrieve(self, item, local, **kwargs):
@@ -618,9 +646,9 @@ class Archive(Storage):
         if ftp:
             try:
                 rc = ftp.size(item)
-            except (ValueError, TypeError) as e:
+            except (ValueError, TypeError):
                 pass
-            except ftplib.all_errors as e:
+            except ftplib.all_errors:
                 pass
             finally:
                 ftp.close()
@@ -629,13 +657,13 @@ class Archive(Storage):
     def _ftplist(self, item, **kwargs):
         """Actual _list using ftp."""
         ftp = self._ftp_client(logname=kwargs.get('username', None))
+        rc = None
         if ftp:
             try:
                 # Is this a directory ?
                 rc = ftp.cd(item)
             except ftplib.all_errors:
                 # Apparently not...
-                rc = None
                 try:
                     # Is it a file ?
                     if ftp.size(item) is not None:
@@ -884,7 +912,7 @@ class MarketPlaceCache(Cache):
     def _process_location_config(self, global_confdict, r_confdict, stuff, section):
         """Process one entry of a configuration file."""
         stuff['restrict'] = r_confdict.get("restrict", None)
-        if ('regex' in stuff and 'rootdir' in stuff):
+        if 'regex' in stuff and 'rootdir' in stuff:
             try:
                 stuff['regex'] = re.compile(stuff['regex'])
             except re.error as e:

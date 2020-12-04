@@ -17,6 +17,7 @@ import io
 import os
 import tarfile
 import tempfile
+import time
 import unittest
 
 import footprints as fp
@@ -188,7 +189,8 @@ class TestCacheStorage(unittest.TestCase):
 
     def test_mtool_and_buddies(self):
         # Basic one
-        storage = fp.proxy.cache(kind='mtool', **self.commons)
+        storage = fp.proxy.cache(kind='mtool', rtouch=True, rtouchskip=3,
+                                 **self.commons)
         mtoolroot = self.sh.path.join(self.tmpdir, 'mtool', 'cache')
         for remap in self._REMAPS:
             self.assertEqual(storage._formatted_path(remap['item']),
@@ -205,11 +207,19 @@ class TestCacheStorage(unittest.TestCase):
         self.assertFalse(storage.check(item))
         self.assertIsNone(storage.list('arome/'))
         self.assertTrue(storage.insert(item, self.tfile))
+        self.assertTrue(storage.check(item))
+        dir_ts0 = self.sh.stat(self.sh.path.dirname(loc)).st_mtime
+        dir_ts1 = self.sh.stat(self.sh.path.dirname(self.sh.path.dirname(loc))).st_mtime
         self.assertIsTestFile(loc)
         self.assertListEqual(storage.list('arome/'), ['3dvarfr', ])
+        time.sleep(0.1)
         self.assertTrue(storage.retrieve(item, 'rtestfile1'))
+        dir_ts0bis = self.sh.stat(self.sh.path.dirname(loc)).st_mtime
+        dir_ts1bis = self.sh.stat(self.sh.path.dirname(self.sh.path.dirname(loc))).st_mtime
+        self.assertTrue(dir_ts0bis > dir_ts0)  # The first directory was touched
+        self.assertEqual(dir_ts1bis, dir_ts1)  # The second directory was not touched
         self.assertIsTestFile('rtestfile1')
-        self.assertTrue(storage.check(item))
+
         # Directory
         self.assertTrue(storage.insert(itemD, self.tdir))
         self.assertIsTestDir(locD)
