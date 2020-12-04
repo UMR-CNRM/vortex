@@ -262,7 +262,7 @@ class Hycom3dRiversIn(Resource):
         return 'rivers'
 
 
-@namebuilding_append('src', lambda self: self.field)
+@namebuilding_append('src', lambda self: self.fields)
 class Hycom3dAtmFrcIn(Resource):
     """Atmospheric forcing input files for the Hycom3d model"""
     
@@ -273,7 +273,7 @@ class Hycom3dAtmFrcIn(Resource):
                 kind=dict(
                     values=['AtmFrcIn']
                 ),
-                field=dict(
+                fields=dict(
                     default=['shwflx', 'radflx','precip', 'preatm',
                              'airtmp','wndspd', 'tauewd', 'taunwd','vapmix'],
                 ),
