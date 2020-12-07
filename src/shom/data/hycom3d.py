@@ -48,8 +48,8 @@ class Hycom3dConsts(_Hycom3dGeoResource):
                 default="hycom3d_consts_tar",
             ),
             rank=dict(
-                default=0, 
-                type=int, 
+                default=0,
+                type=int,
                 optional=True
             ),
         ),
@@ -195,7 +195,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
                     values=["saln", "temp", "thdd", "vaisa", "ssh"],
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc"], 
+                    values=["netcdf", "nc"],
                     default="netcdf",
                 ),
             ),
@@ -205,32 +205,6 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
     @property
     def realkind(self):
         return "hycom3d_regridcdf_output"
-
-
-@namebuilding_append('geo', lambda self: self.field)
-class Hycom3dIniconfOutputFile(GeoFlowResource):
-
-    _footprint = [
-        dict(
-            info="Single variable netcdf file created by inicon",
-            attr=dict(
-                kind=dict(
-                    values=["hycom3d_inicon_output"],
-                ),
-                field=dict(
-                    values=["saln", "temp", "th3d", "u", "v", "h"],
-                ),
-                nativefmt=dict(
-                    values=["netcdf", "nc"], 
-                    default="netcdf",
-                ),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return "hycom3d_inicon_output"
 
 
 # %% Model inputs
@@ -247,7 +221,7 @@ class Hycom3dRiversIn(Resource):
                     values = ['RiversIn'],
                 ),
                 nativefmt=dict(
-                    values=['r','unknown'], 
+                    values=['r','unknown'],
                     default='unknown',
                 ),
                 rivers=dict(
@@ -265,7 +239,7 @@ class Hycom3dRiversIn(Resource):
 @namebuilding_append('src', lambda self: self.field)
 class Hycom3dAtmFrcIn(Resource):
     """Atmospheric forcing input files for the Hycom3d model"""
-    
+
     _footprint = [
         dict(
             info="Hycom Atmospheric Forcing Input Files",
@@ -315,12 +289,86 @@ class Hycom3dAtmFrcIn(Resource):
 #     ]
 
 
+@namebuilding_append('geo', lambda self: self.field)
+class Hycom3dIBCField(GeoFlowResource):
+    _footprint = [
+        dict(
+            info="Single variable IBC .a and .b files",
+            attr=dict(
+                kind=dict(
+                    values=["gridpoint"],
+                ),
+                field=dict(
+                    values=["s", "t", "u", "v", "h"],
+                ),
+                format=dict(values=["a", "b"]),
+                nativefmt=dict(values=["a", "b"]),
+                # actualfmt=dict(values=["a", "b"]),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_ibc_field"
+
+
+@namebuilding_append('geo', lambda self: self.field)
+class Hycom3dRestartField(GeoFlowResource):
+
+    _footprint = [
+        dict(
+            info="Single variable netcdf and restart file created by inicon",
+            attr=dict(
+                kind=dict(
+                    values=["gridpoint"],
+                ),
+                field=dict(
+                    values=["saln", "temp", "th3d", "u", "v", "h", "dpmixl"],
+                ),
+                format=dict(
+                    values=["cdf", "res"]
+                    ),
+                nativefmt=dict(
+                    values=["cdf", "res"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_restart_field"
+
+
+@namebuilding_append('geo', lambda self: "rest_new_head")
+class Hycom3dRestartDate(GeoFlowResource):
+
+    _footprint = [
+        dict(
+            info="Restart date in a binary file",
+            attr=dict(
+                kind=dict(
+                    values=["restart_date"],
+                ),
+                format=dict(
+                    values=["binary"]
+                    ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_restart_date"
+
+
+
 # %% Model outputs
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
 
     _footprint = [
-        #        hgeometry_deco,
         dict(
             info="Model output",
             attr=dict(
@@ -328,7 +376,7 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
                     values=["hycom3d_model_output"],
                 ),
                 domain=dict(
-                    type=str, 
+                    type=str,
                     default="3D",
                 ),
                 cutoff=dict(

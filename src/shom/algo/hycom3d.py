@@ -8,10 +8,12 @@ from collections import defaultdict
 from functools import partial
 
 import vortex.tools.date as vdate
-from vortex.layout.dataflow import Section 
+from vortex.layout.dataflow import Section
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun)
 
+from sloop.io import nc_get_time
+from sloop.interp import nc_interp_at_freq_to_nc
 from sloop.models.hycom3d import (
     HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE,
     HYCOM3D_SIGMA_TO_STMT_FNS,
@@ -22,7 +24,8 @@ from sloop.models.hycom3d import (
     format_ds,
     read_regional_grid,
     AtmFrc,
-    Rivers
+    Rivers,
+    run_bin2hycom
 )
 
 
@@ -118,8 +121,8 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
         info="Compile the 3d model",
         attr=dict(
             dimensions=dict(
-                info="Dictionary of the model dimensions", 
-                optional=False, 
+                info="Dictionary of the model dimensions",
+                optional=False,
                 type=dict,
             ),
             sigma=dict(
@@ -158,7 +161,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
 
 class Hycom3dIBCRunTime(AlgoComponent):
     """Algo component for the temporal interpolation of IBC netcdf files"""
-    
+
     _footprint = [
         #        dateperiod_deco,
         dict(
@@ -167,13 +170,14 @@ class Hycom3dIBCRunTime(AlgoComponent):
                 kind=dict(
                     values=["hycom3d_ibc_run_time"],
                 ),
+                begindate=dict(),
                 ncout=dict(
-                    default="forecast.nc", 
+                    default="forecast.nc",
                     optional=True,
                 ),
                 rank=dict(
-                    default=0, 
-                    type=int, 
+                    default=0,
+                    type=int,
                     optional=True,
                 ),
                 step=dict(),
@@ -191,11 +195,11 @@ class Hycom3dIBCRunTime(AlgoComponent):
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
 
-        from sloop.interp import nc_interp_at_freq_to_nc
         # Interpolate in time
         nc_interp_at_freq_to_nc(
             self._ncfiles,
             self.step,
+            begindate=self.conf.rundate,
             ncout=self.ncout,
             # preproc=self._geo_selector,
             postproc=format_ds)
@@ -211,18 +215,18 @@ class Hycom3dIBCRunHoriz(BlindRun):
                     values=["hycom3d_ibc_run_horiz"],
                 ),
                 rank=dict(
-                    default=0, 
-                    type=int, 
+                    default=0,
+                    type=int,
                     optional=True,
                 ),
                 method=dict(
-                    default=0, 
-                    type=int, 
+                    default=0,
+                    type=int,
                     optional=True,
                 ),
                 pad=dict(
-                    default=1, 
-                    type=float, 
+                    default=1,
+                    type=float,
                     optional=True,
                 ),
             ),
@@ -254,7 +258,7 @@ class Hycom3dIBCRunHoriz(BlindRun):
             [ncinput], outfile_pattern='{var_name}_merc.res{ifile:03d}',
             preproc=geo_selector)
         self.varnames = list(resfiles.keys())
-        self.csteps = range(1, len(resfiles["ssh"])+1)
+        self.csteps = range(len(resfiles["ssh"]))
 
         # Constant files
         cdir = f"FORCING{self.rank}."
@@ -296,16 +300,16 @@ class Hycom3dIBCRunVertical(BlindRun):
                     values=["hycom3d_ibc_run_vert"],
                 ),
                 rank=dict(
-                    default=0, 
-                    type=int, 
+                    default=0,
+                    type=int,
                     optional=True,
                 ),
                 sshmin=dict(),
                 cmoy=dict(),
+                restart=dict(type=bool)
             ),
         ),
     ]
-
 
     @property
     def realkind(self):
@@ -317,6 +321,10 @@ class Hycom3dIBCRunVertical(BlindRun):
         # Input netcdf file
         ncfiles = [ei.rh.container.localpath() for ei in
                    self.context.sequence.effective_inputs(role="Input")]
+
+        # Restart time is taken from input files
+        if self.restart:
+            self._restart_time = nc_get_time(ncfiles[0])[0]
 
         # Constant files
         for cfile in (f"FORCING{self.rank}./regional.grid.a",
@@ -331,6 +339,9 @@ class Hycom3dIBCRunVertical(BlindRun):
         # Read dimensions
         from sloop.models.hycom3d import read_blkdat_input
         dsb = read_blkdat_input("blkdat.input")
+        self._nx = int(dsb.idm)
+        self._ny = int(dsb.jdm)
+        self._nz = int(dsb.kdm)
 
         # Command line arguments
         self._clargs = dict(
@@ -338,12 +349,19 @@ class Hycom3dIBCRunVertical(BlindRun):
             sshfile=ncfiles[0],
             tempfile=ncfiles[1],
             salnfile=ncfiles[2],
-            nx=int(dsb.idm),
-            ny=int(dsb.jdm),
-            nz=int(dsb.kdm),
+            nx=self._nx,
+            ny=self._ny,
+            nz=self._nz,
             cmoy=self.cmoy,
             sshmin=self.sshmin,
-            cstep=1)
+            cstep=0)
+
+    def postfix(self, rh, opts):
+        super().postfix(rh, opts)
+        if self.restart:
+            rest_head(self._restart_time)
+        else:
+            run_bin2hycom(self._nx, self._ny, self._nz)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -353,7 +371,7 @@ class Hycom3dIBCRunVertical(BlindRun):
 # %% AlgoComponents regarding the River preprocessing steps
 
 class Hycom3dRiversFlowRate(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Get the river tar/cfg/ini files"\
@@ -364,19 +382,19 @@ class Hycom3dRiversFlowRate(AlgoComponent):
                     values=["RiversFlowRate"],
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="{river}.flx.nc",
                 ),
                 terms=dict(
-                    optional=False, 
+                    optional=False,
                     type=list,
                 ),
                 rundate=dict(
-                    optional=False, 
+                    optional=False,
                     type=vdate.Date,
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -407,7 +425,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
 
 
 class Hycom3dRiversTempSaln(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Compute temperature and salinity characteristics"\
@@ -417,15 +435,15 @@ class Hycom3dRiversTempSaln(AlgoComponent):
                     values=["RiversTempSaln"]
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="{river}.flx.nc",
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="{river}.flx.ts.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -442,7 +460,7 @@ class Hycom3dRiversTempSaln(AlgoComponent):
 
 
 class Hycom3dRiversOut(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Create the output files for Hycom",
@@ -451,11 +469,11 @@ class Hycom3dRiversOut(AlgoComponent):
                     values=["RiversOut"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="{river}.flx.ts.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -475,7 +493,7 @@ class Hycom3dRiversOut(AlgoComponent):
 
 
 class Hycom3dAtmFrcTime(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Get the atmospheric fluxes conditions from grib files "\
@@ -485,19 +503,19 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                     values=["AtmFrcTime"],
                 ),
                 terms=dict(
-                    optional=False, 
+                    optional=False,
                     type=list,
                 ),
                 rundate=dict(
-                    optional=False, 
+                    optional=False,
                     type=vdate.Date,
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.time.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -516,7 +534,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
             real_term = sec.rh.resource.date.time() + sec.rh.resource.term
             outsec[sec.rh.resource.cumul][real_term][sec.rh.resource.origin] = sec
         return outsec
-    
+
     def prepare(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).prepare(rh, opts)
 
@@ -536,14 +554,14 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         cumul_files=[sec.rh.container.localpath() for sec in self.sections["cumul"]]
         AtmFrc(insta_files=insta_files,
                cumul_files=cumul_files,).interp_time(time, self.nc_out)
-        
+
     @property
     def realkind(self):
         return 'AtmFrcTime'
 
 
 class Hycom3dAtmFrcParameters(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Compute atmospheric flux parameters necessary"\
@@ -553,15 +571,15 @@ class Hycom3dAtmFrcParameters(AlgoComponent):
                     values=["AtmFrcParam"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.time.nc",
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.completed.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -578,7 +596,7 @@ class Hycom3dAtmFrcParameters(AlgoComponent):
 
 
 class Hycom3dAtmFrcMask(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Create the land/sea mask"\
@@ -588,15 +606,15 @@ class Hycom3dAtmFrcMask(AlgoComponent):
                     values=["AtmFrcMask"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.completed.nc",
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.masked.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                     ),
             ),
@@ -619,14 +637,14 @@ class Hycom3dAtmFrcMask(AlgoComponent):
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcMask, self).execute(rh, opts)
         AtmFrc().regridmask(HYCOM3D_MASK_FILE, self.nc_out, self.nc_in, self._weightsfile)
-        
+
     @property
     def realkind(self):
         return 'AtmFrcMask'
 
 
 class Hycom3dAtmFrcSpace(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Run the horizontal interpolator",
@@ -635,15 +653,15 @@ class Hycom3dAtmFrcSpace(AlgoComponent):
                     values=["AtmFrcSpace"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.masked.nc",
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.space.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -675,7 +693,7 @@ class Hycom3dAtmFrcSpace(AlgoComponent):
 
 
 class Hycom3dAtmFrcFinal(AlgoComponent):
-    
+
     _footprint = [
         dict(
             info="Prepare the dataset for Hycom",
@@ -684,15 +702,15 @@ class Hycom3dAtmFrcFinal(AlgoComponent):
                     values=["AtmFrcFinal"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.space.nc",
                 ),
                 nc_out=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.final.nc",
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
@@ -717,15 +735,15 @@ class Hycom3dAtmFrcOut(AlgoComponent):
                     values=["AtmFrcOut"],
                 ),
                 nc_in=dict(
-                    optional=True, 
+                    optional=True,
                     default="atmfrc.final.nc",
                 ),
                 freq=dict(
-                    optional=True, 
+                    optional=True,
                     default=1,
                 ),
                 engine=dict(
-                    values=["current" ], 
+                    values=["current" ],
                     default="current",
                 ),
             ),
