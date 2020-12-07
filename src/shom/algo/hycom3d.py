@@ -465,6 +465,7 @@ class Hycom3dRiversOut(AlgoComponent):
     def execute(self, rh, opts):
         super(Hycom3dRiversOut, self).execute(rh, opts)
         Rivers().write_rfiles(self.nc_in)
+        Rivers().write_ncfiles(self.nc_in)
 
     @property
     def realkind(self):
@@ -735,7 +736,8 @@ class Hycom3dAtmFrcOut(AlgoComponent):
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcOut, self).execute(rh, opts)
         AtmFrc().write_abfiles(self.nc_in, freq=self.freq)
-
+        AtmFrc().write_ncfiles(self.nc_in)
+        
     @property
     def realkind(self):
         return 'AtmFrcOut'

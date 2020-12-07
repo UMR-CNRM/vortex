@@ -233,37 +233,8 @@ class Hycom3dIniconfOutputFile(GeoFlowResource):
         return "hycom3d_inicon_output"
 
 
-# %% Model inputs
-
-@namebuilding_append('src', lambda self: self.rivers)
-class Hycom3dRiversIn(Resource):
-    """Rivers input '.r' files for the Hycom3d model"""
-
-    _footprint = [
-        dict(
-            info='Hycom Rivers (*.r) Files',
-            attr=dict(
-                kind=dict(
-                    values = ['RiversIn'],
-                ),
-                nativefmt=dict(
-                    values=['r','unknown'], 
-                    default='unknown',
-                ),
-                rivers=dict(
-                    optional=True,
-                ),
-            ),
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'rivers'
-
-
-@namebuilding_append('src', lambda self: self.fields)
-class Hycom3dAtmFrcIn(Resource):
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dAtmFrcInputFiles(Resource):
     """Atmospheric forcing input files for the Hycom3d model"""
     
     _footprint = [
@@ -271,11 +242,116 @@ class Hycom3dAtmFrcIn(Resource):
             info="Hycom Atmospheric Forcing Input Files",
             attr=dict(
                 kind=dict(
-                    values=['AtmFrcIn']
+                    values=['hycom3d_atmfrc_input']
                 ),
-                fields=dict(
+                field=dict(
                     default=['shwflx', 'radflx','precip', 'preatm',
                              'airtmp','wndspd', 'tauewd', 'taunwd','vapmix'],
+                ),
+            ),
+        )
+    ]
+
+
+class Hycom3dAtmFrcInputNC(Hycom3dAtmFrcInputFiles):
+    """Atmospheric forcing input [nc] files for the Hycom3d model"""
+    
+    _footprint = [
+        dict(
+            info="Hycom Atmospheric Forcing Input [nc] Files",
+            attr=dict(
+                kind=dict(
+                    values=['hycom3d_atmfrc_input_nc']
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf",
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'hycom3d_atmfrc_input_nc'
+    
+    
+@namebuilding_append('src', lambda self: self.rivers)
+class Hycom3dRiversInputFiles(Resource):
+    """Rivers input files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info='Hycom Rivers Files',
+            attr=dict(
+                kind=dict(
+                    values = ['rivers_input'],
+                ),
+                rivers=dict(
+                    optional=True,
+                ),
+            ),
+        )
+    ]
+    
+    
+class Hycom3dRiversInputNC(Hycom3dRiversInputFiles):
+    """Rivers input [nc] files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info='Hycom Rivers [nc] Files',
+            attr=dict(
+                kind=dict(
+                    values = ['rivers_input_nc'],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf",
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'rivers_input_nc'
+
+
+# %% Model inputs
+
+class Hycom3dRiversInputR(Hycom3dRiversInputFiles):
+    """Rivers input [r] files for the Hycom3d model"""
+
+    _footprint = [
+        dict(
+            info='Hycom Rivers [r] Files',
+            attr=dict(
+                kind=dict(
+                    values = ['rivers_input_r'],
+                ),
+                nativefmt=dict(
+                    values=['r','unknown'], 
+                    default='unknown',
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'rivers_input_r'
+
+
+class Hycom3dAtmFrcInputAB(Hycom3dAtmFrcInputFiles):
+    """Atmospheric forcing input [ab] files for the Hycom3d model"""
+    
+    _footprint = [
+        dict(
+            info="Hycom Atmospheric Forcing Input [ab] Files",
+            attr=dict(
+                kind=dict(
+                    values=['hycom3d_atmfrc_input_ab']
                 ),
                 nativefmt=dict(
                     values=['a','b'],
@@ -286,9 +362,8 @@ class Hycom3dAtmFrcIn(Resource):
 
     @property
     def realkind(self):
-        return 'atmfrc'
-
-
+        return 'hycom3d_atmfrc_input_ab'
+    
 # %% Model outputs
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
