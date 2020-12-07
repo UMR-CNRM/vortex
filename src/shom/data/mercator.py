@@ -35,7 +35,8 @@ class MercatorDailyForecast(MercatorSingleFileDailyForecast):
         dict(
             info="Mercator daily forecast run",
             attr=dict(
-                kind=dict(values=["mercator_daily_forecast"]),
+                kind=dict(values=["boundary"]),
+                cutoff=dict(values=['production']),
             ),
         ),
     ]
