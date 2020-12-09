@@ -111,7 +111,7 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
                     default="hycom3d_ibc_regridcdf_binary",
                 ),
                 kind=dict(
-                    values=["hycom3d_ibc_regridcdf_binary"],
+                    values=["horizontal_regridder"],
                 ),
             ),
         ),
@@ -140,7 +140,7 @@ class Hycom3dIBCIniconBinary(vde.Binary):
                     default="hycom3d_ibc_inicon_binary",
                 ),
                 kind=dict(
-                    values=["hycom3d_ibc_inicon_binary"],
+                    values=["vertical_regridder"],
                 ),
             ),
         ),
@@ -165,7 +165,7 @@ class Hycom3dModelBinary(vde.Binary):
             info="Binary of the model",
             attr= dict(
                 gvar = dict(
-                    default='hycom3d_model_binary',
+                    default='oceanmodel',
                 ),
                 kind = dict(
                     values=['hycom3d_model_binary'],
@@ -189,7 +189,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
             info="Single variable netcdf file created by regridcdf",
             attr=dict(
                 kind=dict(
-                    values=["hycom3d_regridcdf_output"],
+                    values=["boundary"],
                 ),
                 field=dict(
                     values=["saln", "temp", "thdd", "vaisa", "ssh"],
@@ -270,14 +270,20 @@ class Hycom3dIBCField(GeoFlowResource):
             info="Single variable IBC .a and .b files",
             attr=dict(
                 kind=dict(
-                    values=["gridpoint"],
+                    values=["boundary"],
                 ),
                 field=dict(
                     values=["s", "t", "u", "v", "h"],
                 ),
                 format=dict(values=["a", "b"]),
-                nativefmt=dict(values=["a", "b"]),
-                # actualfmt=dict(values=["a", "b"]),
+                nativefmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+                actualfmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
             ),
         ),
     ]
@@ -295,17 +301,22 @@ class Hycom3dRestartField(GeoFlowResource):
             info="Single variable netcdf and restart file created by inicon",
             attr=dict(
                 kind=dict(
-                    values=["gridpoint"],
+                    values=["boundary"],
                 ),
                 field=dict(
                     values=["saln", "temp", "th3d", "u", "v", "h", "dpmixl"],
                 ),
                 format=dict(
-                    values=["cdf", "res"]
-                    ),
-                nativefmt=dict(
                     values=["cdf", "res"],
                 ),
+                nativefmt=dict(
+                    remap={"cdf": "netcdf", "res": "binary"},
+                    values=["binary", "netcdf"],
+                ),
+                actualfmt=dict(
+                    remap={"cdf": "netcdf", "res": "binary"},
+                    values=["binary", "netcdf"],
+                    )
             ),
         ),
     ]
@@ -327,7 +338,7 @@ class Hycom3dRestartDate(GeoFlowResource):
                 ),
                 format=dict(
                     values=["binary"]
-                    ),
+                ),
             ),
         ),
     ]
@@ -347,7 +358,7 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
             info="Model output",
             attr=dict(
                 kind=dict(
-                    values=["hycom3d_model_output"],
+                    values=["gridpoint"],
                 ),
                 domain=dict(
                     type=str,
