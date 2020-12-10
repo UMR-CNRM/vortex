@@ -12,8 +12,7 @@ from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
-# vortex.syntax.stdattrs.models
-
+from vortex.syntax.stdattrs import model_deco
 
 __all__ = []
 # %% Generic
@@ -60,46 +59,32 @@ class Hycom3dConsts(_Hycom3dGeoResource):
         return "hycom3d_consts"
 
 
-class Hycom3dMaskInterpWeights(Resource):
-    _footprint = dict(
-        info="Hycom3d mask interpolation weights nc file",
-        attr=dict(
-            kind=dict(
-                values=["gridpoint"],
-            ),
-            nativefmt=dict(
-                values=['nc'],
-            ),
-            grid=dict(
-                values=["mask2hycom3d"]
-            ),
-        ),
-    )
-
-    @property
-    def realkind(self):
-        return "mask_interp_weights"
-
-
+@namebuilding_append('src', lambda self: self.grids)
 class Hycom3dAtmFrcInterpWeights(Resource):
-    _footprint = dict(
-        info="Hycom3d atmospheric forcing interpolation weights nc file",
-        attr=dict(
-            kind=dict(
-                values=["gridpoint"],
+
+    _footprint = [
+        dict(
+            info="Hycom3d atmfrc interpolation weights nc file",
+            attr=dict(
+                kind=dict(
+                    values=["interp_weights"],
+                ),
+                nativefmt=dict(
+                    values=['netcdf','nc'],
+                ),
+                grids=dict(
+                    values=["atmfrc2hycom3d","mask2hycom3d"],
+                    optional=False,
+                    default='atmfrc2hycom3d',
+                ),
             ),
-            nativefmt=dict(
-                values=['nc'],
-            ),
-            grid=dict(
-                values=["arpege2hycom3d"]
-            ),
-        ),
-    )
+        )
+    ]
 
     @property
     def realkind(self):
-        return "atmfrc_interp_weights"
+        return "interp_weights"
+
 
 # %% Binaries
 
@@ -230,16 +215,14 @@ class Hycom3dAtmFrcInputFiles(Resource):
                     values=['shwflx','radflx','precip','preatm','airtmp',
                             'wndspd','tauewd','taunwd','vapmix'],
                 ),
-                format=dict(
-                     values=['a','b','nc']   
-                ),
+                format=dict(values=["a", "b", "nc"]),
                 nativefmt=dict(
-                    values=['binary','ascii','netcdf'],
-                    default="netcdf",
+                    values=["binary", "ascii", "netcdf"],
+                    remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
                 ),
                 actualfmt=dict(
-                    values=['binary','ascii','netcdf'],
-                    repmap={'a':'binary','b':'ascii','nc':'netcdf'}
+                    values=["binary", "ascii", "netcdf"],
+                    remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
                 ),
             ),
         )
@@ -268,12 +251,12 @@ class Hycom3dRiversInputFiles(Resource):
                      values=['r','nc']   
                 ),
                 nativefmt=dict(
-                    values=['unknown','netcdf'],
-                    default="netcdf",
+                    values=['ascii','netcdf'],
+                    remap={'r':'ascii','nc':'netcdf'}
                 ),
                 actualfmt=dict(
-                    values=['unknown','netcdf'],
-                    repmap={'r':'unknown','nc':'netcdf'}
+                    values=['ascii','netcdf'],
+                    remap={'r':'ascii','nc':'netcdf'}
                 ),
             ),
         )
