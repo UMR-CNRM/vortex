@@ -407,7 +407,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
         super(Hycom3dRiversFlowRate, self).prepare(rh, opts)
 
         gettarfile = self.context.sequence.effective_inputs(
-            role=["GetRivers"])
+            role=["Input"])
         if len(gettarfile) == 0:
             raise AlgoComponentError(
                 "No tar file available for rivers data"
@@ -531,7 +531,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         cumul/term/origin"""
 
         insec = self.context.sequence.effective_inputs(
-            role='GetAtmFrc')
+            role='Input')
         outsec = defaultdict(partial(defaultdict, partial(defaultdict, Section)))
         for sec in insec:
             real_term = sec.rh.resource.date.time() + sec.rh.resource.term

@@ -65,10 +65,13 @@ class Hycom3dMaskInterpWeights(Resource):
         info="Hycom3d mask interpolation weights nc file",
         attr=dict(
             kind=dict(
-                values=["mask_interp_weights"],
+                values=["gridpoint"],
             ),
             nativefmt=dict(
                 values=['nc'],
+            ),
+            grid=dict(
+                values=["mask2hycom3d"]
             ),
         ),
     )
@@ -83,10 +86,13 @@ class Hycom3dAtmFrcInterpWeights(Resource):
         info="Hycom3d atmospheric forcing interpolation weights nc file",
         attr=dict(
             kind=dict(
-                values=["atmfrc_interp_weights"],
+                values=["gridpoint"],
             ),
             nativefmt=dict(
                 values=['nc'],
+            ),
+            grid=dict(
+                values=["arpege2hycom3d"]
             ),
         ),
     )
@@ -208,6 +214,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
 
 
 # %% Model inputs
+
 @namebuilding_append('src', lambda self: self.fields)
 class Hycom3dAtmFrcInputFiles(Resource):
     """Atmospheric forcing input files for the Hycom3d model"""
@@ -217,14 +224,22 @@ class Hycom3dAtmFrcInputFiles(Resource):
             info="Hycom Atmospheric Forcing Input Files",
             attr=dict(
                 kind=dict(
-                    values=['hycom3d_atmfrc_input']
+                    values=['gridpoint']
                 ),
                 fields=dict(
-                    values=['shwflx','radflx','precip','preatm','airtmp','wndspd','tauewd','taunwd','vapmix'],
+                    values=['shwflx','radflx','precip','preatm','airtmp',
+                            'wndspd','tauewd','taunwd','vapmix'],
+                ),
+                format=dict(
+                     values=['a','b','nc']   
                 ),
                 nativefmt=dict(
-                    values=["netcdf","nc","a","b"],
+                    values=['binary','ascii','netcdf'],
                     default="netcdf",
+                ),
+                actualfmt=dict(
+                    values=['binary','ascii','netcdf'],
+                    repmap={'a':'binary','b':'ascii','nc':'netcdf'}
                 ),
             ),
         )
@@ -244,19 +259,25 @@ class Hycom3dRiversInputFiles(Resource):
             info='Hycom Rivers Files',
             attr=dict(
                 kind=dict(
-                    values = ['hycom3d_rivers_input'],
+                    values = ['observations'],
                 ),
                 rivers=dict(
-                    optional=True,
+                    optional=False,
+                ),
+                format=dict(
+                     values=['r','nc']   
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc",'r'],
+                    values=['unknown','netcdf'],
                     default="netcdf",
+                ),
+                actualfmt=dict(
+                    values=['unknown','netcdf'],
+                    repmap={'r':'unknown','nc':'netcdf'}
                 ),
             ),
         )
     ]
-
 
     @property
     def realkind(self):
@@ -346,7 +367,6 @@ class Hycom3dRestartDate(GeoFlowResource):
     @property
     def realkind(self):
         return "hycom3d_restart_date"
-
 
 
 # %% Model outputs
