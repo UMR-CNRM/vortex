@@ -387,7 +387,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
                     optional=True,
                     default="{river}.flx.nc",
                 ),
-                terms=dict(
+                term=dict(
                     optional=False,
                     type=list,
                 ),
@@ -505,7 +505,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                 kind=dict(
                     values=["AtmFrcTime"],
                 ),
-                terms=dict(
+                term=dict(
                     optional=False,
                     type=list,
                 ),
