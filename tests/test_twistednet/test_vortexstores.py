@@ -190,6 +190,15 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(st.put('thestack', _STACK_URI, dict(fmt='filespack')))
                 self.assertTrue(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
                                                             _STACK_PATH + '.tgz')))
+                self.assertTrue(st.delete(_STACK_URI, dict(fmt='filespack')))
+                self.assertFalse(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
+                                                             _STACK_PATH + '.tgz')))
+                stM = self.vortex_store('vortex.multi.fr')
+                self.assertTrue(stM.put('thestack', _STACK_URI, dict(fmt='filespack', inarchive=True)))
+                self.assertTrue(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
+                                                            _STACK_PATH + '.tgz')))
+                self.assertTrue(stM.check(_STACK_URI, dict(fmt='filespack', inarchive=True)))
+                self.assertFalse(stM.check(_STACK_URI, dict(fmt='filespack', incache=True)))
                 # Retrieve the whole stack
                 self.assertEqual(st.locate(_STACK_URI, dict(fmt='filespack')),
                                  'testlogin@localhost:theroot/vortex/arome/3dvarfr/ABCD/20180101T0000P/stacks/flow_logs.filespack.tgz')

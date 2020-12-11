@@ -2071,15 +2071,9 @@ class OSExtended(System):
         tmp = destination + self.safe_filesuffix()
         if self.path.isdir(source):
             self._copydatatree(source, tmp)
-            # Warning: Not an atomic portion of code (sorry)
-            do_cleanup = self.path.exists(destination)
-            if do_cleanup:
-                # Move fails if a directory already exists
-                self.move(destination, tmp + '.olddir')
-            self.move(tmp, destination)
-            if do_cleanup:
-                self.remove(tmp + '.olddir')
-            # End of none atomic part
+            # Move fails if a directory already exists ; so be careful...
+            with self.secure_directory_move(destination):
+                self.move(tmp, destination)
             return self.path.isdir(destination)
         else:
             self.copyfile(source, tmp)
@@ -2280,15 +2274,9 @@ class OSExtended(System):
                 if self.path.isdir(source):
                     rc = self.hardlink(source, tmp_destination, securecopy=False)
                     if rc:
-                        # Warning: Not an atomic portion of code (sorry)
-                        do_cleanup = self.path.exists(destination)
-                        if do_cleanup:
-                            # Move fails if a directory already exists
-                            self.move(destination, tmp_destination + '.olddir')
-                        rc = self.move(tmp_destination, destination)
-                        if do_cleanup:
-                            self.remove(tmp_destination + '.olddir')
-                        # End of none atomic part
+                        # Move fails if a directory already exists ; so be careful...
+                        with self.secure_directory_move(destination):
+                            rc = self.move(tmp_destination, destination)
                         if not rc:
                             logger.error('Cannot move the tmp directory to the final destination %s',
                                          destination)
@@ -2474,6 +2462,19 @@ class OSExtended(System):
             raise
         else:
             return True
+
+    @contextlib.contextmanager
+    def secure_directory_move(self, destination):
+        do_cleanup = (isinstance(destination, six.string_types) and
+                      self.path.exists(destination))
+        if do_cleanup:
+            # Warning: Not an atomic portion of code (sorry)
+            self.move(destination, destination + '.olddir')
+            yield do_cleanup
+            # End of none atomic part
+            self.remove(destination + '.olddir')
+        else:
+            yield do_cleanup
 
     @fmtshcmd
     def mv(self, source, destination):

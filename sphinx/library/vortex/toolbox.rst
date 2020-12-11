@@ -79,6 +79,14 @@ Promises
 .. autofunction:: clear_promises
 
 
+Archive refill (Using a multistore)
+-----------------------------------
+
+.. autofunction:: archive_refill
+
+.. autofunction:: stack_archive_refill
+
+
 Informations
 ------------
 

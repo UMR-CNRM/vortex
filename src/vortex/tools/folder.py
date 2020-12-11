@@ -167,10 +167,15 @@ class FolderShell(addons.FtrawEnableAddon):
                         self.sh.path.isdir(self.sh.path.join(unpacked[-1]))):
                     # This is the most usual case... (ODB, DDH packs produced by Vortex)
                     self.sh.wpermtree(unpacked[-1], force=True)
-                    self.sh.mv(unpacked[-1], destination)
+                    if self.sh.path.isdir(unpacked[-1]):
+                        with self.sh.secure_directory_move(destination):
+                            self.sh.mv(unpacked[-1], destination)
+                    else:
+                        self.sh.mv(unpacked[-1], destination)
                 else:
                     # Old-style DDH packs (produced by Olive)
-                    self.sh.mkdir(destination)
+                    with self.sh.secure_directory_move(destination):
+                        self.sh.mkdir(destination)
                     for item in unpacked:
                         self.sh.wpermtree(item, force=True)
                         self.sh.mv(item, self.sh.path.join(destination, item))

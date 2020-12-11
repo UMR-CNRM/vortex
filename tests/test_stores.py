@@ -126,6 +126,16 @@ class TestVortexArchiveStore(AbstractTestStores):
     def test_remaps2(self):
         self._do_remap_asserts(self._REMAPS_CONFIGURABLE)
 
+    def test_use_cache_and_archive(self):
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.archive-legacy.fr',
+                            storage='unittesttarget.fake.com')
+        self.assertFalse(st.use_cache())
+        self.assertTrue(st.use_archive())
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.archive.fr',
+                            storage='unittesttarget.fake.com')
+        self.assertFalse(st.use_cache())
+        self.assertTrue(st.use_archive())
+
 
 class TestVortexCacheStore(AbstractTestStores):
 
@@ -193,6 +203,25 @@ class TestVortexCacheStore(AbstractTestStores):
 
     def test_remaps1(self):
         self._do_loc_asserts(self._REMAPS)
+
+    def test_use_cache_and_archive(self):
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.cache.fr')
+        self.assertTrue(st.use_cache())
+        self.assertFalse(st.use_archive())
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.stack.fr')
+        self.assertTrue(st.use_cache())
+        self.assertFalse(st.use_archive())
+
+
+class TestVortexMultiStore(AbstractTestStores):
+
+    def test_use_cache_and_archive(self):
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.multi-legacy.fr')
+        self.assertTrue(st.use_cache())
+        self.assertTrue(st.use_archive())
+        st = fp.proxy.store(scheme='vortex', netloc='vortex.multi.fr')
+        self.assertTrue(st.use_cache())
+        self.assertTrue(st.use_archive())
 
 
 class TestFunctionStore(AbstractTestStores):

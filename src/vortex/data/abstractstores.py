@@ -100,8 +100,12 @@ class Store(footprints.FootprintBase):
         return self._sh
 
     def use_cache(self):
-        """Boolean function to check if the current store use a local cache."""
+        """Boolean function to check if the current store uses a local cache."""
         return False
+
+    def use_archive(self):
+        """Boolean function to check if the current store uses a remote archive."""
+        return not self.use_cache()
 
     def has_fast_check(self):
         """How fast and reliable is a check call ?"""
@@ -158,6 +162,23 @@ class Store(footprints.FootprintBase):
         """When tracking get/put request: extra args that will be added to the URI query."""
         return dict()
 
+    def _incache_inarchive_check(self, options):
+        rc = True
+        if options is not None:
+            incache = options.get('incache', False)
+            inarchive = options.get('inarchive', False)
+            if incache and inarchive:
+                raise ValueError("'incache=True' and 'inarchive=True' are mutually exclusive")
+            if incache and not self.use_cache():
+                self._verbose_log(options, 'info',
+                                  'Skip this "%s" store because a cache is requested', self.__class__)
+                rc = False
+            if inarchive and not self.use_archive():
+                self._verbose_log(options, 'info',
+                                  'Skip this "%s" store because an archive is requested', self.__class__)
+                rc = False
+        return rc
+
     def _hash_check_or_delete(self, callback, remote, options=None):
         """Check or delete a hash file."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
@@ -170,31 +191,25 @@ class Store(footprints.FootprintBase):
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
-            rc = False
-        else:
-            rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
-            self._observer_notify('check', rc, remote, options=options)
+        if not self._incache_inarchive_check(options):
+            return False
+        rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
+        self._observer_notify('check', rc, remote, options=options)
         return rc
 
     def locate(self, remote, options=None):
         """Proxy method to dedicated locate method according to scheme."""
         logger.debug('Store locate %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return None
-        else:
-            return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
+        return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
     def list(self, remote, options=None):
         """Proxy method to dedicated list method according to scheme."""
         logger.debug('Store list %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return None
-        else:
-            return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
+        return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
 
     def prestage_advertise(self, remote, options=None):
         """Use the Stores-Activity observer board to advertise the prestaging request.
@@ -219,11 +234,9 @@ class Store(footprints.FootprintBase):
     def prestage(self, remote, options=None):
         """Proxy method to dedicated prestage method according to scheme."""
         logger.debug('Store prestage %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return True
-        else:
-            return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
+        return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
 
     def _hash_store_defaults(self, options):
         """Update default options when fetching hash files."""
@@ -274,21 +287,19 @@ class Store(footprints.FootprintBase):
     def _actual_get(self, action, remote, local, options=None, result_id=None):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store %s from %s to %s', action, remote, local)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return False
-        else:
-            if (options is None or (not options.get('insitu', False)) or
-                    self.use_cache()):
-                if result_id:
-                    rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
-                else:
-                    rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
-                self._observer_notify('get', rc, remote, local=local, options=options)
-                return rc
+        if (options is None or (not options.get('insitu', False)) or
+                self.use_cache()):
+            if result_id:
+                rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
             else:
-                logger.error('Only cache stores can be used when insitu is True.')
-                return False
+                rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
+            self._observer_notify('get', rc, remote, local=local, options=options)
+            return rc
+        else:
+            logger.error('Only cache stores can be used when insitu is True.')
+            return False
 
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method according to scheme."""
@@ -297,12 +308,13 @@ class Store(footprints.FootprintBase):
     def earlyget(self, remote, local, options=None):
         """Proxy method to dedicated earlyget method according to scheme."""
         logger.debug('Store earlyget from %s to %s', remote, local)
+        if not self._incache_inarchive_check(options):
+            return None
         rc = None
-        if options is None or not options.get('incache', False) or self.use_cache():
-            if options is None or (not options.get('insitu', False)) or self.use_cache():
-                available_dget = getattr(self, self.scheme + 'earlyget', None)
-                if available_dget is not None:
-                    rc = available_dget(remote, local, options)
+        if options is None or (not options.get('insitu', False)) or self.use_cache():
+            available_dget = getattr(self, self.scheme + 'earlyget', None)
+            if available_dget is not None:
+                rc = available_dget(remote, local, options)
         return rc
 
     def finaliseget(self, result_id, remote, local, options=None):
@@ -326,34 +338,30 @@ class Store(footprints.FootprintBase):
         """Proxy method to dedicated put method according to scheme."""
         logger.debug('Store put from %s to %s', local, remote)
         self.enforce_readonly()
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return True
+        filtered = False
+        if options is not None and 'urifilter' in options:
+            filtered = options['urifilter'](self, remote)
+        if filtered:
+            rc = True
+            logger.info("This remote URI has been filtered out: we are skipping it.")
         else:
-            filtered = False
-            if options is not None and 'urifilter' in options:
-                filtered = options['urifilter'](self, remote)
-            if filtered:
-                rc = True
-                logger.info("This remote URI has been filtered out: we are skipping it.")
-            else:
-                dryrun = False
-                if options is not None and 'dryrun' in options:
-                    dryrun = options['dryrun']
-                rc = dryrun or getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
-                self._observer_notify('put', rc, remote, local=local, options=options)
-            return rc
+            dryrun = False
+            if options is not None and 'dryrun' in options:
+                dryrun = options['dryrun']
+            rc = dryrun or getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+            self._observer_notify('put', rc, remote, local=local, options=options)
+        return rc
 
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method according to scheme."""
         logger.debug('Store delete from %s', remote)
         self.enforce_readonly()
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
-            rc = True
-        else:
-            rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
-            self._observer_notify('del', rc, remote, options=options)
+        if not self._incache_inarchive_check(options):
+            return True
+        rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+        self._observer_notify('del', rc, remote, options=options)
         return rc
 
 
@@ -476,8 +484,12 @@ class MultiStore(footprints.FootprintBase):
         ]
 
     def use_cache(self):
-        """Boolean function to check if any included store use a local cache."""
+        """Boolean function to check if any included store uses a local cache."""
         return any([x.use_cache() for x in self.openedstores])
+
+    def use_archive(self):
+        """Boolean function to check if any included store uses a remote archive."""
+        return any([x.use_archive() for x in self.openedstores])
 
     def has_fast_check(self):
         """How fast and reliable is a check call ?"""
@@ -993,7 +1005,10 @@ class ConfigurableArchiveStore(object):
             # Global configuration file
             logger.info("Reading config file: %s", self._store_global_config)
             maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-            conf['host'] = dict(maincfg.items(self.actual_storage))
+            if self.actual_storage in maincfg.sections():
+                conf['host'] = dict(maincfg.items(self.actual_storage))
+            else:
+                conf['host'] = dict(maincfg.defaults())
             conf['locations'] = defaultdict(dict)
 
             # Look for a local configuration file
