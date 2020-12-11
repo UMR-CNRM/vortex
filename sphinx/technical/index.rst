@@ -15,6 +15,7 @@ Detailed documentation on some technical aspects:
 * :ref:`env-interface`
 * :ref:`actions-usage`
 * :ref:`nbook-Uget`
+* :ref:`nbook-VortexStacksDoc`
 
 
 .. toctree::
