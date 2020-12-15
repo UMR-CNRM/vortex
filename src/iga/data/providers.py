@@ -238,7 +238,7 @@ class SopranoProvider(Provider):
             info['level_three'] = 'ctbto'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
-        elif self.vapp == 'mocage' and (self.vconf == 'chimique' or self.vconf == 'volcan' or self.vconf == 'indonesie'):
+        elif self.vapp == 'mocage' and self.vconf in ('chimique', 'volcan', 'indonesie'):
             info['level_one'] = 'serv'
             info['level_two'] = 'env'
             info['level_three'] = 'extract_mocacc'
