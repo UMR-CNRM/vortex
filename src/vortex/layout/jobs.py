@@ -576,6 +576,11 @@ class JobAssistant(footprints.FootprintBase):
         """Setup the action dispatcher."""
         t.sh.header('Actions setup')
 
+    @_extendable
+    def _job_final_init(self, t, **kw):
+        """Final initialisations for a job."""
+        t.sh.header("Job's final init")
+
     def _subjob_detect(self, t):
         if 'VORTEX_SUBJOB_ACTIVATED' in t.env:
             tag, fsid = t.env['VORTEX_SUBJOB_ACTIVATED'].split(':', 1)
@@ -604,6 +609,8 @@ class JobAssistant(footprints.FootprintBase):
         self._actions_setup(t, **kw)  # Setup the actionDispatcher
         # Begin signal handling
         t.sh.signal_intercept_on()
+        # A last word ?
+        self._job_final_init(t, **kw)
         print()
         return t, t.env, t.sh
 
@@ -1023,7 +1030,7 @@ class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
                     self._appwide_lock_saved_mtplug = p
         return self._appwide_lock_saved_mtplug
 
-    def plugable_extra_session_setup(self, t, **kw):
+    def plugable_job_final_init(self, t, **kw):
         """Acquire the lock on job startup."""
         self._appwide_lock_label = self.label.format(** self.masterja.special_variables)
         if self.acquire:
