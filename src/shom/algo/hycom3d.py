@@ -14,6 +14,7 @@ from vortex.layout.dataflow import Section
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun)
 
+from sloop.env import stripout_conda_env
 from sloop.io import nc_get_time
 from sloop.interp import nc_interp_time
 from sloop.models.hycom3d import (
@@ -74,14 +75,15 @@ class Hycom3dCompilator(Expresso):
 
     def prepare(self, rh, kw):
         super(Hycom3dCompilator, self).prepare(rh, kw)
-        self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
-        env_vars = config_to_env_vars(self.env_config)
-        for name, value in env_vars.items():
-            self.env[name] = value
+        #self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
+        self._env_vars = config_to_env_vars(self.env_config)
 
     def execute(self, rh, kw):
-        # super(Hycom3dCompilator, self).execute(rh, kw)
-        print(self.spawn([self.compilation_script], {"outsplit": False}))
+        #super(Hycom3dCompilator, self).execute(rh, kw)
+        with self.env.clone() as e:
+            stripout_conda_env(e)
+            e.update(self._env_vars)
+            print(self.spawn([self.compilation_script], {"outsplit": False}))
 
     @property
     def realkind(self):
