@@ -392,8 +392,10 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
 
-    def _std_move(self, source, destination, intent='in', pack=False):
+    def _std_move(self, source, destination, intent=None, pack=False):
         """Extended mv for (possibly) multi lfi file."""
+        if intent is None:
+            intent = 'inout' if self.sh.access(source, self.sh.W_OK) else 'in'
         st = self._std_prepare(source, destination, intent)
         if st.rc == 0:
             st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +

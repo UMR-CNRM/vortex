@@ -723,7 +723,8 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                                                         io_poll_args, io_poll_kwargs)
                 self._flyput_job_internal_put(data)
             except Exception as trouble:
-                logger.error('Polling trouble: %s', str(trouble))
+                logger.error('Polling trouble: %s. %s',
+                             str(trouble), traceback.format_exc())
                 redo = False
             finally:
                 event_free.set()
