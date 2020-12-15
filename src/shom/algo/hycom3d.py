@@ -563,7 +563,6 @@ class Hycom3dAtmFrcTime(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
-        import os; print(os.getcwd())
        
         time = [self.rundate+vdate.Time(term) for term in self.terms]
         AtmFrc(insta_files=self.insta,

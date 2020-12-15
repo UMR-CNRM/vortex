@@ -209,7 +209,7 @@ class Hycom3dAtmFrcInputFiles(Resource):
             info="Hycom Atmospheric Forcing Input Files",
             attr=dict(
                 kind=dict(
-                    values=['gridpoint']
+                    values=['hycom3d_atmfrc_input']
                 ),
                 fields=dict(
                     values=['shwflx','radflx','precip','preatm','airtmp',
