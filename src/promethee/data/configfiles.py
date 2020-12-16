@@ -46,6 +46,41 @@ class PrometheeConfig(JsonConfig):
     ]
 
 
+@namebuilding_append('src', lambda s : {'scope' : s.scope})
+class PrometheeLog(JsonConfig):
+    """Class to access Promethee log files."""
+    _footprint = [
+        version_deco,
+        date_deco,
+        dict(
+            info = 'JSON Log file',
+            attr = dict(
+                kind    = dict(
+                    optional    = False,
+                    values      = ["promethee_log"]
+                ),
+                scope = dict(
+                    values      = ['config', 'mask', 'data', 'prod']
+                ),
+                source = dict(
+                    optional    = True,
+                    default     = ""
+                ),
+                nativefmt = dict(
+                    optional    = True,
+                    values      = ['json', ],
+                    default     = 'json'
+                )
+            )
+        )
+    ]
+    
+    @property
+    def realkind(self):
+        return 'log'
+
+
+
 class PrometheeOutput(JsonConfig):
     """Class to access Promethee output file."""
     _footprint = [
