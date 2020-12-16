@@ -927,7 +927,8 @@ class Task(Node):
         """Broadcast IO SERVER configuration values to environment."""
         t = self.ticket
         triggered = any([i in self.conf
-                         for i in ('io_companions', 'io_nodes', 'io_tasks', 'io_openmp')])
+                         for i in ('io_nodes', 'io_companions', 'io_incore_tasks',
+                                   'io_openmp')])
         if 'io_nodes' in self.conf:
             t.env.default(VORTEX_IOSERVER_NODES=self.conf.io_nodes)
             if 'io_tasks' in self.conf:
@@ -936,6 +937,10 @@ class Task(Node):
             t.env.default(VORTEX_IOSERVER_COMPANION_TASKS=self.conf.io_companions)
         elif 'io_incore_tasks' in self.conf:
             t.env.default(VORTEX_IOSERVER_INCORE_TASKS=self.conf.io_incore_tasks)
+            if 'io_incore_fixer' in self.conf:
+                t.env.default(VORTEX_IOSERVER_INCORE_FIXER=self.conf.io_incore_fixer)
+            if 'io_incore_dist' in self.conf:
+                t.env.default(VORTEX_IOSERVER_INCORE_DIST=self.conf.io_incore_dist)
         if 'io_openmp' in self.conf:
             t.env.default(VORTEX_IOSERVER_OPENMP=self.conf.io_openmp)
         if triggered:

@@ -13,6 +13,7 @@ import math
 import six
 
 from bronx.fancies import loggers
+from bronx.syntax.iterators import interleave
 import footprints
 
 from vortex.algo import mpitools
@@ -256,7 +257,8 @@ class _NWPIoServerMixin(object):
 
     _NWP_IOSERV_PATTERNS = ('io_serv.*.d', )
 
-    def _nwp_ioserv_setup_namelist(self, namcontents, namlocal, total_iotasks):
+    def _nwp_ioserv_setup_namelist(self, namcontents, namlocal,
+                                   total_iotasks, computed_iodist_value=None):
         """Applying IO Server profile on local namelist ``namlocal`` with contents namcontents."""
         if 'NAMIO_SERV' in namcontents:
             namio = namcontents['NAMIO_SERV']
@@ -264,6 +266,8 @@ class _NWPIoServerMixin(object):
             namio = namcontents.newblock('NAMIO_SERV')
 
         namio.nproc_io = total_iotasks
+        if computed_iodist_value is not None:
+            namio.idistio = computed_iodist_value
 
         if 'VORTEX_IOSERVER_METHOD' in self.env:
             namio.nio_serv_method = self.env.VORTEX_IOSERVER_METHOD
@@ -347,18 +351,86 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     def __init__(self, * kargs, **kwargs):
         super(_AbstractMpiNWP, self).__init__(*kargs, **kwargs)
         self._incore_iotasks = None
+        self._effective_incore_iotasks = None
+        self._incore_iotasks_fixer = None
+        self._incore_iodist = None
 
     @property
     def incore_iotasks(self):
-        """The number of tasks dedicated to the IO server"""
+        """The number of tasks dedicated to the IO server."""
         return self._incore_iotasks
 
     @incore_iotasks.setter
     def incore_iotasks(self, value):
-        """The number of tasks dedicated to the IO server"""
+        """The number of tasks dedicated to the IO server."""
         if isinstance(value, six.string_types) and value.endswith('%'):
             value = math.ceil(self.nprocs * float(value[:-1]) / 100)
         self._incore_iotasks = int(value)
+        self._effective_incore_iotasks = None
+
+    @property
+    def incore_iotasks_fixer(self):
+        """Tweak the number of iotasks in order to respect a given constraints."""
+        return self._incore_iotasks_fixer
+
+    @incore_iotasks_fixer.setter
+    def incore_iotasks_fixer(self, value):
+        """Tweak the number of iotasks in order to respect a given constraints."""
+        if not isinstance(value, six.string_types):
+            raise ValueError('A string is expected')
+        if value.startswith('nproc_multiple_of_'):
+            self._incore_iotasks_fixer = ('nproc_multiple_of',
+                                          [int(i) for i in value[18:].split(',')])
+        else:
+            raise ValueError('The "{:s}" value is incorrect'.format(value))
+
+    @property
+    def effective_incore_iotasks(self):
+        """Apply fixers to incore_iotasks and return this value.
+
+        e.g. "nproc_multiple_of_15,16,17" ensure that the number of processes
+        dedicated to computations (i.e. total number of process - IO processes)
+        is a multiple of 15, 16 or 17.
+        """
+        if self.incore_iotasks is not None:
+            if self._effective_incore_iotasks is None:
+                if self.incore_iotasks_fixer is not None:
+                    if self.incore_iotasks_fixer[0] == 'nproc_multiple_of':
+                        # Allow for 5% less, or add some tasks
+                        for candidate in interleave(range(self.incore_iotasks, self.nprocs + 1),
+                                                    range(self.incore_iotasks - 1,
+                                                          int(math.ceil(0.95 * self.incore_iotasks)) - 1,
+                                                          -1)):
+                            if any([(self.nprocs - candidate) % multiple == 0
+                                    for multiple in self.incore_iotasks_fixer[1]]):
+                                self._effective_incore_iotasks = candidate
+                                break
+                    else:
+                        raise RuntimeError('Unsupported fixer')
+                    if self._effective_incore_iotasks != self.incore_iotasks:
+                        logger.info('The number of IO tasks was updated form %d to %d ' +
+                                    'because of the "%s" fixer', self.incore_iotasks,
+                                    self._effective_incore_iotasks, self.incore_iotasks_fixer[0])
+                else:
+                    self._effective_incore_iotasks = self.incore_iotasks
+            return self._effective_incore_iotasks
+        else:
+            return None
+
+    @property
+    def incore_iodist(self):
+        """How to distribute IO server tasks within model tasks."""
+        return self._incore_iodist
+
+    @incore_iodist.setter
+    def incore_iodist(self, value):
+        """How to distribute IO server tasks within model tasks."""
+        allowed = ('begining', 'end', 'scattered',)
+        if not (isinstance(value, six.string_types) and
+                value in allowed):
+            raise ValueError("'{!s}' is not an allowed value ('{:s}')"
+                             .format(value, ', '.join(allowed)))
+        self._incore_iodist = value
 
     def _set_nam_macro(self, namcontents, namlocal, macro, value):
         """Set a namelist macro and log it!"""
@@ -368,14 +440,14 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
-        # List of macros actualy used in the namelist
+        # List of macros actually used in the namelist
         nam_macros = set()
         for nam_block in namcontents.values():
             nam_macros.update(nam_block.macros())
         # The actual number of tasks involved in computations
         effective_nprocs = self.nprocs
-        if self.incore_iotasks is not None:
-            effective_nprocs -= self.incore_iotasks
+        if self.effective_incore_iotasks is not None:
+            effective_nprocs -= self.effective_incore_iotasks
         # Set up the effective_nprocs related macros
         nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
         if any([n in nam_macros for n in nprocs_macros]):
@@ -402,8 +474,23 @@ class _AbstractMpiNWP(mpitools.MpiBinaryBasic, _NWPIoServerMixin):
                                                 namlocal)
         namw = namw or namw_p
         # Incore IO tasks
-        if self.incore_iotasks is not None:
-            namw_io = self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.incore_iotasks)
+        if self.effective_incore_iotasks is not None:
+            c_iodist = None
+            if self.incore_iodist is not None:
+                if self.incore_iodist == 'begining':
+                    c_iodist = -1
+                elif self.incore_iodist == 'end':
+                    c_iodist = 0
+                elif self.incore_iodist == 'scattered':
+                    # Ensure that there is at least one task on the first node
+                    c_iodist = min(self.nprocs // self.effective_incore_iotasks,
+                                   self.options.get('nnp', self.nprocs))
+                else:
+                    raise RuntimeError("incore_iodist '{!s}' is not supported: check your code"
+                                       .format(self.incore_iodist))
+            namw_io = self._nwp_ioserv_setup_namelist(namcontents, namlocal,
+                                                      self.effective_incore_iotasks,
+                                                      computed_iodist_value=c_iodist)
             namw = namw or namw_io
         return namw
 
@@ -452,12 +539,18 @@ class MpiNWPIO(mpitools.MpiBinaryIOServer, _NWPIoServerMixin):
     _footprint = dict(
         attr = dict(
             kind = dict(values = ['nwpioserv', ]),
+            iolocation = dict(values = [-1, 0], default = 0, optional = True, type = int),
         )
     )
 
     def setup_namelist_delta(self, namcontents, namlocal):
         """Setup the IO Server."""
-        self._nwp_ioserv_setup_namelist(namcontents, namlocal, self.nprocs)
+        self._nwp_ioserv_setup_namelist(
+            namcontents,
+            namlocal,
+            self.nprocs,
+            computed_iodist_value=(-1 if self.iolocation == 0 else None)
+        )
 
     def clean(self, opts=None):
         """Finalise the IO server run."""
