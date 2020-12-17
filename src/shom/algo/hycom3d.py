@@ -51,7 +51,7 @@ class Hycom3dCompilator(Expresso):
         info="Compile inicon",
         attr=dict(
             kind=dict(
-                values=["hycom_3d_compilator"],
+                values=["hycom3d_compilator"],
             ),
             compilation_script=dict(
                 info="Shell script that makes the compilation.",
@@ -59,7 +59,7 @@ class Hycom3dCompilator(Expresso):
             ),
             env_config=dict(
                 info="Environment variables and options for compilation",
-                option=True,
+                optional=True,
                 type=dict,
                 default={},
             ),
@@ -124,6 +124,9 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
     _footprint = dict(
         info="Compile the 3d model",
         attr=dict(
+            kind=dict(
+                values=['hycom3d_model_compilator'],
+            ),
             dimensions=dict(
                 info="Dictionary of the model dimensions",
                 optional=False,
@@ -138,7 +141,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
     )
 
     def prepare(self, rh, kw):
-        # super(Hycom3dModel3DCompilator, self).prepare(rh, kw)
+        super().prepare(rh, kw)
 
         # Check dimensions
         check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE)
