@@ -12,7 +12,7 @@ import vortex.tools.date as vdate
 from vortex.syntax.stdattrs import date_deco, term_deco
 from vortex.layout.dataflow import Section
 from vortex.algo.components import (
-    Expresso, AlgoComponent, AlgoComponentError, BlindRun)
+    Expresso, AlgoComponent, AlgoComponentError, BlindRun, Parallel)
 
 from sloop.env import stripout_conda_env
 from sloop.io import nc_get_time
@@ -31,8 +31,6 @@ from sloop.models.hycom3d import (
     run_bin2hycom,
     rest_head
 )
-
-
 from ..util.config import config_to_env_vars
 
 __all__ = []
@@ -777,3 +775,62 @@ class Hycom3dAtmFrcOut(AlgoComponent):
     @property
     def realkind(self):
         return 'AtmFrcOut'
+
+# %% Model run AlgoComponents
+
+class Hycom3dModelRun(Parallel):
+
+    _footprint = [
+        dict(
+            info="Run the model",
+            attr=dict(
+                binary=dict(
+                    values=["hycom3d_model_run"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,                
+                ),
+                restart=dict(
+                    default=False,
+                    type=bool,
+                ),
+                delday=dict(
+                    default=1,
+                    type=int,
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_model_run"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dModelRun, self).prepare(rh, opts)
+
+        from string import Template
+        tpl_runinput = 'FORCING{self.rank}./run.input.tpl'.format(**locals())
+        rpl = dict(
+            lsave=1 if self.restart else 0, 
+            delday=self.delday,
+        )
+        with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
+                s = Template(tpl.read())
+                f.write(s.substitute(rpl))
+
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def execute(self, rh, opts):
+        """Model execution"""
+        self._clargs = dict(
+            datadir    = "./",
+            tmpdir     = "./",
+            localdir   = "./",
+            rank       = self.rank,
+        )
+        super(Hycom3dModelRun, self).execute(rh, opts)

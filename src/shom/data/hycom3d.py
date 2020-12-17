@@ -156,7 +156,7 @@ class Hycom3dModelBinary(vde.Binary):
             info="Binary of the model",
             attr= dict(
                 gvar = dict(
-                    default='hycom3d_model_binary',
+                    default='oceanmodel',
                 ),
                 kind = dict(
                     values=['oceanmodel'],
@@ -168,6 +168,9 @@ class Hycom3dModelBinary(vde.Binary):
     @property
     def realkind(self):
         return 'hycom3d_model_binary'
+    
+    def command_line(self, **opts):
+        return ("{datadir} {tmpdir} {localdir} {rank}").format(**opts)
 
 
 # %% Pre-processing intermediate files
@@ -209,7 +212,7 @@ class Hycom3dAtmFrcInputFiles(Resource):
             info="Hycom Atmospheric Forcing Input Files",
             attr=dict(
                 kind=dict(
-                    values=['hycom3d_atmfrc_input']
+                    values=['gridpoint']
                 ),
                 fields=dict(
                     values=['shwflx','radflx','precip','preatm','airtmp',
@@ -364,6 +367,7 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
                     values=["gridpoint"],
                 ),
                 domain=dict(
+                    values=["3D", "2D"],
                     type=str,
                     default="3D",
                 ),
