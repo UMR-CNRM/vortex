@@ -19,7 +19,7 @@ __all__ = [
 
 #: Usual definition for the ``promid`` (*e.g.* promethee identifier).
 a_promid = dict(
-    info="The promethee identifier (name of the file)",
+    info="[Deprecated] The promethee identifier (name of the file)",
     type=str,
     optional=False,
 )
@@ -30,8 +30,8 @@ promid = footprints.Footprint(info='Abstract promethee identifier (name of the f
 
 promid_deco = footprints.DecorativeFootprint(
     promid,
-    decorator=[namebuilding_append('src', lambda self: {'promid': self.promid}),
-               generic_pathname_insert('promid', lambda self: self.promid, setdefault=True)])
+    decorator=[namebuilding_append('src', lambda self: {'promid': self.promid})]
+)
 
 #: Usual definition for the ``version`` (*e.g.* original configuration hashcode).
 a_version = dict(
@@ -47,12 +47,11 @@ version = footprints.Footprint(info='Abstract original config version (MD5 check
 
 version_deco = footprints.DecorativeFootprint(
     version,
-    decorator=[namebuilding_append('src', lambda self: {'version': self.version}),
-               generic_pathname_insert('version', lambda self: self.version, setdefault=True)])
+    decorator=[namebuilding_append('src', lambda self: {'version': self.version})]
+)
 
 
 #: Usual definition for the ``param`` (*e.g.* field).
-# TO DO : Define a set of default values
 a_param = dict(
     info="Parameter or field name",
     type=str,
@@ -65,5 +64,25 @@ param = footprints.Footprint(info='Abstract parameter or field name',
 
 param_deco = footprints.DecorativeFootprint(
     param,
-    decorator=[namebuilding_append('src', lambda self: {'param': self.param}),
-               generic_pathname_insert('param', lambda self: self.param, setdefault=True)])
+    decorator=[namebuilding_append('src', lambda self: {'param': self.param})]
+)
+
+
+#: Usual definition for the ``task`` (*e.g.* task name for/from which the resource exists)
+tasks = ["conf_task", "data_task", "mask_task", "prod_task", "version"]
+
+a_task = dict(
+    info='Task name',
+    type=str,
+    optional=False,
+    values=tasks
+)
+
+task = footprints.Footprint(info='Abstract task name',
+                            attr=dict(task=a_task))
+
+task_deco = footprints.DecorativeFootprint(
+    task,
+    decorator=[namebuilding_append('src', lambda self: {"task": self.task})]
+)
+ 
