@@ -156,10 +156,10 @@ class Hycom3dModelBinary(vde.Binary):
             info="Binary of the model",
             attr= dict(
                 gvar = dict(
-                    default='oceanmodel',
+                    default='hycom3d_model_binary',
                 ),
                 kind = dict(
-                    values=['hycom3d_model_binary'],
+                    values=['oceanmodel'],
                 ),
             ),
         )
