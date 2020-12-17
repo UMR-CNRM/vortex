@@ -14,6 +14,7 @@ from vortex.layout.dataflow import Section
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun, Parallel)
 
+from sloop.env import stripout_conda_env
 from sloop.io import nc_get_time
 from sloop.interp import nc_interp_time
 from sloop.models.hycom3d import (
@@ -49,7 +50,7 @@ class Hycom3dCompilator(Expresso):
         info="Compile inicon",
         attr=dict(
             kind=dict(
-                values=["hycom_3d_compilator"],
+                values=["hycom3d_compilator"],
             ),
             compilation_script=dict(
                 info="Shell script that makes the compilation.",
@@ -57,7 +58,7 @@ class Hycom3dCompilator(Expresso):
             ),
             env_config=dict(
                 info="Environment variables and options for compilation",
-                option=True,
+                optional=True,
                 type=dict,
                 default={},
             ),
@@ -73,14 +74,15 @@ class Hycom3dCompilator(Expresso):
 
     def prepare(self, rh, kw):
         super(Hycom3dCompilator, self).prepare(rh, kw)
-        self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
-        env_vars = config_to_env_vars(self.env_config)
-        for name, value in env_vars.items():
-            self.env[name] = value
+        #self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
+        self._env_vars = config_to_env_vars(self.env_config)
 
     def execute(self, rh, kw):
-        # super(Hycom3dCompilator, self).execute(rh, kw)
-        print(self.spawn([self.compilation_script], {"outsplit": False}))
+        #super(Hycom3dCompilator, self).execute(rh, kw)
+        with self.env.clone() as e:
+            stripout_conda_env(e)
+            e.update(self._env_vars)
+            print(self.spawn([self.compilation_script], {"outsplit": False}))
 
     @property
     def realkind(self):
@@ -121,6 +123,9 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
     _footprint = dict(
         info="Compile the 3d model",
         attr=dict(
+            kind=dict(
+                values=['hycom3d_model_compilator'],
+            ),
             dimensions=dict(
                 info="Dictionary of the model dimensions",
                 optional=False,
@@ -135,7 +140,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
     )
 
     def prepare(self, rh, kw):
-        # super(Hycom3dModel3DCompilator, self).prepare(rh, kw)
+        super().prepare(rh, kw)
 
         # Check dimensions
         check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE)
@@ -520,6 +525,9 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                     values=["current" ],
                     default="current",
                 ),
+                netw_ana=dict(
+                    type=list,
+                ),
             ),
         ),
     ]
@@ -540,22 +548,30 @@ class Hycom3dAtmFrcTime(AlgoComponent):
     def prepare(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).prepare(rh, opts)
 
-        self.sections = defaultdict(partial(list))
+        self.insta = []
+        self.cumul = defaultdict(partial(list))
         for cumul, cumul_d in self._sorted_inputs.items():
             for term, term_d in cumul_d.items():
                 if "ana" in term_d.keys():
-                    self.sections[cumul].append(term_d["ana"])
+                    origin = "ana"
                 else:
-                    self.sections[cumul].append(term_d["fcst"])
+                    origin = "fcst"
+                sec = term_d[origin]
+                sec_path = sec.rh.container.localpath()
+                if cumul=='insta':
+                    self.insta.append(sec_path)
+                else:
+                    self.cumul[sec.rh.resource.date.ymdh].append(sec_path)
+        print(self.insta)
+        print(self.cumul)
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
-
+       
         time = [self.rundate+vdate.Time(term) for term in self.terms]
-        insta_files=[sec.rh.container.localpath() for sec in self.sections["insta"]]
-        cumul_files=[sec.rh.container.localpath() for sec in self.sections["cumul"]]
-        AtmFrc(insta_files=insta_files,
-               cumul_files=cumul_files,).interp_time(time, self.nc_out)
+        AtmFrc(insta_files=self.insta,
+               cumul_files=self.cumul,
+               ).interp_time(time, self.nc_out)
 
     @property
     def realkind(self):

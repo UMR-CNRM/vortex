@@ -34,6 +34,7 @@ models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
     'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha', 'eps',
+    'hycom3d', 'croco'
 ])
 
 #: Possible values for the most common binaries.

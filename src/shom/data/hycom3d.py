@@ -159,7 +159,7 @@ class Hycom3dModelBinary(vde.Binary):
                     default='oceanmodel',
                 ),
                 kind = dict(
-                    values=['hycom3d_model_binary'],
+                    values=['oceanmodel'],
                 ),
             ),
         )
