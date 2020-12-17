@@ -31,8 +31,7 @@ from sloop.models.hycom3d import (
     run_bin2hycom,
     rest_head
 )
-
-# from ..util.config import config_to_env_vars
+from ..util.config import config_to_env_vars
 
 __all__ = []
 # from vortex.data.executables import Script
@@ -391,7 +390,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
                     optional=True,
                     default="{river}.flx.nc",
                 ),
-                term=dict(
+                terms=dict(
                     optional=False,
                     type=list,
                 ),
@@ -509,7 +508,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                 kind=dict(
                     values=["AtmFrcTime"],
                 ),
-                term=dict(
+                terms=dict(
                     optional=False,
                     type=list,
                 ),
