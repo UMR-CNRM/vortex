@@ -7,13 +7,15 @@ Created on Thu Apr  4 17:32:49 2019 by sraynaud
 from collections import defaultdict
 from functools import partial
 
+from bronx.stdtypes.date import Date
 import vortex.tools.date as vdate
+from vortex.syntax.stdattrs import date_deco, term_deco
 from vortex.layout.dataflow import Section
 from vortex.algo.components import (
-    Expresso, AlgoComponent, AlgoComponentError, BlindRun)
+    Expresso, AlgoComponent, AlgoComponentError, BlindRun, Parallel)
 
 from sloop.io import nc_get_time
-from sloop.interp import nc_interp_at_freq_to_nc
+from sloop.interp import nc_interp_time
 from sloop.models.hycom3d import (
     HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE,
     HYCOM3D_SIGMA_TO_STMT_FNS,
@@ -25,11 +27,11 @@ from sloop.models.hycom3d import (
     read_regional_grid,
     AtmFrc,
     Rivers,
-    run_bin2hycom
+    run_bin2hycom,
+    rest_head
 )
 
-
-from ..util.config import config_to_env_vars
+# from ..util.config import config_to_env_vars
 
 __all__ = []
 # from vortex.data.executables import Script
@@ -74,7 +76,6 @@ class Hycom3dCompilator(Expresso):
         self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
         env_vars = config_to_env_vars(self.env_config)
         for name, value in env_vars.items():
-            print(f'SETTING ENV: {name}={value}')
             self.env[name] = value
 
     def execute(self, rh, kw):
@@ -163,14 +164,13 @@ class Hycom3dIBCRunTime(AlgoComponent):
     """Algo component for the temporal interpolation of IBC netcdf files"""
 
     _footprint = [
-        #        dateperiod_deco,
+        date_deco,
         dict(
             info="Run the initial and boundary conditions time interpolator",
             attr=dict(
                 kind=dict(
                     values=["hycom3d_ibc_run_time"],
                 ),
-                begindate=dict(),
                 ncout=dict(
                     default="forecast.nc",
                     optional=True,
@@ -180,7 +180,7 @@ class Hycom3dIBCRunTime(AlgoComponent):
                     type=int,
                     optional=True,
                 ),
-                step=dict(),
+                terms=dict(type=list),
             ),
         ),
     ]
@@ -191,15 +191,16 @@ class Hycom3dIBCRunTime(AlgoComponent):
         # Input netcdf files
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
+        self._dates = [(self.date+vdate.Time(term)).as_datetime()
+                       for term in self.terms]
 
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
 
         # Interpolate in time
-        nc_interp_at_freq_to_nc(
+        nc_interp_time(
             self._ncfiles,
-            self.step,
-            begindate=self.conf.rundate,
+            dates=self._dates,
             ncout=self.ncout,
             # preproc=self._geo_selector,
             postproc=format_ds)
@@ -324,7 +325,7 @@ class Hycom3dIBCRunVertical(BlindRun):
 
         # Restart time is taken from input files
         if self.restart:
-            self._restart_time = nc_get_time(ncfiles[0])[0]
+            self._restart_time = nc_get_time(ncfiles[0])[0].data
 
         # Constant files
         for cfile in (f"FORCING{self.rank}./regional.grid.a",
@@ -385,7 +386,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
                     optional=True,
                     default="{river}.flx.nc",
                 ),
-                terms=dict(
+                term=dict(
                     optional=False,
                     type=list,
                 ),
@@ -405,7 +406,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
         super(Hycom3dRiversFlowRate, self).prepare(rh, opts)
 
         gettarfile = self.context.sequence.effective_inputs(
-            role=["GetRivers"])
+            role=["Input"])
         if len(gettarfile) == 0:
             raise AlgoComponentError(
                 "No tar file available for rivers data"
@@ -503,7 +504,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
                 kind=dict(
                     values=["AtmFrcTime"],
                 ),
-                terms=dict(
+                term=dict(
                     optional=False,
                     type=list,
                 ),
@@ -529,7 +530,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         cumul/term/origin"""
 
         insec = self.context.sequence.effective_inputs(
-            role='GetAtmFrc')
+            role='Input')
         outsec = defaultdict(partial(defaultdict, partial(defaultdict, Section)))
         for sec in insec:
             real_term = sec.rh.resource.date.time() + sec.rh.resource.term
@@ -755,7 +756,66 @@ class Hycom3dAtmFrcOut(AlgoComponent):
         super(Hycom3dAtmFrcOut, self).execute(rh, opts)
         AtmFrc().write_abfiles(self.nc_in, freq=self.freq)
         AtmFrc().write_ncfiles(self.nc_in)
-        
+
     @property
     def realkind(self):
         return 'AtmFrcOut'
+
+# %% Model run AlgoComponents
+
+class Hycom3dModelRun(Parallel):
+
+    _footprint = [
+        dict(
+            info="Run the model",
+            attr=dict(
+                binary=dict(
+                    values=["hycom3d_model_run"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,                
+                ),
+                restart=dict(
+                    default=False,
+                    type=bool,
+                ),
+                delday=dict(
+                    default=1,
+                    type=int,
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_model_run"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dModelRun, self).prepare(rh, opts)
+
+        from string import Template
+        tpl_runinput = 'FORCING{self.rank}./run.input.tpl'.format(**locals())
+        rpl = dict(
+            lsave=1 if self.restart else 0, 
+            delday=self.delday,
+        )
+        with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
+                s = Template(tpl.read())
+                f.write(s.substitute(rpl))
+
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def execute(self, rh, opts):
+        """Model execution"""
+        self._clargs = dict(
+            datadir    = "./",
+            tmpdir     = "./",
+            localdir   = "./",
+            rank       = self.rank,
+        )
+        super(Hycom3dModelRun, self).execute(rh, opts)
