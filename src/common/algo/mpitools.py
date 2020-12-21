@@ -7,6 +7,7 @@ General interest and NWP specific MPI launchers.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import collections
 import re
 import math
 import six
@@ -104,7 +105,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
         """Set the envelope fake binary options."""
         e_bit.options = {k: v for k, v in e_desc.items()
-                         if k not in ('openmp')}
+                         if k not in ('openmp', )}
         e_bit.options['prefixcommand'] = self._envelope_wrapper_name
         if self.binaries:
             e_bit.master = self.binaries[0].master
@@ -305,16 +306,24 @@ class _NWPIoServerMixin(object):
         ioserv_prefixes = set()
         logfmt = '%24s: %32s %s'
         iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
-        for iodir in self._nwp_ioserv_iodirs():
-            self.system.subtitle('Parallel io directory {0:s}'.format(iodir))
+        self.system.subtitle('Dealing with IO directories')
+        iodirs = self._nwp_ioserv_iodirs()
+        logger.info('List of IO directories: %s', ','.join(iodirs))
+        f_summary = collections.defaultdict(lambda: [' '] * len(iodirs))
+        for i, iodir in enumerate(iodirs):
             for iofile in self.system.listdir(iodir):
                 zf = iofile_re.match(iofile)
                 if zf:
-                    logger.info(logfmt, iodir, iofile, ':-)')
+                    f_summary[zf.group(1)][i] = '+'
                     ioserv_filelist.add((zf.group(1), zf.group(2)))
                     ioserv_prefixes.add(zf.group(2))
                 else:
-                    logger.info(logfmt, iodir, iofile, 'UFO')
+                    f_summary[iofile][i] = '?'
+        max_names_len = max([len(iofile) for iofile in f_summary.keys()])
+        fmt_names = '{:' + str(max_names_len) + 's}'
+        logger.info('Data location accross the various IOserver directories:\n%s',
+                    '\n'.join([(fmt_names + ' |{:s}|').format(iofile, ''.join(where))
+                               for iofile, where in sorted(f_summary.items())]))
 
         if 'GRIBPF' in ioserv_prefixes:
             # If GRIB are requested, do not bother with old FA PF files
