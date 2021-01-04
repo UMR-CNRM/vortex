@@ -34,6 +34,7 @@ import hashlib
 import io
 import json
 import locale
+import multiprocessing
 import os
 import pickle
 import platform
@@ -79,6 +80,11 @@ logger = loggers.getLogger(__name__)
 yaml_checker = ExternalCodeImportChecker('yaml')
 with yaml_checker as ec_register:
     import yaml
+
+# Optional, netcdf comparison tool
+b_netcdf_checker = ExternalCodeImportChecker('netdcf')
+with b_netcdf_checker as npregister:
+    from bronx.datagrip import netcdf as b_netcdf
 
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'none', re.IGNORECASE)
@@ -2955,6 +2961,34 @@ class Python27(object):
                     if _access_check(name, mode):
                         return name
         return None
+
+    def netcdf_diff(self, netcdf1, netcdf2, **kw):
+        """Difference between two NetCDF files.
+
+        Use the netCDF4 package to do so...
+
+        :param netcdf1: first file to compare
+        :param netcdf2: second file to compare
+        """
+        def _compare_function(nc1, nc2, rc):
+            rc = int(b_netcdf.netcdf_file_diff(nc1, nc2))
+
+        if b_netcdf_checker.is_available():
+            # Unfortunately, the netCDF4 package seems to leak memory,
+            # using multiprocessing to mitigate this mess :-(
+            rc = multiprocessing.Value('i', 0)
+            p = multiprocessing.Process(target=_compare_function,
+                                        args=(netcdf1, netcdf2, rc))
+            p.start()
+            p.join()
+            return bool(rc)
+        else:
+            logger.error("Unable to load the 'bronx.datagrip.netcdf' package. " +
+                         "The netcdf library and/or 'netCDF4' python package are probably missing.")
+            return False
+
+    # Let's make this method compatible with fmtshcmd...
+    netcdf_diff.func_extern = True
 
 
 _python34_fp = footprints.Footprint(info='An abstract footprint to be used with the Python34 Mixin',
