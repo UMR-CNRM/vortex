@@ -81,11 +81,6 @@ yaml_checker = ExternalCodeImportChecker('yaml')
 with yaml_checker as ec_register:
     import yaml
 
-# Optional, netcdf comparison tool
-b_netcdf_checker = ExternalCodeImportChecker('netdcf')
-with b_netcdf_checker as npregister:
-    from bronx.datagrip import netcdf as b_netcdf
-
 #: Pre-compiled regex to check a none str value
 isnonedef = re.compile(r'none', re.IGNORECASE)
 
@@ -2928,12 +2923,20 @@ class Python27(object):
         :param netcdf1: first file to compare
         :param netcdf2: second file to compare
         """
-        def _compare_function(nc1, nc2, rc):
-            rc = int(b_netcdf.netcdf_file_diff(nc1, nc2))
+
+        # Optional, netcdf comparison tool
+        b_netcdf_checker = ExternalCodeImportChecker('netdcf')
+        with b_netcdf_checker as npregister:
+            from bronx.datagrip import netcdf as b_netcdf
 
         if b_netcdf_checker.is_available():
             # Unfortunately, the netCDF4 package seems to leak memory,
             # using multiprocessing to mitigate this mess :-(
+
+            def _compare_function(nc1, nc2, rc):
+                """Function started by the subprocess."""
+                rc = int(b_netcdf.netcdf_file_diff(nc1, nc2))
+
             rc = multiprocessing.Value('i', 0)
             p = multiprocessing.Process(target=_compare_function,
                                         args=(netcdf1, netcdf2, rc))
