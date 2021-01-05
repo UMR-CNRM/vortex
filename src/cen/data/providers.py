@@ -8,8 +8,7 @@ TODO: Module documentation.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
-import footprints
-import os
+
 from vortex.util.config import GenericConfigParser
 from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import namespacefp

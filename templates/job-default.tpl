@@ -52,6 +52,7 @@ auto_options = dict(
 $auto_options
 )
 
+# BC 2 modifs to abandon.
 ja = footprints.proxy.jobassistant(kind = 'generic',
                                    modules = footprints.stdtypes.FPSet((
                                        'common', 'gco', 'olive', 'cen',
