@@ -18,8 +18,8 @@ purposes:
     >>> def create_demo_netcdf4(nc_filename):
     ...     demoset = netCDF4.Dataset(nc_filename, mode='w')
     ...     demoset.setncattr('title', 'NetCDF Demo Data')
-    ...     X_u = demoset.createDimension('X', 5)
-    ...     Y_u = demoset.createDimension('Y', 2)
+    ...     x_u = demoset.createDimension('X', 5)
+    ...     y_u = demoset.createDimension('Y', 2)
     ...     g1 = demoset.createGroup('group1')
     ...     g2 = demoset.createGroup('group2')
     ...     vx = demoset.createVariable('x', np.float64, ('X', ), zlib=True)
@@ -29,11 +29,13 @@ purposes:
     ...     T = g1.createVariable('T', np.float32, ('X', 'Y'))
     ...     T.setncattr('unit', 'Kelvin')
     ...     T[...] = np.reshape(np.arange(270, 280, 1), (5, 2))
+    ...     T[1, 0] = np.ma.masked
     ...     z_u = g2.createDimension('Z', size=None)
     ...     T = g2.createVariable('T', np.float32, ('X', 'Y', 'Z'))
     ...     T.setncattr('unit', 'Kelvin')
     ...     T[..., 0] = np.reshape(np.arange(270, 280, 1), (5, 2))
     ...     T[..., 1] = np.reshape(np.arange(300, 310, 1), (5, 2))
+    ...     T[0, 0, 0] = np.nan
     ...     return demoset
 
 Create a NetCDF dataset and display its structure:
@@ -101,6 +103,7 @@ Create a different dataset and perform a comparison:
     >>> demofile2 = tempfile.NamedTemporaryFile(mode='wb', delete=True)
     >>> demoset2 = create_demo_netcdf4(demofile2.name)
     >>> demoset2.delncattr('title')
+    >>> demoset2['group1']['T'][1, 0] = 276.
     >>> demoset2['group1']['T'][1, 1] = np.ma.masked
     >>> demoset2['group2']['T'].unit = 'Celsius'
     >>> demoset2['group2']['T'][1, 1, 1] = 0
@@ -243,16 +246,26 @@ def netcdf_dataset_diff(netcdf4_ref, netcdf4_new, verbose=True):
     common_vars = set(ref_vars.keys()) & set(new_vars.keys())
     updated_vars = set()
     for path_to_var in common_vars:
-        ref_values = ref_vars[path_to_var][...]
-        new_values = new_vars[path_to_var][...]
-        if not (np.array_equal(new_values.mask, ref_values.mask) and
-                np.array_equal(ref_values.compressed(), new_values.compressed())):
+        rc = True
+        ref_values = ref_vars.pop(path_to_var)[...]
+        new_values = new_vars.pop(path_to_var)[...]
+        ref_nans = np.isnan(ref_values).filled(False)
+        new_nans = np.isnan(new_values).filled(False)
+        if np.any(ref_nans) or np.any(new_nans):
+            if not np.array_equal(ref_nans, new_nans):
+                updated_vars.add(path_to_var)
+                continue
+            ref_values[ref_nans] = np.ma.masked
+            new_values[new_nans] = np.ma.masked
+        if np.any(ref_values.mask) or np.any(new_values.mask):
+            if not np.array_equal(new_values.mask, ref_values.mask):
+                updated_vars.add(path_to_var)
+                continue
+            ref_values = ref_values.compressed()
+            new_values = new_values.compressed()
+        if not np.array_equal(new_values, ref_values):
             updated_vars.add(path_to_var)
-        # Hopefully, the following statements will allow for a better garbage collection.
-        del ref_values
-        del new_values
-        del ref_vars[path_to_var]
-        del new_vars[path_to_var]
+    # Summary
     if verbose or updated_vars:
         print('== Comparison of data available in both netcdf datasets: ==')
         print('{:d} data arrays out of {:d} are identical'
