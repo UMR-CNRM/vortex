@@ -264,10 +264,15 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                 d_members = sorted([sec.rh.provider.member for sec in d_sections])
                 d_formats = set([sec.rh.container.actualfmt for sec in d_sections])
                 d_blocks[a_date] = (d_members, d_formats)
-            a_date, (eff_members, eff_formats) = d_blocks.popitem()
+            ref_date, (eff_members, eff_formats) = d_blocks.popitem()
             for a_date, a_data in d_blocks.items():
-                self.algoassert(a_data[0] == eff_members, "Inconsistent members list.")
-                self.algoassert(a_data[1] == eff_formats, "Inconsistent formats list.")
+                self.algoassert(a_data[0] == eff_members,
+                                "Inconsistent members list (date={!s} vs {!s})."
+                                .format(a_date, ref_date))
+                self.algoassert(a_data[1] == eff_formats,
+                                "Inconsistent formats list (date={!s} vs {!s})."
+                                .format(a_date, ref_date))
+            d_blocks[ref_date] = (eff_members, eff_formats)
             if eff_members and self.nbmember is None:
                 # Here, NBE is the number of members for one date
                 self._actual_nbe = len(eff_members)
