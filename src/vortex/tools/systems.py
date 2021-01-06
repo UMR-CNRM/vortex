@@ -2933,16 +2933,16 @@ class Python27(object):
             # Unfortunately, the netCDF4 package seems to leak memory,
             # using multiprocessing to mitigate this mess :-(
 
-            def _compare_function(nc1, nc2, rc):
+            def _compare_function(nc1, nc2, outcome):
                 """Function started by the subprocess."""
-                rc = int(b_netcdf.netcdf_file_diff(nc1, nc2))
+                outcome.value = int(b_netcdf.netcdf_file_diff(nc1, nc2))
 
             rc = multiprocessing.Value('i', 0)
             p = multiprocessing.Process(target=_compare_function,
                                         args=(netcdf1, netcdf2, rc))
             p.start()
             p.join()
-            return bool(rc)
+            return bool(rc.value)
         else:
             logger.error("Unable to load the 'bronx.datagrip.netcdf' package. " +
                          "The netcdf library and/or 'netCDF4' python package are probably missing.")
