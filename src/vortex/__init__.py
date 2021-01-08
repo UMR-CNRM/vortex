@@ -27,10 +27,10 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import os
 from configparser import RawConfigParser
 
-__version__ = '1.7.1'
+__version__ = '1.7.2'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.7.2'
+__nextversion__ = '1.7.3'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []

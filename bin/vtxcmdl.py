@@ -99,7 +99,9 @@ class ExtraArgumentError(Exception):
 
 def vortex_delayed_init(t, loadedmods=None):
     """Setup footprints"""
-    import common, olive, gco
+    import common
+    import olive
+    import gco
     # Load shell addons
     import vortex.tools.folder
     import vortex.tools.grib
@@ -131,7 +133,7 @@ def actual_action(action, t, args, fatal=True):
                                        rh.container.localpath())
                         t.sh.remove(rh.container.localpath(), fmt=args.format)
                     raise
-                except StandardError as e:
+                except Exception as e:
                     logger.warning("An exception was caught: %s.", str(e))
                     rst = False
                     if fatal:
@@ -149,7 +151,7 @@ def actual_action(action, t, args, fatal=True):
             else:
                 raise ValueError("The resource handler could not be fully defined.")
 
-        # Finish the action by actually sending the prestaging request
+        # Finish the action by actually sending the pre-staging request
         if action == 'prestage':
             ctx = t.context
             ctx.prestaging_hub.flush()
@@ -261,7 +263,7 @@ def main():
     fatal = args.fatal
     del args.fatal
 
-    # do some prestaging before get actions
+    # do some pre-staging before get actions
     prestage = args.prestage
     del args.prestage
 

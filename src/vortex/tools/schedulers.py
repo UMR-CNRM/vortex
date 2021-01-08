@@ -352,9 +352,9 @@ class EcFlow(EcmwfLikeScheduler):
                 tunnel = None
                 # wait and retries from config
                 thistarget = self.sh.default_target
-                sshwait = thistarget.get('ecflow:sshproxy_wait', 6)
-                sshretries = thistarget.get('ecflow:sshproxy_retries', 2)
-                sshretrydelay = thistarget.get('ecflow:sshproxy_retrydelay', 1)
+                sshwait = float(thistarget.get('ecflow:sshproxy_wait', 6))
+                sshretries = float(thistarget.get('ecflow:sshproxy_retries', 2))
+                sshretrydelay = float(thistarget.get('ecflow:sshproxy_retrydelay', 1))
                 # Build up an SSH tunnel to convey the EcFlow command
                 ecconf = self.conf(dict())
                 echost = ecconf.get('{:s}HOST'.format(self.env_pattern), None)

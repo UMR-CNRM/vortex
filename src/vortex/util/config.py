@@ -32,22 +32,25 @@ if _PARSERPY32:
 else:
     _PARSERCLASS = SafeConfigParser
 
-_RE_AUTO_TPL = re.compile(r'^@([^/].*\.tpl)$')
+_RE_AUTO_TPL = re.compile(r'^@(([^/].*)\.tpl)$')
 
 _RE_ENCODING = re.compile(r"^\s*#.*?coding[=:]\s*([-\w.]+)")
 
 _DEFAULT_CONFIG_PARSER = ConfigParser if six.PY3 else SafeConfigParser
 
 
-def load_template(t, tplfile, encoding=None):
+def load_template(t, tplfile, encoding=None, version=None):
     """
     Load a template according to filename provided, either absolute or relative path.
     The first argument ``t`` should be a valid ticket session.
 
+    :param vortex.sessions.Ticket t: The Vortex' session to be used
+    :param str tplfile: The name of the desired template file
     :param str encoding: Specify an encoding in order to get a properly decoded
                          unicode string.
                          If "script", the encoding is read in the
                          file if it is present, set to None else.
+    :param int version: Find a template file with version >= to version
     """
     autofile = _RE_AUTO_TPL.match(tplfile)
     if autofile is None:
@@ -56,16 +59,43 @@ def load_template(t, tplfile, encoding=None):
         else:
             raise ValueError('Template file not found: <{}>'.format(tplfile))
     else:
-        autofile = autofile.group(1)
-        persofile = t.sh.path.join(t.glove.configrc, 'templates', autofile)
-        if t.sh.path.exists(persofile):
-            tplfile = persofile
-        else:
-            sitefile = t.sh.path.join(t.glove.siteroot, 'templates', autofile)
-            if t.sh.path.exists(sitefile):
-                tplfile = sitefile
+        new_tplfile = None
+        persodir = t.sh.path.join(t.glove.configrc, 'templates')
+        sitedir = t.sh.path.join(t.glove.siteroot, 'templates')
+        if version is None:
+            autofile = autofile.group(1)
+            persofile = t.sh.path.join(persodir, autofile)
+            if t.sh.path.exists(persofile):
+                new_tplfile = persofile
             else:
-                raise ValueError('Template file not found: <{}>'.format(tplfile))
+                sitefile = t.sh.path.join(sitedir, autofile)
+                if t.sh.path.exists(sitefile):
+                    new_tplfile = sitefile
+        else:
+            autofile = autofile.group(2)
+            autodir = t.sh.path.dirname(autofile)
+            if autodir:
+                persodir = t.sh.path.join(persodir, autodir)
+                sitedir = t.sh.path.join(sitedir, sitedir)
+                autofile = t.sh.path.basename(autofile)
+            allowedre = re.compile(autofile + r'-v(\d+).tpl')
+            alloweditems = dict()
+            for inputdir in (sitedir, persodir):
+                if not t.sh.path.exists(inputdir):
+                    continue
+                for fs_item in t.sh.listdir(inputdir):
+                    fs_match = allowedre.match(fs_item)
+                    if fs_match:
+                        alloweditems[int(fs_match.group(1))] = t.sh.path.join(inputdir, fs_item)
+            for item_version in sorted(alloweditems.keys(), reverse=True):
+                if item_version <= version:
+                    new_tplfile = alloweditems[item_version]
+                    break
+        if not new_tplfile:
+            raise ValueError('Template file not found: <{}> with version >= {!s}.'
+                             .format(tplfile, version))
+        else:
+            tplfile = new_tplfile
     try:
         import string
         # Treat the case encoding = "script"
@@ -83,6 +113,7 @@ def load_template(t, tplfile, encoding=None):
         else:
             actual_encoding = encoding
         # Read the template and delete the encoding line if present
+        logger.debug('Openning %s with encoding %s', tplfile, str(actual_encoding))
         with io.open(tplfile, 'r', encoding=actual_encoding) as tpfld:
             if encoding == "script" and actual_encoding is not None:
                 tpl = string.Template("".join([l for (i, l) in enumerate(tpfld)

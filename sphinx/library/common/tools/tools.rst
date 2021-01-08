@@ -28,6 +28,7 @@ Modules
 * :mod:`common.tools.igastuff`
 * :mod:`common.tools.mars`
 * :mod:`common.tools.odb`
+* :mod:`common.tools.partitioning`
 * :mod:`common.tools.satrad`
 
 

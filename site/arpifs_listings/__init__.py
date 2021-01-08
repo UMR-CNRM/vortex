@@ -12,7 +12,7 @@ import sys
 
 from . import util, norms, jo_tables, listings
 
-__version__ = '1.1.2'
+__version__ = '1.1.3'
 
 
 def compare_files(file_test, file_ref,

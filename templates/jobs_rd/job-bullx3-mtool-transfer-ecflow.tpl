@@ -69,9 +69,12 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='rd_',
                                    )
+
 ja.add_plugin('epygram_setup')
 ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]', lastid='transfer', mtoolid='[this:count]')
 ja.add_plugin('flow', backend='ecflow', jobidlabels=True, mtoolmeters=True)
+for pkind in ($loadedjaplugins):
+    ja.add_plugin(pkind)
 
 flowscheduler = dict(
     ECF_TRYNO=int('%ECF_TRYNO%'),

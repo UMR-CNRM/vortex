@@ -361,13 +361,13 @@ class SafranPackedFiles(GeoFlowResource):
         info = 'SAFRAN packed files covering a given period',
         attr = dict(
             kind = dict(
-                values = ['packedobs', 'listobs', 'packedguess'],
+                values = ['packedobs', 'listobs', 'packedguess', 'packedlisting'],
             ),
             model = dict(
                 values  = ['safran'],
             ),
             nativefmt = dict(
-                values = ['tar'],
+                values = ['tar', 'tar.gz'],
                 default = 'tar'
             ),
             begindate = a_date,

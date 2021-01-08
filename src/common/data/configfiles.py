@@ -101,3 +101,22 @@ class OopsJsonConfig(JsonConfig):
             ),
         )
     )
+
+
+class Bundle(StaticResource):
+    """Contains bundling of source codes."""
+    _footprint = dict(
+        info = 'Contains bundling of source codes.',
+        attr = dict(
+            kind = dict(
+                values = ['bundle']
+            ),
+            nativefmt = dict(
+                values = ['yml', 'yaml']
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'bundle'

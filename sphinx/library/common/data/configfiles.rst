@@ -34,6 +34,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Bundle
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 
 .. hints
 .. .. autodata:: XXX

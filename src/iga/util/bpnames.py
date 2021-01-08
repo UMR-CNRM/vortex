@@ -47,7 +47,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01'):
+                   'reuaro01', 'ctbto'):
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -680,9 +680,12 @@ def global_snames(resource, provider):
         if resource.filling == 'wind':
 
             if hasattr(resource, 'term'):
-                bname = 'vent_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'prv', resource.date.hh)
+                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst', resource.date.hh)
             elif hasattr(resource, 'endtime'):
-                bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv', resource.date.hh)
+                if resource.endtime == 240:
+                    bname = 'vent_{:s}{:s}'.format('prv_long', resource.date.hh)
+                else:
+                    bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv', resource.date.hh)
 
         elif resource.filling == 'currents':
             bname = 'courant_{:s}'.format(resource.date.hh)
@@ -734,5 +737,8 @@ def global_snames(resource, provider):
             bname = 'OULOUTPUT' + my_model + '.' + suff
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + my_model + '.' + suff
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs':
+        bname = 'ctbto_in.tar'
 
     return bname

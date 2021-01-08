@@ -584,8 +584,8 @@ class _VortexCacheBaseStore(CacheStore):
 
     def __init__(self, *args, **kw):
         logger.debug('Vortex cache store init %s', self.__class__)
-        super(_VortexCacheBaseStore, self).__init__(*args, **kw)
         del self.cache
+        super(_VortexCacheBaseStore, self).__init__(*args, **kw)
 
     def vortexcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""

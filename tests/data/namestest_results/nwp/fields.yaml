@@ -61,6 +61,34 @@
       location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      allow_archive: false
+      bdpeid: 43
+      forbidden_target: INT
+      namespace: bdpe.archive.fr
+      preferred_target: OPER
+      term: null
+      unknown: true
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: false
+      bdpeid: 43
+      forbidden_target: INT
+      namespace: bdpe.archive.fr
+      preferred_target: OPER
+      term: 42
+      unknown: true
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+42:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+42:00
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
       fields: seaice
       kind: rawfields
       namespace: '[suite].inline.fr'
