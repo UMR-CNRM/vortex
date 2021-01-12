@@ -53,7 +53,7 @@ def mocage_omplist_binarydeco(omp_variables):
                     self.env[omp_variable] = self.options.get('openmp', 1)
                     logger.info("OpenMP settings: %s=%d", omp_variable, self.env[omp_variable])
                 else:
-                    logger.info("Variable %d already set : %d", omp_variable, self.env[omp_variable])
+                    logger.info("Variable %s already set : %d", omp_variable, self.env[omp_variable])
 
         if hasattr(orig_setup_env, '__doc__'):
             setup_environment.__doc__ = orig_setup_env.__doc__
