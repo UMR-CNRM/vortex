@@ -156,7 +156,7 @@ class LegacyXPid(XPid):
 class FreeXPid(XPid):
     """Basestring wrapper for experiment ids (User defined)."""
 
-    _re_valid = re.compile(r'^\S+@\w+$')
+    _re_valid = re.compile(r'^\S+@[-\w]+$')
 
     def __new__(cls, value):
         if not cls._re_valid.match(value):
