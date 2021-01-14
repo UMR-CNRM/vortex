@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Algo Components for deterministic S2M simulations.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
