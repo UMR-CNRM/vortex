@@ -7,10 +7,12 @@
 #SBATCH --nodes=$nnodes
 #SBATCH --ntasks-per-node=$ntasks
 #SBATCH --partition=$partition
+#SBATCH --qos=$qos
 #SBATCH --time=$time
 #SBATCH --$exclusive
 #SBATCH --account=$account
 #SBATCH --$verbose
+#SBATCH --no-requeue
 
 # Build time: $create
 # Build user: $mkuser
@@ -42,7 +44,7 @@ op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
 
-pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api' ,'epygram/eccodes') ]
+pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api', 'epygram/eccodes') ]
 for d in pathdirs :
     if os.path.isdir(d):
         sys.path.insert(0, d)
