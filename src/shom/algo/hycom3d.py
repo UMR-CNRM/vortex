@@ -22,15 +22,19 @@ from sloop.models.hycom3d import (
     HYCOM3D_SIGMA_TO_STMT_FNS,
     HYCOM3D_MASK_FILE,
     HYCOM3D_GRID_AFILE,
+)
+
+from sloop.models.hycom3d.io import (
     check_grid_dimensions,
     setup_stmt_fns,
     format_ds,
     read_regional_grid,
-    AtmFrc,
-    Rivers,
     run_bin2hycom,
     rest_head
 )
+from sloop.models.hycom3d.atmfrc import AtmFrc
+from sloop.models.hycom3d.rivers import Rivers
+
 from ..util.config import config_to_env_vars
 
 __all__ = []
@@ -135,6 +139,11 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
                 optional=False,
                 values=list(HYCOM3D_SIGMA_TO_STMT_FNS.keys()),
             ),
+            rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+            ),
         ),
     )
 
@@ -142,7 +151,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
         super().prepare(rh, kw)
 
         # Check dimensions
-        check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE)
+        check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE.format(rank=self.rank))
 
         # Fill dimensions.h.template
         dimensionsh = HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE.replace(".template", "")
@@ -250,7 +259,7 @@ class Hycom3dIBCRunHoriz(BlindRun):
             role="Input")[0].rh.container.localpath()
 
         # Read hycom grid extents
-        from sloop.models.hycom3d import read_regional_grid_b
+        from sloop.models.hycom3d.io import read_regional_grid_b
         from sloop.grid import GeoSelector
         rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
         geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
@@ -258,9 +267,9 @@ class Hycom3dIBCRunHoriz(BlindRun):
                                    pad=self.pad)
 
         # Conversion to .res files
-        from sloop.models.hycom3d import nc_to_res
+        from sloop.models.hycom3d.io import nc_to_res
         resfiles = nc_to_res(
-            [ncinput], outfile_pattern='{var_name}_merc.res{ifile:03d}',
+            [ncinput], outfile_pattern='{field}_merc.res{ifile:03d}',
             preproc=geo_selector)
         self.varnames = list(resfiles.keys())
         self.csteps = range(len(resfiles["ssh"]))
@@ -342,7 +351,7 @@ class Hycom3dIBCRunVertical(BlindRun):
                 self.system.symlink(cfile, self.system.path.basename(cfile))
 
         # Read dimensions
-        from sloop.models.hycom3d import read_blkdat_input
+        from sloop.models.hycom3d.io import read_blkdat_input
         dsb = read_blkdat_input("blkdat.input")
         self._nx = int(dsb.idm)
         self._ny = int(dsb.jdm)
@@ -365,8 +374,8 @@ class Hycom3dIBCRunVertical(BlindRun):
         super().postfix(rh, opts)
         if self.restart:
             rest_head(self._restart_time)
-        else:
-            run_bin2hycom(self._nx, self._ny, self._nz)
+        
+        run_bin2hycom(self._nx, self._ny, self._nz)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -422,7 +431,7 @@ class Hycom3dRiversFlowRate(AlgoComponent):
         super(Hycom3dRiversFlowRate, self).execute(rh, opts)
 
         time = [self.rundate+vdate.Time(term) for term in self.terms]
-        Rivers(tarname=self.tarname).flowrate(time, self.nc_out)
+        Rivers().write_flowrate(self.tarname, time, self.nc_out)
 
     @property
     def realkind(self):
@@ -457,7 +466,7 @@ class Hycom3dRiversTempSaln(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dRiversTempSaln, self).execute(rh, opts)
-        Rivers().tempsaln(self.nc_in, self.nc_out)
+        Rivers().write_tempsaln(self.nc_in, self.nc_out)
 
     @property
     def realkind(self):
@@ -568,8 +577,8 @@ class Hycom3dAtmFrcTime(AlgoComponent):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
        
         time = [self.rundate+vdate.Time(term) for term in self.terms]
-        AtmFrc(insta_files=self.insta,
-               cumul_files=self.cumul,
+        AtmFrc(self.insta,
+               self.cumul,
                ).interp_time(time, self.nc_out)
 
     @property
@@ -605,7 +614,7 @@ class Hycom3dAtmFrcParameters(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcParameters, self).execute(rh, opts)
-        AtmFrc().parameters(self.nc_in, self.nc_out)
+        AtmFrc.parameters(self.nc_in, self.nc_out)
 
     @property
     def realkind(self):
@@ -630,6 +639,11 @@ class Hycom3dAtmFrcMask(AlgoComponent):
                     optional=True,
                     default="atmfrc.masked.nc",
                 ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
                 engine=dict(
                     values=["current" ],
                     default="current",
@@ -653,7 +667,8 @@ class Hycom3dAtmFrcMask(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcMask, self).execute(rh, opts)
-        AtmFrc().regridmask(HYCOM3D_MASK_FILE, self.nc_out, self.nc_in, self._weightsfile)
+        AtmFrc.regridmask(HYCOM3D_MASK_FILE.format(rank=self.rank), 
+                          self.nc_in, self.nc_out, self._weightsfile)
 
     @property
     def realkind(self):
@@ -676,6 +691,11 @@ class Hycom3dAtmFrcSpace(AlgoComponent):
                 nc_out=dict(
                     optional=True,
                     default="atmfrc.space.nc",
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
                 ),
                 engine=dict(
                     values=["current" ],
@@ -701,46 +721,13 @@ class Hycom3dAtmFrcSpace(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcSpace, self).execute(rh, opts)
-        hycom_grid = read_regional_grid(HYCOM3D_GRID_AFILE, grid_loc='p')
-        AtmFrc().regridvar(self.nc_in, self.nc_out, hycom_grid, self._weightsfile)
+        hycom_grid = read_regional_grid(HYCOM3D_GRID_AFILE.format(rank=self.rank),
+                                        grid_loc='p')
+        AtmFrc.regridvar(self.nc_in, self.nc_out, hycom_grid, self._weightsfile)
 
     @property
     def realkind(self):
         return 'AtmFrcSpace'
-
-
-class Hycom3dAtmFrcFinal(AlgoComponent):
-
-    _footprint = [
-        dict(
-            info="Prepare the dataset for Hycom",
-            attr=dict(
-                kind=dict(
-                    values=["AtmFrcFinal"],
-                ),
-                nc_in=dict(
-                    optional=True,
-                    default="atmfrc.space.nc",
-                ),
-                nc_out=dict(
-                    optional=True,
-                    default="atmfrc.final.nc",
-                ),
-                engine=dict(
-                    values=["current" ],
-                    default="current",
-                ),
-            ),
-        ),
-    ]
-
-    def execute(self, rh, opts):
-        super(Hycom3dAtmFrcFinal, self).execute(rh, opts)
-        AtmFrc().rename_vars(self.nc_in, self.nc_out)
-
-    @property
-    def realkind(self):
-        return 'AtmFrcFinal'
 
 
 class Hycom3dAtmFrcOut(AlgoComponent):
@@ -753,7 +740,7 @@ class Hycom3dAtmFrcOut(AlgoComponent):
                 ),
                 nc_in=dict(
                     optional=True,
-                    default="atmfrc.final.nc",
+                    default="atmfrc.space.nc",
                 ),
                 freq=dict(
                     optional=True,
@@ -769,8 +756,7 @@ class Hycom3dAtmFrcOut(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcOut, self).execute(rh, opts)
-        AtmFrc().write_abfiles(self.nc_in, freq=self.freq)
-        AtmFrc().write_ncfiles(self.nc_in)
+        AtmFrc.outgen(self.nc_in, freq=self.freq)
 
     @property
     def realkind(self):
