@@ -236,6 +236,12 @@ class S2MTaskMixIn(object):
         else:
             return meteo, "meteo"
 
+    def get_safran_sources(self, list_datebegin):
+
+        source_app = dict(datebegin={str(datebegin): 'arpege' if datebegin >= Date(2002, 8, 1) else 'ifs' for datebegin in list_datebegin})
+        source_conf = dict(datebegin={str(datebegin): '4dvarfr' if datebegin >= Date(2002, 8, 1) else 'era40' for datebegin in list_datebegin})
+        return source_app, source_conf
+
     def get_list_seasons(self, datebegin, dateend):
 
         list_dates_begin_input = list()
