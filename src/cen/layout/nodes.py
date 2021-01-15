@@ -2,8 +2,8 @@
 # -*- coding:Utf-8 -*-
 
 """
-This modules defines the base nodes of the logical layout
-for any :mod:`vortex` experiment.
+This modules defines specific CEN addons for the Task base class.
+Multiple inheritence together with the standard Task class is required to use this module.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

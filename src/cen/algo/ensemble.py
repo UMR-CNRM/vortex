@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Algo Components for ensemble S2M simulations.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -97,8 +97,8 @@ class _S2MWorker(VortexWorkerBlindRun):
 
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
-        for line in self.system.dir():
-            print(line)
+        #for line in self.system.dir():
+        #    print(line)
 
 
 class GuessWorker(_S2MWorker):
