@@ -168,7 +168,7 @@ class Surfex_Parallel(Parallel):
             ),
 
             threshold = dict(
-                info = "The initialization date if different from the starting date.",
+                info = "Threshold on snow water equivalent on August 1st.",
                 type = int,
                 optional = True,
                 default = -999
