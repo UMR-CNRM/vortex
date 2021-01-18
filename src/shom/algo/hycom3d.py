@@ -9,10 +9,12 @@ from functools import partial
 
 from bronx.stdtypes.date import Date
 import vortex.tools.date as vdate
-from vortex.syntax.stdattrs import date_deco, term_deco
+from vortex.syntax.stdattrs import date_deco
 from vortex.layout.dataflow import Section
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun, Parallel)
+
+from ..util.config import config_to_env_vars
 
 from sloop.env import stripout_conda_env
 from sloop.io import nc_get_time
@@ -22,22 +24,20 @@ from sloop.models.hycom3d import (
     HYCOM3D_SIGMA_TO_STMT_FNS,
     HYCOM3D_MASK_FILE,
     HYCOM3D_GRID_AFILE,
+    format_ds
+    )
+from sloop.models.hycom3d.io import (
     check_grid_dimensions,
     setup_stmt_fns,
-    format_ds,
     read_regional_grid,
-    AtmFrc,
-    Rivers,
     run_bin2hycom,
     rest_head
 )
-from ..util.config import config_to_env_vars
+from sloop.models.hycom3d.rivers import Rivers
+from sloop.models.hycom3d.atmfrc import AtmFrc
+
 
 __all__ = []
-# from vortex.data.executables import Script
-# from gco.syntax.stdattrs import gvar
-
-# from hycomvortex import (HYCOM_IBC_COMPILE_SCRIPT)
 
 
 # %% Compilation
@@ -161,7 +161,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
         return "hycom3d_model_compilator"
 
 
-# %% Initial and boundary condition AlgoComponents
+# %% Initial and boundary condition
 
 
 class Hycom3dIBCRunTime(AlgoComponent):
@@ -373,7 +373,7 @@ class Hycom3dIBCRunVertical(BlindRun):
         return dict(**self._clargs)
 
 
-# %% AlgoComponents regarding the River preprocessing steps
+# %% River preprocessing steps
 
 class Hycom3dRiversFlowRate(AlgoComponent):
 
@@ -495,7 +495,7 @@ class Hycom3dRiversOut(AlgoComponent):
         return 'RiversOut'
 
 
-# %% AlgoComponents regarding the Atmospheric forcing preprocessing steps
+# %% Atmospheric forcing preprocessing steps
 
 
 class Hycom3dAtmFrcTime(AlgoComponent):
@@ -566,7 +566,7 @@ class Hycom3dAtmFrcTime(AlgoComponent):
 
     def execute(self, rh, opts):
         super(Hycom3dAtmFrcTime, self).execute(rh, opts)
-       
+
         time = [self.rundate+vdate.Time(term) for term in self.terms]
         AtmFrc(insta_files=self.insta,
                cumul_files=self.cumul,
@@ -616,8 +616,7 @@ class Hycom3dAtmFrcMask(AlgoComponent):
 
     _footprint = [
         dict(
-            info="Create the land/sea mask"\
-                "and add correction to parameters",
+            info="Create the land/sea mask and add correction to parameters",
             attr=dict(
                 kind=dict(
                     values=["AtmFrcMask"],
@@ -790,7 +789,7 @@ class Hycom3dModelRun(Parallel):
                 rank=dict(
                     default=0,
                     type=int,
-                    optional=True,                
+                    optional=True,
                 ),
                 restart=dict(
                     default=False,
@@ -814,7 +813,7 @@ class Hycom3dModelRun(Parallel):
         from string import Template
         tpl_runinput = 'FORCING{self.rank}./run.input.tpl'.format(**locals())
         rpl = dict(
-            lsave=1 if self.restart else 0, 
+            lsave=1 if self.restart else 0,
             delday=self.delday,
         )
         with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
