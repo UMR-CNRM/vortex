@@ -744,8 +744,8 @@ class MakeBDAPDomain(AlgoComponent):
             boundaries = self.boundaries
         # build geometry
         geometry = dm.build.build_lonlat_geometry(boundaries,
-                                                  resolution=(self.x_resolution,
-                                                              self.y_resolution))
+                                                  resolution=(self.resolution_x,
+                                                              self.resolution_y))
         # summary, plot, namelists:
         if self.illustration:
             fig, _ = geometry.plotgeometry(color='red',
