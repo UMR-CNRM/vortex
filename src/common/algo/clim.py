@@ -653,6 +653,20 @@ class MakeBDAPDomain(AlgoComponent):
             resolution = dict(
                 info = "Resolution in degrees.",
                 type = float,
+                optional = True,
+                default = None,
+            ),
+            x_resolution=dict(
+                info="X resolution in degrees.",
+                type=float,
+                optional = True,
+                default = None,
+            ),
+            y_resolution=dict(
+                info="Y resolution in degrees.",
+                type=float,
+                optional=True,
+                default = None,
             ),
             boundaries = dict(
                 info = "Lonlat boundaries of the domain, case mode='boundaries'.",
@@ -707,6 +721,14 @@ class MakeBDAPDomain(AlgoComponent):
             self.algoassert(self.sh.path.exists(self.model_clim))
             if self.boundaries is not None:
                 logger.info('attribute *boundaries* ignored')
+        if self.resolution is None:
+            self.algoassert(None not in (self.x_resolution, self.y_resolution),
+                            "Must provide *resolution* OR *x_resolution/y_resolution*")
+        else:
+            self.algoassert(self.x_resolution is None and self.y_resolution is None,
+                            "Must provide *resolution* OR *x_resolution/y_resolution*")
+            self.x_resolution = self.resolution
+            self.y_resolution = self.resolution
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -722,7 +744,8 @@ class MakeBDAPDomain(AlgoComponent):
             boundaries = self.boundaries
         # build geometry
         geometry = dm.build.build_lonlat_geometry(boundaries,
-                                                  resolution=self.resolution)
+                                                  resolution=(self.x_resolution,
+                                                              self.y_resolution))
         # summary, plot, namelists:
         if self.illustration:
             fig, _ = geometry.plotgeometry(color='red',
