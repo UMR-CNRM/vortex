@@ -656,14 +656,14 @@ class MakeBDAPDomain(AlgoComponent):
                 optional = True,
                 default = None,
             ),
-            x_resolution=dict(
-                info="X resolution in degrees.",
+            resolution_x=dict(
+                info="X resolution in degrees (if different from Y).",
                 type=float,
                 optional = True,
                 default = None,
             ),
-            y_resolution=dict(
-                info="Y resolution in degrees.",
+            resolution_y=dict(
+                info="Y resolution in degrees (if different from X).",
                 type=float,
                 optional=True,
                 default = None,
@@ -722,13 +722,13 @@ class MakeBDAPDomain(AlgoComponent):
             if self.boundaries is not None:
                 logger.info('attribute *boundaries* ignored')
         if self.resolution is None:
-            self.algoassert(None not in (self.x_resolution, self.y_resolution),
-                            "Must provide *resolution* OR *x_resolution/y_resolution*")
+            self.algoassert(None not in (self.resolution_x, self.resolution_y),
+                            "Must provide *resolution* OR *resolution_x/resolution_y*")
         else:
-            self.algoassert(self.x_resolution is None and self.y_resolution is None,
-                            "Must provide *resolution* OR *x_resolution/y_resolution*")
-            self.x_resolution = self.resolution
-            self.y_resolution = self.resolution
+            self.algoassert(self.resolution_x is None and self.resolution_y is None,
+                            "Must provide *resolution* OR *resolution_x/resolution_y*")
+            self._attributes['resolution_x'] = self.resolution
+            self._attributes['resolution_y'] = self.resolution
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
