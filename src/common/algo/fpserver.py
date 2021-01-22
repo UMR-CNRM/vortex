@@ -19,6 +19,7 @@ from six.moves import filterfalse
 import time
 
 from bronx.compat.functools import cached_property
+from bronx.datagrip.namelist import NamelistBlock
 from bronx.stdtypes.date import Time
 from bronx.fancies import loggers
 
@@ -327,6 +328,13 @@ class FullPosServer(IFSParallel):
         return discovered
 
     @cached_property
+    def object_namelists(self):
+        """The list of object's namelists"""
+        return [isec.rh
+                for isec in self.context.sequence.effective_inputs(role='ObjectNamelist')
+                if isec.rh.resource.realkind == 'namelist_fpobject']
+
+    @cached_property
     def xxtmapping(self):
         """A handy dictionary about selection namelists."""
         namxxrh = collections.defaultdict(dict)
@@ -494,6 +502,18 @@ class FullPosServer(IFSParallel):
         """Various sanity checks + namelist tweaking."""
         super(FullPosServer, self).prepare(rh, opts)
 
+        if self.object_namelists:
+            self.system.subtitle('Object Namelists customisation')
+        for o_nam in self.object_namelists:
+            # a/c cy44: &NAMFPIOS NFPDIGITS=__SUFFIXLEN__, /
+            self._set_nam_macro(o_nam.contents, o_nam.container.localpath, 'SUFFIXLEN',
+                                self.inputs.actual_suffixlen(self._MODELSIDE_OUT_SUFFIXLEN_MIN))
+            if o_nam.contents.dumps_needs_update:
+                logger.info('Rewritting the %s namelists file.', o_nam.container.actualpath())
+                o_nam.save()
+
+        self.system.subtitle('Dealing with various input files')
+
         # Sanity check over climfiles and geometries
         input_geo = set([sec.rh.resource.geometry
                          for sdict in self.inputs.tododata for sec in sdict.values()])
@@ -505,7 +525,8 @@ class FullPosServer(IFSParallel):
             input_geo = input_geo.pop()
 
         input_climgeo = set([x.rh.resource.geometry
-                             for x in self.context.sequence.effective_inputs(role='InputClim')])
+                             for x in self.context.sequence.effective_inputs(role=('InputClim',
+                                                                                   'InitialClim'))])
         if len(input_climgeo) == 0:
             logger.info('No input clim provided. Going on without it...')
         elif len(input_climgeo) > 1:
@@ -572,6 +593,20 @@ class FullPosServer(IFSParallel):
                             self.inputs.actual_suffixlen())
         # With cy43: &NAMCT0 NFRPOS=__INPUTDATALEN__, /
         self._set_nam_macro(namcontents, namlocal, 'INPUTDATALEN', len(self.inputs.tododata))
+        # Auto generate the list of namelists for the various objects
+        if self.object_namelists:
+            if 'NAMFPOBJ' not in namcontents or len(namcontents['NAMFPOBJ']) == 0:
+                nb_o = NamelistBlock('NAMFPOBJ')
+                nb_o['NFPOBJ'] = len(self.object_namelists)
+                for i_nam, nam in enumerate(self.object_namelists):
+                    nb_o['NFPCONF({:d})'.format(i_nam + 1)] = nam.resource.fpconf
+                    nb_o['CNAMELIST({:d})'.format(i_nam + 1)] = nam.container.localpath()
+                namcontents['NAMFPOBJ'] = nb_o
+                logger.info('The following namelist block has been added to "%s":\n%s',
+                            namlocal, nb_o.dumps())
+            else:
+                logger.warning('The NAMFPOBJ namelist in "%s" is not empty. Leaving it as it is',
+                               namlocal)
         return True
 
     def execute(self, rh, opts):
