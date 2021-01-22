@@ -727,8 +727,6 @@ class MakeBDAPDomain(AlgoComponent):
         else:
             self.algoassert(self.resolution_x is None and self.resolution_y is None,
                             "Must provide *resolution* OR *resolution_x/resolution_y*")
-            self._attributes['resolution_x'] = self.resolution
-            self._attributes['resolution_y'] = self.resolution
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -743,9 +741,13 @@ class MakeBDAPDomain(AlgoComponent):
         else:
             boundaries = self.boundaries
         # build geometry
-        geometry = dm.build.build_lonlat_geometry(boundaries,
-                                                  resolution=(self.resolution_x,
-                                                              self.resolution_y))
+        if self.resolution is None:
+            geometry = dm.build.build_lonlat_geometry(boundaries,
+                                                      resolution=(self.resolution_x,
+                                                                  self.resolution_y))
+        else:
+            geometry = dm.build.build_lonlat_geometry(boundaries,
+                                                      resolution=self.resolution)
         # summary, plot, namelists:
         if self.illustration:
             fig, _ = geometry.plotgeometry(color='red',
