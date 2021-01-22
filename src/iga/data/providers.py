@@ -172,6 +172,7 @@ class SopranoProvider(Provider):
 
     _footprint = [
         namespacefp,
+	member,
         dict(
             info = 'Soprano provider',
             attr = dict(
@@ -241,9 +242,9 @@ class SopranoProvider(Provider):
         elif self.vapp == 'arpege' and resource.model == 'ifs':
             info['model'] = 'restart_cep'
         elif self.vapp == 'pprod':
-            info['level_one'] = 'previ'
-            info['level_two'] = 'previ_amont'
-            info['level_three'] = 'alpha'
+            info['level_one'] = 'alpha'
+            info['level_two'] = 'alim_hpc_alpha'
+            info['level_three'] = 'extractions'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
 
