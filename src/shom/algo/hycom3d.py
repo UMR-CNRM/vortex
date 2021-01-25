@@ -7,37 +7,27 @@ Created on Thu Apr  4 17:32:49 2019 by sraynaud
 from collections import defaultdict
 from functools import partial
 
-from bronx.stdtypes.date import Date
 import vortex.tools.date as vdate
 from vortex.syntax.stdattrs import date_deco
 from vortex.layout.dataflow import Section
 from vortex.algo.components import (
     Expresso, AlgoComponent, AlgoComponentError, BlindRun, Parallel)
 
-from ..util.config import config_to_env_vars
+from ..util.env import config_to_env_vars, stripout_conda_env
 
-from sloop.env import stripout_conda_env
 from sloop.io import nc_get_time
-from sloop.interp import nc_interp_time
 from sloop.models.hycom3d import (
-    HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE,
-    HYCOM3D_SIGMA_TO_STMT_FNS,
     HYCOM3D_MASK_FILE,
     HYCOM3D_GRID_AFILE,
-    format_ds
 )
 
 from sloop.models.hycom3d.io import (
-    check_grid_dimensions,
-    setup_stmt_fns,
     read_regional_grid,
     run_bin2hycom,
     rest_head
 )
 from sloop.models.hycom3d.atmfrc import AtmFrc
 from sloop.models.hycom3d.rivers import Rivers
-
-from ..util.config import config_to_env_vars
 
 
 __all__ = []
@@ -54,10 +44,6 @@ class Hycom3dCompilator(Expresso):
             kind=dict(
                 values=["hycom3d_compilator"],
             ),
-            compilation_script=dict(
-                info="Shell script that makes the compilation.",
-                optional=False,
-            ),
             env_config=dict(
                 info="Environment variables and options for compilation",
                 optional=True,
@@ -71,108 +57,21 @@ class Hycom3dCompilator(Expresso):
         ),
     )
 
-    def valid_executable(self, rh):
-        return True
-
     def prepare(self, rh, kw):
         super(Hycom3dCompilator, self).prepare(rh, kw)
-        #self.env["HPC_TARGET"] = self.env["RD_HPC_TARGET"]
         self._env_vars = config_to_env_vars(self.env_config)
 
     def execute(self, rh, kw):
-        #super(Hycom3dCompilator, self).execute(rh, kw)
         with self.env.clone() as e:
             stripout_conda_env(e)
             e.update(self._env_vars)
-            print(self.spawn([self.compilation_script], {"outsplit": False}))
-
-    @property
-    def realkind(self):
-        # return self.__class__.__name__.lower()
-        return "hycom3d_compilator"
-
-
-class Hycom3dIBCCompilator(Hycom3dCompilator):
-    _footprint = dict(
-        info="Compile IBC executables",
-        attr=dict(
-            kind=dict(
-                values=['hycom3d_ibc_compilator'],
-            ),
-            sigma=dict(
-                info="sigma value",
-                optional=False,
-                values=list(HYCOM3D_SIGMA_TO_STMT_FNS.keys()),
-            ),
-        ),
-    )
-
-    def prepare(self, rh, kw):
-        super().prepare(rh, kw)
-
-        # Setup the stmt_fns.h file
-        for context in "ibc_hor", "ibc_ver":
-            setup_stmt_fns(self.sigma, context)
-
-    @property
-    def realkind(self):
-        # return self.__class__.__name__.lower()
-        return "hycom3d_ibc_compilator"
-
-
-class Hycom3dModelCompilator(Hycom3dCompilator):
-
-    _footprint = dict(
-        info="Compile the 3d model",
-        attr=dict(
-            kind=dict(
-                values=['hycom3d_model_compilator'],
-            ),
-            dimensions=dict(
-                info="Dictionary of the model dimensions",
-                optional=False,
-                type=dict,
-            ),
-            sigma=dict(
-                info="sigma value",
-                optional=False,
-                values=list(HYCOM3D_SIGMA_TO_STMT_FNS.keys()),
-            ),
-            rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-            ),
-        ),
-    )
-
-    def prepare(self, rh, kw):
-        super().prepare(rh, kw)
-
-        # Check dimensions
-        check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE.format(rank=self.rank))
-
-        # Fill dimensions.h.template
-        dimensionsh = HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE.replace(".template", "")
-        with open(HYCOM3D_MODEL_DIMENSIONSH_TEMPLATE, "r") as f:
-            content = f.read()
-        content = content.format(**self.dimensions)
-        with open(dimensionsh, "w") as f:
-            f.write(content)
-
-        # Setup the stmt_fns.h file
-        setup_stmt_fns(self.sigma, "model")
-
-    @property
-    def realkind(self):
-        # return self.__class__.__name__.lower()
-        return "hycom3d_model_compilator"
+            super(Hycom3dCompilator, self).execute(rh, kw)
 
 
 # %% Initial and boundary condition
 
 
-class Hycom3dIBCRunTime(AlgoComponent):
+class Hycom3dIBCRunTime(Expresso):
     """Algo component for the temporal interpolation of IBC netcdf files"""
 
     _footprint = [
@@ -200,22 +99,16 @@ class Hycom3dIBCRunTime(AlgoComponent):
     def prepare(self, rh, opts):
         super(Hycom3dIBCRunTime, self).prepare(rh, opts)
 
-        # Input netcdf files
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
-        self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
-        self._dates = [(self.date+vdate.Time(term)).as_datetime()
-                       for term in self.terms]
+        self._ncins = ','.join(
+            [sec.rh.container.localpath() for sec in ncinputs])
+        self._dates = ','.join(
+            [(self.date+vdate.Time(term)).isoformat() for term in self.terms])
 
-    def execute(self, rh, opts):
-        super(Hycom3dIBCRunTime, self).execute(rh, opts)
-
-        # Interpolate in time
-        nc_interp_time(
-            self._ncfiles,
-            dates=self._dates,
-            ncout=self.ncout,
-            # preproc=self._geo_selector,
-            postproc=format_ds)
+    def spawn_command_options(self):
+        return dict(
+            ncins=self._ncins, ncout=self.ncout,
+            dates=self._dates, rank=self.rank)
 
 
 class Hycom3dIBCRunHoriz(BlindRun):
@@ -760,7 +653,7 @@ class Hycom3dAtmFrcOut(AlgoComponent):
     def realkind(self):
         return 'AtmFrcOut'
 
-# %% Model run AlgoComponents
+# %% Model run
 
 class Hycom3dModelRun(Parallel):
 

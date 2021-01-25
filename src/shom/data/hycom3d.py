@@ -8,6 +8,7 @@ import vortex.data.executables as vde
 from gco.syntax.stdattrs import gvar
 
 from common.data.consts import GenvModelGeoResource
+from vortex.data.executables import Script, Binary, OceanographicModel
 from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
@@ -89,7 +90,7 @@ class Hycom3dAtmFrcInterpWeights(Resource):
 # %% Binaries
 
 
-class Hycom3dIBCRegridcdfBinary(vde.Binary):
+class Hycom3dIBCRegridcdfBinary(Binary):
     """Binary that regrids initial conditions netcdf files"""
 
     _footprint = [
@@ -119,7 +120,7 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
         return f"{varname} {method} {cstep:03d}"
 
 
-class Hycom3dIBCIniconBinary(vde.Binary):
+class Hycom3dIBCIniconBinary(Binary):
     """Binary that computes initial condictions for HYCOM"""
 
     _footprint = [
@@ -147,7 +148,7 @@ class Hycom3dIBCIniconBinary(vde.Binary):
                 "{sshmin} {cstep}").format(**opts)
 
 
-class Hycom3dModelBinary(vde.Binary):
+class Hycom3dModelBinary(OceanographicModel):
     """Binary of the 3d model"""
 
     _footprint = [
@@ -156,10 +157,7 @@ class Hycom3dModelBinary(vde.Binary):
             info="Binary of the model",
             attr= dict(
                 gvar = dict(
-                    default='oceanmodel',
-                ),
-                kind = dict(
-                    values=['oceanmodel'],
+                    default='hycom3d_model_binary',
                 ),
             ),
         )
@@ -168,9 +166,22 @@ class Hycom3dModelBinary(vde.Binary):
     @property
     def realkind(self):
         return 'hycom3d_model_binary'
-    
+
     def command_line(self, **opts):
         return ("{datadir} {tmpdir} {localdir} {rank}").format(**opts)
+
+
+# %% Task-specific executable scripts
+
+class Hycom3dIBCTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_ibc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "--ncout {ncout} {ncins} {dates}".format(**opts)
 
 
 # %% Pre-processing intermediate files
@@ -251,7 +262,7 @@ class Hycom3dRiversInputFiles(Resource):
                     optional=False,
                 ),
                 format=dict(
-                     values=['r','nc']   
+                     values=['r','nc']
                 ),
                 nativefmt=dict(
                     values=['ascii','netcdf'],
