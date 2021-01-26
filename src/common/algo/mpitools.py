@@ -312,22 +312,25 @@ class _NWPIoServerMixin(object):
         iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
         self.system.subtitle('Dealing with IO directories')
         iodirs = self._nwp_ioserv_iodirs()
-        logger.info('List of IO directories: %s', ','.join(iodirs))
-        f_summary = collections.defaultdict(lambda: [' '] * len(iodirs))
-        for i, iodir in enumerate(iodirs):
-            for iofile in self.system.listdir(iodir):
-                zf = iofile_re.match(iofile)
-                if zf:
-                    f_summary[zf.group(1)][i] = '+'
-                    ioserv_filelist.add((zf.group(1), zf.group(2)))
-                    ioserv_prefixes.add(zf.group(2))
-                else:
-                    f_summary[iofile][i] = '?'
-        max_names_len = max([len(iofile) for iofile in f_summary.keys()])
-        fmt_names = '{:' + str(max_names_len) + 's}'
-        logger.info('Data location accross the various IOserver directories:\n%s',
-                    '\n'.join([(fmt_names + ' |{:s}|').format(iofile, ''.join(where))
-                               for iofile, where in sorted(f_summary.items())]))
+        if iodirs:
+            logger.info('List of IO directories: %s', ','.join(iodirs))
+            f_summary = collections.defaultdict(lambda: [' '] * len(iodirs))
+            for i, iodir in enumerate(iodirs):
+                for iofile in self.system.listdir(iodir):
+                    zf = iofile_re.match(iofile)
+                    if zf:
+                        f_summary[zf.group(1)][i] = '+'
+                        ioserv_filelist.add((zf.group(1), zf.group(2)))
+                        ioserv_prefixes.add(zf.group(2))
+                    else:
+                        f_summary[iofile][i] = '?'
+            max_names_len = max([len(iofile) for iofile in f_summary.keys()])
+            fmt_names = '{:' + str(max_names_len) + 's}'
+            logger.info('Data location accross the various IOserver directories:\n%s',
+                        '\n'.join([(fmt_names + ' |{:s}|').format(iofile, ''.join(where))
+                                   for iofile, where in sorted(f_summary.items())]))
+        else:
+            logger.info('No IO directories were found')
 
         if 'GRIBPF' in ioserv_prefixes:
             # If GRIB are requested, do not bother with old FA PF files
