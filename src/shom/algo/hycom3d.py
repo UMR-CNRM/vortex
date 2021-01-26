@@ -34,6 +34,7 @@ from sloop.models.hycom3d.io import (
 )
 from sloop.models.hycom3d.atmfrc import AtmFrc
 from sloop.models.hycom3d.rivers import Rivers
+from sloop.models.hycom3d.spnudge import Spectral
 
 from ..util.config import config_to_env_vars
 
@@ -119,6 +120,21 @@ class Hycom3dIBCCompilator(Hycom3dCompilator):
     def realkind(self):
         # return self.__class__.__name__.lower()
         return "hycom3d_ibc_compilator"
+
+
+class Hycom3dSpNudgeCompilator(Hycom3dCompilator):
+    _footprint = dict(
+        info="Compile SpNudge executables",
+        attr=dict(
+            kind=dict(
+                values=['hycom3d_spnudge_compilator'],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_compilator"
 
 
 class Hycom3dModelCompilator(Hycom3dCompilator):
@@ -374,7 +390,6 @@ class Hycom3dIBCRunVertical(BlindRun):
         super().postfix(rh, opts)
         if self.restart:
             rest_head(self._restart_time)
-        
         run_bin2hycom(self._nx, self._ny, self._nz)
 
     def spawn_command_options(self):
@@ -762,6 +777,133 @@ class Hycom3dAtmFrcOut(AlgoComponent):
     def realkind(self):
         return 'AtmFrcOut'
 
+
+#%% Spectral nudging
+class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
+    """
+    Demerliac filtering over Hycom3d outputs
+    """
+    _footprint = [
+        dict(
+            info="Run the demerliac filtering over Hycom3d outputs",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_spnudge_demerliac"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_demerliac"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dSpectralNudgingRunDemerliac, self).prepare(rh, opts)
+
+        # Input netcdf file
+        ncfiles = [ei.rh.container.localpath() for ei in
+                   self.context.sequence.effective_inputs(role="Input")]
+
+        # Constant files
+        for cfile in (f"FORCING{self.rank}./regional.grid.a",
+                      f"FORCING{self.rank}./regional.grid.b",
+                      f"FORCING{self.rank}./regional.depth.a",
+                      f"PARAMETERS{self.rank}./blkdat.input",
+                      f"PARAMETERS{self.rank}./blkdat_cmo.input"):
+            if not self.system.path.exists(self.system.path.basename(cfile)):
+                self.system.symlink(cfile, self.system.path.basename(cfile))
+
+        from sloop.models.hycom3d.spnudge import Demerliac
+        date_demerliac = Demerliac().time_sel(ncfiles=ncfiles)
+
+        self._clargs = dict(
+            date=date_demerliac,
+            output_type=0)
+
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def execute(self, rh, opts):
+        """We execute several times the executable with different inputs"""
+        for varname in ["h", "saln", "temp"]:
+            self.system.symlink(f"{varname}_3D.nc", "input.nc")
+            super(Hycom3dSpectralNudgingRunDemerliac, self).execute(rh, opts)
+            self.system.mv("output.nc", f"{varname}-demerliac.nc")
+
+
+class Hycom3dSpectralNudgingRunSpectral(BlindRun):
+    """
+    Spectral filtering over Hycom3d and Mercator outputs
+    """
+    _footprint = [
+        dict(
+            info="Run the demerliac filtering over Hycom3d outputs",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_spnudge_demerliac"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_demerliac"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dSpectralNudgingRunSpectral, self).prepare(rh, opts)
+
+        # Input netcdf file
+        ncfiles = [ei.rh.container.localpath() for ei in
+                   self.context.sequence.effective_inputs(role="Input_nest")]
+
+        # Constant files
+        for cfile in (f"FORCING{self.rank}./regional.grid.a",
+                      f"FORCING{self.rank}./regional.grid.b",
+                      f"FORCING{self.rank}./regional.depth.a",
+                      f"PARAMETERS{self.rank}./blkdat.input",
+                      f"PARAMETERS{self.rank}./blkdat_cmo.input"):
+            if not self.system.path.exists(self.system.path.basename(cfile)):
+                self.system.symlink(cfile, self.system.path.basename(cfile))
+
+        Spectral().time_sel(ncfiles=ncfiles)
+        
+        import json
+        self._clargs = json.load('clargs_spnudge.json')
+        
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def postfix(self, rh, opts):
+        super(Hycom3dSpectralNudgingRunSpectral, self).postfix(rh, opts)
+        from sloop.models.hycom3d.io import nc2hycom
+        for varname in ["h", "saln", "temp"]:
+            ncout = Spectral.diff(varname,
+                                  f'{varname}-nest_filtered.nc',
+                                  f'{varname}-demerliac_filtered.nc')
+            nc2hycom(varname, ncout, f"differences {varname}: Hycom-Mercator")
+
+    def execute(self, rh, opts):
+        """We execute several times the executable with different inputs"""
+        for varname in ["h", "saln", "temp"]:
+            for source in ['demerliac', 'nest']:
+                self.system.symlink(f"{varname}-{source}.nc", "input.nc")
+                super(Hycom3dSpectralNudgingRunSpectral, self).execute(rh, opts)
+                self.system.mv("output.nc", f"{varname}-{source}_filtered.nc")
+                
 # %% Model run AlgoComponents
 
 class Hycom3dModelRun(Parallel):
@@ -786,6 +928,12 @@ class Hycom3dModelRun(Parallel):
                     default=1,
                     type=int,
                 ),
+                mode=dict(
+                    values=["spinup", "forecast", 
+                            "spnudge_free", "spnudge_relax"],
+                    default="spinup",
+                    type=str,
+                ),
             ),
         ),
     ]
@@ -797,15 +945,28 @@ class Hycom3dModelRun(Parallel):
     def prepare(self, rh, opts):
         super(Hycom3dModelRun, self).prepare(rh, opts)
 
+        from sloop.models.hycom3d import (
+            HYCOM3D_RUN_INPUT_TPL_FILE,
+            HYCOM3D_BLKDAT_CMO_INPUT_FILE,
+            HYCOM3D_BLKDAT_CMO_INPUT_FILES,
+            HYCOM3D_SAVEFIELD_INPUT_FILE,
+            HYCOM3D_SAVEFIELD_INPUT_FILES
+        )
+        
         from string import Template
-        tpl_runinput = 'FORCING{self.rank}./run.input.tpl'.format(**locals())
+        tpl_runinput = HYCOM3D_RUN_INPUT_TPL_FILE.format(**locals())
         rpl = dict(
             lsave=1 if self.restart else 0, 
-            delday=self.delday,
-        )
+            delday=self.delday)
         with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
                 s = Template(tpl.read())
                 f.write(s.substitute(rpl))
+        
+        self.system.symlink(HYCOM3D_BLKDAT_CMO_INPUT_FILES[self.mode].format(**locals()), 
+                            HYCOM3D_BLKDAT_CMO_INPUT_FILE.format(**locals()))
+        
+        self.system.symlink(HYCOM3D_SAVEFIELD_INPUT_FILES[self.mode].format(**locals()), 
+                            HYCOM3D_SAVEFIELD_INPUT_FILE.format(**locals()))
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""

@@ -147,6 +147,58 @@ class Hycom3dIBCIniconBinary(vde.Binary):
                 "{sshmin} {cstep}").format(**opts)
 
 
+class Hycom3dSpNudgeDemerliacBinary(vde.Binary):
+    """Binary that apply Demerliac filter HYCOM Spectral Nugding"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that apply Demerliac filter HYCOM Spectral Nugding",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_spnudge_demerliac_binary",
+                ),
+                kind=dict(
+                    values=["demerliac_filter"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_demerliac_binary"
+
+    def command_line(self, **opts):
+        return ("{date_spnudge} {output_type}").format(**opts)
+    
+
+class Hycom3dSpNudgeSpectralBinary(vde.Binary):
+    """Binary that apply spectral filter HYCOM Spectral Nugding"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that apply spectral filter HYCOM Spectral Nugding",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_spnudge_spectral_binary",
+                ),
+                kind=dict(
+                    values=["spectral_filter"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_spectral_binary"
+
+    def command_line(self, **opts):
+        return ("{wave_sp} {genmask} {min_depth} {relax_sp}").format(**opts)
+    
+    
 class Hycom3dModelBinary(vde.Binary):
     """Binary of the 3d model"""
 
@@ -308,7 +360,7 @@ class Hycom3dRestartField(GeoFlowResource):
             info="Single variable netcdf and restart file created by inicon",
             attr=dict(
                 kind=dict(
-                    values=["boundary"],
+                    values=["restart_field"],
                 ),
                 field=dict(
                     values=["saln", "temp", "th3d", "u", "v", "h", "dpmixl"],
@@ -323,7 +375,7 @@ class Hycom3dRestartField(GeoFlowResource):
                 actualfmt=dict(
                     remap={"cdf": "netcdf", "res": "binary"},
                     values=["binary", "netcdf"],
-                    )
+                )
             ),
         ),
     ]
@@ -355,7 +407,67 @@ class Hycom3dRestartDate(GeoFlowResource):
         return "hycom3d_restart_date"
 
 
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dDemerliacFilterOutput(GeoFlowResource):
+    _footprint = [
+        dict(
+            info="Demerliac filter outputs .a and .b files",
+            attr=dict(
+                kind=dict(
+                    values=["demerliac_filter_output"],
+                ),
+                field=dict(
+                    values=["saln", "temp", "h"],
+                ),
+                format=dict(values=["a", "b"]),
+                nativefmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+                actualfmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+            ),
+        ),
+    ]
+
+    @property 
+    def realkind(self):
+        return "demerliac_filter_output"
+    
+  
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dSpectralFilterOutput(GeoFlowResource):
+    _footprint = [
+        dict(
+            info="Spectral filter outputs .a and .b files",
+            attr=dict(
+                kind=dict(
+                    values=["spectral_filter_output"],
+                ),
+                field=dict(
+                    values=["s", "t", "h", "rmu"],
+                ),
+                format=dict(values=["a", "b"]),
+                nativefmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+                actualfmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+            ),
+        ),
+    ]
+
+    @property 
+    def realkind(self):
+        return "spectral_filter_output"
 # %% Model outputs
+@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('geo', lambda self: self.field)
 class Hycom3dModelOutput(_Hycom3dGeoResource):
     """Model output"""
 
@@ -364,7 +476,11 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
             info="Model output",
             attr=dict(
                 kind=dict(
-                    values=["gridpoint"],
+                    values=["model_output"],
+                ),
+                field=dict(
+                    values=["ssh", "sss", "sst", "u", "v", "ubavg", "vbavg",
+                            "h", "saln", "sigma", "temp"],
                 ),
                 domain=dict(
                     values=["3D", "2D"],
@@ -375,12 +491,13 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
                     values=["production", "assim", "spnudge"],
                     default="production",
                 ),
-            ),
+                format=dict(
+                    values=["nc"],
+                ),
+            )
         )
     ]
 
     @property
     def realkind(self):
         return "hycom3d_model_output"
-
-
