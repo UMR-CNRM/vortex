@@ -546,7 +546,7 @@ class FullPosBDAP(FullPos):
                                    sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname)))
                        if sh.path.isfile(x)]:
             sh.move(fpfile, sh.path.basename(fpfile),
-                    fmt='grib' if fpfile.startswith('GRIB') else 'lfi')
+                    fmt='grib' if 'GRIBPF' in fpfile else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
         super(FullPosBDAP, self).postfix(rh, opts)
