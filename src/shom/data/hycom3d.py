@@ -115,7 +115,7 @@ class Hycom3dIBCRegridcdfBinary(Binary):
 
     def command_line(self, **opts):
         varname = opts["varname"]
-        method = opts.get("methode", 0)
+        method = opts.get("method", 0)
         cstep = int(opts.get("cstep", 1))
         return f"{varname} {method} {cstep:03d}"
 

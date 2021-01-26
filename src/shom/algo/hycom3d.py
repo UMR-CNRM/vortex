@@ -6,6 +6,7 @@ Created on Thu Apr  4 17:32:49 2019 by sraynaud
 
 from collections import defaultdict
 from functools import partial
+import json
 
 import vortex.tools.date as vdate
 from vortex.syntax.stdattrs import date_deco
@@ -111,66 +112,38 @@ class Hycom3dIBCRunTime(Expresso):
             dates=self._dates, rank=self.rank)
 
 
-class Hycom3dIBCRunHoriz(BlindRun):
+class Hycom3dIBCRunHorizRegridcdf(BlindRun):
 
     _footprint = [
         dict(
-            info="Run the initial and boundary conditions horizontal interpolator",
+            info="Run the initial and boundary conditions horizontal fortran interpolator",
             attr=dict(
                 kind=dict(
-                    values=["hycom3d_ibc_run_horiz"],
+                    values=["hycom3d_ibc_run_horiz_regridcdf"],
                 ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
-                method=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
-                pad=dict(
-                    default=1,
-                    type=float,
-                    optional=True,
-                ),
+                method=dict(type=int),
+                pad=dict(type=float),
             ),
         ),
     ]
 
-    @property
-    def realkind(self):
-        return "hycom3d_ibc_run_horiz"
-
     def prepare(self, rh, opts):
-        super(Hycom3dIBCRunHoriz, self).prepare(rh, opts)
+        super(Hycom3dIBCRunHorizRegridcdf, self).prepare(rh, opts)
 
-        # Input netcdf file
-        ncinput = self.context.sequence.effective_inputs(
-            role="Input")[0].rh.container.localpath()
+        # Get specs from json
+        with open("regridcdf.json") as f:
+            specs = json.load(f)
 
-        # Read hycom grid extents
-        from sloop.models.hycom3d.io import read_regional_grid_b
-        from sloop.grid import GeoSelector
-        rg = read_regional_grid_b(f"FORCING{self.rank}./regional.grid.b")
-        geo_selector = GeoSelector((rg["plon_min"], rg["plon_max"]),
-                                   (rg["plat_min"], rg["plat_max"]),
-                                   pad=self.pad)
+        # Link to regional files
+        for path in specs["links"]:
+            local_path = self.system.path.basename(path)
+            if not self.system.path.exists(local_path):
+                self.system.symlink(path, local_path)
 
-        # Conversion to .res files
-        from sloop.models.hycom3d.io import nc_to_res
-        resfiles = nc_to_res(
-            [ncinput], outfile_pattern='{field}_merc.res{ifile:03d}',
-            preproc=geo_selector)
+        # Setup args
+        resfiles = specs["resfiles"]
         self.varnames = list(resfiles.keys())
         self.csteps = range(len(resfiles["ssh"]))
-
-        # Constant files
-        cdir = f"FORCING{self.rank}."
-        for cfile in "regional.grid.a", "regional.grid.b", "regional.depth.a":
-            if not self.system.path.exists(cfile):
-                self.system.symlink(self.system.path.join(cdir, cfile), cfile)
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -181,7 +154,7 @@ class Hycom3dIBCRunHoriz(BlindRun):
         for varname in ["ssh", "saln", "temp"]:
             for cstep in self.csteps:
                 self._clargs = dict(varname=varname, cstep=cstep)
-                super(Hycom3dIBCRunHoriz, self).execute(rh, opts)
+                super(Hycom3dIBCRunHorizRegridcdf, self).execute(rh, opts)
 
 
 class Hycom3dIBCRunVertical(BlindRun):
