@@ -56,6 +56,14 @@ COMDEP_IMG_AUTO=$(DIASTUFF_SVG)
 #COMDEP_IMG_AUTO=$(DIASTUFF_PNG) $(SVGSTUFF_PNG)
 COMDEP=$(HIGHLIGHT.STYLES.CSS) $(PROCESSOR) $(TEMPLATES) $(COMDEP_IMG_AUTO)
 
+# Because of Meteo-France's we need this proxy :-(
+ifdef VORTEX_PROJECT_SSLCERT_OVERRIDE
+export GIT_SSL_CAINFO=$(VORTEX_PROJECT_SSLCERT_OVERRIDE)
+WGET=wget --ca-certificate=$(VORTEX_PROJECT_SSLCERT_OVERRIDE)
+else
+WGET=wget
+endif
+
 .PHONY: all docs slides clean distclean $(CDN.JS)
 
 .SECONDARY: $(HIGHLIGHT.STYLES.CSS) $(HIGHLIGHT.JS) $(MARKED.JS) $(REVEAL.JS) $(COMDEP_IMG_AUTO)
@@ -74,15 +82,15 @@ $(REVEAL.JS):
 
 $(MARKED.JS):
 	@mkdir -p $(dir $@)
-	wget --output-document=$@ $(MARKED.CDN)/$(patsubst $(CDN.JS)/%,%,$@)
+	$(WGET) --output-document=$@ $(MARKED.CDN)/$(patsubst $(CDN.JS)/%,%,$@)
 
 $(HIGHLIGHT.JS):
 	@mkdir -p $(dir $@)
-	wget --output-document=$@ $(HIGHLIGHT.CDN)/$(patsubst $(CDN.JS)/%,%,$@)
+	$(WGET) --output-document=$@ $(HIGHLIGHT.CDN)/$(patsubst $(CDN.JS)/%,%,$@)
 
 $(CDN.JS)/highlight-%.min.css:
 	@mkdir -p $(dir $@)
-	wget --output-document=$@ $(HIGHLIGHT.CDN)/styles/$*.min.css
+	$(WGET) --output-document=$@ $(HIGHLIGHT.CDN)/styles/$*.min.css
 
 # Automatic conversions
 
@@ -116,5 +124,3 @@ distclean: clean
 
 heavyclean: dsitclean
 	rm -rf $(REP_IMAGES_AUTO)
-
-
