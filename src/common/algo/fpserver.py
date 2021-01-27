@@ -544,7 +544,7 @@ class FullPosServer(IFSParallel):
         target_climgeos = set([x.rh.resource.geometry
                                for x in self.context.sequence.effective_inputs(role='TargetClim')])
         if len(target_climgeos) == 0:
-            raise AlgoComponentError('No target clim are provided.')
+            logger.info('No target clim are provided. Going on without it...')
 
         # Sanity check on selection namelists
         if self.xxtmapping:
