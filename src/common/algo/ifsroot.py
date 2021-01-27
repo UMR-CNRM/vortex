@@ -318,5 +318,6 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def execute_single(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
-        self.system.ls(output='dirlst')
+        if rh.resource.cycle < 'cy46':
+            self.system.ls(output='dirlst')
         super(IFSParallel, self).execute_single(rh, opts)
