@@ -28,9 +28,10 @@ from footprints.stdtypes import FPSet
 
 import vortex
 from vortex.layout import subjobs
+from vortex.layout.appconf import ConfigSet
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
-from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
+from vortex.util.config import GenericConfigParser, ExtendedReadOnlyConfigParser, load_template
 
 #: Export nothing
 __all__ = []
@@ -426,7 +427,8 @@ class JobAssistant(footprints.FootprintBase):
         # By default, no error code is thrown away
         self.unix_exit_code = 0
         self._plugins = list()
-        self._special_variables = dict()
+        self._conf = None
+        self._special_variables = None
 
     @property
     def plugins(self):
@@ -436,6 +438,18 @@ class JobAssistant(footprints.FootprintBase):
         self._plugins.append(fpx.jobassistant_plugin(kind=kind, masterja=self,
                                                      **kwargs))
 
+    @property
+    def conf(self):
+        if self._conf is None:
+            raise RuntimeError('It is too soon to access the JobAssisant configuration')
+        return self._conf
+
+    @property
+    def special_variables(self):
+        if self._special_variables is None:
+            raise RuntimeError('It is too soon to access the JobAssisant special variables')
+        return self._special_variables
+
     def __getattr__(self, name):
         """Search the plugins for unknown methods."""
         if not (name.startswith('_') or name.startswith('plugable')):
@@ -443,6 +457,44 @@ class JobAssistant(footprints.FootprintBase):
                 if hasattr(plugin, name):
                     return getattr(plugin, name)
         raise AttributeError('Attribute not found.')
+
+    @_extendable
+    def _init_special_variables(self, prefix=None, **kw):
+        """Print some of the environment variables."""
+        prefix = prefix or self.special_prefix
+        # Suffixed variables
+        specials = kw.get('actual', dict())
+        self._special_variables = {k[len(prefix):].lower(): v
+                                   for k, v in specials.items() if k.startswith(prefix)}
+        # Auto variables
+        auto = kw.get('auto_options', dict())
+        for k, v in auto.items():
+            self._special_variables.setdefault(k.lower(), v)
+
+    def _kw_and_specials_get(self, what, default, **kw):
+        """Look for name in **kw** and **self.special_variables**."""
+        return kw.get(what, self.special_variables.get(what, default))
+
+    def _init_conf(self, **kw):
+        """Read the application's configuration file."""
+        jobname = self._kw_and_specials_get('jobname', None)
+        iniconf = self._kw_and_specials_get('iniconf', None)
+        iniencoding = self._kw_and_specials_get('inienconding', None)
+        self._conf = ConfigSet()
+        if iniconf:
+            try:
+                iniparser = GenericConfigParser(iniconf, encoding=iniencoding)
+            except Exception:
+                logger.critical('Could not read config %s', iniconf)
+                raise
+            thisconf = iniparser.as_dict(merged=False)
+            # Conf defaults
+            self._conf.update(thisconf.get('defaults', dict()))
+            if jobname is not None:
+                # Job specific conf
+                self._conf.update(thisconf.get(jobname, dict()))
+        # Stuff from the script and command-line
+        self._conf.update(self.special_variables)
 
     @staticmethod
     def _printfmt(fmt, *kargs, **kwargs):
@@ -493,25 +545,12 @@ class JobAssistant(footprints.FootprintBase):
     def _add_specials(self, t, prefix=None, **kw):
         """Print some of the environment variables."""
         prefix = prefix or self.special_prefix
-        # Suffixed variables
-        specials = kw.get('actual', dict())
-        self._special_variables = {k[len(prefix):].lower(): v
-                                   for k, v in specials.items() if k.startswith(prefix)}
-        # Auto variables
-        auto = kw.get('auto_options', dict())
-        for k, v in auto.items():
-            self._special_variables.setdefault(k.lower(), v)
-        # Summarise
-        if self._special_variables:
-            filtered = {prefix + k: v for k, v in self._special_variables.items()}
-            print('Copying actual {:s} variables to the environment or auto_options'
+        if self.special_variables:
+            filtered = {prefix + k: v for k, v in self.special_variables.items()}
+            print('Copying actual {:s} variables to the environment'
                   .format(prefix))
             t.env.update(filtered)
             self.print_somevariables(t, prefix=prefix)
-
-    @property
-    def special_variables(self):
-        return self._special_variables
 
     @_extendable
     def _modules_preload(self, t):
@@ -544,9 +583,8 @@ class JobAssistant(footprints.FootprintBase):
     def _early_session_setup(self, t, **kw):
         """Create a now session, set important things, ..."""
         t.sh.header("Session's early setup")
-        specials = kw.get('actual', dict())
-        t.glove.vapp = kw.get('vapp', specials.get(self.special_prefix + 'vapp', None))
-        t.glove.vconf = kw.get('vconf', specials.get(self.special_prefix + 'vconf', None))
+        t.glove.vapp = self._kw_and_specials_get('vapp', None)
+        t.glove.vconf = self._kw_and_specials_get('vconf', None)
         # Ensure that the script's path is an absolute path
         sys.argv[0] = t.sh.path.abspath(sys.argv[0])
         return t
@@ -593,7 +631,10 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.subtitle("Starting JobAssistant's setup")
         # Am I a subjob ?
         self._subjob_detect(t)
-        # But a new session can be created here:
+        # JA object setup
+        self._init_special_variables(**kw)
+        self._init_conf(**kw)
+        # A new session can be created here
         t = self._early_session_setup(t, **kw)
         # Then, go on with initialisations...
         self._system_setup(t)  # Tweak the session's System object
