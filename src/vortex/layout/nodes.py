@@ -9,18 +9,21 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
+import collections
+import contextlib
 import re
 import sys
+import traceback
 
 from bronx.fancies import loggers
-from bronx.patterns import getbytag
+from bronx.patterns import getbytag, observer
 from bronx.syntax.iterators import izip_pcn
 from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
 from vortex.layout.appconf import ConfigSet
-from vortex.layout.subjobs import subjob_output_markup
+from vortex.layout.subjobs import subjob_handling, SubJobLauncherError
 from vortex.syntax.stdattrs import Namespace
 from vortex.util.config import GenericConfigParser
 
@@ -29,12 +32,44 @@ logger = loggers.getLogger(__name__)
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']
 
+OBSERVER_TAG = 'Layout-Nodes'
 
-class NiceLayout(object):
+#: Definition of a named tuple for Node Statuses
+_NodeStatusTuple = collections.namedtuple('_NodeStatusTuple',
+                                          ['CREATED', 'READY', 'RUNNING', 'DONE', 'FAILED'])
+
+#: Predefined Node Status values
+NODE_STATUS = _NodeStatusTuple(CREATED='created',
+                               READY='ready to start',
+                               RUNNING='running',
+                               DONE='done',
+                               FAILED='FAILED')
+
+#: Definition of a named tuple for Node on_error behaviour
+_NodeOnErrorTuple = collections.namedtuple('_NodeOnErrorTuple',
+                                           ['FAIL', 'DELAYED_FAIL', 'CONTINUE'])
+
+#: Predefined Node Status values
+NODE_ON_ERROR = _NodeOnErrorTuple(FAIL='fail',
+                                  DELAYED_FAIL='delayed_fail',
+                                  CONTINUE='continue')
+
+
+class NiceLayout(observer.Observer):
     """Some nice method to share between layout items."""
 
     @property
+    def tag(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
+    @property
     def sh(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
+    @property
+    def contents(self):
         """Abstract property: have to be defined later on"""
         raise NotImplementedError
 
@@ -57,6 +92,98 @@ class NiceLayout(object):
             print()
         else:
             print(" + ...\n")
+
+    def _nicelayout_init(self, kw):
+        """Initialise generic stuff."""
+        self._status = NODE_STATUS.CREATED
+        self._delayed_error_flag = False
+        self._on_error = kw.get('on_error', NODE_ON_ERROR.FAIL)
+        if self._on_error not in NODE_ON_ERROR:
+            raise ValueError('Erroneous value for on_error: {!s}'.format(self._on_error))
+        self._obs_board = observer.get(tag=OBSERVER_TAG)
+        self._obs_board.notify_new(self, dict(tag=self.tag,
+                                              status=self.status,
+                                              on_error=self.on_error))
+        self._obs_board.register(self)
+
+    def updobsitem(self, item, info):
+        if info.get('observerboard', '') == OBSERVER_TAG:
+            o_tag = info['tag']
+            if info.get('subjob_replay', False):
+                # If the status/delayed_error_flag chatter is being replayed,
+                # deal with it
+                if o_tag == self.tag:
+                    if 'new_status' in info:
+                        self._status = info['new_status']
+                    if info.get('delayed_error_flag', False):
+                        self._delayed_error_flag = True
+            else:
+                if (self.status != NODE_STATUS.CREATED and
+                        any([o_tag == k.tag for k in self.contents])):
+                    # We are only interested in child nodes
+                    if info.get('new_status', None) == NODE_STATUS.FAILED:
+                        # On kid failure, update my own status
+                        if info['on_error'] == NODE_ON_ERROR.FAIL:
+                            self.status = NODE_STATUS.FAILED
+                    if 'delayed_error_flag' in info:
+                        # Propagate the delayed error flag
+                        self.delayed_error_flag = True
+
+    @property
+    def on_error(self):
+        """How to react on error."""
+        return self._on_error
+
+    @property
+    def delayed_error_flag(self):
+        """Return the delayed error flag."""
+        return self._delayed_error_flag
+
+    @delayed_error_flag.setter
+    def delayed_error_flag(self, value):
+        """Set the status of the current Node/Driver."""
+        if not bool(value):
+            raise ValueError('True is the only possible value for delayed_error_flag')
+        if not self._delayed_error_flag:
+            self._obs_board.notify_upd(self, dict(tag=self.tag,
+                                                  delayed_error_flag=True))
+            self._delayed_error_flag = True
+
+    @property
+    def status(self):
+        """Return the status of the current Node/Driver."""
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        """Set the status of the current Node/Driver."""
+        if value not in NODE_STATUS:
+            raise ValueError('Erroneous value for the node status: {!s}'.format(value))
+        if value != self._status:
+            self._obs_board.notify_upd(self, dict(tag=self.tag,
+                                                  previous_status=self.status,
+                                                  new_status=value,
+                                                  on_error=self.on_error))
+            if value == NODE_STATUS.FAILED and self.on_error == NODE_ON_ERROR.DELAYED_FAIL:
+                self.delayed_error_flag = True
+            self._status = value
+
+    @property
+    def any_failure(self):
+        """Return True if self or any of the subnodes failed."""
+        failure = self.status == NODE_STATUS.FAILED
+        return failure or any([k.any_failure for k in self.contents])
+
+    def __str__(self):
+        """Print the node's tree."""
+        me = '{:s} ({:s}) -> {:s}'.format(self.tag,
+                                          self.__class__.__name__,
+                                          self.status)
+        if self.status == NODE_STATUS.FAILED and self.on_error != NODE_ON_ERROR.FAIL:
+            me += ' (but {:s})'.format(self.on_error)
+        tree = [me, ] + ['\n'.join('  ' + line for line in str(kid).split('\n'))
+                         for kid in self.contents]
+        return '\n'.join(tree)
 
 
 class Node(getbytag.GetByTag, NiceLayout):
@@ -105,7 +232,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         self._conf = None
         self._activenode = None
         self._contents = list()
-        self._aborted = False
+        self._nicelayout_init(kw)
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         """All the necessary arguments to build a copy of this object."""
@@ -143,10 +270,6 @@ class Node(getbytag.GetByTag, NiceLayout):
         return self._configtag
 
     @property
-    def aborted(self):
-        return self._aborted
-
-    @property
     def conf(self):
         return self._conf
 
@@ -154,7 +277,7 @@ class Node(getbytag.GetByTag, NiceLayout):
     def activenode(self):
         if self._activenode is None:
             if self.conf is None:
-                raise RuntimeError('Setup the configuration object befoe calling activenode !')
+                raise RuntimeError('Setup the configuration object before calling activenode !')
             self._activenode = self._active_cb is None or self._active_cb(self)
         return self._activenode
 
@@ -186,29 +309,62 @@ class Node(getbytag.GetByTag, NiceLayout):
             ctx.cocoon()
             self._setup_context(ctx)
             oldctx.activate()
+            self.status = NODE_STATUS.READY
 
     def _setup_context(self, ctx):
         """Setup the newly created context."""
         pass
 
-    def __enter__(self):
-        """
-        Enter a :keyword:`with` context, freezing the current env
-        and joining a cocoon directory.
-        """
+    @contextlib.contextmanager
+    def isolate(self):
+        """Deal with any events related to the actual run."""
         if self.activenode:
-            self._oldctx = self.ticket.context
-            ctx = self.ticket.context.switch(self.tag)
-            ctx.cocoon()
-            logger.debug('Node context directory <%s>', self.sh.getcwd())
-        return self
+            with self._context_isolation():
+                if self._subjobtag == self.tag:
+                    with subjob_handling(self, OBSERVER_TAG):
+                        with self._status_isolation(extra_verbose=True):
+                            yield
+                else:
+                    with self._status_isolation():
+                        yield
+        else:
+            yield
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Exit from :keyword:`with` context."""
-        if self.activenode:
+    @contextlib.contextmanager
+    def _context_isolation(self):
+        """Handle context switching properly."""
+        self._oldctx = self.ticket.context
+        ctx = self.ticket.context.switch(self.tag)
+        ctx.cocoon()
+        logger.debug('Node context directory <%s>', self.sh.getcwd())
+        try:
+            yield
+        finally:
             logger.debug('Exit context directory <%s>', self.sh.getcwd())
             self._oldctx.activate()
             self.ticket.context.cocoon()
+
+    @contextlib.contextmanager
+    def _status_isolation(self, extra_verbose=False):
+        """Handle the Node's status updates."""
+        self.status = NODE_STATUS.RUNNING
+        try:
+            yield
+        except Exception:
+            self.status = NODE_STATUS.FAILED
+            if extra_verbose or self.on_error != NODE_ON_ERROR.FAIL:
+                # Mask the exception
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                self.subtitle('An exception occured (on_error={:s})'.format(self.on_error))
+                print('Exception type: {!s}'.format(exc_type))
+                print('Exception values: {!s}'.format(exc_value))
+                self.header('Traceback Error / BEGIN')
+                print("\n".join(traceback.format_tb(exc_traceback)))
+                self.header('Traceback Error / END')
+            if self.on_error == NODE_ON_ERROR.FAIL:
+                raise
+        else:
+            self.status = NODE_STATUS.DONE
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
@@ -254,6 +410,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         for localvar in sorted([x for x in self.env.keys() if x.startswith(self._locprefix)]):
             if (localvar[localstrip:] not in self.conf or
                     (localvar[localstrip:] not in ('rundate', ) and
+                     self.env[localvar] is not None and
                      self.env[localvar] != self.conf[localvar[localstrip:]])):
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
@@ -391,9 +548,9 @@ class Node(getbytag.GetByTag, NiceLayout):
             # here.
             pass
 
-    def complete(self, aborted=False):
+    def complete(self):
         """Some cleaning and completion status."""
-        self._aborted = aborted
+        pass
 
     def _actual_run(self, nbpass=0, sjob_activated=True):
         """Abstract method: the actual job to do."""
@@ -567,6 +724,7 @@ class Family(Node):
             launcher_opts = {k[len('paralleljobs_'):]: self.conf[k]
                              for k in self.conf if k.startswith('paralleljobs_')}
             launchtool = fpx.subjobslauncher(scriptpath=sys.argv[0],
+                                             nodes_obsboard_tag=OBSERVER_TAG,
                                              ** launcher_opts)
             if launchtool is None:
                 raise RuntimeError('No subjob launcher could be found: check "paralleljobs_kind".')
@@ -581,10 +739,10 @@ class Family(Node):
         if launchtool:
             self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag, '(using subjobs)')))
 
-            def node_recurse(node):
+            def node_recurse(some_node):
                 """Recursively find tags."""
-                o_set = set([node.tag, ])
-                for snode in node.contents:
+                o_set = set([some_node.tag, ])
+                for snode in some_node.contents:
                     o_set = o_set | node_recurse(snode)
                 return o_set
 
@@ -592,17 +750,21 @@ class Family(Node):
             for node in self.contents:
                 launchtool(node.tag, node_recurse(node))
             # Wait for everybody to complete
-            launchtool.waitall()
+            done, ko = launchtool.waitall()
+            if ko:
+                raise SubJobLauncherError("Execution failed for some subjobs: {:s}"
+                                          .format(','.join(ko)))
         else:
             # No subjobs configured or allowed: run the usual way...
             sjob_activated = sjob_activated or self._subjobtag == self.tag
-            with subjob_output_markup(self._subjobtag == self.tag):
+            try:
                 self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
                 self.setup()
                 self.summary()
                 for node in self.contents:
-                    with node:
+                    with node.isolate():
                         node.run(sjob_activated=sjob_activated)
+            finally:
                 self.complete()
 
 
@@ -633,7 +795,7 @@ class LoopFamily(Family):
         else:
             self._loopconf = self._loopconf.split(',')
         # Find the loop's variable names
-        self._loopvariable = kw.pop('_loopvariable', None)
+        self._loopvariable = kw.pop('loopvariable', None)
         if self._loopvariable is None:
             self._loopvariable = [s.rstrip('s') for s in self._loopconf]
         else:
@@ -866,17 +1028,16 @@ class Task(Node):
         """Execution driver: build, setup, refill, process, complete."""
         sjob_activated = sjob_activated or self._subjobtag == self.tag
         if sjob_activated:
-            with subjob_output_markup(self._subjobtag == self.tag):
-                try:
-                    self.build()
-                    self.setup()
-                    self.summary()
-                    self.refill()
-                    self.process()
-                except VortexForceComplete:
-                    self.sh.title('Force complete')
-                finally:
-                    self.complete()
+            try:
+                self.build()
+                self.setup()
+                self.summary()
+                self.refill()
+                self.process()
+            except VortexForceComplete:
+                self.sh.title('Force complete')
+            finally:
+                self.complete()
 
 
 class Driver(getbytag.GetByTag, NiceLayout):
@@ -903,6 +1064,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
         self._nbpass = 0
+        self._nicelayout_init(dict())
 
         # Build the tree to schedule
         self._contents = list()
@@ -1014,9 +1176,25 @@ class Driver(getbytag.GetByTag, NiceLayout):
             node.setconf(self.conf, self.jobconf)
             node.build_context()
 
+        self.status = NODE_STATUS.READY
+        self.header('The various were configured. Here is a Tree-View of the Driver:')
+        print(self)
+
     def run(self):
         """Assume recursion of nodes `run` methods."""
         self._nbpass += 1
-        for node in self.contents:
-            with node:
-                node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
+        self.status = NODE_STATUS.RUNNING
+        try:
+            for node in self.contents:
+                with node.isolate():
+                    node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
+            self.status = NODE_STATUS.DONE
+        finally:
+            if self.any_failure:
+                self.sh.title('An error occured during job...')
+                print('Here is the tree-view of the present Driver:')
+                print(self)
+            if self.delayed_error_flag and self._subjob_tag is None:
+                # Test on _subjob_tag because we do not want to crash in subjobs
+                raise RuntimeError("One or several error occured during the Driver execution. " +
+                                   "The exceptions were delayed but now that the Driver ended let's crash !")

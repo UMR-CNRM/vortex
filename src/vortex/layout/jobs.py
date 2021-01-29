@@ -678,10 +678,6 @@ class JobAssistant(footprints.FootprintBase):
         """Should be called when a job finishes successfully"""
         t = vortex.ticket()
         t.sh.subtitle("Executing JobAssistant's complete actions")
-        if self.subjob_tag is not None:
-            t.datastore.pickle_dump(subjobs._DSTORE_OUT.format(self.subjob_fsid, self.subjob_tag))
-            print(('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT)
-                  .format(self.subjob_fsid, self.subjob_tag))
 
     @_extendable
     def fulltraceback(self, latest_error=None):
@@ -710,6 +706,10 @@ class JobAssistant(footprints.FootprintBase):
         """Called whenever a job finishes (either successfully or badly)."""
         t = vortex.ticket()
         t.sh.subtitle("Executing JobAssistant's finalise actions")
+        if self.subjob_tag is not None:
+            t.datastore.pickle_dump(subjobs._DSTORE_OUT.format(self.subjob_fsid, self.subjob_tag))
+            print(('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT)
+                  .format(self.subjob_fsid, self.subjob_tag))
 
     def close(self):
         """This must be the last called method whenever a job finishes."""

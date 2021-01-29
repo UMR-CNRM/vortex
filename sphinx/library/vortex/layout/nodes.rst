@@ -8,6 +8,12 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.2.0
 
+Global Variables
+----------------
+
+.. autodata:: NODE_STATUS
+
+.. autodata:: NODE_ON_ERROR
 
 Classes
 -------

@@ -15,7 +15,7 @@ import footprints as fp
 
 import vortex
 from vortex import toolbox
-from vortex.layout.nodes import Task, Driver, Family, LoopFamily, WorkshareFamily
+from vortex.layout.nodes import NODE_STATUS, Task, Driver, Family, LoopFamily, WorkshareFamily
 
 
 _JOBCONF1 = """
@@ -171,6 +171,9 @@ class TestTask(Task):
         if 'late-backup' in self.steps:
             actsteps |= 0b10000
 
+        if 'pleasefail' in self.conf:
+            raise RuntimeError('pleasefail was here...')
+
         _GLOBAL_OBS.notify_upd(self, dict(tag=self.tag,
                                           steps=actsteps,
                                           conf=dict(self.conf),
@@ -273,11 +276,18 @@ class TestHeavyNodesStuff(unittest.TestCase):
                 opts['steps'] = steps
             dr = Driver(tag='job_demo_drv_' + extra, ticket=self.t,
                         nodes=[TestTask(tag='forecast1_' + extra, ticket=self.t, **opts),
+                               TestTask(tag='forecast3_' + extra, ticket=self.t,
+                                        pleasefail=True, on_error='continue', **opts),
                                TestTask(tag='forecast2_' + extra, ticket=self.t, **opts)],
                         options=opts,
                         iniencoding='utf-8')
+            self.assertEqual(dr.status, NODE_STATUS.CREATED)
             dr.setup()
+            self.assertEqual(dr.status, NODE_STATUS.READY)
             dr.run()
+            self.assertEqual(dr.status, NODE_STATUS.DONE)
+            self.assertEqual(dr.contents[1].status, NODE_STATUS.FAILED)
+            self.assertEqual(dr.contents[1].on_error, 'continue')
             # Config
             self.assertEqual(self.spy.conf['forecast1_' + extra]['block'], 'forecast1')
             self.assertEqual(self.spy.conf['forecast1_' + extra]['geometry'].tag, 'global798')
@@ -321,6 +331,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
             else:
                 self.assertOrderedDictEqual(self.spy.refill,
                                             [('forecast1_' + extra, True),
+                                             ('forecast3_' + extra, True),
                                              ('forecast2_' + extra, True)])
 
     def test_nodes_play(self):
