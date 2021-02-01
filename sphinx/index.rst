@@ -16,6 +16,7 @@ Contents
    Getting Started <gettingstarted>
    A step by step introduction <stepbystep/index>
    Extra Technical Documentation <technical/index>
+   A few examples <examples>
 
 The following documents are automatically generated from the source code
 repository (they may contain detailed informations on specific classes and

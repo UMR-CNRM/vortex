@@ -28,8 +28,12 @@ class MtoolDemoCache(MtoolCache):
         """Tries to figure out what could be the actual entry point for cache space."""
         sh = self.sh
         if self.rootdir == 'auto':
-            gl = sessions.current().glove
-            sweethome = sh.path.join(gl.configrc, 'democache')
+            e = self.sh.env
+            if 'VORTEX_DEMO_CACHE_PARENTDIR' in e:
+                sweethome = sh.path.join(e.VORTEX_DEMO_CACHE_PARENTDIR, 'democache')
+            else:
+                gl = sessions.current().glove
+                sweethome = sh.path.join(gl.configrc, 'democache')
             sh.mkdir(sweethome)
         else:
             sweethome = self.actual_rootdir

@@ -227,6 +227,12 @@ Such classes may rely on other Vortex's modules (such as the
 :mod:`vortex.algo.mpitools` module that takes care of running MPI programs) or
 even external packages (such as :mod:`taylorism`).
 
+.. seealso::
+
+   * The documents related to "Algorithmic components" in the
+     :ref:`stepbystep-index` tutorial.
+   * The examples described in ":ref:`examples_algo`".
+
 Communicating with the outside world
 ====================================
 
@@ -261,6 +267,7 @@ is advised to use them through the default action dispatcher:
    ...         subject='demo', message='Vortex says Hi :-)\n')
 
 .. seealso::
+
    * A technical documentation (intended for developers): :ref:`actions-usage`
 
 
@@ -325,7 +332,9 @@ This (painless) isolation feature should prevent bugs that otherwise are very
 difficult to track down.
 
 .. seealso::
-   ???
+
+   * The examples described in ":ref:`examples_jobs`".
+
 
 Vortex, a world of footprints
 *****************************
@@ -458,7 +467,7 @@ For major versions, Tar files are available on the `project's Redmine page
 
 Prerequisites:
 
-* Python 2.7 (the code is not fully compatible with Python 3)
+* Python 2.7 or Python >= 3.5
 * The six package
 * The nose package (optional, needed to run unit-tests)
 * The sphinx-build utility >= 1.4  (optional, needed to build the documentation)

@@ -82,13 +82,13 @@ with yaml_checker as ec_register:
     import yaml
 
 #: Pre-compiled regex to check a none str value
-isnonedef = re.compile(r'none', re.IGNORECASE)
+isnonedef = re.compile(r'\s*none\s*$', re.IGNORECASE)
 
 #: Pre-compiled regex to check a boolean true str value
-istruedef = re.compile(r'on|true|ok', re.IGNORECASE)
+istruedef = re.compile(r'\s*(on|true|ok)\s*$', re.IGNORECASE)
 
 #: Pre-compiled regex to check a boolean false str value
-isfalsedef = re.compile(r'off|false|ko', re.IGNORECASE)
+isfalsedef = re.compile(r'\s*(off|false|ko)\s*$', re.IGNORECASE)
 
 #: Global lock to protect temporary locale changes
 LOCALE_LOCK = threading.Lock()

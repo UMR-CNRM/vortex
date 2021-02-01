@@ -96,6 +96,8 @@ class GribInfosScript(Expresso, GribInfosScriptMixin):
       available before term 03h of member 1);
     * Additionaly, if they have been promised, the individual md5 files
       are stored in cache.
+    * An external script is used to compute the md5 sum (have a look at the
+      :class:`sandbox.data.executables.StdpostScript` resource.
     """
 
     _footprint = dict(
@@ -226,6 +228,8 @@ class GribInfosParaScript(ParaExpresso, GribInfosScriptMixin):
       taylorism package)
     * Additionaly, if they have been promised, the individual md5 files
       are stored in cache.
+    * An external script is used to compute the md5 sum (have a look at the
+      :class:`sandbox.data.executables.StdpostScript` resource.
     """
 
     _footprint = dict(

@@ -15,18 +15,16 @@ Global Variables
 
 .. autodata:: NODE_ON_ERROR
 
-Classes
--------
-
-.. autoclass:: NiceLayout
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Abstract Class
+______________
 
 .. autoclass:: Node
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Classes
+-------
 
 .. autoclass:: Family
    :show-inheritance:
@@ -49,6 +47,14 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: Driver
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Utility classes
+---------------
+
+.. autoclass:: NiceLayout
    :show-inheritance:
    :members:
    :member-order: alphabetical

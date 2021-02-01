@@ -4,6 +4,11 @@
 """
 This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
+
+The documentation of this module is probably not enough to understand all the
+features of :class:`Node` and :class:`Driver` objects. The examples provided
+with the Vortex source code (see :ref:`examples_jobs`) may shed some light on
+interesting features.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -204,6 +209,8 @@ class Node(getbytag.GetByTag, NiceLayout):
     :param JobAssistant jobassistant: the jobassistant object that might
                                       be used to find out the **special_prefix**
                                       and **register_cycle_prefix** callback.
+    :param str on_error: How to react when a failure occurs (default is "fail",
+                         alternatives are "delayed_fail" and "continue")
     :param dict kw: Any other attributes that will be added to ``self.options``
                     (that will eventually be added to ``self.conf``)
     """

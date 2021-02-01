@@ -228,6 +228,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         for job in jobs:
+            print('GRRR', job)
             jobname = job['name'] + '.py'
             if os.path.isfile(jobname) and args.backup is not None:
                 copyfile(jobname, jobname + args.backup)
