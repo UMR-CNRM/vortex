@@ -214,7 +214,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         self.play = kw.pop('play', False)
         self._ticket = kw.pop('ticket', None)
         if self._ticket is None:
-            raise ValueError("The session's ticket must be provided")
+            raise ValueError("The session's ticket must be provided (using a `ticket` argument)")
         self._configtag = kw.pop('config_tag', self.tag)
         self._active_cb = kw.pop('active_callback', None)
         if self._active_cb is not None and not callable(self._active_cb):
@@ -909,12 +909,12 @@ class WorkshareFamily(Family):
             else:
                 lb_ws_number = self._worksharelimit or sb_ws_number
             # Final result
-            ws_number = min([sb_ws_number, lb_ws_number])
+            ws_number = max(min([sb_ws_number, lb_ws_number]), 1)
             # Find out the workshares sizes
             floorsize = n_population // ws_number
             ws_sizes = [floorsize, ] * ws_number
             for i in range(n_population - ws_number * floorsize):
-                ws_sizes[i] += 1
+                ws_sizes[i % ws_number] += 1
             # Build de family's content
             self._actual_content = list()
             ws_start = 0
@@ -1052,7 +1052,9 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._conf = None
 
         # Set default parameters for the actual job
-        self._options = dict() if options is None else options
+        if options is None:
+            raise ValueError('An `option` argument needs to be specified.')
+        self._options = options
         self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
         self._subjob_tag = self._options.get('subjob_tag', None)
         j_assist = self._options.get('jobassistant', None)
