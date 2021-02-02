@@ -7,6 +7,7 @@ rough parallelisation at job's level.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
 import contextlib
@@ -189,6 +190,8 @@ class AbstractSubJobLauncher(fp.FootprintBase):
                         if not ignore_end:
                             break
                     else:
+                        if six.PY2:
+                            lst = lst.encode(plocale)
                         sys.stdout.write(lst)
                 else:
                     started = lst == _LOG_CAPTURE_START
