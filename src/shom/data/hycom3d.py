@@ -4,18 +4,17 @@
 Hycom3d files
 """
 
-import vortex.data.executables as vde
 from gco.syntax.stdattrs import gvar
 
 from common.data.consts import GenvModelGeoResource
 from vortex.data.executables import Script, Binary, OceanographicModel
-from vortex.data.geometries import hgeometry_deco
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
-from vortex.syntax.stdattrs import model_deco
+from vortex.syntax.stddeco import namebuilding_append
 
 __all__ = []
+
+
 # %% Generic
 
 class _Hycom3dGeoResource(GenvModelGeoResource):
@@ -128,12 +127,8 @@ class Hycom3dIBCIniconBinary(Binary):
         dict(
             info="Binary that computes initial conditions for HYCOM",
             attr=dict(
-                gvar=dict(
-                    default="hycom3d_ibc_inicon_binary",
-                ),
-                kind=dict(
-                    values=["vertical_regridder"],
-                ),
+                gvar=dict(default="hycom3d_ibc_inicon_binary"),
+                kind=dict(values=["vertical_regridder"]),
             ),
         ),
     ]
@@ -156,16 +151,10 @@ class Hycom3dModelBinary(OceanographicModel):
         dict(
             info="Binary of the model",
             attr= dict(
-                gvar = dict(
-                    default='hycom3d_model_binary',
-                ),
+                gvar = dict(default='hycom3d_model_binary'),
             ),
         )
     ]
-
-    @property
-    def realkind(self):
-        return 'hycom3d_model_binary'
 
     def command_line(self, **opts):
         return ("{datadir} {tmpdir} {localdir} {rank}").format(**opts)
@@ -182,6 +171,28 @@ class Hycom3dIBCTimeScript(Script):
 
     def command_line(self, **opts):
         return "--ncout {ncout} {ncins} {dates}".format(**opts)
+
+
+class Hycom3dAtmfrcTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_atmfrc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins_insta} {ncins_cumul} {dates}".format(**opts)
+
+
+class Hycom3dRiversFlowrateScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_rivers_flowrate_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "--rank {rank} {tarfile} {dates}".format(**opts)
 
 
 # %% Pre-processing intermediate files
