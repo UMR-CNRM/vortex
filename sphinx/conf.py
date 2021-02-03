@@ -245,10 +245,13 @@ man_pages = [
      [u'The Vortex Team'], 1)
 ]
 
-
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/2/': None}
+intersphinx_mapping = {'https://docs.python.org/3/': None}
 
+# Because of Meteo-France's proxy we need this :-(
+import os
+if 'VORTEX_PROJECT_SSLCERT_OVERRIDE' in os.environ:
+    tls_cacerts = os.environ['VORTEX_PROJECT_SSLCERT_OVERRIDE']
 
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
