@@ -32,6 +32,11 @@ class PrometheeGridPoint(TimePeriodGridPoint):
                     optional = False,
                     values = ["gridpoint", "promethee_gridpoint"]
                 ),
+                step = dict(
+                    optional = False,
+                    type = int,
+                    values = [1, 3, 6, 24]
+                ),
                 model = dict(
                     optional = False,
                     values = ["promethee", "prom", "arpege", "arp", "arp_court", 
