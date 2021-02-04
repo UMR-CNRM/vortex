@@ -163,7 +163,6 @@ class OpJobAssistantTest(JobAssistant):
         opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
             jname=opd.get('op_jeeves', None),
-            smtpserver='mail.srv.belenoshpc.meteo.fr',
             sender='admin_prod_sc@meteo.fr',
         )
 
