@@ -401,7 +401,7 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
         if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
-        if hasattr(rh.resource, 'term'):
+        if hasattr(rh.resource, 'term') and not 'term' in kwargs:
             kwargs['term'] = rh.resource.term
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
