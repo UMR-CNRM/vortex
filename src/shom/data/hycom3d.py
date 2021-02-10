@@ -170,7 +170,7 @@ class Hycom3dSpNudgeDemerliacBinary(vde.Binary):
         return "hycom3d_spnudge_demerliac_binary"
 
     def command_line(self, **opts):
-        return ("{date_spnudge} {output_type}").format(**opts)
+        return ("{date} {output_type}").format(**opts)
     
 
 class Hycom3dSpNudgeSpectralBinary(vde.Binary):
@@ -411,7 +411,7 @@ class Hycom3dRestartDate(GeoFlowResource):
 class Hycom3dDemerliacFilterOutput(GeoFlowResource):
     _footprint = [
         dict(
-            info="Demerliac filter outputs .a and .b files",
+            info="Demerliac filter outputs nc files",
             attr=dict(
                 kind=dict(
                     values=["demerliac_filter_output"],
@@ -419,14 +419,11 @@ class Hycom3dDemerliacFilterOutput(GeoFlowResource):
                 field=dict(
                     values=["saln", "temp", "h"],
                 ),
-                format=dict(values=["a", "b"]),
-                nativefmt=dict(
-                    values=["binary", "ascii"],
-                    remap={"a": "binary", "b": "ascii"}
+                format=dict(
+                    values=["nc", "netcdf"],
                 ),
-                actualfmt=dict(
-                    values=["binary", "ascii"],
-                    remap={"a": "binary", "b": "ascii"}
+                nativefmt=dict(
+                    values=["nc", "netcdf"],
                 ),
             ),
         ),
@@ -468,7 +465,7 @@ class Hycom3dSpectralFilterOutput(GeoFlowResource):
 # %% Model outputs
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('geo', lambda self: self.field)
-class Hycom3dModelOutput(_Hycom3dGeoResource):
+class Hycom3dModelOutput(GeoFlowResource):
     """Model output"""
 
     _footprint = [
@@ -493,6 +490,10 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
                 ),
                 format=dict(
                     values=["nc"],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf"
                 ),
             )
         )
