@@ -20,7 +20,7 @@ import time
 
 from bronx.compat.functools import cached_property
 from bronx.datagrip.namelist import NamelistBlock
-from bronx.stdtypes.date import Time
+from bronx.stdtypes.date import Time, Date
 from bronx.fancies import loggers
 
 import footprints
@@ -90,6 +90,7 @@ class FullposServerDiscoveredInputs(object):
         self.inidata = dict()
         self.tododata = list()
         self.guessdata = list()
+        self.termscount = collections.defaultdict(int)
         self.anyexpected = False
         self.inputsminlen = 0
         self.firstprefix = None
@@ -186,6 +187,11 @@ class FullPosServer(IFSParallel):
                             "server run"),
                 optional = True,
             ),
+            basedate=dict(
+                info     = "The run date of the coupling generating process",
+                type     = Date,
+                optional = True
+            ),
             xpname = dict(
                 default  = 'FPOS'
             ),
@@ -272,6 +278,11 @@ class FullPosServer(IFSParallel):
         todosec0 = self.context.sequence.effective_inputs(role=self._INPUTDATA_ROLE)
         todosec1 = collections.defaultdict(list)
         discovered.anyexpected = any([isec.rh.is_expected() for isec in todosec0])
+        hasterms = all([hasattr(isec.rh.resource, 'term') for isec in todosec0])
+        # Sort things up (if possible)
+        if hasterms:
+            logger.info('Sorting input data based on the actual term.')
+            todosec0 = sorted(todosec0, key=lambda s: self._actual_term(s.rh))
         if todosec0:
             for iseq, s in enumerate(todosec0):
                 rprefix = ((self._INPUTDATA_ROLE.match(s.role) or
@@ -286,10 +297,7 @@ class FullPosServer(IFSParallel):
                     )
             iprefixes = sorted(todosec1.keys())
             if len(iprefixes) == 1:
-                for s in sorted(todosec0,
-                                key=lambda isec: (isec.rh.resource.term
-                                                  if hasattr(isec.rh.resource, 'term')
-                                                  else None)):
+                for s in todosec0:
                     discovered.tododata.append({self._MODELSIDE_INPUTPREFIX0 + iprefixes[0]: s})
             else:
                 if len(set([len(secs) for secs in todosec1.values()])) > 1:
@@ -297,6 +305,13 @@ class FullPosServer(IFSParallel):
                 for sections in zip(* [iter(todosec1[i]) for i in iprefixes]):
                     discovered.tododata.append({self._MODELSIDE_INPUTPREFIX0 + k: v
                                                 for k, v in zip(iprefixes, sections)})
+
+        # Detect the number of terms based on the firstprefix
+        if hasterms:
+            for sections in discovered.tododata:
+                act_term = self._actual_term(sections[self._MODELSIDE_INPUTPREFIX0 +
+                                                      discovered.firstprefix].rh)
+                discovered.termscount[act_term] += 1
 
         # Look for guesses of output files
         guesses_sec0 = collections.defaultdict(list)
@@ -329,10 +344,55 @@ class FullPosServer(IFSParallel):
 
     @cached_property
     def object_namelists(self):
-        """The list of object's namelists"""
-        return [isec.rh
-                for isec in self.context.sequence.effective_inputs(role='ObjectNamelist')
-                if isec.rh.resource.realkind == 'namelist_fpobject']
+        """The list of object's namelists."""
+        namrhs = [isec.rh
+                  for isec in self.context.sequence.effective_inputs(role='ObjectNamelist')
+                  if isec.rh.resource.realkind == 'namelist_fpobject']
+        # Update the object's content
+        for namrh in namrhs:
+            namsave = False
+            if namrh.resource.fp_cmodel is not None:
+                self._set_nam_macro(namrh.contents, namrh.container.localpath(),
+                                    'FP_CMODEL', namrh.resource.fp_cmodel)
+                namsave = True
+            if namrh.resource.fp_lextern is not None:
+                self._set_nam_macro(namrh.contents, namrh.container.localpath(),
+                                    'FP_LEXTERN', namrh.resource.fp_lextern)
+                namsave = True
+            if namrh.resource.fp_terms is not None:
+                if not self.inputs.termscount:
+                    raise AlgoComponentError('In this use case, all input data must have a term attribute')
+                active_terms = {Time(t) for t in namrh.resource.fp_terms}
+                # Generate the list of NFPOSTS
+                global_i = 0
+                nfposts = list()
+                for term, n_term in sorted(self.inputs.termscount.items()):
+                    if term in active_terms:
+                        nfposts.extend(range(global_i, global_i + n_term))
+                    global_i += n_term
+                # Get the NAMFPC block
+                try:
+                    nfpc = namrh.contents['NAMFPC']
+                except KeyError:
+                    raise AlgoComponentError('NAMFPC should be defined in {:s}'
+                                             .format(namrh.container.localpath()))
+                # Sanity check
+                for k in nfpc.keys():
+                    if k.startswith('NFPOSTS'):
+                        raise AlgoComponentError('&NAMFPC NFPOSTS*(*) / entries should not be defined in {:s}'
+                                                 .format(namrh.container.localpath()))
+                # Write NFPOSTS to NAMFPC
+                nfpc['NFPOSTS(0)'] = - len(nfposts)
+                for i, v in enumerate(nfposts):
+                    nfpc['NFPOSTS({:d})'.format(i + 1)] = - v
+                logger.info("The NAMFPC namelist in %s was updated.",
+                            namrh.container.localpath())
+                logger.debug("The updated NAMFPC namelist in %s is:\n%s",
+                             namrh.container.localpath(), nfpc)
+                namsave = True
+            if namsave:
+                namrh.save()
+        return namrhs
 
     @cached_property
     def xxtmapping(self):
@@ -342,6 +402,8 @@ class FullPosServer(IFSParallel):
                                                            kind='namselect'):
             dpath = self.system.path.dirname(isec.rh.container.localpath())
             namxxrh[dpath][isec.rh.resource.term] = isec.rh
+        if namxxrh and not self.inputs.termscount:
+            raise AlgoComponentError('In this use case, all input data must have a term attribute')
         return namxxrh
 
     @cached_property
@@ -390,6 +452,13 @@ class FullPosServer(IFSParallel):
             fmt, self._MODELSIDE_OUTPUTPREFIX
         )
 
+    def _actual_term(self, rhandler):
+        """Compute the actual Resource Handler term."""
+        rterm = rhandler.resource.term
+        if self.basedate is not None:
+            rterm += rhandler.resource.date - self.basedate
+        return rterm
+
     def _add_output_mapping(self, outputs_mapping, i, out_re, out_fname):
         """Add mappings for output file."""
         # FA/default file
@@ -432,14 +501,17 @@ class FullPosServer(IFSParallel):
     def _link_xxt(self, todorh, i):
         """If necessary, link in the appropriate xxtNNNNNNMM file."""
         for sdir, tdict in self.xxtmapping.items():
-            xxtsource = tdict[todorh.resource.term].container.localpath()
-            # The file is expected to follow the xxtDDDDHHMM syntax where DDDD
-            # is the number of days
-            days_hours = (i // 24) * 100 + i % 24
-            xxttarget = 'xxt{:06d}00'.format(days_hours)
-            xxttarget = self.system.path.join(sdir, xxttarget)
-            self.system.symlink(xxtsource, xxttarget)
-            logger.info('XXT %s linked in as %s.', xxtsource, xxttarget)
+            xxtrh = tdict.get(self._actual_term(todorh), None)
+            if xxtrh is not None:
+                xxtsource = self.system.path.relpath(xxtrh.container.abspath,
+                                                     sdir)
+                # The file is expected to follow the xxtDDDDHHMM syntax where DDDD
+                # is the number of days
+                days_hours = (i // 24) * 100 + i % 24
+                xxttarget = 'xxt{:06d}00'.format(days_hours)
+                xxttarget = self.system.path.join(sdir, xxttarget)
+                self.system.symlink(xxtsource, xxttarget)
+                logger.info('XXT %s linked in as %s.', xxtsource, xxttarget)
 
     def _init_poll_and_move(self, outputs_mapping):
         """Deal with the PF*INIT file."""
@@ -506,7 +578,7 @@ class FullPosServer(IFSParallel):
             self.system.subtitle('Object Namelists customisation')
         for o_nam in self.object_namelists:
             # a/c cy44: &NAMFPIOS NFPDIGITS=__SUFFIXLEN__, /
-            self._set_nam_macro(o_nam.contents, o_nam.container.localpath, 'SUFFIXLEN',
+            self._set_nam_macro(o_nam.contents, o_nam.container.localpath(), 'SUFFIXLEN',
                                 self.inputs.actual_suffixlen(self._MODELSIDE_OUT_SUFFIXLEN_MIN))
             if o_nam.contents.dumps_needs_update:
                 logger.info('Rewritting the %s namelists file.', o_nam.container.actualpath())
@@ -549,9 +621,9 @@ class FullPosServer(IFSParallel):
         # Sanity check on selection namelists
         if self.xxtmapping:
             for tdict in self.xxtmapping.values():
-                if (set([sec.rh.resource.term
-                         for sdict in self.inputs.tododata for sec in sdict.values()]) !=
-                        set(tdict.keys())):
+                if (set([self._actual_term(sec.rh)
+                         for sdict in self.inputs.tododata
+                         for sec in sdict.values()]) < set(tdict.keys())):
                     raise AlgoComponentError("The list of terms between input data and selection namelists differs")
         else:
             logger.info("No selection namelists detected. That's fine")
@@ -592,14 +664,15 @@ class FullPosServer(IFSParallel):
         self._set_nam_macro(namcontents, namlocal, 'INPUT_SUFFIXLEN',
                             self.inputs.actual_suffixlen())
         # With cy43: &NAMCT0 NFRPOS=__INPUTDATALEN__, /
-        self._set_nam_macro(namcontents, namlocal, 'INPUTDATALEN', len(self.inputs.tododata))
+        self._set_nam_macro(namcontents, namlocal, 'INPUTDATALEN', - len(self.inputs.tododata))
         # Auto generate the list of namelists for the various objects
         if self.object_namelists:
             if 'NAMFPOBJ' not in namcontents or len(namcontents['NAMFPOBJ']) == 0:
                 nb_o = NamelistBlock('NAMFPOBJ')
                 nb_o['NFPOBJ'] = len(self.object_namelists)
                 for i_nam, nam in enumerate(self.object_namelists):
-                    nb_o['NFPCONF({:d})'.format(i_nam + 1)] = nam.resource.fpconf
+                    if nam.resource.fp_conf:
+                        nb_o['NFPCONF({:d})'.format(i_nam + 1)] = nam.resource.fp_conf
                     nb_o['CNAMELIST({:d})'.format(i_nam + 1)] = nam.container.localpath()
                 namcontents['NAMFPOBJ'] = nb_o
                 logger.info('The following namelist block has been added to "%s":\n%s',
@@ -608,6 +681,22 @@ class FullPosServer(IFSParallel):
                 logger.warning('The NAMFPOBJ namelist in "%s" is not empty. Leaving it as it is',
                                namlocal)
         return True
+
+    def spawn_pre_dirlisting(self):
+        """Print a directory listing just before run."""
+        super(FullPosServer, self).spawn_pre_dirlisting()
+        for sdir in self.outdirectories:
+            self.system.subtitle('{0:s} : {1:s} sub-directory listing (pre-execution)'
+                                 .format(self.realkind, sdir))
+            self.system.dir(sdir, output=False, fatal=False)
+
+    def spawn_hook(self):
+        """Usually a good habit to dump the fort.4 namelist."""
+        super(FullPosServer, self).spawn_hook()
+        for o_nam in self.object_namelists:
+            self.system.subtitle('{0:s} : dump namelist <{1:s}>'
+                                 .format(self.realkind, o_nam.container.localpath()))
+            self.system.cat(o_nam.container.localpath(), output=False)
 
     def execute(self, rh, opts):
         """Server still or Normal execution depending on the input sequence."""
@@ -658,10 +747,21 @@ class FullPosServer(IFSParallel):
         self.flymapping = True
         self._flyput_mapping_d = outputs_mapping
 
+        # Deal with XXT files
+        if self.xxtmapping:
+            for i, istuff in enumerate(self.inputs.tododata):
+                self._link_xxt(istuff[self._MODELSIDE_INPUTPREFIX0 +
+                                      self.inputs.firstprefix].rh, i)
+
         if self.inputs.anyexpected:
             # Some server sync here...
             self.server_run = True
             self.system.subtitle('Starting computation with server_run=T')
+
+            # Process the data in chronological order ?
+            ordered_processing = (self.xxtmapping or
+                                  any([o_rh.resource.fp_terms is not None
+                                       for o_rh in self.object_namelists]))
 
             # IO poll settings
             self.io_poll_kwargs['nthreads'] = self.maxpollingthreads
@@ -677,18 +777,34 @@ class FullPosServer(IFSParallel):
                 self._deal_with_promises(outputs_mapping, self._init_poll_and_move)
 
             # Setup the InputMonitor
+            all_entries = set()
             metagang = _lmonitor.MetaGang()
+            cur_term = None
+            cur_term_gangs = set()
+            prev_term_gangs = set()
             for istuff, iguesses in zip(self.inputs.tododata, self.inputs.guessdata):
                 iinputs = {_lmonitor.InputMonitorEntry(s) for s in istuff.values()}
                 iinputs |= {_lmonitor.InputMonitorEntry(g.sec) for g in iguesses}
+                all_entries.update(iinputs)
                 bgang = _lmonitor.BasicGang()
                 bgang.info = (istuff, iguesses)
                 bgang.add_member(* iinputs)
+                # If needed, wait for the previous terms to complete
+                if ordered_processing:
+                    my_term = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
+                                                       self.inputs.firstprefix].rh)
+                    if cur_term is not None and cur_term != my_term:
+                        # Detect term's change
+                        prev_term_gangs = cur_term_gangs
+                        cur_term_gangs = set()
+                    if prev_term_gangs:
+                        # Wait for the gangs of the previous terms
+                        bgang.add_member(* prev_term_gangs)
+                    # Save things up for the next time
+                    cur_term_gangs.add(bgang)
+                    cur_term = my_term
                 metagang.add_member(bgang)
-            bm = _lmonitor.ManualInputMonitor(self.context,
-                                              [ime
-                                               for g in metagang.memberslist
-                                               for ime in g.memberslist],
+            bm = _lmonitor.ManualInputMonitor(self.context, all_entries,
                                               caching_freq=self.refreshtime,)
 
             # Start the InputMonitor
@@ -719,15 +835,12 @@ class FullPosServer(IFSParallel):
                                 return
                             self._deal_with_promises(outputs_mapping, self._init_poll_and_move)
 
-                        # Link input files and XXT files
+                        # Link input files
                         for iprefix, isec in istuff.items():
                             self._link_input(iprefix, isec.rh, current_i,
                                              inputs_mapping, outputs_mapping)
                         for iguess in iguesses:
                             self._move_output_guess(iguess, current_i)
-                        self._link_xxt(istuff[self._MODELSIDE_INPUTPREFIX0 +
-                                              self.inputs.firstprefix].rh,
-                                       current_i)
 
                         # Let's go...
                         super(FullPosServer, self).execute(rh, opts)
@@ -785,8 +898,6 @@ class FullPosServer(IFSParallel):
                     self._link_input(iprefix, isec.rh, i, inputs_mapping, outputs_mapping)
                 for iguess in iguesses:
                     self._move_output_guess(iguess, i)
-                self._link_xxt(iinputs[self._MODELSIDE_INPUTPREFIX0 +
-                                       self.inputs.firstprefix].rh, i)
 
             # On the fly ?
             if self.promises:

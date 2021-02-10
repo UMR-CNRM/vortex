@@ -14,6 +14,7 @@ import six
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Time, Date
 from bronx.datagrip.namelist import NO_SORTING, NamelistSet, NamelistParser
+from footprints.stdtypes import FPList
 from vortex import sessions
 from vortex.data.outflow import ModelResource, StaticResource
 from vortex.data.outflow import ModelGeoResource
@@ -414,12 +415,26 @@ class NamelistFpServerObject(Namelist):
             kind = dict(
                 values   = ['namelist_fpobject', ]
             ),
-            fpconf=dict(
+            fp_conf = dict(
                 info     = 'The FPCONF setting associated with this object.',
                 type     = int,
                 optional = True,
-                default  = 2,
             ),
+            fp_cmodel = dict(
+                info     = 'The CMODEL setting associated with this object.',
+                optional = True,
+            ),
+            fp_lextern = dict(
+                info     = 'The LEXTERN setting associated with this object.',
+                type     = bool,
+                optional = True,
+            ),
+            fp_terms = dict(
+                info     = ('Apply this object only on a subset of the input '
+                            'data (based on term)'),
+                type     = FPList,
+                optional = True,
+            )
         )
     )
 
