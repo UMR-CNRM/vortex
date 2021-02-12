@@ -10,6 +10,7 @@ Store objects use the :mod:`footprints` mechanism.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
+import contextlib
 import copy
 import re
 
@@ -49,7 +50,52 @@ def observer_board(obsname=None):
     return observer.get(tag=obsname)
 
 
-class Store(footprints.FootprintBase):
+class _SetAsideStoreMixin(object):
+    """
+    This Mixin is intended to work with store-like classes. It provides the
+    necessary methods to take care of the "setaside" urlquery option.
+    """
+
+    def _check_set_aside(self, remote):
+        """Look for "setaside" entry in the url-query."""
+        if 'setaside_p' in remote['query']:
+            remote['query'] = remote['query'].copy()
+            set_aside_s = remote['query'].pop('setaside_s', [self.scheme])
+            set_aside_n = remote['query'].pop('setaside_n', [self.netloc])
+            set_aside_p = remote['query'].pop('setaside_p')
+            return set_aside_s[0], set_aside_n[0], set_aside_p[0]
+        else:
+            return None
+
+    @contextlib.contextmanager
+    def _do_set_aside_cocoon(self, local, options):
+        """If the requested file is intent=inout, creates a temporary copy."""
+        options_bis = dict() if options is None else options.copy()
+        intent = options_bis.pop('intent', _CACHE_GET_INTENT_DEFAULT)
+        if intent != 'in':
+            local_bis = local + self.system.safe_filesuffix()
+            fmt = options_bis.get('fmt', None)
+            self.system.cp(local, local_bis, intent='inout', fmt=fmt)
+            try:
+                yield local_bis, options_bis
+            finally:
+                self.system.rm(local_bis, fmt=fmt)
+        else:
+            yield local, options_bis
+
+    def _do_set_aside(self, remote, local, set_aside, options=None):
+        """Put the resource to the place designated by "setaside"."""
+        remote_bis = remote.copy()
+        remote_bis['path'] = set_aside[2]
+        st_bis_attr = self.footprint_as_shallow_dict()
+        st_bis_attr['scheme'] = set_aside[0]
+        st_bis_attr['netloc'] = set_aside[1]
+        st_bis = footprints.proxy.store(** st_bis_attr)
+        with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
+            return st_bis.put(local_bis, remote_bis, options=options_bis)
+
+
+class Store(footprints.FootprintBase, _SetAsideStoreMixin):
     """Root class for any :class:`Store` subclasses."""
 
     _abstract = True
@@ -271,10 +317,13 @@ class Store(footprints.FootprintBase):
         else:
             if (options is None or (not options.get('insitu', False)) or
                     self.use_cache()):
+                set_aside = self._check_set_aside(remote)
                 if result_id:
                     rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
                 else:
                     rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
+                if rc and set_aside:
+                    self._do_set_aside(remote, local, set_aside, options=options)
                 self._observer_notify('get', rc, remote, local=local, options=options)
                 return rc
             else:
@@ -348,7 +397,7 @@ class Store(footprints.FootprintBase):
         return rc
 
 
-class MultiStore(footprints.FootprintBase):
+class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
     """Agregate various :class:`Store` items."""
 
     _abstract = True
@@ -519,6 +568,7 @@ class MultiStore(footprints.FootprintBase):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
+        set_aside = self._check_set_aside(remote)
         f_rd_ostores = self.filtered_readable_openedstores(remote)
         if self.refillstore:
             f_wr_ostores = self.filtered_writeable_openedstores(remote)
@@ -558,7 +608,10 @@ class MultiStore(footprints.FootprintBase):
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
-        if not rc:
+        if rc:
+            if set_aside:
+                self._do_set_aside(remote, local, set_aside, options=options)
+        else:
             self._verbose_log(options, 'warning',
                               "Multistore get {:s}://{:s}: none of the opened store succeeded."
                               .format(self.scheme, self.netloc), slevel='info')
