@@ -283,10 +283,10 @@ class Hycom3dIBCRunHoriz(BlindRun):
                                    pad=self.pad)
         from xoa.filter import erode_mask
         import xarray as xr
-        kernel = {"longitude": 5, "latitude": 5}
+        kernel = {"longitude": 3, "latitude": 3}
         ds = xr.open_dataset(ncinput)
         for var in ["salinity", "temperature"]:
-            ds[var] = erode_mask(ds[var], kernel=kernel , until=5)
+            ds[var] = erode_mask(ds[var], kernel=kernel , until=1)
         ds.to_netcdf('forecast_time_eroded.nc')
         # Conversion to .res files
         from sloop.models.hycom3d.io import nc_to_res
