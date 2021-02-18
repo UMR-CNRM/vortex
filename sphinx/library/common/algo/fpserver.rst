@@ -11,28 +11,28 @@
 .. autodata:: __all__
 
 
-Functions
----------
-
-.. autofunction:: fullpos_server_flypoll
-
 Classes
 -------
-.. autoclass:: FullPosServerFlyPollPersistantState
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 .. autoclass:: FullPosServer
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+Utility Functions
+-----------------
 
-.. hints
-.. .. autodata:: XXX
-.. .. autofunction:: XXX
-.. .. autoclass:: EpygramMetadataReader
-..    :show-inheritance:
-..    :members:
-..    :member-order: alphabetical
+.. autofunction:: fullpos_server_flypoll
+
+Utility Classes
+---------------
+
+.. autoclass:: FullPosServerFlyPollPersistantState
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FullposServerDiscoveredInputs
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

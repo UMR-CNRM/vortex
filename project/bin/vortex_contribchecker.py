@@ -480,7 +480,8 @@ class DocSphinxChecker(AbstractOneShotChecker):
         for line in self._result[1].split('\n'):
             for bad_word in self._BAD_WORDS:
                 if (bad_word in line and
-                        not re.search(r'The \w+ package is unavailable', line)):
+                        not re.search(r'The \w+ package is unavailable', line) and
+                        not re.search(r'\[epygram.formats\]', line)):
                     warnings = True
         if warnings:
             self._result = (1, self._result[1])

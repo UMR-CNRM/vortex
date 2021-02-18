@@ -723,7 +723,9 @@ class AutoRetriesFtp(StdFtp):
         wftplogin = self._retry_wrapped_callable(self._actual_login,
                                                  retrycount=self.retrycount_login,
                                                  retrydelay=self.retrydelay_login,
-                                                 exceptions_extras=[ftplib.error_perm, socket.error, ])
+                                                 exceptions_extras=[ftplib.error_perm,
+                                                                    socket.error,
+                                                                    EOFError])
         return wftplogin(*args)
 
     def _retry_wrapped_callable(self, func, retrycount=None, retrydelay=None,

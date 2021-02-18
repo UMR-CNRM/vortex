@@ -36,6 +36,11 @@ Bull Targets
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MeteoBullX3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Belenos
    :show-inheritance:
    :members:
