@@ -10,7 +10,6 @@ declinations depending on the experiment indentifier type.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
-import six
 from six.moves.urllib import parse as urlparse
 
 import os.path
