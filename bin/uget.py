@@ -971,7 +971,20 @@ class UGetShell(cmd.Cmd):
         Remove all the element of the Hack store that are available in the Archive store.
         """
         to_delete = list()
-        s_uris = [f.lstrip('/').split('/') for f in self._storehack.cache.catalog()]
+        s_uris = set()
+        for hack_f in self._storehack.cache.catalog():
+            s_uri = hack_f.lstrip('/').split('/')
+            if len(s_uri) >= 3:
+                if s_uri[1] not in ('data', 'env'):
+                    print("The '{:s}' file exists in the Uget's hack store. ".format(hack_f) +
+                          "This is odd since the second level of directory should be either " +
+                          "'data' or 'env'.")
+                else:
+                    s_uris.add(tuple(s_uri[:3]))
+            else:
+                print("The '{:s}' file exists in the Uget's hack store. ".format(hack_f) +
+                      "This is odd. Ingoring it.")
+        s_uris = sorted(s_uris)
         h_uris = [self._uri(self._storehack, (f[1], '{:s}@{:s}'.format(f[2], f[0])))
                   for f in s_uris]
         a_uris = [self._uri(self._storearch, (f[1], '{:s}@{:s}'.format(f[2], f[0])))
