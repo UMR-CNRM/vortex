@@ -10,15 +10,17 @@ declinations depending on the experiment indentifier type.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+from six.moves.urllib import parse as urlparse
 
 import os.path
 
 from bronx.fancies import loggers
+from bronx.syntax.parsing import StringDecoder
 import footprints
 from footprints import proxy as fpx
 
 from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, scenario, member, block
-from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
+from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt, DelayedEnvValue
 from vortex.tools import net, names
 
 #: No automatic export
@@ -289,6 +291,13 @@ class Vortex(Provider):
                     default     = False,
                     doc_zorder  = -5,
                 ),
+                set_aside = dict(
+                    info        = "Do we need to re-archive retrieve data somewhere else?",
+                    optional    = True,
+                    default     = DelayedEnvValue('VORTEX_PROVIDER_SET_ASIDE',
+                                                  default='dict()'),
+                    doc_visibility = footprints.doc.visibility.GURU,
+                )
             ),
             fastkeys = set(['block', 'experiment']),
         )
@@ -307,6 +316,7 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
+        self._x_set_aside = None
 
     @property
     def namebuilder(self):
@@ -350,6 +360,27 @@ class Vortex(Provider):
         and resource :func:`~vortex.data.resources.Resource.namebuilding_info`.
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
+
+    def urlquery(self, resource):
+        """Deal with the set_aside attribute."""
+        base_query = super(Vortex, self).urlquery(resource)
+        if self._x_set_aside is None:
+            self._x_set_aside = StringDecoder()(self.set_aside)
+            if not isinstance(self._x_set_aside, dict):
+                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
+                               self.set_aside, self._x_set_aside)
+                self._x_set_aside = dict()
+        if self.experiment in self._x_set_aside:
+            provider_attrs = self.footprint_as_shallow_dict()
+            provider_attrs['experiment'] = self._x_set_aside[self.experiment]
+            provider_bis = fpx.provider(** provider_attrs)
+            set_aside_n = urlparse.quote(provider_bis.netloc(resource))
+            set_aside_p = urlparse.quote(provider_bis.pathname(resource) + '/' +
+                                         provider_bis.basename(resource))
+            return ('setaside_n=' + set_aside_n + '&setaside_p=' + set_aside_p +
+                    ('&' + base_query if base_query else ''))
+        else:
+            return base_query
 
 
 class VortexStd(Vortex):

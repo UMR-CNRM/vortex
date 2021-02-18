@@ -508,9 +508,9 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
-        xpath = remote['path'].split('/')
-        f_xpid = FreeXPid(xpath[3])
-        xpath[3] = f_xpid.id
+        xpath = remote['path'].strip('/').split('/')
+        f_xpid = FreeXPid(xpath[2])
+        xpath[2] = f_xpid.id
         xpath[:0] = [self.storehead, ]
         if 'root' not in remote:
             remote['root'] = self._actual_storeroot(f_xpid)

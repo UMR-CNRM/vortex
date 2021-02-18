@@ -809,7 +809,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
                     except IndexError:
                         current_gang[geometry] = None
 
-                if not (bm.all_done or any(current_gang[g] is not None and
+                if not (bm.all_done or any(gang is not None and
                                            gang.state is not GangSt.ufo
                                            for gang in six.itervalues(current_gang))):
                     # Timeout ?
