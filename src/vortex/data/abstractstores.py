@@ -657,12 +657,6 @@ class ArchiveStore(Store):
                     optional = True,
                     default  = 'sto',
                 ),
-                storesync = dict(
-                    alias    = ('archsync', 'synchro'),
-                    type     = bool,
-                    optional = True,
-                    default  = True,
-                ),
                 storetrue = dict(
                     type     = bool,
                     optional = True,
@@ -797,8 +791,8 @@ class ArchiveStore(Store):
             info=options.get('rhandler'),
             logname=remote['username'],
             compressionpipeline=self._actual_cpipeline,
-            sync=options.get('synchro', not options.get('delayed', not self.storesync)),
             enforcesync=options.get('enforcesync', False),
+            usejeeves=options.get('delayed', None),
         )
         return rc and self._hash_put(self.inarchiveput, local, remote, options)
 
