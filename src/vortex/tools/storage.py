@@ -43,8 +43,9 @@ from bronx.stdtypes.history import History
 from bronx.syntax.decorators import nicedeco
 import footprints
 from vortex import sessions
-from vortex.util.config import GenericConfigParser
 from vortex.tools.actions import actiond as ad
+from vortex.tools.systems import istruedef
+from vortex.util.config import GenericConfigParser
 
 #: No automatic export
 __all__ = []
@@ -502,6 +503,7 @@ class Archive(Storage):
 
     _default_tube = 'ftp'
     _default_storage = 'hendrix.meteo.fr'
+    _default_usejeeves = False
 
     _collector = ('archive', )
     _footprint = dict(
@@ -553,6 +555,15 @@ class Archive(Storage):
                  if self._actual_config.has_option(self.kind, 'tube') else None) or
                 self.sh.default_target.get('stores:archive_tube', None) or
                 self._default_tube)
+
+    @property
+    def default_usejeeves(self):
+        """This archive sync_insert default value."""
+        if self._actual_config.has_option(self.kind, 'usejeeves'):
+            conf_value = self._actual_config.get(self.kind, 'usejeeves')
+        else:
+            conf_value = self.sh.default_target.get('stores:archive_usejeeves', None)
+        return self._default_usejeeves if conf_value is None else bool(istruedef.match(conf_value))
 
     def _formatted_path(self, rawpath, **kwargs):
         root = kwargs.get('root', None)
@@ -738,9 +749,11 @@ class Archive(Storage):
 
     def _ftpinsert(self, item, local, **kwargs):
         """Actual _insert using ftp."""
-        sync_insert = kwargs.get('sync', True)
+        usejeeves = kwargs.get('usejeeves', None)
+        if usejeeves is None:
+            usejeeves = self.default_usejeeves
         hostname, port = self._ftp_hostinfos
-        if sync_insert:
+        if not usejeeves:
             logger.info('ftpput to ftp://%s/%s (from: %s)', self.actual_storage, item, local)
             extras = dict(fmt=kwargs.get('fmt', 'foo'),
                           cpipeline=kwargs.get('compressionpipeline', None))

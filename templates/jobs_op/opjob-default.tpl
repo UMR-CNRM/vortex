@@ -34,6 +34,7 @@ op_runtime   = $runtime
 op_runstep   = $runstep
 op_iniconf   = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf)
 op_fullplay  = $fullplay
+op_warmstart = $warmstart
 op_refill    = $refill
 op_mail      = $mail
 op_jeeves    = '{0}_$jeeves'.format(op_xpid)
