@@ -29,6 +29,7 @@ import vortex
 from vortex.layout import subjobs
 from vortex.tools.actions import actiond as ad
 from vortex.tools.actions import FlowSchedulerGateway
+from vortex.tools.systems import istruedef
 from vortex.util.config import ExtendedReadOnlyConfigParser, load_template
 
 #: Export nothing
@@ -183,9 +184,14 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
         verb = 'verbose' if verb else 'noverbose'
 
     # Adapt the partition name if refill is on
-    refill = opts.pop('refill', False)
+    refill = opts_plus_job_plus_tpl('refill', False)
+    if not isinstance(refill, bool):
+        refill = bool(istruedef.match(refill))
+    warmstart = opts_plus_job_plus_tpl('warmstart', False)
+    if not isinstance(warmstart, bool):
+        warmstart = bool(istruedef.match(warmstart))
     partition = opts_plus_job_plus_tpl('partition', None)
-    if refill:
+    if refill or warmstart:
         partition = opts_plus_job_plus_tpl('refill_partition', None)
 
     # SuiteBg
@@ -248,6 +254,7 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
         tr_opts['suitebg'] = "'" + suitebg + "'"  # Ugly, but that's history
     auto_opts['suitebg'] = suitebg
     tr_opts['refill'] = refill
+    tr_opts['warmstart'] = warmstart
     if partition is not None:
         tr_opts['partition'] = partition
     if rundates:

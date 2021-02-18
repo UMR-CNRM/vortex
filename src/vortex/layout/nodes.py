@@ -437,57 +437,6 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Dump actual parameters of the configuration."""
         self.nicedump('Complete parameters', **self.conf)
 
-    def refill(self, **kw):
-        """Populates the vortex cache with expected input flow data.
-
-        The refill method is systematically called when a task is run. However,
-        the refill is not always desirable hence the if statement that checks the
-        self.steps attribute's content.
-        """
-        # This method acts as an example: if a refill is actually needed,
-        # it should be overwritten.
-        if 'refill' in self.steps:
-            logger.warning("Refill should takes place here: please overwrite...")
-
-    def process(self):
-        """Abstract method: perform the task to do."""
-        # This method acts as an example: it should be overwritten.
-
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run on a
-            # transfer node. Consequently, data that may be missing from the
-            # local cache must be fetched here. (e.g. GCO's genv, data from the
-            # mass archive system, ...). Note: most of the data should be
-            # retrieved here since the use of transfer node is costless.
-            pass
-
-        if 'fetch' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a
-            # compute node, just before the beginning of computations. It is the
-            # appropriate place to fetch data produced by a previous task (the
-            # so-called previous task will have to use the 'backup' step
-            # (see the later explanations) in order to make such data available
-            # in the local cache).
-            pass
-
-        if 'compute' in self.steps:
-            # The actual computations... (usually a call to the run method of an
-            # AlgoComponent)
-            pass
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a
-            # compute node, just after the computations. It is the appropriate
-            # place to put data in the local cache in order to make it available
-            # to a subsequent step.
-            pass
-
-        if 'late-backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run on a
-            # transfer node. Consequently, most of the data should be archived
-            # here.
-            pass
-
     def complete(self, aborted=False):
         """Some cleaning and completion status."""
         self._aborted = aborted
@@ -869,12 +818,10 @@ class Task(Node):
     def __init__(self, **kw):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
-        self.__dict__.update(
-            steps=kw.pop('steps', tuple()),
-            fetch=kw.pop('fetch', 'fetch'),
-            compute=kw.pop('compute', 'compute'),
-            backup=kw.pop('backup', 'backup'),
-        )
+        self.steps = kw.pop('steps', tuple())
+        self.fetch = kw.pop('fetch', 'fetch')
+        self.compute = kw.pop('compute', 'compute')
+        self.backup = kw.pop('backup', 'backup')
         self.options = kw.copy()
         if isinstance(self.steps, six.string_types):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
@@ -911,16 +858,23 @@ class Task(Node):
 
         # Some attempt to find the current active steps
         if not self.steps:
-            if self.env.get(self._locprefix + 'REFILL'):
-                self.steps = ('refill',)
-            elif self.play:
-                self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
-                              self.compute,
-                              self.backup, 'late-{:s}'.format(self.backup))
-            elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
-                self.steps = (self.fetch, self.compute)
+            new_steps = []
+            if (self.env.get(self._locprefix + 'WARMSTART')
+                    or self.conf.get('warmstart', False)):
+                new_steps.append('warmstart')
+            if (self.env.get(self._locprefix + 'REFILL')
+                    or self.conf.get('refill', False)):
+                new_steps.append('refill')
+            if new_steps:
+                self.steps = tuple(new_steps)
             else:
-                self.steps = (self.fetch,)
+                if self.play:
+                    self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
+                                  self.compute,
+                                  self.backup, 'late-{:s}'.format(self.backup))
+                else:
+                    self.steps = ('early-{:s}'.format(self.fetch), self.fetch)
+        self.header(str(self.steps))
         self.header('Active steps: ' + ' '.join(self.steps))
 
     def conf2io(self):
@@ -959,6 +913,72 @@ class Task(Node):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 
+    def warmstart(self, **kw):
+        """Populates the vortex cache with expected input flow data.
+
+        This is usefull when someone wants to restat an experiment from
+        another one.
+
+        The warmstart method is systematically called when a task is run. However,
+        the warmstart is not always desirable hence the if statement that checks the
+        self.steps attribute's content.
+        """
+        # This method acts as an example: if a refill is actually needed,
+        # it should be overwritten.
+        if 'warmstart' in self.steps:
+            pass
+
+    def refill(self, **kw):
+        """Populates the vortex cache with external input data.
+
+        The refill method is systematically called when a task is run. However,
+        the refill is not always desirable hence the if statement that checks the
+        self.steps attribute's content.
+        """
+        # This method acts as an example: if a refill is actually needed,
+        # it should be overwritten.
+        if 'refill' in self.steps:
+            pass
+
+    def process(self):
+        """Abstract method: perform the task to do."""
+        # This method acts as an example: it should be overwritten.
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, data that may be missing from the
+            # local cache must be fetched here. (e.g. GCO's genv, data from the
+            # mass archive system, ...). Note: most of the data should be
+            # retrieved here since the use of transfer node is costless.
+            pass
+
+        if 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just before the beginning of computations. It is the
+            # appropriate place to fetch data produced by a previous task (the
+            # so-called previous task will have to use the 'backup' step
+            # (see the later explanations) in order to make such data available
+            # in the local cache).
+            pass
+
+        if 'compute' in self.steps:
+            # The actual computations... (usually a call to the run method of an
+            # AlgoComponent)
+            pass
+
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just after the computations. It is the appropriate
+            # place to put data in the local cache in order to make it available
+            # to a subsequent step.
+            pass
+
+        if 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, most of the data should be archived
+            # here.
+            pass
+
     def _actual_run(self, nbpass=0, sjob_activated=True):
         """Execution driver: build, setup, refill, process, complete."""
         sjob_activated = sjob_activated or self._subjobtag == self.tag
@@ -968,6 +988,7 @@ class Task(Node):
                     self.build()
                     self.setup()
                     self.summary()
+                    self.warmstart()
                     self.refill()
                     self.process()
                 except VortexForceComplete:
