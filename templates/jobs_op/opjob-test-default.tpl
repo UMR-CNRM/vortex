@@ -7,11 +7,12 @@
 #SBATCH --nodes=$nnodes
 #SBATCH --ntasks-per-node=$ntasks
 #SBATCH --partition=$partition
-#SBATCH --qos=essai
+#SBATCH --qos=$qos
 #SBATCH --time=$time
 #SBATCH --$exclusive
 #SBATCH --account=$account
 #SBATCH --$verbose
+#SBATCH --no-requeue
 
 # Build time: $create
 # Build user: $mkuser
@@ -25,6 +26,9 @@ if 'DMT_PATH_EXEC' in os.environ:
     op_rootapp  = os.path.dirname(os.environ["DMT_PATH_EXEC"])
 else:
     op_rootapp  = os.path.dirname(os.getcwd())
+
+vortexbase = os.path.join(op_rootapp, 'vortex')
+
 op_xpid      = op_rootapp.split('/')[-3]
 op_vapp      = op_rootapp.split('/')[-2]
 op_vconf     = op_rootapp.split('/')[-1]
@@ -43,10 +47,17 @@ op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
 
-pathdirs = [ os.path.join(op_rootapp, xpath) for xpath in ('', 'vortex/site', 'vortex/src', 'epygram', 'epygram/site', 'epygram/grib_api', 'epygram/eccodes') ]
-for d in pathdirs :
+# Alter path for extra packages
+for d in [os.path.join(op_rootapp, p) for p in ($extrapythonpath)]:
     if os.path.isdir(d):
         sys.path.insert(0, d)
+    else:
+        sys.stderr.write("<< {:s} >> does not exists : it won't be pre-pended to sys.path\n"
+                         .format(d))
+# Alter path for current tasks + vortex (mandatory)
+sys.path.insert(0, os.path.join(vortexbase, 'site'))
+sys.path.insert(0, os.path.join(vortexbase, 'src'))
+sys.path.insert(0, op_rootapp)
 
 import locale
 locale.setlocale(locale.LC_ALL, '$defaultencoding')
@@ -55,7 +66,7 @@ from bronx.system.interrupt import SignalInterruptError
 import footprints
 import vortex
 import vortex.layout.jobs
-import  iga.tools.op
+import iga.tools.op
 import $package.$task as todo
 
 ja = footprints.proxy.jobassistant(kind = 'op_default',
