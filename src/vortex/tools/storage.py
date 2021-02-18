@@ -336,6 +336,7 @@ class Cache(Storage):
                 default  = 'cache',
             ),
             storage = dict(
+                optional = True,
                 default  = 'localhost',
             ),
             rtouch = dict(
