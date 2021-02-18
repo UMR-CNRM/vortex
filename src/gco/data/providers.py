@@ -13,7 +13,7 @@ from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import Namespace
 
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import GgetId, UgetId
+from gco.syntax.stdattrs import GgetId, UgetId, AbstractUgetId
 
 #: No automatic export
 __all__ = []
@@ -175,14 +175,15 @@ class _UtypeProvider(Provider):
     )
 
 
-class UGetProvider(_UtypeProvider):
-    """Provides a description of a Uget repository of op components."""
+class AbstractUGetProvider(_UtypeProvider):
+    """Provides a description of a Uget repository of op components (abstract)."""
 
+    _abstract = True
     _footprint = dict(
         info = 'Uget provider',
         attr = dict(
             uget = dict(
-                type = UgetId,
+                type = AbstractUgetId,
             ),
         ),
         fastkeys = set(['uget']),
@@ -211,16 +212,29 @@ class UGetProvider(_UtypeProvider):
                                                      resource.basename(self.realkind))
 
 
-class UEnvProvider(_UtypeProvider):
-    """Provides a description of a Uenv global cycles contents."""
+class UGetProvider(AbstractUGetProvider):
+    """Provides a description of a Uget repository of op components."""
 
+    _footprint = dict(
+        attr=dict(
+            uget=dict(
+                type=UgetId,
+            ),
+        ),
+    )
+
+
+class AbstractUEnvProvider(_UtypeProvider):
+    """Provides a description of a Uenv global cycles contents (abstract)."""
+
+    _abstract = True
     _footprint = dict(
         info = 'UEnv provider',
         attr = [_COMMON_GCO_FP,
                 dict(
                     uenv = dict(
                         alias = ('genv', 'gco_cycle', 'gcocycle', 'cyclegco', 'gcycle'),
-                        type = UgetId,
+                        type = AbstractUgetId,
                     ),
                 )
                 ],
@@ -228,7 +242,7 @@ class UEnvProvider(_UtypeProvider):
     )
 
     def __init__(self, *kargs, **kwargs):
-        super(UEnvProvider, self).__init__(*kargs, **kwargs)
+        super(AbstractUEnvProvider, self).__init__(*kargs, **kwargs)
         self._id_cache = dict()
 
     @property
@@ -243,7 +257,7 @@ class UEnvProvider(_UtypeProvider):
     def _get_id(self, resource):
         """Return the UgetId or GgetId associated with a given resource."""
         if id(resource) not in self._id_cache:
-            gconf = uenv.contents(cycle=self.uenv, scheme='uget', netloc=self.unamespace)
+            gconf = uenv.contents(cycle=self.uenv, scheme='uget', netloc=self._uenv_netloc)
             gkey = resource.basename(self.realkind)
             if gkey not in gconf:
                 logger.error('Key <%s> unknown in cycle <%s>', gkey, self.uenv)
@@ -254,17 +268,21 @@ class UEnvProvider(_UtypeProvider):
     def scheme(self, resource):
         """Default scheme is ``gget``."""
         theid = self._get_id(resource)
-        return 'uget' if isinstance(theid, UgetId) else 'gget'
+        return 'uget' if isinstance(theid, AbstractUgetId) else 'gget'
+
+    @property
+    def _uenv_netloc(self):
+        return self.unamespace
 
     def netloc(self, resource):
         """Default network location is ``gco.meteo.fr``."""
         theid = self._get_id(resource)
-        return self.unamespace if isinstance(theid, UgetId) else self.gnamespace
+        return self.unamespace if isinstance(theid, AbstractUgetId) else self.gnamespace
 
     def pathname(self, resource):
         """Uenv fetches Uget data or some stuff from the Ggetn tampon."""
         theid = self._get_id(resource)
-        return 'data' if isinstance(theid, UgetId) else self.gspool
+        return 'data' if isinstance(theid, AbstractUgetId) else self.gspool
 
     def basename(self, resource):
         """
@@ -272,9 +290,22 @@ class UEnvProvider(_UtypeProvider):
         in relation to current resource ``gvar`` attribute.
         """
         theid = self._get_id(resource)
-        if isinstance(theid, UgetId):
+        if isinstance(theid, AbstractUgetId):
             return ('{0.id:s}{1:s}@{0.location:s}'.
-                    format(theid, resource.basename(UGetProvider.footprint_clsrealkind())))
+                    format(theid, resource.basename(AbstractUGetProvider.footprint_clsrealkind())))
         else:
             return '{0:s}{1:s}'.format(theid,
                                        resource.basename(GGet.footprint_clsrealkind()))
+
+
+class UEnvProvider(AbstractUEnvProvider):
+    """Provides a description of a Uenv global cycles contents."""
+
+    _footprint = dict(
+        attr = dict(
+            uenv = dict(
+                alias = ('genv', 'gco_cycle', 'gcocycle', 'cyclegco', 'gcycle'),
+                type = UgetId,
+            ),
+        ),
+    )

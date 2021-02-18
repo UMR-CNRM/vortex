@@ -391,7 +391,10 @@ class VortexArchiveStore(ArchiveStore):
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
-        pass
+        if 'root' not in remote:
+            remote = copy.copy(remote)
+            remote['root'] = self.storehead
+        return remote
 
     def remap_list(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
@@ -841,7 +844,10 @@ class VortexPromiseStore(PromiseStore):
         info = 'VORTEX promise store',
         attr = dict(
             scheme = dict(
-                values = ['xvortex'],
+                values  = ['xvortex'],
+            ),
+            netloc=dict(
+                outcast = ['vortex-demo.cache.fr', 'vortex-demo.multi.fr'],
             ),
         )
     )

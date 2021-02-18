@@ -13,7 +13,7 @@ from vortex.tools.net import uriparse
 import iga.data.stores
 from gco.data.stores import UgetArchiveStore
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import UgetId, GgetId, ArpIfsSimplifiedCycle
+from gco.syntax.stdattrs import AbstractUgetId, GgetId, ArpIfsSimplifiedCycle
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
@@ -381,7 +381,7 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         with self.assertRaises(uenv.UenvError):
             uenv.contents('uget:cy42_op2.06@huguette')
         mycycle = uenv.contents('uget:cy42_op2.06@huguette', 'uget', 'uget.multi.fr')
-        self.assertIsInstance(mycycle.rrtm_const, UgetId)
+        self.assertIsInstance(mycycle.rrtm_const, AbstractUgetId)
         self.assertEqual(mycycle.rrtm_const, "uget:rrtm.const.02b.tgz@huguette")
         self.assertIsInstance(mycycle.master_arpege, GgetId)
         self.assertEqual(mycycle.master_arpege, "cy42_masterodb-op1.13.IMPI512IFC1601.2v.exe")

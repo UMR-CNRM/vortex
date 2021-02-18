@@ -23,6 +23,10 @@ Such classes are based on the :mod:`taylorism` (the developer should be familiar
 with this package) and uses "Worker" classes provided in the
 :mod:`vortex.tools.parallelism` package.
 
+A few examples of AlgoComponent classes are shipped with the code
+(see :ref:`examples_algo`). In addition to the documentation provided
+in :ref:`stepbystep-index`, it might help.
+
 When class inheritance is not applicable or ineffective, The AlgoComponent's
 Mixins are a powerful tool to mutualise some pieces of code. See the
 :class:`AlgoComponentDecoMixin` class documentation for more details.

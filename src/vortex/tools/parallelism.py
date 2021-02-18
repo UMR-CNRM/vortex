@@ -122,8 +122,8 @@ class VortexWorkerBlindRun(TaylorVortexWorker):
                            be saved.
         """
         tmpio = io.open(stdoutfile, 'wb')
-        self.system.remove('core')
-        self.system.softlink('/dev/null', 'core')
+        if not self.system.path.exists('core'):
+            self.system.softlink('/dev/null', 'core')
         self.local_spawn_hook()
         self.system.default_target.spawn_hook(self.system)
         logger.info("The program stdout/err will be saved to %s", stdoutfile)

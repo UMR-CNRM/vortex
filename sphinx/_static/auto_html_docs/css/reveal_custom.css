@@ -27,6 +27,10 @@
 .reveal h4 {
   font-size: 1em; }
 
+.reveal li {
+  margin-top: 5px;
+  margin-bottom: 5px; }
+
 .reveal blockquote {
   width: 90%;
   margin: 15px auto;
@@ -51,6 +55,9 @@
   box-shadow: none; }
 
 .reveal pre.bigpre code {
-  max-height: 570px;
+  max-height: 540px;
 }
 
+.reveal code {
+  font-size: 93%;
+}

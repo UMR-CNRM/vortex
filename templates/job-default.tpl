@@ -59,7 +59,11 @@ ja = footprints.proxy.jobassistant(kind = 'generic',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='rd_',
                                    )
-ja.add_plugin('tmpdir')
+
+ja.add_plugin('epygram_setup')
+ja.add_plugin('autodir', appbase=appbase, jobname='$name')
+for pkind in ($loadedjaplugins):
+    ja.add_plugin(pkind)
 
 try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)

@@ -17,7 +17,7 @@ import sys
 import tempfile
 
 # Export de la version de vortex à utiliser (celle de l'application concernee)
-appbase = re.sub(os.path.sep + '(jobs|conf|logs|tasks)$', '',
+appbase = re.sub(os.path.sep + '(jobs|jobs_[^' + os.path.sep + ']+|conf|logs|tasks)$', '',
                  os.path.realpath(os.getcwd()))
 vortex_path = os.path.join(appbase, 'vortex')
 if not os.path.exists(vortex_path):
@@ -228,6 +228,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         for job in jobs:
+            print('GRRR', job)
             jobname = job['name'] + '.py'
             if os.path.isfile(jobname) and args.backup is not None:
                 copyfile(jobname, jobname + args.backup)
