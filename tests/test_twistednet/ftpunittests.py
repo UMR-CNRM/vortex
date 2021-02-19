@@ -48,7 +48,8 @@ class FtpBasedTestCase(unittest.TestCase):
         self.sh.rmtree(self.tdir)
 
     def assertFile(self, path, content, binary=False):
-        self.assertTrue(self.sh.path.exists(path))
+        self.assertTrue(self.sh.path.exists(path),
+                        msg="Testing existence of: {:s}".format(path))
         with io.open(path, 'rb' if binary else 'r') as fhr:
             self.assertEqual(fhr.read(), content)
 

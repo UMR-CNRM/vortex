@@ -6,6 +6,7 @@ Test Vortex's Archive Stores + The folder special addon.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.urllib import parse as urlparse
 import hashlib
 import io
 
@@ -24,16 +25,22 @@ fpx.addon(kind='allfolders', sh=vortex.sh())
 tloglevel = 'INFO'
 
 _PATHl1 = 'arome/3dvarfr/ABCD/20180101T0000P/forecast/listing1'
-_URIl1 = uriparse('vortex://vortex.archive.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/listing1')
+_URIl1 = uriparse('vortex://vortex.archive.fr/{:s}'.format(_PATHl1))
+
+_SA_PATHl1 = 'arome/3dvarfr/smile@someone/20180101T0000P/forecast/listing1'
+_SA_URIl1 = uriparse('vortex://vortex.cache.fr/{:s}'.format(_PATHl1) +
+                     '?setaside_n=vortex-free.cache.fr' +
+                     '&setaside_p={:s}'.format(urlparse.quote_plus(_SA_PATHl1)))
+_SA_URIl1_CHECK = uriparse('vortex://vortex.archive.fr/{:s}'.format(_SA_PATHl1))
 
 _STACK_PATH = 'arome/3dvarfr/ABCD/20180101T0000P/stacks/flow_logs.filespack'
 _STACK_URI = uriparse('vortex://vortex.archive.fr/' + _STACK_PATH)
-_STACK_URIl1 = uriparse('vortex://vortex.archive.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/listing1' +
-                        '?stackfmt=filespack&' +
-                        'stackpath=arome%2F3dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack')
+_STACK_URIl1 = uriparse('vortex://vortex.archive.fr/{:s}'.format(_PATHl1) +
+                        '?stackfmt=filespack' +
+                        '&stackpath={:s}'.format(urlparse.quote_plus(_STACK_PATH)))
 _STACK_URIl2 = uriparse('vortex://vortex.archive.fr/arome/3dvarfr/ABCD/20180101T0000P/minim/listing1' +
-                        '?stackfmt=filespack&' +
-                        'stackpath=arome%2F3dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack')
+                        '?stackfmt=filespack' +
+                        '&stackpath={:s}'.format(urlparse.quote_plus(_STACK_PATH)))
 
 
 # Prestaging tools for this unittests
@@ -154,6 +161,14 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                                  '{0.udir}/mtool/cache/vortex/{1:s}'
                                  .format(self, _PATHl1))
                 sh.rm('toto')
+
+                # Test the "set_aside stuff"
+                self.assertTrue(stC.get(_SA_URIl1, 'toto', dict(fmt='ascii')))
+                self.assertTrue(stC.get(_SA_URIl1_CHECK, 'toto_bis', dict(fmt='ascii')))
+                with io.open('toto', 'r') as fhl:
+                    self.assertFile('toto_bis', fhl.read())
+                sh.rm('toto')
+                sh.rm('toto_bis')
 
     def test_vortex_store_stacks(self):
         with self.server():
