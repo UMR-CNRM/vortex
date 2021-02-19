@@ -1485,33 +1485,33 @@ class AssistedSsh(Ssh):
         >>> print(ssh1, ssh1.remote)
         <vortex.tools.net.AssistedSsh object at 0x7fac3bb19810> localhost
         >> ssh1.execute("echo -n 'My name is: '; hostname")
-        ['My name is: beaufixlogin3']
+        ['My name is: belenoslogin3']
 
     - Using virtual nodes names (let's consider here that "network" nodes are
       defined in the current target-?.ini configuration file)::
 
         >>> ssh2 = AssistedSsh(sh, 'network', virtualnode=True)
         >>> print(ssh2, ssh2.targets)  # The list of possible network nodes
-        ['beaufixlogin0', 'beaufixlogin1', 'beaufixlogin2', 'beaufixlogin3', ]
+        ['belenoslogin0', 'belenoslogin1', 'belenoslogin2', 'belenoslogin3', ]
         >>> print(ssh2, ssh2.remote)  # Pick one randomly
-        'beaufixlogin2'
+        'belenoslogin2'
 
     - The multiple retries concept::
 
         >>> ssh3 = AssistedSsh(sh, 'network', virtualnode=True, maxtries=3)
         >>> print(ssh3, ssh3.remote)  # Pick one randomly
-        'beaufixlogin0'
+        'belenoslogin0'
         >>> ssh3.execute("false")
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:00][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=2/3)...
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:01][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=3/3)...
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (3) was reached...
         False
@@ -1521,7 +1521,7 @@ class AssistedSsh(Ssh):
         >>> ssh4 = AssistedSsh(sh, 'network', virtualnode=True,  fatal=True)
         >>> ssh4.execute("false")
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (1) was reached...
         RuntimeError: Could not execute the SSH command.

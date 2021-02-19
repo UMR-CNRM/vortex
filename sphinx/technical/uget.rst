@@ -373,7 +373,7 @@ arguments) ; cela ouvrira une invite de commande (que l'on peut quitter avec
 
 Cela peut présenter quelques avantages :
 
-   * Pour les systèmes où le chargement de Vortex prend un certain temps (*beaufix*
+   * Pour les systèmes où le chargement de Vortex prend un certain temps (*belenos*
      par exemple), cela peut éviter de charger ``uget.py`` de trop nombreuses fois.
    * Une auto-complétion existe (touche ``Tab``)
    * Au sein d'une session de l'invite de commande, il est possible de naviguer

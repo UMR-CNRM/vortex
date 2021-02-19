@@ -28,8 +28,8 @@ logger = loggers.getLogger(__name__)
 
 # Any kind of DSI's Supercomputer
 
-class MeteoBull(Target):
-    """Bull Computer."""
+class MeteoBullX3(Target):
+    """Any MF's third generation of Bullx supercomputer."""
 
     _abstract = True
     _footprint = dict(
@@ -54,67 +54,10 @@ class MeteoBull(Target):
         else:
             return self.inetname + 'cn'
 
-
-class Beaufix(MeteoBull):
-    """Beaufix Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Beaufix Supercomputer at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'beaufix',
-                values  = ['beaufix']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'beaufix(?:login|transfert)?\d+(?:\.|$)')
-        )
-    )
-
-
-class Prolix(MeteoBull):
-    """Prolix Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Prolix Supercomputer at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'prolix',
-                values  = ['prolix']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'prolix(?:login|transfert)?\d+(?:\.|$)')
-        )
-    )
-
-
-class Epona(MeteoBull):
-    """Epona Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Epona porting system at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'epona',
-                values  = ['epona']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'epona(?:login)?\d+(?:\.|$)')
-        )
-    )
-
-
-class MeteoBullX3(MeteoBull):
-    """Any MF's third generation of Bullx supercomputer."""
-
-    _abstract = True
-
     @contextlib.contextmanager
     def algo_run_context(self, ticket, *kmappings):
         """Specific target hook before any componnent run."""
-        with super(MeteoBull, self).algo_run_context(ticket, *kmappings):
+        with super(MeteoBullX3, self).algo_run_context(ticket, *kmappings):
             dis_boost_confkey = 'bullx3_disable_boost'
             dis_boost_cmd = ['clush', '-bw', ticket.env.SLURM_JOB_NODELIST,
                              'sudo', '/opt/softs/amd/{todo:s}_boost_amd.sh']

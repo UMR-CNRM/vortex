@@ -42,28 +42,30 @@ Configuration file example:
 export_service  = SSH
 username        = verolive
 #keyfile        = /home/meunierlf/.ssh/id_rsa
+stagingdir      = $HOME/tmp/vortex_auto_unpack
+headdir         = $HOME/vortex
+python27_c2020  = /opt/softs/anaconda3/envs/Python27/bin/python
+python37_c2020  = /opt/softs/anaconda3/envs/Py37nomkl/bin/python
 
-[prolix]
-#disabled       = True
-hostname        = prolix.meteo.fr
-stagingdir      = /home/mf/dp/marp/verolive/tmp/vortex_auto_unpack
-headdir         = /home/mf/dp/marp/verolive/vortex
-python27        = /opt/softs/python/2.7.5/bin/python
+[belenos]
+#disabled        = True
+hostname        = belenos.meteo.fr
+python27        = %(python27_c2020)s
+python3         = %(python37_c2020)s
 
-[beaufix]
-#disabled       = True
-hostname        = beaufix.meteo.fr
-stagingdir      = /home/mf/dp/marp/verolive/tmp/vortex_auto_unpack
-headdir         = /home/mf/dp/marp/verolive/vortex
-python27        = /opt/softs/python/2.7.5/bin/python
+[taranis]
+disabled        = True
+hostname        = taranis.meteo.fr
+python27        = %(python27_c2020)s
+python3         = %(python37_c2020)s
 
 Example:
 
 # Export 0.9.22 version of Vortex on all the configured targets
 {progname:s} 0.9.22
 
-# Export the master branch of Vortex on beaufix only
-{progname:s} master beaufix
+# Export the master branch of Vortex on belenos only
+{progname:s} master belenos
 
 # Create/Update a 'vortex-olive' link that will point to version 0.9.22
 {progname:s} --link 0.9.22 olive
