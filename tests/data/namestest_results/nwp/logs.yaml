@@ -16,7 +16,7 @@
         namespace: vortex.multi.fr
         vapp: arpege
         vconf: 4dvarfr
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: &id002 !test_names.core.TestParameters
         cutoff: production
         cycle: cy42_op2.67
@@ -27,7 +27,7 @@
         namespace: vortex.multi.fr
         vapp: arpege
         vconf: 4dvarfr
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       binary: null
@@ -37,9 +37,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       binary: surfex
@@ -49,9 +49,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       binary: surfex
@@ -61,9 +61,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.surfex-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.surfex-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -74,9 +74,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.n0001-omp01
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.n0001-omp01?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.n0001-omp01
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.n0001-omp01?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -87,9 +87,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.n0001-omp01
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.n0001-omp01?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.n0001-omp01
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.n0001-omp01?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -125,9 +125,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -137,9 +137,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -149,9 +149,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -161,9 +161,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -174,9 +174,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.a0001-b0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-anonymous.a0001-b0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.a0001-b0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-anonymous.a0001-b0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -187,9 +187,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.a0001-b0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/listing.arpege-gruik.a0001-b0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.a0001-b0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/listing.arpege-gruik.a0001-b0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       binary: null
@@ -295,9 +295,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -307,9 +307,9 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.all
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.all?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -319,9 +319,9 @@
       task: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.n0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-anonymous.n0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.n0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-anonymous.n0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast
@@ -331,6 +331,6 @@
       task: gruik
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.n0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/drhookprof.arpege-gruik.n0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.n0001
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/drhookprof.arpege-gruik.n0001?stackfmt=filespack&stackpath=arpege%2F4dvarfr%2FABCD%2F20180101T0000P%2Fstacks%2Fflow_logs.filespack

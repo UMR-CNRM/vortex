@@ -8,8 +8,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import os
-import tempfile
-import unittest
 
 import footprints as fp
 from bronx.fancies import loggers
@@ -17,8 +15,7 @@ import vortex
 from vortex.tools.net import uriparse
 from gco.data.stores import UgetArchiveStore
 
-from . import has_ftpservers
-from .utils import get_ftp_port_number
+from . import ftpunittests
 
 DATAPATHTEST = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 
@@ -35,9 +32,8 @@ class UgetArchiveTestStore(UgetArchiveStore):
     )
 
 
-@unittest.skipUnless(has_ftpservers(), 'FTP Server')
 @loggers.unittestGlobalLevel(tloglevel)
-class TestGcoArchiveStore(unittest.TestCase):
+class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
 
     _TEST_SESSION_NAME = None
 
@@ -51,54 +47,16 @@ class TestGcoArchiveStore(unittest.TestCase):
         # Tweak the target object
         self.testconf = self.sh.path.join(DATAPATHTEST, 'target-test.ini')
         self.sh.target(inifile=self.testconf, sysname='Linux')
-        # Temp directory
-        self.tdir = tempfile.mkdtemp(suffix='test_uget_archive_store_')
-        self.oldpwd = self.sh.pwd()
-        self.sh.cd(self.tdir)
+        # tmp-directory, FTP server setup and Netrc creation
+        super(TestGcoArchiveStore, self).setUp()
         # Tweak the HOME directory in order to trick Uenv/Uget hack store
         self.sh.env.HOME = self.tdir
-        # Set-up the MTOOLDIR
-        self.sh.mkdir('mtool')
-        self.sh.env.MTOOLDIR = self.sh.path.join(self.tdir, 'mtool')
-        # Cocoon the ftp server directory
-        self.udir = self.sh.path.join(self.tdir, 'testlogin')
-        self.user = 'testlogin'
-        self.password = 'aqmp'
-        self.sh.mkdir(self.udir)
-        # FTP Config
-        self.port = get_ftp_port_number()
-        self.configure_ftpserver()
-        # Fake NetRC
-        self._fnrc = self.sh.path.join(self.tdir, 'fakenetrc')
-        with io.open(self._fnrc, 'w') as fhnrc:
-            fhnrc.write('machine localhost login {:s} password {:s}'
-                        .format(self.user, self.password))
-        self.sh.chmod(self._fnrc, 0o600)
-
-    def configure_ftpserver(self):
-        from .ftpservers import TestFTPServer, logger
-        logger.setLevel(tloglevel)
-        self.server = TestFTPServer(self.port, self.tdir,
-                                    self.user, self.password)
 
     def tearDown(self):
         # Do some cleaning
-        self.sh.cd(self.oldpwd)
-        self.sh.rmtree(self.tdir)
+        super(TestGcoArchiveStore, self).tearDown()
         # Go back to the original session
         self.cursession.activate()
-
-    def assertFile(self, path, content):
-        self.assertTrue(self.sh.path.exists(path))
-        with io.open(path, 'rb') as fhr:
-            self.assertEqual(fhr.read(), content)
-
-    def assertRemote(self, path, content):
-        where = self.sh.path.join(self.udir, path)
-        self.assertFile(where, content)
-
-    def ftp_client_thook(self):
-        pass
 
     def _uget_archive_dump_config(self):
         with io.open('storetest_uget.ini', 'w') as fhini:

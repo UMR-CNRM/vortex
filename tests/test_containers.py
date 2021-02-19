@@ -12,6 +12,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import six
 
 import contextlib
+import copy
 import os
 import shutil
 import sys
@@ -188,6 +189,22 @@ class TestContainers(unittest.TestCase):
         self.assertEqual(inc1.abspath,
                          os.path.join(os.getcwd(), inc1.filename))
         self.assertEqual(inc1.absdir, os.getcwd())
+        inc2 = copy.deepcopy(inc1)
+        self.assertNotEqual(inc1.filename, inc2.filename)
+        # Uuid4Fly
+        inc1 = cts.Uuid4UnamedSingleFile(uuid4flydir='toto')
+        os.makedirs('toto')
+        self.assertEqual(os.path.dirname(inc1.actualpath()),
+                         'toto')
+        self.assertFalse(inc1.exists())
+        inc1.write(testraw)
+        inc1.rewind()
+        self.assertEqual(inc1.read(), testraw)
+        self.assertTrue(inc1.exists())
+        inc1.clear()
+        self.assertFalse(inc1.exists())
+        inc2 = copy.deepcopy(inc1)
+        self.assertNotEqual(inc1.filename, inc2.filename)
         # Common
         inc1 = cts.SingleFile(filename='testfile1')
         self.assertEqual(inc1.actualpath(), inc1.filename)

@@ -17,12 +17,15 @@ import six
 from bronx.fancies import loggers
 import footprints
 
+from vortex import sessions
 from vortex.data.abstractstores import Store, ArchiveStore, ConfigurableArchiveStore, CacheStore
 from vortex.data.abstractstores import MultiStore, PromiseStore
+from vortex.data.abstractstores import ARCHIVE_GET_INTENT_DEFAULT
 from vortex.layout import dataflow
 from vortex.syntax.stdattrs import hashalgo_avail_list
 from vortex.syntax.stdattrs import FreeXPid
 from vortex.syntax.stdattrs import DelayedEnvValue
+from vortex.tools.systems import ExecutionError
 
 #: Export base class
 __all__ = []
@@ -93,7 +96,7 @@ class FunctionStore(Store):
 
     Lets consider the following URI:
 
-      ``function:///sandbox.utils.storefunctions.echofunction?msg=toto&msg=titi``
+      ``function:///sandbox.util.storefunctions.echofunction?msg=toto&msg=titi``
 
     It will be seen as follows:
 
@@ -291,10 +294,19 @@ class Finder(Store):
         logger.error("The Finder store with scheme:symlink is not able to perform Deletes.")
         return False
 
+    def _ftpinfos(self, remote, **kwargs):
+        args = kwargs.copy()
+        args['hostname'] = self.hostname()
+        args['logname'] = remote['username']
+        port = self.hostname().netport
+        if port is not None:
+            args['port'] = port
+        return args
+
     def ftpcheck(self, remote, options):
         """Delegates to ``system.ftp`` a distant check."""
         rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'])
+        ftp = self.system.ftp(** self._ftpinfos(remote))
         if ftp:
             try:
                 rc = ftp.size(self.fullpath(remote))
@@ -308,7 +320,7 @@ class Finder(Store):
 
     def ftplocate(self, remote, options):
         """Delegates to ``system`` qualified name creation."""
-        ftp = self.system.ftp(self.hostname(), remote['username'], delayed=True)
+        ftp = self.system.ftp(** self._ftpinfos(remote, delayed=True))
         if ftp:
             rloc = ftp.netpath(self.fullpath(remote))
             ftp.close()
@@ -323,10 +335,9 @@ class Finder(Store):
         rc = self.system.smartftget(
             rpath,
             local,
-            # ftp control
-            hostname=self.hostname(),
-            logname=remote['username'],
             fmt=options.get('fmt'),
+            # ftp control
+            ** self._ftpinfos(remote)
         )
         rc = rc and self._hash_get_check(self.ftpget, remote, local, options)
         if rc:
@@ -344,28 +355,94 @@ class Finder(Store):
             local,
             rpath,
             # ftp control
-            hostname=self.hostname(),
-            logname=remote['username'],
-            ** put_opts
+            ** self._ftpinfos(remote, ** put_opts)
         )
         return rc and self._hash_put(self.ftpput, local, remote, options)
 
     def ftpdelete(self, remote, options):
         """Delegates to ``system`` a distant remove."""
         rc = None
-        ftp = self.system.ftp(self.hostname(), remote['username'])
-        if ftp:
-            actualpath = self.fullpath(remote)
-            if self.ftpcheck(actualpath, options=options):
-                logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
-                rc = ftp.delete(actualpath)
-                ftp.close()
-            else:
-                logger.error('Try to remove a non-existing resource <%s>', actualpath)
+        actualpath = self.fullpath(remote)
+        if self.ftpcheck(remote, options=options):
+            logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
+            ftp = self.system.ftp(**self._ftpinfos(remote))
+            if ftp:
+                try:
+                    rc = ftp.delete(actualpath)
+                finally:
+                    ftp.close()
+        else:
+            logger.error('Try to remove a non-existing resource <%s>', actualpath)
         return rc
 
 
-class VortexArchiveStore(ArchiveStore):
+class _VortexStackedStorageMixin(object):
+    """Mixin class that adds utility functions to work with stacked data."""
+
+    _STACKED_RE = re.compile('stacked-')
+
+    @property
+    def stackedstore(self):
+        """Tell if the present store is looking into a stack of resources."""
+        return self._STACKED_RE.search(self.netloc)
+
+    def _stacked_remainder(self, remote, stackpath):
+        path_remainder = remote['path'].strip('/').split('/')
+        for a_spath in stackpath.split('/'):
+            if path_remainder and path_remainder[0] == a_spath:
+                del path_remainder[0]
+            else:
+                break
+        return '/'.join(path_remainder)
+
+    def _stacked_xremote(self, remote):
+        """The path to **remote** with its stack."""
+        if self.stackedstore:
+            remote = remote.copy()
+            remote['query'] = remote['query'].copy()
+            stackpath = remote['query'].pop('stackpath', (None, ))[0]
+            stackfmt = remote['query'].pop('stackfmt', (None, ))[0]
+            if stackpath is None or stackfmt is None:
+                raise ValueError('"stackpath" and "stackfmt" are not available in the query.')
+            else:
+                remote['path'] = stackpath + '/' + self._stacked_remainder(remote, stackpath)
+        return remote
+
+    def _stacked_xegglocate(self, remote):
+        """Return various informations about the stack associated with **remote**.
+
+        It returns a 3 elements tuple:
+
+        * The remote-like dictionary to the stack resource
+        * The format of the stack resource
+        * The path to **remote** within the stacked resource
+
+        """
+        remote = remote.copy()
+        remote['query'] = remote['query'].copy()
+        stackpath = remote['query'].pop('stackpath', (None, ))[0].strip('/')
+        stackfmt = remote['query'].pop('stackfmt', (None, ))[0]
+        if stackpath is None or stackfmt is None:
+            raise ValueError('"stackpath" and "stackfmt" are not available in the query.')
+        else:
+            resource_remainder = self._stacked_remainder(remote, stackpath)
+            remote['path'] = '/' + stackpath
+        return remote, stackfmt, resource_remainder
+
+
+_vortex_readonly_store = footprints.Footprint(
+    info="Abstract store' readonly=True attribute",
+    attr=dict(
+        readonly=dict(
+            values=[True, ],
+            optional=True,
+            default=True
+        )
+    )
+)
+
+
+class _VortexBaseArchiveStore(ArchiveStore, _VortexStackedStorageMixin):
     """Some kind of archive for VORTEX experiments."""
 
     _abstract = True
@@ -376,24 +453,27 @@ class VortexArchiveStore(ArchiveStore):
                 values   = ['vortex'],
             ),
             netloc = dict(
-                values   = ['vortex.archive.fr'],
             ),
             storehead = dict(
+                optional = True,
                 default  = 'vortex',
                 outcast  = ['xp'],
             ),
         )
     )
 
+    _STACKS_AUTOREFILL_CRIT = 'stacked-archive-smart'
+
     def __init__(self, *args, **kw):
         logger.debug('Vortex archive store init %s', self.__class__)
-        super(VortexArchiveStore, self).__init__(*args, **kw)
+        super(_VortexBaseArchiveStore, self).__init__(*args, **kw)
 
     def remap_read(self, remote, options):
-        """Reformulates the remote path to compatible vortex namespace."""
-        if 'root' not in remote:
-            remote = copy.copy(remote)
-            remote['root'] = self.storehead
+        """Remap actual remote path to distant store path for intrusive actions."""
+        remote = copy.copy(remote)
+        xpath = remote['path'].split('/')
+        xpath[:0] = [self.system.path.sep, self.storehead]
+        remote['path'] = self.system.path.join(*xpath)
         return remote
 
     def remap_list(self, remote, options):
@@ -403,26 +483,84 @@ class VortexArchiveStore(ArchiveStore):
         else:
             logger.critical('The << %s >> path is not listable.', remote['path'])
             return None
-        return remote
 
-    def remap_write(self, remote, options):
-        """Remap actual remote path to distant store path for intrusive actions."""
-        if 'root' not in remote:
-            remote = copy.copy(remote)
-            remote['root'] = self.storehead
-        return remote
+    remap_write = remap_read
+
+    @property
+    def stacks_autorefill(self):
+        """Where to refill a stack retrieved from the archive."""
+        if self._STACKS_AUTOREFILL_CRIT in self.netloc:
+            return self.netloc.replace(self._STACKS_AUTOREFILL_CRIT, 'cache')
+        else:
+            return None
+
+    def _vortex_stacked_egg_retrieve(self, remote, result_id=None):
+        """Retrieve the stack associated with **remote**."""
+        remote, remotefmt, remainder = self._stacked_xegglocate(remote)
+        rundir = sessions.current().context.rundir
+        if not rundir:
+            rundir = self.system.pwd()
+        rundir = self.system.path.join(rundir, 'vortex_stacks_xeggs')
+        target = self.system.path.join(rundir, * remote['path'].strip('/').split('/'))
+        targetopts = dict(fmt=remotefmt, intent=dataflow.intent.IN)
+        if self.system.path.exists(target):
+            logger.info("Stack previously retrieved (in %s). Using it.", target)
+            rc = True
+        else:
+            if result_id:
+                rc = self._vortexfinaliseget(result_id, remote, target, targetopts)
+            else:
+                rc = self._vortexget(remote, target, targetopts)
+        if rc and self.stacks_autorefill:
+            rstore = footprints.proxy.store(scheme=self.scheme, netloc=self.stacks_autorefill)
+            logger.info("Refilling the stack egg to [%s]", rstore)
+            try:
+                rstore.put(target, remote.copy(), targetopts)
+            except (ExecutionError, IOError, OSError) as e:
+                logger.error("An ExecutionError happened during the refill: %s", str(e))
+                logger.error("This error is ignored... but that's ugly !")
+        return rc, target, remainder
 
     def vortexcheck(self, remote, options):
+        """Vortex' archive check sequence."""
+        if self.stackedstore:
+            s_remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
+            options = options.copy()
+            options['fmt'] = s_remotefmt
+            rc = self._vortexcheck(s_remote, options)
+            if rc:
+                rc, target, remainder = self._vortex_stacked_egg_retrieve(remote)
+                rc = rc and self.system.path.exists(self.system.path.join(target, remainder))
+            return rc
+        else:
+            return self._vortexcheck(remote, options)
+
+    def _vortexcheck(self, remote, options):
         """Remap and ftpcheck sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchivecheck(remote, options)
 
     def vortexlocate(self, remote, options):
+        """Vortex' archive locate sequence."""
+        if self.stackedstore:
+            remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
+            options = options.copy()
+            options['fmt'] = s_remotefmt
+        return self._vortexlocate(remote, options)
+
+    def _vortexlocate(self, remote, options):
         """Remap and ftplocate sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchivelocate(remote, options)
 
     def vortexlist(self, remote, options):
+        """Vortex' archive list sequence."""
+        if self.stackedstore:
+            return None
+        else:
+            return self._vortexlist(remote, options)
+
+    def _vortexlist(self, remote, options):
         """Remap and ftplist sequence."""
         remote = self.remap_list(remote, options)
         if remote:
@@ -431,27 +569,70 @@ class VortexArchiveStore(ArchiveStore):
             return None
 
     def vortexprestageinfo(self, remote, options):
+        """Vortex' archive prestageinfo sequence."""
+        if self.stackedstore:
+            remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
+            options = options.copy()
+            options['fmt'] = s_remotefmt
+        return self._vortexprestageinfo(remote, options)
+
+    def _vortexprestageinfo(self, remote, options):
         """Remap and ftpprestageinfo sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchiveprestageinfo(remote, options)
 
     def vortexget(self, remote, local, options):
+        """Vortex' archive get sequence."""
+        if self.stackedstore:
+            rc, target, remainder = self._vortex_stacked_egg_retrieve(remote)
+            rc = rc and self.system.cp(self.system.path.join(target, remainder), local,
+                                       fmt=options.get('fmt'),
+                                       intent=options.get('intent',
+                                                          ARCHIVE_GET_INTENT_DEFAULT))
+            return rc
+        else:
+            return self._vortexget(remote, local, options)
+
+    def _vortexget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchiveget(remote, local, options)
 
     def vortexearlyget(self, remote, local, options):
+        """Vortex' archive earlyget sequence."""
+        if self.stackedstore:
+            s_remote, s_remotefmt, _ = self._stacked_xegglocate(remote)
+            targetopts = dict(fmt=s_remotefmt, intent=dataflow.intent.IN)
+            return self._vortexearlyget(s_remote, 'somelocalfile', targetopts)
+        else:
+            return self._vortexearlyget(remote, local, options)
+
+    def _vortexearlyget(self, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchiveearlyget(remote, local, options)
 
     def vortexfinaliseget(self, result_id, remote, local, options):
+        """Vortex' archive finaliseget sequence."""
+        if self.stackedstore:
+            rc, target, remainder = self._vortex_stacked_egg_retrieve(remote, result_id=result_id)
+            rc = rc and self.system.cp(self.system.path.join(target, remainder), local,
+                                       fmt=options.get('fmt'),
+                                       intent=options.get('intent',
+                                                          ARCHIVE_GET_INTENT_DEFAULT))
+            return rc
+        else:
+            return self._vortexfinaliseget(result_id, remote, local, options)
+
+    def _vortexfinaliseget(self, result_id, remote, local, options):
         """Remap and ftpget sequence."""
         remote = self.remap_read(remote, options)
         return self.inarchivefinaliseget(result_id, remote, local, options)
 
     def vortexput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
+        if self.stackedstore:
+            raise RuntimeError("stacked archive stores are never writable.")
         if not self.storetrue:
             logger.info("put deactivated for %s", str(local))
             return True
@@ -460,37 +641,73 @@ class VortexArchiveStore(ArchiveStore):
 
     def vortexdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
+        if self.stackedstore:
+            raise RuntimeError("stacked archive stores are never writable.")
         remote = self.remap_write(remote, options)
         return self.inarchivedelete(remote, options)
 
 
-class VortexStdArchiveStore(VortexArchiveStore):
-    """Archive for casual VORTEX experiments: Support for legacy XPIDs"""
+class VortexStdBaseArchiveStore(_VortexBaseArchiveStore):
+    """Archive for casual VORTEX experiments: Support for legacy/Olive XPIDs.
+
+    This 'archive-legacy' store looks into the resource 'main' location not
+    into a potential stack.
+    """
 
     _footprint = dict(
         info = 'VORTEX archive access for casual experiments',
         attr = dict(
             netloc = dict(
-                values   = ['vortex.archive.fr'],
-            ),
-            storeroot = dict(
-                default  = '/home/m/marp/marp999',
+                values   = ['vortex.archive-legacy.fr'],
             ),
         )
     )
+
+    @property
+    def _actual_mappingroot(self):
+        """Read the get entry point form configuration."""
+        return self._actual_from_genericconf('vortex_legacy_mappingroot')
 
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        xpath[3:4] = list(xpath[3])
+        actual_mappingroot = self._actual_mappingroot
+        if not self.storeroot and actual_mappingroot:
+            remote['root'] = actual_mappingroot
+            xpath[3:4] = list(xpath[3])
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
         return remote
 
 
-class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
-    """Archive for casual VORTEX experiments: Support for Free XPIDs"""
+class VortexStdStackedArchiveStore(VortexStdBaseArchiveStore):
+    """Archive for casual VORTEX experiments: Support for legacy/Olive XPIDs.
+
+    This 'stacked-archive-legacy' or 'stacked-archive-smart' store looks into
+    the stack associated to the resource. The '-smart' variant, has the ability
+    to refill the whole stack into local cache (to be faster in the future).
+    """
+
+    _footprint = [
+        _vortex_readonly_store,
+        dict(
+            attr = dict(
+                netloc = dict(
+                    values   = ['vortex.stacked-archive-legacy.fr',
+                                'vortex.stacked-archive-smart.fr'],
+                ),
+            )
+        )
+    ]
+
+
+class VortexFreeStdBaseArchiveStore(_VortexBaseArchiveStore, ConfigurableArchiveStore):
+    """Archive for casual VORTEX experiments: Support for Free XPIDs.
+
+    This 'archive-legacy' store looks into the resource 'main' location not
+    into a potential stack.
+    """
 
     #: Path to the vortex-free Store configuration file
     _store_global_config = '@store-vortex-free.ini'
@@ -500,10 +717,7 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
         info = 'VORTEX archive access for casual experiments',
         attr = dict(
             netloc = dict(
-                values   = ['vortex-free.archive.fr', ],
-            ),
-            storeroot = dict(
-                default  = None,  # That way it will be read from the config file
+                values   = ['vortex-free.archive-legacy.fr'],
             ),
         )
     )
@@ -523,17 +737,38 @@ class VortexFreeStdArchiveStore(VortexArchiveStore, ConfigurableArchiveStore):
     remap_write = remap_read
 
 
-class VortexOpArchiveStore(VortexArchiveStore):
-    """Archive for op VORTEX experiments."""
+class VortexFreeStdStackedArchiveStore(VortexFreeStdBaseArchiveStore):
+    """Archive for casual VORTEX experiments: Support for Free XPIDs.
+
+    This 'stacked-archive-legacy' or 'stacked-archive-smart' store looks into
+    the stack associated to the resource. The '-smart' variant, has the ability
+    to refill the whole stack into local cache (to be faster in the future).
+    """
+
+    _footprint = [
+        _vortex_readonly_store,
+        dict(
+            attr = dict(
+                netloc = dict(
+                    values   = ['vortex-free.stacked-archive-legacy.fr',
+                                'vortex-free.stacked-archive-smart.fr'],
+                ),
+            )
+        )]
+
+
+class VortexOpBaseArchiveStore(_VortexBaseArchiveStore):
+    """Archive for op VORTEX experiments.
+
+    This 'archive-legacy' store looks into the resource 'main' location not
+    into a potential stack.
+    """
 
     _footprint = dict(
         info = 'VORTEX archive access for op experiments',
         attr = dict(
             netloc = dict(
-                values   = ['vsop.archive.fr'],
-            ),
-            storeroot = dict(
-                default  = '/home/m/mxpt/mxpt001',
+                values   = ['vsop.archive-legacy.fr'],
             ),
             storetrue = dict(
                 default = DelayedEnvValue('op_archive', True),
@@ -541,9 +776,15 @@ class VortexOpArchiveStore(VortexArchiveStore):
         )
     )
 
+    @property
+    def _actual_storeroot(self):
+        return (self.storeroot or
+                self._actual_from_genericconf('vsop_storeroot'))
+
     def remap_read(self, remote, options):
         """Reformulates the remote path to compatible vortex namespace."""
         remote = copy.copy(remote)
+        remote['root'] = self._actual_storeroot
         xpath = remote['path'].split('/')
         if len(xpath) >= 5 and re.match(r'^\d{8}T\d{2,4}', xpath[4]):
             # If a date is detected
@@ -559,7 +800,82 @@ class VortexOpArchiveStore(VortexArchiveStore):
     remap_write = remap_read
 
 
-class _VortexCacheBaseStore(CacheStore):
+class VortexOpStackedArchiveStore(VortexOpBaseArchiveStore):
+    """Archive for op VORTEX experiments.
+
+    This 'stacked-archive-legacy' or 'stacked-archive-smart' store looks into
+    the stack associated to the resource. The '-smart' variant, has the ability
+    to refill the whole stack into local cache (to be faster in the future).
+    """
+
+    _footprint = [
+        _vortex_readonly_store,
+        dict(
+            attr = dict(
+                netloc = dict(
+                    values   = ['vsop.stacked-archive-legacy.fr',
+                                'vsop.stacked-archive-smart.fr'],
+                ),
+            )
+        )]
+
+
+class VortexArchiveStore(MultiStore):
+    """Archive store for any Vortex experiments.
+
+    Depending on the netloc, legacy/Olive XPIDs ('vortex'), free XPIDs
+    ('vortex-free') or operational experiments ('vsop') will be dealt with.
+
+    First, this multi store will look onto the resource 'main' location. In a
+    second phase, if sensible, il will also dig into the stack associated with
+    the resource.
+    """
+
+    _footprint = dict(
+        info = 'VORTEX archive access',
+        attr = dict(
+            scheme = dict(
+                values  = ['vortex'],
+            ),
+            netloc = dict(
+                values  = ['vortex.archive.fr', 'vortex-free.archive.fr', 'vsop.archive.fr'],
+            ),
+            refillstore = dict(
+                default = False,
+            ),
+            storehead = dict(
+                optional = True,
+            ),
+            storesync = dict(
+                alias    = ('archsync', 'synchro'),
+                type     = bool,
+                optional = True,
+            ),
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        """Only use the stacked store if sensible."""
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if not sto.stackedstore or 'stackpath' in remote['query']
+                        ])
+        return ostores
+
+    def alternates_netloc(self):
+        """Return netlocs describing both base and stacked archives."""
+        netloc_m = re.match(r'(?P<base>v.*)\.archive\.(?P<country>\w+)', self.netloc)
+        return [
+            '{base:s}.archive-legacy.{country:s}'.format(** netloc_m.groupdict()),
+            '{base:s}.stacked-archive-legacy.{country:s}'.format(** netloc_m.groupdict()),
+        ]
+
+    def alternates_fpextras(self):
+        """Deal with some ArchiveStores' specific attributes."""
+        return dict(storehead=self.storehead, storesync=self.storesync)
+
+
+class _VortexCacheBaseStore(CacheStore, _VortexStackedStorageMixin):
     """Some kind of cache for VORTEX experiments: one still needs to choose the cache strategy."""
 
     _abstract = True
@@ -592,11 +908,11 @@ class _VortexCacheBaseStore(CacheStore):
 
     def vortexcheck(self, remote, options):
         """Proxy to :meth:`incachecheck`."""
-        return self.incachecheck(remote, options)
+        return self.incachecheck(self._stacked_xremote(remote), options)
 
     def vortexlocate(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
-        return self.incachelocate(remote, options)
+        return self.incachelocate(self._stacked_xremote(remote), options)
 
     def vortexlist(self, remote, options):
         """Proxy to :meth:`incachelocate`."""
@@ -604,19 +920,19 @@ class _VortexCacheBaseStore(CacheStore):
 
     def vortexprestageinfo(self, remote, options):
         """Proxy to :meth:`incacheprestageinfo`."""
-        return self.incacheprestageinfo(remote, options)
+        return self.incacheprestageinfo(self._stacked_xremote(remote), options)
 
     def vortexget(self, remote, local, options):
         """Proxy to :meth:`incacheget`."""
-        return self.incacheget(remote, local, options)
+        return self.incacheget(self._stacked_xremote(remote), local, options)
 
     def vortexput(self, local, remote, options):
-        """Proxy to :meth:`incacheputt`."""
-        return self.incacheput(local, remote, options)
+        """Proxy to :meth:`incacheput`."""
+        return self.incacheput(local, self._stacked_xremote(remote), options)
 
     def vortexdelete(self, remote, options):
         """Proxy to :meth:`incachedelete`."""
-        return self.incachedelete(remote, options)
+        return self.incachedelete(self._stacked_xremote(remote), options)
 
 
 class VortexCacheMtStore(_VortexCacheBaseStore):
@@ -626,8 +942,8 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
         info = 'VORTEX MTOOL like Cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vortex.cache-mt.fr', 'vortex-free.cache-mt.fr',
-                           'vsop.cache-mt.fr'],
+                values  = ['{:s}.{:s}cache-mt.fr'.format(v, s)
+                           for v in ('vortex', 'vortex-free', 'vsop') for s in ('', 'stacked-')]
             ),
             strategy = dict(
                 default = 'mtool',
@@ -637,13 +953,14 @@ class VortexCacheMtStore(_VortexCacheBaseStore):
 
 
 class VortexCacheBuddiesStore(_VortexCacheBaseStore):
-    """Some kind of MTOOL cache for VORTEX experiments."""
+    """Some kind of MTOOL cache to access friends VORTEX R&D experiments."""
 
     _footprint = dict(
         info = 'VORTEX MTOOL like Cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vortex.cache-buddies.fr', 'vortex-free.cache-buddies.fr', ],
+                values  = ['{:s}.{:s}cache-buddies.fr'.format(v, s)
+                           for v in ('vortex', 'vortex-free') for s in ('', 'stacked-')]
             ),
             strategy = dict(
                 default = 'mtoolbuddies',
@@ -669,7 +986,8 @@ class VortexCacheMarketPlaceStore(_VortexCacheBaseStore):
         info = "VORTEX's centralised Cache access",
         attr = dict(
             netloc = dict(
-                values  = ['vortex.cache-market.fr', 'vortex-free.cache-market.fr', ],
+                values  = ['{:s}.{:s}cache-market.fr'.format(v, s)
+                           for v in ('vortex', 'vortex-free') for s in ('', 'stacked-')]
             ),
             strategy = dict(
                 default = 'marketplace',
@@ -681,44 +999,6 @@ class VortexCacheMarketPlaceStore(_VortexCacheBaseStore):
     )
 
 
-class VortexCacheStore(MultiStore):
-
-    _footprint = dict(
-        info = 'VORTEX cache access',
-        attr = dict(
-            scheme = dict(
-                values  = ['vortex'],
-            ),
-            netloc = dict(
-                values  = ['vortex.cache.fr', 'vortex-free.cache.fr', ],
-            ),
-            refillstore = dict(
-                default = False,
-            )
-        )
-    )
-
-    def filtered_readable_openedstores(self, remote):
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_reads(remote['path'])])
-        return ostores
-
-    def filtered_writeable_openedstores(self, remote):
-        ostores = [self.openedstores[0], ]
-        ostores.extend([sto for sto in self.openedstores[1:]
-                        if sto.cache.allow_writes(remote['path'])])
-        return ostores
-
-    def alternates_netloc(self):
-        """For Non-Op users, Op caches may be accessed in read-only mode."""
-        netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
-        mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
-        bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
-        ma_netloc = '{base:s}.cache-market.{country:s}'.format(** netloc_m.groupdict())
-        return [mt_netloc, bd_netloc, ma_netloc]
-
-
 class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     """The DSI/OP VORTEX cache where researchers can get the freshest data."""
 
@@ -726,7 +1006,8 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
         info = 'VORTEX Mtool cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vsop.cache-primary.fr', 'vsop.cache-secondary.fr'],
+                values  = ['vsop.{:s}cache-{:s}.fr'.format(s, l)
+                           for l in ('primary', 'secondary') for s in ('', 'stacked-')],
             ),
             strategy = dict(
                 default = 'op2r',
@@ -740,24 +1021,19 @@ class VortexCacheOp2ResearchStore(_VortexCacheBaseStore):
     @property
     def underlying_cache_kind(self):
         """The kind of cache that will be used."""
-        mgrp = re.match(r'\w+\.cache-(\w+)\.\w+', self.netloc)
+        mgrp = re.match(r'\w+\.(?:stacked-)?cache-(\w+)\.\w+', self.netloc)
         return '_'.join((self.strategy, mgrp.group(1)))
 
 
-class VortexVsopCacheStore(MultiStore):
+class _AbstractVortexCacheMultiStore(MultiStore):
+    """Any Cache based Vortex multi store."""
 
+    _abstract = True
     _footprint = dict(
-        info = 'VORTEX vsop magic cache access',
+        info = 'VORTEX cache access',
         attr = dict(
             scheme = dict(
                 values  = ['vortex'],
-            ),
-            netloc = dict(
-                values  = ['vsop.cache.fr', ],
-            ),
-            glovekind = dict(
-                optional = True,
-                default = '[glove::realkind]',
             ),
             refillstore = dict(
                 default = False,
@@ -765,18 +1041,190 @@ class VortexVsopCacheStore(MultiStore):
         )
     )
 
+    def filtered_readable_openedstores(self, remote):
+        """Deals with stacked and marketplace stores that are not always active."""
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if ((not sto.stackedstore or 'stackpath' in remote['query']) and
+                            sto.cache.allow_reads(remote['path']))
+                        ])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        """
+        Deals with marketplace stores that are not always active and never
+        writes into stack stores.
+        """
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if not sto.stackedstore and sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+
+class VortexCacheStore(_AbstractVortexCacheMultiStore):
+    """The go to store for data cached by VORTEX R&D experiments."""
+
+    _footprint = dict(
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.cache.fr', 'vortex-free.cache.fr', ],
+            ),
+        )
+    )
+
     def alternates_netloc(self):
         """For Non-Op users, Op caches may be accessed in read-only mode."""
-        todo = ['vsop.cache-mt.fr', ]  # The MTOOL Cache remains a must :-)
+        netloc_m = re.match(r'(?P<base>vortex.*)\.cache\.(?P<country>\w+)', self.netloc)
+        mt_netloc = '{base:s}.cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        bd_netloc = '{base:s}.cache-buddies.{country:s}'.format(** netloc_m.groupdict())
+        s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
+        ma_netloc = '{base:s}.cache-market.{country:s}'.format(** netloc_m.groupdict())
+        s_ma_netloc = '{base:s}.stacked-cache-market.{country:s}'.format(** netloc_m.groupdict())
+        return [mt_netloc, s_mt_netloc, bd_netloc, s_bd_netloc, ma_netloc, s_ma_netloc]
+
+
+class VortexVsopCacheStore(_AbstractVortexCacheMultiStore):
+    """The go to store for data cached by VORTEX operational experiments.
+
+    It behaves differently depending on the profile of the user running the
+    code 'see the **glovekind** attribute).
+    """
+
+    _footprint = dict(
+        info = 'VORTEX vsop magic cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vsop.cache.fr', ],
+            ),
+            glovekind = dict(
+                optional = True,
+                default = '[glove::realkind]',
+            ),
+        )
+    )
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        todo = ['vsop.cache-mt.fr', 'vsop.stacked-cache-mt.fr', ]  # The MTOOL Caches remain a must :-)
         if self.glovekind != 'opuser':
             for loc in ('primary', 'secondary'):
                 if int(self.system.default_target.get('stores:vsop_cache_op{}'.format(loc), '0')):
-                    todo.append('vsop.cache-{}.fr'.format(loc))
+                    for s in ('', 'stacked-'):
+                        todo.append('vsop.{:s}cache-{:s}.fr'.format(s, loc))
         return todo
 
 
+class _AbstractVortexStackMultiStore(MultiStore):
+    """Any Cache based Vortex multi store."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'VORTEX stack access',
+        attr = dict(
+            scheme = dict(
+                values  = ['vortex'],
+            ),
+            refillstore = dict(
+                default = False,
+            )
+        )
+    )
+
+    def filtered_readable_openedstores(self, remote):
+        """Deals with marketplace stores that are not always active."""
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_reads(remote['path'])])
+        return ostores
+
+    def filtered_writeable_openedstores(self, remote):
+        """Deals with marketplace stores that are not always active."""
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if sto.cache.allow_writes(remote['path'])])
+        return ostores
+
+
+class VortexStackStore(_AbstractVortexStackMultiStore):
+    """Store intended to read and write data into VORTEX R&D stacks."""
+
+    _footprint = dict(
+        info = 'VORTEX stack access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.stack.fr', 'vortex-free.stack.fr'],
+            ),
+        )
+    )
+
+    def alternates_netloc(self):
+        """Go through the various stacked stores."""
+        netloc_m = re.match(r'(?P<base>vortex.*)\.stack\.(?P<country>\w+)', self.netloc)
+        s_mt_netloc = '{base:s}.stacked-cache-mt.{country:s}'.format(** netloc_m.groupdict())
+        s_bd_netloc = '{base:s}.stacked-cache-buddies.{country:s}'.format(** netloc_m.groupdict())
+        s_ma_netloc = '{base:s}.stacked-cache-market.{country:s}'.format(** netloc_m.groupdict())
+        return [s_mt_netloc, s_bd_netloc, s_ma_netloc]
+
+
+class VortexVsopStackStore(_AbstractVortexStackMultiStore):
+    """Store intended to read and write data into VORTEX R&D stacks."""
+
+    _footprint = dict(
+        info = 'VORTEX stack access',
+        attr = dict(
+            netloc = dict(
+                values  = ['vsop.stack.fr'],
+            ),
+            glovekind = dict(
+                optional = True,
+                default = '[glove::realkind]',
+            ),
+        )
+    )
+
+    def alternates_netloc(self):
+        """For Non-Op users, Op caches may be accessed in read-only mode."""
+        todo = ['vsop.stacked-cache-mt.fr', ]
+        if self.glovekind != 'opuser':
+            for loc in ('primary', 'secondary'):
+                if int(self.system.default_target.get('stores:vsop_cache_op{}'.format(loc), '0')):
+                    todo.append('vsop.stacked-cache-{:s}.fr'.format(loc))
+        return todo
+
+
+class VortexStoreLegacy(MultiStore):
+    """Combined cache and archive legacy VORTEX stores.
+
+    By '-legacy' we mean that stack resources are ignored.
+    """
+
+    _footprint = dict(
+        info='VORTEX multi access',
+        attr=dict(
+            scheme=dict(
+                values=['vortex'],
+            ),
+            netloc=dict(
+                values=['vortex.multi-legacy.fr', 'vortex-free.multi-legacy.fr', 'vsop.multi-legacy.fr'],
+            ),
+            refillstore=dict(
+                default=True,
+            )
+        )
+    )
+
+    def alternates_netloc(self):
+        """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
+        return [self.netloc.firstname + d for d in ('.cache.fr',
+                                                    '.archive-legacy.fr')]
+
+
 class VortexStore(MultiStore):
-    """Combined cache and archive VORTEX stores."""
+    """Combined cache and archive VORTEX stores.
+
+    If sensible, stack will be explored and might be refilled into cache.
+    """
 
     _footprint = dict(
         info = 'VORTEX multi access',
@@ -788,14 +1236,23 @@ class VortexStore(MultiStore):
                 values  = ['vortex.multi.fr', 'vortex-free.multi.fr', 'vsop.multi.fr'],
             ),
             refillstore = dict(
-                default = True,
+                default = False
             )
         )
     )
 
+    def filtered_readable_openedstores(self, remote):
+        """Deals with stacked stores that are not always active."""
+        ostores = [self.openedstores[0], ]
+        ostores.extend([sto for sto in self.openedstores[1:]
+                        if not sto.stackedstore or 'stackpath' in remote['query']
+                        ])
+        return ostores
+
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return [self.netloc.firstname + d for d in ('.cache.fr', '.archive.fr')]
+        return [self.netloc.firstname + d for d in ('.multi-legacy.fr',
+                                                    '.stacked-archive-smart.fr',)]
 
 
 class PromiseCacheStore(VortexCacheMtStore):

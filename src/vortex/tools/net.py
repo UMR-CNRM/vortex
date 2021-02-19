@@ -302,13 +302,6 @@ class ExtendedFtplib(object):
         rc = False
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except (ValueError, TypeError, IOError) as e:
-            logger.error('FTP could not get %s: %s', repr(source), str(e))
-            raise
-        except ftplib.all_errors as e:
-            logger.error('FTP internal exception %s: %s', repr(source), str(e))
-            raise
-        else:
             if xdestination:
                 target.seek(0, io.SEEK_END)
                 if self.size(source) == target.tell():
@@ -355,13 +348,13 @@ class ExtendedFtplib(object):
         self.rmkdir(destination)
         try:
             self.delete(destination)
-            logger.warning('Replacing <file:%s>', str(destination))
+            logger.info('Replacing <file:%s>', str(destination))
         except ftplib.error_perm:
-            logger.warning('Creating <file:%s>', str(destination))
+            logger.info('Creating <file:%s>', str(destination))
         except (ValueError, TypeError, IOError,
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
-            logger.critical('Serious delete trouble <file:%s> <error:%s>',
-                            str(destination), str(e))
+            logger.error('Serious delete trouble <file:%s> <error:%s>',
+                         str(destination), str(e))
 
         logger.info('FTP <put:%s>', str(destination))
         rc = False
@@ -374,13 +367,6 @@ class ExtendedFtplib(object):
 
         try:
             self.storbinary('STOR ' + destination, inputsrc)
-        except (ValueError, IOError, TypeError) as e:
-            logger.error('FTP could not put %s: %s', repr(source), str(e))
-            raise
-        except ftplib.all_errors as e:
-            logger.error('FTP could not put %s: %s', repr(source), str(e))
-            raise
-        else:
             if exact:
                 if self.size(destination) == size:
                     rc = True

@@ -622,8 +622,9 @@ class Handler(object):
                     self.container.iotarget(),
                     st_options,
                 )
-            except Exception:
-                logger.error("The store's earlyget method did not return : it should never append!")
+            except Exception as e:
+                logger.error("The store's earlyget method did not return (%s): it should never append!",
+                             str(e))
                 return None
         else:
             logger.error('Could not find any store to get %s', self.lasturl)

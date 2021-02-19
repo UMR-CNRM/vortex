@@ -15,7 +15,7 @@ from vortex import sessions
 from vortex.data.contents import DataContent, JsonDictContent, FormatAdapter
 from vortex.data.flow import FlowResource
 from vortex.data.resources import Resource
-from vortex.syntax.stdattrs import FmtInt
+from vortex.syntax.stdattrs import FmtInt, date_deco, cutoff_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
 from vortex.util.roles import setrole
 
@@ -23,6 +23,48 @@ from vortex.util.roles import setrole
 __all__ = []
 
 
+class FlowLogsStack(Resource):
+    """Stack of miscellaneous log files"""
+
+    _footprint = [
+        date_deco,
+        cutoff_deco,
+        dict(
+            info = 'Stack of miscellaneous log files.',
+            attr = dict(
+                kind = dict(
+                    values   = ['flow_logs']
+                ),
+                nativefmt = dict(
+                    values   = ['filespack', ],
+                    default  = 'filespack',
+                ),
+            ),
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'flow_logs'
+
+
+def use_flow_logs_stack(cls):
+    """Setup the decorated class to work with the FlowLogsStack resource."""
+    fpattrs = set(cls.footprint_retrieve().attr.keys())
+    fpcheck = all([k in fpattrs for k in ('date', 'cutoff')])
+    if not fpcheck:
+        raise ImportError('The "{!s}" class is not compatible with the FlowLogsStack class.'
+                          .format(cls))
+
+    def stackedstorage_resource(self):
+        """Use the FlowLogsStack resource for stacked storage."""
+        return FlowLogsStack(kind='flow_logs', date=self.date, cutoff=self.cutoff), False
+
+    cls.stackedstorage_resource = stackedstorage_resource
+    return cls
+
+
+@use_flow_logs_stack
 @namebuilding_insert('src', lambda s: [s.binary, s.task.split('/').pop()])
 @namebuilding_insert('compute', lambda s: s.part)
 @namebuilding_delete('fmt')
@@ -179,6 +221,7 @@ class DrHookListing(Listing):
         return 'drhookprof'
 
 
+@use_flow_logs_stack
 class Beacon(FlowResource):
     """Output indicating the end of a model run."""
     _footprint = [
@@ -203,6 +246,7 @@ class Beacon(FlowResource):
         return 'beacon'
 
 
+@use_flow_logs_stack
 @namebuilding_insert('src', lambda s: s.task.split('/').pop())
 @namebuilding_insert('compute', lambda s: s.scope)
 class TaskInfo(FlowResource):
@@ -433,6 +477,7 @@ class SectionsJsonListContent(DataContent):
         container.updfill(True)
 
 
+@use_flow_logs_stack
 @namebuilding_insert('src', lambda s: s.task.split('/').pop())
 class SectionsList(FlowResource):
     """Class to handle a resource that contains a list of Sections in JSON format.

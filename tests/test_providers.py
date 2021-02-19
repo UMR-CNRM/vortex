@@ -63,6 +63,9 @@ class DummyRessource(object):
     def vortex_urlquery(self):
         return None
 
+    def stackedstorage_resource(self):
+        return None, True
+
 
 class TestProviderMagic(unittest.TestCase):
 

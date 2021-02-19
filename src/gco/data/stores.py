@@ -711,10 +711,8 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
             netloc = dict(
                 values   = ['uget.archive.fr'],
             ),
-            storeroot = dict(
-                default  = None,
-            ),
             storehead = dict(
+                optional = True,
                 default  = 'uget',
             ),
             storehash = dict(
