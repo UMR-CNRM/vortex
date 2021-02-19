@@ -6,20 +6,22 @@ This module contains "fake" stores for demonstration purposes.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from vortex.data.stores import VortexArchiveStore, VortexCacheMtStore, VortexStore, \
-    PromiseCacheStore, VortexPromiseStore
+from vortex.data.stores import _VortexBaseArchiveStore, VortexCacheMtStore, \
+    VortexStoreLegacy, PromiseCacheStore, VortexPromiseStore
 
-from gco.data.stores import UgetHackCacheStore, _UgetCacheStore, UgetArchiveStore, UgetStore
+from gco.data.stores import UgetHackCacheStore, _UgetCacheStore, UgetArchiveStore, \
+    UgetStore
 
 
-class VortexDemoArchiveStore(VortexArchiveStore):
+class VortexDemoArchiveStore(_VortexBaseArchiveStore):
     """Archive for demo VORTEX experiments."""
 
     _footprint = dict(
         info = 'VORTEX archive access for demo experiments',
         attr = dict(
             netloc = dict(
-                values   = ['vortex-demo.archive.fr'],
+                values   = ['vortex-demo.archive.fr',
+                            'vortex-demo.archive-legacy.fr'],
             ),
             storeroot = dict(
                 default  = None,
@@ -42,7 +44,8 @@ class VortexDemoCacheStore(VortexCacheMtStore):
         info = 'VORTEX MTOOL like Demo cache access',
         attr = dict(
             netloc = dict(
-                values  = ['vortex-demo.cache.fr'],
+                values  = ['vortex-demo.cache.fr',
+                           'vortex-demo.hack.fr'],
             ),
             strategy = dict(
                 default = 'mtool-demo',
@@ -51,7 +54,7 @@ class VortexDemoCacheStore(VortexCacheMtStore):
     )
 
 
-class VortexDemoStore(VortexStore):
+class VortexDemoStore(VortexStoreLegacy):
     """Combined cache and archive for demo VORTEX experiments."""
 
     _footprint = dict(
