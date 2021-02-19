@@ -71,7 +71,7 @@ class _SetAsideStoreMixin(object):
     def _do_set_aside_cocoon(self, local, options):
         """If the requested file is intent=inout, creates a temporary copy."""
         options_bis = dict() if options is None else options.copy()
-        intent = options_bis.pop('intent', _CACHE_GET_INTENT_DEFAULT)
+        intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
         if intent != 'in':
             local_bis = local + self.system.safe_filesuffix()
             fmt = options_bis.get('fmt', None)
