@@ -395,30 +395,9 @@ class Vortex(Provider):
             provider_attrs = self.footprint_as_shallow_dict()
             provider_attrs['experiment'] = self._x_set_aside[self.experiment]
             provider_bis = fpx.provider(** provider_attrs)
-            uqs['setaside_n'] = provider_bis.netloc(resource)
-            uqs['setaside_p'] = provider_bis.pathname(resource) + '/' + provider_bis.basename(resource)
+            uqs['setaside_n'] = [provider_bis.netloc(resource), ]
+            uqs['setaside_p'] = [provider_bis.pathname(resource) + '/' + provider_bis.basename(resource), ]
         return urlparse.urlencode(sorted(uqs.items()), doseq=True)
-
-    def urlquery(self, resource):
-        """Deal with the set_aside attribute."""
-        base_query = super(Vortex, self).urlquery(resource)
-        if self._x_set_aside is None:
-            self._x_set_aside = StringDecoder()(self.set_aside)
-            if not isinstance(self._x_set_aside, dict):
-                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
-                               self.set_aside, self._x_set_aside)
-                self._x_set_aside = dict()
-        if self.experiment in self._x_set_aside:
-            provider_attrs = self.footprint_as_shallow_dict()
-            provider_attrs['experiment'] = self._x_set_aside[self.experiment]
-            provider_bis = fpx.provider(** provider_attrs)
-            set_aside_n = urlparse.quote(provider_bis.netloc(resource))
-            set_aside_p = urlparse.quote(provider_bis.pathname(resource) + '/' +
-                                         provider_bis.basename(resource))
-            return ('setaside_n=' + set_aside_n + '&setaside_p=' + set_aside_p +
-                    ('&' + base_query if base_query else ''))
-        else:
-            return base_query
 
 
 class VortexStd(Vortex):
