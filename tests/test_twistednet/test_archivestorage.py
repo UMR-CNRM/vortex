@@ -7,11 +7,9 @@ Test Vortex's FTP client
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
-import ftplib
 import gzip
 import io
 import tempfile
-import unittest
 
 from bronx.fancies import loggers
 from footprints import proxy as fpx
@@ -35,6 +33,7 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
         return fpx.archive(kind='std',
                            storage='localhost:{:d}'.format(self.port),
                            tube='ftp',
+
                            inifile='void_config_file.ini')
 
     def test_archive_storage(self):
@@ -53,7 +52,7 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
                 testdata = six.BytesIO()
                 testdata.write(b'Coucou')
                 testdata.seek(0)
-                self.assertTrue(st.insert('some/test/file1', testdata))
+                self.assertTrue(st.insert('some/test/file1', testdata, usejeeves=False))
                 self.assertRemote('some/test/file1', 'Coucou')
                 # With a real file...
                 with tempfile.NamedTemporaryFile(mode='wb', prefix='tmp_indputd',
@@ -61,12 +60,12 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
                     fht.write(b'Hello')
                     fht.seek(0)
                     fht.flush()
-                    self.assertTrue(st.insert('some/test/file1', fht.name))
+                    self.assertTrue(st.insert('some/test/file1', fht.name, usejeeves=False))
                     self.assertRemote('some/test/file1', 'Hello')
                     # Another one...
-                    self.assertTrue(st.insert('some/test/file2', fht.name))
+                    self.assertTrue(st.insert('some/test/file2', fht.name, usejeeves=False))
                     self.assertEqual(st.check('some/test/file2'), 5)  # The file size
-                    self.assertTrue(st.insert('file3', fht.name))
+                    self.assertTrue(st.insert('file3', fht.name, usejeeves=False))
                     self.assertRemote('some/test/file2', 'Hello')
                     self.assertRemote('file3', 'Hello')
                 # Test retrieves
@@ -85,7 +84,8 @@ class TestArchiveStorage(NetrcFtpBasedTestCase):
                     fht.seek(0)
                     fht.flush()
                     self.assertTrue(st.insert('some/test/filecomp', fht,
-                                              compressionpipeline=cpipe))
+                                              compressionpipeline=cpipe,
+                                              usejeeves=False))
                 self.assertTrue(st.retrieve('some/test/filecomp.gz', 'testgzip1'))
                 with gzip.GzipFile(filename='testgzip1', mode='rb') as fhgz:
                     self.assertEqual(fhgz.read(), b'Coucou_Very_Very_Long')

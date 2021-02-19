@@ -97,7 +97,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
 
                 # Archive them using a compression pipeline (not advisable in real life).
                 st = self.vortex_store('vortex.archive.fr', store_compressed='gz')
-                self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii')))
+                self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii', delayed=False)))
                 with io.open('flisting1.gz', 'rb') as fhl:
                     self.assertVortexRemote(_PATHl1 + '.gz', fhl.read(), binary=True)
                 self.assertTrue(st.get(_URIl1, 'toto', dict(fmt='ascii')))
@@ -110,7 +110,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 # Archive them along with a hash file
                 st = self.vortex_store('vortex.archive.fr', storehash='md5')
                 stM = self.vortex_store('vortex.multi.fr', storehash='md5')
-                self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii')))
+                self.assertTrue(st.put('flisting1', _URIl1, dict(fmt='ascii', delayed=False)))
                 m_listing = hashlib.md5()
                 m_listing.update('forecast_list'.encode())
                 self.assertVortexRemote(_PATHl1 + '.md5', m_listing.hexdigest())
@@ -133,7 +133,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 stA = self.vortex_store('vortex.archive.fr')
                 stM = self.vortex_store('vortex.multi.fr')
                 stC = self.vortex_store('vortex.cache.fr')
-                self.assertTrue(stA.put('flisting1', _URIl1, dict(fmt='ascii')))
+                self.assertTrue(stA.put('flisting1', _URIl1, dict(fmt='ascii', delayed=False)))
                 self.assertEqual(stA.check(_URIl1, dict(fmt='ascii')), 13)
                 self.assertEqual(stM.check(_URIl1, dict(fmt='ascii')), 13)
                 self.assertFalse(stM.check(_URIl1, dict(fmt='ascii', incache=True)))
@@ -152,7 +152,7 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertTrue(stM.delete(_URIl1, dict(fmt='ascii')))
                 self.assertFalse(stA.check(_URIl1, dict(fmt='ascii')))
                 # incache put & co
-                self.assertTrue(stM.put('flisting1', _URIl1, dict(fmt='ascii', incache=True)))
+                self.assertTrue(stM.put('flisting1', _URIl1, dict(fmt='ascii', incache=True, delayed=False)))
                 self.assertFalse(stA.check(_URIl1, dict(fmt='ascii')))
                 self.assertEqual(stM.locate(_URIl1, dict(fmt='ascii')),
                                  '{0.udir}/mtool/cache/vortex/{1:s};{0.user}@localhost:theroot/vortex/{1:s}'
@@ -202,14 +202,14 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
                 self.assertFalse(st.check(_STACK_URIl2, dict(fmt='ascii')))
                 # Drop the stack
                 st = self.vortex_store('vortex.archive-legacy.fr')
-                self.assertTrue(st.put('thestack', _STACK_URI, dict(fmt='filespack')))
+                self.assertTrue(st.put('thestack', _STACK_URI, dict(fmt='filespack', delayed=False)))
                 self.assertTrue(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
                                                             _STACK_PATH + '.tgz')))
                 self.assertTrue(st.delete(_STACK_URI, dict(fmt='filespack')))
                 self.assertFalse(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
                                                              _STACK_PATH + '.tgz')))
                 stM = self.vortex_store('vortex.multi.fr')
-                self.assertTrue(stM.put('thestack', _STACK_URI, dict(fmt='filespack', inarchive=True)))
+                self.assertTrue(stM.put('thestack', _STACK_URI, dict(fmt='filespack', inarchive=True, delayed=False)))
                 self.assertTrue(sh.path.exists(sh.path.join(self.udir, 'theroot', 'vortex',
                                                             _STACK_PATH + '.tgz')))
                 self.assertTrue(stM.check(_STACK_URI, dict(fmt='filespack', inarchive=True)))

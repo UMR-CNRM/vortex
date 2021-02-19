@@ -134,11 +134,11 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                                             storetube='ftp', readonly=False)
                     self.assertTrue(stAbis.put('mask1',
                                                uriparse('uget://uget.archive.fr/data/mask.atms.02@huguette'),
-                                               dict()))
+                                               dict(delayed=False)))
                     self.assertFalse(stAbis.put(
                         self.sh.path.join('nam_ext1', 'nam_ext_arch1'),
                         uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?extract=fileX'),
-                        dict()
+                        dict(delayed=False)
                     ))
                     with io.open(self.sh.path.join(self.udir, 'uget', 'data', 'c', 'mask.atms.02')) as fhm:
                         self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
