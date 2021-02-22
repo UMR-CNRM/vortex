@@ -89,9 +89,7 @@ class Hycom3dIBCRunTime(Expresso):
     def spawn_command_options(self):
         return dict(
             ncins=self._ncins,
-            ncout=self.ncout,
-            dates=self._dates,
-            rank=self.rank)
+            dates=self._dates)
 
 
 class Hycom3dIBCRunHorizRegridcdf(BlindRun):
@@ -155,7 +153,7 @@ class Hycom3dIBCRunVerticalInicon(BlindRun):
         dict(
             info="Run the initial and boundary conditions vertical interpolator",
             attr=dict(
-                kind=dict(values=["hycom3d_ibc_run_vert"]),
+                kind=dict(values=["hycom3d_ibc_run_vert_inicon"]),
                 sshmin=dict(),
                 cmoy=dict()
             ),
@@ -238,7 +236,7 @@ class Hycom3dRiversFlowRate(Expresso):
         return dict(
             rank=self.rank,
             tarfile=self._tarname,
-            dates=",".join([date.isformat() for date in self._dates])
+            dates=",".join([date.isoformat() for date in self._dates])
             )
 
 
@@ -260,10 +258,6 @@ class Hycom3dAtmFrcTime(Expresso):
                     optional=False,
                     type=list,
                 ),
-                engine=dict(
-                    values=["current" ],
-                    default="current",
-                ),
             ),
         ),
     ]
@@ -274,16 +268,16 @@ class Hycom3dAtmFrcTime(Expresso):
         # Input insta files
         insta_rhs = [sec.rh for sec in
                      self.context.sequence.effective_inputs(role="InputInsta")]
-        insta_rhs.sort(key=lambda rh: (rh.ressource.date, rh.term))
+        insta_rhs.sort(key=lambda rh: (rh.resource.date, rh.resource.term))
         self._insta_files = [rh.container.localpath() for rh in insta_rhs]
 
         # Input cumul files
         cumul_rhs = [sec.rh for sec in
                      self.context.sequence.effective_inputs(role="InputCumul")]
-        cumul_rhs.sort(key=lambda rh: (rh.ressource.date, rh.term))
+        cumul_rhs.sort(key=lambda rh: (rh.resource.date, rh.resource.term))
         self._cumul_files = defaultdict(list)
         for rh in cumul_rhs:
-            self._cumul_files[rh.ressource.date].append(
+            self._cumul_files[rh.resource.date].append(
                 rh.container.localpath())
 
         # Output dates

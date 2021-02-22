@@ -170,7 +170,7 @@ class Hycom3dIBCTimeScript(Script):
         )
 
     def command_line(self, **opts):
-        return "--ncout {ncout} {ncins} {dates}".format(**opts)
+        return "{ncins} {dates}".format(**opts)
 
 
 class Hycom3dAtmfrcTimeScript(Script):
