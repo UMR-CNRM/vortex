@@ -309,7 +309,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                     mypadding = None
                     for p in paddingstuff:
                         if getattr(p.rh.resource, 'ipert',
-                                   getattr(p.rh.resource, 'number', None) == i):
+                                   getattr(p.rh.resource, 'number', None)) == i:
                             mypadding = p
                             break
                         else:
@@ -608,7 +608,7 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))
-        # Requesting Hybrid cimputations ?
+        # Requesting Hybrid computations ?
         if self.hybrid:
             hybstuff = self.context.sequence.effective_inputs(role=self._HYBRID_CLIM_ROLE)
             hybformat = hybstuff[0].rh.container.actualfmt
