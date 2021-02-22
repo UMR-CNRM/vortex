@@ -430,7 +430,7 @@ class Cache(Storage):
     def _actual_prestageinfo(self, item, **kwargs):
         """Returns pre-staging informations."""
         return dict(strategy=self.kind,
-                    location=self._actual_fullpath(item, **kwargs), ), dict()
+                    location=self.fullpath(item, **kwargs)), dict()
 
     def _actual_check(self, item, **kwargs):
         """Check/Stat an **item** from the current storage place."""

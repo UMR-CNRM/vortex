@@ -11,18 +11,22 @@ Vortex features are working correctly.
 When debugging, fix other tests first and only then look at this one !
 """
 
+import io
 import os
 import tempfile
 from unittest import TestCase, main
 
 import vortex
 from vortex import sessions, toolbox
-from vortex.data.abstractstores import CACHE_GET_INTENT_DEFAULT
+from vortex.data.abstractstores import CACHE_GET_INTENT_DEFAULT, MultiStore
 from vortex.data.contents import TextContent
 from vortex.data.flow import FlowResource
+from vortex.data.handlers import HandlerError
 from vortex.data.providers import VortexStd
-from vortex.data.stores import _VortexCacheBaseStore
+from vortex.data.stores import _VortexCacheBaseStore, VortexPromiseStore, PromiseCacheStore
+from vortex.layout.dataflow import SectionFatalError
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
+from vortex.tools.prestaging import PrestagingTool, prestaging_p
 from vortex.tools.storage import FixedEntryCache
 
 MYPYFILE = os.path.abspath(__file__)
@@ -48,8 +52,8 @@ class TestDataCache(FixedEntryCache):
     @property
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
-        testsdir = self.sh.path.dirname(MYPYFILE)
-        return self.sh.path.join(testsdir, 'data', 'testcache', self.actual_headdir)
+        return self.sh.path.join(self.session.rundir, self.session.tag,
+                                 'testcache', self.actual_headdir)
 
     def _actual_earlyretrieve(self, item, local, **kwargs):
         dirextract = kwargs.get("dirextract", False)
@@ -127,6 +131,88 @@ class VortexCacheTestStore(_VortexCacheBaseStore):
         return self.incachefinaliseget(result_id, remote, local, options)
 
 
+class VortexCacheTestStoreBis(_VortexCacheBaseStore):
+
+    _footprint = dict(
+        info = 'VORTEX MTOOL like Cache access (without earlyget)',
+        attr = dict(
+            netloc = dict(
+                values  = ['vortex.testcache0.fr', ],
+            ),
+            strategy = dict(
+                default = 'testcache',
+            ),
+            headdir = dict(
+                default = 'fastvortex',
+            )
+        )
+    )
+
+
+class BasicTestMultiStore(MultiStore):
+    """Combined cache and archive legacy VORTEX stores.
+
+    By '-legacy' we mean that stack resources are ignored.
+    """
+
+    _footprint = dict(
+        info='VORTEX multi access',
+        attr=dict(
+            scheme=dict(
+                values=['vortex'],
+            ),
+            netloc=dict(
+                values=['vortex.testmulti.fr'],
+            )
+        )
+    )
+
+    def alternates_netloc(self):
+        """Two times the same underlying store... that's ugly but."""
+        return [self.netloc.firstname + d for d in ('.testcache0.fr', '.testcache.fr')]
+
+
+class DemoPromiseCacheStore(PromiseCacheStore):
+    """Some kind of vortex cache for demo expected resources."""
+
+    _footprint = dict(
+        info = 'EXPECTED cache access',
+        attr = dict(
+            netloc = dict(
+                values  = ['promise.testcache.fr'],
+            ),
+            headdir = dict(
+                default = 'promise',
+                outcast = ['xp', 'vortex'],
+            ),
+            strategy=dict(
+                default='testcache',
+            ),
+        )
+    )
+
+
+class VortexDemoPromiseStore(VortexPromiseStore):
+    """Combine a Promise Store for expected resources and a Demo VORTEX Store."""
+
+    _footprint = dict(
+        info = 'VORTEX promise store',
+        attr = dict(
+            scheme = dict(
+                values = ['xvortex'],
+            ),
+            prstorename=dict(
+                optional=True,
+                default='promise.testcache.fr',
+            ),
+            netloc = dict(
+                outcast = [],
+                values = ['vortex.testcache.fr'],
+            ),
+        )
+    )
+
+
 # A test delayed action... (it's just a cp)
 class TestLocalCpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
 
@@ -168,10 +254,36 @@ class VortexTest(VortexStd):
         info = 'Vortex provider for casual experiments with an Olive XPID',
         attr = dict(
             namespace = dict(
-                values   = ['vortex.testcache.fr', ],
+                values   = ['vortex.testcache.fr', 'vortex.testmulti.fr'],
             )
         ),
     )
+
+
+# In order to test prestaging
+
+class TestCachePrestagingTool(PrestagingTool):
+
+    _footprint = dict(
+        info = "Process testcache pre-staging requests.",
+        attr = dict(
+            issuerkind = dict(
+                values = ['cachestore', ]
+            ),
+            strategy = dict(
+                values = ['testcache'],
+            ),
+            scheme = dict(),
+        )
+    )
+
+    def flush(self, email=None):
+        """Actually fake prestaging."""
+        if len(self):
+            with io.open('prestaging_req_{0.strategy:s}_pri{0.priority:d}.txt'.format(self),
+                         mode='w') as fh_req:
+                fh_req.write('\n'.join(sorted(self.items())))
+        return True
 
 
 # Test resources
@@ -270,6 +382,12 @@ class UtSimpleWorkflow(TestCase):
         self.cursession.context.cocoon()
         self.cursession.glove.vapp = 'arpege'
         self.cursession.glove.vconf = '4dvarfr'
+        cache_4d = self.sh.path.join('testcache', 'vortex', 'arpege', '4dvarfr')
+        tests_dir = self.sh.path.dirname(MYPYFILE)
+        self.sh.mkdir(cache_4d)
+        for xp_input in ('ABC1', 'ABC2'):
+            self.sh.softlink(self.sh.path.join(tests_dir, 'data', cache_4d, xp_input),
+                             self.sh.path.join(cache_4d, xp_input))
 
     def tearDown(self):
         self.cursession.exit()
@@ -303,39 +421,133 @@ class UtSimpleWorkflow(TestCase):
     def test_simpleget_and_put(self):
         desc = self.default_fp_stuff
         desc.update(kind=['utest1', 'utest2'], local='[kind]_get')
-        descO = self.default_fp_stuff
-        del descO['namespace']
-        del descO['experiment']
-        descO.update(kind=['utest1', 'utest2'], local='[kind]_get',
-                     remote=self.sh.path.join(self.sh.pwd(), 'testput', '[local]'))
-        descdiff = self.default_fp_stuff
-        descdiff.update(kind=['utest1', 'utest2'], local='[kind]_get', experiment='ABC2')
+        del desc['namespace']
+        descO = desc.copy()
+        descO.update(experiment='CBA1')
+        descdiff = desc.copy()
+        descdiff.update(experiment='ABC2')
+        for namespace in ('vortex.testcache.fr', 'vortex.testmulti.fr'):
+            for batch in [True, False]:
+                # Input
+                rhs = toolbox.input(now=True, verbose=False, batch=batch, namespace=namespace,
+                                    **desc)
+                rcdiff = toolbox.diff(namespace=namespace, **descdiff)
+                self.assertTrue(all(rcdiff))
+                for rh in rhs:
+                    self.assertIntegrity(rh)
+                # Output
+                rhsO = toolbox.output(now=True, verbose=False, batch=batch, namespace=namespace,
+                                      **descO)
+                for rh in rhsO:
+                    xloc = rh.locate().split(';')
+                    self.assertTrue(xloc)
+                    for loc in xloc:
+                        self.assertTrue(self.sh.path.exists(loc))
+                    self.assertIntegrity(rh)
+                    rh.delete()
+                for rh in rhs:
+                    rh.clear()
+
+    def test_simple_promises(self):
         for batch in [True, False]:
-            # Input
-            rhs = toolbox.input(now=True, verbose=False, batch=batch,
-                                **desc)
-            rcdiff = toolbox.diff(**descdiff)
-            self.assertTrue(all(rcdiff))
-            for rh in rhs:
+            desc_i1 = self.default_fp_stuff
+            desc_i1.update(kind='utest1', local='[kind]_get')
+            desc_o1 = self.default_fp_stuff
+            desc_o1.update(kind=['utest1', 'utest2'], local='[kind]_get', experiment='CBA1')
+            desc_i2 = self.default_fp_stuff
+            desc_i2.update(kind=['utest1', 'utest2'], local='[kind]_getbis', experiment='CBA1')
+            # Promises
+            rhs_p = toolbox.promise(now=True, verbose=False, role='PromiseTester',
+                                    **desc_o1)
+            whitness = rhs_p[0].check()
+            # This should have not effect since the promise already exists
+            rhs_pbis = toolbox.promise(now=True, verbose=False, role='PromiseTester',
+                                       **desc_o1)
+            self.assertEqual(rhs_pbis[0].check(), whitness)
+            # Input (promised files)
+            rhs_2 = toolbox.input(now=True, verbose=False, expected=True, batch=batch,
+                                  **desc_i2)
+            for rh in rhs_2:
+                self.assertTrue(rh.is_expected())
+                self.assertFalse(rh.is_grabable())
+            with self.assertRaises(HandlerError):
+                rhs_2[0].wait(sleep=0.1, timeout=0.2, fatal=True)
+            self.assertFalse(rhs_2[1].wait(sleep=0.1, timeout=0.2, fatal=False))
+            # Input (original files)
+            rhs_1 = toolbox.input(now=True, verbose=False,
+                                  **desc_i1)
+            for rh in rhs_1:
                 self.assertIntegrity(rh)
-            # Output
-            rhsO = toolbox.output(now=True, verbose=False, batch=batch,
-                                  **descO)
-            for rh in rhsO:
-                self.assertTrue(self.sh.path.exists(rh.provider.remote))
-                self.assertIntegrity(rh)
-                rh.delete()
-            for rh in rhs:
+            # Put the first file, delete the second
+            rhs_p[0].put()
+            rhs_p[1].delete()
+            # Effect on expected files
+            for rh in rhs_2:
+                self.assertTrue(rh.is_expected())
+            self.assertTrue(rhs_2[0].is_grabable())
+            self.assertTrue(rhs_2[0].is_grabable(check_exists=True))
+            self.assertTrue(rhs_2[1].is_grabable())
+            self.assertFalse(rhs_2[1].is_grabable(check_exists=True))
+            self.assertTrue(rhs_2[0].wait())
+            self.assertFalse(rhs_2[1].wait())
+            for rh in rhs_2:
+                self.assertTrue(rh.is_expected())
+            self.assertTrue(rhs_2[0].get())
+            self.assertFalse(rhs_2[1].get())
+            for rh in rhs_2:
+                self.assertFalse(rh.is_expected())
+            self.assertTrue(self.sh.diff(rhs_1[0].container.localpath(),
+                                         rhs_2[0].container.localpath()))
+            # Cleaning
+            for rh in rhs_1:
                 rh.clear()
+            for rh in rhs_2:
+                rh.clear()
+            rhs_p[0].delete()
+
+    def test_prestage(self):
+        desc = self.default_fp_stuff
+        desc.update(kind=['utest1', 'utest2'], local='[kind]_get')
+        # Input
+        rhs = toolbox.rload(**desc)
+        for rh in rhs:
+            rh.prestage()
+            # Do it twice (it should do nothing)
+            rh.prestage()
+        rhs[0].prestage(priority=prestaging_p.low)
+        rhs[1].prestage(priority=prestaging_p.urgent)
+        loc0 = rhs[0].locate().split(';')[0]
+        loc1 = rhs[1].locate().split(';')[0]
+        phub = self.cursession.context.prestaging_hub
+        self.assertEqual(len(phub._get_ptools()), 3)
+        self.assertEqual(len(phub._get_ptools(priority_threshold=prestaging_p.normal)), 2)
+        for urgent_one in phub._get_ptools(priority_threshold=prestaging_p.urgent):
+            self.assertEqual(len(urgent_one), 1)
+        phub.clear(priority_threshold=prestaging_p.urgent)
+        for urgent_one in phub._get_ptools(priority_threshold=prestaging_p.urgent):
+            self.assertEqual(len(urgent_one), 0)
+        verb_description = str(phub)
+        self.assertIn(loc0, verb_description)
+        self.assertIn(loc1, verb_description)
+        phub.flush(priority_threshold=prestaging_p.normal)
+        self.assertTrue(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+                                            .format(prestaging_p.normal)))
+        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+                                             .format(prestaging_p.urgent)))
+        self.assertFalse(self.sh.path.exists('prestaging_req_testcache_pri{0:d}.txt'
+                                             .format(prestaging_p.low)))
+        with io.open('prestaging_req_testcache_pri{0:d}.txt'.format(prestaging_p.normal)) as fh_req:
+            self.assertEqual(fh_req.read(), '\n'.join(sorted([loc0, loc1])))
+        verb_description = str(phub)
+        self.assertIn(loc0, verb_description)
+        self.assertNotIn(loc1, verb_description)
 
     def test_hookedget_and_put(self):
         desc = self.default_fp_stuff
         desc.update(kind=['utest1', 'utest2'], local='[kind]_get')
-        descO = self.default_fp_stuff
-        del descO['namespace']
-        del descO['experiment']
-        descO.update(kind=['utest1', 'utest2'], local='[kind]_get',
-                     remote=self.sh.path.join(self.sh.pwd(), 'testput', '[local]'))
+        descO = desc.copy()
+        descO['namespace'] = 'vortex.testmulti.fr'
+        descO['experiment'] = 'CBA1'
         for batch in [True, False]:
             rhs = toolbox.input(now=True, verbose=True, intent='inout', batch=batch,
                                 hook_toto=(toto_hook, ),
@@ -343,48 +555,68 @@ class UtSimpleWorkflow(TestCase):
             for rh in rhs:
                 self.assertIntegrity(rh, finalstatement='Toto was here...\n')
             print(self.sh.ll())
+            toolbox.output(now=True, verbose=False, batch=batch,
+                           hook_toto=(toto_hook, 'Toto wrote here...\n'),
+                           **descO)
+            # Tis should have no effect sinc toto_hook as already been executed
             rhsO = toolbox.output(now=True, verbose=False, batch=batch,
-                                  hook_toto=(toto_hook, 'Toto wrote here...\n'),
+                                  hook_toto=(toto_hook, 'Toto wrote here a second time...\n'),
                                   **descO)
             for rh in rhsO:
-                self.assertTrue(self.sh.path.exists(rh.provider.remote))
+                xloc = rh.locate().split(';')
+                self.assertTrue(xloc)
+                for loc in xloc:
+                    self.assertTrue(self.sh.path.exists(loc))
                 self.assertIntegrity(rh, finalstatement='Toto wrote here...\n')
                 rh.delete()
             for rh in rhs:
                 rh.clear()
 
     def test_rh_check_delayed_get(self):
-        desc1 = self.default_fp_stuff
-        desc1.update(kind='utest1', local='utest1_get', )
-        rh1 = toolbox.rh(**desc1)
-        desc2 = self.default_fp_stuff
-        desc2.update(kind='utest2', local='utest2_get', )
-        rh2 = toolbox.rh(**desc2)
-        # Check
-        self.assertTrue(rh1.check())
-        self.assertTrue(rh2.check())
-        # Delayed get
-        self.assertTrue(rh1.earlyget(intent='in'))
-        self.assertTrue(rh2.earlyget(intent='in'))
-        self.assertTrue(rh1.finaliseget())
-        self.assertTrue(rh2.finaliseget())
-        # IS it ok
-        self.assertIntegrity(rh1)
-        self.assertIntegrity(rh2)
+        for namespace in ('vortex.testcache.fr', 'vortex.testmulti.fr'):
+            desc1 = self.default_fp_stuff
+            desc1.update(kind='utest1', local='utest1_get', namespace=namespace)
+            rh1 = toolbox.rh(**desc1)
+            desc2 = self.default_fp_stuff
+            desc2.update(kind='utest2', local='utest2_get', namespace=namespace)
+            rh2 = toolbox.rh(**desc2)
+            # Check
+            self.assertTrue(rh1.check())
+            self.assertTrue(rh2.check())
+            # Delayed get
+            self.assertTrue(rh1.earlyget(intent='in'))
+            self.assertTrue(rh2.earlyget(intent='in'))
+            self.assertTrue(rh1.finaliseget())
+            self.assertTrue(rh2.finaliseget())
+            # Is it ok
+            self.assertIntegrity(rh1)
+            self.assertIntegrity(rh2)
+            # Some cleaning
+            rh1.clear()
+            rh2.clear()
 
     def test_simpleinsitu(self):
         desc = self.default_fp_stuff
         desc.update(kind='utest1', local='utest1_get', )
         for batch in [True, False]:
-            rhs = toolbox.input(now=True, verbose=False, batch=batch, **desc)
-            self.assertIntegrity(rhs[0])
+            rhs = toolbox.rload(**desc)
+            for rh in rhs:
+                rh.get()
+                self.assertIntegrity(rh)
+            rhsbis_bare = toolbox.rload(insitu=True, **desc)
+            for rh in rhsbis_bare:
+                rh.get()
             rhsbis = toolbox.input(now=True, insitu=True, batch=batch, **desc)
             self.assertIntegrity(rhsbis[0])
             desc2 = self.default_fp_stuff
-            desc2.update(kind='utest1', local='utest1_getbis', )
-            rhster = toolbox.input(now=True, insitu=True, verbose=False, batch=batch, **desc2)
-            self.assertIntegrity(rhster[0])
-            for rh in [rhs[0], rhster[0]]:
+            desc2.update(kind='utest2', local='utest1_get', )
+            with self.assertRaises(SectionFatalError):
+                toolbox.input(now=True, insitu=True, batch=batch, **desc2)
+            desc3 = self.default_fp_stuff
+            desc3.update(kind='utest2', local='utest2_get', )
+            rhsquad = toolbox.input(now=True, insitu=True, batch=batch, **desc3)
+            self.assertIntegrity(rhsquad[0])
+            for rh in [rhs[0], rhsquad[0]]:
                 rh.clear()
 
     def test_simplealternate_and_missing(self):
@@ -445,13 +677,15 @@ class UtSimpleWorkflow(TestCase):
             rhs1bis = toolbox.input(alternate=therole, now=True, insitu=True, fatal=False, verbose=False, batch=batch, **desc)
             self.assertTrue(rhs1bis)
             self.assertFalse(rhs1bis[0].container.filled)
+            rhs1ter = toolbox.rload(insitu=True, **desc)
+            self.assertTrue(rhs1ter[0].get(alternate=True))
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='safran')
             rhs2 = toolbox.input(alternate=therole, now=True, insitu=True, fatal=True, verbose=False, batch=batch, **desc)
             self.assertTrue(rhs2)
             efftoto = self.sequence.effective_inputs(role=therole)
             self.assertEqual(len(efftoto), 1)
             self.assertEqual(efftoto[0].rh.resource.model, 'arpege')
-            # nettoyage
+            # Cleaning
             rhs1[0].clear()
 
     def test_coherentget(self):
