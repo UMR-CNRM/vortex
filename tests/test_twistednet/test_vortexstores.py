@@ -164,11 +164,21 @@ class TestVortexStores(MtoolNetrcFtpBasedTestCase):
 
                 # Test the "set_aside stuff"
                 self.assertTrue(stC.get(_SA_URIl1, 'toto', dict(fmt='ascii')))
+                xloc = stC.locate(_SA_URIl1_CHECK, dict(fmt='ascii')).split(';')
+                self.assertTrue(xloc)
+                self.assertTrue(sh.readonly(xloc[0]))
                 self.assertTrue(stC.get(_SA_URIl1_CHECK, 'toto_bis', dict(fmt='ascii')))
                 with io.open('toto', 'r') as fhl:
                     self.assertFile('toto_bis', fhl.read())
                 sh.rm('toto')
                 sh.rm('toto_bis')
+                self.assertTrue(stC.delete(_SA_URIl1_CHECK, dict(fmt='ascii')))
+                self.assertTrue(stC.get(_SA_URIl1, 'toto', dict(fmt='ascii', intent="inout")))
+                self.assertTrue(sh.wperm('toto'))
+                self.assertTrue(sh.readonly(xloc[0]))
+                with io.open('toto', 'r') as fhl:
+                    self.assertFile(xloc[0], fhl.read())
+                sh.rm('toto')
 
     def test_vortex_store_stacks(self):
         with self.server():

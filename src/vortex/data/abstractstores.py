@@ -59,13 +59,14 @@ class _SetAsideStoreMixin(object):
     def _check_set_aside(self, remote):
         """Look for "setaside" entry in the url-query."""
         if 'setaside_p' in remote['query']:
+            remote = remote.copy()
             remote['query'] = remote['query'].copy()
             set_aside_s = remote['query'].pop('setaside_s', [self.scheme])
             set_aside_n = remote['query'].pop('setaside_n', [self.netloc])
             set_aside_p = remote['query'].pop('setaside_p')
-            return set_aside_s[0], set_aside_n[0], set_aside_p[0]
+            return remote, (set_aside_s[0], set_aside_n[0], set_aside_p[0])
         else:
-            return None
+            return remote, None
 
     @contextlib.contextmanager
     def _do_set_aside_cocoon(self, local, options):
@@ -337,7 +338,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
             return False
         if (options is None or (not options.get('insitu', False)) or
                 self.use_cache()):
-            set_aside = self._check_set_aside(remote)
+            remote, set_aside = self._check_set_aside(remote)
             if result_id:
                 rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
             else:
@@ -611,7 +612,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
-        set_aside = self._check_set_aside(remote)
+        remote, set_aside = self._check_set_aside(remote)
         f_rd_ostores = self.filtered_readable_openedstores(remote)
         if self.refillstore:
             f_wr_ostores = self.filtered_writeable_openedstores(remote)
