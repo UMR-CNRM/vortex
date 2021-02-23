@@ -22,7 +22,7 @@ from .ftpunittests import MtoolNetrcFtpBasedTestCase
 
 fpx.addon(kind='allfolders', sh=vortex.sh())
 
-tloglevel = 'INFO'
+tloglevel = 'ERROR'
 
 _PATHl1 = 'arome/3dvarfr/ABCD/20180101T0000P/forecast/listing1'
 _URIl1 = uriparse('vortex://vortex.archive.fr/{:s}'.format(_PATHl1))

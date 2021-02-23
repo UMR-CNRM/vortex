@@ -457,7 +457,7 @@ class UtSimpleWorkflow(TestCase):
             desc_i2 = self.default_fp_stuff
             desc_i2.update(kind=['utest1', 'utest2'], local='[kind]_getbis', experiment='CBA1')
             # Promises
-            rhs_p = toolbox.promise(now=True, verbose=False, role='PromiseTester',
+            rhs_p = toolbox.promise(now=True, verbose=True, role='PromiseTester',
                                     **desc_o1)
             whitness = rhs_p[0].check()
             # This should have not effect since the promise already exists
