@@ -80,27 +80,27 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         options = super(MpiAuto, self)._reshaped_mpiopts()
-        options['init-timeout-restart'] = (self.timeoutrestart, )
+        options['init-timeout-restart'] = [(self.timeoutrestart, )]
         if self.sublauncher == 'srun':
-            options['use-slurm-mpi'] = ()
+            options['use-slurm-mpi'] = [()]
         elif self.sublauncher == 'libspecific':
-            options['no-use-slurm-mpi'] = ()
+            options['no-use-slurm-mpi'] = [()]
         if self.bindingmethod:
             for k in ['{:s}use-{:s}-bind'.format(p, t) for p in ('', 'no-')
                       for t in ('arch', 'slurm', 'intelmpi', 'openmpi')]:
                 options.pop(k, None)
             if self.bindingmethod == 'arch':
-                options['use-arch-bind'] = ()
+                options['use-arch-bind'] = [()]
             elif self.bindingmethod == 'launcherspecific' and self.sublauncher == 'srun':
-                options['no-use-arch-bind'] = ()
-                options['use-slurm-bind'] = ()
+                options['no-use-arch-bind'] = [()]
+                options['use-slurm-bind'] = [()]
             elif self.bindingmethod == 'launcherspecific':
-                options['no-use-arch-bind'] = ()
+                options['no-use-arch-bind'] = [()]
                 for k in ['use-{:s}-bind'.format(t)
                           for t in ('slurm', 'intelmpi', 'openmpi')]:
-                    options[k] = ()
+                    options[k] = [()]
             elif self.bindingmethod == 'vortex':
-                options['no-use-arch-bind'] = ()
+                options['no-use-arch-bind'] = [()]
         return options
 
     def _envelope_fix_envelope_bit(self, e_bit, e_desc):
@@ -141,7 +141,7 @@ class MpiAuto(mpitools.ConfigurableMpiTool):
         # Regular MPI tasks count (the usual...)
         if 'nnp' in options and 'nn' in options:
             if options['nn'] * options['nnp'] == options['np']:
-                # Remove harmlful options
+                # Remove harmful options
                 del tuned['np']
                 tuned.pop('allowodddist', None)
                 # that's the strange MPI distribution...
@@ -222,10 +222,10 @@ class MpiAutoDDT(MpiAuto):
                                         'prefix_mpirun command defined: "{:s}"'
                                         .format(options))
         armtool = ArmForgeTool(self.ticket)
-        options['prefix-mpirun'] = (' '.join(armtool.ddt_prefix_cmd(
+        options['prefix-mpirun'] = [(' '.join(armtool.ddt_prefix_cmd(
             sources=self.sources,
             workdir=self.system.path.dirname(self.binaries[0].master)
-        )), )
+        )), )]
         return options
 
 
@@ -308,8 +308,7 @@ class _NWPIoServerMixin(object):
         # Get a look inside io server output directories according to its own pattern
         ioserv_filelist = set()
         ioserv_prefixes = set()
-        logfmt = '%24s: %32s %s'
-        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?:\:\d+)?(?:\.sfx)?)(?:\..+)?$')
+        iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?::\d+)?(?:\.sfx)?)(?:\..+)?$')
         self.system.subtitle('Dealing with IO directories')
         iodirs = self._nwp_ioserv_iodirs()
         if iodirs:

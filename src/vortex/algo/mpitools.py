@@ -455,14 +455,14 @@ class MpiTool(footprints.FootprintBase):
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         klast = None
-        options = dict()
+        options = collections.defaultdict(list)
         for optdef in shlex.split(self._actual_mpiopts()):
             if optdef.startswith('-'):
                 optdef = optdef.lstrip('-')
-                options[optdef] = []
+                options[optdef].append([])
                 klast = optdef
             elif klast is not None:
-                options[klast].append(optdef)
+                options[klast][-1].append(optdef)
             else:
                 raise MpiException('Badly shaped mpi option around %s', optdef)
         return options
@@ -780,10 +780,11 @@ class MpiTool(footprints.FootprintBase):
     def mkcmdline(self):
         """Builds the MPI command line."""
         cmdl = [self.launcher, ]
-        for k, v in sorted(self._reshaped_mpiopts().items()):
-            cmdl.append(self.optprefix + six.text_type(k))
-            for a_value in v:
-                cmdl.append(six.text_type(a_value))
+        for k, instances in sorted(self._reshaped_mpiopts().items()):
+            for instance in instances:
+                cmdl.append(self.optprefix + six.text_type(k))
+                for a_value in instance:
+                    cmdl.append(six.text_type(a_value))
         if self.envelope:
             self._envelope_mkcmdline(cmdl)
         else:
