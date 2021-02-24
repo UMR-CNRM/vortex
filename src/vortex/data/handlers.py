@@ -272,7 +272,8 @@ class Handler(object):
             if self.container.filled or self.stage == 'put':
                 if self._contents is None:
                     self._contents = self.resource.contents_handler(datafmt=self.container.actualfmt)
-                    self._contents.slurp(self.container)
+                    with self.container.iod_context():
+                        self._contents.slurp(self.container)
                 return self._contents
             else:
                 logger.warning('Contents requested on an empty container [%s]', self.container)

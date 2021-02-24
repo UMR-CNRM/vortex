@@ -235,6 +235,7 @@ class TestHeavyNodesStuff(unittest.TestCase):
 
     def tearDown(self):
         self.spy.quit()
+        self.t.exit()
         self.cursession.activate()
         self.sh.cd(self.oldpwd)
         fp.setup.defaults = self.olddefaults

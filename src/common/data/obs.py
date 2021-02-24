@@ -278,7 +278,8 @@ def needs_slurp(mtd):
 
     def new_stuff(self):
         if self._do_delayed_slurp is not None:
-            self._actual_slurp(self._do_delayed_slurp)
+            with self._do_delayed_slurp.iod_context():
+                self._actual_slurp(self._do_delayed_slurp)
         return mtd(self)
 
     return new_stuff

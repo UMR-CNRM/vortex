@@ -347,6 +347,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         try:
             yield
         finally:
+            ctx.free_resources()
             logger.debug('Exit context directory <%s>', self.sh.getcwd())
             self._oldctx.activate()
             self.ticket.context.cocoon()

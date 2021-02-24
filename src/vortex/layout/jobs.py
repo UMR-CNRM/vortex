@@ -730,7 +730,7 @@ class JobAssistant(footprints.FootprintBase):
         t = vortex.ticket()
         t.sh.subtitle("Executing JobAssistant's close")
         t.sh.signal_intercept_off()
-        t.close()
+        t.exit()
         if self.unix_exit_code:
             print('Something went wrong :-(')
             exit(self.unix_exit_code)

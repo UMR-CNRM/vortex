@@ -120,6 +120,19 @@ class Container(footprints.FootprintBase):
         else:
             raise AttributeError('Could not get an io descriptor')
 
+    @contextlib.contextmanager
+    def iod_context(self):
+        """Ensure that any opened IO descriptor is closed after use."""
+        if self.is_virtual():
+            # With virtual container, this is not a good idea since closing
+            # the io descriptor might result in data losses
+            yield
+        else:
+            try:
+                yield
+            finally:
+                self.close()
+
     def localpath(self):
         """Abstract method to be overwritten."""
         raise NotImplementedError

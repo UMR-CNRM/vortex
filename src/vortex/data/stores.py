@@ -1304,7 +1304,8 @@ class VortexPromiseStore(PromiseStore):
                 values  = ['xvortex'],
             ),
             netloc=dict(
-                outcast = ['vortex-demo.cache.fr', 'vortex-demo.multi.fr'],
+                outcast = ['vortex-demo.cache.fr', 'vortex-demo.multi.fr',
+                           'vortex.testcache.fr', 'vortex.testmulti.fr'],
             ),
         )
     )

@@ -81,15 +81,16 @@ class _AbstractGribInfos(AlgoComponent):
     def _compute_info_dict(self, rh):
         # Compute the md5 sum using the dedicated Vortex object
         hash_a = HashAdapter('md5')
-        md5sum = hash_a.file2hash(rh.container.iotarget())
-        # If the input file is not virtual (i.e. in memory) dump a md5 file
-        # alongside the input file (with the .md5 extension
-        self._dump_indiviudal_md5_file(rh, md5sum)
-        # Return the info dict (to be used in the JSON output file)
-        return dict(
-            filesize=rh.container.totalsize,
-            md5sum=md5sum
-        )
+        with rh.container.iod_context():
+            md5sum = hash_a.file2hash(rh.container.iotarget())
+            # If the input file is not virtual (i.e. in memory) dump a md5 file
+            # alongside the input file (with the .md5 extension
+            self._dump_indiviudal_md5_file(rh, md5sum)
+            # Return the info dict (to be used in the JSON output file)
+            return dict(
+                filesize=rh.container.totalsize,
+                md5sum=md5sum
+            )
 
     def postfix(self, rh, opts):
         """Create a list of dictionaries and dump it in the JSON output file."""

@@ -470,10 +470,11 @@ class SectionsJsonListContent(DataContent):
         """Write the data in the specified container."""
         t = sessions.current()
         container.close()
-        with container.preferred_decoding(byte=False):
-            with container.preferred_write():
-                iod = container.iodesc()
-                t.sh.json_dump(self.data.to_list(), iod, indent=4)
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                with container.preferred_write():
+                    iod = container.iodesc()
+                    t.sh.json_dump(self.data.to_list(), iod, indent=4)
         container.updfill(True)
 
 

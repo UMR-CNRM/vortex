@@ -128,9 +128,9 @@ class NamelistContent(AlmostDictContent):
 
         """
         container.close()
-        with container.preferred_decoding(byte=False):
-            container.write(self.dumps(sorting=sorting))
-        container.close()
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                container.write(self.dumps(sorting=sorting))
 
 
 class Namelist(ModelResource):

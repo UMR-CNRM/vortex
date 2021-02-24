@@ -172,7 +172,7 @@ class BasicTestMultiStore(MultiStore):
         return [self.netloc.firstname + d for d in ('.testcache0.fr', '.testcache.fr')]
 
 
-class DemoPromiseCacheStore(PromiseCacheStore):
+class TestPromiseCacheStore(PromiseCacheStore):
     """Some kind of vortex cache for demo expected resources."""
 
     _footprint = dict(
@@ -192,7 +192,7 @@ class DemoPromiseCacheStore(PromiseCacheStore):
     )
 
 
-class VortexDemoPromiseStore(VortexPromiseStore):
+class VortexTestPromiseStore(VortexPromiseStore):
     """Combine a Promise Store for expected resources and a Demo VORTEX Store."""
 
     _footprint = dict(
@@ -207,7 +207,7 @@ class VortexDemoPromiseStore(VortexPromiseStore):
             ),
             netloc = dict(
                 outcast = [],
-                values = ['vortex.testcache.fr'],
+                values = ['vortex.testcache.fr', 'vortex.testmulti.fr'],
             ),
         )
     )
@@ -463,7 +463,7 @@ class UtSimpleWorkflow(TestCase):
             # This should have not effect since the promise already exists
             rhs_pbis = toolbox.promise(now=True, verbose=False, role='PromiseTester',
                                        **desc_o1)
-            self.assertEqual(rhs_pbis[0].check(), whitness)
+            self.assertEqual(rhs_pbis[0].check().st_mtime, whitness.st_mtime)
             # Input (promised files)
             rhs_2 = toolbox.input(now=True, verbose=False, expected=True, batch=batch,
                                   **desc_i2)

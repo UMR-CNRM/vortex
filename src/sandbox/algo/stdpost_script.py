@@ -143,10 +143,11 @@ class GribInfosScript(Expresso, GribInfosScriptMixin):
                     with io.open(self._current_path + '.md5', 'r',
                                  encoding='utf-8', errors='ignore') as fhmd:
                         md5sum = fhmd.readline().split()[0]
-                    self._gribstack[self._gribkey(my_rh)][my_rh.resource.term.fmthm] = dict(
-                        filesize=my_rh.container.totalsize,
-                        md5sum=md5sum
-                    )
+                    with my_rh.container.iod_context():
+                        self._gribstack[self._gribkey(my_rh)][my_rh.resource.term.fmthm] = dict(
+                            filesize=my_rh.container.totalsize,
+                            md5sum=md5sum
+                        )
 
                 # Various sanity checks
                 if not (bm.all_done or len(bm.available) > 0):

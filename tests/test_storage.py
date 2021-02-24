@@ -212,7 +212,7 @@ class TestCacheStorage(unittest.TestCase):
         dir_ts1 = self.sh.stat(self.sh.path.dirname(self.sh.path.dirname(loc))).st_mtime
         self.assertIsTestFile(loc)
         self.assertListEqual(storage.list('arome/'), ['3dvarfr', ])
-        time.sleep(0.1)
+        time.sleep(1)
         self.assertTrue(storage.retrieve(item, 'rtestfile1'))
         dir_ts0bis = self.sh.stat(self.sh.path.dirname(loc)).st_mtime
         dir_ts1bis = self.sh.stat(self.sh.path.dirname(self.sh.path.dirname(loc))).st_mtime

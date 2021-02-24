@@ -65,6 +65,10 @@ class DummyNamContainer(object):
     def __init__(self, thetxt=DIRTYNAM):
         self.mytxt = thetxt
 
+    @contextlib.contextmanager
+    def iod_context(self):
+        yield
+
     def rewind(self):
         pass
 
