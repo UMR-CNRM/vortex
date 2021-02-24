@@ -239,18 +239,17 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
         obsok = list()
         for secobs in obsall:
             rhobs = secobs.rh
-            with rhobs.container.iod_context():
-                if rhobs.resource.nativefmt == 'odb':
-                    logger.warning('Observations set [%s] is ODB ready',
-                                   rhobs.resource.part)
-                    continue
-                if rhobs.container.totalsize < sizemin:
-                    logger.warning('Observations set [%s] is far too small: %d',
-                                   rhobs.resource.part, rhobs.container.totalsize)
-                else:
-                    logger.info('Observations set [%s] has size: %d',
-                                rhobs.resource.part, int(rhobs.container.totalsize))
-                    obsok.append(Foo(rh=rhobs, refdata=list(), mapped=False))
+            if rhobs.resource.nativefmt == 'odb':
+                logger.warning('Observations set [%s] is ODB ready',
+                               rhobs.resource.part)
+                continue
+            if rhobs.container.totalsize < sizemin:
+                logger.warning('Observations set [%s] is far too small: %d',
+                               rhobs.resource.part, rhobs.container.totalsize)
+            else:
+                logger.info('Observations set [%s] has size: %d',
+                            rhobs.resource.part, int(rhobs.container.totalsize))
+                obsok.append(Foo(rh=rhobs, refdata=list(), mapped=False))
 
         # Check the observations dates
         for obs in [obs for obs in obsok if obs.rh.resource.date != self.date]:
