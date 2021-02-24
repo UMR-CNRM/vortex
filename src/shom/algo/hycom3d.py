@@ -137,6 +137,21 @@ class Hycom3dSpNudgeCompilator(Hycom3dCompilator):
         return "hycom3d_spnudge_compilator"
 
 
+class Hycom3dPostProdCompilator(Hycom3dCompilator):
+    _footprint = dict(
+        info="Compile post-production executables",
+        attr=dict(
+            kind=dict(
+                values=['hycom3d_postprod_compilator'],
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_compilator"
+    
+
 class Hycom3dModelCompilator(Hycom3dCompilator):
 
     _footprint = dict(
@@ -998,3 +1013,7 @@ class Hycom3dModelRun(Parallel):
             rank       = self.rank,
         )
         #super(Hycom3dModelRun, self).execute(rh, opts)
+
+
+#%% Post-production algo components
+
