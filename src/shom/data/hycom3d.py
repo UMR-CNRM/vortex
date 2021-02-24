@@ -88,8 +88,6 @@ class Hycom3dAtmFrcInterpWeights(Resource):
 
 
 # %% Binaries
-
-
 class Hycom3dIBCRegridcdfBinary(vde.Binary):
     """Binary that regrids initial conditions netcdf files"""
 
@@ -238,7 +236,7 @@ class Hycom3dPostProdFilterBinary(vde.Binary):
                     default="hycom3d_postprod_filter_binary",
                 ),
                 kind=dict(
-                    values=["hycom3d_postprod_filter"],
+                    values=["postprod_filter"],
                 ),
             ),
         ),
@@ -253,19 +251,20 @@ class Hycom3dPostProdFilterBinary(vde.Binary):
                 "{file_rundate_next} {file_rundate} {file_rundate_before}").format(**opts)
 
 
-class Hycom3dPostProdConversionBinary(vde.Binary):
-    """Binary that converts HYCOM output in SOAP and dataShom formats"""
+class Hycom3dPostProdVertInterpolationBinary(vde.Binary):
+    """Binary that verticaly interpolates and 
+    converts HYCOM output in SOAP and dataShom formats"""
 
     _footprint = [
         gvar,
         dict(
-            info="Binary that converts HYCOM output in SOAP and dataShom formats",
+            info="Binary that verticaly interpolates",
             attr=dict(
                 gvar=dict(
-                    default="hycom3d_postprod_conversion_binary",
+                    default="hycom3d_postprod_vertinterpolation_binary",
                 ),
                 kind=dict(
-                    values=["postprod_conversion"],
+                    values=["postprod_vertinterpolation"],
                 ),
             ),
         ),
@@ -273,14 +272,14 @@ class Hycom3dPostProdConversionBinary(vde.Binary):
 
     @property
     def realkind(self):
-        return "hycom3d_postprod_conversion_binary"
+        return "hycom3d_postprod_vertinterpolation_binary"
 
     def command_line(self, **opts):
         return ("{offset} {file_in} {file_out} {file_cfg} "\
                 "{file_layer} {file_depth}").format(**opts)
 
 
-class Hycom3dPostProdTemperatureBinary(vde.Binary):
+class Hycom3dPostProdTempConversionBinary(vde.Binary):
     """Binary that converts potential to insitu temperature for dataSHOM production"""
 
     _footprint = [
@@ -289,10 +288,10 @@ class Hycom3dPostProdTemperatureBinary(vde.Binary):
             info="Binary that converts potential to insitu temperature for dataSHOM production",
             attr=dict(
                 gvar=dict(
-                    default="hycom3d_postprod_temperature_binary",
+                    default="hycom3d_postprod_tempconversion_binary",
                 ),
                 kind=dict(
-                    values=["postprod_temperature"],
+                    values=["postprod_tempconversion"],
                 ),
             ),
         ),
@@ -300,7 +299,7 @@ class Hycom3dPostProdTemperatureBinary(vde.Binary):
 
     @property
     def realkind(self):
-        return "hycom3d_postprod_temperature_binary"
+        return "hycom3d_postprod_tempconversion_binary"
 
     def command_line(self, **opts):
         return ("{file_temp} {file_saln} {file_out}").format(**opts)
