@@ -134,7 +134,7 @@ a_arpifs_cycle = dict(info="An Arpege/IFS cycle name",
 arpifs_cycle = footprints.Footprint(info='An abstract arpifs_cycle in GCO convention',
                                     attr=dict(cycle=a_arpifs_cycle))
 
-uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>\w+))')
+uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>[-\w]+))')
 uget_id_regex = r'(?P<fulluget>u(?:get|env):' + uget_sloppy_id_regex.pattern + ')'
 uget_id_regex_only = re.compile('^' + uget_id_regex + '$')
 uget_id_regex = re.compile(r'\b' + uget_id_regex + r'\b')
