@@ -185,7 +185,7 @@ class Aneto(UmrCnrmTarget):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r'n[ctx]\d+(?:\.|$)')
+            hostname = footprints.FPRegex(r'n[ct]x\d+(?:\.|$)')
         )
     )
 
