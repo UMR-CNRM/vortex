@@ -71,7 +71,7 @@ class _SetAsideStoreMixin(object):
     @contextlib.contextmanager
     def _do_set_aside_cocoon(self, local, options):
         """If the requested file is intent=inout, creates a temporary copy."""
-        options_bis = dict() if options is None else options.copy()
+        options_bis = options.copy()
         intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
         if intent != 'in':
             local_bis = local + self.system.safe_filesuffix()
@@ -84,7 +84,7 @@ class _SetAsideStoreMixin(object):
         else:
             yield local, options_bis
 
-    def _do_set_aside(self, remote, local, set_aside, options=None):
+    def _do_set_aside(self, remote, local, set_aside, options):
         """Put the resource to the place designated by "setaside"."""
         remote_bis = remote.copy()
         remote_bis['path'] = set_aside[2]
@@ -211,22 +211,21 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def _incache_inarchive_check(self, options):
         rc = True
-        if options is not None:
-            incache = options.get('incache', False)
-            inarchive = options.get('inarchive', False)
-            if incache and inarchive:
-                raise ValueError("'incache=True' and 'inarchive=True' are mutually exclusive")
-            if incache and not self.use_cache():
-                self._verbose_log(options, 'info',
-                                  'Skip this "%s" store because a cache is requested', self.__class__)
-                rc = False
-            if inarchive and not self.use_archive():
-                self._verbose_log(options, 'info',
-                                  'Skip this "%s" store because an archive is requested', self.__class__)
-                rc = False
+        incache = options.get('incache', False)
+        inarchive = options.get('inarchive', False)
+        if incache and inarchive:
+            raise ValueError("'incache=True' and 'inarchive=True' are mutually exclusive")
+        if incache and not self.use_cache():
+            self._verbose_log(options, 'info',
+                              'Skip this "%s" store because a cache is requested', self.__class__)
+            rc = False
+        if inarchive and not self.use_archive():
+            self._verbose_log(options, 'info',
+                              'Skip this "%s" store because an archive is requested', self.__class__)
+            rc = False
         return rc
 
-    def _hash_check_or_delete(self, callback, remote, options=None):
+    def _hash_check_or_delete(self, callback, remote, options):
         """Check or delete a hash file."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -235,9 +234,14 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         remote['path'] = remote['path'] + '.' + self.storehash
         return callback(remote, options)
 
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
+        options = self._options_fixup(options)
         if not self._incache_inarchive_check(options):
             return False
         rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
@@ -246,6 +250,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def locate(self, remote, options=None):
         """Proxy method to dedicated locate method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store locate %s', remote)
         if not self._incache_inarchive_check(options):
             return None
@@ -253,6 +258,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def list(self, remote, options=None):
         """Proxy method to dedicated list method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store list %s', remote)
         if not self._incache_inarchive_check(options):
             return None
@@ -264,6 +270,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         Hopefully, something will register to the ober board in order to process
         the request.
         """
+        options = self._options_fixup(options)
         logger.debug('Store prestage through hub %s', remote)
         infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
         if infos_cb:
@@ -280,14 +287,16 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def prestage(self, remote, options=None):
         """Proxy method to dedicated prestage method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store prestage %s', remote)
         if not self._incache_inarchive_check(options):
             return True
         return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
 
-    def _hash_store_defaults(self, options):
+    @staticmethod
+    def _hash_store_defaults(options):
         """Update default options when fetching hash files."""
-        options = options.copy() if options is not None else dict()
+        options = options.copy()
         options['obs_notify'] = False
         options['fmt'] = 'ascii'
         options['intent'] = CACHE_GET_INTENT_DEFAULT
@@ -295,7 +304,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
         options['auto_dirextract'] = False
         return options
 
-    def _hash_get_check(self, callback, remote, local, options=None):
+    def _hash_get_check(self, callback, remote, local, options):
         """Update default options when fetching hash files."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -331,13 +340,12 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
                 tempcontainer.clear()
         return rc
 
-    def _actual_get(self, action, remote, local, options=None, result_id=None):
+    def _actual_get(self, action, remote, local, options, result_id=None):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store %s from %s to %s', action, remote, local)
         if not self._incache_inarchive_check(options):
             return False
-        if (options is None or (not options.get('insitu', False)) or
-                self.use_cache()):
+        if not options.get('insitu', False) or self.use_cache():
             remote, set_aside = self._check_set_aside(remote)
             if result_id:
                 rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
@@ -353,25 +361,28 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method according to scheme."""
+        options = self._options_fixup(options)
         return self._actual_get('get', remote, local, options)
 
     def earlyget(self, remote, local, options=None):
+        options = self._options_fixup(options)
         """Proxy method to dedicated earlyget method according to scheme."""
         logger.debug('Store earlyget from %s to %s', remote, local)
         if not self._incache_inarchive_check(options):
             return None
         rc = None
-        if options is None or (not options.get('insitu', False)) or self.use_cache():
+        if not options.get('insitu', False) or self.use_cache():
             available_dget = getattr(self, self.scheme + 'earlyget', None)
             if available_dget is not None:
                 rc = available_dget(remote, local, options)
         return rc
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         """Proxy method to dedicated finaliseget method according to scheme."""
         return self._actual_get('finaliseget', remote, local, options, result_id=result_id)
 
-    def _hash_put(self, callback, local, remote, options=None):
+    def _hash_put(self, callback, local, remote, options):
         """Put a hash file next to the 'real' file."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -386,6 +397,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store put from %s to %s', local, remote)
         self.enforce_readonly()
         if not self._incache_inarchive_check(options):
@@ -406,6 +418,7 @@ class Store(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store delete from %s', remote)
         self.enforce_readonly()
         if not self._incache_inarchive_check(options):
@@ -553,8 +566,13 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
     def writeable(self):
         return not self.readonly
 
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore check from %s', remote)
         rc = False
         for sto in self.filtered_readable_openedstores(remote):
@@ -565,6 +583,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore locate %s', remote)
         f_ostores = self.filtered_readable_openedstores(remote)
         if not f_ostores:
@@ -579,6 +598,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def list(self, remote, options=None):
         """Go through internal opened stores and list the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore list %s', remote)
         rlist = set()
         for sto in self.filtered_readable_openedstores(remote):
@@ -592,6 +612,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def prestage(self, remote, options=None):
         """Go through internal opened stores and prestage the resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore prestage %s', remote)
         f_ostores = self.filtered_readable_openedstores(remote)
         if not f_ostores:
@@ -608,7 +629,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
                     break
         return rc
 
-    def _refilling_get(self, remote, local, options=None, result_id=None):
+    def _refilling_get(self, remote, local, options, result_id=None):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
@@ -616,7 +637,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
         f_rd_ostores = self.filtered_readable_openedstores(remote)
         if self.refillstore:
             f_wr_ostores = self.filtered_writeable_openedstores(remote)
-        get_options = copy.copy(options) if options is not None else dict()
+        get_options = copy.copy(options)
         get_options['silent'] = True
         while refill_in_progress:
             for num, sto in enumerate(f_rd_ostores):
@@ -655,7 +676,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
                     break
         if rc:
             if set_aside:
-                self._do_set_aside(remote, local, set_aside, options=options)
+                self._do_set_aside(remote, local, set_aside, options)
         else:
             self._verbose_log(options, 'warning',
                               "Multistore get {:s}://{:s}: none of the opened store succeeded."
@@ -664,13 +685,15 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore get from %s to %s', remote, local)
         return self._refilling_get(remote, local, options)
 
     def earlyget(self, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Multistore earlyget from %s to %s', remote, local)
         f_ostores = self.filtered_readable_openedstores(remote)
-        get_options = copy.copy(options) if options is not None else dict()
+        get_options = copy.copy(options)
         if len(f_ostores) > 1:
             first_checkable = all([s.has_fast_check() for s in f_ostores[:-1]])
             # Early-fetch is only available on the last resort store...
@@ -685,11 +708,13 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
             return None
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Multistore finaliseget from %s to %s', remote, local)
         return self._refilling_get(remote, local, options, result_id=result_id)
 
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore put from %s to %s', local, remote)
         f_ostores = self.filtered_writeable_openedstores(remote)
         if not f_ostores:
@@ -705,6 +730,7 @@ class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore delete from %s', remote)
         f_ostores = self.filtered_writeable_openedstores(remote)
         rc = False
@@ -1411,15 +1437,20 @@ class PromiseStore(footprints.FootprintBase):
         self.system.json_dump(info, pfile, sort_keys=True, indent=4)
         return pfile
 
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise check from %s', remote)
         return self.other.check(remote.copy(), options) or self.promise.check(remote.copy(), options)
 
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Promise locate %s', remote)
-
         inpromise = True
         if options:
             inpromise = options.get('inpromise', True)
@@ -1432,9 +1463,8 @@ class PromiseStore(footprints.FootprintBase):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise get %s', remote)
-        if options is None:
-            options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
         try:
@@ -1461,10 +1491,9 @@ class PromiseStore(footprints.FootprintBase):
 
     def earlyget(self, remote, local, options=None):
         """Possible early-get on the target store."""
+        options = self._options_fixup(options)
         logger.debug('Promise early-get %s', remote)
         result_id = None
-        if options is None:
-            options = dict()
         try:
             rc = (self.promise.has_fast_check and
                   self.promise.check(remote.copy(), options))
@@ -1477,9 +1506,8 @@ class PromiseStore(footprints.FootprintBase):
         return result_id
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Promise finalise-get %s', remote)
-        if options is None:
-            options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
         try:
@@ -1504,10 +1532,10 @@ class PromiseStore(footprints.FootprintBase):
 
     def put(self, local, remote, options=None):
         """Put a promise or the actual resource if available."""
+        options = self._options_fixup(options)
         logger.debug('Multistore put from %s to %s', local, remote)
-        if options is None:
-            options = dict()
         if options.get('force', False) or not self.system.path.exists(local):
+            options = options.copy()
             if not self.other.use_cache():
                 logger.critical('Could not promise resource without other cache <%s>', self.other)
                 raise ValueError('Could not promise: other store does not use cache')
@@ -1550,6 +1578,7 @@ class PromiseStore(footprints.FootprintBase):
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise delete from %s', remote)
         return self.promise.delete(remote.copy(), options) and self.other.delete(remote.copy(), options)
 

@@ -566,8 +566,6 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
         """System call to ``gget`` external tool."""
         (gcmd, gname) = self._actualgget(remote['path'])
         sh = self.system
-        if options is None:
-            options = dict()
         fmt = options.get('fmt', 'foo')
         extract = remote['query'].get('extract', None)
         # Run the Gget command in a temporary directory
@@ -810,8 +808,6 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
 
     def ugetget(self, remote, local, options):
         """Remap and ftpget sequence."""
-        if options is None:
-            options = dict()
         remote = self._universal_remap(remote)
         xintent = options.get('intent', ARCHIVE_GET_INTENT_DEFAULT)
         # Extract what to do ?
@@ -849,8 +845,6 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
     def ugetearlyget(self, remote, local, options):
         """Remap and inarchiveearlyget sequence."""
         remote = self._universal_remap(remote)
-        if options is None:
-            options = dict()
         # Deal with extract !
         if remote['query'].get('extract', None):
             return None  # No early-get when extract=True
@@ -859,8 +853,6 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
     def ugetfinaliseget(self, result_id, remote, local, options):
         """Remap and inarchivefinaliseget sequence."""
         remote = self._universal_remap(remote)
-        if options is None:
-            options = dict()
         # Deal with extract !
         if remote['query'].get('extract', None):
             return False  # No early-get when extract=True
@@ -1146,7 +1138,7 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
         remote = self.universal_remap(remote)
         a_remote, a_altremote = self._alternate_source(remote, options)
         a_extract = remote['query'].get('extract', None)
-        options = options.copy() if options is not None else dict()
+        options = options.copy()
         # Also check if the data is a regular file with the notable exception
         # of expanded tarfiles (see _alternate_source above) and specific data
         # format (e.g. ODB databases)
@@ -1262,6 +1254,7 @@ class UgetStore(MultiStore):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
+        options = self._options_fixup(options)
         # Try to deal with extracts...
         extract = remote['query'].get('extract', None)
         if extract:

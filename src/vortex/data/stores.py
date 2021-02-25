@@ -363,7 +363,7 @@ class Finder(Store):
         """Delegates to ``system`` a distant remove."""
         rc = None
         actualpath = self.fullpath(remote)
-        if self.ftpcheck(remote, options=options):
+        if self.ftpcheck(remote, options):
             logger.info('ftpdelete on ftp://%s/%s', self.hostname(), actualpath)
             ftp = self.system.ftp(**self._ftpinfos(remote))
             if ftp:
@@ -1273,10 +1273,7 @@ class PromiseCacheStore(VortexCacheMtStore):
 
     @staticmethod
     def _add_default_options(options):
-        if options is not None:
-            options_upd = options.copy()
-        else:
-            options_upd = dict()
+        options_upd = options.copy()
         options_upd['fmt'] = 'ascii'  # Promises are always JSON files
         options_upd['intent'] = 'in'  # Promises are always read-only
         return options_upd
