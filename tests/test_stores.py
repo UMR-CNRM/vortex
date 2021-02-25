@@ -2,17 +2,25 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import os
+import pickle
 import tempfile
 import unittest
+
+from bronx.fancies.loggers import unittestGlobalLevel
 
 import footprints as fp
 
 import vortex  # @UnusedImport
+import vortex.data.stores
 from vortex.tools.net import uriparse, uriunparse
+from bronx.datagrip.datastore import DataStore
 
 DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
+TLOGLEVEL = 9999
 
+
+@unittestGlobalLevel(TLOGLEVEL)
 class AbstractTestStores(unittest.TestCase):
 
     def setUp(self):
@@ -33,6 +41,8 @@ class AbstractTestStores(unittest.TestCase):
 
 
 class TestVortexArchiveStore(AbstractTestStores):
+
+    _TEST_STORAGE = 'unittesttarget.fake.com'
 
     _REMAPS = [
         # Vortex Standard
@@ -91,11 +101,48 @@ class TestVortexArchiveStore(AbstractTestStores):
              rread_root='/somwhere/lies/toto15',
              rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root='/somwhere/lies/toto15'),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special666@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='/somwhere/lies/toto15_by_foo',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special666/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='/somwhere/lies/toto15_by_foo'),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/other_stuff@toto15/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='/somwhere/lies/toto15_by_foo',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/other_stuff/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='/somwhere/lies/toto15_by_foo'),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='/somwhere/lies/masked_guy',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='/somwhere/lies/masked_guy'),
+        # To times in a row (to test the cache)
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/special1@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='/somwhere/lies/masked_guy',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/special1/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='/somwhere/lies/masked_guy'),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/nope@toto16/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='~toto16',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/nope/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='~toto16'),
         dict(uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@titi/20180101T0000-20180101T1800/forecast/unittest',
              rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rread_root='~titi',
              rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
              rwrite_root='~titi'),
+        dict(
+            uri='vortex://vortex-free.archive-legacy.fr/arome/3dvarfr/ABCD@self/20180101T0000-20180101T1800/forecast/unittest',
+            rread='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+            rread_root='~',
+            rwrite='vortex://vortex-free.archive-legacy.fr/vortex/arome/3dvarfr/ABCD/20180101T0000-20180101T1800/forecast/unittest',
+            rwrite_root='~'),
     ]
 
     def setUp(self):
@@ -112,7 +159,7 @@ class TestVortexArchiveStore(AbstractTestStores):
         for remap in remaps:
             puri = uriparse(remap['uri'])
             st = fp.proxy.store(scheme=puri['scheme'], netloc=puri['netloc'],
-                                storage='unittesttarget.fake.com')
+                                storage=self._TEST_STORAGE)
             puri2 = st.remap_read(puri, dict())
             self.assertEqual(uriunparse(list(puri2.values())[:6]), remap['rread'])
             self.assertEqual(puri2.get('root', ''), remap['rread_root'])
@@ -125,14 +172,19 @@ class TestVortexArchiveStore(AbstractTestStores):
 
     def test_remaps2(self):
         self._do_remap_asserts(self._REMAPS_CONFIGURABLE)
+        # Also test that the datastore is picklable
+        ds = self.t.datastore
+        conf = ds.get(vortex.data.stores.VortexFreeStdBaseArchiveStore._datastore_id,
+                      dict(storage=self._TEST_STORAGE))
+        pickle.dumps(conf, DataStore._PICKLE_PROTOCOL)
 
     def test_use_cache_and_archive(self):
         st = fp.proxy.store(scheme='vortex', netloc='vortex.archive-legacy.fr',
-                            storage='unittesttarget.fake.com')
+                            storage=self._TEST_STORAGE)
         self.assertFalse(st.use_cache())
         self.assertTrue(st.use_archive())
         st = fp.proxy.store(scheme='vortex', netloc='vortex.archive.fr',
-                            storage='unittesttarget.fake.com')
+                            storage=self._TEST_STORAGE)
         self.assertFalse(st.use_cache())
         self.assertTrue(st.use_archive())
 

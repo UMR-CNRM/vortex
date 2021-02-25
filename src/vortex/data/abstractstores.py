@@ -12,6 +12,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from collections import defaultdict
 import contextlib
 import copy
+import functools
 import re
 
 from bronx.fancies import loggers
@@ -1002,6 +1003,7 @@ class ConfigurableArchiveStore(object):
     #: Path to the Store configuration file (please overwrite !)
     _store_global_config = None
     _datastore_id = None
+    _re_subhosting = re.compile(r'(.*)\s+hosted\s+by\s+([-\w]+)$')
 
     @staticmethod
     def _get_remote_config(store, url, container):
@@ -1011,6 +1013,46 @@ class ConfigurableArchiveStore(object):
             return config.GenericConfigParser(inifile=container.iotarget())
         else:
             return None
+
+    @staticmethod
+    def _please_fix(what):
+        logger.error('Please fix that quickly... Meanwhile, "%s" is ignored !', what)
+
+    def _process_location_section(self, section, section_items):
+        section_data = dict()
+        m_section = self._re_subhosting.match(section)
+        if m_section:
+            # A "hosted by" section
+            section_data['idrestricts'] = list()
+            for k, v in section_items:
+                if k.endswith('_idrestrict'):
+                    try:
+                        compiled_re = re.compile(v)
+                        section_data['idrestricts'].append(compiled_re)
+                    except re.error as e:
+                        logger.error('The regex provided for "%s" in section "%s" does not compile !: "%s".',
+                                     k, section, str(e))
+                        self._please_fix(k)
+                elif k == 'idrestricts':
+                    logger.error('A "%s" entrey was found in section "%s". This is not ok.', k, section)
+                    self._please_fix(k)
+                else:
+                    section_data[k] = v
+            if section_data['idrestricts']:
+                return m_section.group(1), m_section.group(2), section_data
+            else:
+                logger.error('No acceptable "_idrestrict" entry was found in section "%s".', section)
+                self._please_fix(section)
+                return None, None, None
+        else:
+            # The usual/generic section
+            for k, v in section_items:
+                if k.endswith('_idrestrict') or k == 'idrestricts':
+                    logger.error('A "*idrestrict*" entry was found in section "%s". This is not ok.', section)
+                    self._please_fix(section)
+                    return None, None, None
+                section_data[k] = v
+            return section, None, section_data
 
     def _ingest_remote_config(self, r_id, r_confdict, global_confdict):
         logger.info("Reading config file: %s (id=%s)", r_confdict['uri'], r_id)
@@ -1038,16 +1080,22 @@ class ConfigurableArchiveStore(object):
         # Update the configuration using the parser
         if remotecfg_parser is not None:
             for section in remotecfg_parser.sections():
-                logger.debug("New location found: %s", section)
-                # Filtering based on the regex : No collisions allowed !
-                if r_confdict['restrict'] is not None:
-                    if r_confdict['restrict'].search(section):
-                        global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                s_loc, s_entry, s_data = self._process_location_section(
+                    section,
+                    remotecfg_parser.items(section)
+                )
+                if s_loc is not None:
+                    logger.debug("New location entry found: %s (subentry: %s)", s_loc, s_entry)
+                    # Filtering based on the regex : No collisions allowed !
+                    if r_confdict['restrict'] is not None:
+                        if r_confdict['restrict'].search(s_loc):
+                            global_confdict['locations'][s_loc][s_entry] = s_data
+                        else:
+                            logger.error('According to the "restrict" clause, ' +
+                                         'you are not allowed to define the "%s" location !', s_loc)
+                            self._please_fix(section)
                     else:
-                        logger.error('According to the "restrict" clause, ' +
-                                     'you are not allowed to define the %s location !', section)
-                else:
-                    global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                        global_confdict['locations'][s_loc][s_entry] = s_data
             r_confdict['seen'] = True
         else:
             raise IOError("The remote configuration {:s} couldn't be found."
@@ -1083,21 +1131,28 @@ class ConfigurableArchiveStore(object):
                 conf['host'] = dict(maincfg.items(self.actual_storage))
             else:
                 conf['host'] = dict(maincfg.defaults())
-            conf['locations'] = defaultdict(dict)
+
+            conf['locations'] = defaultdict(functools.partial(defaultdict, dict))
+            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
+            conf['uuids_cache'] = dict()
 
             # Look for a local configuration file
             localcfg = conf['host'].get('localconf', None)
             if localcfg is not None:
                 logger.info("Reading config file: %s", localcfg)
                 localcfg = config.GenericConfigParser(inifile=localcfg)
-                conf['locations']['generic'] = localcfg.defaults()
+                conf['locations']['generic'][None] = localcfg.defaults()
                 for section in localcfg.sections():
-                    logger.debug("New location found: %s", section)
-                    conf['locations'][section] = dict(localcfg.items(section))
+                    s_loc, s_entry, s_data = self._process_location_section(
+                        section,
+                        localcfg.items(section)
+                    )
+                    if s_loc is not None:
+                        logger.debug("New location entry found: %s (subentry: %s)", s_loc, s_entry)
+                        conf['locations'][s_loc][s_entry] = s_data
 
             # Look for remote configurations
             tg_inet = self.system.default_target.inetname
-            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
             for key in conf['host'].keys():
                 k_match = re.match(r'generic_(remoteconf\w*)_uri$', key)
                 if k_match:
@@ -1120,9 +1175,9 @@ class ConfigurableArchiveStore(object):
                             compiled_re = re.compile(conf['remoteconfigs'][r_id]['restrict'])
                             conf['remoteconfigs'][r_id]['restrict'] = compiled_re
                         except re.error as e:
-                            logger.error('The regex provided for %s does not compile !: "%s".',
+                            logger.error('The regex provided for "%s" does not compile !: "%s".',
                                          r_id, str(e))
-                            logger.error('Please fix that quickly... Meanwhile, %s is ignored !', r_id)
+                            self._please_fix(r_id)
                             del conf['remoteconfigs'][r_id]
 
             for r_confk, r_conf in conf['remoteconfigs'].items():
@@ -1145,13 +1200,26 @@ class ConfigurableArchiveStore(object):
         ds = sessions.current().datastore
         conf = ds.get(self._datastore_id, dict(storage=self.actual_storage),
                       default_payload=dict(), readonly=True)
-        mylocation = uuid.location
-        self._load_config(conf, mylocation)
-        st_root = None
-        if mylocation in conf['locations']:
-            st_root = conf['locations'][mylocation].get(item, None)
-        st_root = st_root or conf['locations']['generic'].get(item, None)
-        return st_root
+        if (uuid, item) in conf.get('uuids_cache', dict()):
+            return conf['uuids_cache'][(uuid, item)]
+        else:
+            logger.debug('Looking for %s''s "%s" in config.', uuid, item)
+            mylocation = uuid.location
+            self._load_config(conf, mylocation)
+            st_item = None
+            if mylocation in conf['locations']:
+                # The default
+                if None in conf['locations'][mylocation]:
+                    st_item = conf['locations'][mylocation][None].get(item, None)
+                # Id based
+                for s_entry, s_entry_d in conf['locations'][mylocation].items():
+                    if s_entry is not None:
+                        if any([idrestrict.search(uuid.id)
+                                for idrestrict in s_entry_d['idrestricts']]):
+                            st_item = s_entry_d.get(item, None)
+            st_item = st_item or conf['locations']['generic'][None].get(item, None)
+            conf['uuids_cache'][(uuid, item)] = st_item
+            return st_item
 
     def _actual_storeroot(self, uuid):
         """For a given **uuid**, determine the proper storeroot."""

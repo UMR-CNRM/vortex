@@ -873,30 +873,34 @@ class MarketPlaceCache(Cache):
 
     This cache storage needs configuration data to work properly.
 
-    * In the '@cache-[storage].ini' configuration file, a [kind-headdir] section
-      is needed::
+    * In the ``@cache-[storage].ini`` configuration file, a ``[kind-headdir]`` section
+      is needed:
 
-        [marketplace-vortex]  # Given that kind=marketplace and headdir=vortex
-        siteconf=@marketplace-lxgmap45.ini
-        externalconf_test1_path=/somewhere/on/disk.ini
-        externalconf_test1_restrict=a_regex
+      .. code-block:: ini
 
-      This tells that a global configuration is available in '@marketplace-lxgmap45.ini'
-      and that additional configuration data can be read on disk in '/somewhere/on/disk.ini'.
+         [marketplace-vortex]  # Given that kind=marketplace and headdir=vortex
+         siteconf=@marketplace-lxgmap45.ini
+         externalconf_test1_path=/somewhere/on/disk.ini
+         externalconf_test1_restrict=a_regex
+
+      This tells that a global configuration is available in ``@marketplace-lxgmap45.ini``
+      and that additional configuration data can be read on disk in ``/somewhere/on/disk.ini``.
       Note that several 'externalconf' clauses can be specified. The scope of an
       'externalconf' clause named NAME can be restricted using
       ``externalconf_NAME_restrict``: if specified, the ``externalconf_NAME_path``
       configuration file will only be used for cache's items matching the
       ``externalconf_NAME_restrict`` regular expression.
 
-    * Each of the configuration files listed in '@cache-[storage].ini' (both ``siteconf``
+    * Each of the configuration files listed in ``@cache-[storage].ini`` (both ``siteconf``
       and ``externalconf``) consists of sections describing cache root directories
-      for one or several cache's items::
+      for one or several cache's items:
 
-        [the_rule_id]  # An informative name that does not really matters
-        rootdir=/a/directory/somewhere/on/storage
-        regex=a_regex
-        owners=meunierlf
+      .. code-block:: ini
+
+         [the_rule_id]  # An informative name that does not really matters
+         rootdir=/a/directory/somewhere/on/storage
+         regex=a_regex
+         owners=meunierlf
 
       ``rootdir`` and ``regex`` are mandatory, they describe the cache root
       directory for cache's items matching ``regex``. ``owners`` (coma separated
