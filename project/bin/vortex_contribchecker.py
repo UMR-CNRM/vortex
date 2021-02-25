@@ -270,7 +270,8 @@ class NoseChecker(AbstractChecker):
                   'test_net_ssh.py',
                   'test_algo_server.py',
                   'test_taylorism.py',
-                  'test_job_examples.py'}
+                  'test_job_examples.py',
+                  'test_uget.py'}
 
     #: Seconds (the longest test should not last more than...)
     _TIMEOUT = 120

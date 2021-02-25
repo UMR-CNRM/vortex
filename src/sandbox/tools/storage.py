@@ -73,8 +73,14 @@ class DemoArchive(Archive):
     def entry(self):
         """Tries to figure out what could be the actual entry point for cache space."""
         if self._entry is None:
-            gl = sessions.current().glove
-            self._entry = self.sh.path.join(gl.siteroot, 'examples', 'demoarchive')
+            if 'VORTEX_DEMO_ARCHIVE_PARENTDIR' in self.sh.env:
+                self._entry = self.sh.path.join(
+                    self.sh.env['VORTEX_DEMO_ARCHIVE_PARENTDIR'],
+                    'demoarchive'
+                )
+            else:
+                gl = sessions.current().glove
+                self._entry = self.sh.path.join(gl.siteroot, 'examples', 'demoarchive')
         return self._entry
 
     def _demo_actual_location(self, item):
@@ -83,12 +89,12 @@ class DemoArchive(Archive):
 
     def _demofullpath(self, item, **kwargs):
         """Actual _fullpath."""
-        rc = '{:s}:{:s}'.format(self.actual_storage, self._demo_actual_location(item))
+        rc = '{:s}:{:s}'.format(self.storage, self._demo_actual_location(item))
         return rc, dict()
 
     def _demoprestageinfo(self, item, **kwargs):
         """Actual _prestageinfo."""
-        baseinfo = dict(storage=self.actual_storage,
+        baseinfo = dict(storage=self.storage,
                         location=self._demo_actual_location(item))
         return baseinfo, dict()
 
