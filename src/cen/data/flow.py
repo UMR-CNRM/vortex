@@ -183,6 +183,26 @@ class Pro(SurfaceIO):
     def realkind(self):
         return "PRO"
 
+class Postproc(SurfaceIO):
+    """Class for post-processed SURFEX/Crocus output files."""
+    _footprint = [
+        dict(
+            info = 'Post-processed Surfex-simulated snowpack files',
+            attr = dict(
+                kind = dict(
+                    values = ['SnowpackSimulation'],
+                ),
+                model = dict(
+                    values = ['postproc'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "POSTPROC"
+
 
 @namebuilding_delete('src')
 @namebuilding_delete('geo')

@@ -164,7 +164,7 @@ class S2MTaskMixIn(object):
 
         return rundate_prep, alternates
 
-    def get_list_members(self):
+    def get_list_members(self, sytron=True):
         if not self.conf.nmembers:
             raise ValueError
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
@@ -172,6 +172,8 @@ class S2MTaskMixIn(object):
 
         if self.conf.geometry.area == "postes":
             # no sytron members for postes geometry
+            return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
+        elif sytron==False:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
