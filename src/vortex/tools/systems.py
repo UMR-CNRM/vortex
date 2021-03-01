@@ -2030,7 +2030,7 @@ class OSExtended(System):
         """
         self.stderr('_copydatatree', src, dst)
         with self.mute_stderr():
-            keep_symlinks_below = keep_symlinks_below or src
+            keep_symlinks_below = keep_symlinks_below or self.path.realpath(src)
             names = self._os.listdir(src)
             self._os.makedirs(dst)
             errors = []
@@ -2207,7 +2207,7 @@ class OSExtended(System):
         if self.path.isdir(source):
             self.stderr('hardlink', source, destination,
                         '#', 'directory,', 'readonly={!s}'.format(readonly))
-            keep_symlinks_below = keep_symlinks_below or source
+            keep_symlinks_below = keep_symlinks_below or self.path.realpath(source)
             with self.mute_stderr():
                 # Mimics 'cp -al'
                 names = self._os.listdir(source)

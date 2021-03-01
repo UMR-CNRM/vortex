@@ -36,7 +36,7 @@ class TestOSExtendedBasics(unittest.TestCase):
 
     def setUp(self):
         # Temporary heaven
-        self.tmpdir = tempfile.mkdtemp(suffix='_test_storage')
+        self.tmpdir = os.path.realpath(tempfile.mkdtemp(suffix='_test_storage'))
         self.startupdir = os.getcwd()
         os.chdir(self.tmpdir)
         self.create_testfile()
