@@ -2005,16 +2005,22 @@ class OSExtended(System):
         """
         Check that **symlink** is relative and that its target is below
         the **valid_below** directory.
+
+        :note: **valid_below** needs to be an absolute canonical path
+               (this is user responsability)
         """
         link_to = self._os.readlink(symlink)
         # Is it relative ?
         if re.match('^([^{0:s}]|..{0:s}|.{0:s})'.format(re.escape(os.path.sep)),
                     link_to):
             symlink_dir = self.path.abspath(self.path.dirname(symlink))
-            abspath_to = self.path.normpath(self.path.join(symlink_dir, link_to))
+            abspath_to = self.path.realpath(
+                self.path.normpath(
+                    self.path.join(symlink_dir, link_to)
+                )
+            )
             # Valid ?
-            abspath_valid_below = self.path.abspath(valid_below)
-            valid = self.path.commonprefix([abspath_valid_below, abspath_to]) == abspath_valid_below
+            valid = self.path.commonprefix([valid_below, abspath_to]) == valid_below
             return (self.path.relpath(abspath_to, start=symlink_dir)
                     if valid else None)
         else:
@@ -2030,7 +2036,8 @@ class OSExtended(System):
         """
         self.stderr('_copydatatree', src, dst)
         with self.mute_stderr():
-            keep_symlinks_below = keep_symlinks_below or self.path.realpath(src)
+            keep_symlinks_below = (keep_symlinks_below or
+                                   self.path.realpath(self.path.abspath(src)))
             names = self._os.listdir(src)
             self._os.makedirs(dst)
             errors = []
@@ -2207,7 +2214,8 @@ class OSExtended(System):
         if self.path.isdir(source):
             self.stderr('hardlink', source, destination,
                         '#', 'directory,', 'readonly={!s}'.format(readonly))
-            keep_symlinks_below = keep_symlinks_below or self.path.realpath(source)
+            keep_symlinks_below = (keep_symlinks_below or
+                                   self.path.realpath(self.path.abspath(source)))
             with self.mute_stderr():
                 # Mimics 'cp -al'
                 names = self._os.listdir(source)
