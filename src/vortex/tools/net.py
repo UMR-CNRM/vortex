@@ -1519,8 +1519,8 @@ class _AssistedSshMeta(type):
 class AssistedSsh(Ssh):
     """Remote command execution via ssh.
 
-    Also handles remote copy via scp or ssh, which is intimately linked. Compared
-    too the :class:`Ssh` class it adds:
+    Also handles remote copy via scp or ssh, which is intimately linked.
+    Compared to the :class:`Ssh` class it adds:
 
     - retries capabilities
     - support for multiple hostnames (a hostname is picked up in the hostnames

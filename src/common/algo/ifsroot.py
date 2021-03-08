@@ -82,7 +82,7 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                     info     = 'The unit used in the *fcterm* attribute.',
                     optional = True,
                     default  = 'h',
-                    values   = ['h', 'hour', 't', 'step', 'timespep'],
+                    values   = ['h', 'hour', 't', 'step', 'timestep'],
                     remap = dict(
                         hour = 'h',
                         step = 't',
