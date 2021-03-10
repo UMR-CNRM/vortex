@@ -36,7 +36,8 @@ from sloop.models.hycom3d.atmfrc import AtmFrc
 from sloop.models.hycom3d.rivers import Rivers
 from sloop.models.hycom3d.spnudge import Spectral
 
-from ..util.config import config_to_env_vars
+from ..util.config import (config_to_env_vars,
+                           config_to_mpienv_vars)
 
 __all__ = []
 # from vortex.data.executables import Script
@@ -179,7 +180,7 @@ class Hycom3dModelCompilator(Hycom3dCompilator):
     )
 
     def prepare(self, rh, kw):
-        super().prepare(rh, kw)
+        super(Hycom3dModelCompilator, self).prepare(rh, kw)
 
         # Check dimensions
         check_grid_dimensions(self.dimensions, HYCOM3D_GRID_AFILE.format(rank=self.rank))
@@ -237,7 +238,7 @@ class Hycom3dIBCRunTime(AlgoComponent):
         self._ncfiles = [sec.rh.container.localpath() for sec in ncinputs]
         self._dates = [(self.date+vdate.Time(term)).as_datetime()
                        for term in self.terms]
-
+        print(self._dates)
     def execute(self, rh, opts):
         super(Hycom3dIBCRunTime, self).execute(rh, opts)
 
@@ -375,8 +376,8 @@ class Hycom3dIBCRunVertical(BlindRun):
 
         # Restart time is taken from input files
         if self.restart:
-            self._restart_time = nc_get_time(ncfiles[0])[0].data
-
+            self._restart_time = nc_get_time(ncfiles[0]).dt.floor("D")[0].data
+            print(self._restart_time)
         # Constant files
         for cfile in (f"FORCING{self.rank}./regional.grid.a",
                       f"FORCING{self.rank}./regional.grid.b",
@@ -943,7 +944,7 @@ class Hycom3dModelRun(Parallel):
             info="Run the model",
             attr=dict(
                 binary=dict(
-                    values=["hycom3d_model_run"],
+                    values=["hycom3d_model_runner"],
                 ),
                 rank=dict(
                     default=0,
@@ -964,6 +965,16 @@ class Hycom3dModelRun(Parallel):
                     default="spinup",
                     type=str,
                 ),
+                env_config=dict(
+                    info="Environment variables and options for running the model",
+                    optional=True,                 
+                    type=dict,
+                    default={},
+                ),
+                env_context=dict(
+                    info="hycom3d context",
+                    values=["prepost", "model"]
+                ),
             ),
         ),
     ]
@@ -973,8 +984,8 @@ class Hycom3dModelRun(Parallel):
         return "hycom3d_model_run"
 
     def prepare(self, rh, opts):
-        super(Hycom3dModelRun, self).prepare(rh, opts)
 
+        super(Parallel, self).prepare(rh, opts)
         from sloop.models.hycom3d import (
             HYCOM3D_RUN_INPUT_TPL_FILE,
             HYCOM3D_BLKDAT_CMO_INPUT_FILE,
@@ -999,21 +1010,22 @@ class Hycom3dModelRun(Parallel):
 
         concat_ascii_files([fin.format(rank=self.rank) for fin in HYCOM3D_SAVEFIELD_INPUT_FILES[self.mode]], 
                            HYCOM3D_SAVEFIELD_INPUT_FILE.format(rank=self.rank))
-
+        self._env_vars = config_to_env_vars(self.env_config)
+        self._clargs = dict(
+            datadir     = "./",
+            tmpdir      = "./",
+            localdir    = "./",
+            rank        = self.rank
+        )
+         
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
         return dict(**self._clargs)
 
     def execute(self, rh, opts):
-        """Model execution"""
-        self._clargs = dict(
-            datadir    = "./",
-            tmpdir     = "./",
-            localdir   = "./",
-            rank       = self.rank,
-        )
-        #super(Hycom3dModelRun, self).execute(rh, opts)
+        opts = dict(mpiopts=dict(np=381))
+        with self.env as e:
+            e.update(self._env_vars)
+            super(Hycom3dModelRun, self).execute(rh, opts)
 
-
-#%% Post-production algo components
 

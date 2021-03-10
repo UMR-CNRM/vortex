@@ -15,3 +15,16 @@ def config_to_env_vars(cfg):
                 value = ','.join(value)
             env_vars[key] = value
     return env_vars
+
+
+def config_to_mpienv_vars(cfg):
+    """Extract from a ConfigSet options that starts with `mpienv_`"""
+    env_vars = {}
+    for key, value in cfg.items():
+        if key.startswith("mpienv_"):
+            key = key[7:].upper()
+            if isinstance(value, list):
+                value = ','.join(value)
+            env_vars[key] = value
+    return env_vars
+

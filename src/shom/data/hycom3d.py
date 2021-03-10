@@ -336,7 +336,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
 # %% Model inputs
 
 @namebuilding_append('src', lambda self: self.fields)
-class Hycom3dAtmFrcInputFiles(Resource):
+class Hycom3dAtmFrcInputFiles(GeoFlowResource):
     """Atmospheric forcing input files for the Hycom3d model"""
 
     _footprint = [
@@ -369,7 +369,7 @@ class Hycom3dAtmFrcInputFiles(Resource):
 
 
 @namebuilding_append('src', lambda self: self.rivers)
-class Hycom3dRiversInputFiles(Resource):
+class Hycom3dRiversInputFiles(GeoFlowResource):
     """Rivers input files for the Hycom3d model"""
 
     _footprint = [
@@ -381,6 +381,9 @@ class Hycom3dRiversInputFiles(Resource):
                 ),
                 rivers=dict(
                     optional=False,
+                ),
+                model=dict(
+                     values=["cmems"]
                 ),
                 format=dict(
                      values=['r','nc']   
@@ -443,7 +446,7 @@ class Hycom3dRestartField(GeoFlowResource):
                     values=["restart_field"],
                 ),
                 field=dict(
-                    values=["saln", "temp", "th3d", "u", "v", "h", "dpmixl"],
+                    values=["saln", "temp", "th3d", "u", "v", "ut", "vt", "h", "dpmixl"],
                 ),
                 format=dict(
                     values=["cdf", "res"],
@@ -569,7 +572,7 @@ class Hycom3dModelOutput(GeoFlowResource):
                     default="production",
                 ),
                 format=dict(
-                    values=["nc"],
+                    values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
                     values=["netcdf", "nc"], 
@@ -588,7 +591,7 @@ class Hycom3dModelOutput(GeoFlowResource):
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('src', lambda self: self.ppdate)
 @namebuilding_append('geo', lambda self: self.field)
-@namebuilding_append('geo', lambda self: self.filter)
+@namebuilding_append('geo', lambda self: self.filtering)
 class Hycom3dPostprodFilterOutput(GeoFlowResource):
     """Post-production filtering outputs"""
 
@@ -597,7 +600,7 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
             info="Post-production filtering outputs",
             attr=dict(
                 kind=dict(
-                    values=["postprod_filter"],
+                    values=["postprod_filter_output"],
                 ),
                 field=dict(
                     values=["ssh", "sss", "sst", "u", "v",
@@ -608,10 +611,10 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
                     type=str,
                     default="3D",
                 ),
-                filter=dict(
-                    values=["None", "mean", "demerliac", "godin"],
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
                     type=str,
-                    default="None",
+                    default="none",
                 ),
                 ppdate=dict(
                      type=Date,
@@ -622,7 +625,7 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
                     default="production",
                 ),
                 format=dict(
-                    values=["nc"],
+                    values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
                     values=["netcdf", "nc"], 
@@ -640,7 +643,7 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('src', lambda self: self.ppdate)
 @namebuilding_append('geo', lambda self: self.field)
-@namebuilding_append('geo', lambda self: self.filter)
+@namebuilding_append('geo', lambda self: self.filtering)
 class Hycom3dPostprodInterpOutput(GeoFlowResource):
     """Post-production interpolation outputs"""
 
@@ -649,7 +652,7 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
             info="Post-production interpolation outputs",
             attr=dict(
                 kind=dict(
-                    values=["postprod_interp"],
+                    values=["postprod_interp_output"],
                 ),
                 field=dict(
                     values=["u", "v", "saln", "sigma", "temp", 'tempis'],
@@ -659,10 +662,10 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
                     type=str,
                     default="3D",
                 ),
-                filter=dict(
-                    values=["None", "mean", "demerliac", "godin"],
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
                     type=str,
-                    default="None",
+                    default="none",
                 ),
                 ppdate=dict(
                      type=Date,
@@ -673,7 +676,7 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
                     default="production",
                 ),
                 format=dict(
-                    values=["nc"],
+                    values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
                     values=["netcdf", "nc"], 
@@ -691,7 +694,7 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('src', lambda self: self.ppdate)
 @namebuilding_append('geo', lambda self: self.area)
-@namebuilding_append('geo', lambda self: self.filter)
+@namebuilding_append('geo', lambda self: self.filtering)
 class Hycom3dPostprodOutput(GeoFlowResource):
     """Post-production outputs"""
 
@@ -710,10 +713,10 @@ class Hycom3dPostprodOutput(GeoFlowResource):
                     type=str,
                     default="3D",
                 ),
-                filter=dict(
-                    values=["None", "mean", "demerliac", "godin"],
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
                     type=str,
-                    default="None",
+                    default="none",
                 ),
                 ppdate=dict(
                      type=Date,
@@ -724,7 +727,7 @@ class Hycom3dPostprodOutput(GeoFlowResource):
                     default="production",
                 ),
                 format=dict(
-                    values=["nc"],
+                    values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
                     values=["netcdf", "nc"], 
