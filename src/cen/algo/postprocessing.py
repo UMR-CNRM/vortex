@@ -7,6 +7,7 @@ Algo Components for S2M post processing.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 from bronx.fancies import loggers
+from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import footprints
@@ -19,7 +20,7 @@ logger = loggers.getLogger(__name__)
 echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.plots.pearps2m.postprocess import EnsemblePostproc, Ensemble
-    from snowtools.utils import prosimu
+
 
 @echecker.disabled_if_unavailable
 class S2m_ensemble_postprocessing(AlgoComponent):
@@ -43,27 +44,23 @@ class S2m_ensemble_postprocessing(AlgoComponent):
                 default     = 's2m',
                 values      = ['s2m']
                 ),
-            outfilename = dict(
-                info = "output filename",
-                optional    = False
-                ),
+            datebegin=dict(
+                info="Date in the namelist to run PREP.",
+                type=Date,
+            ),
+            dateend=dict(
+                info="Date in the namelist to stop OFFLINE.",
+                type=Date,
+                default=None),
             ),
         )
 
     def execute(self, rh, opts):
         # get input resources
-        avail_forcasts = self.context.sequence.effective_inputs() #role="Crocus Forecast"
-        print("output ", self.context.sequence.effective_outputs())
+        avail_forcasts = self.context.sequence.effective_inputs()  # role="Crocus Forecast"
         # get list of file names
         listforcing = [am.rh.container.filename for am in avail_forcasts]
-        # self.context.session.sh.cp(avail_forcasts[0].rh.container.filename, self.outfilename)
-
-        #print("forcing", listforcing)
-        ens = EnsemblePostproc(Ensemble(), self.varnames, listforcing,
-                               vortex.proxy.container(filename=self.outfilename, mode='wb'))
+        # init ensemble postprocessing object
+        ens = EnsemblePostproc(Ensemble(), self.varnames, listforcing, self.datebegin, self.dateend)
+        # do postprocessing
         ens.postprocess()
-
-
-
-
-
