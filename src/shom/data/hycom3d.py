@@ -5,6 +5,7 @@ Hycom3d files
 """
 
 from gco.syntax.stdattrs import gvar
+from bronx.stdtypes.date import Date
 
 from common.data.consts import GenvModelGeoResource
 from vortex.data.executables import Script, Binary, OceanographicModel
@@ -89,6 +90,7 @@ class Hycom3dAtmFrcInterpWeights(Resource):
 # %% Binaries
 
 
+
 class Hycom3dIBCRegridcdfBinary(Binary):
     """Binary that regrids initial conditions netcdf files"""
 
@@ -143,6 +145,59 @@ class Hycom3dIBCIniconBinary(Binary):
                 "{sshmin} {cstep}").format(**opts)
 
 
+
+class Hycom3dSpNudgeDemerliacBinary(Binary):
+    """Binary that apply Demerliac filter HYCOM Spectral Nugding"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that apply Demerliac filter HYCOM Spectral Nugding",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_spnudge_demerliac_binary",
+                ),
+                kind=dict(
+                    values=["demerliac_filter"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_demerliac_binary"
+
+    def command_line(self, **opts):
+        return ("{date} {output_type}").format(**opts)
+    
+
+class Hycom3dSpNudgeSpectralBinary(Binary):
+    """Binary that apply spectral filter HYCOM Spectral Nugding"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that apply spectral filter HYCOM Spectral Nugding",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_spnudge_spectral_binary",
+                ),
+                kind=dict(
+                    values=["spectral_filter"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_spnudge_spectral_binary"
+
+    def command_line(self, **opts):
+        return ("{wave_sp} {genmask} {min_depth} {relax_sp}").format(**opts)
+    
+    
 class Hycom3dModelBinary(OceanographicModel):
     """Binary of the 3d model"""
 
@@ -195,6 +250,87 @@ class Hycom3dRiversFlowrateScript(Script):
         return "--rank {rank} {tarfile} {dates}".format(**opts)
 
 
+class Hycom3dPostProdFilterBinary(Binary):
+    """Binary that applies filtering in time over Hycom outputs"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that applies filtering in time over Hycom outputs",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_postprod_filter_binary",
+                ),
+                kind=dict(
+                    values=["postprod_filter"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_filter_binary"
+
+    def command_line(self, **opts):
+        return ("{filter_type} {file_out} "\
+                "{file_rundate_next} {file_rundate} {file_rundate_before}").format(**opts)
+
+
+class Hycom3dPostProdVertInterpolationBinary(Binary):
+    """Binary that verticaly interpolates and 
+    converts HYCOM output in SOAP and dataShom formats"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that verticaly interpolates",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_postprod_vertinterpolation_binary",
+                ),
+                kind=dict(
+                    values=["postprod_vertinterpolation"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_vertinterpolation_binary"
+
+    def command_line(self, **opts):
+        return ("{offset} {file_in} {file_out} {file_cfg} "\
+                "{file_layer} {file_depth}").format(**opts)
+
+
+class Hycom3dPostProdTempConversionBinary(Binary):
+    """Binary that converts potential to insitu temperature for dataSHOM production"""
+
+    _footprint = [
+        gvar,
+        dict(
+            info="Binary that converts potential to insitu temperature for dataSHOM production",
+            attr=dict(
+                gvar=dict(
+                    default="hycom3d_postprod_tempconversion_binary",
+                ),
+                kind=dict(
+                    values=["postprod_tempconversion"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_tempconversion_binary"
+
+    def command_line(self, **opts):
+        return ("{file_temp} {file_saln} {file_out}").format(**opts)
+            
+
 # %% Pre-processing intermediate files
 
 @namebuilding_append('geo', lambda self: self.field)
@@ -226,7 +362,7 @@ class Hycom3dRegridcdfOutputFile(GeoFlowResource):
 # %% Model inputs
 
 @namebuilding_append('src', lambda self: self.fields)
-class Hycom3dAtmFrcInputFiles(Resource):
+class Hycom3dAtmFrcInputFiles(GeoFlowResource):
     """Atmospheric forcing input files for the Hycom3d model"""
 
     _footprint = [
@@ -259,7 +395,7 @@ class Hycom3dAtmFrcInputFiles(Resource):
 
 
 @namebuilding_append('src', lambda self: self.rivers)
-class Hycom3dRiversInputFiles(Resource):
+class Hycom3dRiversInputFiles(GeoFlowResource):
     """Rivers input files for the Hycom3d model"""
 
     _footprint = [
@@ -271,6 +407,9 @@ class Hycom3dRiversInputFiles(Resource):
                 ),
                 rivers=dict(
                     optional=False,
+                ),
+                model=dict(
+                     values=["cmems"]
                 ),
                 format=dict(
                      values=['r','nc']
@@ -330,10 +469,10 @@ class Hycom3dRestartField(GeoFlowResource):
             info="Single variable netcdf and restart file created by inicon",
             attr=dict(
                 kind=dict(
-                    values=["boundary"],
+                    values=["restart_field"],
                 ),
                 field=dict(
-                    values=["saln", "temp", "th3d", "u", "v", "h", "dpmixl"],
+                    values=["saln", "temp", "th3d", "u", "v", "ut", "vt", "h", "dpmixl"],
                 ),
                 format=dict(
                     values=["cdf", "res"],
@@ -345,7 +484,7 @@ class Hycom3dRestartField(GeoFlowResource):
                 actualfmt=dict(
                     remap={"cdf": "netcdf", "res": "binary"},
                     values=["binary", "netcdf"],
-                    )
+                )
             ),
         ),
     ]
@@ -377,8 +516,65 @@ class Hycom3dRestartDate(GeoFlowResource):
         return "hycom3d_restart_date"
 
 
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dDemerliacFilterOutput(GeoFlowResource):
+    _footprint = [
+        dict(
+            info="Demerliac filter outputs nc files",
+            attr=dict(
+                kind=dict(
+                    values=["demerliac_filter_output"],
+                ),
+                field=dict(
+                    values=["saln", "temp", "h"],
+                ),
+                format=dict(
+                    values=["nc", "netcdf"],
+                ),
+                nativefmt=dict(
+                    values=["nc", "netcdf"],
+                ),
+            ),
+        ),
+    ]
+
+    @property 
+    def realkind(self):
+        return "demerliac_filter_output"
+    
+  
+@namebuilding_append('src', lambda self: self.field)
+class Hycom3dSpectralFilterOutput(GeoFlowResource):
+    _footprint = [
+        dict(
+            info="Spectral filter outputs .a and .b files",
+            attr=dict(
+                kind=dict(
+                    values=["spectral_filter_output"],
+                ),
+                field=dict(
+                    values=["s", "t", "h", "rmu"],
+                ),
+                format=dict(values=["a", "b"]),
+                nativefmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+                actualfmt=dict(
+                    values=["binary", "ascii"],
+                    remap={"a": "binary", "b": "ascii"}
+                ),
+            ),
+        ),
+    ]
+
+    @property 
+    def realkind(self):
+        return "spectral_filter_output"
 # %% Model outputs
-class Hycom3dModelOutput(_Hycom3dGeoResource):
+@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('geo', lambda self: self.field)
+class Hycom3dModelOutput(GeoFlowResource):
     """Model output"""
 
     _footprint = [
@@ -386,7 +582,11 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
             info="Model output",
             attr=dict(
                 kind=dict(
-                    values=["gridpoint"],
+                    values=["model_output"],
+                ),
+                field=dict(
+                    values=["ssh", "sss", "sst", "u", "v", "ubavg", "vbavg",
+                            "h", "saln", "sigma", "temp"],
                 ),
                 domain=dict(
                     values=["3D", "2D"],
@@ -397,7 +597,14 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
                     values=["production", "assim", "spnudge"],
                     default="production",
                 ),
-            ),
+                format=dict(
+                    values=["nc", "netcdf"],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf"
+                ),
+            )
         )
     ]
 
@@ -406,3 +613,156 @@ class Hycom3dModelOutput(_Hycom3dGeoResource):
         return "hycom3d_model_output"
 
 
+# %% Postprod outputs
+@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('src', lambda self: self.ppdate)
+@namebuilding_append('geo', lambda self: self.field)
+@namebuilding_append('geo', lambda self: self.filtering)
+class Hycom3dPostprodFilterOutput(GeoFlowResource):
+    """Post-production filtering outputs"""
+
+    _footprint = [
+        dict(
+            info="Post-production filtering outputs",
+            attr=dict(
+                kind=dict(
+                    values=["postprod_filter_output"],
+                ),
+                field=dict(
+                    values=["ssh", "sss", "sst", "u", "v",
+                            "h", "saln", "sigma", "temp"],
+                ),
+                domain=dict(
+                    values=["3D", "2D"],
+                    type=str,
+                    default="3D",
+                ),
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
+                    type=str,
+                    default="none",
+                ),
+                ppdate=dict(
+                     type=Date,
+                     optional=False,
+                ),
+                cutoff=dict(
+                    values=["production"],
+                    default="production",
+                ),
+                format=dict(
+                    values=["nc", "netcdf"],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf"
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_filter"
+    
+    
+@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('src', lambda self: self.ppdate)
+@namebuilding_append('geo', lambda self: self.field)
+@namebuilding_append('geo', lambda self: self.filtering)
+class Hycom3dPostprodInterpOutput(GeoFlowResource):
+    """Post-production interpolation outputs"""
+
+    _footprint = [
+        dict(
+            info="Post-production interpolation outputs",
+            attr=dict(
+                kind=dict(
+                    values=["postprod_interp_output"],
+                ),
+                field=dict(
+                    values=["u", "v", "saln", "sigma", "temp", 'tempis'],
+                ),
+                domain=dict(
+                    values=["3D"],
+                    type=str,
+                    default="3D",
+                ),
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
+                    type=str,
+                    default="none",
+                ),
+                ppdate=dict(
+                     type=Date,
+                     optional=False,
+                ),
+                cutoff=dict(
+                    values=["production"],
+                    default="production",
+                ),
+                format=dict(
+                    values=["nc", "netcdf"],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf"
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_interp"
+    
+    
+@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('src', lambda self: self.ppdate)
+@namebuilding_append('geo', lambda self: self.area)
+@namebuilding_append('geo', lambda self: self.filtering)
+class Hycom3dPostprodOutput(GeoFlowResource):
+    """Post-production outputs"""
+
+    _footprint = [
+        dict(
+            info="Post-production outputs",
+            attr=dict(
+                kind=dict(
+                    values=["postprod_output"],
+                ),
+                area=dict(
+                    values=["MANGA", "BretagneSud"],
+                ),
+                domain=dict(
+                    values=["2D", "3D"],
+                    type=str,
+                    default="3D",
+                ),
+                filtering=dict(
+                    values=["none", "mean", "demerliac", "godin"],
+                    type=str,
+                    default="none",
+                ),
+                ppdate=dict(
+                     type=Date,
+                     optional=False,
+                ),
+                cutoff=dict(
+                    values=["production"],
+                    default="production",
+                ),
+                format=dict(
+                    values=["nc", "netcdf"],
+                ),
+                nativefmt=dict(
+                    values=["netcdf", "nc"], 
+                    default="netcdf"
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_output"

@@ -402,8 +402,8 @@ class MpiTool(footprints.FootprintBase):
             sh = self.system
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
-                libs = sh.ldd(mpirun_path)
-
+                #libs = sh.ldd(mpirun_path)
+                libs = sh.ldd(mpi_lib)
                 if any([libname is None for libname in libs.values()]):
                     libscache = dict()
                     for binary in self.binaries:
