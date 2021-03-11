@@ -4,8 +4,8 @@
 MeteoFrance ressources
 """
 
-from vortex.syntax.stddeco import namebuilding_insert
 from common.data.gridfiles import GridPoint
+
 
 class MeteoFranceFiles(GridPoint):
     """MeteoFrance Forecast and Analyse run files"""

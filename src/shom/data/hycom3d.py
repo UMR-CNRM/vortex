@@ -4,17 +4,17 @@
 Hycom3d files
 """
 
-import vortex.data.executables as vde
 from gco.syntax.stdattrs import gvar
 
 from common.data.consts import GenvModelGeoResource
-from vortex.data.geometries import hgeometry_deco
+from vortex.data.executables import Script, Binary, OceanographicModel
 from vortex.data.resources import Resource
 from vortex.data.flow import GeoFlowResource
-from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert
-from vortex.syntax.stdattrs import model_deco
+from vortex.syntax.stddeco import namebuilding_append
 
 __all__ = []
+
+
 # %% Generic
 
 class _Hycom3dGeoResource(GenvModelGeoResource):
@@ -89,7 +89,7 @@ class Hycom3dAtmFrcInterpWeights(Resource):
 # %% Binaries
 
 
-class Hycom3dIBCRegridcdfBinary(vde.Binary):
+class Hycom3dIBCRegridcdfBinary(Binary):
     """Binary that regrids initial conditions netcdf files"""
 
     _footprint = [
@@ -114,12 +114,12 @@ class Hycom3dIBCRegridcdfBinary(vde.Binary):
 
     def command_line(self, **opts):
         varname = opts["varname"]
-        method = opts.get("methode", 0)
+        method = opts.get("method", 0)
         cstep = int(opts.get("cstep", 1))
         return f"{varname} {method} {cstep:03d}"
 
 
-class Hycom3dIBCIniconBinary(vde.Binary):
+class Hycom3dIBCIniconBinary(Binary):
     """Binary that computes initial condictions for HYCOM"""
 
     _footprint = [
@@ -127,12 +127,8 @@ class Hycom3dIBCIniconBinary(vde.Binary):
         dict(
             info="Binary that computes initial conditions for HYCOM",
             attr=dict(
-                gvar=dict(
-                    default="hycom3d_ibc_inicon_binary",
-                ),
-                kind=dict(
-                    values=["vertical_regridder"],
-                ),
+                gvar=dict(default="hycom3d_ibc_inicon_binary"),
+                kind=dict(values=["vertical_regridder"]),
             ),
         ),
     ]
@@ -147,7 +143,7 @@ class Hycom3dIBCIniconBinary(vde.Binary):
                 "{sshmin} {cstep}").format(**opts)
 
 
-class Hycom3dModelBinary(vde.Binary):
+class Hycom3dModelBinary(OceanographicModel):
     """Binary of the 3d model"""
 
     _footprint = [
@@ -155,22 +151,48 @@ class Hycom3dModelBinary(vde.Binary):
         dict(
             info="Binary of the model",
             attr= dict(
-                gvar = dict(
-                    default='oceanmodel',
-                ),
-                kind = dict(
-                    values=['oceanmodel'],
-                ),
+                gvar = dict(default='hycom3d_model_binary'),
             ),
         )
     ]
 
-    @property
-    def realkind(self):
-        return 'hycom3d_model_binary'
-    
     def command_line(self, **opts):
         return ("{datadir} {tmpdir} {localdir} {rank}").format(**opts)
+
+
+# %% Task-specific executable scripts
+
+class Hycom3dIBCTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_ibc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins} {dates}".format(**opts)
+
+
+class Hycom3dAtmfrcTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_atmfrc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins_insta} {ncins_cumul} {dates}".format(**opts)
+
+
+class Hycom3dRiversFlowrateScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_rivers_flowrate_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "--rank {rank} {tarfile} {dates}".format(**opts)
 
 
 # %% Pre-processing intermediate files
@@ -212,7 +234,7 @@ class Hycom3dAtmFrcInputFiles(Resource):
             info="Hycom Atmospheric Forcing Input Files",
             attr=dict(
                 kind=dict(
-                    values=['gridpoint']
+                    values=['gridpoint', 'hycom3d_atmfrc_input']
                 ),
                 fields=dict(
                     values=['shwflx','radflx','precip','preatm','airtmp',
@@ -251,7 +273,7 @@ class Hycom3dRiversInputFiles(Resource):
                     optional=False,
                 ),
                 format=dict(
-                     values=['r','nc']   
+                     values=['r','nc']
                 ),
                 nativefmt=dict(
                     values=['ascii','netcdf'],
