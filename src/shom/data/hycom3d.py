@@ -538,16 +538,20 @@ class Hycom3dRestartDate(GeoFlowResource):
 
 
 @namebuilding_append('src', lambda self: self.field)
-class Hycom3dDemerliacFilterOutput(GeoFlowResource):
+@namebuilding_append('src', lambda self: self.filter)
+class Hycom3dSpnudgeFilterOutput(GeoFlowResource):
     _footprint = [
         dict(
-            info="Demerliac filter outputs nc files",
+            info="Spnudge filter output nc files",
             attr=dict(
                 kind=dict(
-                    values=["demerliac_filter_output"],
+                    values=["spnudge_filter_output"],
                 ),
                 field=dict(
                     values=["saln", "temp", "h"],
+                ),
+                filter=dict(
+                    values=["demerliac", "spectral"],
                 ),
                 format=dict(
                     values=["nc", "netcdf"],
@@ -561,17 +565,17 @@ class Hycom3dDemerliacFilterOutput(GeoFlowResource):
 
     @property 
     def realkind(self):
-        return "demerliac_filter_output"
+        return "spnudge_filter_output"
     
   
 @namebuilding_append('src', lambda self: self.field)
-class Hycom3dSpectralFilterOutput(GeoFlowResource):
+class Hycom3dSpnudgeOutput(GeoFlowResource):
     _footprint = [
         dict(
             info="Spectral filter outputs .a and .b files",
             attr=dict(
                 kind=dict(
-                    values=["spectral_filter_output"],
+                    values=["spnudge_postproc_output"],
                 ),
                 field=dict(
                     values=["s", "t", "h", "rmu"],
@@ -591,8 +595,12 @@ class Hycom3dSpectralFilterOutput(GeoFlowResource):
 
     @property 
     def realkind(self):
-        return "spectral_filter_output"
+        return "spnudge_postproc_output"
+
+
 # %% Model outputs
+
+
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('geo', lambda self: self.field)
 class Hycom3dModelOutput(GeoFlowResource):
