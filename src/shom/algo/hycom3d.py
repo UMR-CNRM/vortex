@@ -388,7 +388,7 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
 
 
 class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
-    """Algo component for preparing files before the demerliac filter"""
+    """Algo component for preparing files before the spectral filter"""
 
     _footprint = [
         date_deco,
