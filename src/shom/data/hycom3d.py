@@ -215,41 +215,6 @@ class Hycom3dModelBinary(OceanographicModel):
         return ("{datadir} {tmpdir} {localdir} {rank}").format(**opts)
 
 
-# %% Task-specific executable scripts
-
-class Hycom3dIBCTimeScript(Script):
-
-    _footprint = dict(
-        info="Python script ",
-        attr=dict(kind=dict(values=["hycom3d_ibc_time_script"]))
-        )
-
-    def command_line(self, **opts):
-        return "{ncins} {dates}".format(**opts)
-
-
-class Hycom3dAtmfrcTimeScript(Script):
-
-    _footprint = dict(
-        info="Python script ",
-        attr=dict(kind=dict(values=["hycom3d_atmfrc_time_script"]))
-        )
-
-    def command_line(self, **opts):
-        return "{ncins_insta} {ncins_cumul} {dates}".format(**opts)
-
-
-class Hycom3dRiversFlowrateScript(Script):
-
-    _footprint = dict(
-        info="Python script ",
-        attr=dict(kind=dict(values=["hycom3d_rivers_flowrate_script"]))
-        )
-
-    def command_line(self, **opts):
-        return "--rank {rank} {tarfile} {dates}".format(**opts)
-
-
 class Hycom3dPostProdFilterBinary(Binary):
     """Binary that applies filtering in time over Hycom outputs"""
 
@@ -329,7 +294,63 @@ class Hycom3dPostProdTempConversionBinary(Binary):
 
     def command_line(self, **opts):
         return ("{file_temp} {file_saln} {file_out}").format(**opts)
+
+# %% Task-specific executable scripts
+
+class Hycom3dIBCTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_ibc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins} {dates}".format(**opts)
+
+
+class Hycom3dAtmfrcTimeScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_atmfrc_time_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins_insta} {ncins_cumul} {dates}".format(**opts)
+
+
+class Hycom3dRiversFlowrateScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_rivers_flowrate_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "--rank {rank} {tarfile} {dates}".format(**opts)
+
+
+class Hycom3dSpnudgePrepostScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_spnudge_prepost_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins}".format(**opts)
             
+
+class Hycom3dSpnudgeSpectralPreprocScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_spnudge_spectral_preproc_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "{ncins_hycom3d} {ncins_mercator}".format(**opts)
+    
 
 # %% Pre-processing intermediate files
 
