@@ -269,7 +269,7 @@ class Hycom3dAtmFrcTime(Expresso):
                      self.context.sequence.effective_inputs(role="InputInsta")]
         insta_rhs.sort(key=lambda rh: (rh.resource.date, rh.resource.term))
         self._insta_files = [rh.container.localpath() for rh in insta_rhs]
-
+        
         # Input cumul files
         cumul_rhs = [sec.rh for sec in
                      self.context.sequence.effective_inputs(role="InputCumul")]
@@ -278,7 +278,7 @@ class Hycom3dAtmFrcTime(Expresso):
         for rh in cumul_rhs:
             self._cumul_files[rh.resource.date].append(
                 rh.container.localpath())
-
+        
         # Output dates
         self._interp_dates = [
             self.date+vdate.Time(term) for term in self.terms]
@@ -294,6 +294,38 @@ class Hycom3dAtmFrcTime(Expresso):
 
 
 #%% Spectral nudging
+class Hycom3dSpectralNudgingRunPrepost(Expresso):
+    """Algo component for preparing files before the demerliac filter"""
+
+    _footprint = [
+        date_deco,
+        dict(
+            info="Run the spectral  nudging demerliac preprocessing",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_spnudge_prepost"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+            ),
+        ),
+    ]
+
+    def prepare(self, rh, opts):
+        super(Hycom3dSpectralNudgingRunPrepost, self).prepare(rh, opts)
+
+        ncinputs = self.context.sequence.effective_inputs(role=["Input"])
+        self._ncins = ','.join(
+            [sec.rh.container.localpath() for sec in ncinputs])
+
+    def spawn_command_options(self):
+        return dict(
+            ncins=self._ncins,
+            )
+
 class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
     """
     Demerliac filtering over Hycom3d outputs
@@ -321,38 +353,77 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
     def prepare(self, rh, opts):
         super(Hycom3dSpectralNudgingRunDemerliac, self).prepare(rh, opts)
 
-        # Input netcdf file
-        ncfiles = [ei.rh.container.localpath() for ei in
-                   self.context.sequence.effective_inputs(role="Input")]
-
-        # Constant files
-        for cfile in (f"FORCING{self.rank}./regional.grid.a",
-                      f"FORCING{self.rank}./regional.grid.b",
-                      f"FORCING{self.rank}./regional.depth.a",
-                      f"PARAMETERS{self.rank}./blkdat.input",
-                      f"PARAMETERS{self.rank}./blkdat_cmo.input"):
-            if not self.system.path.exists(self.system.path.basename(cfile)):
-                self.system.symlink(cfile, self.system.path.basename(cfile))
-
-        from sloop.models.hycom3d.spnudge import Demerliac
-        date_demerliac = Demerliac().time_sel(ncfiles=ncfiles)
-        self._clargs = dict(
-            date=date_demerliac,
-            output_type=0)
+        # Get specs from json
+        with open("demerliac.json") as f:
+            specs = json.load(f)
+            
+        # Link to regional and blkdat files
+        for path in specs["links"]:
+            local_path = self.system.path.basename(path)
+            if not self.system.path.exists(local_path):
+                self.system.symlink(path, local_path)
+                
+        # Setup args
+        self.ncins = specs["ncins"]
+        self.ncout_patt = specs["ncout_patt"]
+        self.varnames = list(self.ncins.keys())
+        self.date_demerliac = specs["date_demerliac"]
+        self.otype = specs["otype"]
 
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        return dict(**self._clargs)
+        return dict(date=self.date_demerliac, 
+                    output_type=self.otype)
 
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs"""
-        for varname in ["h", "saln", "temp"]:
-            self.system.symlink(f"{varname}_3D.nc", "input.nc")
+        for varname in self.varnames:
+            self.system.symlink(self.ncins[varname] , "input.nc")
             super(Hycom3dSpectralNudgingRunDemerliac, self).execute(rh, opts)
             self.system.rm("input.nc")
-            self.system.mv("output.nc", f"{varname}-demerliac.nc")
+            self.system.mv("output.nc", self.ncout_patt.format(**locals()))
 
 
+class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
+    """Algo component for preparing files before the spectral filter"""
+
+    _footprint = [
+        date_deco,
+        dict(
+            info="Run the spectral  nudging spectral filter preprocessing",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_spnudge_spectral_preproc"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+            ),
+        ),
+    ]
+
+    def prepare(self, rh, opts):
+        super(Hycom3dSpectralNudgingRunSpectralPreproc, self).prepare(rh, opts)
+
+        ncinputs_hycom3d = self.context.sequence.effective_inputs(
+            role=["Input_hycom3d"])
+        ncinputs_mercator = self.context.sequence.effective_inputs(
+            role=["Input_mercator"])
+        self._ncins_hycom3d = ','.join(
+            [sec.rh.container.localpath() for sec in ncinputs_hycom3d])
+        self._ncins_mercator = ','.join(
+            [sec.rh.container.localpath() for sec in ncinputs_mercator])
+        print(self._ncins_mercator)
+        print(self._ncins_hycom3d)
+    def spawn_command_options(self):
+        return dict(
+            nchycom3d=self._ncins_hycom3d,
+            ncmercator=self._ncins_mercator,
+            )
+    
+    
 class Hycom3dSpectralNudgingRunSpectral(BlindRun):
     """
     Spectral filtering over Hycom3d and Mercator outputs
@@ -380,52 +451,40 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun):
     def prepare(self, rh, opts):
         super(Hycom3dSpectralNudgingRunSpectral, self).prepare(rh, opts)
 
-        # Input netcdf file
-        ncfiles = [ei.rh.container.localpath() for ei in
-                   self.context.sequence.effective_inputs(role="Input_nest")]
-
-        # Constant files
-        for cfile in (f"FORCING{self.rank}./regional.grid.a",
-                      f"FORCING{self.rank}./regional.grid.b",
-                      f"FORCING{self.rank}./regional.depth.a",
-                      f"PARAMETERS{self.rank}./blkdat.input",
-                      f"PARAMETERS{self.rank}./blkdat_cmo.input"):
-            if not self.system.path.exists(self.system.path.basename(cfile)):
-                self.system.symlink(cfile, self.system.path.basename(cfile))
-
-        import xarray as xr
-        ds = xr.open_dataset("h-demerliac.nc")
-        Spectral().extract_mercator(ds.time)
-
-        import json
-        with open(f"PARAMETERS{self.rank}./spnudging_parameters.json", "r") as json_file:
-            self._clargs = json.load(json_file)
-
+        # Get specs from json
+        with open("spectral.json") as f:
+            specs = json.load(f)
+            
+        # Link to regional and blkdat files
+        for path in specs["links"]:
+            local_path = self.system.path.basename(path)
+            if not self.system.path.exists(local_path):
+                self.system.symlink(path, local_path)
+                
+        self.varnames = list(specs["ncfiles"].keys())
+        self.ncfiles = specs["ncfiles"]
+        self.ncout_patt = specs["ncout_patt"]
+        
+        # Get command line options
+        with open(specs["clargs"], "r") as f:
+            self._clargs = json.load(f)
+        
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
         return dict(**self._clargs)
 
-    def postfix(self, rh, opts):
-        super(Hycom3dSpectralNudgingRunSpectral, self).postfix(rh, opts)
-        from sloop.models.hycom3d.io import nc2hycom
-        for varname in ["h", "saln", "temp"]:
-            ncout = Spectral.diff(varname,
-                                  f'{varname}-nest_timesel_filtered.nc',
-                                  f'{varname}-demerliac_filtered.nc')
-            nc2hycom(varname, ncout, f"differences {varname}: Hycom-Mercator")
-
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs"""
-
-        for varname in ["h", "saln", "temp"]:
-            for source in ['demerliac', 'nest_timesel']:
-                self.system.symlink(f"{varname}-{source}.nc", "input.nc")
+        
+        for varname in self.varnames:
+            for source in list(self.ncfiles[varname].keys()):
+                self.system.symlink(self.ncfiles[varname][source], "input.nc")
                 super(Hycom3dSpectralNudgingRunSpectral, self).execute(rh, opts)
                 self.system.rm("input.nc")
-                self.system.mv("output.nc", f"{varname}-{source}_filtered.nc")
-
-
-# %% Model run
+                self.system.mv("output.nc", self.ncout_patt.format(**locals()))
+    
+    
+# %% Model run AlgoComponents
 
 class Hycom3dModelRun(Parallel):
 
