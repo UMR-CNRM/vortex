@@ -74,9 +74,9 @@ class Hycom3dAtmFrcInterpWeights(Resource):
                     values=['netcdf','nc'],
                 ),
                 grids=dict(
-                    values=["atmfrc2hycom3d","mask2hycom3d"],
+                    values=["a2o","o2a"],
                     optional=False,
-                    default='atmfrc2hycom3d',
+                    default='a2o',
                 ),
             ),
         )
@@ -206,7 +206,7 @@ class Hycom3dModelBinary(OceanographicModel):
         dict(
             info="Binary of the model",
             attr= dict(
-                gvar = dict(default='hycom3d_model_binary'),
+                gvar = dict(default='oceanmodel'),
             ),
         )
     ]
@@ -349,7 +349,7 @@ class Hycom3dSpnudgeSpectralPreprocScript(Script):
         )
 
     def command_line(self, **opts):
-        return "{ncins_hycom3d} {ncins_mercator}".format(**opts)
+        return "{nchycom3d} {ncmercator}".format(**opts)
     
 
 # %% Pre-processing intermediate files
@@ -538,7 +538,9 @@ class Hycom3dRestartDate(GeoFlowResource):
 
 
 @namebuilding_append('src', lambda self: self.field)
+@namebuilding_append('src', lambda self: self.dim)
 @namebuilding_append('src', lambda self: self.filter)
+@namebuilding_append('src', lambda self: self.source)
 class Hycom3dSpnudgeFilterOutput(GeoFlowResource):
     _footprint = [
         dict(
@@ -548,13 +550,21 @@ class Hycom3dSpnudgeFilterOutput(GeoFlowResource):
                     values=["spnudge_filter_output"],
                 ),
                 field=dict(
-                    values=["saln", "temp", "h"],
+                    values=["saln", "temp", "h", "s", "t"],
                 ),
                 filter=dict(
                     values=["demerliac", "spectral"],
                 ),
                 format=dict(
                     values=["nc", "netcdf"],
+                ),
+                dim=dict(
+                    values=["3D", "2D"],
+                    optional=True,
+                ),
+                source=dict(
+                    values=["hycom3d", "mercator"],
+                    optional=True
                 ),
                 nativefmt=dict(
                     values=["nc", "netcdf"],
@@ -580,14 +590,14 @@ class Hycom3dSpnudgeOutput(GeoFlowResource):
                 field=dict(
                     values=["s", "t", "h", "rmu"],
                 ),
-                format=dict(values=["a", "b"]),
+                format=dict(values=["a", "b", "nc"]),
                 nativefmt=dict(
-                    values=["binary", "ascii"],
-                    remap={"a": "binary", "b": "ascii"}
+                    values=["binary", "ascii", "netcdf"],
+                    remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
                 ),
                 actualfmt=dict(
-                    values=["binary", "ascii"],
-                    remap={"a": "binary", "b": "ascii"}
+                    values=["binary", "ascii", "netcdf"],
+                    remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
                 ),
             ),
         ),
@@ -601,7 +611,7 @@ class Hycom3dSpnudgeOutput(GeoFlowResource):
 # %% Model outputs
 
 
-@namebuilding_append('src', lambda self: self.domain)
+@namebuilding_append('src', lambda self: self.dim)
 @namebuilding_append('geo', lambda self: self.field)
 class Hycom3dModelOutput(GeoFlowResource):
     """Model output"""
@@ -617,7 +627,7 @@ class Hycom3dModelOutput(GeoFlowResource):
                     values=["ssh", "sss", "sst", "u", "v", "ubavg", "vbavg",
                             "h", "saln", "sigma", "temp"],
                 ),
-                domain=dict(
+                dim=dict(
                     values=["3D", "2D"],
                     type=str,
                     default="3D",

@@ -271,7 +271,7 @@ class Hycom3dAtmFrcTime(Expresso):
                      self.context.sequence.effective_inputs(role="InputInsta")]
         insta_rhs.sort(key=lambda rh: (rh.resource.date, rh.resource.term))
         self._insta_files = [rh.container.localpath() for rh in insta_rhs]
-
+        
         # Input cumul files
         cumul_rhs = [sec.rh for sec in
                      self.context.sequence.effective_inputs(role="InputCumul")]
@@ -280,7 +280,7 @@ class Hycom3dAtmFrcTime(Expresso):
         for rh in cumul_rhs:
             self._cumul_files[rh.resource.date].append(
                 rh.container.localpath())
-
+        
         # Output dates
         self._interp_dates = [
             self.date+vdate.Time(term) for term in self.terms]
@@ -318,7 +318,7 @@ class Hycom3dSpectralNudgingRunPrepost(Expresso):
     ]
 
     def prepare(self, rh, opts):
-        super(Hycom3dIBCRunTime, self).prepare(rh, opts)
+        super(Hycom3dSpectralNudgingRunPrepost, self).prepare(rh, opts)
 
         ncinputs = self.context.sequence.effective_inputs(role=["Input"])
         self._ncins = ','.join(
@@ -381,7 +381,7 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
     def execute(self, rh, opts):
         """We execute several times the executable with different inputs"""
         for varname in self.varnames:
-            self.system.symlink(self.ncfiles[varname] , "input.nc")
+            self.system.symlink(self.ncins[varname] , "input.nc")
             super(Hycom3dSpectralNudgingRunDemerliac, self).execute(rh, opts)
             self.system.rm("input.nc")
             self.system.mv("output.nc", self.ncout_patt.format(**locals()))
@@ -393,10 +393,10 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
     _footprint = [
         date_deco,
         dict(
-            info="Run the spectral  nudging demerliac preprocessing",
+            info="Run the spectral  nudging spectral filter preprocessing",
             attr=dict(
                 kind=dict(
-                    values=["hycom3d_spnudge_demerliac_preproc"],
+                    values=["hycom3d_spnudge_spectral_preproc"],
                 ),
                 rank=dict(
                     default=0,
@@ -408,7 +408,7 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
     ]
 
     def prepare(self, rh, opts):
-        super(Hycom3dIBCRunTime, self).prepare(rh, opts)
+        super(Hycom3dSpectralNudgingRunSpectralPreproc, self).prepare(rh, opts)
 
         ncinputs_hycom3d = self.context.sequence.effective_inputs(
             role=["Input_hycom3d"])
@@ -418,11 +418,12 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
             [sec.rh.container.localpath() for sec in ncinputs_hycom3d])
         self._ncins_mercator = ','.join(
             [sec.rh.container.localpath() for sec in ncinputs_mercator])
-
+        print(self._ncins_mercator)
+        print(self._ncins_hycom3d)
     def spawn_command_options(self):
         return dict(
-            ncins_hycom3d=self._ncins_hycom3d,
-            ncins_mercator=self._ncins_mercator,
+            nchycom3d=self._ncins_hycom3d,
+            ncmercator=self._ncins_mercator,
             )
     
     
