@@ -15,7 +15,6 @@ from vortex.algo.components import (
 from ..util.env import config_to_env_vars, stripout_conda_env
 
 
-
 __all__ = []
 
 
@@ -55,7 +54,6 @@ class Hycom3dCompilator(Expresso):
 
 
 # %% Initial and boundary condition
-
 
 class Hycom3dIBCRunTime(Expresso):
     """Algo component for the temporal interpolation of IBC netcdf files"""
@@ -285,7 +283,6 @@ class Hycom3dAtmFrcTime(Expresso):
         self._interp_dates = [
             self.date+vdate.Time(term) for term in self.terms]
 
-
     def spawn_command_options(self):
         return dict(
             ncins_insta=','.join(self._insta_files),
@@ -512,14 +509,14 @@ class Hycom3dModelRun(Parallel):
                     type=int,
                 ),
                 mode=dict(
-                    values=["spinup", "forecast", 
+                    values=["spinup", "forecast",
                             "spnudge_free", "spnudge_relax"],
                     default="spinup",
                     type=str,
                 ),
                 env_config=dict(
                     info="Environment variables and options for running the model",
-                    optional=True,                 
+                    optional=True,
                     type=dict,
                     default={},
                 ),
@@ -550,29 +547,29 @@ class Hycom3dModelRun(Parallel):
 
         tpl_runinput = HYCOM3D_RUN_INPUT_TPL_FILE.format(rank=self.rank)
         rpl = dict(
-            lsave=1 if self.restart else 0, 
-            delday=self.delday)
+            lsave=1 if self.restart else 0,
+            delday=self.delday,
+        )
         with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
                 s = Template(tpl.read())
                 f.write(s.substitute(rpl))
-        
-        self.system.cp(HYCOM3D_BLKDAT_CMO_INPUT_FILES[self.mode].format(rank=self.rank), 
-                       HYCOM3D_BLKDAT_CMO_INPUT_FILE.format(rank=self.rank), 
+
+        self.system.cp(HYCOM3D_BLKDAT_CMO_INPUT_FILES[self.mode].format(rank=self.rank),
+                       HYCOM3D_BLKDAT_CMO_INPUT_FILE.format(rank=self.rank),
                        intent='inout')
 
-        concat_ascii_files([fin.format(rank=self.rank) for fin in HYCOM3D_SAVEFIELD_INPUT_FILES[self.mode]], 
+        concat_ascii_files([fin.format(rank=self.rank) for fin in HYCOM3D_SAVEFIELD_INPUT_FILES[self.mode]],
                            HYCOM3D_SAVEFIELD_INPUT_FILE.format(rank=self.rank))
         self._env_vars = config_to_env_vars(self.env_config)
-        self._clargs = dict(
-            datadir     = "./",
-            tmpdir      = "./",
-            localdir    = "./",
-            rank        = self.rank
-        )
-         
+
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        return dict(**self._clargs)
+        return dict(
+            datadir    = "./",
+            tmpdir     = "./",
+            localdir   = "./",
+            rank       = self.rank,
+        )
 
     def execute(self, rh, opts):
         opts = dict(mpiopts=dict(np=381))

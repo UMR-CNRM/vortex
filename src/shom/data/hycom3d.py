@@ -89,8 +89,6 @@ class Hycom3dAtmFrcInterpWeights(Resource):
 
 # %% Binaries
 
-
-
 class Hycom3dIBCRegridcdfBinary(Binary):
     """Binary that regrids initial conditions netcdf files"""
 
@@ -145,7 +143,6 @@ class Hycom3dIBCIniconBinary(Binary):
                 "{sshmin} {cstep}").format(**opts)
 
 
-
 class Hycom3dSpNudgeDemerliacBinary(Binary):
     """Binary that apply Demerliac filter HYCOM Spectral Nugding"""
 
@@ -170,7 +167,7 @@ class Hycom3dSpNudgeDemerliacBinary(Binary):
 
     def command_line(self, **opts):
         return ("{date} {output_type}").format(**opts)
-    
+
 
 class Hycom3dSpNudgeSpectralBinary(Binary):
     """Binary that apply spectral filter HYCOM Spectral Nugding"""
@@ -196,8 +193,8 @@ class Hycom3dSpNudgeSpectralBinary(Binary):
 
     def command_line(self, **opts):
         return ("{wave_sp} {genmask} {min_depth} {relax_sp}").format(**opts)
-    
-    
+
+
 class Hycom3dModelBinary(OceanographicModel):
     """Binary of the 3d model"""
 
@@ -238,12 +235,12 @@ class Hycom3dPostProdFilterBinary(Binary):
         return "hycom3d_postprod_filter_binary"
 
     def command_line(self, **opts):
-        return ("{filter_type} {file_out} "\
+        return ("{filter_type} {file_out} "
                 "{file_rundate_next} {file_rundate} {file_rundate_before}").format(**opts)
 
 
 class Hycom3dPostProdVertInterpolationBinary(Binary):
-    """Binary that verticaly interpolates and 
+    """Binary that verticaly interpolates and
     converts HYCOM output in SOAP and dataShom formats"""
 
     _footprint = [
@@ -573,7 +570,7 @@ class Hycom3dSpnudgeFilterOutput(GeoFlowResource):
         ),
     ]
 
-    @property 
+    @property
     def realkind(self):
         return "spnudge_filter_output"
     
@@ -603,7 +600,7 @@ class Hycom3dSpnudgeOutput(GeoFlowResource):
         ),
     ]
 
-    @property 
+    @property
     def realkind(self):
         return "spnudge_postproc_output"
 
@@ -640,7 +637,7 @@ class Hycom3dModelOutput(GeoFlowResource):
                     values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc"], 
+                    values=["netcdf", "nc"],
                     default="netcdf"
                 ),
             )
@@ -693,7 +690,7 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
                     values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc"], 
+                    values=["netcdf", "nc"],
                     default="netcdf"
                 ),
             )
@@ -703,8 +700,8 @@ class Hycom3dPostprodFilterOutput(GeoFlowResource):
     @property
     def realkind(self):
         return "hycom3d_postprod_filter"
-    
-    
+
+
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('src', lambda self: self.ppdate)
 @namebuilding_append('geo', lambda self: self.field)
@@ -744,7 +741,7 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
                     values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc"], 
+                    values=["netcdf", "nc"],
                     default="netcdf"
                 ),
             )
@@ -754,8 +751,8 @@ class Hycom3dPostprodInterpOutput(GeoFlowResource):
     @property
     def realkind(self):
         return "hycom3d_postprod_interp"
-    
-    
+
+
 @namebuilding_append('src', lambda self: self.domain)
 @namebuilding_append('src', lambda self: self.ppdate)
 @namebuilding_append('geo', lambda self: self.area)
@@ -795,7 +792,7 @@ class Hycom3dPostprodOutput(GeoFlowResource):
                     values=["nc", "netcdf"],
                 ),
                 nativefmt=dict(
-                    values=["netcdf", "nc"], 
+                    values=["netcdf", "nc"],
                     default="netcdf"
                 ),
             )
