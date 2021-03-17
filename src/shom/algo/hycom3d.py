@@ -576,3 +576,121 @@ class Hycom3dModelRun(Parallel):
         with self.env as e:
             e.update(self._env_vars)
             super(Hycom3dModelRun, self).execute(rh, opts)
+
+
+#%% Post-production run algo component
+
+class Hycom3dPostprodPreproc(Expresso):
+
+    _footprint = [
+        date_deco,
+        dict(
+            info="Prepare Hycom output for postproduction",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_postprod_preproc"],
+                ),
+            ),
+        ),
+    ]
+
+    def prepare(self, rh, opts):
+        super(Hycom3dPostprodPreproc, self).prepare(rh, opts)
+
+        # Input files
+        rhs = [sec.rh for sec in 
+               self.context.sequence.effective_inputs(role="Input")]
+        self._files = [rh.container.localpath() for rh in rhs]
+
+
+    def spawn_command_options(self):
+        return dict(
+            ncins=','.join(self._files),
+            )
+    
+    
+class Hycom3dPostprod(BlindRun):
+    """
+    Post-production filter over hycom3d outputs
+    """
+    _footprint = [
+        dict(
+            info="Run the postprod filtering over Hycom3d outputs",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_postprod_filter",
+                            "hycom3d_postprod_tempconversion"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dPostprod, self).prepare(rh, opts)
+
+        with open("filter.json") as f:
+            specs = json.load(f)
+        self.args = specs["clargs"]
+        
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def execute(self, rh, opts):
+        """We execute several times the executable with different inputs"""
+        
+        for arg in self.args:
+            self._clargs = arg
+            super(Hycom3dPostprod, self).execute(rh, opts)
+            
+            
+class Hycom3dPostprodInterpolation(BlindRun):
+    """
+    Post-production interpolation over hycom3d outputs
+    """
+    _footprint = [
+        dict(
+            info="Run the postprod interpolation over Hycom3d outputs",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_postprod_interpolation"],
+                ),
+            ),
+        ),
+    ]
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_interpolation"
+
+    def prepare(self, rh, opts):
+        super(Hycom3dPostprodInterpolation, self).prepare(rh, opts)
+
+        with open("interp.json") as f:
+            specs = json.load(f)
+        
+        # Link to regional and blkdat files
+        for path in specs["links"]:
+            local_path = self.system.path.basename(path)
+            if not self.system.path.exists(local_path):
+                if "traductions_noms_longs" in local_path:
+                    self.system.symlink(path, "traductions_noms_longs")
+                else:
+                    self.system.symlink(path, local_path)
+        
+        self.args = specs["clargs"]
+        
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return dict(**self._clargs)
+
+    def execute(self, rh, opts):
+        """We execute several times the executable with different inputs"""
+        
+        for arg in self.args:
+            self._clargs = arg
+            super(Hycom3dPostprodInterpolation, self).execute(rh, opts)
