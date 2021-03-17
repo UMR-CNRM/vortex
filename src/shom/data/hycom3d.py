@@ -235,9 +235,13 @@ class Hycom3dPostProdFilterBinary(Binary):
         return "hycom3d_postprod_filter_binary"
 
     def command_line(self, **opts):
-        return ("{filter} {ncout} "
-                "{ncin_for} {ncin_mid} {ncin_back}").format(**opts)
-
+        if not "ncin_back" in list(opts.keys()):
+            return ("{filter} {ncout} "
+                    "{ncin_for} {ncin_mid}").format(**opts)
+        else:
+            return ("{filter} {ncout} "
+                    "{ncin_for} {ncin_mid} {ncin_back}").format(**opts)
+           
 
 class Hycom3dPostProdVertInterpolationBinary(Binary):
     """Binary that verticaly interpolates and
@@ -263,8 +267,12 @@ class Hycom3dPostProdVertInterpolationBinary(Binary):
         return "hycom3d_postprod_vertinterpolation_binary"
 
     def command_line(self, **opts):
-        return ("{offset} {ncin} {ncout} {config} "\
-                "{h} {zgrid}").format(**opts)
+        if not "zgrid" in list(opts.keys()):
+            return ("{offset} {ncin} {ncout} {config} "\
+                    "{h}").format(**opts)
+        else:
+            return ("{offset} {ncin} {ncout} {config} "\
+                    "{h} {zgrid}").format(**opts)
 
 
 class Hycom3dPostProdTempConversionBinary(Binary):
@@ -349,7 +357,7 @@ class Hycom3dSpnudgeSpectralPreprocScript(Script):
         return "{nchycom3d} {ncmercator}".format(**opts)
     
     
-class Hycom3dPostprodPreproc(Script):
+class Hycom3dPostprodPreprocScript(Script):
 
     _footprint = dict(
         info="Python script ",
@@ -357,7 +365,9 @@ class Hycom3dPostprodPreproc(Script):
         )
 
     def command_line(self, **opts):
-        return "{ncins}".format(**opts)
+        return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate}".format(**opts)
+
+
 # %% Pre-processing intermediate files
 
 @namebuilding_append('geo', lambda self: self.field)

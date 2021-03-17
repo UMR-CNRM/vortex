@@ -588,7 +588,22 @@ class Hycom3dPostprodPreproc(Expresso):
             info="Prepare Hycom output for postproduction",
             attr=dict(
                 kind=dict(
-                    values=["hycom3d_postprod_preproc"],
+                    values=["hycom3d_postprod_preproc",
+                            "hycom3d_postprod_filter_preproc"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+                postprod=dict(
+                    default="datashom_forecast",
+                    type=str,
+                    optional=True,
+                ),
+                rundate=dict(
+                    default=0,
+                    optional=True,
                 ),
             ),
         ),
@@ -602,10 +617,12 @@ class Hycom3dPostprodPreproc(Expresso):
                self.context.sequence.effective_inputs(role="Input")]
         self._files = [rh.container.localpath() for rh in rhs]
 
-
     def spawn_command_options(self):
         return dict(
             ncins=','.join(self._files),
+            rank=self.rank,
+            postprod=self.postprod,
+            rundate=self.rundate,
             )
     
     
@@ -632,7 +649,7 @@ class Hycom3dPostprod(BlindRun):
     def prepare(self, rh, opts):
         super(Hycom3dPostprod, self).prepare(rh, opts)
 
-        with open("filter.json") as f:
+        with open("specs.json") as f:
             specs = json.load(f)
         self.args = specs["clargs"]
         
@@ -670,7 +687,7 @@ class Hycom3dPostprodInterpolation(BlindRun):
     def prepare(self, rh, opts):
         super(Hycom3dPostprodInterpolation, self).prepare(rh, opts)
 
-        with open("interp.json") as f:
+        with open("specs.json") as f:
             specs = json.load(f)
         
         # Link to regional and blkdat files
