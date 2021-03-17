@@ -539,6 +539,10 @@ class Hycom3dModelRun(Parallel):
                 binary=dict(
                     values=["hycom3d_model_runner"],
                 ),
+                mpiname=dict(
+                    default="mpirun",
+                    optional=True,
+                ),
                 env_config=dict(
                     info="Environment variables and options for running the model",
                     optional=True,
