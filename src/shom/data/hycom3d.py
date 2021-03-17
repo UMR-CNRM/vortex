@@ -335,6 +335,17 @@ class Hycom3dRiversFlowrateScript(Script):
         return "--rank {rank} {tarfile} {dates}".format(**opts)
 
 
+class Hycom3dModelPreprocScript(Script):
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_model_preproc_script"]))
+        )
+
+    def command_line(self, **opts):
+        return "--rank {rank} --mode {mode} --restart {restart} --delday {delday}".format(**opts)
+    
+    
 class Hycom3dSpnudgePrepostScript(Script):
 
     _footprint = dict(
