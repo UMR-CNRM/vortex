@@ -486,6 +486,50 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun):
     
 # %% Model run AlgoComponents
 
+
+class Hycom3dModelRunPreproc(Expresso):
+
+    _footprint = [
+        date_deco,
+        dict(
+            info="Prepare Hycom output for postproduction",
+            attr=dict(
+                kind=dict(
+                    values=["hycom3d_model_preproc"],
+                ),
+                rank=dict(
+                    default=0,
+                    type=int,
+                    optional=True,
+                ),
+                restart=dict(
+                    default=True,
+                    type=bool,
+                    optional=True,
+                ),
+                delday=dict(
+                    default=1,
+                    type=int,
+                    optional=True,
+                ),
+                mode=dict(
+                    default="forecast",
+                    type=str,
+                    optional=True,
+                ),
+            ),
+        ),
+    ]
+
+    def spawn_command_options(self):
+        return dict(
+            rank=self.rank,
+            mode=self.mode,
+            delday=self.delday,
+            restart=self.restart,
+            )
+
+
 class Hycom3dModelRun(Parallel):
 
     _footprint = [
@@ -494,25 +538,6 @@ class Hycom3dModelRun(Parallel):
             attr=dict(
                 binary=dict(
                     values=["hycom3d_model_runner"],
-                ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
-                restart=dict(
-                    default=False,
-                    type=bool,
-                ),
-                delday=dict(
-                    default=1,
-                    type=int,
-                ),
-                mode=dict(
-                    values=["spinup", "forecast",
-                            "spnudge_free", "spnudge_relax"],
-                    default="spinup",
-                    type=str,
                 ),
                 env_config=dict(
                     info="Environment variables and options for running the model",
@@ -533,49 +558,28 @@ class Hycom3dModelRun(Parallel):
         return "hycom3d_model_run"
 
     def prepare(self, rh, opts):
-
         super(Parallel, self).prepare(rh, opts)
-        from sloop.models.hycom3d import (
-            HYCOM3D_RUN_INPUT_TPL_FILE,
-            HYCOM3D_BLKDAT_CMO_INPUT_FILE,
-            HYCOM3D_BLKDAT_CMO_INPUT_FILES,
-            HYCOM3D_SAVEFIELD_INPUT_FILE,
-            HYCOM3D_SAVEFIELD_INPUT_FILES
-        )
-        from string import Template
-        from sloop.io import concat_ascii_files
 
-        tpl_runinput = HYCOM3D_RUN_INPUT_TPL_FILE.format(rank=self.rank)
-        rpl = dict(
-            lsave=1 if self.restart else 0,
-            delday=self.delday,
-        )
-        with open(tpl_runinput, 'r') as tpl, open(tpl_runinput[:-4], 'w') as f:
-                s = Template(tpl.read())
-                f.write(s.substitute(rpl))
+        with open("specs.json") as f:
+            specs = json.load(f)
+            
+        for copy in specs["copy"]:
+            self.system.cp(copy[0], copy[1], intent="inout")
 
-        self.system.cp(HYCOM3D_BLKDAT_CMO_INPUT_FILES[self.mode].format(rank=self.rank),
-                       HYCOM3D_BLKDAT_CMO_INPUT_FILE.format(rank=self.rank),
-                       intent='inout')
-
-        concat_ascii_files([fin.format(rank=self.rank) for fin in HYCOM3D_SAVEFIELD_INPUT_FILES[self.mode]],
-                           HYCOM3D_SAVEFIELD_INPUT_FILE.format(rank=self.rank))
+        self._clargs = specs["clargs"]
         self._env_vars = config_to_env_vars(self.env_config)
-
+        self.mpiopts = specs["mpiopts"] 
+        
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
-        return dict(
-            datadir    = "./",
-            tmpdir     = "./",
-            localdir   = "./",
-            rank       = self.rank,
-        )
+        return dict(**self._clargs)
 
     def execute(self, rh, opts):
-        opts = dict(mpiopts=dict(np=381))
+        opts = dict(mpiopts=self.mpiopts)
         with self.env as e:
             e.update(self._env_vars)
             super(Hycom3dModelRun, self).execute(rh, opts)
+
 
 
 #%% Post-production run algo component
