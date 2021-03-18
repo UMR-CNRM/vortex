@@ -4,14 +4,11 @@
 """
 Promethee gridfiles
 """
-
 from __future__ import print_function, absolute_import, unicode_literals, division
-
-#from vortex.data.resources import Resource
 from vortex.data.outflow import StaticResource
 from common.data.gridfiles import TimePeriodGridPoint
-from promethee.syntax.stdattrs import param_deco, version_deco, promid_deco
-from vortex.syntax.stddeco import namebuilding_insert
+from promethee.syntax.stdattrs import param_deco, version_deco, promid_deco, step_deco
+from vortex.syntax.stddeco import namebuilding_insert, namebuilding_append
 
 
 #: No automatic export
@@ -25,17 +22,13 @@ class PrometheeGridPoint(TimePeriodGridPoint):
     """
     _footprint = [
         param_deco,
+        step_deco,
         dict(
             info = "Promethee gridpoint",
             attr = dict(
                 kind = dict(
                     optional = False,
                     values = ["gridpoint", "promethee_gridpoint"]
-                ),
-                step = dict(
-                    optional = False,
-                    type = int,
-                    values = [1, 3, 6, 24]
                 ),
                 model = dict(
                     optional = False,
@@ -68,7 +61,6 @@ class PrometheeGridPoint(TimePeriodGridPoint):
 
 
 @namebuilding_insert("radical", lambda s: s.realkind)
-#class PrometheeMask(Resource):
 class PrometheeMask(StaticResource):
     """
     Promethee Mask 

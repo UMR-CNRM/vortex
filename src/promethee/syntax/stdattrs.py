@@ -8,13 +8,15 @@ Promethee standard attributes.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import footprints
+from bronx.stdtypes.date import Time
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert, generic_pathname_insert
 
 #: Export a set of attributes
 __all__ = [
     'a_promid',
     'a_version',
-    'a_param'
+    'a_param',
+    'a_step'
 ]
 
 #: Usual definition for the ``promid`` (*e.g.* promethee identifier).
@@ -85,4 +87,21 @@ task_deco = footprints.DecorativeFootprint(
     task,
     decorator=[namebuilding_append('src', lambda self: {"task": self.task})]
 )
- 
+
+#: Usual definition for the ``step`` (*e.g.* step between two consecutive terms)
+steps = [1, 3, 6, 12, 24]
+
+a_step = dict(
+    info='Step length between two consecutive terms',
+    type=Time,
+    optional=False,
+    values=steps
+)
+
+step = footprints.Footprint(info='Abstract step',
+                            attr=dict(step=a_step))
+
+step_deco = footprints.DecorativeFootprint(
+    step,
+    decorator=[namebuilding_append('period', lambda self: {"step": self.step})]
+)
