@@ -517,6 +517,11 @@ class Hycom3dModelRunPreproc(Expresso):
                     type=str,
                     optional=True,
                 ),
+                mpiname=dict(
+                    default="mpirun",
+                    optional=True,
+                    type=str,
+                ),
             ),
         ),
     ]
@@ -527,6 +532,7 @@ class Hycom3dModelRunPreproc(Expresso):
             mode=self.mode,
             delday=self.delday,
             restart=self.restart,
+            mpiname=self.mpiname
             )
 
 
@@ -538,10 +544,6 @@ class Hycom3dModelRun(Parallel):
             attr=dict(
                 binary=dict(
                     values=["hycom3d_model_runner"],
-                ),
-                mpiname=dict(
-                    default="mpirun",
-                    optional=True,
                 ),
                 env_config=dict(
                     info="Environment variables and options for running the model",
@@ -572,18 +574,21 @@ class Hycom3dModelRun(Parallel):
 
         self._clargs = specs["clargs"]
         self._env_vars = config_to_env_vars(self.env_config)
-        self.mpiopts = specs["mpiopts"] 
+        self.mpiopts = specs["mpiopts"]
+        self.mpiname = specs["mpiname"]
         
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
         return dict(**self._clargs)
 
     def execute(self, rh, opts):
-        opts = dict(mpiopts=self.mpiopts)
+        opts = dict(
+            mpiopts=self.mpiopts,
+            mpiname=self.mpiname
+            )
         with self.env as e:
             e.update(self._env_vars)
             super(Hycom3dModelRun, self).execute(rh, opts)
-
 
 
 #%% Post-production run algo component

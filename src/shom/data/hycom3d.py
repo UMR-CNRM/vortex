@@ -343,7 +343,7 @@ class Hycom3dModelPreprocScript(Script):
         )
 
     def command_line(self, **opts):
-        return "--rank {rank} --mode {mode} --restart {restart} --delday {delday}".format(**opts)
+        return "--rank {rank} --mode {mode} --restart {restart} --delday {delday} --mpiname {mpiname}".format(**opts)
     
     
 class Hycom3dSpnudgePrepostScript(Script):
