@@ -575,7 +575,7 @@ class Hycom3dModelRun(Parallel):
         self._clargs = specs["clargs"]
         self._env_vars = config_to_env_vars(self.env_config)
         self.mpiopts = specs["mpiopts"]
-        self.mpiname = specs["mpiname"]
+        self.namempi = specs["mpiname"]
         
     def spawn_command_options(self):
         """Prepare options for the resource's command line."""
@@ -584,7 +584,7 @@ class Hycom3dModelRun(Parallel):
     def execute(self, rh, opts):
         opts = dict(
             mpiopts=self.mpiopts,
-            mpiname=self.mpiname
+            mpiname=self.namempi
             )
         with self.env as e:
             e.update(self._env_vars)
