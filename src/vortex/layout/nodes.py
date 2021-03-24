@@ -26,7 +26,6 @@ from bronx.syntax.iterators import izip_pcn
 from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
-from vortex.algo.components import DelayedAlgoComponentError
 from vortex.layout.appconf import ConfigSet
 from vortex.layout.subjobs import subjob_handling, SubJobLauncherError
 from vortex.syntax.stdattrs import Namespace
@@ -608,7 +607,7 @@ class Node(getbytag.GetByTag, NiceLayout):
                         tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
                     except (Exception, SignalInterruptError, KeyboardInterrupt) as e:
                         mask_delayed, f_infos = self.filter_execution_error(e)
-                        if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
+                        if mask_delayed:
                             logger.warning("The delayed exception is masked:\n%s", str(f_infos))
                             self.report_execution_warning(e, **f_infos)
                         else:
