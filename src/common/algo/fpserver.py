@@ -29,6 +29,7 @@ from vortex.algo.components import AlgoComponentError
 import vortex.layout.monitor as _lmonitor
 
 from .ifsroot import IFSParallel
+from common.syntax.stdattrs import outputid_deco
 
 #: No automatic export
 __all__ = []
@@ -166,77 +167,76 @@ class FullPosServer(IFSParallel):
     _SERVERSYNC_RUNONSTARTUP = False
     _SERVERSYNC_STOPONEXIT = False
 
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values   = ['fpserver', ],
-            ),
-            outputid = dict(
-                info     = "The identifier for the encoding of post-processed fields.",
-                optional = True,
-            ),
-            outdirectories = dict(
-                info     = "The list of possible output directories.",
-                type     = footprints.stdtypes.FPList,
-                default  = footprints.stdtypes.FPList(['.', ]),
-                optional = True,
-            ),
-            append_domain = dict(
-                info     = ("If defined, the output file for domain append_domain " +
-                            "will be made a copy of the input file (prior to the " +
-                            "server run"),
-                optional = True,
-            ),
-            basedate=dict(
-                info     = "The run date of the coupling generating process",
-                type     = Date,
-                optional = True
-            ),
-            xpname = dict(
-                default  = 'FPOS'
-            ),
-            conf = dict(
-                default  = 903,
-            ),
-            timestep=dict(
-                default  = 1.,
-            ),
-            timeout = dict(
-                type     = int,
-                optional = True,
-                default  = 300,
-            ),
-            refreshtime = dict(
-                info     = "How frequently are the expected input files looked for ? (seconds)",
-                type     = int,
-                optional = True,
-                default  = 20,
-            ),
-            server_run = dict(
-                # This is a rw attribute: it will be managed internally
-                values   = [True, False]
-            ),
-            serversync_method = dict(
-                default  = 'simple_socket',
-            ),
-            serversync_medium = dict(
-                default  = 'nextfile_wait',
-            ),
-            maxpollingthreads = dict(
-                type     = int,
-                optional = True,
-                default  = 8,
-            ),
-            flypoll = dict(
-                default  = 'internal',
-            ),
-            defaultformat = dict(
-                info = "Format for the legacy output files.",
-                default = 'fa',
-                optional = True
+    _footprint = [
+        outputid_deco,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values   = ['fpserver', ],
+                ),
+                outdirectories = dict(
+                    info     = "The list of possible output directories.",
+                    type     = footprints.stdtypes.FPList,
+                    default  = footprints.stdtypes.FPList(['.', ]),
+                    optional = True,
+                ),
+                append_domain = dict(
+                    info     = ("If defined, the output file for domain append_domain " +
+                                "will be made a copy of the input file (prior to the " +
+                                "server run"),
+                    optional = True,
+                ),
+                basedate=dict(
+                    info     = "The run date of the coupling generating process",
+                    type     = Date,
+                    optional = True
+                ),
+                xpname = dict(
+                    default  = 'FPOS'
+                ),
+                conf = dict(
+                    default  = 903,
+                ),
+                timestep=dict(
+                    default  = 1.,
+                ),
+                timeout = dict(
+                    type     = int,
+                    optional = True,
+                    default  = 300,
+                ),
+                refreshtime = dict(
+                    info     = "How frequently are the expected input files looked for ? (seconds)",
+                    type     = int,
+                    optional = True,
+                    default  = 20,
+                ),
+                server_run = dict(
+                    # This is a rw attribute: it will be managed internally
+                    values   = [True, False]
+                ),
+                serversync_method = dict(
+                    default  = 'simple_socket',
+                ),
+                serversync_medium = dict(
+                    default  = 'nextfile_wait',
+                ),
+                maxpollingthreads = dict(
+                    type     = int,
+                    optional = True,
+                    default  = 8,
+                ),
+                flypoll = dict(
+                    default  = 'internal',
+                ),
+                defaultformat = dict(
+                    info = "Format for the legacy output files.",
+                    default = 'fa',
+                    optional = True
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -646,8 +646,6 @@ class FullPosServer(IFSParallel):
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
         super(FullPosServer, self).prepare_namelist_delta(rh, namcontents, namlocal)
-        if self.outputid:
-            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
         # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
         if self.inputs.anyexpected:
             self._set_nam_macro(namcontents, namlocal, 'SERVERSYNC_SCRIPT',

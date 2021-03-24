@@ -74,18 +74,19 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                 ),
                 fcterm = dict(
                     info     = 'The forecast term of the Arpege/IFS model.',
-                    type = int,
+                    type     = int,
                     optional = True,
-                    default = 0,
+                    default  = 0,
                 ),
                 fcunit = dict(
                     info     = 'The unit used in the *fcterm* attribute.',
                     optional = True,
                     default  = 'h',
-                    values   = ['h', 'hour', 't', 'step'],
+                    values   = ['h', 'hour', 't', 'step', 'timespep'],
                     remap = dict(
                         hour = 'h',
-                        step = 't'
+                        step = 't',
+                        timestep = 't',
                     )
                 ),
                 xpname = dict(
