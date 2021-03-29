@@ -381,3 +381,174 @@ class SARdataWave(GenericWaveSatelliteData):
     @property
     def realkind(self):
         return 'SARdataWave'
+
+class ForcingWindNetcdf(GeoFlowResource):
+    """Class for netcdf  wind forcing for WW3 """
+    _footprint = dict(
+        info = ('wind forcing for ww3 input'),
+        attr = dict(
+            kind = dict(
+                values = ['windNetcdf'],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf'],
+                default = 'netcdf',
+            ),
+            fields = dict(
+                values = ['wind'],
+            ),
+            model = dict(
+                    values = ['ww3'],
+            ),
+
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'WindNetcdf'
+
+class TarResultBoundww3(GeoFlowResource):
+    """Class for ww3 boundaries spectra converted from mfwam  (tar file: ww3....spec)."""
+    _footprint = dict(
+        info = 'tar of ww3 boundaries spectra',
+        attr = dict(
+            kind = dict(
+                values = ['tarspecmfwam2ww3', ],
+            ),
+            nativefmt = dict(
+                values = ['tar'],
+                default = 'tar'
+            ),
+            fields = dict(
+                values = ['specmfwam2ww3'],
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+
+        )
+    )
+
+
+@namebuilding_insert('radical', lambda s: s.fields)
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
+class Ww3IntermediateResults(GeoFlowResource):
+    """Class for ww3 Intermediate result (.ww3)  """
+    _footprint = dict(
+        info = ' ww3 format files',
+        attr = dict(
+            kind = dict(
+                values = ['ww3IntermedResult'],
+            ),
+            fields = dict(
+                values = ['nest','wind','restart','out_pnt','out_grd','restart001','restart002','restart003'],
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+
+        )
+    )
+
+@namebuilding_insert('radical', lambda s: s.fields + "_" + s.dateval.ymdh)
+class Ww3DatedIntermediateResults(Ww3IntermediateResults):
+    """Class for ww3 Intermediate result (.ww3) with a date """
+    _footprint = dict(
+        info = ' ww3 format dated files',
+        attr = dict(
+            kind = dict(
+                values = ['ww3DatedIntermedResult'],
+            ),
+            dateval = dict(
+                type = Date,
+                optional = False,
+            ),
+            term = dict(
+                type = Time,
+                optional = True,
+            ),
+        )
+    )
+
+
+@namebuilding_insert('radical', lambda s: s.fields + "_" + s.dateval.ymdh)
+class WW3Out(GeoFlowResource):
+    """Class for ww3 parameters output raw netcdf """
+    _footprint = dict(
+        info = 'ww3 parameters output raw netcdf',
+        attr = dict(
+            kind = dict(
+                values = ['ww3outpts','ww3outsurf'],
+            ),
+            nativefmt = dict(
+                values  = ['tar'],
+                default = 'tar',
+            ),
+            fields = dict(
+                values = ['out_pnt','out_grd','out_reg'],
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+            dateval = dict(
+                type = Date,
+                optional = False,
+            ),
+            term = dict(
+                type = Time,
+                optional = True,
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'WW3Out'
+
+@namebuilding_insert('radical', lambda s: s.header + '_' + s.param + '_' + s.datpivot.ymdh + '_' + s.term.fmth + '_' + s.origin + '.' + s.nativefmt)
+@namebuilding_delete('src')
+@namebuilding_delete('fmt')
+class WWW3FieldOut(FlowResource):
+    """Class for ww3 parameters output (nc)"""
+    _footprint = dict(
+        info = 'ww3 parameters output',
+        attr = dict(
+            kind = dict(
+                values = ['ww3outsurf'],
+            ),
+            nativefmt = dict(
+                values  = ['netcdf','grib'],
+#                default = 'netcdf',
+            ),
+            param = dict(
+                optional = False,
+            ),
+            header = dict(
+                optional = True,
+            ),
+            origin = dict(
+#                optional = False,
+                values = ['ana','fcst'],
+                optional = False,
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+            datpivot = dict(
+                type = Date,
+                optional = False,
+            ),
+            term = dict(
+                type = Time,
+                optional = True,
+            ),
+
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'WW3OutField'
+
