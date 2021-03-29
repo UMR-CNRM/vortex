@@ -571,7 +571,7 @@ class Hycom3dModelRun(Parallel):
             
         for copy in specs["copy"]:
             self.system.cp(copy[0], copy[1], intent="inout")
-
+        self.system.mkdir(specs["mkdir"])
         self._clargs = specs["clargs"]
         self._env_vars = config_to_env_vars(self.env_config)
         self.mpiopts = specs["mpiopts"]
