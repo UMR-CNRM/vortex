@@ -943,3 +943,50 @@ class EnsembleDiagScript(GnuScript):
             )
         )
     ]
+
+
+@gmkpack_bin_deco
+class Surfexoff(BlackBox):
+    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info = 'surfex offline domeo',
+            attr = dict(
+                kind = dict(
+                    values   = ['surfexoff'],
+                ),
+                gvar = dict(
+                    default  = 'master_surfexoff'
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'surfexoff'
+
+
+class ScriptDataCor(Script):
+    """Class to deal with correction script. """
+    _footprint = [
+        gvar,
+        dict(
+            info = 'correction script',
+            attr = dict(
+                kind = dict(
+                    values = ['script_cor']
+                ),
+                gvar=dict(
+                    values=['scr_forcing_cor','scr_crop_out'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'script_cor'
+

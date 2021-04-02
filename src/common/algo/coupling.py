@@ -13,7 +13,7 @@ from bronx.stdtypes import date
 
 from common.algo.ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
-from vortex.algo.components import AlgoComponentError, BlindRun
+from vortex.algo.components import AlgoComponentError, BlindRun, Parallel
 from vortex.layout.dataflow import intent
 
 from .forecasts import FullPos
@@ -223,7 +223,7 @@ class CouplingLAM(Coupling):
         return opts
 
 
-class Prep(BlindRun, DrHookDecoMixin):
+class Prep(Parallel, DrHookDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
     _footprint = dict(
@@ -236,7 +236,11 @@ class Prep(BlindRun, DrHookDecoMixin):
                 values   = ['fa', 'lfi'],
                 optional = True,
                 default  = 'fa'
-            )
+            ),
+            basedate = dict(
+                type     = date.Date,
+                optional = True
+            ),
         )
     )
 
@@ -300,6 +304,11 @@ class Prep(BlindRun, DrHookDecoMixin):
             self.system.mv('LISTING_PREP0.txt', finallisting)
         return finaloutput
 
+    def _set_nam_macro(self, namcontents, namlocal, macro, value):
+        """Set a namelist macro and log it!"""
+        namcontents.setmacro(macro, value)
+        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
+
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Prep, self).prepare(rh, opts)
@@ -307,12 +316,22 @@ class Prep(BlindRun, DrHookDecoMixin):
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):
             raise AlgoComponentError("One Initial clim have to be provided")
-        self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
+        #self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
         # Convert the target clim if needed...
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         if not (len(targetclim) == 1):
             raise AlgoComponentError("One Target clim have to be provided")
-        self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
+        #self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
+
+        namrh = self.context.sequence.effective_inputs(kind=('namelist'))
+        namrh = namrh[0].rh
+        namcontents = namrh.contents
+        namlocal = namrh.container.actualpath()
+        self._set_nam_macro(namcontents, namlocal, 'YYYY', int(self.basedate.year))
+        self._set_nam_macro(namcontents, namlocal, 'MM', int(self.basedate.month))
+        self._set_nam_macro(namcontents, namlocal, 'DD', int(self.basedate.day))
+        namrh.save()
+        namrh.container.cat()
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
@@ -324,7 +343,8 @@ class Prep(BlindRun, DrHookDecoMixin):
             kind=('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
-        infile = 'PREP1.{:s}'.format(self.underlyingformat)
+        #infile = 'PREP1.{:s}'.format(self.underlyingformat)
+        infile = 'LFI_SURF.{:s}'.format(self.underlyingformat)
         outfile = 'PREP2.{:s}'.format(self.underlyingformat)
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         targetclim = targetclim[0].rh.container.localpath()
@@ -347,13 +367,13 @@ class Prep(BlindRun, DrHookDecoMixin):
             sh.dir(output=False, fatal=False)
 
             # Deal with outputs
-            actualname = self._process_outputs(rh, sec, targetclim, outfile)
+            #actualname = self._process_outputs(rh, sec, targetclim, outfile)
 
             # promises management
-            expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
-            if expected:
-                for thispromise in expected:
-                    thispromise.put(incache=True)
+            #expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
+            #if expected:
+            #    for thispromise in expected:
+            #       thispromise.put(incache=True)
 
             # Some cleaning
             sh.rmall('*.des')

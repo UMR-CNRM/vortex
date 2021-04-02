@@ -107,6 +107,24 @@ class PGDNC(PGDRaw):
     )
 
 
+class PGDTXT(PGDRaw):
+    """
+    SURFEX climatological resource in txt format.
+    A Genvkey can be provided.
+    """
+    _footprint = dict(
+        info = 'Grid-point data consts',
+        attr = dict(
+            kind = dict(
+                values  = ['pgdtxt'],
+            ),
+            nativefmt = dict(
+                default = 'txt',
+            )
+        )
+    )
+
+
 @namebuilding_delete('src')
 class PGDWithGeo(ModelGeoResource):
     """
