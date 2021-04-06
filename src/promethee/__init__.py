@@ -10,6 +10,8 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 # Recursive inclusion of packages with potential FootprintBase classes
 from . import data
 from . import algo
+from . import syntax
+from . import layout
 
 #: No automatic export
 __all__ = []
