@@ -26,7 +26,7 @@ class PrometheeAlgo(Expresso):
             ),
             interpreter = dict(
                 optional    = True,
-                values      = ['python3.7',]
+                values      = ["python3.7", "/opt/softs/anaconda3/bin/python", "python", ]
             ),
             engine = dict(
                 optional    = True,
