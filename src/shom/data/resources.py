@@ -259,7 +259,7 @@ class Hycom3dInitialConditionDate(InitialCondition):
 # %% Model outputs
 
 @namebuilding_append('src', lambda self: [self.field, self.dim, self.filtering, 
-                                          self.ppdate, self.source])
+                                          self.ppdate, self.source, self.interp])
 @namebuilding_append('geo', lambda self: [self.area])
 class Hycom3dModelOutput(Analysis):
     """Model output"""
@@ -288,6 +288,11 @@ class Hycom3dModelOutput(Analysis):
                 ),
                 filtering=dict(
                     values=["none", "mean", "demerliac", "godin", "spectral"],
+                    type=str,
+                    optional=True
+                ),
+                interp=dict(
+                    values=["zlevel"],
                     type=str,
                     optional=True
                 ),
