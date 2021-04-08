@@ -786,8 +786,10 @@ class FullPosServer(IFSParallel):
                 iinputs |= {_lmonitor.InputMonitorEntry(g.sec) for g in iguesses}
                 all_entries.update(iinputs)
                 bgang = _lmonitor.BasicGang()
-                bgang.info = (istuff, iguesses)
                 bgang.add_member(* iinputs)
+                igang = _lmonitor.MetaGang()
+                igang.info = (istuff, iguesses)
+                igang.add_member(bgang)
                 # If needed, wait for the previous terms to complete
                 if ordered_processing:
                     my_term = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
@@ -798,11 +800,11 @@ class FullPosServer(IFSParallel):
                         cur_term_gangs = set()
                     if prev_term_gangs:
                         # Wait for the gangs of the previous terms
-                        bgang.add_member(* prev_term_gangs)
+                        igang.add_member(* prev_term_gangs)
                     # Save things up for the next time
-                    cur_term_gangs.add(bgang)
+                    cur_term_gangs.add(igang)
                     cur_term = my_term
-                metagang.add_member(bgang)
+                metagang.add_member(igang)
             bm = _lmonitor.ManualInputMonitor(self.context, all_entries,
                                               caching_freq=self.refreshtime,)
 
