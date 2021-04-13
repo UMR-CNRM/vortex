@@ -167,6 +167,9 @@ def makejob(job):
 
     def _wrap_launch(jobfile):
         """Launch the **jobfile** script using **extra_wrapper*."""
+        if not t.sh.path.isabs(jobfile):
+            jobfile = t.sh.path.abspath(jobfile)
+        t.sh.xperm(jobfile, force=True)
         rundate = (re.sub(r"^'(.*)'$", r'\1', tplconf['rundate'])
                    if isinstance(tplconf['rundate'], six.string_types) else '.')
         cmd = tplconf.get('extra_wrapper').format(injob=jobfile,
@@ -200,12 +203,14 @@ def makejob(job):
             _wrap_launch(tplconf['file'])
         else:
             # Here the job is written in a temporary file submitted and deleted
-            with tempfile.NamedTemporaryFile(prefix=re.sub(r'\.py$', '', tplconf['file']) + '_',
-                                             dir=tplconf['pwd'], mode='w+b') as jobfh:
+            jobfh = tempfile.NamedTemporaryFile(prefix=re.sub(r'\.py$', '', tplconf['file']) + '_',
+                                                dir=tplconf['pwd'], mode='w+b', delete=False)
+            try:
                 jobfh.write(corejob.encode(tplconf['scriptencoding']))
-                jobfh.flush()
-                t.sh.fsync(jobfh)
+                jobfh.close()
                 _wrap_launch(jobfh.name)
+            finally:
+                t.sh.rm(jobfh.name)
     else:
         # Just create the job file...
         with io.open(tplconf['file'], 'w', encoding=tplconf['scriptencoding']) as jobfh:
