@@ -5,14 +5,13 @@
 Actions specific to operational needs.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 
-from bronx.fancies import loggers
 import footprints
-
 from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
 from vortex.tools.actions import Action, actiond
@@ -191,8 +190,8 @@ class OpPhase(Action):
 
         def isiterable(item):
             return (
-                  isinstance(item, collections_abc.Iterable) and
-                  not isinstance(item, six.string_types)
+                isinstance(item, collections_abc.Iterable) and
+                not isinstance(item, six.string_types)
             )
 
         def flatten(iterable):
@@ -316,7 +315,7 @@ class OpPhase(Action):
         elif protocol == 'cp':
             if effective_path == remote_path:
                 msg = "Cannot locally phase file onto itself."
-                msg += "path={} basepaths={}".format(effective_path, basepaths)
+                msg += "\npath={}\nbasepaths={}".format(effective_path, basepaths)
                 raise ValueError(msg)
             jeeves_opts.update(
                 todo='cp',
