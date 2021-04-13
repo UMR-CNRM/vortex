@@ -8,11 +8,11 @@ Actions specific to operational needs.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
-import collections
 
 from bronx.fancies import loggers
 import footprints
 
+from bronx.compat.moves import collections_abc
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
 from vortex.tools.actions import Action, actiond
@@ -191,8 +191,8 @@ class OpPhase(Action):
 
         def isiterable(item):
             return (
-                isinstance(item, collections.Iterable) and
-                not isinstance(item, six.string_types)
+                  isinstance(item, collections_abc.Iterable) and
+                  not isinstance(item, six.string_types)
             )
 
         def flatten(iterable):
