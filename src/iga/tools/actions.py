@@ -269,9 +269,9 @@ class OpPhase(Action):
         basepaths = self.getx('basepaths', default='', aslist=True)
         if basepaths:
             src, dst = basepaths
-            if not incache_path.startswith(src):
-                dst, src = basepaths
-                if not incache_path.startswith(src):
+            if not self.sh.path.commonpath((incache_path, src,)) == src:
+                dst, src = src, dst
+                if not self.sh.path.commonpath((incache_path, src,)) == src:
                     msg = "Basepaths are incompatible with resource path\n\tpath={}\n\tbasepaths={}".format(
                         incache_path, basepaths)
                     raise ValueError(msg)
