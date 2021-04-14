@@ -453,7 +453,9 @@ class StdFtp(object):
     adds some interesting features such as:
 
         * a fast login using the .netrc file;
-        * the ability to delay the :class:`ftplib.FTP` object creation as much as possible.
+        * the ability to delay the :class:`ftplib.FTP` object creation as much as possible;
+        * the VORTEX_FTP_PROXY environment variable is looked for (if not available
+          FTP_PROXY is also scrutated). If defined, a FTP proxy will be used.
 
     Methods that are not explicitly defined in the present class will be looked
     for in the associated :class:`ExtendedFtplib` object (and eventually in the
@@ -462,23 +464,56 @@ class StdFtp(object):
     :class:`ExtendedFtplib` and :class:`ftplib.FTP` class).
     """
 
+    _PROXY_TYPES = ('no-auth-logname-based', )
+
     _NO_AUTOLOGIN = ('set_debuglevel', 'connect', 'login', 'stderr',)
 
-    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None):
+    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None, ignoreproxy=False):
         """
         :param ~vortex.tools.systems.OSExtended system: The system object to work with
         :param str hostname: The remote host's network name
         :param int port: The remote host's FTP port.
         :param str nrcfile: The path to the .netrc file (if `None` the ~/.netrc default is used)
+        :param bool ignoreproxy: Forcibly ignore any proxy related environment variables
         """
         logger.debug('FTP init <host:%s>', hostname)
         self._system = system
+        if ignoreproxy:
+            self._proxy_host, self._proxy_port, self._proxy_type = (None, None, None)
+        else:
+            self._proxy_host, self._proxy_port, self._proxy_type = self._proxy_init()
         self._hostname = hostname
         self._port = port
         self._nrcfile = nrcfile
         self._internal_ftp = None
         self._logname = None
         self._cached_pwd = None
+        self._barelogname = None
+
+    def _proxy_init(self):
+        """Return the proxy type, address and port."""
+        p_netloc = (None, None)
+        p_url = self.system.env.get(
+            'VORTEX_FTP_PROXY', self.system.env.get('FTP_PROXY', None)
+        )
+        if p_url:
+            p_netloc = p_url.split(':', 1)
+            if len(p_netloc) == 1:
+                p_netloc.append(DEFAULT_FTP_PORT)
+            else:
+                p_netloc[1] = int(p_netloc[1])
+        p_type = self.system.env.get('VORTEX_FTP_PROXY_TYPE', self._PROXY_TYPES[0])
+        if p_type not in self._PROXY_TYPES:
+            raise ValueError('Incorrect value for the VORTEX_FTP_PROXY_TYPE ' +
+                             'environment variable (got: {:s})'.format(p_type))
+        return p_netloc[0], p_netloc[1], p_type
+
+    def _extended_ftp_host_and_port(self):
+        if self._proxy_host:
+            if self._proxy_type == self._PROXY_TYPES[0]:
+                return self._proxy_host, self._proxy_port
+        else:
+            return self._hostname, self._port
 
     @property
     def _extended_ftp(self):
@@ -489,8 +524,7 @@ class StdFtp(object):
         if self._internal_ftp is None:
             self._internal_ftp = ExtendedFtplib(self._system,
                                                 ftplib.FTP(),
-                                                self._hostname,
-                                                self._port)
+                                                * self._extended_ftp_host_and_port())
         return self._internal_ftp
 
     _loginlike_extended_ftp = _extended_ftp
@@ -503,7 +537,7 @@ class StdFtp(object):
     @property
     def host(self):
         """The FTP server hostname."""
-        if self._internal_ftp is None:
+        if self._internal_ftp is None or self._proxy_host:
             return self._hostname
         else:
             return self._extended_ftp.host
@@ -511,7 +545,7 @@ class StdFtp(object):
     @property
     def port(self):
         """The FTP server port number."""
-        if self._internal_ftp is None:
+        if self._internal_ftp is None or self._proxy_host:
             return self._port
         else:
             return self._extended_ftp.port
@@ -519,7 +553,14 @@ class StdFtp(object):
     @property
     def logname(self):
         """The current logname."""
-        return self._logname
+        return self._barelogname
+
+    @property
+    def proxy(self):
+        if self._proxy_host:
+            return '{0._proxy_host}:{0._proxy_port}'.format(self)
+        else:
+            return None
 
     @property
     def cached_pwd(self):
@@ -534,23 +575,27 @@ class StdFtp(object):
     def delayedlogin(self):
         """Login to the FTP server (if it was not already done)."""
         if self._loginlike_extended_ftp.closed:
-            if self.logname is None or self.cached_pwd is None:
+            if self._logname is None or self.cached_pwd is None:
                 logger.warning('FTP logname/password must be set first. Use the fastlogin method.')
                 raise RuntimeError('logname/password were not provided')
-            return self.login(self.logname, self.cached_pwd)
+            return self.login(self._logname, self.cached_pwd)
         else:
             return True
 
     def _process_logname_password(self, logname, password=None):
         """Find the actual *logname* and *password*."""
         if logname and password:
-            return logname, password
+            bare_logname = logname
         else:
-            actual_logname, actual_pwd = netrc_lookup(logname, self.host, nrcfile=self._nrcfile)
-            if actual_logname is not None:
-                return actual_logname, actual_pwd
-            else:
-                return None, None
+            bare_logname, password = netrc_lookup(logname, self.host, nrcfile=self._nrcfile)
+        logname = bare_logname
+        if logname and self._proxy_host:
+            if self._proxy_type == self._PROXY_TYPES[0]:
+                logname = '{0:s}@{1.host:s}:{1.port:d}'.format(bare_logname, self)
+        if logname:
+            return logname, password, bare_logname
+        else:
+            return None, None, None
 
     def close(self):
         """Terminates the FTP session."""
@@ -568,10 +613,11 @@ class StdFtp(object):
         necessary).
         """
         rc = False
-        p_logname, p_password = self._process_logname_password(logname, password)
+        p_logname, p_password, p_barelogname = self._process_logname_password(logname, password)
         if p_logname and p_password:
             self._logname = p_logname
             self._cached_pwd = p_password
+            self._barelogname = p_barelogname
             rc = True
         if not delayed and rc:
             # If one really wants to login...
@@ -632,7 +678,7 @@ class AutoRetriesFtp(StdFtp):
     the retry-on-failure capability.
     """
 
-    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None,
+    def __init__(self, system, hostname, port=DEFAULT_FTP_PORT, nrcfile=None, ignoreproxy=False,
                  retrycount_default=6, retrycount_connect=8, retrycount_login=3,
                  retrydelay_default=15, retrydelay_connect=15, retrydelay_login=10):
         """
@@ -640,6 +686,7 @@ class AutoRetriesFtp(StdFtp):
         :param str hostname: The remote host's network name.
         :param int port: The remote host's FTP port.
         :param str nrcfile: The path to the .netrc file (if `None` the ~/.netrc default is used)
+        :param bool ignoreproxy: Forcibly ignore any proxy related environment variables
         :param int retrycount_default: The maximum number of retries for most of the FTP functions.
         :param int retrydelay_default: The delay (in seconds) between two retries for most of the FTP functions.
         :param int retrycount_connect: The maximum number of retries when connecting to the FTP server.
@@ -658,7 +705,7 @@ class AutoRetriesFtp(StdFtp):
         # Reset everything
         self._initialise()
         # Finalise
-        super(AutoRetriesFtp, self).__init__(system, hostname, port=port, nrcfile=nrcfile)
+        super(AutoRetriesFtp, self).__init__(system, hostname, port=port, nrcfile=nrcfile, ignoreproxy=ignoreproxy)
 
     def _initialise(self):
         self._internal_retries_max = None
@@ -677,7 +724,7 @@ class AutoRetriesFtp(StdFtp):
                                                    retrydelay=retrydelay,
                                                    exceptions_extras=exceptions_extras)
             self._internal_ftp = eftplib(self._system, ftplib.FTP(),
-                                         self._hostname, port=self._port)
+                                         * self._extended_ftp_host_and_port())
         return self._internal_ftp
 
     @property
@@ -696,7 +743,9 @@ class AutoRetriesFtp(StdFtp):
         """Actually log in + save logname/password + correct the cwd if needed."""
         rc = self._extended_ftp.login(*args)
         if rc:
-            self._logname = args[0]
+            if self._logname is None or self._logname != args[0]:
+                self._logname = args[0]
+                self._barelogname = args[0]
             self._cached_pwd = args[1]
         if rc and self._cwd:
             cocoondir = self._cwd
@@ -894,13 +943,15 @@ class FtpConnectionPool(object):
     #: warning are issued)
     _REUSABLE_THRESHOLD = 10
 
-    def __init__(self, system, nrcfile=None):
+    def __init__(self, system, nrcfile=None, ignoreproxy=False):
         """
         :param ~vortex.tools.systems.OSExtended system: The system object to work with.
         :param str nrcfile: The path to the .netrc file (if `None` the ~/.netrc default is used)
+        :param bool ignoreproxy: Forcibly ignore any proxy related environment variables
         """
         self._system = system
         self._nrcfile = nrcfile
+        self._ignoreproxy = ignoreproxy
         self._reusable = collections.defaultdict(collections.deque)
         self._created = 0
         self._reused = 0
@@ -924,7 +975,7 @@ class FtpConnectionPool(object):
                     out += '  - {id[1]:s}@{id[0]:s}: {cl!r}\n'.format(id=ident, cl=client)
         return out
 
-    def deal(self, hostname, logname, port=DEFAULT_FTP_PORT, delayed=True):
+    def deal(self, hostname, logname, port=DEFAULT_FTP_PORT, delayed=True, ignoreproxy=False):
         """Retrieve an FTP client for the *hostname*/*logname* pair."""
         p_logname, _ = netrc_lookup(logname, hostname, nrcfile=self._nrcfile)
         if self._reusable[(hostname, port, p_logname)]:
@@ -938,7 +989,8 @@ class FtpConnectionPool(object):
             return ftpc
         else:
             ftpc = self._FTPCLIENT_CLASS(self, self._system, hostname,
-                                         port=port, nrcfile=self._nrcfile)
+                                         port=port, nrcfile=self._nrcfile,
+                                         ignoreproxy=self._ignoreproxy)
             rc = ftpc.fastlogin(p_logname, delayed=delayed)
             if rc:
                 logger.debug('Creating a new client: %s', repr(ftpc))
