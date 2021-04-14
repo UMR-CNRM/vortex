@@ -3,7 +3,9 @@
 # pylint: disable=unused-argument
 
 """
-TODO: Module documentation.
+Common stores.
+
+For now, only the BDPE store is available here, dedicated to BDPE extraction.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -60,7 +62,7 @@ class BdpeStore(Store):
         return False
 
     def bdpeput(self, local, remote, options):
-        """Cannot write to the BDPE (yet ?)."""
+        """Cannot write to the BDPE (See :class:`BdpeService`)."""
         logger.error("A BdpeStore is not able to perform PUTs.")
         return False
 
