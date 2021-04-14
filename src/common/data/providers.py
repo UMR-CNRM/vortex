@@ -67,12 +67,21 @@ class BdpeProvider(Provider):
                 preferred_target = dict(
                     optional = True,
                     default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
-                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                    values   = ['OPER', 'INT', 'SEC', 'DEV',
+                                'oper', 'int', 'sec', 'dev', ],
                 ),
                 forbidden_target = dict(
+                    info     = "The database we don't want to access - See the BDPE documentation.",
                     optional = True,
                     default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
-                    values   = ['OPER', 'INT', 'SEC', 'DEV'],
+                    values   = ['OPER', 'INT', 'SEC', 'DEV',
+                                'oper', 'int', 'sec', 'dev', ],
+                ),
+                soprano_domain = dict(
+                    info     = 'Databases priorities profile - See the BDPE documentation.',
+                    optional = True,
+                    default  = DelayedEnvValue('DOMAINE_SOPRA', 'dev'),
+                    values   = ['oper', 'int', 'dev'],
                 ),
                 allow_archive = dict(
                     info     = 'If True, sets the env. var. allowing the use of the archive'
@@ -80,6 +89,18 @@ class BdpeProvider(Provider):
                     optional = True,
                     type     = bool,
                     default  = False,
+                ),
+                bdpe_timeout = dict(
+                    info     = 'Seconds before abandoning a request.',
+                    optional = True,
+                    type     = int,
+                    default  = 10,
+                ),
+                bdpe_retries = dict(
+                    info     = 'Number of retries when a request fails.',
+                    optional = True,
+                    type     = int,
+                    default  = 3,
                 ),
                 config = dict(
                     info     = 'A ready to use configuration file object for this storage place.',
@@ -123,13 +144,14 @@ class BdpeProvider(Provider):
         return 'BDPE_{}+{!s}'.format(self.bdpeid, myterm)
 
     def pathname(self, resource):
-        """Something like 'PREFERRED_FORBIDDEN_ARCHIVE/date/'."""
+        """Something like 'PREFERRED_FORBIDDEN_DOMAIN_ARCHIVE_TIMEOUT_RETRIES/date/'."""
         try:
             requested_date = resource.date.vortex()
         except AttributeError:
             requested_date = 'most_recent'
-        return '{}_{}_{}/{}'.format(self.preferred_target, self.forbidden_target,
-                                    self.allow_archive, requested_date)
+        return '{}_{}_{}_{}_{}_{}/{}'.format(
+            self.preferred_target, self.forbidden_target, self.soprano_domain,
+            self.allow_archive, self.bdpe_timeout, self.bdpe_retries, requested_date)
 
     def uri(self, resource):
         """

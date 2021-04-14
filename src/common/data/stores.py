@@ -76,9 +76,9 @@ class BdpeStore(Store):
         if not isinstance(local, six.string_types):
             raise TypeError('The BDPE provider can not deal with virtual containers')
 
-        # remote['path'] looks like '/OPER_SEC_True/20151105T0000P/BDPE_42+06:00'
+        # remote['path'] looks like '/OPER_SEC_DEV_True_10_3/20151105T0000P/BDPE_42+06:00'
         _, targetmix, str_date, more = remote['path'].split('/')
-        p_target, f_target, s_archive = targetmix.split('_')
+        p_target, f_target, domain, s_archive, timeout, retries = targetmix.split('_')
         productid, str_term = more[5:].split('+')
         if str_date == 'most_recent':
             bdpe_date = '/'
@@ -93,7 +93,10 @@ class BdpeStore(Store):
         ]
         extraenv = dict(
             BDPE_CIBLE_PREFEREE=p_target,
-            BDPE_CIBLE_INTERDITE=f_target
+            BDPE_CIBLE_INTERDITE=f_target,
+            DOMAINE_SOPRA=domain,
+            BDPE_TIMEOUT=timeout,
+            BDPE_RETRYS=retries,
         )
         if s_archive == 'True':
             extraenv['BDPE_LECTURE_ARCHIVE_AUTORISEE'] = 'oui'
