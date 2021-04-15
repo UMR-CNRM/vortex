@@ -11,6 +11,8 @@
 Interface
 ---------
 
+.. autofunction:: rangex
+
 .. autofunction:: inplace
 
 .. autofunction:: expand

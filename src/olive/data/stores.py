@@ -164,10 +164,8 @@ class OliveArchiveStore(ArchiveStore):
                 values  = ['open.archive.fr', 'olive.archive.fr'],
                 remap   = {'olive.archive.fr': 'open.archive.fr'},
             ),
-            storeroot = dict(
-                default  = '/home/m/marp/marp999',
-            ),
             storehead = dict(
+                optional= True,
                 default = 'xp',
                 outcast = ['vortex']
             ),
@@ -178,17 +176,29 @@ class OliveArchiveStore(ArchiveStore):
         logger.debug('Olive archive store init %s', self.__class__)
         super(OliveArchiveStore, self).__init__(*args, **kw)
 
+    @property
+    def _actual_mappingroot(self):
+        return self._actual_from_genericconf('olive_legacy_mappingroot')
+
     def remap_read(self, remote, options):
-        """Remap actual remote path to distant store path for read-only actions."""
+        """Reformulates the remote path to compatible vortex namespace."""
+        remote = copy.copy(remote)
         xpath = remote['path'].split('/')
-        xpath[1:2] = list(xpath[1])
+        actual_mappingroot = self._actual_mappingroot
+        if not self.storeroot and actual_mappingroot:
+            remote['root'] = actual_mappingroot
+            xpath[1:2] = list(xpath[1])
         xpath[:0] = [self.system.path.sep, self.storehead]
         remote['path'] = self.system.path.join(*xpath)
+        return remote
 
     def remap_write(self, remote, options):
         """Remap actual remote path to distant store path for intrusive actions."""
-        if 'root' not in remote:
-            remote['root'] = self.storehead
+        remote = copy.copy(remote)
+        xpath = remote['path'].split('/')
+        xpath[:0] = [self.system.path.sep, self.storehead]
+        remote['path'] = self.system.path.join(*xpath)
+        return remote
 
     def olivecheck(self, remote, options):
         """Remap and inarchivecheck sequence."""
@@ -328,7 +338,6 @@ class OpArchiveStore(ArchiveStore):
                 remap    = {'dbl.archive.fr': 'dble.archive.fr'},
             ),
             storeroot = dict(
-                optional = True,
                 alias    = ['archivehome'],
                 default  = '/home/m/mxpt/mxpt001',
             ),

@@ -49,6 +49,11 @@ Abstract classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AbstractFtpArchiveDelayedGetHandler
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Actual handlers classes
 ***********************
 

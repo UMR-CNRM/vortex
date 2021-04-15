@@ -10,7 +10,9 @@ Store objects use the :mod:`footprints` mechanism.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from collections import defaultdict
+import contextlib
 import copy
+import functools
 import re
 
 from bronx.fancies import loggers
@@ -35,11 +37,11 @@ logger = loggers.getLogger(__name__)
 
 OBSERVER_TAG = 'Stores-Activity'
 
-_CACHE_PUT_INTENT = 'in'
-_CACHE_GET_INTENT_DEFAULT = 'in'
+CACHE_PUT_INTENT = 'in'
+CACHE_GET_INTENT_DEFAULT = 'in'
 
-_ARCHIVE_PUT_INTENT = 'in'
-_ARCHIVE_GET_INTENT_DEFAULT = 'in'
+ARCHIVE_PUT_INTENT = 'in'
+ARCHIVE_GET_INTENT_DEFAULT = 'in'
 
 
 def observer_board(obsname=None):
@@ -49,7 +51,53 @@ def observer_board(obsname=None):
     return observer.get(tag=obsname)
 
 
-class Store(footprints.FootprintBase):
+class _SetAsideStoreMixin(object):
+    """
+    This Mixin is intended to work with store-like classes. It provides the
+    necessary methods to take care of the "setaside" urlquery option.
+    """
+
+    def _check_set_aside(self, remote):
+        """Look for "setaside" entry in the url-query."""
+        if 'setaside_p' in remote['query']:
+            remote = remote.copy()
+            remote['query'] = remote['query'].copy()
+            set_aside_s = remote['query'].pop('setaside_s', [self.scheme])
+            set_aside_n = remote['query'].pop('setaside_n', [self.netloc])
+            set_aside_p = remote['query'].pop('setaside_p')
+            return remote, (set_aside_s[0], set_aside_n[0], set_aside_p[0])
+        else:
+            return remote, None
+
+    @contextlib.contextmanager
+    def _do_set_aside_cocoon(self, local, options):
+        """If the requested file is intent=inout, creates a temporary copy."""
+        options_bis = options.copy()
+        intent = options_bis.pop('intent', CACHE_GET_INTENT_DEFAULT)
+        if intent != 'in':
+            local_bis = local + self.system.safe_filesuffix()
+            fmt = options_bis.get('fmt', None)
+            self.system.cp(local, local_bis, intent='inout', fmt=fmt)
+            try:
+                yield local_bis, options_bis
+            finally:
+                self.system.rm(local_bis, fmt=fmt)
+        else:
+            yield local, options_bis
+
+    def _do_set_aside(self, remote, local, set_aside, options):
+        """Put the resource to the place designated by "setaside"."""
+        remote_bis = remote.copy()
+        remote_bis['path'] = set_aside[2]
+        st_bis_attr = self.footprint_as_shallow_dict()
+        st_bis_attr['scheme'] = set_aside[0]
+        st_bis_attr['netloc'] = set_aside[1]
+        st_bis = footprints.proxy.store(** st_bis_attr)
+        with self._do_set_aside_cocoon(local, options) as (local_bis, options_bis):
+            return st_bis.put(local_bis, remote_bis, options=options_bis)
+
+
+class Store(footprints.FootprintBase, _SetAsideStoreMixin):
     """Root class for any :class:`Store` subclasses."""
 
     _abstract = True
@@ -100,8 +148,12 @@ class Store(footprints.FootprintBase):
         return self._sh
 
     def use_cache(self):
-        """Boolean function to check if the current store use a local cache."""
+        """Boolean function to check if the current store uses a local cache."""
         return False
+
+    def use_archive(self):
+        """Boolean function to check if the current store uses a remote archive."""
+        return not self.use_cache()
 
     def has_fast_check(self):
         """How fast and reliable is a check call ?"""
@@ -158,34 +210,60 @@ class Store(footprints.FootprintBase):
         """When tracking get/put request: extra args that will be added to the URI query."""
         return dict()
 
+    def _incache_inarchive_check(self, options):
+        rc = True
+        incache = options.get('incache', False)
+        inarchive = options.get('inarchive', False)
+        if incache and inarchive:
+            raise ValueError("'incache=True' and 'inarchive=True' are mutually exclusive")
+        if incache and not self.use_cache():
+            self._verbose_log(options, 'info',
+                              'Skip this "%s" store because a cache is requested', self.__class__)
+            rc = False
+        if inarchive and not self.use_archive():
+            self._verbose_log(options, 'info',
+                              'Skip this "%s" store because an archive is requested', self.__class__)
+            rc = False
+        return rc
+
+    def _hash_check_or_delete(self, callback, remote, options):
+        """Check or delete a hash file."""
+        if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
+            return True
+        options = self._hash_store_defaults(options)
+        remote = remote.copy()
+        remote['path'] = remote['path'] + '.' + self.storehash
+        return callback(remote, options)
+
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Proxy method to dedicated check method according to scheme."""
         logger.debug('Store check from %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
-            rc = False
-        else:
-            rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
-            self._observer_notify('check', rc, remote, options=options)
+        options = self._options_fixup(options)
+        if not self._incache_inarchive_check(options):
+            return False
+        rc = getattr(self, self.scheme + 'check', self.notyet)(remote, options)
+        self._observer_notify('check', rc, remote, options=options)
         return rc
 
     def locate(self, remote, options=None):
         """Proxy method to dedicated locate method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store locate %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return None
-        else:
-            return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
+        return getattr(self, self.scheme + 'locate', self.notyet)(remote, options)
 
     def list(self, remote, options=None):
         """Proxy method to dedicated list method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store list %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return None
-        else:
-            return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
+        return getattr(self, self.scheme + 'list', self.notyet)(remote, options)
 
     def prestage_advertise(self, remote, options=None):
         """Use the Stores-Activity observer board to advertise the prestaging request.
@@ -193,6 +271,7 @@ class Store(footprints.FootprintBase):
         Hopefully, something will register to the ober board in order to process
         the request.
         """
+        options = self._options_fixup(options)
         logger.debug('Store prestage through hub %s', remote)
         infos_cb = getattr(self, self.scheme + 'prestageinfo', None)
         if infos_cb:
@@ -209,24 +288,24 @@ class Store(footprints.FootprintBase):
 
     def prestage(self, remote, options=None):
         """Proxy method to dedicated prestage method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store prestage %s', remote)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return True
-        else:
-            return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
+        return getattr(self, self.scheme + 'prestage', self.prestage_advertise)(remote, options)
 
-    def _hash_store_defaults(self, options):
+    @staticmethod
+    def _hash_store_defaults(options):
         """Update default options when fetching hash files."""
-        options = options.copy() if options is not None else dict()
+        options = options.copy()
         options['obs_notify'] = False
         options['fmt'] = 'ascii'
-        options['intent'] = _CACHE_GET_INTENT_DEFAULT
+        options['intent'] = CACHE_GET_INTENT_DEFAULT
         options['auto_tarextract'] = False
         options['auto_dirextract'] = False
         return options
 
-    def _hash_get_check(self, callback, remote, local, options=None):
+    def _hash_get_check(self, callback, remote, local, options):
         """Update default options when fetching hash files."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -262,45 +341,49 @@ class Store(footprints.FootprintBase):
                 tempcontainer.clear()
         return rc
 
-    def _actual_get(self, action, remote, local, options=None, result_id=None):
+    def _actual_get(self, action, remote, local, options, result_id=None):
         """Proxy method to dedicated get method according to scheme."""
         logger.debug('Store %s from %s to %s', action, remote, local)
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return False
-        else:
-            if (options is None or (not options.get('insitu', False)) or
-                    self.use_cache()):
-                if result_id:
-                    rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
-                else:
-                    rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
-                self._observer_notify('get', rc, remote, local=local, options=options)
-                return rc
+        if not options.get('insitu', False) or self.use_cache():
+            remote, set_aside = self._check_set_aside(remote)
+            if result_id:
+                rc = getattr(self, self.scheme + action, self.notyet)(result_id, remote, local, options)
             else:
-                logger.error('Only cache stores can be used when insitu is True.')
-                return False
+                rc = getattr(self, self.scheme + action, self.notyet)(remote, local, options)
+            if rc and set_aside:
+                self._do_set_aside(remote, local, set_aside, options=options)
+            self._observer_notify('get', rc, remote, local=local, options=options)
+            return rc
+        else:
+            logger.error('Only cache stores can be used when insitu is True.')
+            return False
 
     def get(self, remote, local, options=None):
         """Proxy method to dedicated get method according to scheme."""
+        options = self._options_fixup(options)
         return self._actual_get('get', remote, local, options)
 
     def earlyget(self, remote, local, options=None):
+        options = self._options_fixup(options)
         """Proxy method to dedicated earlyget method according to scheme."""
         logger.debug('Store earlyget from %s to %s', remote, local)
+        if not self._incache_inarchive_check(options):
+            return None
         rc = None
-        if options is None or not options.get('incache', False) or self.use_cache():
-            if options is None or (not options.get('insitu', False)) or self.use_cache():
-                available_dget = getattr(self, self.scheme + 'earlyget', None)
-                if available_dget is not None:
-                    rc = available_dget(remote, local, options)
+        if not options.get('insitu', False) or self.use_cache():
+            available_dget = getattr(self, self.scheme + 'earlyget', None)
+            if available_dget is not None:
+                rc = available_dget(remote, local, options)
         return rc
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         """Proxy method to dedicated finaliseget method according to scheme."""
         return self._actual_get('finaliseget', remote, local, options, result_id=result_id)
 
-    def _hash_put(self, callback, local, remote, options=None):
+    def _hash_put(self, callback, local, remote, options):
         """Put a hash file next to the 'real' file."""
         if (self.storehash is None) or (remote['path'].endswith('.' + self.storehash)):
             return True
@@ -315,46 +398,44 @@ class Store(footprints.FootprintBase):
 
     def put(self, local, remote, options=None):
         """Proxy method to dedicated put method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store put from %s to %s', local, remote)
         self.enforce_readonly()
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
+        if not self._incache_inarchive_check(options):
             return True
+        filtered = False
+        if options is not None and 'urifilter' in options:
+            filtered = options['urifilter'](self, remote)
+        if filtered:
+            rc = True
+            logger.info("This remote URI has been filtered out: we are skipping it.")
         else:
-            filtered = False
-            if options is not None and 'urifilter' in options:
-                filtered = options['urifilter'](self, remote)
-            if filtered:
-                rc = True
-                logger.info("This remote URI has been filtered out: we are skipping it.")
-            else:
-                dryrun = False
-                if options is not None and 'dryrun' in options:
-                    dryrun = options['dryrun']
-                rc = dryrun or getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
-                self._observer_notify('put', rc, remote, local=local, options=options)
-            return rc
+            dryrun = False
+            if options is not None and 'dryrun' in options:
+                dryrun = options['dryrun']
+            rc = dryrun or getattr(self, self.scheme + 'put', self.notyet)(local, remote, options)
+            self._observer_notify('put', rc, remote, local=local, options=options)
+        return rc
 
     def delete(self, remote, options=None):
         """Proxy method to dedicated delete method according to scheme."""
+        options = self._options_fixup(options)
         logger.debug('Store delete from %s', remote)
         self.enforce_readonly()
-        if options is not None and options.get('incache', False) and not self.use_cache():
-            self._verbose_log(options, 'info', 'Skip this store because a cache is requested')
-            rc = True
-        else:
-            rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
-            self._observer_notify('del', rc, remote, options=options)
+        if not self._incache_inarchive_check(options):
+            return True
+        rc = getattr(self, self.scheme + 'delete', self.notyet)(remote, options)
+        self._observer_notify('del', rc, remote, options=options)
         return rc
 
 
-class MultiStore(footprints.FootprintBase):
+class MultiStore(footprints.FootprintBase, _SetAsideStoreMixin):
     """Agregate various :class:`Store` items."""
 
     _abstract = True
     _collector = ('store',)
     _footprint = [
-        compressionpipeline,
+        compressionpipeline,  # Not used by cache stores but ok, just in case...
         hashalgo,
         dict(
             info = 'Multi store',
@@ -371,10 +452,20 @@ class MultiStore(footprints.FootprintBase):
                     optional = True,
                     default  = False,
                 ),
+                storehash=dict(
+                    values   = hashalgo_avail_list,
+                ),
+                # ArchiveStores only be harmless for others...
                 storage = dict(
                     optional = True,
                     default  = None,
                 ),
+                storetube = dict(
+                    optional = True,
+                ),
+                storeroot = dict(
+                    optional = True,
+                )
             ),
         )
     ]
@@ -437,22 +528,32 @@ class MultiStore(footprints.FootprintBase):
         """Abstract method."""
         pass
 
+    def alternates_fpextras(self):
+        """Abstract method."""
+        return dict()
+
     def alternates_fp(self):
         """
         Returns a list of anonymous descriptions to be used as footprint entries
         while loading alternates stores.
         """
         return [
-            dict(system=self.system, storehash=self.storehash, storage=self.storage,
-                 store_compressed=self.store_compressed,
-                 scheme=x, netloc=y)
+            dict(system=self.system,
+                 storehash=self.storehash, store_compressed=self.store_compressed,
+                 storage=self.storage, storetube=self.storetube,
+                 storeroot=self.storeroot,
+                 scheme=x, netloc=y, ** self.alternates_fpextras())
             for x in self.alternates_scheme()
             for y in self.alternates_netloc()
         ]
 
     def use_cache(self):
-        """Boolean function to check if any included store use a local cache."""
+        """Boolean function to check if any included store uses a local cache."""
         return any([x.use_cache() for x in self.openedstores])
+
+    def use_archive(self):
+        """Boolean function to check if any included store uses a remote archive."""
+        return any([x.use_archive() for x in self.openedstores])
 
     def has_fast_check(self):
         """How fast and reliable is a check call ?"""
@@ -466,8 +567,13 @@ class MultiStore(footprints.FootprintBase):
     def writeable(self):
         return not self.readonly
 
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore check from %s', remote)
         rc = False
         for sto in self.filtered_readable_openedstores(remote):
@@ -478,6 +584,7 @@ class MultiStore(footprints.FootprintBase):
 
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore locate %s', remote)
         f_ostores = self.filtered_readable_openedstores(remote)
         if not f_ostores:
@@ -492,6 +599,7 @@ class MultiStore(footprints.FootprintBase):
 
     def list(self, remote, options=None):
         """Go through internal opened stores and list the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore list %s', remote)
         rlist = set()
         for sto in self.filtered_readable_openedstores(remote):
@@ -505,24 +613,32 @@ class MultiStore(footprints.FootprintBase):
 
     def prestage(self, remote, options=None):
         """Go through internal opened stores and prestage the resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore prestage %s', remote)
         f_ostores = self.filtered_readable_openedstores(remote)
         if not f_ostores:
             return False
-        rc = True
-        for sto in f_ostores:
-            logger.debug('Multistore prestage at %s', sto)
-            rc = rc and sto.prestage(remote.copy(), options)
+        if len(f_ostores) == 1:
+            logger.debug('Multistore prestage at %s', f_ostores[0])
+            rc = f_ostores[0].prestage(remote.copy(), options)
+        else:
+            rc = True
+            for sto in f_ostores:
+                if sto.check(remote.copy(), options):
+                    logger.debug('Multistore prestage at %s', sto)
+                    rc = sto.prestage(remote.copy(), options)
+                    break
         return rc
 
-    def _refilling_get(self, remote, local, options=None, result_id=None):
+    def _refilling_get(self, remote, local, options, result_id=None):
         """Go through internal opened stores for the first available resource."""
         rc = False
         refill_in_progress = True
+        remote, set_aside = self._check_set_aside(remote)
         f_rd_ostores = self.filtered_readable_openedstores(remote)
         if self.refillstore:
             f_wr_ostores = self.filtered_writeable_openedstores(remote)
-        get_options = copy.copy(options) if options is not None else dict()
+        get_options = copy.copy(options)
         get_options['silent'] = True
         while refill_in_progress:
             for num, sto in enumerate(f_rd_ostores):
@@ -538,7 +654,8 @@ class MultiStore(footprints.FootprintBase):
                 restores = []
                 if rc and self.refillstore and num > 0:
                     restores = [ostore for ostore in f_rd_ostores[:num]
-                                if ostore.writeable and ostore in f_wr_ostores]
+                                if (ostore.writeable and ostore in f_wr_ostores and
+                                    ostore.use_cache())]
                 # Do the refills and check if one of them succeed
                 refill_in_progress = False
                 for restore in restores:
@@ -547,8 +664,8 @@ class MultiStore(footprints.FootprintBase):
                         logger.info('Refill back in writeable store [%s].', restore)
                         try:
                             refill_in_progress = ((restore.put(local, remote.copy(), options) and
-                                                   (options.get('intent', _CACHE_GET_INTENT_DEFAULT) !=
-                                                    _CACHE_PUT_INTENT)) or
+                                                   (options.get('intent', CACHE_GET_INTENT_DEFAULT) !=
+                                                    CACHE_PUT_INTENT)) or
                                                   refill_in_progress)
                         except (ExecutionError, IOError, OSError) as e:
                             logger.error("An ExecutionError happened during the refill: %s", str(e))
@@ -558,7 +675,10 @@ class MultiStore(footprints.FootprintBase):
                 # Whatever the refill's outcome, that's fine
                 if rc:
                     break
-        if not rc:
+        if rc:
+            if set_aside:
+                self._do_set_aside(remote, local, set_aside, options)
+        else:
             self._verbose_log(options, 'warning',
                               "Multistore get {:s}://{:s}: none of the opened store succeeded."
                               .format(self.scheme, self.netloc), slevel='info')
@@ -566,13 +686,15 @@ class MultiStore(footprints.FootprintBase):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore get from %s to %s', remote, local)
         return self._refilling_get(remote, local, options)
 
     def earlyget(self, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Multistore earlyget from %s to %s', remote, local)
         f_ostores = self.filtered_readable_openedstores(remote)
-        get_options = copy.copy(options) if options is not None else dict()
+        get_options = copy.copy(options)
         if len(f_ostores) > 1:
             first_checkable = all([s.has_fast_check() for s in f_ostores[:-1]])
             # Early-fetch is only available on the last resort store...
@@ -587,11 +709,13 @@ class MultiStore(footprints.FootprintBase):
             return None
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Multistore finaliseget from %s to %s', remote, local)
         return self._refilling_get(remote, local, options, result_id=result_id)
 
     def put(self, local, remote, options=None):
         """Go through internal opened stores and put resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Multistore put from %s to %s', local, remote)
         f_ostores = self.filtered_writeable_openedstores(remote)
         if not f_ostores:
@@ -607,6 +731,7 @@ class MultiStore(footprints.FootprintBase):
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
+        options = self._options_fixup(options)
         logger.debug('Multistore delete from %s', remote)
         f_ostores = self.filtered_writeable_openedstores(remote)
         rc = False
@@ -636,33 +761,29 @@ class ArchiveStore(Store):
                     values   = ['open.archive.fr'],
                 ),
                 storehash = dict(
-                    values = hashalgo_avail_list,
+                    values   = hashalgo_avail_list,
                 ),
                 storage = dict(
                     optional = True,
-                    default  = None,
                 ),
                 storetube = dict(
                     optional = True,
                 ),
                 storeroot = dict(
                     optional = True,
-                    default  = '/tmp',
                 ),
                 storehead = dict(
                     optional = True,
-                    default  = 'sto',
-                ),
-                storesync = dict(
-                    alias    = ('archsync', 'synchro'),
-                    type     = bool,
-                    optional = True,
-                    default  = True,
                 ),
                 storetrue = dict(
                     type     = bool,
                     optional = True,
                     default  = True,
+                ),
+                genericconfig = dict(
+                    type     = config.GenericReadOnlyConfigParser,
+                    optional = True,
+                    default  = config.GenericReadOnlyConfigParser('@store-archive-mapping.ini'),
                 ),
             )
         ),
@@ -671,8 +792,11 @@ class ArchiveStore(Store):
     def __init__(self, *args, **kw):
         logger.debug('Archive store init %s', self.__class__)
         self._archive = None
+        self._actual_storage = None
+        self._actual_storetube = None
         super(ArchiveStore, self).__init__(*args, **kw)
-        del self.archive
+        self._actual_storage = self.storage
+        self._actual_storetube = self.storetube
 
     @property
     def realkind(self):
@@ -692,13 +816,49 @@ class ArchiveStore(Store):
     def underlying_archive_kind(self):
         return 'std'
 
+    @property
+    def actual_storage(self):
+        """This archive network name (potentially read form the configuration file)."""
+        if self._actual_storage is None:
+            self._actual_storage = (
+                self.system.env.VORTEX_DEFAULT_STORAGE or
+                self.system.glove.default_fthost or
+                self.system.default_target.get('stores:archive_storage', None) or
+                self.system.default_target.get('stores:storage', None)
+            )
+            if self._actual_storage is None:
+                raise ValueError('Unable to find the archive network name.')
+        return self._actual_storage
+
+    def _actual_from_genericconf(self, what):
+        """Read an entry in the generic configuration file"""
+        result = None
+        inetsource = self.system.default_target.inetname
+        k_inet = '{:s}@{:s}'.format(self.actual_storage, inetsource)
+        if self.genericconfig.has_option(k_inet, what):
+            result = self.genericconfig.get(k_inet, what)
+        if result is None and self.genericconfig.has_option(self.actual_storage, what):
+            result = self.genericconfig.get(self.actual_storage, what)
+        if result is None and what in self.genericconfig.defaults():
+            result = self.genericconfig.defaults()[what]
+        return result
+
+    @property
+    def actual_storetube(self):
+        """This archive network name (potentially read form the configuration file)."""
+        if self._actual_storetube is None:
+            self._actual_storetube = self._actual_from_genericconf('storetube')
+            if self._actual_storetube is None:
+                raise ValueError('Unable to find the archive access method.')
+        return self._actual_storetube
+
     def _get_archive(self):
         """Create a new Archive object only if needed."""
         if not self._archive:
             self._archive = footprints.proxy.archives.default(
                 kind=self.underlying_archive_kind,
-                storage=self.storage if self.storage else 'generic',
-                tube=self.storetube,
+                storage=self.actual_storage,
+                tube=self.actual_storetube,
                 readonly=self.readonly,
             )
             self._archives_object_stack.add(self._archive)
@@ -716,20 +876,32 @@ class ArchiveStore(Store):
     archive = property(_get_archive, _set_archive, _del_archive)
 
     def _inarchiveformatpath(self, remote):
-        formatted = self.system.path.join(
-            remote.get('root', self.storeroot),
-            remote['path'].lstrip(self.system.path.sep)
-        )
+        pathroot = remote.get('root', self.storeroot)
+        if pathroot is not None:
+            formatted = self.system.path.join(
+                pathroot,
+                remote['path'].lstrip(self.system.path.sep)
+            )
+        else:
+            formatted = remote['path'].lstrip(self.system.path.sep)
         return formatted
 
     def inarchivecheck(self, remote, options):
-        return self.archive.check(self._inarchiveformatpath(remote),
-                                  username=remote.get('username', None),
-                                  compressionpipeline=self._actual_cpipeline)
+        """Use the archive object to check if **remote** exists."""
+        # Try to delete the md5 file but ignore errors...
+        if self._hash_check_or_delete(self.inarchivecheck, remote, options):
+            return self.archive.check(self._inarchiveformatpath(remote),
+                                      username=remote.get('username', None),
+                                      fmt=options.get('fmt', 'foo'),
+                                      compressionpipeline=self._actual_cpipeline)
+        else:
+            return False
 
     def inarchivelocate(self, remote, options):
+        """Use the archive object to obtain **remote** physical location."""
         return self.archive.fullpath(self._inarchiveformatpath(remote),
                                      username=remote.get('username', None),
+                                     fmt=options.get('fmt', 'foo'),
                                      compressionpipeline=self._actual_cpipeline)
 
     def inarchivelist(self, remote, options):
@@ -741,14 +913,16 @@ class ArchiveStore(Store):
         """Returns the prestaging informations"""
         return self.archive.prestageinfo(self._inarchiveformatpath(remote),
                                          username=remote.get('username', None),
+                                         fmt=options.get('fmt', 'foo'),
                                          compressionpipeline=self._actual_cpipeline)
 
     def inarchiveget(self, remote, local, options):
+        """Use the archive object to retrieve **remote** in **local**."""
         logger.info('inarchiveget on %s://%s/%s (to: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.retrieve(
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -757,11 +931,12 @@ class ArchiveStore(Store):
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
     def inarchiveearlyget(self, remote, local, options):
+        """Use the archive object to initiate an early get request on **remote**."""
         logger.debug('inarchiveearlyget on %s://%s/%s (to: %s)',
                      self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.earlyretrieve(
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -770,12 +945,13 @@ class ArchiveStore(Store):
         return rc
 
     def inarchivefinaliseget(self, result_id, remote, local, options):
+        """Use the archive object to finalise the **result_id** early get request."""
         logger.info('inarchivefinaliseget on %s://%s/%s (to: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.finaliseretrieve(
             result_id,
             self._inarchiveformatpath(remote), local,
-            intent=options.get('intent', _ARCHIVE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', ARCHIVE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
@@ -784,28 +960,32 @@ class ArchiveStore(Store):
         return rc and self._hash_get_check(self.inarchiveget, remote, local, options)
 
     def inarchiveput(self, local, remote, options):
+        """Use the archive object to put **local** to **remote**"""
         logger.info('inarchiveput to %s://%s/%s (from: %s)',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote), local)
         rc = self.archive.insert(
             self._inarchiveformatpath(remote), local,
-            intent=_ARCHIVE_PUT_INTENT,
+            intent=ARCHIVE_PUT_INTENT,
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler'),
             logname=remote['username'],
             compressionpipeline=self._actual_cpipeline,
-            sync=options.get('synchro', not options.get('delayed', not self.storesync)),
             enforcesync=options.get('enforcesync', False),
+            usejeeves=options.get('delayed', None),
         )
         return rc and self._hash_put(self.inarchiveput, local, remote, options)
 
     def inarchivedelete(self, remote, options):
         logger.info('inarchivedelete on %s://%s/%s',
                     self.scheme, self.netloc, self._inarchiveformatpath(remote))
+        # Try to delete the md5 file but ignore errors...
+        self._hash_check_or_delete(self.inarchivedelete, remote, options)
         return self.archive.delete(
             self._inarchiveformatpath(remote),
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler', None),
             username=remote['username'],
+            compressionpipeline=self._actual_cpipeline,
         )
 
 
@@ -823,6 +1003,7 @@ class ConfigurableArchiveStore(object):
     #: Path to the Store configuration file (please overwrite !)
     _store_global_config = None
     _datastore_id = None
+    _re_subhosting = re.compile(r'(.*)\s+hosted\s+by\s+([-\w]+)$')
 
     @staticmethod
     def _get_remote_config(store, url, container):
@@ -832,6 +1013,46 @@ class ConfigurableArchiveStore(object):
             return config.GenericConfigParser(inifile=container.iotarget())
         else:
             return None
+
+    @staticmethod
+    def _please_fix(what):
+        logger.error('Please fix that quickly... Meanwhile, "%s" is ignored !', what)
+
+    def _process_location_section(self, section, section_items):
+        section_data = dict()
+        m_section = self._re_subhosting.match(section)
+        if m_section:
+            # A "hosted by" section
+            section_data['idrestricts'] = list()
+            for k, v in section_items:
+                if k.endswith('_idrestrict'):
+                    try:
+                        compiled_re = re.compile(v)
+                        section_data['idrestricts'].append(compiled_re)
+                    except re.error as e:
+                        logger.error('The regex provided for "%s" in section "%s" does not compile !: "%s".',
+                                     k, section, str(e))
+                        self._please_fix(k)
+                elif k == 'idrestricts':
+                    logger.error('A "%s" entrey was found in section "%s". This is not ok.', k, section)
+                    self._please_fix(k)
+                else:
+                    section_data[k] = v
+            if section_data['idrestricts']:
+                return m_section.group(1), m_section.group(2), section_data
+            else:
+                logger.error('No acceptable "_idrestrict" entry was found in section "%s".', section)
+                self._please_fix(section)
+                return None, None, None
+        else:
+            # The usual/generic section
+            for k, v in section_items:
+                if k.endswith('_idrestrict') or k == 'idrestricts':
+                    logger.error('A "*idrestrict*" entry was found in section "%s". This is not ok.', section)
+                    self._please_fix(section)
+                    return None, None, None
+                section_data[k] = v
+            return section, None, section_data
 
     def _ingest_remote_config(self, r_id, r_confdict, global_confdict):
         logger.info("Reading config file: %s (id=%s)", r_confdict['uri'], r_id)
@@ -859,16 +1080,22 @@ class ConfigurableArchiveStore(object):
         # Update the configuration using the parser
         if remotecfg_parser is not None:
             for section in remotecfg_parser.sections():
-                logger.debug("New location found: %s", section)
-                # Filtering based on the regex : No collisions allowed !
-                if r_confdict['restrict'] is not None:
-                    if r_confdict['restrict'].search(section):
-                        global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                s_loc, s_entry, s_data = self._process_location_section(
+                    section,
+                    remotecfg_parser.items(section)
+                )
+                if s_loc is not None:
+                    logger.debug("New location entry found: %s (subentry: %s)", s_loc, s_entry)
+                    # Filtering based on the regex : No collisions allowed !
+                    if r_confdict['restrict'] is not None:
+                        if r_confdict['restrict'].search(s_loc):
+                            global_confdict['locations'][s_loc][s_entry] = s_data
+                        else:
+                            logger.error('According to the "restrict" clause, ' +
+                                         'you are not allowed to define the "%s" location !', s_loc)
+                            self._please_fix(section)
                     else:
-                        logger.error('According to the "restrict" clause, ' +
-                                     'you are not allowed to define the %s location !', section)
-                else:
-                    global_confdict['locations'][section].update(dict(remotecfg_parser.items(section)))
+                        global_confdict['locations'][s_loc][s_entry] = s_data
             r_confdict['seen'] = True
         else:
             raise IOError("The remote configuration {:s} couldn't be found."
@@ -900,22 +1127,32 @@ class ConfigurableArchiveStore(object):
             # Global configuration file
             logger.info("Reading config file: %s", self._store_global_config)
             maincfg = config.GenericConfigParser(inifile=self._store_global_config)
-            conf['host'] = dict(maincfg.items(self.archive.actual_storage))
-            conf['locations'] = defaultdict(dict)
+            if self.actual_storage in maincfg.sections():
+                conf['host'] = dict(maincfg.items(self.actual_storage))
+            else:
+                conf['host'] = dict(maincfg.defaults())
+
+            conf['locations'] = defaultdict(functools.partial(defaultdict, dict))
+            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
+            conf['uuids_cache'] = dict()
 
             # Look for a local configuration file
             localcfg = conf['host'].get('localconf', None)
             if localcfg is not None:
                 logger.info("Reading config file: %s", localcfg)
                 localcfg = config.GenericConfigParser(inifile=localcfg)
-                conf['locations']['generic'] = localcfg.defaults()
+                conf['locations']['generic'][None] = localcfg.defaults()
                 for section in localcfg.sections():
-                    logger.debug("New location found: %s", section)
-                    conf['locations'][section] = dict(localcfg.items(section))
+                    s_loc, s_entry, s_data = self._process_location_section(
+                        section,
+                        localcfg.items(section)
+                    )
+                    if s_loc is not None:
+                        logger.debug("New location entry found: %s (subentry: %s)", s_loc, s_entry)
+                        conf['locations'][s_loc][s_entry] = s_data
 
             # Look for remote configurations
             tg_inet = self.system.default_target.inetname
-            conf['remoteconfigs'] = defaultdict(_default_remoteconfig_dict)
             for key in conf['host'].keys():
                 k_match = re.match(r'generic_(remoteconf\w*)_uri$', key)
                 if k_match:
@@ -938,9 +1175,9 @@ class ConfigurableArchiveStore(object):
                             compiled_re = re.compile(conf['remoteconfigs'][r_id]['restrict'])
                             conf['remoteconfigs'][r_id]['restrict'] = compiled_re
                         except re.error as e:
-                            logger.error('The regex provided for %s does not compile !: "%s".',
+                            logger.error('The regex provided for "%s" does not compile !: "%s".',
                                          r_id, str(e))
-                            logger.error('Please fix that quickly... Meanwhile, %s is ignored !', r_id)
+                            self._please_fix(r_id)
                             del conf['remoteconfigs'][r_id]
 
             for r_confk, r_conf in conf['remoteconfigs'].items():
@@ -961,20 +1198,33 @@ class ConfigurableArchiveStore(object):
         method
         """
         ds = sessions.current().datastore
-        conf = ds.get(self._datastore_id, dict(storage=self.archive.actual_storage),
+        conf = ds.get(self._datastore_id, dict(storage=self.actual_storage),
                       default_payload=dict(), readonly=True)
-        mylocation = uuid.location
-        self._load_config(conf, mylocation)
-        st_root = None
-        if mylocation in conf['locations']:
-            st_root = conf['locations'][mylocation].get(item, None)
-        st_root = st_root or conf['locations']['generic'].get(item, None)
-        return st_root
+        if (uuid, item) in conf.get('uuids_cache', dict()):
+            return conf['uuids_cache'][(uuid, item)]
+        else:
+            logger.debug('Looking for %s''s "%s" in config.', uuid, item)
+            mylocation = uuid.location
+            self._load_config(conf, mylocation)
+            st_item = None
+            if mylocation in conf['locations']:
+                # The default
+                if None in conf['locations'][mylocation]:
+                    st_item = conf['locations'][mylocation][None].get(item, None)
+                # Id based
+                for s_entry, s_entry_d in conf['locations'][mylocation].items():
+                    if s_entry is not None:
+                        if any([idrestrict.search(uuid.id)
+                                for idrestrict in s_entry_d['idrestricts']]):
+                            st_item = s_entry_d.get(item, None)
+            st_item = st_item or conf['locations']['generic'][None].get(item, None)
+            conf['uuids_cache'][(uuid, item)] = st_item
+            return st_item
 
     def _actual_storeroot(self, uuid):
         """For a given **uuid**, determine the proper storeroot."""
         if self.storeroot is None:
-            # Read the sotreroot from the configuration data
+            # Read the storeroot from the configuration data
             st_root = self._actual_fromconf(uuid, 'storeroot')
             if st_root is None:
                 raise IOError("No valid storeroot could be found.")
@@ -1021,10 +1271,6 @@ class CacheStore(Store):
                 optional = True,
                 default  = 'conf',
             ),
-            storage = dict(
-                optional = True,
-                default  = None,
-            ),
             rtouch = dict(
                 type     = bool,
                 optional = True,
@@ -1039,9 +1285,9 @@ class CacheStore(Store):
     )
 
     def __init__(self, *args, **kw):
+        del self.cache
         logger.debug('Generic cache store init %s', self.__class__)
         super(CacheStore, self).__init__(*args, **kw)
-        del self.cache
 
     @property
     def realkind(self):
@@ -1050,15 +1296,12 @@ class CacheStore(Store):
     @property
     def hostname(self):
         """Returns the current :attr:`storage`."""
-        tg = self.system.default_target
-        return tg.inetname if self.storage is None else self.storage
+        return self.system.default_target.inetname
 
     @property
     def config_name(self):
         """Returns the current :attr:`storage`."""
-        tg = self.system.default_target
-        idname = tg.cache_storage_alias() if self.storage is None else self.storage
-        return '@cache-{!s}.ini'.format(idname)
+        return '@cache-{!s}.ini'.format(self.system.default_target.cache_storage_alias())
 
     def use_cache(self):
         """Boolean value to insure that this store is using a cache."""
@@ -1104,10 +1347,13 @@ class CacheStore(Store):
 
     def incachecheck(self, remote, options):
         """Returns a stat-like object if the ``remote`` exists in the current cache."""
-        st = self.cache.check(remote['path'])
-        if options.get('isfile', False) and st:
-            st = self.system.path.isfile(self.incachelocate(remote, options))
-        return st
+        if self._hash_check_or_delete(self.incachecheck, remote, options):
+            st = self.cache.check(remote['path'])
+            if options.get('isfile', False) and st:
+                st = self.system.path.isfile(self.incachelocate(remote, options))
+            return st
+        else:
+            return False
 
     def incachelocate(self, remote, options):
         """Agregates cache to remote subpath."""
@@ -1128,7 +1374,7 @@ class CacheStore(Store):
         rc = self.cache.retrieve(
             remote['path'],
             local,
-            intent=options.get('intent', _CACHE_GET_INTENT_DEFAULT),
+            intent=options.get('intent', CACHE_GET_INTENT_DEFAULT),
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
             tarextract=options.get('auto_tarextract', False),
@@ -1148,7 +1394,7 @@ class CacheStore(Store):
         rc = self.cache.insert(
             remote['path'],
             local,
-            intent=_CACHE_PUT_INTENT,
+            intent=CACHE_PUT_INTENT,
             fmt=options.get('fmt'),
             info=options.get('rhandler', None),
         )
@@ -1160,6 +1406,7 @@ class CacheStore(Store):
         """Simple removing of the remote resource in cache."""
         logger.info('incachedelete on %s://%s/%s',
                     self.scheme, self.netloc, remote['path'])
+        self._hash_check_or_delete(self.incachedelete, remote, options)
         return self.cache.delete(
             remote['path'],
             fmt=options.get('fmt'),
@@ -1179,6 +1426,7 @@ class PromiseStore(footprints.FootprintBase):
                 alias    = ('protocol',)
             ),
             netloc = dict(
+                type     = Namespace,
                 alias    = ('domain', 'namespace')
             ),
             storetrack = dict(
@@ -1187,6 +1435,7 @@ class PromiseStore(footprints.FootprintBase):
                 optional = True,
             ),
             prstorename = dict(
+                type     = Namespace,
                 optional = True,
                 default  = 'promise.cache.fr',
             ),
@@ -1256,15 +1505,20 @@ class PromiseStore(footprints.FootprintBase):
         self.system.json_dump(info, pfile, sort_keys=True, indent=4)
         return pfile
 
+    @staticmethod
+    def _options_fixup(options):
+        return dict() if options is None else options
+
     def check(self, remote, options=None):
         """Go through internal opened stores and check for the resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise check from %s', remote)
         return self.other.check(remote.copy(), options) or self.promise.check(remote.copy(), options)
 
     def locate(self, remote, options=None):
         """Go through internal opened stores and locate the expected resource for each of them."""
+        options = self._options_fixup(options)
         logger.debug('Promise locate %s', remote)
-
         inpromise = True
         if options:
             inpromise = options.get('inpromise', True)
@@ -1277,9 +1531,8 @@ class PromiseStore(footprints.FootprintBase):
 
     def get(self, remote, local, options=None):
         """Go through internal opened stores for the first available resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise get %s', remote)
-        if options is None:
-            options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
         try:
@@ -1306,10 +1559,9 @@ class PromiseStore(footprints.FootprintBase):
 
     def earlyget(self, remote, local, options=None):
         """Possible early-get on the target store."""
+        options = self._options_fixup(options)
         logger.debug('Promise early-get %s', remote)
         result_id = None
-        if options is None:
-            options = dict()
         try:
             rc = (self.promise.has_fast_check and
                   self.promise.check(remote.copy(), options))
@@ -1322,9 +1574,8 @@ class PromiseStore(footprints.FootprintBase):
         return result_id
 
     def finaliseget(self, result_id, remote, local, options=None):
+        options = self._options_fixup(options)
         logger.debug('Promise finalise-get %s', remote)
-        if options is None:
-            options = dict()
         self.delayed = False
         logger.info('Try promise from store %s', self.promise)
         try:
@@ -1349,10 +1600,10 @@ class PromiseStore(footprints.FootprintBase):
 
     def put(self, local, remote, options=None):
         """Put a promise or the actual resource if available."""
+        options = self._options_fixup(options)
         logger.debug('Multistore put from %s to %s', local, remote)
-        if options is None:
-            options = dict()
         if options.get('force', False) or not self.system.path.exists(local):
+            options = options.copy()
             if not self.other.use_cache():
                 logger.critical('Could not promise resource without other cache <%s>', self.other)
                 raise ValueError('Could not promise: other store does not use cache')
@@ -1395,6 +1646,7 @@ class PromiseStore(footprints.FootprintBase):
 
     def delete(self, remote, options=None):
         """Go through internal opened stores and delete the resource."""
+        options = self._options_fixup(options)
         logger.debug('Promise delete from %s', remote)
         return self.promise.delete(remote.copy(), options) and self.other.delete(remote.copy(), options)
 

@@ -10,14 +10,11 @@ import six
 import ftplib
 import io
 import tempfile
-import unittest
 
 from bronx.fancies import loggers
-import vortex
 from vortex.tools.net import StdFtp, AutoRetriesFtp, FtpConnectionPool
 
-from . import has_ftpservers
-from .utils import get_ftp_port_number
+from .ftpunittests import FtpBasedTestCase
 
 tloglevel = 9999
 
@@ -35,40 +32,13 @@ class FakeFp(object):
             return b'Coucou'[:blocksize]
 
 
-@unittest.skipUnless(has_ftpservers(), 'FTP Server')
 @loggers.unittestGlobalLevel(tloglevel)
-class TestStdFtp(unittest.TestCase):
+class TestStdFtp(FtpBasedTestCase):
 
-    def setUp(self):
-        self.sh = vortex.sh()
-        self.tdir = tempfile.mkdtemp(prefix='ftp_testdir_')
-        self.udir = self.sh.path.join(self.tdir, 'testlogin')
-        self.user = 'testlogin'
-        self.password = 'aqmp'
-        self.sh.mkdir(self.udir)
-        self._oldpwd = self.sh.getcwd()
-        self.sh.chdir(self.udir)
-        self.port = get_ftp_port_number()
-        self.configure_ftpserver()
-
-    def configure_ftpserver(self):
-        from .ftpservers import TestFTPServer, logger
-        logger.setLevel(tloglevel)
-        self.server = TestFTPServer(self.port, self.tdir,
-                                    self.user, self.password)
-
-    def tearDown(self):
-        self.sh.chdir(self._oldpwd)
-        self.sh.rmtree(self.tdir)
+    _FTPLOGLEVEL = tloglevel
 
     def new_ftp_client(self):
         return StdFtp(self.sh, 'localhost', self.port)
-
-    def assertRemote(self, path, content):
-        where = self.sh.path.join(self.udir, path)
-        self.assertTrue(self.sh.path.exists(where))
-        with io.open(where, 'rb') as fhr:
-            self.assertEqual(fhr.read(), content)
 
     def ftp_client_thook(self):
         pass
@@ -95,7 +65,7 @@ class TestStdFtp(unittest.TestCase):
                 self.assertTrue(ftpc.mkd('dirX'))
                 self.assertTrue(ftpc.cd('dirX'))
                 self.assertTrue(ftpc.put(testdata, 'coucou1'))
-                self.assertRemote('dirX/coucou1', b'Coucou')
+                self.assertRemote('dirX/coucou1', 'Coucou')
                 self.assertTrue(ftpc.cd('..'))
                 with tempfile.NamedTemporaryFile(mode='wb', prefix='tmp_indputd',
                                                  delete=True) as fht:
@@ -103,21 +73,21 @@ class TestStdFtp(unittest.TestCase):
                     fht.seek(0)
                     fht.flush()
                     self.assertTrue(ftpc.put(fht.name, 'dir1/coucou1'))
-                self.assertRemote('dir1/coucou1', b'Hello')
+                self.assertRemote('dir1/coucou1', 'Hello')
                 self.assertTrue(ftpc.cd('dir1'))
                 self.assertTrue(ftpc.put(FakeFp(), 'coucou2'))
-                self.assertRemote('dir1/coucou2', b'Coucou')
+                self.assertRemote('dir1/coucou2', 'Coucou')
                 self.assertEqual(set(ftpc.nlst('.')),
                                  set(['coucou1', 'coucou2']))
                 self.assertTrue(all(['coucou' in l for l in ftpc.list()]))
                 self.assertTrue(ftpc.put(testdata, 'dirbis/coucou3'))
-                self.assertRemote('dir1/dirbis/coucou3', b'Coucou')
+                self.assertRemote('dir1/dirbis/coucou3', 'Coucou')
                 self.assertTrue(ftpc.rm('coucou2'))
                 self.assertFalse(self.sh.path.exists(self.sh.path.join(self.udir, 'dir1/coucou2')))
                 self.assertEqual(ftpc.size('coucou1'), 5)
                 self.assertIsInstance(ftpc.mtime('coucou1'), int)
                 self.assertTrue(ftpc.get('dirbis/coucou3', 'rawget'))
-                self.assertRemote('rawget', b'Coucou')
+                self.assertFile('rawget', 'Coucou')
                 testget = six.BytesIO()
                 self.assertTrue(ftpc.get('coucou1', testget))
                 testget.seek(0)
@@ -131,7 +101,7 @@ class TestAutoRetriesFtp(TestStdFtp):
     def configure_ftpserver(self):
         from .ftpservers import TestFTPServer, logger
         from twisted.protocols.ftp import AUTH_FAILURE, TOO_MANY_CONNECTIONS
-        logger.setLevel(tloglevel)
+        logger.setLevel(self._FTPLOGLEVEL)
         self.server = TestFTPServer(self.port, self.tdir,
                                     self.user, self.password,
                                     pass_seq=(AUTH_FAILURE, AUTH_FAILURE, TOO_MANY_CONNECTIONS, AUTH_FAILURE, True,),
@@ -192,7 +162,7 @@ class TestPooledFtp(TestStdFtp):
             self.assertTrue(ftpc1.cd('FTP1'))
             self.assertEqual(ftpc1.pwd(), '/FTP1')
             self.assertTrue(ftpc1.put(FakeFp(), 'coucou1'))
-            self.assertRemote('FTP1/coucou1', b'Coucou')
+            self.assertRemote('FTP1/coucou1', 'Coucou')
             # Create #2
             ftpc2 = self.new_ftp_client(delayed=False)
             self.assertIsNot(ftpc1, ftpc2)
@@ -211,10 +181,10 @@ class TestPooledFtp(TestStdFtp):
             self.assertEqual(ftpc3.pwd(), '/')
             # And it works
             self.assertTrue(ftpc3.put(FakeFp(), 'coucou1'))
-            self.assertRemote('coucou1', b'Coucou')
+            self.assertRemote('coucou1', 'Coucou')
             # FTP #2 also works
             self.assertTrue(ftpc2.put(FakeFp(), 'coucou1'))
-            self.assertRemote('FTP2/coucou1', b'Coucou')
+            self.assertRemote('FTP2/coucou1', 'Coucou')
             # Get with #3 stills works
             testget = six.BytesIO()
             self.assertTrue(ftpc3.get('FTP1/coucou1', testget))

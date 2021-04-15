@@ -6,6 +6,8 @@ Core classes needed to run names tests.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from six.moves import urllib
+
 import collections
 import functools
 import hashlib
@@ -298,7 +300,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
         """
         for item in self._lookupmap[desc]:
             if default in item.results:
-                return item.results[default]
+                return item.results.getparsed(default)
         return None
 
     def load_test(self, dumpeddata):
@@ -337,7 +339,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
                     data we are comparing to.
         """
         for test in self:
-            for default, result in test.results.items():
+            for default, result in test.results.parseditems():
                 ref_result = ref.lookup(test.desc, default)
                 if ref_result is None:
                     exc = TestNamesComparisonNoRefError(default, test.desc)
@@ -452,6 +454,23 @@ class TestResults(collections_abc.Mapping):
         """Iterate over results."""
         for k, v in self._results.items():
             yield k, v
+
+    def getparsed(self, default):
+        """Return a result dictinary wher URI are parsed."""
+        what = self._results[default]
+        parsed = dict()
+        for k, v in what.items():
+            if k in ('location', ):
+                v = urllib.parse.urlparse(v)
+                v = urllib.parse.ParseResult(v.scheme, v.netloc, v.path, v.params,
+                                             urllib.parse.parse_qs(v.query), v.fragment)
+            parsed[k] = v
+        return parsed
+
+    def parseditems(self):
+        """Iterate over parsed results."""
+        for k in self._results.keys():
+            yield k, self.getparsed(k)
 
     @classmethod
     def to_yaml(cls, dumper, data):

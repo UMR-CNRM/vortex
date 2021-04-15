@@ -494,8 +494,14 @@ class Context(getbytag.GetByTag, observer.Observer):
             self._fstore = dict()
             self._fstamps = set()
 
+    def free_resources(self):
+        """Try to free up memory (removing temporary stuff, caches, ...)."""
+        self.sequence.free_resources()
+        self.clear_stamps()
+
     def clear(self):
         """Make a clear place of local cocoon directory."""
+        self.sequence.clear()
         self.clear_stamps()
 
     def exit(self):

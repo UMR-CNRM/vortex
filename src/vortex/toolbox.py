@@ -13,6 +13,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from contextlib import contextmanager
 import re
 import six
+import traceback
 
 from bronx.fancies import loggers
 from bronx.stdtypes.history import History
@@ -755,6 +756,99 @@ def magic(localpath, **kw):
     rhmagic = rh(**kw)
     rhmagic.get()
     return rhmagic
+
+
+def archive_refill(*args, **kw):
+    """
+    Get a ressource in cache and upload it into the archive.
+
+    This will only have effect when working on a multistore.
+
+    The **kw** items are passed directly to the :func:`rload` function in
+    order to create the resource's :class:`~vortex.data.handlers.Handler`.
+    No "container" description is needed. One will be created by default.
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects.
+    """
+
+    t = sessions.current()
+
+    # First, retrieve arguments of the toolbox command itself
+    loglevel = kw.pop('loglevel', None)
+    talkative = kw.pop('verbose', active_verbose)
+
+    with _tb_isolate(t, loglevel):
+
+        # Distinguish between section arguments, and resource loader arguments
+        opts, kwclean = stripargs_section(**kw)
+        fatal = opts.get('fatal', True)
+
+        # Print the user inputs
+        if talkative:
+            nicedump('Archive Refill Ressource+Provider description', **kwclean)
+
+        # Create the resource handlers
+        kwclean['container'] = footprints.proxy.container(uuid4fly=True,
+                                                          uuid4flydir="archive_refills")
+        rl = rload(*args, **kwclean)
+
+        @contextmanager
+        def _fatal_wrap(action):
+            """Handle errors during the calls to get or put."""
+            wrap_rc = dict(rc=True)
+            try:
+                yield wrap_rc
+            except Exception as e:
+                logger.error('Something wrong (action %s): %s. %s',
+                             action, str(e), traceback.format_exc())
+                wrap_rc['rc'] = False
+                wrap_rc['exc'] = e
+            if fatal and not wrap_rc['rc']:
+                logger.critical('Fatal error with action %s.', action)
+                raise RuntimeError('Could not {:s} resource: {!s}'.format(action,
+                                                                          wrap_rc['rc']))
+
+        with t.sh.ftppool():
+            for ir, rhandler in enumerate(rl):
+                if talkative:
+                    t.sh.subtitle('Resource no {0:02d}/{1:02d}'.format(ir + 1,
+                                                                       len(rl)))
+                    rhandler.quickview(nb=ir + 1, indent=0)
+                if not (rhandler.store.use_cache() and rhandler.store.use_archive()):
+                    logger.info('The requested store does not have both the cache and archive capabilities. ' +
+                                'Skipping this ressource handler.')
+                    continue
+                with _fatal_wrap('get') as get_status:
+                    get_status['rc'] = rhandler.get(incache=True, intent=intent.IN,
+                                                    fmt=rhandler.resource.nativefmt)
+                put_status = dict(rc=False)
+                if get_status['rc']:
+                    with _fatal_wrap('put') as put_status:
+                        put_status['rc'] = rhandler.put(inarchive=True,
+                                                        fmt=rhandler.resource.nativefmt)
+                    rhandler.container.clear()
+                if talkative:
+                    t.sh.highlight('Result from get: [{!s}], from put: [{!s}]'
+                                   .format(get_status['rc'], put_status['rc']))
+
+    return rl
+
+
+def stack_archive_refill(*args, **kw):
+    """Get a stack ressource in cache and upload it into the archive.
+
+    This will only have effect when working on a multistore.
+
+    The **kw** items are passed directly to the :func:`rload` function in
+    order to create the resource's :class:`~vortex.data.handlers.Handler`.
+
+    * No "container" description is needed. One will be created by default.
+    * The **block** attribute will be set automaticaly
+
+    :return: A list of :class:`vortex.data.handlers.Handler` objects.
+    """
+    kw['block'] = 'stacks'
+    return archive_refill(*args, **kw)
 
 
 def namespaces(**kw):

@@ -12,7 +12,7 @@
 #   * ok yesterday only without archive access
 
 case $(hostname) in
-	prolix*|beaufix*)
+	belenos*|taranis*)
 		echo "running on HPC"
 		export HOME_SOPRA=/opt/softs/sopra
 		export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/softs/sopra/lib

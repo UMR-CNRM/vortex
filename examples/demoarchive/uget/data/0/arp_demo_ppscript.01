@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Inside the bash script ! Calculating the md5sum for $1 (will wait 2 seconds)."
+md5sum $1 > $1.md5
+sleep 1

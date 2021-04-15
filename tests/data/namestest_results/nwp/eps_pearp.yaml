@@ -300,7 +300,7 @@
       kind: mbpopulation
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbpopulation.json
+      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbpopulation.json?stackfmt=filespack&stackpath=arpege%2Fpearp%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: ic
@@ -309,7 +309,7 @@
       nbsample: 2
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbsampleof2.json
+      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbsampleof2.json?stackfmt=filespack&stackpath=arpege%2Fpearp%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: ic
@@ -318,7 +318,7 @@
       nbsample: 2
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbsampleof2.json
+      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/mbsampleof2.json?stackfmt=filespack&stackpath=arpege%2Fpearp%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: ic
@@ -327,4 +327,4 @@
       nbsample: 2
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/physampleof2.json
+      location: vortex://vortex.multi.fr/arpege/pearp/ABCD/20180101T0000A/ic/physampleof2.json?stackfmt=filespack&stackpath=arpege%2Fpearp%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack

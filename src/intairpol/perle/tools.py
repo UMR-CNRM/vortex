@@ -121,7 +121,7 @@ class PerleLauncher(PerleTool):
             ),
             target_host = dict(
                 optional = True,
-                default  = DelayedEnvValue('PERLE_TARGET_HOST', 'beaufix'),
+                default  = DelayedEnvValue('PERLE_TARGET_HOST', 'belenos'),
             ),
             target_user = dict(
                 optional = True,

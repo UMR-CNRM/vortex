@@ -4,7 +4,7 @@
 """
 This module provides informations on the NUMA partitioning of the CPUs.
 
-On Epona (2x AMD Rome socket with 64 cores each)::
+On Belenos (2x AMD Rome socket with 64 cores each)::
 
     >>> numa_i = numa_nodes_info()
     >>> print(numa_i)
