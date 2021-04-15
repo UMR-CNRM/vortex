@@ -81,3 +81,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FormatAdapterAbstractImplementation
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

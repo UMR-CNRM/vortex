@@ -5,12 +5,16 @@
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict, deque
+import copy
 import io
+import re
 
 from arpifs_listings import norms, jo_tables, cost_functions, listings
+from bronx.stdtypes.date import Date
 import footprints
 
+from vortex.data.contents import FormatAdapterAbstractImplementation
 from . import addons
 
 #: No automatic export
@@ -176,26 +180,10 @@ class ArpIfsListingsTool(addons.Addon):
         return ArpIfsListingDiff_Status(norms_eq, jos_eq, jos_diff)
 
 
-class ArpifsListingsFormatAdapter(footprints.FootprintBase):
+class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
 
-    _collector = ('dataformat',)
     _footprint = dict(
         attr=dict(
-            filename=dict(
-                info="Path to the Arpege/IFSlisting file.",
-            ),
-            openmode=dict(
-                info="File open-mode.",
-                values=['r', ],
-                default='r',
-                optional=True,
-            ),
-            fmtdelayedopen=dict(
-                info="Delay the opening of the listing file.",
-                type=bool,
-                default=True,
-                optional=True,
-            ),
             format=dict(
                 values=['ARPIFSLIST', ],
             ),
@@ -268,3 +256,110 @@ class ArpifsListingsFormatAdapter(footprints.FootprintBase):
     def __len__(self):
         """The number of lines in the listing."""
         return len(self.lines)
+
+
+class CutoffDispenser(object):
+    """
+    From a dictionary of cutoff times (probably read from an extraction listing,
+    see :class:`BdmBufrListingsFormatAdapter`), for a given *obstype*, find the
+    best suited cutoff time.
+
+    The __call__ method takes a unique *obstype* argument. It will return the
+    best suited cutoff time for this particular *obstype*. N.B: If no exact
+    match is found, the latest cutoff time will be used.
+    """
+
+    def __init__(self, cutoffs, fuse_per_obstype=False):
+        self._cutoffs = cutoffs
+        f_cutoffs = {}
+        for k, dates in cutoffs.items():
+            f_dates = [d for d in dates if d is not None]
+            if f_dates:
+                f_cutoffs[k] = f_dates
+        if f_cutoffs:
+            self._max_cutoff = max([max(dates) for dates in f_cutoffs.values()])
+        else:
+            self._max_cutoff = None
+        self._default_cutoffs = defaultdict(lambda: self._max_cutoff)
+        self._default_cutoffs.update({k: max(dates)
+                                      for k, dates in f_cutoffs.items()})
+        self._fuse_per_obstype = fuse_per_obstype
+
+    @property
+    def max_cutoff(self):
+        """The latest cutoff time(accoss any available obstypes)."""
+        return self._max_cutoff
+
+    @property
+    def default_cutoffs(self):
+        """A dictionary of the latest cutoff time for each of the obstypes."""
+        return self._default_cutoffs
+
+    def __call__(self, obstype):
+        """Find the best suited cutoff time for *obstype*."""
+        obstype = obstype.lower()
+        if self._cutoffs.get(obstype, None) and not self._fuse_per_obstype:
+            item = self._cutoffs[obstype].popleft()
+            return item or self.default_cutoffs[obstype]
+        else:
+            return self.default_cutoffs[obstype]
+
+
+class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
+    """Read the content of a BDM extraction output listing."""
+
+    _footprint = dict(
+        attr=dict(
+            format=dict(
+                values=['BDMBUFR_LISTING', ],
+            ),
+        )
+    )
+
+    _RE_OBSTYPE_GRP = re.compile(r"^.*tentative\s+(?:d')?extraction\s+pour\s+'?(?P<obstype>\w+)'?\b",
+                                 re.IGNORECASE)
+    _RE_OBSTYPE_CUT = re.compile(r"^.*cutoff\s+pour\s+'?(?P<obstype>\w+)'?\s*:\s*(?P<datetime>\d+)\b",
+                                 re.IGNORECASE)
+
+    def __init__(self, *kargs, **kwargs):
+        super(BdmBufrListingsFormatAdapter, self).__init__(*kargs, **kwargs)
+        self._lines = None
+        self._cutoffs = defaultdict(deque)
+        if not self.fmtdelayedopen:
+            self.lines
+
+    @property
+    def lines(self):
+        """Return an array populated with the listing file lines."""
+        if self._lines is None:
+            with io.open(self.filename, self.openmode, encoding='utf-8', errors='replace') as f:
+                self._lines = [l.rstrip("\n") for l in f]  # to remove trailing '\n'
+        return self._lines
+
+    @property
+    def cutoffs(self):
+        """
+        A dictionary of cutoff times for all of the obstypes available in the
+        listing.
+        """
+        if not self._cutoffs:
+            cur_obstype = None
+            for line in self.lines:
+                l_match = self._RE_OBSTYPE_GRP.match(line)
+                if l_match:
+                    if cur_obstype is not None:
+                        self._cutoffs[cur_obstype].append(None)
+                    cur_obstype = l_match.group('obstype').lower()
+                if cur_obstype:
+                    l_match = self._RE_OBSTYPE_CUT.match(line)
+                    if l_match and l_match.group('obstype').lower() == cur_obstype:
+                        self._cutoffs[cur_obstype].append(Date(l_match.group('datetime')))
+                        cur_obstype = None
+            if cur_obstype is not None:
+                self._cutoffs[cur_obstype].append(None)
+        return self._cutoffs
+
+    def cutoffs_dispenser(self, fuse_per_obstype=False):
+        """Return a new :class:`CutoffDispenser` object."""
+        return CutoffDispenser(copy.deepcopy(self.cutoffs),
+                               fuse_per_obstype=fuse_per_obstype)

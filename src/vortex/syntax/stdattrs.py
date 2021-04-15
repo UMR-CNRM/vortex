@@ -45,7 +45,7 @@ utilities = set(['batodb'])
 
 #: Known formats
 knownfmt = set([
-    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
+    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist', 'bdmbufr_listing',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
