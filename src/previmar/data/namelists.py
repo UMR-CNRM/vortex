@@ -36,7 +36,7 @@ class BlkdatNamFiles(ModelResource):
                     default = "[model]_blkdat_[param]_[gdomain]",
                 ),
                 param = dict(
-                    values  = ['full_prv', 'full_ana', 'ms', 'full'],
+                    values  = ['full_prv', 'full_ana', 'ms', 'red', 'full'],
                 ),
                 forcage = dict(
                     values   = ['aro', 'cep', 'arp', 'aoc', ],

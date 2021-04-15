@@ -93,21 +93,6 @@ class Forecast(IFSParallel):
             # At least, expect the analysis to be there...
             self.grab(analysis, comment='analysis')
 
-        for namrh in [x.rh for x in self.context.sequence.effective_inputs(
-            role='Namelist',
-            kind='namelist',
-        )]:
-            try:
-                namlocal = namrh.container.actualpath()
-                namc = namrh.contents
-                if self.outputid is not None:
-                    namc.setmacro('OUTPUTID', self.outputid)
-                    logger.info('Setup macro OUTPUTID=%s in %s', self.outputid, namlocal)
-                namc.rewrite(namrh.container)
-            except Exception:
-                logger.critical('Could not fix %s', namrh.container.actualpath())
-                raise
-
         # Promises should be nicely managed by a co-proccess
         if self.promises:
             prefixes_set = set()
@@ -118,6 +103,20 @@ class Forecast(IFSParallel):
                     prefixes_set.add('{:s}PF'.format('GRIB' if pr_res.nativefmt == 'grib' else ''))
             self.io_poll_args = tuple(prefixes_set)
             self.flyput = len(self.io_poll_args) > 0
+
+    def find_namelists(self, opts=None):
+        """Find any namelists candidates in actual context inputs."""
+        return [x.rh
+                for x in self.context.sequence.effective_inputs(role='Namelist',
+                                                                kind='namelist')]
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        namw = super(Forecast, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        if self.outputid is not None and any(['OUTPUTID' in nam_b.macros()
+                                              for nam_b in namcontents.values()]):
+            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
+            namw = True
+        return namw
 
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
@@ -480,8 +479,7 @@ class FullPosBDAP(FullPos):
                 namfp = [x for x in namrh if x.resource.term == r.resource.term].pop()
                 namfplocal = namfp.container.localpath()
                 if self.outputid is not None:
-                    namfp.contents.setmacro('OUTPUTID', self.outputid)
-                    logger.info('Setup macro OUTPUTID=%s in %s', self.outputid, namfplocal)
+                    self._set_nam_macro(namfp.contents, namfplocal, 'OUTPUTID', self.outputid)
                 namfp.contents.rewrite(namfp.container)
                 sh.remove('fort.4')
                 sh.symlink(namfplocal, 'fort.4')
@@ -548,7 +546,7 @@ class FullPosBDAP(FullPos):
                                    sh.glob('RUNOUT*/GRIBPF{0:s}*+*'.format(self.xpname)))
                        if sh.path.isfile(x)]:
             sh.move(fpfile, sh.path.basename(fpfile),
-                    fmt='grib' if fpfile.startswith('GRIB') else 'lfi')
+                    fmt='grib' if 'GRIBPF' in fpfile else 'lfi')
         sh.cat('RUNOUT*/NODE.001_01', output='NODE.all')
 
         super(FullPosBDAP, self).postfix(rh, opts)
@@ -634,5 +632,6 @@ class OfflineSurfex(Parallel, DrHookDecoMixin):
             if finaldate:
                 self._fix_nam_macro(namsec, 'FINAL_STOP', finaldate)
                 self._fix_nam_macro(namsec, 'NB_READS', nbreads)
-            namsec.rh.save()
+            if namsec.rh.contents.dumps_needs_update:
+                namsec.rh.save()
             logger.info("Namelist dump: \n%s", namsec.rh.container.read())

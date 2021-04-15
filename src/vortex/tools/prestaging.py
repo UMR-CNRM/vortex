@@ -71,7 +71,7 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
 
     def describe(self, fulldump=False):
         """Print the object's characteristics and content."""
-        res = 'PrestagingTool object of class: {:s}\n'.format(self.__class__)
+        res = 'PrestagingTool object of class: {!s}\n'.format(self.__class__)
         for k, v in self.footprint_as_shallow_dict().items():
             res += '  * {:s}: {!s}\n'.format(k, v)
         if fulldump:
@@ -129,6 +129,7 @@ class PrivatePrestagingHub(object):
         if myptool is None:
             logger.debug("Unable to perform prestaging with: %s", lightdump(myptool_desc))
         else:
+            logger.debug("Prestaging requested accepted for: %s", location)
             myptool.add(location)
 
     def _get_ptools(self, priority_threshold=prestaging_p.low):
@@ -150,7 +151,7 @@ class PrivatePrestagingHub(object):
     def flush(self, priority_threshold=prestaging_p.low):
         """Actually send the pre-staging request to the appropriate location.
 
-        :param int priority: Only requests with a priority >= *priority_threshold*
+        :param int priority_threshold: Only requests with a priority >= *priority_threshold*
             will be sent.
         """
         for ptool in self._get_ptools(priority_threshold):
@@ -163,7 +164,7 @@ class PrivatePrestagingHub(object):
     def clear(self, priority_threshold=prestaging_p.low):
         """Erase the pre-staging requests list.
 
-        :param int priority: Only requests with a priority >= *priority_threshold*
+        :param int priority_threshold: Only requests with a priority >= *priority_threshold*
             will be deleted.
         """
         for ptool in self._get_ptools(priority_threshold):

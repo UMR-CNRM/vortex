@@ -809,7 +809,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
                     except IndexError:
                         current_gang[geometry] = None
 
-                if not (bm.all_done or any(current_gang[g] is not None and
+                if not (bm.all_done or any(gang is not None and
                                            gang.state is not GangSt.ufo
                                            for gang in six.itervalues(current_gang))):
                     # Timeout ?
@@ -1069,7 +1069,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
             # Expect the input FP file source to be there...
             self.grab(sec, comment='fullpos source')
 
-            # Finaly set the actual init file
+            # Finally set the actual init file
             self.system.softlink(r.container.localpath(), self.fortinput)
 
             # Standard execution
@@ -1077,7 +1077,7 @@ class Fa2GaussGrib(BlindRun, DrHookDecoMixin):
 
             # Freeze the current output
             if self.system.path.exists(thisoutput):
-                self.system.move(thisoutput, 'GGRID' + r.container.localpath()[6:], fmt=r.container.actualfmt)
+                self.system.move(thisoutput, 'GGRID' + r.container.localpath()[6:], fmt='grib')
             else:
                 logger.warning('Missing some grib output for %s',
                                thisoutput)

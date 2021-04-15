@@ -12,7 +12,12 @@
 Classes
 -------
 
-.. autoclass:: ArchiveECMWF
+.. autoclass:: EcfsArchive
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: EctransArchive
    :show-inheritance:
    :members:
    :member-order: alphabetical

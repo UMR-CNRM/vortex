@@ -119,26 +119,17 @@ class SeaIceAnalysis(IFSParallel):
         )
     )
 
-    def prepare(self, rh, opts):
-        """Update the date in the namelist."""
-
-        super(SeaIceAnalysis, self).prepare(rh, opts)
-
-        namrh_list = [x.rh for x in self.context.sequence.effective_inputs(role='Namelist',
-                                                                           kind='namelist',)]
-
+    def find_namelists(self, opts=None):
+        namrh_list = super(SeaIceAnalysis, self).find_namelists(opts)
         if not namrh_list:
             logger.critical('No namelist was found.')
             raise ValueError('No namelist was found for seaice analysis')
+        return namrh_list
 
-        for namrh in namrh_list:
-            logger.info('Setup IDAT=%s in %s', self.date.ymd, namrh.container.actualpath())
-            try:
-                namrh.contents.setmacro('IDAT', int(self.date.ymd))
-            except Exception:
-                logger.critical('Could not fix NAMICE in %s', namrh.container.actualpath())
-                raise
-            namrh.contents.rewrite(namrh.container)
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        super(SeaIceAnalysis, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        self._set_nam_macro(namcontents, namlocal, 'IDAT', int(self.date.ymd))
+        return True
 
 
 class Canari(IFSParallel, odb.OdbComponentDecoMixin):

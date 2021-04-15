@@ -22,6 +22,7 @@ import io
 import os
 import re
 import tempfile
+import uuid
 
 from bronx.fancies import loggers
 from bronx.syntax.decorators import secure_getattr
@@ -109,7 +110,8 @@ class Container(footprints.FootprintBase):
     def __getattr__(self, key):
         """Gateway to undefined method or attributes if present in internal io descriptor."""
         # It avoids to call self.iodesc() when footprint_export is called...
-        if key.startswith('footprint_export') or key in ('export_dict', '_iod'):
+        if (key.startswith('footprint_export') or
+                key in ('export_dict', 'as_dump', 'as_dict', '_iod')):
             raise AttributeError('Could not get an io descriptor')
         # Normal processing
         iod = self.iodesc()
@@ -117,6 +119,19 @@ class Container(footprints.FootprintBase):
             return getattr(iod, key)
         else:
             raise AttributeError('Could not get an io descriptor')
+
+    @contextlib.contextmanager
+    def iod_context(self):
+        """Ensure that any opened IO descriptor is closed after use."""
+        if self.is_virtual():
+            # With virtual container, this is not a good idea since closing
+            # the io descriptor might result in data losses
+            yield
+        else:
+            try:
+                yield
+            finally:
+                self.close()
 
     def localpath(self):
         """Abstract method to be overwritten."""
@@ -698,8 +713,7 @@ class SingleFile(_SingleFileStyle):
 
 
 class UnnamedSingleFile(_SingleFileStyle):
-    """
-    Unnamed file container. Data is stored as a file object.
+    """Unnamed file container. Data is stored as a file object.
 
     The filename is chosen arbitrarily when the object is created.
     """
@@ -722,18 +736,65 @@ class UnnamedSingleFile(_SingleFileStyle):
 
     def __init__(self, *args, **kw):
         logger.debug('UnnamedSingleFile container init %s', self.__class__)
-        fh, fpath = tempfile.mkstemp(prefix="shouldfly-", dir=os.getcwd())
-        os.close(fh)  # mkstemp opens the file but we do not really care...
-        self._auto_filename = os.path.basename(fpath)
-        logger.debug('The localfile will be: %s', self.filename)
+        self._auto_filename = None
         kw.setdefault('shouldfly', True)
         super(UnnamedSingleFile, self).__init__(*args, **kw)
 
     @property
     def filename(self):
+        if self._auto_filename is None:
+            fh, fpath = tempfile.mkstemp(prefix="shouldfly-", dir=os.getcwd())
+            os.close(fh)  # mkstemp opens the file but we do not really care...
+            self._auto_filename = os.path.basename(fpath)
         return self._auto_filename
+
+    def __getstate__(self):
+        st = super(UnnamedSingleFile, self).__getstate__()
+        st['_auto_filename'] = None
+        return st
 
     def exists(self, empty=False):
         """Check the existence of the actual file."""
         return (os.path.exists(self.localpath()) and
                 (empty or os.path.getsize(self.localpath())))
+
+
+class Uuid4UnamedSingleFile(_SingleFileStyle):
+    """Unamed file container created in a temporary diectory."""
+
+    _footprint = dict(
+        info = 'File container (a temporary filename is chosen at runtime)',
+        attr = dict(
+            uuid4fly = dict(
+                info       = 'Activate the Uuid4UnnamedSingleFile container',
+                type       = bool,
+                values     = [True, ],
+                doc_zorder = 90,
+            ),
+            uuid4flydir = dict(
+                info       = 'The subdirectory where to create the unamed file',
+                optional   = True,
+                default    = '.',
+                doc_zorder = 90,
+            ),
+        ),
+        fastkeys = set(['uuid4fly', ])
+    )
+
+    def __init__(self, *args, **kw):
+        logger.debug('UuidBasedUnamedSingleFile container init %s', self.__class__)
+        self._auto_filename = None
+        kw.setdefault('uuid4fly', True)
+        super(Uuid4UnamedSingleFile, self).__init__(*args, **kw)
+
+    @property
+    def filename(self):
+        if self._auto_filename is None:
+            self._auto_filename = os.path.join(self.uuid4flydir,
+                                               uuid.uuid4().hex)
+        return self._auto_filename
+
+    def __getstate__(self):
+        st = super(Uuid4UnamedSingleFile, self).__getstate__()
+        st['_auto_filename'] = None
+        return st

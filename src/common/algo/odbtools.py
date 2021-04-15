@@ -408,7 +408,8 @@ class Raw2ODBparallel(ParaBlindRun, odb.OdbComponentDecoMixin, drhook.DrHookDeco
             for nam in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp')):
                 nam.rh.contents.setmacro('MEMBER', self.member)
                 logger.info('Setup macro MEMBER=%s in %s', self.member, nam.rh.container.actualpath())
-                nam.rh.save()
+                if nam.rh.contents.dumps_needs_update:
+                    nam.rh.save()
 
     def spawn_command_options(self):
         """Any data useful to build the command line."""
