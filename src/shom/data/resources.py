@@ -71,6 +71,7 @@ class Hycom3dInterpOutput(GeoFlowResource):
                 ),
                 field=dict(
                     values=["saln", "temp", "thdd", "vaisa", "ssh"],
+                    remap={"sal": "saln"},
                     optional=True
                 ),
                 nativefmt=dict(
@@ -109,8 +110,11 @@ class Hycom3dModelInput(GeoFlowResource):
                             'wndspd','tauewd','taunwd','vapmix']
                 ),
                 nativefmt=dict(
-                    values=["binary", "ascii", "netcdf"],
+                    values=["a", "b", "nc", "binary", "ascii", "netcdf"],
                     remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
+                ),
+                format=dict(
+                    values=["a", "b", "nc"],
                 ),
             ),
         ),
@@ -121,7 +125,6 @@ class Hycom3dModelInput(GeoFlowResource):
         return "hycom3d_model_input"
 
 
-@namebuilding_append('src', lambda self: self.rivers)
 class Hycom3dRiversModelInput(Hycom3dModelInput):
     """Rivers input files for the Hycom3d model"""
 
@@ -132,12 +135,17 @@ class Hycom3dRiversModelInput(Hycom3dModelInput):
                 kind=dict(
                     values = ['observations'],
                 ),
-                rivers=dict(
+                field=dict(
+                    values=["Adour", "Gironde", "Loire", "Seine",
+                            "Rhone", "Nile", "Po", "Ebro", "Marma"],
                     optional=False,
                 ),
                 nativefmt=dict(
-                    values=['ascii', 'netcdf'],
+                    values=['r', 'nc', "ascii", "netcdf"],
                     remap={'r':'ascii','nc':'netcdf'}
+                ),
+                format=dict(
+                    values=['r', 'nc'],
                 ),
             ),
         )
@@ -166,8 +174,13 @@ class Hycom3dInitialCondition(InitialCondition):
                 ),
                 nativefmt=dict(
                     remap={"cdf": "netcdf", "res": "binary"},
-                    values=["binary", "netcdf"],
+                    values=["cdf", "res", "netcdf", "binary"],
                 ),
+                format=dict(
+                    values=["cdf", "res", "netcdf", "binary"],
+                    optional=True
+                ),
+ 
             ),
         ),
     ]
