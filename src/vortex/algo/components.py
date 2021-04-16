@@ -42,7 +42,7 @@ import multiprocessing
 import shlex
 import sys
 import tempfile
-import traceback
+import traceback as py_traceback
 
 import six
 
@@ -592,7 +592,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             print('Exception type: {!s}'.format(exc_type))
             print('Exception info: {!s}'.format(exc_value))
             print('Traceback:')
-            print("\n".join(traceback.format_tb(exc_traceback)))
+            print("\n".join(py_traceback.format_tb(exc_traceback)))
         self._delayed_excs.append(exc)
 
     def algoassert(self, assertion, msg=''):
@@ -728,7 +728,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                 self._flyput_job_internal_put(data)
             except Exception as trouble:
                 logger.error('Polling trouble: %s. %s',
-                             str(trouble), traceback.format_exc())
+                             str(trouble), py_traceback.format_exc())
                 redo = False
             finally:
                 event_free.set()
@@ -865,7 +865,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             print('Exception type: {!s}'.format(exc_type))
             print('Exception info: {!s}'.format(exc_value))
             print('Traceback:')
-            print("\n".join(traceback.format_tb(exc_traceback)))
+            print("\n".join(py_traceback.format_tb(exc_traceback)))
             # Alert the main process of the error
             self._server_event.set()
 
