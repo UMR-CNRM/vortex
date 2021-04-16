@@ -147,7 +147,6 @@ class MailService(Service):
             ),
             smtpserver = dict(
                 optional = True,
-                default  = 'localhost',
             ),
             smtpport = dict(
                 type = int,
@@ -295,13 +294,19 @@ class MailService(Service):
 
     @contextlib.contextmanager
     def smtp_entrypoints(self):
+        import smtplib
+        my_smtpserver = self.actual_value('smtpserver',
+                                          as_var='VORTEX_SMTPSERVER',
+                                          default='localhost')
+        my_smtpport = self.actual_value('smtpport',
+                                        as_var='VORTEX_SMTPPORT',
+                                        default=smtplib.SMTP_PORT)
         if not self.sh.default_target.isnetworknode:
-            import smtplib
             sshobj = self.sh.ssh('network', virtualnode=True, mandatory_hostcheck=False)
-            with sshobj.tunnel(self.smtpserver, smtplib.SMTP_PORT) as tun:
-                yield('localhost', tun.entranceport)
+            with sshobj.tunnel(my_smtpserver, my_smtpport) as tun:
+                yield 'localhost', tun.entranceport
         else:
-            yield (self.smtpserver, self.smtpport)
+            yield my_smtpserver, my_smtpport
 
     def __call__(self):
         """Main action: pack the message body, add the attachments, and send via SMTP."""
@@ -310,12 +315,12 @@ class MailService(Service):
             msg = self.as_multipart(msg)
         self.set_headers(msg)
         msgcorpus = msg.as_string()
-        with self.smtp_entrypoints() as smtpspecs:
+        with self.smtp_entrypoints() as (smtpserver, smtpport):
             import smtplib
             extras = dict()
-            if smtpspecs[1]:
-                extras['port'] = smtpspecs[1]
-            smtp = smtplib.SMTP(smtpspecs[0], ** extras)
+            if smtpport:
+                extras['port'] = smtpport
+            smtp = smtplib.SMTP(smtpserver, ** extras)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)

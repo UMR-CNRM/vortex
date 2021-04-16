@@ -11,14 +11,17 @@ declinations depending on the experiment indentifier type.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from six.moves.urllib import parse as urlparse
 import os.path
 
 from bronx.fancies import loggers
+from bronx.syntax.parsing import StringDecoder
 import footprints
 from footprints import proxy as fpx
 
-from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, scenario, member, block
-from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt
+from vortex.syntax.stdattrs import xpid, legacy_xpid, free_xpid, opsuites, \
+    demosuites, scenario, member, block
+from vortex.syntax.stdattrs import namespacefp, Namespace, FmtInt, DelayedEnvValue
 from vortex.tools import net, names
 
 #: No automatic export
@@ -266,14 +269,15 @@ class Vortex(Provider):
                 ),
                 namespace = dict(
                     values   = [
-                        'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr',
-                        'open.cache.fr', 'open.archive.fr', 'open.multi.fr',
+                        'vortex.cache.fr', 'vortex.archive.fr', 'vortex.multi.fr', 'vortex.stack.fr',
+                        'open.cache.fr', 'open.archive.fr', 'open.multi.fr', 'open.stack.fr',
                     ],
                     default  = Namespace('vortex.cache.fr'),
                     remap    = {
                         'open.cache.fr': 'vortex.cache.fr',
                         'open.archive.fr': 'vortex.archive.fr',
                         'open.multi.fr': 'vortex.multi.fr',
+                        'open.stack.fr': 'vortex.stack.fr',
                     }
                 ),
                 namebuild = dict(
@@ -289,6 +293,13 @@ class Vortex(Provider):
                     default     = False,
                     doc_zorder  = -5,
                 ),
+                set_aside = dict(
+                    info        = "Do we need to re-archive retrieve data somewhere else?",
+                    optional    = True,
+                    default     = DelayedEnvValue('VORTEX_PROVIDER_SET_ASIDE',
+                                                  default='dict()'),
+                    doc_visibility = footprints.doc.visibility.GURU,
+                )
             ),
             fastkeys = set(['block', 'experiment']),
         )
@@ -307,6 +318,7 @@ class Vortex(Provider):
             self._namebuilder = self._CUSTOM_NAME_BUILDERS[self.namebuild]
         else:
             self._namebuilder = self._DEFAULT_NAME_BUILDER
+        self._x_set_aside = None
 
     @property
     def namebuilder(self):
@@ -331,8 +343,8 @@ class Vortex(Provider):
         """Returns the current ``namespace``."""
         return self.namespace.netloc
 
-    def pathname(self, resource):
-        """Constructs pathname of the ``resource`` according to :func:`namebuilding_info`."""
+    def _pathname_info(self, resource):
+        """Return all the necessary informations to build a pathname."""
         rinfo = resource.namebuilding_info()
         rinfo.update(
             vapp=self.vapp,
@@ -342,7 +354,11 @@ class Vortex(Provider):
             member=self.member,
             scenario=self.scenario,
         )
-        return self.namebuilder.pack_pathname(rinfo)
+        return rinfo
+
+    def pathname(self, resource):
+        """Constructs pathname of the ``resource`` according to :func:`namebuilding_info`."""
+        return self.namebuilder.pack_pathname(self._pathname_info(resource))
 
     def basename(self, resource):
         """
@@ -350,6 +366,38 @@ class Vortex(Provider):
         and resource :func:`~vortex.data.resources.Resource.namebuilding_info`.
         """
         return self.namebuilder.pack_basename(resource.namebuilding_info())
+
+    def urlquery(self, resource):
+        """Construct the urlquery (taking into account stacked storage)."""
+        s_urlquery = super(Vortex, self).urlquery(resource)
+        if s_urlquery:
+            uqs = urlparse.parse_qs(super(Vortex, self).urlquery(resource))
+        else:
+            uqs = dict()
+        # Deal with stacked storage
+        stackres, keepmember = resource.stackedstorage_resource()
+        if stackres:
+            stackpathinfo = self._pathname_info(stackres)
+            stackpathinfo['block'] = 'stacks'
+            if not keepmember:
+                stackpathinfo['member'] = None
+            uqs['stackpath'] = [(self.namebuilder.pack_pathname(stackpathinfo) + '/' +
+                                 self.basename(stackres)), ]
+            uqs['stackfmt'] = [stackres.nativefmt, ]
+        # Deal with set_aside
+        if self._x_set_aside is None:
+            self._x_set_aside = StringDecoder()(self.set_aside)
+            if not isinstance(self._x_set_aside, dict):
+                logger.warning("setaside should decode as a dictionary (got '%s' that translate into '%s')",
+                               self.set_aside, self._x_set_aside)
+                self._x_set_aside = dict()
+        if self.experiment in self._x_set_aside:
+            provider_attrs = self.footprint_as_shallow_dict()
+            provider_attrs['experiment'] = self._x_set_aside[self.experiment]
+            provider_bis = fpx.provider(** provider_attrs)
+            uqs['setaside_n'] = [provider_bis.netloc(resource), ]
+            uqs['setaside_p'] = [provider_bis.pathname(resource) + '/' + provider_bis.basename(resource), ]
+        return urlparse.urlencode(sorted(uqs.items()), doseq=True)
 
 
 class VortexStd(Vortex):
@@ -361,7 +409,7 @@ class VortexStd(Vortex):
             info = 'Vortex provider for casual experiments with an Olive XPID',
             attr = dict(
                 experiment = dict(
-                    outcast = opsuites,
+                    outcast = opsuites | demosuites,
                 ),
             ),
         ),

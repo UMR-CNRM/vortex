@@ -53,10 +53,10 @@ baretests3:
 cover: cover27
 
 cover27: clean-coverage
-	$(NOSE) $(COVER_OPTS)
+	export VORTEX_TEST_NAMES_NTASKS=1; $(NOSE) $(COVER_OPTS)
 
 cover3: clean-coverage
-	$(NOSE3) $(COVER_OPTS)
+	export VORTEX_TEST_NAMES_NTASKS=1; $(NOSE3) $(COVER_OPTS)
 
 clean-coverage:
 	rm -f .coverage

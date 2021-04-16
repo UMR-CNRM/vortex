@@ -9,6 +9,7 @@ import footprints as fp
 import vortex.data.providers  # @UnusedImport
 import olive.data.providers  # @UnusedImport
 from vortex.data import geometries
+from vortex.tools.net import uriparse
 
 
 class DummyRessource(object):
@@ -62,6 +63,9 @@ class DummyRessource(object):
 
     def vortex_urlquery(self):
         return None
+
+    def stackedstorage_resource(self):
+        return None, True
 
 
 class TestProviderMagic(unittest.TestCase):
@@ -165,6 +169,13 @@ class TestProviderVortexStd(unittest.TestCase):
         self.assertEqual(pr.uri(self.t_res),
                          'vortex://toto@' + self.fp_defaults['namespace'] +
                          '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres')
+        # set aside ?
+        pr = fp.proxy.provider(set_aside='dict(VOID:OPER)', **self.fp_defaults)
+        self.assertEqual(uriparse(pr.uri(self.t_res)),
+                         uriparse('vortex://' + self.fp_defaults['namespace'] +
+                                  '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
+                                  '?setaside_n=vsop.cache.fr' +
+                                  '&setaside_p=arpege%2F4dvar%2FOPER%2F20000101T0000A%2Fdummy%2Fdummyres'))
 
 
 class TestProviderVortexOp(unittest.TestCase):

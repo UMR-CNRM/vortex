@@ -4,37 +4,77 @@
 """
 This modules defines the base nodes of the logical layout
 for any :mod:`vortex` experiment.
+
+The documentation of this module is probably not enough to understand all the
+features of :class:`Node` and :class:`Driver` objects. The examples provided
+with the Vortex source code (see :ref:`examples_jobs`) may shed some light on
+interesting features.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 import six
 
+import collections
+import contextlib
 import re
 import sys
+import traceback
 
-from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
-from bronx.patterns import getbytag
-from bronx.syntax.decorators import secure_getattr
+from bronx.patterns import getbytag, observer
 from bronx.syntax.iterators import izip_pcn
+from bronx.system.interrupt import SignalInterruptError
 from footprints import proxy as fpx
 from vortex import toolbox, VortexForceComplete
 from vortex.algo.components import DelayedAlgoComponentError
-from vortex.layout.subjobs import subjob_output_markup
+from vortex.layout.appconf import ConfigSet
+from vortex.layout.subjobs import subjob_handling, SubJobLauncherError
 from vortex.syntax.stdattrs import Namespace
-from vortex.util.config import GenericConfigParser, AppConfigStringDecoder
+from vortex.util.config import GenericConfigParser
 
 logger = loggers.getLogger(__name__)
 
 #: Export real nodes.
 __all__ = ['Driver', 'Task', 'Family']
 
+OBSERVER_TAG = 'Layout-Nodes'
 
-class NiceLayout(object):
+#: Definition of a named tuple for Node Statuses
+_NodeStatusTuple = collections.namedtuple('_NodeStatusTuple',
+                                          ['CREATED', 'READY', 'RUNNING', 'DONE', 'FAILED'])
+
+#: Predefined Node Status values
+NODE_STATUS = _NodeStatusTuple(CREATED='created',
+                               READY='ready to start',
+                               RUNNING='running',
+                               DONE='done',
+                               FAILED='FAILED')
+
+#: Definition of a named tuple for Node on_error behaviour
+_NodeOnErrorTuple = collections.namedtuple('_NodeOnErrorTuple',
+                                           ['FAIL', 'DELAYED_FAIL', 'CONTINUE'])
+
+#: Predefined Node Status values
+NODE_ON_ERROR = _NodeOnErrorTuple(FAIL='fail',
+                                  DELAYED_FAIL='delayed_fail',
+                                  CONTINUE='continue')
+
+
+class NiceLayout(observer.Observer):
     """Some nice method to share between layout items."""
 
     @property
+    def tag(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
+    @property
     def sh(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
+    @property
+    def contents(self):
         """Abstract property: have to be defined later on"""
         raise NotImplementedError
 
@@ -58,103 +98,97 @@ class NiceLayout(object):
         else:
             print(" + ...\n")
 
+    def _nicelayout_init(self, kw):
+        """Initialise generic stuff."""
+        self._status = NODE_STATUS.CREATED
+        self._delayed_error_flag = False
+        self._on_error = kw.get('on_error', NODE_ON_ERROR.FAIL)
+        if self._on_error not in NODE_ON_ERROR:
+            raise ValueError('Erroneous value for on_error: {!s}'.format(self._on_error))
+        self._obs_board = observer.get(tag=OBSERVER_TAG)
+        self._obs_board.notify_new(self, dict(tag=self.tag,
+                                              status=self.status,
+                                              on_error=self.on_error))
+        self._obs_board.register(self)
 
-class ConfigSet(collections_abc.MutableMapping):
-    """Simple struct-like object that acts as a lower case dictionary.
+    def updobsitem(self, item, info):
+        if info.get('observerboard', '') == OBSERVER_TAG:
+            o_tag = info['tag']
+            if info.get('subjob_replay', False):
+                # If the status/delayed_error_flag chatter is being replayed,
+                # deal with it
+                if o_tag == self.tag:
+                    if 'new_status' in info:
+                        self._status = info['new_status']
+                    if info.get('delayed_error_flag', False):
+                        self._delayed_error_flag = True
+            else:
+                if (self.status != NODE_STATUS.CREATED and
+                        any([o_tag == k.tag for k in self.contents])):
+                    # We are only interested in child nodes
+                    if info.get('new_status', None) == NODE_STATUS.FAILED:
+                        # On kid failure, update my own status
+                        if info['on_error'] == NODE_ON_ERROR.FAIL:
+                            self.status = NODE_STATUS.FAILED
+                    if 'delayed_error_flag' in info:
+                        # Propagate the delayed error flag
+                        self.delayed_error_flag = True
 
-    Two syntax are available to add a new entry in a :class:`ConfigSet` object:
+    @property
+    def on_error(self):
+        """How to react on error."""
+        return self._on_error
 
-    * ``ConfigSetObject.key = value``
-    * ``ConfigSetObject[key] = value``
+    @property
+    def delayed_error_flag(self):
+        """Return the delayed error flag."""
+        return self._delayed_error_flag
 
-    Prior to being retrieved, entries ere passed to a
-    :class:`vortex.util.config.AppConfigStringDecoder` object. It allows to
-    describe complex data types (see the :class:`vortex.util.config.AppConfigStringDecoder`
-    class documentation).
+    @delayed_error_flag.setter
+    def delayed_error_flag(self, value):
+        """Set the status of the current Node/Driver."""
+        if not bool(value):
+            raise ValueError('True is the only possible value for delayed_error_flag')
+        if not self._delayed_error_flag:
+            self._obs_board.notify_upd(self, dict(tag=self.tag,
+                                                  delayed_error_flag=True))
+            self._delayed_error_flag = True
 
-    Some extra features are added on top of the
-    :class:`vortex.util.config.AppConfigStringDecoder` capabilities:
+    @property
+    def status(self):
+        """Return the status of the current Node/Driver."""
+        return self._status
 
-    * If ``key`` ends with *_map*, ``value`` will be seen as a dictionary
-    * If ``key`` contains the words *geometry* or *geometries*, ``value``
-      will be converted to a :class:`vortex.data.geometries.Geometry` object
-    * If ``key`` ends with *_range*, ``value`` will be passed to the
-      :func:`footprints.util.rangex` function
+    @status.setter
+    def status(self, value):
+        """Set the status of the current Node/Driver."""
+        if value not in NODE_STATUS:
+            raise ValueError('Erroneous value for the node status: {!s}'.format(value))
+        if value != self._status:
+            self._obs_board.notify_upd(self, dict(tag=self.tag,
+                                                  previous_status=self.status,
+                                                  new_status=value,
+                                                  on_error=self.on_error))
+            if value == NODE_STATUS.FAILED and self.on_error == NODE_ON_ERROR.DELAYED_FAIL:
+                self.delayed_error_flag = True
+            self._status = value
 
-    """
+    @property
+    def any_failure(self):
+        """Return True if self or any of the subnodes failed."""
+        failure = self.status == NODE_STATUS.FAILED
+        return failure or any([k.any_failure for k in self.contents])
 
-    def __init__(self, *kargs, **kwargs):
-        super(ConfigSet, self).__init__(*kargs, **kwargs)
-        self.__dict__['_internal'] = dict()
-        self.__dict__['_confdecoder'] = AppConfigStringDecoder(substitution_cb=self._internal.get)
-
-    @staticmethod
-    def _remap_key(key):
-        return key.lower()
-
-    def __iter__(self):
-        for k in self._internal.keys():
-            yield self._remap_key(k)
-
-    def __getitem__(self, key):
-        return self._confdecoder(self._internal[self._remap_key(key)])
-
-    def __setitem__(self, key, value):
-        if value is not None and isinstance(value, six.string_types):
-            # Support for old style dictionaries (compatibility)
-            if (key.endswith('_map') and not re.match(r'^dict\(.*\)$', value) and
-                    not re.match(r'^\w+\(dict\(.*\)\)$', value)):
-                key = key[:-4]
-                if re.match(r'^\w+\(.*\)$', value):
-                    value = re.sub(r'^(\w+)\((.*)\)$', r'\1(dict(\2))', value)
-                else:
-                    value = 'dict(' + value + ')'
-            # Support for geometries (compatibility)
-            if (('geometry' in key or 'geometries' in key) and
-                    (not re.match(r'^geometry\(.*\)$', value, flags=re.IGNORECASE))):
-                value = 'geometry(' + value + ')'
-            # Support for oldstyle range (compatibility)
-            if (key.endswith('_range') and not re.match(r'^rangex\(.*\)$', value) and
-                    not re.match(r'^\w+\(rangex\(.*\)\)$', value)):
-                key = key[:-6]
-                if re.match(r'^\w+\(.*\)$', value):
-                    value = re.sub(r'^(\w+)\((.*)\)$', r'\1(rangex(\2))', value)
-                else:
-                    value = 'rangex(' + value + ')'
-        self._internal[self._remap_key(key)] = value
-
-    def __delitem__(self, key):
-        del self._internal[self._remap_key(key)]
-
-    def __len__(self):
-        return len(self._internal)
-
-    def clear(self):
-        self._internal.clear()
-
-    def __contains__(self, key):
-        return self._remap_key(key) in self._internal
-
-    @secure_getattr
-    def __getattr__(self, key):
-        if key in self:
-            return self[key]
-        else:
-            raise AttributeError('No such parameter <' + key + '>')
-
-    def __setattr__(self, attr, value):
-        self[attr] = value
-
-    def __delattr__(self, key):
-        if key in self:
-            del self[key]
-        else:
-            raise AttributeError('No such parameter <' + key + '>')
-
-    def copy(self):
-        newobj = self.__class__()
-        newobj.update(**self._internal)
-        return newobj
+    def __str__(self):
+        """Print the node's tree."""
+        me = '{:s} ({:s}) -> {:s}'.format(self.tag,
+                                          self.__class__.__name__,
+                                          self.status)
+        if self.status == NODE_STATUS.FAILED and self.on_error != NODE_ON_ERROR.FAIL:
+            me += ' (but {:s})'.format(self.on_error)
+        tree = [me, ] + ['\n'.join('  ' + line for line in str(kid).split('\n'))
+                         for kid in self.contents]
+        return '\n'.join(tree)
 
 
 class Node(getbytag.GetByTag, NiceLayout):
@@ -175,6 +209,8 @@ class Node(getbytag.GetByTag, NiceLayout):
     :param JobAssistant jobassistant: the jobassistant object that might
                                       be used to find out the **special_prefix**
                                       and **register_cycle_prefix** callback.
+    :param str on_error: How to react when a failure occurs (default is "fail",
+                         alternatives are "delayed_fail" and "continue")
     :param dict kw: Any other attributes that will be added to ``self.options``
                     (that will eventually be added to ``self.conf``)
     """
@@ -185,7 +221,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         self.play = kw.pop('play', False)
         self._ticket = kw.pop('ticket', None)
         if self._ticket is None:
-            raise ValueError("The session's ticket must be provided")
+            raise ValueError("The session's ticket must be provided (using a `ticket` argument)")
         self._configtag = kw.pop('config_tag', self.tag)
         self._active_cb = kw.pop('active_callback', None)
         if self._active_cb is not None and not callable(self._active_cb):
@@ -203,7 +239,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         self._conf = None
         self._activenode = None
         self._contents = list()
-        self._aborted = False
+        self._nicelayout_init(kw)
 
     def _args_loopclone(self, tagsuffix, extras):  # @UnusedVariable
         """All the necessary arguments to build a copy of this object."""
@@ -241,10 +277,6 @@ class Node(getbytag.GetByTag, NiceLayout):
         return self._configtag
 
     @property
-    def aborted(self):
-        return self._aborted
-
-    @property
     def conf(self):
         return self._conf
 
@@ -252,7 +284,7 @@ class Node(getbytag.GetByTag, NiceLayout):
     def activenode(self):
         if self._activenode is None:
             if self.conf is None:
-                raise RuntimeError('Setup the configuration object befoe calling activenode !')
+                raise RuntimeError('Setup the configuration object before calling activenode !')
             self._activenode = self._active_cb is None or self._active_cb(self)
         return self._activenode
 
@@ -284,29 +316,63 @@ class Node(getbytag.GetByTag, NiceLayout):
             ctx.cocoon()
             self._setup_context(ctx)
             oldctx.activate()
+            self.status = NODE_STATUS.READY
 
     def _setup_context(self, ctx):
         """Setup the newly created context."""
         pass
 
-    def __enter__(self):
-        """
-        Enter a :keyword:`with` context, freezing the current env
-        and joining a cocoon directory.
-        """
+    @contextlib.contextmanager
+    def isolate(self):
+        """Deal with any events related to the actual run."""
         if self.activenode:
-            self._oldctx = self.ticket.context
-            ctx = self.ticket.context.switch(self.tag)
-            ctx.cocoon()
-            logger.debug('Node context directory <%s>', self.sh.getcwd())
-        return self
+            with self._context_isolation():
+                if self._subjobtag == self.tag:
+                    with subjob_handling(self, OBSERVER_TAG):
+                        with self._status_isolation(extra_verbose=True):
+                            yield
+                else:
+                    with self._status_isolation():
+                        yield
+        else:
+            yield
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Exit from :keyword:`with` context."""
-        if self.activenode:
+    @contextlib.contextmanager
+    def _context_isolation(self):
+        """Handle context switching properly."""
+        self._oldctx = self.ticket.context
+        ctx = self.ticket.context.switch(self.tag)
+        ctx.cocoon()
+        logger.debug('Node context directory <%s>', self.sh.getcwd())
+        try:
+            yield
+        finally:
+            ctx.free_resources()
             logger.debug('Exit context directory <%s>', self.sh.getcwd())
             self._oldctx.activate()
             self.ticket.context.cocoon()
+
+    @contextlib.contextmanager
+    def _status_isolation(self, extra_verbose=False):
+        """Handle the Node's status updates."""
+        self.status = NODE_STATUS.RUNNING
+        try:
+            yield
+        except Exception:
+            self.status = NODE_STATUS.FAILED
+            if extra_verbose or self.on_error != NODE_ON_ERROR.FAIL:
+                # Mask the exception
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                self.subtitle('An exception occured (on_error={:s})'.format(self.on_error))
+                print('Exception type: {!s}'.format(exc_type))
+                print('Exception values: {!s}'.format(exc_value))
+                self.header('Traceback Error / BEGIN')
+                print("\n".join(traceback.format_tb(exc_traceback)))
+                self.header('Traceback Error / END')
+            if self.on_error == NODE_ON_ERROR.FAIL:
+                raise
+        else:
+            self.status = NODE_STATUS.DONE
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
@@ -350,7 +416,10 @@ class Node(getbytag.GetByTag, NiceLayout):
         autoconf = dict()
         localstrip = len(self._locprefix)
         for localvar in sorted([x for x in self.env.keys() if x.startswith(self._locprefix)]):
-            if localvar[localstrip:] not in self.conf:
+            if (localvar[localstrip:] not in self.conf or
+                    (localvar[localstrip:] not in ('rundate', ) and
+                     self.env[localvar] is not None and
+                     self.env[localvar] != self.conf[localvar[localstrip:]])):
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
             self.nicedump('Populate conf with local variables',
@@ -436,60 +505,9 @@ class Node(getbytag.GetByTag, NiceLayout):
         """Dump actual parameters of the configuration."""
         self.nicedump('Complete parameters', **self.conf)
 
-    def refill(self, **kw):
-        """Populates the vortex cache with expected input flow data.
-
-        The refill method is systematically called when a task is run. However,
-        the refill is not always desirable hence the if statement that checks the
-        self.steps attribute's content.
-        """
-        # This method acts as an example: if a refill is actually needed,
-        # it should be overwritten.
-        if 'refill' in self.steps:
-            logger.warning("Refill should takes place here: please overwrite...")
-
-    def process(self):
-        """Abstract method: perform the task to do."""
-        # This method acts as an example: it should be overwritten.
-
-        if 'early-fetch' in self.steps or 'fetch' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run on a
-            # transfer node. Consequently, data that may be missing from the
-            # local cache must be fetched here. (e.g. GCO's genv, data from the
-            # mass archive system, ...). Note: most of the data should be
-            # retrieved here since the use of transfer node is costless.
-            pass
-
-        if 'fetch' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a
-            # compute node, just before the beginning of computations. It is the
-            # appropriate place to fetch data produced by a previous task (the
-            # so-called previous task will have to use the 'backup' step
-            # (see the later explanations) in order to make such data available
-            # in the local cache).
-            pass
-
-        if 'compute' in self.steps:
-            # The actual computations... (usually a call to the run method of an
-            # AlgoComponent)
-            pass
-
-        if 'backup' in self.steps or 'late-backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run, on a
-            # compute node, just after the computations. It is the appropriate
-            # place to put data in the local cache in order to make it available
-            # to a subsequent step.
-            pass
-
-        if 'late-backup' in self.steps:
-            # In a multi step job (MTOOL, ...), this step will be run on a
-            # transfer node. Consequently, most of the data should be archived
-            # here.
-            pass
-
-    def complete(self, aborted=False):
+    def complete(self):
         """Some cleaning and completion status."""
-        self._aborted = aborted
+        pass
 
     def _actual_run(self, nbpass=0, sjob_activated=True):
         """Abstract method: the actual job to do."""
@@ -578,23 +596,25 @@ class Node(getbytag.GetByTag, NiceLayout):
                 mpiopts[stuff] = [int(v) for v in mpiopts[stuff]]
             else:
                 mpiopts[stuff] = int(mpiopts[stuff])
+
         # When multiple list of binaries are given (i.e several binaries are launched
         # by the same MPI command).
         if tbx and isinstance(tbx[0], (list, tuple)):
             tbx = zip(*tbx)
         with self.env.delta_context(**env_update):
-            for binary in tbx:
-                try:
-                    tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
-                except Exception as e:
-                    mask_delayed, f_infos = self.filter_execution_error(e)
-                    if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
-                        logger.warning("The delayed exception is masked:\n%s", str(f_infos))
-                        self.report_execution_warning(e, **f_infos)
-                    else:
-                        logger.error("Un-filtered execution error:\n%s", str(f_infos))
-                        self.report_execution_error(e, **f_infos)
-                        raise
+            with self.sh.default_target.algo_run_context(self.ticket, self.conf):
+                for binary in tbx:
+                    try:
+                        tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
+                    except (Exception, SignalInterruptError, KeyboardInterrupt) as e:
+                        mask_delayed, f_infos = self.filter_execution_error(e)
+                        if isinstance(e, DelayedAlgoComponentError) and mask_delayed:
+                            logger.warning("The delayed exception is masked:\n%s", str(f_infos))
+                            self.report_execution_warning(e, **f_infos)
+                        else:
+                            logger.error("Un-filtered execution error:\n%s", str(f_infos))
+                            self.report_execution_error(e, **f_infos)
+                            raise
 
 
 class Family(Node):
@@ -661,6 +681,7 @@ class Family(Node):
             launcher_opts = {k[len('paralleljobs_'):]: self.conf[k]
                              for k in self.conf if k.startswith('paralleljobs_')}
             launchtool = fpx.subjobslauncher(scriptpath=sys.argv[0],
+                                             nodes_obsboard_tag=OBSERVER_TAG,
                                              ** launcher_opts)
             if launchtool is None:
                 raise RuntimeError('No subjob launcher could be found: check "paralleljobs_kind".')
@@ -675,10 +696,10 @@ class Family(Node):
         if launchtool:
             self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag, '(using subjobs)')))
 
-            def node_recurse(node):
+            def node_recurse(some_node):
                 """Recursively find tags."""
-                o_set = set([node.tag, ])
-                for snode in node.contents:
+                o_set = set([some_node.tag, ])
+                for snode in some_node.contents:
                     o_set = o_set | node_recurse(snode)
                 return o_set
 
@@ -686,17 +707,21 @@ class Family(Node):
             for node in self.contents:
                 launchtool(node.tag, node_recurse(node))
             # Wait for everybody to complete
-            launchtool.waitall()
+            done, ko = launchtool.waitall()
+            if ko:
+                raise SubJobLauncherError("Execution failed for some subjobs: {:s}"
+                                          .format(','.join(ko)))
         else:
             # No subjobs configured or allowed: run the usual way...
             sjob_activated = sjob_activated or self._subjobtag == self.tag
-            with subjob_output_markup(self._subjobtag == self.tag):
+            try:
                 self.ticket.sh.title(' '.join(('Build', self.realkind, self.tag)))
                 self.setup()
                 self.summary()
                 for node in self.contents:
-                    with node:
+                    with node.isolate():
                         node.run(sjob_activated=sjob_activated)
+            finally:
                 self.complete()
 
 
@@ -727,7 +752,7 @@ class LoopFamily(Family):
         else:
             self._loopconf = self._loopconf.split(',')
         # Find the loop's variable names
-        self._loopvariable = kw.pop('_loopvariable', None)
+        self._loopvariable = kw.pop('loopvariable', None)
         if self._loopvariable is None:
             self._loopvariable = [s.rstrip('s') for s in self._loopconf]
         else:
@@ -841,12 +866,12 @@ class WorkshareFamily(Family):
             else:
                 lb_ws_number = self._worksharelimit or sb_ws_number
             # Final result
-            ws_number = min([sb_ws_number, lb_ws_number])
+            ws_number = max(min([sb_ws_number, lb_ws_number]), 1)
             # Find out the workshares sizes
             floorsize = n_population // ws_number
             ws_sizes = [floorsize, ] * ws_number
             for i in range(n_population - ws_number * floorsize):
-                ws_sizes[i] += 1
+                ws_sizes[i % ws_number] += 1
             # Build de family's content
             self._actual_content = list()
             ws_start = 0
@@ -866,12 +891,10 @@ class Task(Node):
     def __init__(self, **kw):
         logger.debug('Task init %s', repr(self))
         super(Task, self).__init__(kw)
-        self.__dict__.update(
-            steps=kw.pop('steps', tuple()),
-            fetch=kw.pop('fetch', 'fetch'),
-            compute=kw.pop('compute', 'compute'),
-            backup=kw.pop('backup', 'backup'),
-        )
+        self.steps = kw.pop('steps', tuple())
+        self.fetch = kw.pop('fetch', 'fetch')
+        self.compute = kw.pop('compute', 'compute')
+        self.backup = kw.pop('backup', 'backup')
         self.options = kw.copy()
         if isinstance(self.steps, six.string_types):
             self.steps = tuple(self.steps.replace(' ', '').split(','))
@@ -908,23 +931,30 @@ class Task(Node):
 
         # Some attempt to find the current active steps
         if not self.steps:
-            if self.env.get(self._locprefix + 'REFILL'):
-                self.steps = ('refill',)
-            elif self.play:
-                self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
-                              self.compute,
-                              self.backup, 'late-{:s}'.format(self.backup))
-            elif int(self.env.get('SLURM_NPROCS', 1)) > 1:
-                self.steps = (self.fetch, self.compute)
+            new_steps = []
+            if (self.env.get(self._locprefix + 'WARMSTART')
+                    or self.conf.get('warmstart', False)):
+                new_steps.append('warmstart')
+            if (self.env.get(self._locprefix + 'REFILL')
+                    or self.conf.get('refill', False)):
+                new_steps.append('refill')
+            if new_steps:
+                self.steps = tuple(new_steps)
             else:
-                self.steps = (self.fetch,)
+                if self.play:
+                    self.steps = ('early-{:s}'.format(self.fetch), self.fetch,
+                                  self.compute,
+                                  self.backup, 'late-{:s}'.format(self.backup))
+                else:
+                    self.steps = ('early-{:s}'.format(self.fetch), self.fetch)
         self.header('Active steps: ' + ' '.join(self.steps))
 
     def conf2io(self):
         """Broadcast IO SERVER configuration values to environment."""
         t = self.ticket
         triggered = any([i in self.conf
-                         for i in ('io_companions', 'io_nodes', 'io_tasks', 'io_openmp')])
+                         for i in ('io_nodes', 'io_companions', 'io_incore_tasks',
+                                   'io_openmp')])
         if 'io_nodes' in self.conf:
             t.env.default(VORTEX_IOSERVER_NODES=self.conf.io_nodes)
             if 'io_tasks' in self.conf:
@@ -933,6 +963,10 @@ class Task(Node):
             t.env.default(VORTEX_IOSERVER_COMPANION_TASKS=self.conf.io_companions)
         elif 'io_incore_tasks' in self.conf:
             t.env.default(VORTEX_IOSERVER_INCORE_TASKS=self.conf.io_incore_tasks)
+            if 'io_incore_fixer' in self.conf:
+                t.env.default(VORTEX_IOSERVER_INCORE_FIXER=self.conf.io_incore_fixer)
+            if 'io_incore_dist' in self.conf:
+                t.env.default(VORTEX_IOSERVER_INCORE_DIST=self.conf.io_incore_dist)
         if 'io_openmp' in self.conf:
             t.env.default(VORTEX_IOSERVER_OPENMP=self.conf.io_openmp)
         if triggered:
@@ -951,21 +985,87 @@ class Task(Node):
             sh.header('Post-IO Poll directory listing')
             sh.ll(output=False, fatal=False)
 
+    def warmstart(self, **kw):
+        """Populates the vortex cache with expected input flow data.
+
+        This is usefull when someone wants to restat an experiment from
+        another one.
+
+        The warmstart method is systematically called when a task is run. However,
+        the warmstart is not always desirable hence the if statement that checks the
+        self.steps attribute's content.
+        """
+        # This method acts as an example: if a refill is actually needed,
+        # it should be overwritten.
+        if 'warmstart' in self.steps:
+            pass
+
+    def refill(self, **kw):
+        """Populates the vortex cache with external input data.
+
+        The refill method is systematically called when a task is run. However,
+        the refill is not always desirable hence the if statement that checks the
+        self.steps attribute's content.
+        """
+        # This method acts as an example: if a refill is actually needed,
+        # it should be overwritten.
+        if 'refill' in self.steps:
+            pass
+
+    def process(self):
+        """Abstract method: perform the task to do."""
+        # This method acts as an example: it should be overwritten.
+
+        if 'early-fetch' in self.steps or 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, data that may be missing from the
+            # local cache must be fetched here. (e.g. GCO's genv, data from the
+            # mass archive system, ...). Note: most of the data should be
+            # retrieved here since the use of transfer node is costless.
+            pass
+
+        if 'fetch' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just before the beginning of computations. It is the
+            # appropriate place to fetch data produced by a previous task (the
+            # so-called previous task will have to use the 'backup' step
+            # (see the later explanations) in order to make such data available
+            # in the local cache).
+            pass
+
+        if 'compute' in self.steps:
+            # The actual computations... (usually a call to the run method of an
+            # AlgoComponent)
+            pass
+
+        if 'backup' in self.steps or 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run, on a
+            # compute node, just after the computations. It is the appropriate
+            # place to put data in the local cache in order to make it available
+            # to a subsequent step.
+            pass
+
+        if 'late-backup' in self.steps:
+            # In a multi step job (MTOOL, ...), this step will be run on a
+            # transfer node. Consequently, most of the data should be archived
+            # here.
+            pass
+
     def _actual_run(self, nbpass=0, sjob_activated=True):
         """Execution driver: build, setup, refill, process, complete."""
         sjob_activated = sjob_activated or self._subjobtag == self.tag
         if sjob_activated:
-            with subjob_output_markup(self._subjobtag == self.tag):
-                try:
-                    self.build()
-                    self.setup()
-                    self.summary()
-                    self.refill()
-                    self.process()
-                except VortexForceComplete:
-                    self.sh.title('Force complete')
-                finally:
-                    self.complete()
+            try:
+                self.build()
+                self.setup()
+                self.summary()
+                self.warmstart()
+                self.refill()
+                self.process()
+            except VortexForceComplete:
+                self.sh.title('Force complete')
+            finally:
+                self.complete()
 
 
 class Driver(getbytag.GetByTag, NiceLayout):
@@ -980,7 +1080,9 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._conf = None
 
         # Set default parameters for the actual job
-        self._options = dict() if options is None else options
+        if options is None:
+            raise ValueError('An `option` argument needs to be specified.')
+        self._options = options
         self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
         self._subjob_tag = self._options.get('subjob_tag', None)
         j_assist = self._options.get('jobassistant', None)
@@ -992,6 +1094,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
         self._nbpass = 0
+        self._nicelayout_init(dict())
 
         # Build the tree to schedule
         self._contents = list()
@@ -1103,9 +1206,25 @@ class Driver(getbytag.GetByTag, NiceLayout):
             node.setconf(self.conf, self.jobconf)
             node.build_context()
 
+        self.status = NODE_STATUS.READY
+        self.header('The various were configured. Here is a Tree-View of the Driver:')
+        print(self)
+
     def run(self):
         """Assume recursion of nodes `run` methods."""
         self._nbpass += 1
-        for node in self.contents:
-            with node:
-                node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
+        self.status = NODE_STATUS.RUNNING
+        try:
+            for node in self.contents:
+                with node.isolate():
+                    node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
+            self.status = NODE_STATUS.DONE
+        finally:
+            if self.any_failure:
+                self.sh.title('An error occured during job...')
+                print('Here is the tree-view of the present Driver:')
+                print(self)
+            if self.delayed_error_flag and self._subjob_tag is None:
+                # Test on _subjob_tag because we do not want to crash in subjobs
+                raise RuntimeError("One or several error occured during the Driver execution. " +
+                                   "The exceptions were delayed but now that the Driver ended let's crash !")

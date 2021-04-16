@@ -47,16 +47,17 @@ e = t.env
 
 import $package.$task as todo
 
-rd_vapp     = '$vapp'
-rd_vconf    = '$vconf'
-rd_cutoff   = '$cutoff'
+rd_vapp         = '$vapp'
+rd_vconf        = '$vconf'
+rd_cutoff       = '$cutoff'
 if $rundate:
     rd_rundate  = bronx.stdtypes.date.Date($rundate)
-rd_xpid     = '$xpid'
-rd_refill   = $refill
-rd_jobname  = '$name'
-rd_iniconf  = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase, 
-                                                       rd_vapp, rd_vconf, '$taskconf')
+rd_xpid         = '$xpid'
+rd_refill       = $refill
+rd_warmstart    = $warmstart
+rd_jobname      = '$name'
+rd_iniconf      = '{0:s}/conf/{1:s}_{2:s}{3:s}.ini'.format(appbase,
+                                                           rd_vapp, rd_vconf, '$taskconf')
 
 # Any options passed on the command line
 auto_options = dict(
@@ -79,7 +80,7 @@ try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
     sh.ftraw = True # To activate ftserv
 
-    opts = dict(jobassistant=ja, fullplay=True)
+    opts = dict(jobassistant=ja, play=True)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()

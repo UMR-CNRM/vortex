@@ -37,6 +37,13 @@ todo:
                     - INT
             -   prefered_target: INT
                 forbidden_target: OPER
+            -   bdpeid: 13709
+                fields: seaice_conc
+                origin: safosi_hn
+            -   bdpeid: 13709
+                kind: observations
+                part: hn
+                stage: extract
     # Most recent date BDPE access
     -   commons:
             bdpeid: 43
@@ -71,6 +78,8 @@ todo:
             fields:
                 - sst
                 - seaice
+                - seaice_conc
+                - seaice_thick
                 - ocean
             origin:
                 fields:
@@ -80,31 +89,10 @@ todo:
                     seaice:
                         - bdm
                         - safosi
-                    ocean: psy4
-            format: netcdf
-        tests:
-            -   suite: oper
-                namespace: '[suite].multi.fr'
-            -   experiment: abcd
-                block: observations
-                namespace:
-                    - olive.multi.fr
-                    - vortex.multi.fr
-    # RawFields
-    -   commons:
-            kind: rawfields
-            fields:
-                - sst
-                - seaice
-                - ocean
-            origin:
-                fields:
-                    sst:
-                        - ostia
-                        - nesdis
-                    seaice:
-                        - bdm
-                        - safosi
+                    seaice_conc:
+                        - safosi_hn
+                        - safosi_hs
+                    seaice_thick: psy4
                     ocean: psy4
             format: netcdf
         tests:

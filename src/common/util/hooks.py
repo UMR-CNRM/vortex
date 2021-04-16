@@ -34,20 +34,16 @@ def concatenate(t, rh, *rhlist):
     """Concatenate *rhlist* after *rh*."""
     blocksize = 32 * 1024 * 1024  # 32Mb
     rh.container.close()
-    myfh = rh.container.iodesc(mode='ab')
-    try:
+    with rh.container.iod_context():
+        myfh = rh.container.iodesc(mode='ab')
         for crh in rhlist:
             if not isinstance(crh, (list, tuple)):
                 crh = [crh, ]
             for arh in crh:
                 logger.info('Appending %s to self.', str(arh.container))
-                afh = arh.container.iodesc(mode='rb')
-                try:
+                with arh.container.iod_context():
+                    afh = arh.container.iodesc(mode='rb')
                     stuff = afh.read(blocksize)
                     while stuff:
                         myfh.write(stuff)
                         stuff = afh.read(blocksize)
-                finally:
-                    arh.container.close()
-    finally:
-        rh.container.close()

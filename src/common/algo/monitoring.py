@@ -74,12 +74,23 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         sh = self.system
 
         # Looking for input observations
-        obsatm = [
+
+        # Virtual upper-air observations database
+        obsatm_virt = [
             x for x in self.lookupodb(fatal=False)
             if (x.rh.resource.stage.startswith('matchup') or
                 x.rh.resource.stage.startswith('screening')) and x.rh.resource.part == 'virtual'
         ]
 
+        # Single upper-air observations database
+        obsatm_single = [
+            x for x in self.lookupodb(fatal=False)
+            if x.rh.resource.stage.startswith('matchup') or x.rh.resource.stage.startswith('screening')
+        ]
+        if len(obsatm_single) > 1:
+            obsatm_single = []
+
+        # Surface observations database
         obssurf = [
             x for x in self.lookupodb(fatal=False)
             if x.rh.resource.stage.startswith('canari') and (x.rh.resource.part == 'surf' or
@@ -87,14 +98,16 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         ]
 
         # One database at a time
-        if not obsatm and self.stage == 'atm':
+        if not (obsatm_virt or obsatm_single) and self.stage == 'atm':
             raise ValueError('Could not find any ODB matchup or screening ECMA database')
         if not obssurf and self.stage == 'surf':
             raise ValueError('Could not find any ODB surface ECMA database')
 
         # Set actual ODB paths
-        if obsatm:
-            ecma = obsatm.pop(0)
+        if obsatm_virt:
+            ecma = obsatm_virt.pop(0)
+        elif obsatm_single:
+            ecma = obsatm_single.pop(0)
         else:
             ecma = obssurf.pop(0)
         ecma_path = sh.path.abspath(ecma.rh.container.localpath())
@@ -172,7 +185,8 @@ class OdbMonitoring(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin)
         self._fix_nam_macro(namrh, 'LLVRP', self.model == 'varpack')
         self._fix_nam_macro(namrh, 'LLCAN', self.stage == 'surf')
 
-        namrh.contents.rewrite(namrh.container)
+        if namrh.contents.dumps_needs_update:
+            namrh.contents.rewrite(namrh.container)
         namrh.container.cat()
 
     def postfix(self, rh, opts):

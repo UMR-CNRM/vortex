@@ -491,15 +491,20 @@ def timerangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
 def timeintrangex(start, end=None, step=None, shift=None, fmt=None, prefix=None):
     """Extended range expansion  (returns a list).
 
-    This function is built on top of :func:`timerangex`. It uses the
-    :class:`TimeInt` class instead of the :class:`Time` class. Practically, if
-    the 'range' is just made of basic integers (e.g. just hours), a list of
-    integers is returned. If minutes are needed, a list of string formated as
+    This function is built on top of :func:`~bronx.stdtypes.date.timerangex`.
+    It uses the :class:`~bronx.stdtypes.date.TimeInt` class instead of the
+    :class:`~bronx.stdtypes.date.Time` class. Practically, if the 'range' is
+    just made of basic integers (e.g. just hours), a list of integers is
+    returned. If minutes are needed, a list of string formated as
     'hhhh:mm' is returned.
 
     When ``start`` is already a complex definition (as a string), ``end`` and
     ``step`` only apply as default when the sub-definition in ``start`` does not
     contain any ``end`` or ``step`` value.
+
+    All the examples below refers to :func:`~bronx.stdtypes.date.timeintrangex`.
+    However, they are fully relevant for :func:`~footprints.util.rangex` (since
+    it is an alias of :func:`~bronx.stdtypes.date.timeintrangex`).
 
     Basic examples::
 

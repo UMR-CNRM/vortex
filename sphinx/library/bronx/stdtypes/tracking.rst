@@ -21,3 +21,17 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: RecursiveMappingTracker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+
+Utility Classes
+---------------
+
+.. autoclass:: SimpleDifference
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

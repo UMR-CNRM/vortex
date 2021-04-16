@@ -3,8 +3,10 @@
 """
 Utilities about the environment
 """
-import os
+
 import sys
+
+from vortex import sessions
 
 
 def config_to_env_vars(cfg):
@@ -21,8 +23,11 @@ def config_to_env_vars(cfg):
 
 def stripout_conda_env(env_dict=None):
     """Remove conda env from PATH, LD_LIBRARY_PATH and C_INCLUDE_PATH"""
+    
+    t = sessions.current()
+    
     if env_dict is None:
-        env_dict = os.environ
+        env_dict = t.sh.environ
     for name, subdir in (
             ("PATH", "bin"),
             ("LD_LIBRARY_PATH", "lib"),
@@ -31,7 +36,7 @@ def stripout_conda_env(env_dict=None):
             ("C_INCLUDE_PATH", "include")):
         if name in env_dict:
             paths = env_dict[name].split(':')
-            path = os.path.join(sys.prefix, subdir)
+            path = t.sh.path.join(sys.prefix, subdir)
             if path in paths:
                 paths.remove(path)
             env_dict[name] = ":".join(paths)

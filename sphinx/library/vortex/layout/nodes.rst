@@ -8,28 +8,23 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 0.2.0
 
-.. todo::
+Global Variables
+----------------
 
-      Nothing written for :mod:`vortex.layout.nodes` handling yet !
+.. autodata:: NODE_STATUS
 
+.. autodata:: NODE_ON_ERROR
 
-Classes
--------
-
-.. autoclass:: NiceLayout
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ConfigSet
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
+Abstract Class
+______________
 
 .. autoclass:: Node
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+Classes
+-------
 
 .. autoclass:: Family
    :show-inheritance:
@@ -52,6 +47,14 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: Driver
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Utility classes
+---------------
+
+.. autoclass:: NiceLayout
    :show-inheritance:
    :members:
    :member-order: alphabetical

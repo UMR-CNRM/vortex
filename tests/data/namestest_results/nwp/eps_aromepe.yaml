@@ -16,7 +16,7 @@
         namespace: vortex.multi.fr
         vapp: arome
         vconf: pefrance
-      location: vortex://vortex.multi.fr/arome/pefrance/ABCD/20180101T0000A/ic/clustering_full.txt
+      location: vortex://vortex.multi.fr/arome/pefrance/ABCD/20180101T0000A/ic/clustering_full.txt?stackfmt=filespack&stackpath=arome%2Fpefrance%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: ic
@@ -26,4 +26,4 @@
       nativefmt: ascii
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/pefrance/ABCD/20180101T0000A/ic/clustering_full.txt
+      location: vortex://vortex.multi.fr/arome/pefrance/ABCD/20180101T0000A/ic/clustering_full.txt?stackfmt=filespack&stackpath=arome%2Fpefrance%2FABCD%2F20180101T0000A%2Fstacks%2Fflow_logs.filespack

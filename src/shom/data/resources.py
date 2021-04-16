@@ -4,8 +4,6 @@ Hycom3d files
 """
 
 from bronx.stdtypes.date import Date
-from common.data.gridfiles import GridPoint
-from common.data.boundaries import LAMBoundary
 from vortex.data.flow import FlowResource
 from common.data.modelstates import Analysis, InitialCondition
 from vortex.data.flow import GeoFlowResource
@@ -13,46 +11,6 @@ from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stddeco import namebuilding_append
 
 __all__ = []
-
-
-class MeteoFranceInput(GridPoint):
-    """MeteoFrance Forecast and Analyse run files"""
-
-    _footprint = [
-        dict(
-            info="MeteoFrance Forecast and Analyse run files",
-            attr=dict(
-                origin=dict(
-                    values=["ana","fcst"]
-                ),
-                cumul=dict(
-                    values=["cumul","insta"]
-                ),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return "gridpoint"
-
-
-class MercatorDailyForecast(LAMBoundary):
-
-    _footprint = [
-        dict(
-            info="Mercator daily forecast run",
-            attr=dict(
-                kind=dict(values=["boundary"]),
-                nativefmt=dict(values=["netcdf", "nc"], default="netcdf"),
-                cutoff=dict(values=['production']),
-            ),
-        ),
-    ]
-
-    @property
-    def realkind(self):
-        return "mercator_daily_forecast"
 
 
 class CmemsRivers(FlowResource):
@@ -113,6 +71,7 @@ class Hycom3dInterpOutput(GeoFlowResource):
                 ),
                 field=dict(
                     values=["saln", "temp", "thdd", "vaisa", "ssh"],
+                    remap={"sal": "saln"},
                     optional=True
                 ),
                 nativefmt=dict(
@@ -148,17 +107,14 @@ class Hycom3dModelInput(GeoFlowResource):
                 field=dict(
                     values=["s", "t", "h", "rmu", "u", "v",
                             'shwflx','radflx','precip','preatm','airtmp',
-                            'wndspd','tauewd','taunwd','vapmix'],
-                    optional=True,
+                            'wndspd','tauewd','taunwd','vapmix']
                 ),
-                format=dict(values=["a", "b", "nc", "r"]),
                 nativefmt=dict(
-                    values=["binary", "ascii", "netcdf"],
+                    values=["a", "b", "nc", "binary", "ascii", "netcdf"],
                     remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
                 ),
-                actualfmt=dict(
-                    values=["binary", "ascii", "netcdf"],
-                    remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
+                format=dict(
+                    values=["a", "b", "nc"],
                 ),
             ),
         ),
@@ -169,7 +125,6 @@ class Hycom3dModelInput(GeoFlowResource):
         return "hycom3d_model_input"
 
 
-@namebuilding_append('src', lambda self: self.rivers)
 class Hycom3dRiversModelInput(Hycom3dModelInput):
     """Rivers input files for the Hycom3d model"""
 
@@ -180,19 +135,17 @@ class Hycom3dRiversModelInput(Hycom3dModelInput):
                 kind=dict(
                     values = ['observations'],
                 ),
-                rivers=dict(
+                field=dict(
+                    values=["Adour", "Gironde", "Loire", "Seine",
+                            "Rhone", "Nile", "Po", "Ebro", "Marma"],
                     optional=False,
                 ),
-                format=dict(
-                     values=['r','nc']
-                ),
                 nativefmt=dict(
-                    values=['ascii','netcdf'],
+                    values=['r', 'nc', "ascii", "netcdf"],
                     remap={'r':'ascii','nc':'netcdf'}
                 ),
-                actualfmt=dict(
-                    values=['ascii','netcdf'],
-                    remap={'r':'ascii','nc':'netcdf'}
+                format=dict(
+                    values=['r', 'nc'],
                 ),
             ),
         )
@@ -217,44 +170,21 @@ class Hycom3dInitialCondition(InitialCondition):
                 ),
                 field=dict(
                     values=["saln", "temp", "th3d", "u", "v", "ut", "vt", 
-                            "h", "dpmixl"],
+                            "h", "dpmixl", "restdate"],
+                ),
+                nativefmt=dict(
+                    remap={"cdf": "netcdf", "res": "binary"},
+                    values=["cdf", "res", "netcdf", "binary"],
                 ),
                 format=dict(
-                    values=["cdf", "res"],
+                    values=["cdf", "res", "netcdf", "binary"],
+                    optional=True
                 ),
-                nativefmt=dict(
-                    remap={"cdf": "netcdf", "res": "binary"},
-                    values=["binary", "netcdf"],
-                ),
-                actualfmt=dict(
-                    remap={"cdf": "netcdf", "res": "binary"},
-                    values=["binary", "netcdf"],
-                )
+ 
             ),
         ),
     ]
 
-
-@namebuilding_append('src', lambda self: self.field)
-class Hycom3dInitialConditionDate(InitialCondition):
-
-    _footprint = [
-        dict(
-            info="Restart date in a binary file",
-            attr=dict(
-                kind=dict(
-                    values=["ic", "initial_condition"],
-                ),
-                field=dict(
-                    values=["restdate"],
-                ),
-                nativefmt=dict(
-                    values=["binary"]
-                ),
-            ),
-        ),
-    ]
-    
 
 # %% Model outputs
 

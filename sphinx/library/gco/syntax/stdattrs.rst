@@ -32,6 +32,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AbstractUgetId
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: UgetId
    :show-inheritance:
    :members:

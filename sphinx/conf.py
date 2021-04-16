@@ -152,6 +152,12 @@ html_favicon = 'favicon.ico'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+# These paths are either relative to html_static_path
+# or fully qualified paths (eg. https://...)
+html_css_files = [
+    'local_extras.css',
+]
+
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
@@ -245,10 +251,13 @@ man_pages = [
      [u'The Vortex Team'], 1)
 ]
 
-
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/2/': None}
+intersphinx_mapping = {'https://docs.python.org/3/': None}
 
+# Because of Meteo-France's proxy we need this :-(
+import os
+if 'VORTEX_PROJECT_SSLCERT_OVERRIDE' in os.environ:
+    tls_cacerts = os.environ['VORTEX_PROJECT_SSLCERT_OVERRIDE']
 
 # Concatenate the class docstring and the __init__ docstring
 autoclass_content = 'both'
