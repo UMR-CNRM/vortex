@@ -9,8 +9,11 @@ Multiple inheritence together with the standard Task class is required to use th
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
+from bronx.fancies import loggers
+from vortex.tools.actions import actiond as ad
 from vortex.algo.components import DelayedAlgoComponentError
 
+logger = loggers.getLogger(__name__)
 
 class S2MTaskMixIn(object):
     """Usefull addtions for any S2M task."""
@@ -24,7 +27,9 @@ class S2MTaskMixIn(object):
         """Define the behaviour in case of errors.
 
         For S2M chain, the errors do not raise exception if the deterministic
-        run or if more than 30 members are available.
+        run and if less than 5 members produce errors.
+        Note than unavailability of members do not produce errors managed by effective_inputs), therefore more than
+        5 errors is a critical anomaly.
         """
 
         warning = {}
@@ -42,12 +47,23 @@ class S2MTaskMixIn(object):
 
                     warning["deterministic"] = e.deterministic
 
-            accept_errors = not determinitic_error or nerrors < 5
-
-            if accept_errors:
-                print(self.warningmessage(nerrors, exc))
+            accept_errors = not determinitic_error and nerrors < 5
 
         return accept_errors, warning
+
+    def s2moper_report_execution_warning(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            # This is disactivated because blocked for CNRM untrusted staff on taranis
+            # ad.mail(
+            #     subject='S2M warning',
+            #     to='matthieu.lafaysse@meteo.fr',
+            #     contents=warning,
+            # )
+
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
@@ -59,9 +75,9 @@ class S2MTaskMixIn(object):
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
-        warningline = "!" * 40 + "\n"
+        warningline = "\n" + "!" * 40 + "\n"
         warningmessage = (warningline + "ALERT :" + str(nerrors) +
-                          " members produced a delayed exception.\n" +
+                          " members produced a delayed exception." +
                           warningline + str(exc) + warningline)
         return warningmessage
 
