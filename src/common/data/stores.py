@@ -13,6 +13,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import six
 
 import footprints
+import vortex
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 from vortex.data.abstractstores import Store
@@ -82,6 +83,13 @@ class BdpeStore(Store):
         _, targetmix, str_date, more = remote['path'].split('/')
         p_target, f_target, domain, s_archive, timeout, retries = targetmix.split('_')
         productid, str_term = more[5:].split('+')
+
+        # the 'oper' domain is allowed only to the operational suite
+        if domain == 'oper':
+            if not vortex.ticket().glove.profile == 'oper':
+                logger.warning("Only profile 'oper' can use 'soprano_domain=oper'. Using 'dev' instead.")
+                domain = 'dev'
+
         if str_date == 'most_recent':
             bdpe_date = '/'
         else:
