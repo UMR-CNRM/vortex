@@ -75,3 +75,18 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: DegradedEnsembleDiagError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: FailedEnsembleDiagError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: PyEnsembleDiag
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

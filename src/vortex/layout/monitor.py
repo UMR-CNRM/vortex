@@ -704,6 +704,10 @@ class MetaGang(_Gang):
 
     _mstates = GangSt
 
+    def has_ufo(self):
+        """Is there at least one UFO member ?"""
+        return len(self._members[self._mstates.ufo])
+
     def has_collectable(self):
         """Is there at least one collectable member ?"""
         return len(self._members[self._mstates.collectable])
@@ -723,6 +727,16 @@ class MetaGang(_Gang):
             return self.pop_collectable()
         else:
             return self._members[self._mstates.pcollectable].pop()
+
+    def consume_colectable(self):
+        """Retriece all collectable members (as a generator)."""
+        while self.has_collectable():
+            yield self.pop_collectable()
+
+    def consume_pcolectable(self):
+        """Retriece all collectable or collectable_partial members (as a generator)."""
+        while self.has_pcollectable():
+            yield self.pop_pcollectable()
 
     def _is_collectable(self):
         return len(self._members[self._mstates.collectable]) == len(self)

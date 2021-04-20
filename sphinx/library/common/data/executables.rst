@@ -180,3 +180,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: EnsembleDiagScript
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
