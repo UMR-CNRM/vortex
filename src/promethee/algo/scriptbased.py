@@ -57,6 +57,7 @@ class PrometheeAlgo(Expresso):
 
     """
     _footprint = dict(
+        info = "Algo Component for executing Python scripts with args.",
         attr = dict(
             kind = dict(
                 values      = ["promethee_algo"],

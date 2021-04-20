@@ -50,6 +50,7 @@ class PrometheeScript(Script):
 
     """
     _footprint = dict(
+        info = "Python script, that could be executed with command line args.",
         attr = dict(
             kind = dict(
                 optional    = False,
