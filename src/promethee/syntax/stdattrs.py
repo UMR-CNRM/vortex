@@ -16,17 +16,18 @@ __all__ = [
     'a_promid',
     'a_version',
     'a_param',
-    'a_step'
+    'a_step',
+    'a_task'
 ]
 
-#: Usual definition for the ``promid`` (*e.g.* promethee identifier).
+#: Usual definition for the ``promid`` (*i.e.* promethee production identifier).
 a_promid = dict(
-    info="[Deprecated] The promethee identifier (name of the file)",
+    info="The identifier of the Promethee production (e.g. report name, mask id, zone id, etc.)",
     type=str,
     optional=False,
 )
 
-promid = footprints.Footprint(info='Abstract promethee identifier (name of the file)',
+promid = footprints.Footprint(info='Abstract Promethee identifier',
                             attr=dict(promid=a_promid))
 
 
@@ -35,15 +36,15 @@ promid_deco = footprints.DecorativeFootprint(
     decorator=[namebuilding_append('src', lambda self: {'promid': self.promid})]
 )
 
-#: Usual definition for the ``version`` (*e.g.* original configuration hashcode).
+#: Usual definition for the ``version`` (*e.g.* config version, promethee mask version).
 a_version = dict(
-    info="The original config version (MD5 checksum)",
+    info="The resource version (i.e. production version).",
     type=str,
     optional=True,
     default=""
 )
 
-version = footprints.Footprint(info='Abstract original config version (MD5 checksum)',
+version = footprints.Footprint(info='Abstract resource version',
                             attr=dict(version=a_version))
 
 
@@ -53,9 +54,9 @@ version_deco = footprints.DecorativeFootprint(
 )
 
 
-#: Usual definition for the ``param`` (*e.g.* field).
+#: Usual definition for the ``param`` (*i.e.* parameter name).
 a_param = dict(
-    info="Parameter or field name",
+    info="The weather parameter or field name.",
     type=str,
     optional=False,
 )
@@ -70,14 +71,14 @@ param_deco = footprints.DecorativeFootprint(
 )
 
 
-#: Usual definition for the ``task`` (*e.g.* task name for/from which the resource exists)
-tasks = ["conf_task", "data_task", "mask_task", "prod_task", "version"]
-
+#: Usual definition for the ``task`` (*i.e.* promethee task name among "conf_task",
+#: "data_task", "mask_task", "prod_task" and "version" for which the resource is
+#: dedicated)
 a_task = dict(
-    info='Task name',
+    info="The task name for which the resource is dedicated.",
     type=str,
     optional=False,
-    values=tasks
+    values=["conf_task", "data_task", "mask_task", "prod_task", "version"]
 )
 
 task = footprints.Footprint(info='Abstract task name',
@@ -88,14 +89,13 @@ task_deco = footprints.DecorativeFootprint(
     decorator=[namebuilding_append('src', lambda self: {"task": self.task})]
 )
 
-#: Usual definition for the ``step`` (*e.g.* step between two consecutive terms)
-steps = [1, 3, 6, 12, 24]
-
+#: Usual definition for the ``step`` (*i.e.* step (in hours) between two
+#: consecutive terms in the resource)
 a_step = dict(
-    info='Step length between two consecutive terms',
+    info="The step (in hours) between two consecutive terms in the resource.",
     type=Time,
     optional=False,
-    values=steps
+    values=[1, 3, 6, 12, 24]
 )
 
 step = footprints.Footprint(info='Abstract step',
