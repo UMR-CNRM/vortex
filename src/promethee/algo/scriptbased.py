@@ -13,6 +13,7 @@ from vortex.algo.components import Expresso
 #: No automatic export
 __all__ = []
 
+
 class PrometheeAlgo(Expresso):
     """PrometheeAlgo : This algo component is used for executing Python scripts
     with args, like a common Python script execution in command line.
@@ -43,15 +44,15 @@ class PrometheeAlgo(Expresso):
         vortex.algo.components.Expresso
 
     Attrs:
-        kind        (str)   : Must be 'promethee_algo'.
-        interpreter (str)   : Interpreter to use for executing scripts.
-        engine      (str)   : Optionnal engine, default is 'exec'.
+        kind          (str) : Algo kind. Must be 'promethee_algo'.
+        interpreter   (str) : Interpreter to use for executing scripts.
+        engine        (str) : Optionnal engine, default is 'exec'.
         extendpypath (list) : The list of things to be prepended in the python's path.
             The added paths must lead to python packages used by the script to execute.
             Default is [].
-        timeout     (int)   : Default timeout (in sec.) used when waiting for
+        timeout       (int) : Default timeout (in sec.) used when waiting for
             an expected resource. Default is 180.
-        cmdline     (dict)  : Optionnal command line arguments to pass on to
+        cmdline      (dict) : Optionnal command line arguments to pass on to
             the script to execute.
 
     """
