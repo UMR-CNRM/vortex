@@ -131,6 +131,12 @@ class TestFTPServer(object):
         reactor.listenTCP(self.port, f)
         logger.info("ServerSide: Factory %s registered with port %d",
                     str(f), self.port)
+
+        def reactor_stop_handler(signum, frame):
+            logger.info("ServerSide: Calling reactor's stop")
+            reactor.stop()
+
+        signal.signal(signal.SIGUSR1, reactor_stop_handler)
         reactor.run()
         logger.info("ServerSide: Reactor's run returned")
         return True
@@ -148,8 +154,8 @@ class TestFTPServer(object):
             logger.info('ClientSide: The test FTP server is ready on port: %d', self.port)
             yield
         finally:
-            logger.info("ClientSide: firing terminate")
-            p.terminate()
+            logger.info("ClientSide: firing server graceful stop")
+            os.kill(p.pid, signal.SIGUSR1)
             logger.debug("ClientSide: terminate called")
             p.join(timeout=5)
             if p.exitcode is None:

@@ -13,9 +13,18 @@ Package
 
 .. autodata:: __all__
 
+Class decorator
+---------------
+
+.. autofunction:: use_flow_logs_stack
 
 Classes
 -------
+
+.. autoclass:: FlowLogsStack
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. autoclass:: Listing
    :show-inheritance:

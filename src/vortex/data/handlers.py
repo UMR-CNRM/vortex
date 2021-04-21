@@ -272,7 +272,8 @@ class Handler(object):
             if self.container.filled or self.stage == 'put':
                 if self._contents is None:
                     self._contents = self.resource.contents_handler(datafmt=self.container.actualfmt)
-                    self._contents.slurp(self.container)
+                    with self.container.iod_context():
+                        self._contents.slurp(self.container)
                 return self._contents
             else:
                 logger.warning('Contents requested on an empty container [%s]', self.container)
@@ -622,8 +623,9 @@ class Handler(object):
                     self.container.iotarget(),
                     st_options,
                 )
-            except Exception:
-                logger.error("The store's earlyget method did not return : it should never append!")
+            except Exception as e:
+                logger.error("The store's earlyget method did not return (%s): it should never append!",
+                             str(e))
                 return None
         else:
             logger.error('Could not find any store to get %s', self.lasturl)

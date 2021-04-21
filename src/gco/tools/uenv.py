@@ -15,7 +15,7 @@ import footprints
 import vortex
 from vortex.tools.env import Environment
 from vortex.tools.net import uriparse
-from gco.syntax.stdattrs import GgetId, UgetId
+from gco.syntax.stdattrs import GgetId, AbstractUgetId
 
 #: No automatic export
 __all__ = []
@@ -41,8 +41,8 @@ def contents(cycle, scheme=None, netloc=None):
     """Return definition of a given ``cycle``."""
     p = handler()
     regcycle = None
-    if not isinstance(cycle, UgetId):
-        cycle = UgetId(cycle)
+    if not isinstance(cycle, AbstractUgetId):
+        cycle = AbstractUgetId(cycle)
     if p.check(_DATASTORE_KIND, dict(cycle=cycle)):
         regcycle = p.get(_DATASTORE_KIND, dict(cycle=cycle))
         regcycle = regcycle.clone()
@@ -78,7 +78,7 @@ def contents(cycle, scheme=None, netloc=None):
                 k, v = item.split('=', 1)
                 cycle = v.rstrip("\n").strip('"')
                 try:
-                    cycle = UgetId(cycle)
+                    cycle = AbstractUgetId(cycle)
                 except ValueError:
                     cycle = GgetId(cycle)
                 regcycle[k] = cycle
@@ -91,8 +91,8 @@ def contents(cycle, scheme=None, netloc=None):
 
 def nicedump(cycle, scheme=None, netloc=None):
     """Return a nice sequence of string, ready to print."""
-    if not isinstance(cycle, UgetId):
-        cycle = UgetId(cycle)
+    if not isinstance(cycle, AbstractUgetId):
+        cycle = AbstractUgetId(cycle)
     ldump = list()
     c = contents(cycle, scheme, netloc)
     if c:
@@ -103,8 +103,8 @@ def nicedump(cycle, scheme=None, netloc=None):
 
 def as_rawstr(cycle, scheme=None, netloc=None):
     """Return a raw string of the cycle contents."""
-    if not isinstance(cycle, UgetId):
-        cycle = UgetId(cycle)
+    if not isinstance(cycle, AbstractUgetId):
+        cycle = AbstractUgetId(cycle)
     thisdump = nicedump(cycle, scheme, netloc)
     return "\n".join(thisdump)
 

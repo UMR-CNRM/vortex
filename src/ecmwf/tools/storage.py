@@ -7,26 +7,18 @@ This package is used to implement the Archive Store class only used at ECMWF.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-import footprints
-from vortex.tools.storage import Archive, DEFAULT_ARCHIVE_TUBES
+from vortex.tools.storage import Archive
 
 
-class ArchiveECMWF(Archive):
+class EctransArchive(Archive):
     """The specific class to handle Archive from ECMWF super-computers"""
-
-    _default_tube = 'ectrans'
 
     _footprint = dict(
         info = 'Default archive description from ECMWF',
         attr = dict(
             tube = dict(
-                info     = "How to communicate with the archive?",
-                values   = DEFAULT_ARCHIVE_TUBES + ['ectrans', 'ecfs'],
-                optional = True
+                values   = ['ectrans'],
             )
-        ),
-        priority=dict(
-            level=footprints.priorities.top.TOOLBOX
         )
     )
 
@@ -50,7 +42,7 @@ class ArchiveECMWF(Archive):
         """Actual _retrieve using ectrans"""
         remote = self.sh.ectrans_remote_init(remote=kwargs.get("remote", None),
                                              inifile=self.inifile,
-                                             storage=self.actual_storage)
+                                             storage=self.storage)
         gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
                                                inifile=self.inifile)
         return self.sh.ectransget(source=item,
@@ -64,7 +56,7 @@ class ArchiveECMWF(Archive):
         """Actual _insert using ectrans"""
         remote = self.sh.ectrans_remote_init(remote=kwargs.get("remote", None),
                                              inifile=self.inifile,
-                                             storage=self.actual_storage)
+                                             storage=self.storage)
         gateway = self.sh.ectrans_gateway_init(gateway=kwargs.get("gateway", None),
                                                inifile=self.inifile)
         return self.sh.ectransput(source=local,
@@ -79,14 +71,30 @@ class ArchiveECMWF(Archive):
         """Actual _delete using ectrans"""
         raise NotImplementedError
 
+
+class EcfsArchive(Archive):
+    """The specific class to handle Archive from ECMWF super-computers"""
+
+    _footprint = dict(
+        info='Default archive description from ECMWF',
+        attr=dict(
+            storage=dict(
+                values = ['ecgate.ecmwf.int'],
+            ),
+            tube=dict(
+                values=['ecfs'],
+            ),
+        )
+    )
+
     def _ecfsfullpath(self, item, **kwargs):
         """Actual _fullpath using ecfs"""
-        actual_fullpath = None
-        if self.actual_storage == "ecgate.ecmwf.int":
-            actual_fullpath = "ec:{}".format(item)
-        else:
+        actual_fullpath = {
+            'ecgate.ecmwf.int': "ec:{item!s}"
+        }.get(self.storage, None)
+        if actual_fullpath is None:
             raise NotImplementedError
-        return actual_fullpath, dict()
+        return actual_fullpath.format(item=item), dict()
 
     def _ecfsprestageinfo(self, item, **kwargs):
         """Actual _prestageinfo using ecfs"""

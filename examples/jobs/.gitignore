@@ -1,0 +1,8 @@
+# Where the temporary and abort directories are created
+*/*/*/run
+# Where the job files are created
+*/*/*/jobs/*
+*/*/*/jobs_*
+# The vortex link
+*/*/*/vortex/*
+*/*/*/vortex/.*

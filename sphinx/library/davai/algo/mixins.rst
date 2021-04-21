@@ -108,3 +108,7 @@ Mixed AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Canari_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

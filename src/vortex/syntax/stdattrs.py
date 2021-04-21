@@ -178,6 +178,10 @@ opsuites = set([LegacyXPid(x) for x in (['OPER', 'DBLE', 'TEST', 'MIRR'] +
                                         ['OP{0:02d}'.format(i) for i in range(100)])])
 
 
+#: The list of experiemnt names dedicated to Vortex' demos
+demosuites = set([LegacyXPid('DEMO'), LegacyXPid('DREF')])
+
+
 class Namespace(six.text_type):
     """Basestring wrapper for namespaces (as net domains)."""
     def __new__(cls, value):

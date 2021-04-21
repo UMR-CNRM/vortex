@@ -348,7 +348,7 @@ class ExtraConfMocaccCtbtoContent(JsonDictContent):
     @property
     def mail_ctbto(self):
         """CTBTO mail."""
-        return self._data["basetime_forecast"]
+        return self._data["mail_ctbto"]
 
     @property
     def source_vertical_profile(self):

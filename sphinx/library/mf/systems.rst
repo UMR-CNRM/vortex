@@ -16,22 +16,7 @@ Package
 Bull Targets
 ------------
 
-.. autoclass:: MeteoBull
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Beaufix
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Prolix
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: Epona
+.. autoclass:: MeteoBullX3
    :show-inheritance:
    :members:
    :member-order: alphabetical

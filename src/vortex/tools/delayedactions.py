@@ -71,7 +71,7 @@ from bronx.patterns import getbytag, observer
 import footprints
 from footprints import proxy as fpx
 
-from vortex.tools.systems import OSExtended, ExecutionError
+from vortex.tools.systems import OSExtended
 
 #: No automatic export
 __all__ = []
@@ -387,20 +387,12 @@ class DemoSleepDelayedActionHandler(AbstractDelayedActionsHandler):
                 action.mark_as_failed()
 
 
-class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
-    """
-    When FtServ is used, accumulate "GET" requests for several files and fetch
-    them during a unique ``ftget`` system call.
+class AbstractFtpArchiveDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
+    """Includes some FTP related methods"""
 
-    :note: The *request* needs to be a two-elements tuple where the first element
-           is the path to the file that shoudl be fetched and the second element
-           the file format.
-    :note: The **result** returned by the :meth:`retrieve` method will be the
-           path to the temporary file where the resource has been fetched.
-    """
-
+    _abstract = True
     _footprint = dict(
-        info = "Fetch multiple files using FtServ.",
+        info = "Fetch multiple files using an FTP archive.",
         attr = dict(
             kind = dict(
                 values = ['archive', ],
@@ -414,8 +406,9 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
                 values = ['ftp', ],
             ),
             raw = dict(
-                values = [True, ],
                 type = bool,
+                optional = True,
+                default = False,
             ),
             logname = dict(
                 optional = True
@@ -432,7 +425,13 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
         """Create a new :class:`DelayedAction` object from a user's **request**."""
         assert isinstance(request, (tuple, list)) and len(request) == 2, \
             'Request needs to be a two element tuple or list (location, format)'
-        return super(RawFtpDelayedGetHandler, self).register(request)
+        # Check for duplicated entries...
+        target = request[0]
+        for v in self._resultsmap.values():
+            if target == v.request[0]:
+                return None
+        # Ok, let's proceed...
+        return super(AbstractFtpArchiveDelayedGetHandler, self).register(request)
 
     @property
     def _ftp_hostinfos(self):
@@ -447,6 +446,29 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
                 logger.error('Invalid port number < %s >. Ignoring it', s_storage[1])
         return hostname, port
 
+
+class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
+    """
+    When FtServ is used, accumulate "GET" requests for several files and fetch
+    them during a unique ``ftget`` system call.
+
+    :note: The *request* needs to be a two-elements tuple where the first element
+           is the path to the file that shoudl be fetched and the second element
+           the file format.
+    :note: The **result** returned by the :meth:`retrieve` method will be the
+           path to the temporary file where the resource has been fetched.
+    """
+
+    _footprint = dict(
+        info = "Fetch multiple files using FtServ.",
+        attr = dict(
+            raw = dict(
+                optional = False,
+                values = [True, ],
+            ),
+        )
+    )
+
     def finalise(self, *r_ids):  # @UnusedVariable
         """Given a **r_ids** list of delayed action IDs, wait upon actions completion."""
         todo = defaultdict(list)
@@ -456,6 +478,7 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
                          if self.system.fmtspecific_mtd('batchrawftget', v.request[1])
                          else None)
                 todo[a_fmt].append(k)
+        rc = True
         if todo:
             for a_fmt, a_todolist in todo.items():
                 sources = list()
@@ -472,7 +495,7 @@ class RawFtpDelayedGetHandler(AbstractFileBasedDelayedActionsHandler):
                     rc = self.system.batchrawftget(sources, destinations,
                                                    hostname=hostname, logname=self.logname, port=port,
                                                    ** extras)
-                except (OSError, IOError, ExecutionError):
+                except (OSError, IOError):
                     rc = False
                 for k in a_todolist:
                     if rc:
@@ -572,7 +595,8 @@ class PrivateDelayedActionsHub(object):
             return None
         else:
             resultid = myhandler.register(request)
-            self._resultsmap[resultid] = myhandler
+            if resultid is not None:
+                self._resultsmap[resultid] = myhandler
         return resultid
 
     @property

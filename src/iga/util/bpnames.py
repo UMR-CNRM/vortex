@@ -738,10 +738,19 @@ def global_snames(resource, provider):
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + my_model + '.' + suff
 
-    elif resource.realkind == 'mocacc_emis_and_nwp_inputs':
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'ctbto':
         bname = 'ctbto_in.tar'
 
     elif resource.realkind == 'promethee_inputs':
         bname= 'alim_hpc_promethee.tar'
+    
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'chimique':
+        bname = '7960.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'volcan':
+        bname = '7961.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'indonesie':
+        bname = '12204.tar'
 
     return bname

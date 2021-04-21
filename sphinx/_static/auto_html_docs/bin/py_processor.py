@@ -116,13 +116,13 @@ class ContentParser(object):
                 logger.info('Entry #%d has %d subslides.', i, len(s))
 
 
-def do_content2tpl(tplname, ifile, ofile, reveal, cdn, lang, style,
+def do_content2tpl(tplname, ifile, ofile, cdn, lang, style,
                    mdclean=False):
     cparser = ContentParser(mdclean=mdclean)
     cparser(ifile)
     template = jinja_env.get_template(tplname)
     rendered = template.render(slides=cparser.slides,
-                               revealjs=reveal, cdn=cdn,
+                               cdn=cdn,
                                hljlang=lang, hljstyle=style,
                                **cparser.headers)
     with open(ofile, 'w', encoding='utf-8') as fho:
@@ -149,9 +149,6 @@ if __name__ == '__main__':
                             formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         help="set verbosity level [default: %(default)s].")
-    parser.add_argument("--reveal", dest="reveal", action="store",
-                        default='reveal.js',
-                        help="set reveal.js code location [default: %(default)s].")
     parser.add_argument("--cdn", dest="cdn", action="store",
                         default='cdn',
                         help="subdirectory with the CDN local copy [default: %(default)s].")
@@ -185,9 +182,9 @@ if __name__ == '__main__':
 
     if args.content2slides:
         do_content2tpl(bits2slides_tpl, args.input_file, args.output_file,
-                args.reveal, args.cdn, args.lang, args.style)
+                args.cdn, args.lang, args.style)
 
     if args.content2html:
         do_content2tpl(bits2html_tpl, args.input_file, args.output_file,
-                args.reveal, args.cdn, args.lang, args.style, mdclean=True)
+                args.cdn, args.lang, args.style, mdclean=True)
 

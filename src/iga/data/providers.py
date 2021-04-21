@@ -31,7 +31,7 @@ ATM_LIST_ONE = {'antiguy', 'arome', 'aromepi', 'arpege', 'caledonie', 'aromeaefr
                 'polynesie', 'restart_cep', 'reunion', 'ssmice', 'varpack', 'mfwam'}
 
 # TODO: move in config file
-ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc'}
+ATM_LIST_TWO = {'perle_arp', 'perle_ifs', 'perle_arom', 'ctbto', 'mocchim', 'mocvolc', 'mocindo'}
 
 ATM_LIST_THREE = {'macc'}
 
@@ -172,6 +172,7 @@ class SopranoProvider(Provider):
 
     _footprint = [
         namespacefp,
+        member,
         dict(
             info = 'Soprano provider',
             attr = dict(
@@ -238,12 +239,18 @@ class SopranoProvider(Provider):
             info['level_three'] = 'ctbto'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
+        elif self.vapp == 'mocage' and self.vconf in ('chimique', 'volcan', 'indonesie'):
+            info['level_one'] = 'serv'
+            info['level_two'] = 'env'
+            info['level_three'] = 'extract_mocacc'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
         elif self.vapp == 'arpege' and resource.model == 'ifs':
             info['model'] = 'restart_cep'
         elif self.vapp == 'pprod':
-            info['level_one'] = 'previ'
-            info['level_two'] = 'previ_amont'
-            info['level_three'] = 'alpha'
+            info['level_one'] = 'alpha'
+            info['level_two'] = 'alim_hpc_alpha'
+            info['level_three'] = 'extractions'
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
 
