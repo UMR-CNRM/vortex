@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: JobAssistantAutodirPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: JobAssistantMtoolPlugin
    :show-inheritance:
    :members:

@@ -89,14 +89,6 @@ class C923(IFSParallel):
 
     def prepare(self, rh, opts):
         super(C923, self).prepare(rh, opts)
-        # Namelist
-        nam = self.context.sequence.effective_inputs(role=('Namelist',))
-        self.algoassert(len(nam) == 1,
-                        "One and only one namelist necessary as input.")
-        nam = nam[0].rh
-        nam.contents['NAMMCC']['N923'] = self.step
-        nam.contents.setmacro('LPGD', self.orog_in_pgd)
-        nam.save()
         # check PGD if needed
         if self.orog_in_pgd:
             pgd = self.context.sequence.effective_inputs(role=('Pgd',))
@@ -112,6 +104,19 @@ class C923(IFSParallel):
                     format(self.input_orog_name))
             elif pgd.resource.nativefmt == 'lfi':
                 raise NotImplementedError('CY43T2 onwards: lfi PGD should not be used.')
+
+    def find_namelists(self, opts=None):
+        namrh_list = [x.rh
+                      for x in self.context.sequence.effective_inputs(role=('Namelist',))]
+        self.algoassert(len(namrh_list) == 1,
+                        "One and only one namelist necessary as input.")
+        return namrh_list
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        super(C923, self).prepare_namelist_delta(rh, namcontents, namlocal)
+        namcontents['NAMMCC']['N923'] = self.step
+        namcontents.setmacro('LPGD', self.orog_in_pgd)
+        return True
 
 
 class FinalizePGD(AlgoComponent):
@@ -648,6 +653,20 @@ class MakeBDAPDomain(AlgoComponent):
             resolution = dict(
                 info = "Resolution in degrees.",
                 type = float,
+                optional = True,
+                default = None,
+            ),
+            resolution_x=dict(
+                info="X resolution in degrees (if different from Y).",
+                type=float,
+                optional = True,
+                default = None,
+            ),
+            resolution_y=dict(
+                info="Y resolution in degrees (if different from X).",
+                type=float,
+                optional=True,
+                default = None,
             ),
             boundaries = dict(
                 info = "Lonlat boundaries of the domain, case mode='boundaries'.",
@@ -702,6 +721,12 @@ class MakeBDAPDomain(AlgoComponent):
             self.algoassert(self.sh.path.exists(self.model_clim))
             if self.boundaries is not None:
                 logger.info('attribute *boundaries* ignored')
+        if self.resolution is None:
+            self.algoassert(None not in (self.resolution_x, self.resolution_y),
+                            "Must provide *resolution* OR *resolution_x/resolution_y*")
+        else:
+            self.algoassert(self.resolution_x is None and self.resolution_y is None,
+                            "Must provide *resolution* OR *resolution_x/resolution_y*")
 
     def execute(self, rh, opts):  # @UnusedVariable
         from common.util.usepygram import epygram
@@ -716,8 +741,13 @@ class MakeBDAPDomain(AlgoComponent):
         else:
             boundaries = self.boundaries
         # build geometry
-        geometry = dm.build.build_lonlat_geometry(boundaries,
-                                                  resolution=self.resolution)
+        if self.resolution is None:
+            geometry = dm.build.build_lonlat_geometry(boundaries,
+                                                      resolution=(self.resolution_x,
+                                                                  self.resolution_y))
+        else:
+            geometry = dm.build.build_lonlat_geometry(boundaries,
+                                                      resolution=self.resolution)
         # summary, plot, namelists:
         if self.illustration:
             fig, _ = geometry.plotgeometry(color='red',

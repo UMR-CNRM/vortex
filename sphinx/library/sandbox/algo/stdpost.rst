@@ -16,7 +16,22 @@ Package
 Classes
 -------
 
-.. autoclass:: GribInfos
+.. autoclass:: GribInfosKey
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: _AbstractGribInfos
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GribInfosSequential
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GribInfosArbitraryOrder
    :show-inheritance:
    :members:
    :member-order: alphabetical

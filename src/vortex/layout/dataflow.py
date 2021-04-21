@@ -351,6 +351,13 @@ class Sequence(observer.Observer):
     def __call__(self):
         return self.sections[:]
 
+    def free_resources(self):
+        """Free contents and io descriptors on every sections."""
+        for section in self.sections:
+            section.rh.reset_contents()
+            if section.rh.container is not None:
+                section.rh.container.close()
+
     def clear(self):
         """Clear the internal list of sections."""
         self.sections = list()

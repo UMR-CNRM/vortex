@@ -42,3 +42,17 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Abstract Classes
+----------------
+
+.. autoclass:: AbstractUGetProvider
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: AbstractUEnvProvider
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

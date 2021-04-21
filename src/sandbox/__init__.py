@@ -7,7 +7,7 @@ A package that contain useless things (to play around).
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from . import algo, data
+from . import algo, data, tools
 
 __all__ = []
 

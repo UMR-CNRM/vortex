@@ -455,14 +455,14 @@ class MpiTool(footprints.FootprintBase):
     def _reshaped_mpiopts(self):
         """Raw list of mpi tool command line options."""
         klast = None
-        options = dict()
+        options = collections.defaultdict(list)
         for optdef in shlex.split(self._actual_mpiopts()):
             if optdef.startswith('-'):
                 optdef = optdef.lstrip('-')
-                options[optdef] = []
+                options[optdef].append([])
                 klast = optdef
             elif klast is not None:
-                options[klast].append(optdef)
+                options[klast][-1].append(optdef)
             else:
                 raise MpiException('Badly shaped mpi option around %s', optdef)
         return options
@@ -663,7 +663,7 @@ class MpiTool(footprints.FootprintBase):
                     cpu_disp = self.system.cpus_ids_dispenser(topology=self._actual_mpibind_topology)
                     if not cpu_disp:
                         raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                           .format(self._actual_vortexbind_topology, ))
+                                           .format(self._actual_mpibind_topology, ))
                     for _ in range(e_bit.options['nnp']):
                         dispensers_map[ranks_idx] = (cpu_disp, i_node)
                         ranks_idx += 1
@@ -780,10 +780,11 @@ class MpiTool(footprints.FootprintBase):
     def mkcmdline(self):
         """Builds the MPI command line."""
         cmdl = [self.launcher, ]
-        for k, v in sorted(self._reshaped_mpiopts().items()):
-            cmdl.append(self.optprefix + six.text_type(k))
-            for a_value in v:
-                cmdl.append(six.text_type(a_value))
+        for k, instances in sorted(self._reshaped_mpiopts().items()):
+            for instance in instances:
+                cmdl.append(self.optprefix + six.text_type(k))
+                for a_value in instance:
+                    cmdl.append(six.text_type(a_value))
         if self.envelope:
             self._envelope_mkcmdline(cmdl)
         else:
@@ -841,7 +842,9 @@ class MpiTool(footprints.FootprintBase):
             for bin_obj in self.binaries:
                 changed = bin_obj.setup_namelist_delta(namc, namrh.container.actualpath()) or changed
             if changed:
-                namc.rewrite(namrh.container)
+                if namc.dumps_needs_update:
+                    logger.info('Rewritting the %s namelists file.', namrh.container.actualpath())
+                    namc.rewrite(namrh.container)
 
     def _logged_env_set(self, k, v):
         """Set an environment variable *k* and emit a log message."""
@@ -1195,8 +1198,13 @@ class MpiBinaryBasic(MpiBinary):
     def setup_namelist_delta(self, namcontents, namlocal):
         """Applying MPI profile on local namelist ``namlocal`` with contents namcontents."""
         namw = False
+        # List of macros actualy used in the namelist
+        nam_macros = set()
+        for nam_block in namcontents.values():
+            nam_macros.update(nam_block.macros())
+        # Look for relevant once
         nprocs_macros = ('NPROC', 'NBPROC', 'NTASKS')
-        if any([n in namcontents.macros() for n in nprocs_macros]):
+        if any([n in nam_macros for n in nprocs_macros]):
             for n in nprocs_macros:
                 logger.info('Setup macro %s=%s in %s', n, self.nprocs, namlocal)
                 namcontents.setmacro(n, self.nprocs)
@@ -1362,7 +1370,7 @@ class SRun(ConfigurableMpiTool):
                                                       hexmask=True)
                 if not ids:
                     raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                       .format(self._actual_vortexbind_topology,))
+                                       .format(self._actual_mpibind_topology,))
                 masklist = [m for _, m in zip(range(what[0].options['nnp']),
                                               itertools.cycle(ids))]
                 cmdl.append('mask_cpu:' + ','.join(masklist))

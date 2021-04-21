@@ -12,16 +12,16 @@ import re
 import six
 
 from bronx.fancies import loggers
-
-from vortex import sessions
-from vortex.tools import env
 from bronx.stdtypes.date import Time, Date
 from bronx.datagrip.namelist import NO_SORTING, NamelistSet, NamelistParser
+from footprints.stdtypes import FPList
+from vortex import sessions
 from vortex.data.outflow import ModelResource, StaticResource
 from vortex.data.outflow import ModelGeoResource
 from vortex.data.contents import AlmostDictContent, IndexedTable
 from vortex.syntax.stdattrs import binaries, term, cutoff
 from vortex.syntax.stddeco import namebuilding_insert
+from vortex.tools import env
 from gco.syntax.stdattrs import gvar
 
 #: No automatic export
@@ -75,6 +75,11 @@ class NamelistContent(AlmostDictContent):
         self._data.setmacro(item, value)
         self._macros[item] = value
 
+    @property
+    def dumps_needs_update(self):
+        """Tells wether something as changed in the namelist's dump."""
+        return self._data.dumps_needs_update
+
     def dumps(self, sorting=NO_SORTING):
         """
         Returns the namelist contents as a string.
@@ -123,9 +128,9 @@ class NamelistContent(AlmostDictContent):
 
         """
         container.close()
-        with container.preferred_decoding(byte=False):
-            container.write(self.dumps(sorting=sorting))
-        container.close()
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                container.write(self.dumps(sorting=sorting))
 
 
 class Namelist(ModelResource):
@@ -399,6 +404,43 @@ class NamelistFullPos(NamelistTerm):
     def gget_urlquery(self):
         """GGET specific query : ``extract``."""
         return 'extract=' + self.incoming_namelist_fixup('source', 'namel')
+
+
+class NamelistFpServerObject(Namelist):
+    """Class for a fullpos server object's namelists."""
+
+    _footprint = dict(
+        info = 'Namelist for a fullpos server object',
+        attr = dict(
+            kind = dict(
+                values   = ['namelist_fpobject', ]
+            ),
+            fp_conf = dict(
+                info     = 'The FPCONF setting associated with this object.',
+                type     = int,
+                optional = True,
+            ),
+            fp_cmodel = dict(
+                info     = 'The CMODEL setting associated with this object.',
+                optional = True,
+            ),
+            fp_lextern = dict(
+                info     = 'The LEXTERN setting associated with this object.',
+                type     = bool,
+                optional = True,
+            ),
+            fp_terms = dict(
+                info     = ('Apply this object only on a subset of the input '
+                            'data (based on term)'),
+                type     = FPList,
+                optional = True,
+            )
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'namelist_fpobject'
 
 
 class XXTContent(IndexedTable):

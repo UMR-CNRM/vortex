@@ -12,7 +12,7 @@ from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError
 from common.algo.oopstests import (OOPSObsOpTest, OOPSecma2ccma,
                                    OOPSTestEnsBuild, OOPSTest)
 from common.algo.oopsroot import OOPSMinim
-from common.algo.assim import (Screening, Minim)
+from common.algo.assim import (Screening, Minim, Canari)
 from common.algo.odbtools import (Raw2ODBparallel)
 from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
@@ -55,6 +55,8 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             ref_status = ref_summary.get('Status')
             if ref_status['symbol'].startswith('X'):
                 status = task_status['X=R']
+        elif len(ref_summary) == 0:  # if reference crashed, the summary is not available in archive
+            status = task_status.get('X:R?', task_status['X'])
         # then write summary in promise
         summary = {'Status': status,
                    'Exception': str(e),
@@ -139,4 +141,8 @@ class Prep_CrashWitness(Prep, _CrashWitnessDecoMixin):
 
 
 class Coupling_CrashWitness(Coupling, _CrashWitnessDecoMixin):
+    pass
+
+
+class Canari_CrashWitness(Canari, _CrashWitnessDecoMixin):
     pass

@@ -4,13 +4,13 @@
 
 		<link rel="stylesheet" href="css/marked_custom.css" />
 
-        <script src="{{cdn}}/highlight.min.js"></script>
+        <script src="{{cdn}}/highlight/highlight.min.js"></script>
         {%- for lang in hljlang %}
-        <script src="{{cdn}}/languages/{{ lang }}.min.js"></script>
+        <script src="{{cdn}}/highlight/languages/{{lang}}.min.js"></script>
         {%- endfor %}
         
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css" />
+		<link rel="stylesheet" href="{{cdn}}/highlight/styles/{{hljstyle}}.min.css" />
 
 {%- endblock head %}
 
@@ -25,14 +25,15 @@
             hljs.initHighlightingOnLoad();
         </script>
 
-        <script src="{{cdn}}/marked.min.js"></script>
+        <script src="{{cdn}}/marked/marked.min.js"></script>
 		<script>
             // Set options
             // `highlight` example uses `highlight.js`
             marked.setOptions({
                 renderer: new marked.Renderer(),
-                highlight: function(code) {
-                    return '<div class="hljs">' + hljs.highlightAuto(code).value + '</div>';
+                highlight: function(code, language) {
+                    const validLanguage = hljs.getLanguage(language) ? language : 'plaintext';
+                    return '<div class="hljs">' + hljs.highlight(validLanguage, code).value + '</div>';
                 },
                 gfm: true,  // GitHub Flavored Markdown (GFM) 
                 smartLists: true,

@@ -17,15 +17,10 @@ Exceptions
    :members:
    :member-order: alphabetical
 
-Classes
--------
+Abstract Classes
+----------------
 
 .. autoclass:: AbstractSubJobLauncher
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: SpawnSubJobLauncher
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -35,11 +30,26 @@ Classes
    :members:
    :member-order: alphabetical
 
+Classes
+-------
+
+.. autoclass:: SpawnSubJobLauncher
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SlurmSshSubJobLauncher
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
+Utility Classes
+---------------
+
+.. autoclass:: NodesObserverboardRecorder
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. hints
 .. .. autodata:: XXX

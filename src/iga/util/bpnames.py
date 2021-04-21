@@ -47,7 +47,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto'):
+                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie'):
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -738,7 +738,16 @@ def global_snames(resource, provider):
         else:
             bname = 'OULOUTPUT_BUFR' + '_' + resource.scope + my_model + '.' + suff
 
-    elif resource.realkind == 'mocacc_emis_and_nwp_inputs':
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'ctbto':
         bname = 'ctbto_in.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'chimique':
+        bname = '7960.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'volcan':
+        bname = '7961.tar'
+
+    elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'indonesie':
+        bname = '12204.tar'
 
     return bname
