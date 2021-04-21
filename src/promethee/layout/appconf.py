@@ -32,7 +32,7 @@ def recursive_format(element, **format_kwargs):
     >>> recursive_format(u'{daughter} and {son}, I am your father', daughter="leia", son="luke")
     u'leia and luke, I am your father'
     >>> my_kwargs = {"father" : "anakin", "mother": "padme", "son":"luke", "daughter":"leia", "age":42}
-    >>> recursive_format({"A" : "My name is {father}", "B" : "I am not fun", "C": "My kids are {kids}"}, ``**my_kwargs``)
+    >>> recursive_format({"A" : "My name is {father}", "B" : "I'm Vader", "C": "My kids are {kids}"}, ``**my_kwargs``)
     {"A" : "My name is anakin", "B" : "I used to be fun", "C": "My kids are {kids}"}
     >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, ``**my_kwargs``)
     {"A":[{"B":{"deeply":"At 42, I still love padme"}}]}
