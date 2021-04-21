@@ -34,7 +34,7 @@ class PrometheeScript(Script):
     >>> tb_algo = toolbox.algo(
     ...     kind        = "promethee_algo",
     ...     interpreter = "python3.7",
-    ...     cmdline     = {"foo":42, "bar":51},   
+    ...     cmdline     = {"foo":42, "bar":51},
     ... )
     >>> tb_algo.run(tb_script)
 
@@ -70,6 +70,7 @@ class PrometheeScript(Script):
 
         Returns:
             str : Command line to pass on to the script
+
         """
         cmdline = " ".join(
             ["--{} {}".format(key, value) for key, value in kwargs.items()]

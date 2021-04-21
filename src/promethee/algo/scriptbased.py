@@ -33,7 +33,7 @@ class PrometheeAlgo(Expresso):
     >>> tb_algo = toolbox.algo(
     ...     kind        = "promethee_algo",
     ...     interpreter = "python3.7",
-    ...     cmdline     = {"foo":42, "bar":51},   
+    ...     cmdline     = {"foo":42, "bar":51},
     ... )
     >>> tb_algo.run(tb_script)
 
@@ -68,13 +68,13 @@ class PrometheeAlgo(Expresso):
             ),
             engine = dict(
                 optional    = True,
-                values      = ["exec", "launch",],
+                values      = ["exec", "launch", ],
                 default     = "exec",
             ),
             cmdline=dict(
                 info        = "The command line arguments to pass on to the script.",
                 type        = FPDict,
-                default     = FPDict({"nproc" : 32}),
+                default     = FPDict({"nproc": 32}),
                 optional    = True,
             ),
         )

@@ -1,5 +1,5 @@
 :mod:`promethee` --- The Promethee VORTEX extension package
-===================================================
+===========================================================
 
 .. automodule:: promethee
    :synopsis: The Promethee VORTEX extension package

@@ -1,5 +1,5 @@
 :mod:`promethee.syntax.stdattrs` --- Custom Promethee syntax features
-==================================================
+=====================================================================
 
 .. automodule:: promethee.syntax.stdattrs
    :synopsis: Custom Promethee syntax features

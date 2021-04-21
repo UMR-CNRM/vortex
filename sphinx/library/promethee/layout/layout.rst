@@ -1,5 +1,5 @@
 :mod:`promethee.layout` --- Specific Promethee layout features
-===================================================
+==============================================================
 
 .. automodule:: promethee.layout
    :synopsis: Specific Promethee layout features

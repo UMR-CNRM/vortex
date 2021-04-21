@@ -9,7 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import footprints
 from bronx.stdtypes.date import Time
-from vortex.syntax.stddeco import namebuilding_append, namebuilding_insert, generic_pathname_insert
+from vortex.syntax.stddeco import namebuilding_append
 
 #: Export a set of attributes
 __all__ = [
@@ -28,7 +28,7 @@ a_promid = dict(
 )
 
 promid = footprints.Footprint(info='Abstract Promethee identifier',
-                            attr=dict(promid=a_promid))
+                                attr=dict(promid=a_promid))
 
 
 promid_deco = footprints.DecorativeFootprint(
@@ -45,7 +45,7 @@ a_version = dict(
 )
 
 version = footprints.Footprint(info='Abstract resource version',
-                            attr=dict(version=a_version))
+                                attr=dict(version=a_version))
 
 
 version_deco = footprints.DecorativeFootprint(
@@ -62,7 +62,7 @@ a_param = dict(
 )
 
 param = footprints.Footprint(info='Abstract parameter or field name',
-                            attr=dict(param=a_param))
+                                attr=dict(param=a_param))
 
 
 param_deco = footprints.DecorativeFootprint(

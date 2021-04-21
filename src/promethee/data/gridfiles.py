@@ -16,8 +16,8 @@ __all__ = []
 
 class PrometheeGridPoint(TimePeriodGridPoint):
     """PrometheeGridPoint : GridPoint file containing all the terms (with a fixed
-    step) of a single weather parameter of a single run. 
-    
+    step) of a single weather parameter of a single run.
+
     This kind of GridPoint file is the result of a pre-processing task in the
     Promethee flow, where usual GridPoint files (from other models) are processed :
         - weather parameter extracted,
@@ -40,7 +40,7 @@ class PrometheeGridPoint(TimePeriodGridPoint):
             horizontal geometry.
         date (bronx.stdtypes.date.Datetime) : The run of the resource's generating
             process.
-        begintime (bronx.stdtypes.date.Time) : The resource's begin forecast term.	
+        begintime (bronx.stdtypes.date.Time) : The resource's begin forecast term.
         endtime (bronx.stdtypes.date.Time) : The resource's end forecast term.
         step (bronx.stdtypes.date.Time) : The resource's fixed time step between two
             consecutive terms.
@@ -87,7 +87,7 @@ class PrometheeMask(StaticResource):
     identified by its 'promid' attribute) is versioned : if its configuration changes,
     the version also changes, thus the Resource itself changes.
 
-    Inheritance: 
+    Inheritance:
         vortex.data.outflow.StaticResource
 
     Attrs:

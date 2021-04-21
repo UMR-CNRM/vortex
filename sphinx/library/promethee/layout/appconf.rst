@@ -1,5 +1,5 @@
 :mod:`promethee.layout.appconf` --- Custom Promethee app configuration features
-==================================================
+===============================================================================
 
 .. automodule:: promethee.layout.appconf
    :synopsis: Custom Promethee app configuration features

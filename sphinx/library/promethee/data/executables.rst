@@ -1,5 +1,5 @@
 :mod:`promethee.data.executables` --- Custom Promethee executable resources
-==================================================
+===========================================================================
 
 .. automodule:: promethee.data.executables
    :synopsis: Custom Promethee executable resources

@@ -1,5 +1,5 @@
 :mod:`promethee.data` --- Specific Promethee data resources
-===================================================
+===========================================================
 
 .. automodule:: promethee.algo
    :synopsis: Specific Promethee data resources

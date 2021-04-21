@@ -1,5 +1,5 @@
 :mod:`promethee.data.gridfiles` --- Custom Promethee gridfiles resources
-==================================================
+========================================================================
 
 .. automodule:: promethee.data.gridfiles
    :synopsis: Custom Promethee gridfiles resources

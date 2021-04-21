@@ -14,6 +14,7 @@ from promethee.syntax.stdattrs import version_deco, task_deco
 #: No automatic export
 __all__ = []
 
+
 class PrometheeFlowResource(FlowResource):
     """PrometheeFlowResource : Abstract Class to access all kind of flow resources
     for promethee. A PrometheeFlowResource is a quite common flow resource with a
@@ -33,7 +34,7 @@ class PrometheeFlowResource(FlowResource):
         cutoff      (str) : The cutoff type of the generating process.
         model       (str) : The model name (from a source code perspective).
         nativefmt   (str) : The resource's storage format.
-        task        (str) : The task name for which the resource is designed. Among 
+        task        (str) : The task name for which the resource is designed. Among
             "conf_task", "data_task", "mask_task", "prod_task" and "version".
         version     (str) : The resource version.
     """
@@ -42,7 +43,8 @@ class PrometheeFlowResource(FlowResource):
         task_deco,
         version_deco,
         dict(
-            info = "Abstract FlowResource for a Promethee usage. It is a flow resource that has a version tag and is related to a specific task.",
+            info = "Abstract FlowResource for a Promethee usage. It is a flow resource"
+            " that has a version tag and is related to a specific task.",
         )
     ]
 
@@ -81,6 +83,7 @@ class PrometheeJson(PrometheeFlowResource):
             )
         )
     )
+
 
 class PrometheeArchive(PrometheeFlowResource):
     """PrometheeArchive : specific PrometheeFlowResource designed archive files.

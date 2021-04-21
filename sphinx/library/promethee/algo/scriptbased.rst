@@ -1,5 +1,5 @@
 :mod:`promethee.algo.scriptbased` --- Custom Promethee scriptbased algo components 
-==================================================
+==================================================================================
 
 .. automodule:: promethee.algo.scriptbased
    :synopsis: Custom Promethee scriptbased algo components

@@ -1,5 +1,5 @@
 :mod:`promethee.data.flow` --- Custom Promethee flow resources
-==================================================
+==============================================================
 
 .. automodule:: promethee.data.flow
    :synopsis: Custom Promethee flow resources

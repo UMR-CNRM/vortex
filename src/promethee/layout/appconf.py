@@ -1,4 +1,11 @@
-ll__ = []
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Promethee Application Configuration features.
+"""
+
+from __future__ import print_function, absolute_import, unicode_literals, division
 
 import json
 import vortex  # noqa: F401
@@ -9,6 +16,8 @@ import promethee  # noqa: F401
 import footprints
 
 logger = footprints.loggers.getLogger(__name__)
+
+__all__ = []
 
 def recursive_format(element, **format_kwargs):
     """recursive_format : function which applies string formatting to a given
@@ -21,7 +30,7 @@ def recursive_format(element, **format_kwargs):
     >>> recursive_format(u'{daughter} and {son}, I am your father', daughter="leia", son="luke")
     u'leia and luke, I am your father'
     >>> my_kwargs = {"father" : "anakin", "mother": "padme", "son":"luke", "daughter":"leia", "age":42}
-    >>> recursive_format({"A" : "My name is {father}", "B" : "I used to be fun", "C": "My kids are {kids}"}, **my_kwargs)
+    >>> recursive_format({"A" : "My name is {father}", "B" : "I am not fun", "C": "My kids are {kids}"}, **my_kwargs)
     {"A" : "My name is anakin", "B" : "I used to be fun", "C": "My kids are {kids}"}
     >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, **my_kwargs)
     {"A":[{"B":{"deeply":"At 42, I still love padme"}}]}
@@ -31,6 +40,7 @@ def recursive_format(element, **format_kwargs):
 
     Returns:
         type(element): Formatted given element
+
     """
     if isinstance(element, (str, unicode)):
         try:
@@ -45,18 +55,19 @@ def recursive_format(element, **format_kwargs):
         return element
     return element
 
+
 class ConfigSetPromethee(ConfigSet):
     """ConfigSetPromethee : Custom Promethee application configuration set.
 
     It is an extension of the usual vortex.layout.nodes.ConfigSet of a task, composed
-    by some environment variables and the constants declared in the .ini 
+    by some environment variables and the constants declared in the .ini
     configuration file. The ConfigSetPromethee will search for another configuration
     file following the <vapp>_<conf>.json naming standard (like the usual ini file)
     and add the elements retrieved to the given config set.
 
     This new json configuration file gathers all the footprints of the resources,
     providers and algo components used in the application. It has been conceived
-    to factorize the task writing, and to serialize the resource fetch/backup. 
+    to factorize the task writing, and to serialize the resource fetch/backup.
     This configuration file has the following structure:
     >>> {
     ...     providers : {
@@ -95,7 +106,7 @@ class ConfigSetPromethee(ConfigSet):
     >>> [toolbox.output(**rh) for rh in toolbox.output("backup").values()]
     {...} (output resource handler combining the 'resource_2' and 'provider_1')
     {...} (output resource handler combining the 'resource_2' and 'provider_2')
- 
+
     Inheritance:
         vortex.layout.nodes.ConfigSet
 
@@ -104,19 +115,20 @@ class ConfigSetPromethee(ConfigSet):
             configuration set resulting from the env and .ini configuration file
             parsing.
         ticket (vortex.sessions.Ticket): Session's ticket.
+
     """
     def __init__(self, conf, ticket):
         super(ConfigSetPromethee, self).__init__()
         for key, value in conf.items():
             try:
                 self[key] = value.strftime("%Y%m%dT%H%M%S")
-            except:
+            except Exception:
                 try:
                     self[key] = int(value)
-                except:
+                except Exception:
                     try:
                         self[key] = float(value)
-                    except:
+                    except Exception:
                         self[key] = value
         self.ticket = ticket
         self.rootapp_dir = "."
@@ -124,14 +136,14 @@ class ConfigSetPromethee(ConfigSet):
         try:
             self.rootapp_dir = self.path.dirname(self.path.dirname(self.iniconf))
             self.jsonconf = self.iniconf.rstrip("ini") + "json"
-        except:
+        except Exception:
             logger.warning("Missing mandatory attribute 'iniconf'.")
 
         if self.path.isfile(self.jsonconf):
             try:
                 with open(self.jsonconf) as jsonf:
                     self.update(**json.load(jsonf))
-            except:
+            except Exception:
                 logger.error("Failed to retrieve json config", exc_info=True)
         self.steps = dict()
         if "tasks" in self and "task" in self:
@@ -170,7 +182,7 @@ class ConfigSetPromethee(ConfigSet):
         then accessible like in a dictionnary.
 
         It is important to differentiate the types of steps:
-        - "all", "early-fetch" and "fetch" are input steps. It means that all the 
+        - "all", "early-fetch" and "fetch" are input steps. It means that all the
             given resources are to be processed with a toolbox.input().get()
         - "compute" is a computational step. The given footprint is an algo component
             footprint, and thus is to be run like so.
@@ -184,6 +196,7 @@ class ConfigSetPromethee(ConfigSet):
 
         Returns:
             dict : Step configuration
+
         """
         step_conf = dict()
         if step in ["all", "early-fetch", "fetch"]:
@@ -203,4 +216,3 @@ class ConfigSetPromethee(ConfigSet):
                     step_conf[res_prov].update(self["resources"][resource])
                     step_conf[res_prov].update(self["providers"][provider])
         return step_conf
-

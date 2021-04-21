@@ -1,5 +1,5 @@
 :mod:`promethee.algo` --- Specific Promethee algo resources
-===================================================
+===========================================================
 
 .. automodule:: promethee.algo
    :synopsis: Specific Promethee algo resources
