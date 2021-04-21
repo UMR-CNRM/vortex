@@ -14,6 +14,30 @@ from promethee.syntax.stdattrs import version_deco, task_deco
 #: No automatic export
 __all__ = []
 
+class PrometheeInputs(FlowResource):
+    """Tar with gribs extracted from the BDAP database"""
+
+    _footprint = dict(
+        info = "Tar from soprano. Specific to promethee.",
+        attr = dict(
+            kind = dict(
+                values = ["promethee_inputs"]
+            ),
+            model = dict(
+                values = ['promethee', ]
+            ),
+            nativefmt = dict(
+                values = ["tar"],
+                default = "tar"
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
+
+
 class PrometheeFlowResource(FlowResource):
     """Abstract Class to access all kind of flow resources for promethee."""
     _abstract = True

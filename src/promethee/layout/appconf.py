@@ -1,6 +1,7 @@
 ll__ = []
 
 import json
+import six
 import vortex  # noqa: F401
 from vortex.layout.nodes import ConfigSet
 
@@ -11,7 +12,8 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 def recursive_format(element, **format_kwargs):
-    if isinstance(element, (str, unicode)):
+#    if isinstance(element, (str, unicode)):
+    if isinstance(element, six.string_types):
         try:
             return element.format(**format_kwargs)
         except KeyError:
