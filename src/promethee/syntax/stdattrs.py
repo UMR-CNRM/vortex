@@ -27,9 +27,7 @@ a_promid = dict(
     optional=False,
 )
 
-promid = footprints.Footprint(info='Abstract Promethee identifier',
-                                attr=dict(promid=a_promid))
-
+promid = footprints.Footprint(info='Abstract Promethee identifier', attr=dict(promid=a_promid))
 
 promid_deco = footprints.DecorativeFootprint(
     promid,
@@ -44,9 +42,7 @@ a_version = dict(
     default=""
 )
 
-version = footprints.Footprint(info='Abstract resource version',
-                                attr=dict(version=a_version))
-
+version = footprints.Footprint(info='Abstract resource version', attr=dict(version=a_version))
 
 version_deco = footprints.DecorativeFootprint(
     version,
@@ -61,15 +57,12 @@ a_param = dict(
     optional=False,
 )
 
-param = footprints.Footprint(info='Abstract parameter or field name',
-                                attr=dict(param=a_param))
-
+param = footprints.Footprint(info='Abstract parameter or field name', attr=dict(param=a_param))
 
 param_deco = footprints.DecorativeFootprint(
     param,
     decorator=[namebuilding_append('src', lambda self: {'param': self.param})]
 )
-
 
 #: Usual definition for the ``task`` (*i.e.* promethee task name among "conf_task",
 #: "data_task", "mask_task", "prod_task" and "version" for which the resource is
@@ -81,8 +74,7 @@ a_task = dict(
     values=["conf_task", "data_task", "mask_task", "prod_task", "version"]
 )
 
-task = footprints.Footprint(info='Abstract task name',
-                            attr=dict(task=a_task))
+task = footprints.Footprint(info='Abstract task name', attr=dict(task=a_task))
 
 task_deco = footprints.DecorativeFootprint(
     task,
@@ -98,8 +90,7 @@ a_step = dict(
     values=[1, 3, 6, 12, 24]
 )
 
-step = footprints.Footprint(info='Abstract step',
-                            attr=dict(step=a_step))
+step = footprints.Footprint(info='Abstract step', attr=dict(step=a_step))
 
 step_deco = footprints.DecorativeFootprint(
     step,

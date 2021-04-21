@@ -11,6 +11,12 @@
 .. autodata:: __all__
 
 
+Functions
+---------
+
+.. autofunction:: recursive_format
+
+
 Classes
 -------
 

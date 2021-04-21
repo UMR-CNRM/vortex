@@ -7,6 +7,7 @@ Promethee Application Configuration features.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import io
 import json
 import vortex  # noqa: F401
 from vortex.layout.nodes import ConfigSet
@@ -18,6 +19,7 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 __all__ = []
+
 
 def recursive_format(element, **format_kwargs):
     """recursive_format : function which applies string formatting to a given
@@ -141,7 +143,8 @@ class ConfigSetPromethee(ConfigSet):
 
         if self.path.isfile(self.jsonconf):
             try:
-                with open(self.jsonconf) as jsonf:
+                # with open(self.jsonconf) as jsonf:
+                with io.open(self.jsonconf, 'r', encoding='utf-8') as jsonf:
                     self.update(**json.load(jsonf))
             except Exception:
                 logger.error("Failed to retrieve json config", exc_info=True)
