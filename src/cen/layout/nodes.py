@@ -57,13 +57,23 @@ class S2MTaskMixIn(object):
             logger.warning(warning)
 
             # Add e-mail
-            # This is disactivated because blocked for CNRM untrusted staff on taranis
-            # ad.mail(
-            #     subject='S2M warning',
-            #     to='matthieu.lafaysse@meteo.fr',
-            #     contents=warning,
-            # )
+            ad.mail(
+                subject='S2M warning',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
 
+    def s2moper_report_execution_error(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M fatal error',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
