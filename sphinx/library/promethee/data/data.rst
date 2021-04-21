@@ -1,7 +1,7 @@
 :mod:`promethee.data` --- Specific Promethee data resources
 ===========================================================
 
-.. automodule:: promethee.algo
+.. automodule:: promethee.data
    :synopsis: Specific Promethee data resources
 
 .. moduleauthor:: The Vortex Team

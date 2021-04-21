@@ -32,9 +32,9 @@ def recursive_format(element, **format_kwargs):
     >>> recursive_format(u'{daughter} and {son}, I am your father', daughter="leia", son="luke")
     u'leia and luke, I am your father'
     >>> my_kwargs = {"father" : "anakin", "mother": "padme", "son":"luke", "daughter":"leia", "age":42}
-    >>> recursive_format({"A" : "My name is {father}", "B" : "I am not fun", "C": "My kids are {kids}"}, **my_kwargs)
+    >>> recursive_format({"A" : "My name is {father}", "B" : "I am not fun", "C": "My kids are {kids}"}, ``**my_kwargs``)
     {"A" : "My name is anakin", "B" : "I used to be fun", "C": "My kids are {kids}"}
-    >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, **my_kwargs)
+    >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, ``**my_kwargs``)
     {"A":[{"B":{"deeply":"At 42, I still love padme"}}]}
 
     Args:
@@ -72,18 +72,18 @@ class ConfigSetPromethee(ConfigSet):
     to factorize the task writing, and to serialize the resource fetch/backup.
     This configuration file has the following structure:
     >>> {
-    ...     providers : {
+    ...     'providers' : {
     ...         'provider_1': {...},
     ...         'provider_2': {...}
     ...     },
-    ...     resources : {
+    ...     'resources' : {
     ...         'resource_1': {...},
     ...         'resource_2': {...}
     ...     },
-    ...     algos : {
+    ...     'algos' : {
     ...         'algo_component_1': {...}
     ...     },
-    ...     tasks : {
+    ...     'tasks' : {
     ...         'task_1' : {
     ...             'all' : {},
     ...             'early-fetch' : {},
@@ -103,9 +103,9 @@ class ConfigSetPromethee(ConfigSet):
     handlers can be accessed like a dictionnary through the 'get_step_conf'
     method. For instance :
     >>> conf = ConfigSetPromethee(self.conf, self.ticket)
-    >>> toolbox.input(**conf.get_step_conf("fetch")["resource_1"])
+    >>> toolbox.input(``**conf.get_step_conf("fetch")["resource_1"]``)
     {...} (input resource handler combining the 'resource_1' and 'provider_1' as configured later)
-    >>> [toolbox.output(**rh) for rh in toolbox.output("backup").values()]
+    >>> [toolbox.output(``**rh``) for rh in toolbox.output("backup").values()]
     {...} (output resource handler combining the 'resource_2' and 'provider_1')
     {...} (output resource handler combining the 'resource_2' and 'provider_2')
 
@@ -114,8 +114,7 @@ class ConfigSetPromethee(ConfigSet):
 
     Args:
         conf (vortex.layout.nodes.ConfigSet, or dict-like): Classical application
-            configuration set resulting from the env and .ini configuration file
-            parsing.
+        configuration set resulting from the env and .ini configuration file parsing.
         ticket (vortex.sessions.Ticket): Session's ticket.
 
     """
@@ -186,13 +185,13 @@ class ConfigSetPromethee(ConfigSet):
 
         It is important to differentiate the types of steps:
         - "all", "early-fetch" and "fetch" are input steps. It means that all the
-            given resources are to be processed with a toolbox.input().get()
+        given resources are to be processed with a toolbox.input().get()
         - "compute" is a computational step. The given footprint is an algo component
-            footprint, and thus is to be run like so.
+        footprint, and thus is to be run like so.
         - "backup" and "late-backup" are output steps. It means that all the given
-            resources are to be processed with a toolbox.output().put(). Also we
-            can associate several providers to a single resource in the case we would
-            like to feed several providers of a single resource.
+        resources are to be processed with a toolbox.output().put(). Also we
+        can associate several providers to a single resource in the case we would
+        like to feed several providers of a single resource.
 
         Args:
             step (str): step name

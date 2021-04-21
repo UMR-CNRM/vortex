@@ -20,11 +20,11 @@ class PrometheeGridPoint(TimePeriodGridPoint):
 
     This kind of GridPoint file is the result of a pre-processing task in the
     Promethee flow, where usual GridPoint files (from other models) are processed :
-        - weather parameter extracted,
-        - terms concatenated,
-        - accumulations calculated,
-        - grid transformed and adapted if necessary,
-        - etc.
+    - weather parameter extracted,
+    - terms concatenated,
+    - accumulations calculated,
+    - grid transformed and adapted if necessary,
+    - etc.
 
     Inheritance:
         common.data.gridfiles.TimePeriodGridPoint
@@ -32,21 +32,23 @@ class PrometheeGridPoint(TimePeriodGridPoint):
     Attrs:
         kind (str) : The resource's kind. Among 'gridpoint' and 'promethee_gridpoint'.
         model (str) : The model's name (from a source code perspective).
-            Must be 'promethee'.
+        Must be 'promethee'.
         cutoff (str) : The cutoff's type of the generating process.
         origin (str) : Describes where the data originaly comes from.
-            Must be 'post' (stands for 'post-processing').
+        Must be 'post' (stands for 'post-processing').
         geometry (vortex.data.geometries.HorizontalGeometry) : The resource's
-            horizontal geometry.
+        horizontal geometry.
         date (bronx.stdtypes.date.Datetime) : The run of the resource's generating
-            process.
+        process.
         begintime (bronx.stdtypes.date.Time) : The resource's begin forecast term.
         endtime (bronx.stdtypes.date.Time) : The resource's end forecast term.
         step (bronx.stdtypes.date.Time) : The resource's fixed time step between two
-            consecutive terms.
+        consecutive terms.
         parameter (str) : The weather parameter name.
         nativefmt (str) : The resource's storage format. Should be 'netcdf'.
+
     """
+
     _footprint = [
         param_deco,
         step_deco,
@@ -78,9 +80,9 @@ class PrometheeMask(StaticResource):
     Then, a PrometheeMask is like a dataset of ndarrays. Each ndarray is the
     representation (a binary matrix) on a given geometry (e.g. 'EURW1S100') and
     has the following dimensions :
-        - latitude
-        - longitude
-        - id (i.e. geographical zone identifier, e.g. "Haute-Garonne").
+    - latitude
+    - longitude
+    - id (i.e. geographical zone identifier, e.g. "Haute-Garonne").
 
     A mask is a static resource because it can be used ad vitam eternam, as long
     as its configuration does not change. That is the reason why a given mask (
@@ -94,9 +96,11 @@ class PrometheeMask(StaticResource):
         kind (str) : The resource's kind. Among 'promethee_mask' or 'mask'.
         promid (str) : The Promethee production identifier.
         version (str) : The version of the mask used. Usually it is the MD5 sum of
-            the resource's configuration.
+        the resource's configuration.
         nativefmt (str) : The resource's storage format. Must be 'netcdf'.
+
     """
+
     _footprint = [
         promid_deco,
         version_deco,

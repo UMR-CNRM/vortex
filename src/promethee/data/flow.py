@@ -35,9 +35,10 @@ class PrometheeFlowResource(FlowResource):
         model       (str) : The model name (from a source code perspective).
         nativefmt   (str) : The resource's storage format.
         task        (str) : The task name for which the resource is designed. Among
-            "conf_task", "data_task", "mask_task", "prod_task" and "version".
+        "conf_task", "data_task", "mask_task", "prod_task" and "version".
         version     (str) : The resource version.
     """
+
     _abstract = True
     _footprint = [
         task_deco,
@@ -66,6 +67,7 @@ class PrometheeJson(PrometheeFlowResource):
         clscontents (type) : Must be JsonDictContent.
         * and all the other PrometheeFlowResource attributes.
     """
+
     _footprint = dict(
         info = 'Json files identified as task related, versioned, flow resources. Specific to Promethee.',
         attr = dict(
@@ -98,6 +100,7 @@ class PrometheeArchive(PrometheeFlowResource):
         nativefmt (str) : The resource's storage format. Among 'tgz' or 'tar'.
         * and all the other PrometheeFlowResource attributes.
     """
+
     _footprint = dict(
         info = 'Archive files (tar) identified as task related, versioned, flow resources. Specific to Promethee.',
         attr = dict(

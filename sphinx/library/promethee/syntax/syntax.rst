@@ -1,7 +1,7 @@
-:mod:`promethee.syntax.stdattrs` --- Custom Promethee syntax features
-=====================================================================
+:mod:`promethee.syntax` --- Custom Promethee syntax features
+============================================================
 
-.. automodule:: promethee.syntax.stdattrs
+.. automodule:: promethee.syntax
    :synopsis: Custom Promethee syntax features
 
 .. moduleauthor:: The Vortex Team

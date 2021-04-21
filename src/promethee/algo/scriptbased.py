@@ -48,14 +48,15 @@ class PrometheeAlgo(Expresso):
         interpreter   (str) : Interpreter to use for executing scripts.
         engine        (str) : Optionnal engine, default is 'exec'.
         extendpypath (list) : The list of things to be prepended in the python's path.
-            The added paths must lead to python packages used by the script to execute.
-            Default is [].
+        The added paths must lead to python packages used by the script to execute.
+        Default is [].
         timeout       (int) : Default timeout (in sec.) used when waiting for
-            an expected resource. Default is 180.
+        an expected resource. Default is 180.
         cmdline      (dict) : Optionnal command line arguments to pass on to
-            the script to execute.
+        the script to execute.
 
     """
+
     _footprint = dict(
         info = "Algo Component for executing Python scripts with args.",
         attr = dict(
