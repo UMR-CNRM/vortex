@@ -1,7 +1,10 @@
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      cycle: mo11_mocage@fcst-main.07
+      date: 2021033112
       edition: null
       genv: '[cycle]'
+      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: &id001 !test_names.core.TestParameters
@@ -14,15 +17,18 @@
         namespace: vortex.multi.fr
         vapp: mocage
         vconf: camsfcst
-      location: gget://gco.multi.fr/tampon/cams.grib.template.forecast.02
+      location: gget://gco.multi.fr/tampon/grib.template.prevair.GLOB11.01
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      cycle: mo11_mocage@fcst-main.07
+      date: 2021033112
       edition: 1
       genv: '[cycle]'
+      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: *id001
-      location: gget://gco.multi.fr/tampon/cams.grib.template.forecast.02
+      location: gget://gco.multi.fr/tampon/grib.template.prevair.GLOB11.01
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       genv: '[cycle]'

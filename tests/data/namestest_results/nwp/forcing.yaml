@@ -23,6 +23,22 @@
       location: vortex://vortex.multi.fr/surfex/global/ABCD/20180101T0000A-20180104T0000/coupling/forcing.arpege-4dvarfr-assim.tl1198-c22.netcdf
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      begintime: 0
+      block: coupling
+      endtime: 72
+      experiment: abcd
+      filling: null
+      kind: forcing
+      namespace: vortex.multi.fr
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/surfex/global/ABCD/20180101T0000A/coupling/forcing.arpege-4dvarfr-assim.tl1198-c22+0000:00-0072:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
       block: coupling
       experiment: abcd
       filling: atm
@@ -36,3 +52,18 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: vortex://vortex.multi.fr/surfex/global/ABCD/20180101T0000A/coupling/forcing.arpege-4dvarfr-assim.tl1198-c22+0072:00.netcdf
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: coupling
+      experiment: abcd
+      filling: corrected_atm
+      kind: forcing
+      namespace: vortex.multi.fr
+      nativefmt: netcdf
+      source_app: arpege
+      source_conf: 4dvarfr
+      source_cutoff: assim
+      term: 72
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/surfex/global/ABCD/20180101T0000A/coupling/forcing.arpege-4dvarfr-assim-corrected_atm.tl1198-c22+0072:00.netcdf

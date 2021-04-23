@@ -202,42 +202,42 @@ class OliveArchiveStore(ArchiveStore):
 
     def olivecheck(self, remote, options):
         """Remap and inarchivecheck sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchivecheck(remote, options)
 
     def olivelocate(self, remote, options):
         """Remap and inarchivelocate sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchivelocate(remote, options)
 
     def oliveprestageinfo(self, remote, options):
         """Remap and inarchiveprestageinfo sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchiveprestageinfo(remote, options)
 
     def oliveget(self, remote, local, options):
         """Remap and inarchiveget sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchiveget(remote, local, options)
 
     def oliveearlyget(self, remote, local, options):
         """Remap and inarchiveearlyget sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchiveearlyget(remote, local, options)
 
     def olivefinaliseget(self, result_id, remote, local, options):
         """Remap and inarchivefinaliseget sequence."""
-        self.remap_read(remote, options)
+        remote = self.remap_read(remote, options)
         return self.inarchivefinaliseget(result_id, remote, local, options)
 
     def oliveput(self, local, remote, options):
         """Remap root dir and ftpput sequence."""
-        self.remap_write(remote, options)
+        remote = self.remap_write(remote, options)
         return self.inarchiveput(local, remote, options)
 
     def olivedelete(self, remote, options):
         """Remap and ftpdelete sequence."""
-        self.remap_write(remote, options)
+        remote = self.remap_write(remote, options)
         return self.inarchivedelete(remote, options)
 
 

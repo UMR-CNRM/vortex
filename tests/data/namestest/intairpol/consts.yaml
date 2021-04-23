@@ -14,15 +14,20 @@ default:
 register:
     genv:
         - mo07_mocage@camsfcst-main.05
+        - mo11_mocage@fcst-main.07
 
 todo:
     -   commons:
             genv: '[cycle]'
         tests:
             -   kind: emiss_cst
+            -   kind: chemical_surf
+            -   kind: firecst
+            # incompatible change at the time of unification
             -   kind: gribtpl
+                date: 2021033112
+                cycle: mo11_mocage@fcst-main.07
+                geometry: glob11
                 edition:
                     - null
                     - 1
-            -   kind: chemical_surf
-            -   kind: firecst
