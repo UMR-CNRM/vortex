@@ -221,9 +221,9 @@ class CouplingLAM(Coupling):
         opts = super(CouplingLAM, self).spawn_command_options()
         opts['model'] = 'aladin'
         return opts
-
-
-class Prep(Parallel, DrHookDecoMixin):
+    
+    
+class Prep(BlindRun, DrHookDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
     _footprint = dict(
@@ -236,11 +236,7 @@ class Prep(Parallel, DrHookDecoMixin):
                 values   = ['fa', 'lfi'],
                 optional = True,
                 default  = 'fa'
-            ),
-            basedate = dict(
-                type     = date.Date,
-                optional = True
-            ),
+            )
         )
     )
 
@@ -304,11 +300,6 @@ class Prep(Parallel, DrHookDecoMixin):
             self.system.mv('LISTING_PREP0.txt', finallisting)
         return finaloutput
 
-    def _set_nam_macro(self, namcontents, namlocal, macro, value):
-        """Set a namelist macro and log it!"""
-        namcontents.setmacro(macro, value)
-        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
-
     def prepare(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
         super(Prep, self).prepare(rh, opts)
@@ -316,26 +307,15 @@ class Prep(Parallel, DrHookDecoMixin):
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):
             raise AlgoComponentError("One Initial clim have to be provided")
-        #self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
+        self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
         # Convert the target clim if needed...
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         if not (len(targetclim) == 1):
             raise AlgoComponentError("One Target clim have to be provided")
-        #self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
-
-        namrh = self.context.sequence.effective_inputs(kind=('namelist'))
-        namrh = namrh[0].rh
-        namcontents = namrh.contents
-        namlocal = namrh.container.actualpath()
-        self._set_nam_macro(namcontents, namlocal, 'YYYY', int(self.basedate.year))
-        self._set_nam_macro(namcontents, namlocal, 'MM', int(self.basedate.month))
-        self._set_nam_macro(namcontents, namlocal, 'DD', int(self.basedate.day))
-        namrh.save()
-        namrh.container.cat()
+        self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
 
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
-
         sh = self.system
 
         cplsec = self.context.sequence.effective_inputs(
@@ -343,8 +323,7 @@ class Prep(Parallel, DrHookDecoMixin):
             kind=('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
-        #infile = 'PREP1.{:s}'.format(self.underlyingformat)
-        infile = 'LFI_SURF.{:s}'.format(self.underlyingformat)
+        infile = 'PREP1.{:s}'.format(self.underlyingformat)
         outfile = 'PREP2.{:s}'.format(self.underlyingformat)
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         targetclim = targetclim[0].rh.container.localpath()
@@ -367,17 +346,116 @@ class Prep(Parallel, DrHookDecoMixin):
             sh.dir(output=False, fatal=False)
 
             # Deal with outputs
-            #actualname = self._process_outputs(rh, sec, targetclim, outfile)
+            actualname = self._process_outputs(rh, sec, targetclim, outfile)
 
             # promises management
-            #expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
-            #if expected:
-            #    for thispromise in expected:
-            #       thispromise.put(incache=True)
+            expected = [x for x in self.promises if x.rh.container.localpath() == actualname]
+            if expected:
+                for thispromise in expected:
+                    thispromise.put(incache=True)
 
             # Some cleaning
             sh.rmall('*.des')
             sh.rmall('PREP1.*')
+
+
+class Prepd(Parallel):
+    """Coupling/Interpolation of Surfex files. Manage date."""
+
+    _footprint = dict(
+        info = "Coupling/Interpolation of Surfex files.",
+        attr = dict(
+            kind = dict(
+                values   = ['prepd'],
+            ),
+            underlyingformat = dict(
+                values   = ['fa', 'lfi'],
+                optional = True,
+                default  = 'fa'
+            ),
+            basedate = dict(
+                type     = date.Date,
+                optional = True
+            ),
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(Prepd, self).__init__(*kargs, **kwargs)
+        self._addon_checked = None
+
+    def _check_addons(self):
+        if self._addon_checked is None:
+            self._addon_checked = ('sfx' in self.system.loaded_addons() and
+                                   'lfi' in self.system.loaded_addons())
+        if not self._addon_checked:
+            raise RuntimeError("The sfx addon is needed... please load it.")
+
+    def _do_input_format_change(self, section, output_name):
+        (localpath, infmt) = (section.rh.container.localpath(),
+                              section.rh.container.actualfmt)
+        self.system.subtitle("Processing inputs")
+        if section.rh.container.actualfmt != self.underlyingformat:
+            if infmt == 'fa' and self.underlyingformat == 'lfi':
+                if self.system.path.exists(output_name):
+                    raise IOError("The %s file already exists.", output_name)
+                self._check_addons()
+                logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
+                self.system.sfx_fa2lfi(localpath, output_name)
+            else:
+                raise RuntimeError("Format conversion from %s to %s is not possible",
+                                   infmt, self.underlyingformat)
+        else:
+            if not self.system.path.exists(output_name):
+                logger.info("Linking %s to %s", localpath, output_name)
+                self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
+
+
+    def _set_nam_macro(self, namcontents, namlocal, macro, value):
+        """Set a namelist macro and log it!"""
+        namcontents.setmacro(macro, value)
+        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
+
+    def prepare(self, rh, opts):
+        """Default pre-link for namelist file and domain change."""
+        namrh = self.context.sequence.effective_inputs(kind=('namelist'))
+        namrh = namrh[0].rh
+        namcontents = namrh.contents
+        namlocal = namrh.container.actualpath()
+        self._set_nam_macro(namcontents, namlocal, 'YYYY', int(self.basedate.year))
+        self._set_nam_macro(namcontents, namlocal, 'MM', int(self.basedate.month))
+        self._set_nam_macro(namcontents, namlocal, 'DD', int(self.basedate.day))
+        namrh.save()
+        namrh.container.cat()
+        """ sym link with LFI_SURF
+        sh = self.system
+        sh.softlink( 'PREP1.lfi', 'LFI_SURF.lfi' )"""
+
+    def execute(self, rh, opts):
+        """Loop on the various initial conditions provided."""
+        if opts.get('fortran', True):
+            self.export('fortran')
+        logger.info ("Start Prepd.execute ...")
+        sh = self.system
+        cplsec = self.context.sequence.effective_inputs(role=('InitialCondition'), kind=('historic'))
+        infile = 'LFI_SURF.{:s}'.format(self.underlyingformat)
+
+        for sec in cplsec:
+            r = sec.rh
+            sh.header(' {0:s}'.format(r.container.localpath()))
+
+            # Expect the coupling source to be there...
+            self.grab(sec, comment='coupling source')
+
+            # Set the actual init file
+            if sh.path.exists(infile):
+                logger.critical('Cannot process input files if %s exists.', infile)
+            self._do_input_format_change(sec, infile)
+
+            # Standard execution
+            super(Prepd, self).execute(rh, opts)
+            sh.subtitle("Listing after PREPD")
+            sh.dir(output=False, fatal=False)
 
 
 class C901(IFSParallel):
