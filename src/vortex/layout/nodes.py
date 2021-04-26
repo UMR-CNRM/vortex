@@ -106,25 +106,25 @@ class NiceLayout(observer.Observer):
         if self._on_error not in NODE_ON_ERROR:
             raise ValueError('Erroneous value for on_error: {!s}'.format(self._on_error))
         self._obs_board = observer.get(tag=OBSERVER_TAG)
-        self._obs_board.notify_new(self, dict(tag=self.tag,
+        self._obs_board.notify_new(self, dict(tag=self.tag, typename=type(self).__name__,
                                               status=self.status,
                                               on_error=self.on_error))
         self._obs_board.register(self)
 
     def updobsitem(self, item, info):
         if info.get('observerboard', '') == OBSERVER_TAG:
-            o_tag = info['tag']
+            o_id = (info['tag'], info['typename'])
             if info.get('subjob_replay', False):
                 # If the status/delayed_error_flag chatter is being replayed,
                 # deal with it
-                if o_tag == self.tag:
+                if o_id == (self.tag, type(self).__name__):
                     if 'new_status' in info:
                         self._status = info['new_status']
                     if info.get('delayed_error_flag', False):
                         self._delayed_error_flag = True
             else:
                 if (self.status != NODE_STATUS.CREATED and
-                        any([o_tag == k.tag for k in self.contents])):
+                        any([o_id == (k.tag, type(k).__name__) for k in self.contents])):
                     # We are only interested in child nodes
                     if info.get('new_status', None) == NODE_STATUS.FAILED:
                         # On kid failure, update my own status
@@ -150,7 +150,7 @@ class NiceLayout(observer.Observer):
         if not bool(value):
             raise ValueError('True is the only possible value for delayed_error_flag')
         if not self._delayed_error_flag:
-            self._obs_board.notify_upd(self, dict(tag=self.tag,
+            self._obs_board.notify_upd(self, dict(tag=self.tag, typename=type(self).__name__,
                                                   delayed_error_flag=True))
             self._delayed_error_flag = True
 
@@ -165,7 +165,7 @@ class NiceLayout(observer.Observer):
         if value not in NODE_STATUS:
             raise ValueError('Erroneous value for the node status: {!s}'.format(value))
         if value != self._status:
-            self._obs_board.notify_upd(self, dict(tag=self.tag,
+            self._obs_board.notify_upd(self, dict(tag=self.tag, typename=type(self).__name__,
                                                   previous_status=self.status,
                                                   new_status=value,
                                                   on_error=self.on_error))
