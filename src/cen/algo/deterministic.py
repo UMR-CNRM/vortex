@@ -305,12 +305,14 @@ class Interpol_Forcing(Parallel):
 
     def execute(self, rh, opts):
 
-        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(kind='forcing')]
+        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
+
+        self.algoassert(len(list_forcings) >= 1)
 
         for forcing in list_forcings:
-            self.system.mv(forcing.rh.container.filename, 'input.nc')
+            self.system.mv(forcing.container.filename, 'input.nc')
             super(Interpol_Forcing, self).execute(rh, opts)
-            self.system.mv('output.nc', forcing.rh.container.filename)
+            self.system.mv('output.nc', forcing.container.filename)
 
 
 @echecker.disabled_if_unavailable
