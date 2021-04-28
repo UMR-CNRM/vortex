@@ -76,16 +76,16 @@ class BdpeProvider(Provider):
                 preferred_target = dict(
                     info     = "The database we'd like to get the data from - See the BDPE documentation.",
                     optional = True,
-                    default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'OPER'),
-                    values   = ['OPER', 'INT', 'SEC', 'DEV',
-                                'oper', 'int', 'sec', 'dev', ],
+                    default  = DelayedEnvValue('BDPE_CIBLE_PREFEREE', 'SEC'),
+                    values   = ['OPER', 'INT', 'SEC',
+                                'oper', 'int', 'sec', ],
                 ),
                 forbidden_target = dict(
                     info     = "The database we don't want to access - See the BDPE documentation.",
                     optional = True,
-                    default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'DEV'),
-                    values   = ['OPER', 'INT', 'SEC', 'DEV',
-                                'oper', 'int', 'sec', 'dev', ],
+                    default  = DelayedEnvValue('BDPE_CIBLE_INTERDITE', 'OPER'),
+                    values   = ['OPER', 'INT', 'SEC',
+                                'oper', 'int', 'sec', ],
                 ),
                 soprano_domain = dict(
                     info     = 'Databases priorities profile - See the BDPE documentation.',
