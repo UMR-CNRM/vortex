@@ -215,10 +215,7 @@ class S2MTaskMixIn(object):
 
     def get_list_geometry(self, meteo="safran"):
 
-        if not hasattr(self.conf, "interpol"):
-            self.conf.interpol = False
-
-        if self.conf.interpol:
+        if hasattr(self.conf, "geoin"):
             return [self.conf.geoin]
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
