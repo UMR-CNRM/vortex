@@ -761,6 +761,8 @@ class FullPosServer(IFSParallel):
             ordered_processing = (self.xxtmapping or
                                   any([o_rh.resource.fp_terms is not None
                                        for o_rh in self.object_namelists]))
+            if ordered_processing:
+                logger.info('Input data will be processed chronologicaly.')
 
             # IO poll settings
             self.io_poll_kwargs['nthreads'] = self.maxpollingthreads
@@ -784,17 +786,17 @@ class FullPosServer(IFSParallel):
             for istuff, iguesses in zip(self.inputs.tododata, self.inputs.guessdata):
                 iinputs = {_lmonitor.InputMonitorEntry(s) for s in istuff.values()}
                 iinputs |= {_lmonitor.InputMonitorEntry(g.sec) for g in iguesses}
+                iterm = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
+                                                 self.inputs.firstprefix].rh)
                 all_entries.update(iinputs)
                 bgang = _lmonitor.BasicGang()
                 bgang.add_member(* iinputs)
                 igang = _lmonitor.MetaGang()
-                igang.info = (istuff, iguesses)
+                igang.info = (istuff, iguesses, iterm)
                 igang.add_member(bgang)
                 # If needed, wait for the previous terms to complete
                 if ordered_processing:
-                    my_term = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
-                                                       self.inputs.firstprefix].rh)
-                    if cur_term is not None and cur_term != my_term:
+                    if cur_term is not None and cur_term != iterm:
                         # Detect term's change
                         prev_term_gangs = cur_term_gangs
                         cur_term_gangs = set()
@@ -803,7 +805,7 @@ class FullPosServer(IFSParallel):
                         igang.add_member(* prev_term_gangs)
                     # Save things up for the next time
                     cur_term_gangs.add(igang)
-                    cur_term = my_term
+                    cur_term = iterm
                 metagang.add_member(igang)
             bm = _lmonitor.ManualInputMonitor(self.context, all_entries,
                                               caching_freq=self.refreshtime,)
@@ -814,13 +816,20 @@ class FullPosServer(IFSParallel):
             server_stopped = False
             with bm:
                 while not bm.all_done or len(bm.available) > 0:
+
+                    # Fetch available inputs and sort them
+                    ibatch = list()
                     while metagang.has_collectable():
                         thegang = metagang.pop_collectable()
-                        (istuff, iguesses) = thegang.info
+                        ibatch.append(thegang.info)
+                    ibatch.sort(key=lambda item: item[2])  # Sort according to the term
+
+                    # Deal with the various available inputs
+                    for (istuff, iguesses, iterm) in ibatch:
                         sh.highlight("The Fullpos Server is triggered (step={:d})..."
                                      .format(current_i))
 
-                        # Link for the initfile (if needed)
+                        # Link for the init file (if needed)
                         if current_i == 0 and not self.inputs.inidata:
                             for iprefix, isec in istuff.items():
                                 i_init = '{:s}{:s}INIT'.format(iprefix, self.xpname)
