@@ -797,7 +797,7 @@ class AutoRetriesFtp(StdFtp):
                         return func(*args, **kw)
                     except actual_exc as e:
                         logger.warning('An error occurred (in "%s"): %s',
-                                       func.__name__, str(e))
+                                       func.__name__, e)
                         retriesleft -= 1
                         self._internal_retries_max -= 1
                         if not retriesleft:
