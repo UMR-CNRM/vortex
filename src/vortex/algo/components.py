@@ -671,7 +671,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
     def flyput_outputmapping(self, item):
         """Map output to another filename."""
-        return item
+        return item, 'unknown'
 
     def _flyput_job_internal_search(self, io_poll_method, io_poll_args, io_poll_kwargs):
         data = list()

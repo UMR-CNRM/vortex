@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 # Recursive inclusion of packages with potential FootprintBase classes
 from . import conftools
+from . import ifstools
 
 #: Automatic export of data subpackage
 __all__ = []

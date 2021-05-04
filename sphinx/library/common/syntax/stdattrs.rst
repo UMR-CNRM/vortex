@@ -11,6 +11,11 @@
 .. autodata:: __all__
 
 
+Pre-defined attributes as abstract decorated footprints
+-------------------------------------------------------
+
+.. autodata:: outputid_deco
+
 Pre-defined attributes as abstract footprints
 ---------------------------------------------
 
@@ -22,6 +27,8 @@ Pre-defined attributes as abstract footprints
 
 .. autodata:: oops_members_terms_lists
 
+.. autodata:: outputid
+
 Pre-defined attributes as dictionaries
 --------------------------------------
 
@@ -31,6 +38,7 @@ Pre-defined attributes as dictionaries
 
 .. autodata:: an_oops_expected_target
 
+.. autodata:: a_outputid
 
 Module Interface
 -----------------
