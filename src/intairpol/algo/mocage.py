@@ -143,7 +143,7 @@ class AbstractMocageRoot(Parallel):
             kind='gridpoint'
         )
         # the list of coupling files will be empty for the last 24h section of 96H run with alternates coupling files
-        if len(smterms.keys()) * len(smterms.keys()) != 0:
+        if len(smterms.keys()) * len(fmterms.keys()) != 0:
             # Control of the duration of the run depending on the the SM and FM terms available
             # Min values indicates whether the resources are nominal or alternate resources
             minsm = max([min(smterms[geo]) for geo in smterms.keys()])

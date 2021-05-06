@@ -137,6 +137,25 @@ class CfcScenario(GenvModelResource):
         return 'cfc_scenario'
 
 
+class CfcScenarioComplement(CfcScenario):
+    """WMO CFC Clim"""
+    _footprint = dict(
+        info = 'Initial CFC concentration clim file',
+        attr = dict(
+            kind = dict(
+                values  = ['cfc_scenario_complement'],
+            ),
+            gvar = dict(
+                default = 'scenario_cfc_complement'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'cfc_scenario_complement'
+
+
 class TopScenario(GenvModelResource):
     """Top model scenario."""
 

@@ -112,7 +112,7 @@ class Maccraq(BlackBox):
                     values  = ['post_bdap'],
                 ),
                 gvar = dict(
-                    default = 'master_[kind]',
+                    default = 'master_post',
                 )
             )
         )
