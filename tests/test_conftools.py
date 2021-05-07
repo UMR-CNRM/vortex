@@ -804,6 +804,10 @@ class ArpIfsForecastTermConfToolTest(unittest.TestCase):
                          wtool.foo_terms('production', 0))
         self.assertEqual([],
                          wtool.diag_terms_fplist('production', 0))
+        self.assertEqual(wtool.inline_terms('production', 0),
+                         wtool.no_inline.diag_terms('production', 0))
+        self.assertEqual([],
+                         wtool.no_inline.inline_terms('production', 0))
         self.assertEqual(rangex("0-47-3,48-102:00-6"),
                          wtool.inline_terms('production', 0))
         self.assertEqual([2, 3, 9, 15, 21, 27, 33, 39, 45],

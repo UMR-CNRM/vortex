@@ -789,9 +789,16 @@ class ArpIfsForecastTermConfTool(ConfTool):
       >>> print(','.join([str(t) for t in ct.inline_terms('production', 12)]))
       0,3,6,9,12,15,18,21,24
 
-
     Note: It depends on the value of **use_inline_fp**. If ``False`` an empty
     list will be returned.
+
+    The inline Fullpos can also be switched-off manually using the `no_inline`
+    property:
+
+      >>> print(','.join([str(t) for t in ct.no_inline.inline_terms('production', 0)]))
+      <BLANKLINE>
+      >>> print(','.join([str(t) for t in ct.no_inline.diag_terms('production', 0)]))
+      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
 
     The list of terms when some offline fullpos job is needed (for any of the
     domains):
@@ -873,7 +880,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
             fcterm_def = dict(
                 info = ("The forecast's term for each cutoff and base time " +
                         "(e.g ``{'assim':{0:6, 12:6}, 'production':{0:102}}``)"),
-                type = FPDict,
+                type = dict,
             ),
             fcterm_unit=dict(
                 info="The forecast's term unit (hour or timestep)",
@@ -886,23 +893,23 @@ class ArpIfsForecastTermConfTool(ConfTool):
                       "(for permanant storage) " +
                       "(e.g ``{'assim':{default: '0-finalterm-3'}, " +
                       "'production':{0:'0-23-1,24-finalterm-6}}``)"),
-                type=FPDict,
+                type=dict,
                 optional=True,
             ),
             surf_terms_def=dict(
                 info=("The forecast's terms when surface files are needed " +
                       "(for permanant storage) "),
-                type=FPDict,
+                type=dict,
                 optional=True,
             ),
             norm_terms_def=dict(
                 info="The forecast's terms when spectral norms are computed",
-                type=FPDict,
+                type=dict,
                 optional=True,
             ),
             diag_fp_terms_def=dict(
                 info="The forecast's terms when fullpos core diagnostics are computed",
-                type=FPDict,
+                type=dict,
                 optional=True,
             ),
             extra_fp_terms_def=dict(
@@ -910,7 +917,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
                       "They are always computed by some offline tasks. " +
                       "The dictionary has an additional level (describing the 'name' of the " +
                       "extra fullpos processing"),
-                type=FPDict,
+                type=dict,
                 optional=True,
             ),
             use_inline_fp = dict(
@@ -942,6 +949,19 @@ class ArpIfsForecastTermConfTool(ConfTool):
                                   for k, v in self._x_extra_fp_terms.items()}
         self._lookup_cache = dict()
         self._lookup_rangex_cache = dict()
+        self._no_inline_cache = None
+
+    def _clone(self, **kwargs):
+        my_args = self.footprint_as_shallow_dict()
+        my_args.update(kwargs)
+        return self.__class__(** my_args)
+
+    @property
+    def no_inline(self):
+        """Return a clone of this object with inline fullpos de-activated."""
+        if self._no_inline_cache is None:
+            self._no_inline_cache = self._clone(use_inline_fp=False)
+        return self._no_inline_cache
 
     @staticmethod
     def _cast_void(value):
@@ -1028,6 +1048,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return self._lookup_rangex_cache[(what_desc, cutoff, hh)]
 
     def fcterm(self, cutoff, hh):
+        """The forecast term for **cutoff** and **hh**."""
         fcterm = self._cutoff_hh_lookup('fcterm', cutoff, hh)
         if isinstance(fcterm, Time) and fcterm.minute == 0:
             return fcterm.hour
@@ -1035,27 +1056,33 @@ class ArpIfsForecastTermConfTool(ConfTool):
             return fcterm
 
     def hist_terms(self, cutoff, hh):
+        """The list of terms for requested/archived historical files."""
         return self._cutoff_hh_rangex_lookup('hist_terms', cutoff, hh)
 
     def surf_terms(self, cutoff, hh):
+        """The list of terms for historical surface files."""
         return self._cutoff_hh_rangex_lookup('surf_terms', cutoff, hh)
 
     def norm_terms(self, cutoff, hh):
+        """The list of terms for norm calculations."""
         return self._cutoff_hh_rangex_lookup('norm_terms', cutoff, hh)
 
     def inline_terms(self, cutoff, hh):
+        """The list of terms for inline diagnostics."""
         if self.use_inline_fp:
             return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
         else:
             return list()
 
     def diag_terms(self, cutoff, hh):
+        """The list of terms for offline diagnostics."""
         if self.use_inline_fp:
             return list()
         else:
             return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
 
     def diag_terms_fplist(self, cutoff, hh):
+        """The list of terms for offline diagnostics (as a FPlist)."""
         flist = self.diag_terms(cutoff, hh)
         return FPList(flist) if flist else []
 
@@ -1089,16 +1116,19 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return fpoff_terms
 
     def extra_hist_terms(self, cutoff, hh):
+        """The list of terms for historical file terms solely produced for fullpos use."""
         fpoff_terms = self._fpoff_terms_set(cutoff, hh)
         fpoff_terms -= set(self.hist_terms(cutoff, hh))
         return sorted(fpoff_terms)
 
     def all_hist_terms(self, cutoff, hh):
+        """The list of terms for all historical file."""
         all_terms = self._fpoff_terms_set(cutoff, hh)
         all_terms |= set(self.hist_terms(cutoff, hh))
         return sorted(all_terms)
 
     def fpoff_terms(self, cutoff, hh):
+        """The list of terms for offline fullpos."""
         fpoff_terms = self._fpoff_terms_set(cutoff, hh)
         return sorted(fpoff_terms)
 
@@ -1119,10 +1149,12 @@ class ArpIfsForecastTermConfTool(ConfTool):
         return sorted(items)
 
     def fpoff_terms_map(self, cutoff, hh):
+        """The mapping dictionary between offline post-processing terms and domains."""
         return {k: getattr(self, '{:s}_terms'.format(k))(cutoff, hh)
                 for k in self.fpoff_items(cutoff, hh)}
 
     def fpoff_terms_fpmap(self, cutoff, hh):
+        """The mapping dictionary between offline post-processing terms and domains (as a FPlist)."""
         return {k: getattr(self, '{:s}_terms_fplist'.format(k))(cutoff, hh)
                 for k in self.fpoff_items(cutoff, hh)}
 
