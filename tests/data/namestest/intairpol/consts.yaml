@@ -19,8 +19,6 @@ todo:
     -   commons:
             genv: '[cycle]'
         tests:
-            -   kind: boundary
-            -   kind: gridpoint
             -   kind: firecst
             -   kind: gribtpl
                 edition:
