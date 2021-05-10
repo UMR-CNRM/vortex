@@ -13,7 +13,7 @@ from common.data.consts import GenvModelResource, GenvModelGeoResource
 __all__ = []
 
 
-class StaticSurfaceEmissions(GenvModelResource):
+class StaticSurfaceEmissions(GenvModelGeoResource):
     """Emissions files collected by international community."""
 
     _footprint = dict(
@@ -23,7 +23,7 @@ class StaticSurfaceEmissions(GenvModelResource):
                 values  = ['emiss_cst'],
             ),
             gvar = dict(
-                default = 'surface_emissions_files'
+                default = 'surface_emissions_[geometry::area]'
             ),
         )
     )

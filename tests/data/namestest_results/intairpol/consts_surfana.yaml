@@ -1,0 +1,27 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      edition: null
+      genv: '[cycle]'
+      kind: gribtpl
+    results: !test_names.core.TestResults []
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      edition: 1
+      genv: '[cycle]'
+      kind: gribtpl
+    results: !test_names.core.TestResults []
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: chemical_surf
+    results: !test_names.core.TestResults []
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: emiss_cst
+    results: !test_names.core.TestResults []
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      genv: '[cycle]'
+      kind: firecst
+    results: !test_names.core.TestResults []
