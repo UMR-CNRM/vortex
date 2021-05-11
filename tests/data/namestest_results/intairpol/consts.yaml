@@ -1,10 +1,7 @@
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
-      cycle: mo11_mocage@fcst-main.07
-      date: 2021033112
       edition: null
       genv: '[cycle]'
-      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: &id001 !test_names.core.TestParameters
@@ -20,11 +17,8 @@
       location: gget://gco.multi.fr/tampon/grib.template.prevair.GLOB11.01
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
-      cycle: mo11_mocage@fcst-main.07
-      date: 2021033112
       edition: 1
       genv: '[cycle]'
-      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: *id001

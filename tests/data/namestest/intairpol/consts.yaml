@@ -21,9 +21,6 @@ todo:
         tests:
             -   kind: firecst
             -   kind: gribtpl
-                date: 2021033112
-                cycle: mo11_mocage@fcst-main.07
-                geometry: glob11
                 edition:
                     - null
                     - 1
