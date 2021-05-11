@@ -48,6 +48,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: CfcScenarioComplement
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SurfaceEmissionsProfilesTable
    :show-inheritance:
    :members:

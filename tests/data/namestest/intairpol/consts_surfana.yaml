@@ -3,17 +3,17 @@ default:
     sets:
         -   date: 2021041500
             geometry: glob11
-            cutoff: production
+            cutoff: assim
             model: mocage
             namespace: vortex.multi.fr
-            cycle: mo11_mocage@fcst-main.08
+            cycle: mo11_mocage@surfana-main.08
             gnamespace: 'gco.multi.fr'
             vapp: mocage
-            vconf: fcst
+            vconf: surfana
 
 register:
     genv:
-        - mo11_mocage@fcst-main.08
+        - mo11_mocage@surfana-main.08
 
 todo:
     -   commons:
@@ -21,9 +21,6 @@ todo:
         tests:
             -   kind: firecst
             -   kind: gribtpl
-                date: 2021033112
-                cycle: mo11_mocage@fcst-main.07
-                geometry: glob11
                 edition:
                     - null
                     - 1
