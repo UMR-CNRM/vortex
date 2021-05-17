@@ -7,6 +7,7 @@ rough parallelisation at job's level.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
+import six
 
 import collections
 import contextlib
@@ -19,6 +20,7 @@ import time
 from bronx.datagrip import datastore
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
+from bronx.patterns import observer
 import footprints as fp
 
 logger = loggers.getLogger(__name__)
@@ -30,19 +32,53 @@ _DSTORE_IN = '{:s}_datastore.in'
 _DSTORE_OUT = '{:s}_{:s}_datastore.out'
 _JOB_STDEO = '{:s}_{:s}.stdeo'
 
+_SUBJOB_NODES_CHATTER = 'subjob_nodes_observerboard_chatter'
+
+
+class NodesObserverboardRecorder(observer.Observer):
+    """Listen on the 'Layout-Nodes' observer board and record everything."""
+
+    def __init__(self, observer_tag):
+        """
+        :param observer_tag: The name of the observer board
+        """
+        self._obsboard = observer.get(tag=observer_tag)
+        self._obsboard.register(self)
+        self._messages = list()
+
+    def stop_listening(self):
+        """Stop listening on the observer board."""
+        self._obsboard.unregister(self)
+
+    def updobsitem(self, item, info):
+        """Store the observer board messages"""
+        self._messages.append({k: v for k, v in info.items()
+                               if k != 'observerboard'})
+
+    @property
+    def messages(self):
+        """The list of collected messages"""
+        return self._messages
+
 
 @contextlib.contextmanager
-def subjob_output_markup(do_marking_up):
-    """Insert markup strings in stdout in order to frame its "usefull" part."""
-    if do_marking_up:
-        sys.stdout.write(_LOG_CAPTURE_START)
-        sys.stdout.flush()
+def subjob_handling(node, observer_tag):
+    """
+    Insert markup strings in stdout in order to frame its "usefull" part and
+    record the Layout-Nodes observer board.
+    """
+    sys.stdout.write(_LOG_CAPTURE_START)
+    sys.stdout.flush()
+    recorder = NodesObserverboardRecorder(observer_tag)
     try:
         yield
     finally:
-        if do_marking_up:
-            sys.stdout.write(_LOG_CAPTURE_END)
-            sys.stdout.flush()
+        recorder.stop_listening()
+        sys.stdout.flush()
+        sys.stdout.write(_LOG_CAPTURE_END)
+        sys.stdout.flush()
+        node.ticket.datastore.insert(_SUBJOB_NODES_CHATTER,
+                                     dict(tag=node.tag), recorder.messages)
 
 
 class SubJobLauncherError(Exception):
@@ -60,11 +96,16 @@ class AbstractSubJobLauncher(fp.FootprintBase):
         attr = dict(
             kind = dict(
             ),
+            nodes_obsboard_tag = dict(
+                info = "The name of the Layout-Nodes observer board.",
+            ),
             limit = dict(
+                info = "The maximum number of parallel subjobs.",
                 type = int,
                 optional = True
             ),
             scriptpath = dict(
+                info = "The path to the current job script.",
             )
         ),
     )
@@ -113,18 +154,24 @@ class AbstractSubJobLauncher(fp.FootprintBase):
 
     def wait(self):
         """Wait for at least one subjob to complete."""
-        done = self._actual_wait()
-        for tag in done:
-            self._stdeo_dump(tag, 'succeeded')
+        done, ko = self._actual_wait()
+        for tag in done | ko:
+            self._stdeo_dump(tag, 'succeeded' if tag in done else 'failed')
             self._update_context(tag)
             del self._running[tag]
             self._watermark -= 1
+        return done, ko
 
     def waitall(self):
         """Wait for all subjob to complete."""
         logger.info("Waiting for all subjobs to terminate.")
+        done = set()
+        ko = set()
         while self._running:
-            self.wait()
+            new_done, new_ko = self.wait()
+            done.update(new_done)
+            ko.update(new_ko)
+        return done, ko
 
     def _stdeo_dump(self, tag, outcome='succeeded', ignore_end=False):
         """Dump the standard output of the subjob refered by **tag**.
@@ -143,6 +190,8 @@ class AbstractSubJobLauncher(fp.FootprintBase):
                         if not ignore_end:
                             break
                     else:
+                        if six.PY2:
+                            lst = lst.encode(plocale)
                         sys.stdout.write(lst)
                 else:
                     started = lst == _LOG_CAPTURE_START
@@ -170,6 +219,16 @@ class AbstractSubJobLauncher(fp.FootprintBase):
                             self.ticket.datastore.insert(k.kind, k.extras,
                                                          ds.get(k.kind, k.extras))
                         break
+            if k.kind == _SUBJOB_NODES_CHATTER and k.extras['tag'] == tag:
+                messages = ds.get(k.kind, k.extras)
+                if messages:
+                    oboard = observer.get(tag=self.nodes_obsboard_tag)
+                    oboard.notify_new(self, dict(tag=tag, subjob_replay=True))
+                    for message in messages:
+                        message['subjob_replay'] = True
+                        oboard.notify_upd(self, message)
+                        logger.debug('Relaying status change: %s', message)
+                    oboard.notify_del(self, dict(tag=tag, subjob_replay=False))
 
     def _actual_launch(self, tag):
         """Launch the **tag** subjob: to be overwritten in the subclass!"""
@@ -231,25 +290,22 @@ class SpawnSubJobLauncher(AbstractSubJobLauncher):
         terminate and raise a :class:`SubJobLauncherError` exception.
         """
         sh = self.ticket.sh
-        oktags = list()
-        kotags = list()
+        oktags = set()
+        kotags = set()
         while self._processes and (not oktags or kotags):
             for tag, p in self._processes.items():
                 if p.poll() is not None:
                     if sh.pclose(p):
-                        oktags.append(tag)
+                        oktags.add(tag)
                     else:
-                        kotags.append(tag)
-                        self._stdeo_dump(tag, 'failed', ignore_end=True)
-            for tag in oktags + kotags:
+                        kotags.add(tag)
+            for tag in oktags | kotags:
                 if tag in self._processes:
                     del self._processes[tag]
                     del self._outfhs[tag]
-            time.sleep(1)
-        if kotags:
-            raise SubJobLauncherError("Execution failed for some subjobs: {:s}"
-                                      .format(','.join(kotags)))
-        return oktags
+            if self._processes and (not oktags or kotags):
+                time.sleep(0.5)
+        return oktags, kotags
 
 
 class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
@@ -350,26 +406,23 @@ class AbstractSshSubJobLauncher(AbstractSubJobLauncher):
         terminate and raise a :class:`SubJobLauncherError` exception.
         """
         sh = self.ticket.sh
-        oktags = list()
-        kotags = list()
+        oktags = set()
+        kotags = set()
         while self._processes and (not oktags or kotags):
             for tag, p in self._processes.items():
                 if p.poll() is not None:
                     if sh.pclose(p):
-                        oktags.append(tag)
+                        oktags.add(tag)
                     else:
-                        kotags.append(tag)
-                        self._stdeo_dump(tag, 'failed', ignore_end=True)
-            for tag in oktags + kotags:
+                        kotags.add(tag)
+            for tag in oktags | kotags:
                 if tag in self._processes:
                     self._avnodes.append(self._hosts.pop(tag))
                     del self._processes[tag]
                     del self._outfhs[tag]
-            time.sleep(1)
-        if kotags:
-            raise SubJobLauncherError("Execution failed for some subjobs: {:s}"
-                                      .format(','.join(kotags)))
-        return oktags
+            if self._processes and (not oktags or kotags):
+                time.sleep(0.5)
+        return oktags, kotags
 
 
 class SlurmSshSubJobLauncher(AbstractSshSubJobLauncher):

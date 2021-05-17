@@ -49,12 +49,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: NamelistSelect
+.. autoclass:: NamelistFpServerObject
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: NamelistFullPos
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: NamelistSelect
    :show-inheritance:
    :members:
    :member-order: alphabetical

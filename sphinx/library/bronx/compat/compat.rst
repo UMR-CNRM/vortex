@@ -14,7 +14,9 @@
 Sub-modules
 -----------
 
+* :mod:`bronx.compat.functools`
 * :mod:`bronx.compat.random`
+* :mod:`bronx.compat.moves`
 
 NB: All of these sub-modules have to be imported manually (depending on your
 needs).

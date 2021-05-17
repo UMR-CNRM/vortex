@@ -13,7 +13,7 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import footprints
 import io
-from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
+from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, DelayedAlgoComponentError
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
@@ -739,7 +739,7 @@ class SytistWorker(_SafranWorker):
 
 
 class S2MExecutionError(ExecutionError):
-    """TODO: Class documentation."""
+    """Execution Error in S2M algo component that should be catched and delayed"""
 
     def __init__(self, model, deterministic, subdir, datebegin, dateend):
         self.model = model
@@ -757,6 +757,22 @@ class S2MExecutionError(ExecutionError):
         red = list(super(S2MExecutionError, self).__reduce__())
         red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin,
                         self.dateend])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
+class S2MMissingDeterministicError(DelayedAlgoComponentError):
+    """Exception when no resource is found for a mandatory role although fatal is False in toolbox inputs"""
+
+    def __init__(self, role):
+        self.role = role
+        self.deterministic = True
+
+    def __str__(self):
+        return ("Unable to find the mandatory resource of role : " + self.role)
+
+    def __reduce__(self):
+        red = list(super(S2MMissingDeterministicError, self).__reduce__())
+        red[1] = tuple([self.role, self.deterministic])
         return tuple(red)
 
 
@@ -1002,8 +1018,8 @@ class SurfexWorker(_S2MWorker):
                 # Uncomment these lines to test the behaviour in case of failure of 1 member
                 # if self.subdir == "mb006":
                 #     deterministic = self.subdir == "mb035"
-                #     print("DEBUGINFO")
-                #     print(dir(self))
+                #     # print("DEBUGINFO")
+                #     # print(dir(self))
                 #     rdict['rc'] = S2MExecutionError(self.progname, deterministic,
                 #                                     self.subdir, datebegin_this_run, dateend_this_run)
 
@@ -1287,11 +1303,24 @@ class S2MComponent(ParaBlindRun):
 
     def get_subdirs(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
+        # Produce a delayed algo component error if no deterministic member in order to let the members run
+        # but crash at the end
+        if len(deterministic_member) < 1:
+            self.delayed_exception_add(S2MMissingDeterministicError(self.role_deterministic_namebuilder()),
+                                       traceback=True)
+        avail_members = deterministic_member +\
+                        self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
+
         subdirs = list()
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
+
+        # Add a sytron member (only for child SurfexComponent but done here to test availability of deterministic mb)
+        if self.kind == "ensmeteo+sytron" and len(deterministic_member) == 1:
+            subdirs.append('mb036')
+
         # Ca partait d'une bonne idee mais en pratique il y a plein de cas particuliers
         # pour lesquels ca pose probleme : reanalyse safran, surfex postes, etc
         # self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
@@ -1302,7 +1331,9 @@ class S2MComponent(ParaBlindRun):
 
     def get_origin(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
+        avail_members = deterministic_member +\
+                        self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
         subdirs = list()
         cpl_model = list()
         for am in avail_members:
@@ -1317,7 +1348,10 @@ class S2MComponent(ParaBlindRun):
 
         return cpl_model
 
-    def role_ref_namebuilder(self):
+    def role_deterministic_namebuilder(self):
+        return 'Ebauche_Deterministic'
+
+    def role_members_namebuilder(self):
         return 'Ebauche'
 
 
@@ -1435,7 +1469,7 @@ class S2MReforecast(S2MComponent):
         self._default_post_execute(rh, opts)
 
     def get_individual_instructions(self, rh, opts):
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        avail_members = self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
         subdirs = list()
         list_dates_begin = list()
         list_dates_end = list()
@@ -1539,12 +1573,13 @@ class SurfexComponent(S2MComponent):
                 # Therefore it is necessary to reduce subdirs to 1 single element for each member
                 subdirs = list(set(map(self.system.path.dirname, subdirs)))
 
-            if self.kind == "ensmeteo+sytron":
-                subdirs.append('mb036')
             return subdirs
 
-    def role_ref_namebuilder(self):
+    def role_members_namebuilder(self):
         return 'Forcing'
+
+    def role_deterministic_namebuilder(self):
+        return 'Forcing_Deterministic'
 
 
 @echecker.disabled_if_unavailable
@@ -1610,9 +1645,6 @@ class PrepareForcingComponent(TaylorRun):
     def get_subdirs(self, rh, opts):
 
         return [begin.year for begin in self.datebegin]
-
-    def role_ref_namebuilder(self):
-        return 'Forcing'
 
 
 @echecker.disabled_if_unavailable
@@ -1725,6 +1757,8 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
 
         return subdirs
 
+    def role_ref_namebuilder(self):
+        return 'Forcing'
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorker(PrepareForcingWorker):

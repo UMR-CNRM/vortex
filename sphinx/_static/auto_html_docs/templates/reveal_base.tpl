@@ -1,26 +1,21 @@
-{%- extends "html.tpl" -%}
+{%- extends "html.tpl" -%}, maximum-scale=1.0, user-scalable=no
 {%- block head %}
         {{ super() }}
 
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-		<link rel="stylesheet" href="{{revealjs}}/css/reset.css" />
-		<link rel="stylesheet" href="{{revealjs}}/css/reveal.css" />
-		<link rel="stylesheet" href="{{revealjs}}/css/theme/white.css" id="theme" />
+		<link rel="stylesheet" href="{{cdn}}/reveal/reset.min.css" />
+		<link rel="stylesheet" href="{{cdn}}/reveal/reveal.min.css" />
+		<link rel="stylesheet" href="{{cdn}}/reveal/theme/white.min.css" id="theme" />
 		<link rel="stylesheet" href="css/reveal_custom.css" />
 
         
 		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="{{cdn}}/highlight-{{hljstyle}}.min.css" />
-
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? '{{revealjs}}/css/print/pdf.css' : '{{revealjs}}/css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
+		<link rel="stylesheet" href="{{cdn}}/highlight/styles/{{hljstyle}}.min.css" id="highlight-theme" />
+        <!-- Extra kanguages for highlight-->
+        {%- for lang in hljlang %}
+        <script src="{{cdn}}/highlight/languages/{{lang}}.min.js"></script>
+        {%- endfor %}
 {%- endblock head %}
 
 {%- block body %}
@@ -33,9 +28,21 @@
 
         <!-- Javascript libraries configuration and initialisation -->
 
-		<script src="{{revealjs}}/js/reveal.js"></script>
+		<script src="{{cdn}}/reveal/reveal.min.js"></script>
+		<script src="{{cdn}}/reveal/plugin/markdown/markdown.min.js"></script>
+		<script src="{{cdn}}/reveal/plugin/highlight/highlight.min.js"></script>
+		<script src="{{cdn}}/reveal/plugin/notes/notes.min.js"></script>
+		<!-- <script src="{{cdn}}/reveal/plugin/math/math.min.js"></script> -->
 		<script>
 			Reveal.initialize({
+
+                //math: {
+                //    mathjax: '{{cdn}}/mathjax/MathJax.js',
+                //},
+                // Add this in the list below if  needed: RevealMath,
+                plugins: [ RevealMarkdown,
+                           RevealHighlight,
+                           RevealNotes, ],
 
 				// Display presentation control arrows
 				controls: true,
@@ -57,6 +64,12 @@
 				// Display the page number of the current slide
 				slideNumber: true,
 
+                // Can be used to limit the contexts in which the slide number appears
+                // - "all":      Always show the slide number
+                // - "print":    Only when printing to PDF
+                // - "speaker":  Only in the speaker view
+                showSlideNumber: 'all',
+
 				// Add the current slide number to the URL hash so that reloading the
 				// page/copying the URL will return you to the same slide
 				hash: true,
@@ -69,6 +82,9 @@
 
 				// Enable the slide overview mode
 				overview: true,
+
+                // Vertical centering of slides
+                center: true,
 
 				// See https://github.com/hakimel/reveal.js/#navigation-mode
 				navigationMode: 'default',
@@ -95,39 +111,8 @@
 				// Number of slides away from the current that are visible
 				viewDistance: 3,
 
-				// Parallax background image
-				parallaxBackgroundImage: '', // e.g. "'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg'"
-
-				// Parallax background size
-				parallaxBackgroundSize: '', // CSS syntax, e.g. "2100px 900px"
-
-				// Number of pixels to move the parallax background per slide
-				// - Calculated automatically unless specified
-				// - Set to 0 to disable movement along an axis
-				parallaxBackgroundHorizontal: null,
-				parallaxBackgroundVertical: null,
-
 				// The display mode that will be used to show slides
 				display: 'block',
-
-				// Dependencies to external libs
-				dependencies: [
-					// Interpret Markdown in <section> elements
-					{ src: '{{revealjs}}/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-					{ src: '{{revealjs}}/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-
-					// Syntax highlight for <code> elements
-					{ src: '{{revealjs}}/plugin/highlight/highlight.js', async: true },
-
-					// Zoom in and out with Alt+click
-					{ src: '{{revealjs}}/plugin/zoom-js/zoom.js', async: true },
-
-					// Speaker notes
-					{ src: '{{revealjs}}/plugin/notes/notes.js', async: true },
-
-					// MathJax
-					{ src: '{{revealjs}}/plugin/math/math.js', async: true },
-				],
 			});
 		</script>
 {%- endblock body %}

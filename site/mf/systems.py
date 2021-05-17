@@ -8,6 +8,7 @@ This package handles some common targets used at Meteo France.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import six
+import contextlib
 import ftplib
 import re
 import uuid
@@ -15,6 +16,7 @@ import uuid
 from bronx.fancies import loggers
 import footprints
 
+from vortex.tools.env import vartrue
 from vortex.tools.targets import Target
 from vortex.tools.prestaging import PrestagingTool
 
@@ -26,8 +28,8 @@ logger = loggers.getLogger(__name__)
 
 # Any kind of DSI's Supercomputer
 
-class MeteoBull(Target):
-    """Bull Computer."""
+class MeteoBullX3(Target):
+    """Any MF's third generation of Bullx supercomputer."""
 
     _abstract = True
     _footprint = dict(
@@ -52,59 +54,30 @@ class MeteoBull(Target):
         else:
             return self.inetname + 'cn'
 
-
-class Beaufix(MeteoBull):
-    """Beaufix Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Beaufix Supercomputer at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'beaufix',
-                values  = ['beaufix']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'beaufix(?:login|transfert)?\d+(?:\.|$)')
-        )
-    )
-
-
-class Prolix(MeteoBull):
-    """Prolix Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Prolix Supercomputer at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'prolix',
-                values  = ['prolix']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'prolix(?:login|transfert)?\d+(?:\.|$)')
-        )
-    )
+    @contextlib.contextmanager
+    def algo_run_context(self, ticket, *kmappings):
+        """Specific target hook before any componnent run."""
+        with super(MeteoBullX3, self).algo_run_context(ticket, *kmappings):
+            dis_boost_confkey = 'bullx3_disable_boost'
+            dis_boost_cmd = ['clush', '-bw', ticket.env.SLURM_JOB_NODELIST,
+                             'sudo', '/opt/softs/amd/{todo:s}_boost_amd.sh']
+            dis_boost = any([vartrue.match(str(a_mapping.get(dis_boost_confkey, '0'))) or
+                             vartrue.match(str(a_mapping.get('vortex_' + dis_boost_confkey, '0')))
+                             for a_mapping in kmappings])
+            if dis_boost:
+                actual_cmd = [c.format(todo='disable') for c in dis_boost_cmd]
+                logger.info('Disabling AMD boost: %s\n', ' '.join(actual_cmd))
+                ticket.sh.spawn(actual_cmd, output=False)
+            try:
+                yield
+            finally:
+                if dis_boost:
+                    actual_cmd = [c.format(todo='enable') for c in dis_boost_cmd]
+                    logger.info('Re-enabling AMD boost: %s\n', ' '.join(actual_cmd))
+                    ticket.sh.spawn(actual_cmd, output=False)
 
 
-class Epona(MeteoBull):
-    """Epona Computer at Meteo-France."""
-
-    _footprint = dict(
-        info = 'Bull Epona porting system at Meteo France',
-        attr = dict(
-            inetname = dict(
-                default = 'epona',
-                values  = ['epona']
-            ),
-        ),
-        only = dict(
-            hostname = footprints.FPRegex(r'epona(?:login)?\d+(?:\.|$)')
-        )
-    )
-
-
-class Belenos(MeteoBull):
+class Belenos(MeteoBullX3):
     """Belenos Supercomputer at Meteo-France."""
 
     _footprint = dict(
@@ -121,7 +94,7 @@ class Belenos(MeteoBull):
     )
 
 
-class Taranis(MeteoBull):
+class Taranis(MeteoBullX3):
     """Taranis Supercomputer at Meteo-France."""
 
     _footprint = dict(
@@ -212,7 +185,7 @@ class Aneto(UmrCnrmTarget):
             ),
         ),
         only = dict(
-            hostname = footprints.FPRegex(r'n[ctx]\d+(?:\.|$)')
+            hostname = footprints.FPRegex(r'n[ct]x\d+(?:\.|$)')
         )
     )
 

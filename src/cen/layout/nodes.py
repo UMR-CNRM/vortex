@@ -9,7 +9,11 @@ Multiple inheritence together with the standard Task class is required to use th
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
+from bronx.fancies import loggers
+from vortex.tools.actions import actiond as ad
+from vortex.algo.components import DelayedAlgoComponentError
 
+logger = loggers.getLogger(__name__)
 
 class S2MTaskMixIn(object):
     """Usefull addtions for any S2M task."""
@@ -23,26 +27,53 @@ class S2MTaskMixIn(object):
         """Define the behaviour in case of errors.
 
         For S2M chain, the errors do not raise exception if the deterministic
-        run or if more than 30 members are available.
+        run and if less than 5 members produce errors.
+        Note than unavailability of members do not produce errors managed by effective_inputs), therefore more than
+        5 errors is a critical anomaly.
         """
 
         warning = {}
-        nerrors = len(list(enumerate(exc)))
-        warning["nfail"] = nerrors
-        determinitic_error = False
+        accept_errors = False
 
-        for i, e in enumerate(exc):   # @UnusedVariable
-            if hasattr(e, 'deterministic'):
-                if e.deterministic:
-                    determinitic_error = True
+        if isinstance(exc, DelayedAlgoComponentError):
+            nerrors = len(list(enumerate(exc)))
+            warning["nfail"] = nerrors
+            determinitic_error = False
 
-                warning["deterministic"] = e.deterministic
+            for e in exc:
+                if hasattr(e, 'deterministic'):
+                    if e.deterministic:
+                        determinitic_error = True
 
-        accept_errors = not determinitic_error or nerrors < 5
+                    warning["deterministic"] = e.deterministic
 
-        if accept_errors:
-            print(self.warningmessage(nerrors, exc))
+            accept_errors = not determinitic_error and nerrors < 5
+
         return accept_errors, warning
+
+    def s2moper_report_execution_warning(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M warning',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
+
+    def s2moper_report_execution_error(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M fatal error',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
@@ -54,9 +85,9 @@ class S2MTaskMixIn(object):
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
-        warningline = "!" * 40 + "\n"
+        warningline = "\n" + "!" * 40 + "\n"
         warningmessage = (warningline + "ALERT :" + str(nerrors) +
-                          " members produced a delayed exception.\n" +
+                          " members produced a delayed exception." +
                           warningline + str(exc) + warningline)
         return warningmessage
 
@@ -184,10 +215,7 @@ class S2MTaskMixIn(object):
 
     def get_list_geometry(self, meteo="safran"):
 
-        if not hasattr(self.conf, "interpol"):
-            self.conf.interpol = False
-
-        if self.conf.interpol:
+        if hasattr(self.conf, "geoin"):
             return [self.conf.geoin]
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)

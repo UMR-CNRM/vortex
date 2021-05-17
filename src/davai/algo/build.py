@@ -51,7 +51,8 @@ class GmkpackDecoMixin(AlgoComponentDecoMixin):
         self.env['GMKROOT'] = gmk_installdir
         prefix = self.system.glove.user + '.gmktmp.'
         self.env['GMKTMP'] = tempfile.mkdtemp(prefix=prefix, dir='/tmp')  # would be much slower on Lustre
-        del self.env['HOMEBIN']  # may cause broken links, because WORKDIR is not defined
+        if not self.system.path.exists(self.env.get('HOMEBIN', '')):
+            del self.env['HOMEBIN']  # may cause broken links
 
     def _gmkpack_finalise(self, opts):  # @UnusedVariable
         try:
@@ -138,10 +139,11 @@ class GitDecoMixin(AlgoComponentDecoMixin):
                     yield
                 finally:
                     # getting out of contextmanager : set origin remote URL back to what it was
-                    logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url)))
-                    with self.system.cdcontext(self.repository):
-                        self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', origin_url],
-                                          output=False)
+                    if origin_url:
+                        logger.info("Set back remote.origin.url to initial value: {}".format(str(origin_url[0])))
+                        with self.system.cdcontext(self.repository):
+                            self.system.spawn(['git', 'config', '--replace-all', 'remote.origin.url', origin_url[0]],
+                                              output=False)
         else:
             yield
 

@@ -108,6 +108,7 @@ class TestMonitor(unittest.TestCase):
                 self._inputs[it][im] = self._create_section(what, ixo.INPUT)
 
     def tearDown(self):
+        self.t.exit()
         self.cursession.activate()
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)

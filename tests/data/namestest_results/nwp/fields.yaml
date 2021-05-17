@@ -59,6 +59,34 @@
       location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
     - default: *id002
       location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      bdpeid: 13709
+      fields: seaice_conc
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: safosi_hn
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      bdpeid: 13709
+      fields: sst
+      kind: observations
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      part: hn
+      stage: extract
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       allow_archive: false
@@ -211,207 +239,86 @@
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: sst
+      fields: seaice_conc
       format: netcdf
       kind: rawfields
       namespace: olive.multi.fr
-      origin: nesdis
+      origin: safosi_hn
     results: !test_names.core.TestResults
     - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/sst.nesdis.bdap
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_conc.safosi_hn
     - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/sst.nesdis.bdap
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_conc.safosi_hn
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: sst
+      fields: seaice_conc
       format: netcdf
       kind: rawfields
       namespace: olive.multi.fr
-      origin: ostia
+      origin: safosi_hs
     results: !test_names.core.TestResults
     - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/sst.ostia
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_conc.safosi_hs
     - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/sst.ostia
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_conc.safosi_hs
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: sst
+      fields: seaice_conc
       format: netcdf
       kind: rawfields
       namespace: vortex.multi.fr
-      origin: nesdis
+      origin: safosi_hn
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/sst.nesdis
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice_conc.safosi_hn
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/sst.nesdis
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice_conc.safosi_hn
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: sst
+      fields: seaice_conc
       format: netcdf
       kind: rawfields
       namespace: vortex.multi.fr
-      origin: ostia
+      origin: safosi_hs
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/sst.ostia
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice_conc.safosi_hs
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/sst.ostia
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice_conc.safosi_hs
   - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      fields: ocean
-      format: netcdf
-      kind: rawfields
-      namespace: '[suite].multi.fr'
-      origin: psy4
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ocean.psy4
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ocean.psy4
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: '[suite].multi.fr'
-      origin: bdm
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ice_concent
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ice_concent
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: '[suite].multi.fr'
-      origin: safosi
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ice_concent
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ice_concent
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      fields: sst
-      format: netcdf
-      kind: rawfields
-      namespace: '[suite].multi.fr'
-      origin: nesdis
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/sst.nesdis.bdap
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/sst.nesdis.bdap
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      fields: sst
-      format: netcdf
-      kind: rawfields
-      namespace: '[suite].multi.fr'
-      origin: ostia
-      suite: oper
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/sst.ostia
-    - default: *id002
-      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/sst.ostia
-- - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: ocean
+      fields: seaice_thick
       format: netcdf
       kind: rawfields
       namespace: olive.multi.fr
       origin: psy4
     results: !test_names.core.TestResults
     - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.psy4
     - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ocean.psy4
+      location: olive://olive.multi.fr/abcd/20180101H00A/observations/seaice_thick.psy4
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
       experiment: abcd
-      fields: ocean
+      fields: seaice_thick
       format: netcdf
       kind: rawfields
       namespace: vortex.multi.fr
       origin: psy4
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/ocean.psy4
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice_thick.psy4
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/ocean.psy4
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      block: observations
-      experiment: abcd
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: olive.multi.fr
-      origin: bdm
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ice_concent
-    - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ice_concent
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      block: observations
-      experiment: abcd
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: olive.multi.fr
-      origin: safosi
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ice_concent
-    - default: *id002
-      location: olive://olive.multi.fr/abcd/20180101H00A/observations/ice_concent
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      block: observations
-      experiment: abcd
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: vortex.multi.fr
-      origin: bdm
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice.bdm
-    - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice.bdm
-  - !test_names.core.SingleTest
-    description: !test_names.core.TestParameters
-      block: observations
-      experiment: abcd
-      fields: seaice
-      format: netcdf
-      kind: rawfields
-      namespace: vortex.multi.fr
-      origin: safosi
-    results: !test_names.core.TestResults
-    - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/observations/seaice.safosi
-    - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice.safosi
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/observations/seaice_thick.psy4
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: observations
@@ -507,6 +414,45 @@
       location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/ice_concent
     - default: *id002
       location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/ice_concent
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: seaice_conc
+      format: netcdf
+      kind: rawfields
+      namespace: '[suite].multi.fr'
+      origin: safosi_hn
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/seaice_conc.safosi_hn
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/seaice_conc.safosi_hn
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: seaice_conc
+      format: netcdf
+      kind: rawfields
+      namespace: '[suite].multi.fr'
+      origin: safosi_hs
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/seaice_conc.safosi_hs
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/seaice_conc.safosi_hs
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      fields: seaice_thick
+      format: netcdf
+      kind: rawfields
+      namespace: '[suite].multi.fr'
+      origin: psy4
+      suite: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: op://oper.multi.fr/arome/oper/assim/2018/01/01/r0/seaice_thick.psy4
+    - default: *id002
+      location: op://oper.multi.fr/arpege/oper/assim/2018/01/01/r0/seaice_thick.psy4
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       fields: sst

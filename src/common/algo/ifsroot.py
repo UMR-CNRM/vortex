@@ -263,12 +263,13 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def find_namelists(self, opts=None):
         """Find any namelists candidates in actual context inputs."""
-        namcandidates = [x.rh
-                         for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
-        self.system.subtitle('Namelist candidates')
-        for nam in namcandidates:
-            nam.quickview()
-        return namcandidates
+        return [x.rh
+                for x in self.context.sequence.effective_inputs(kind=('namelist', 'namelistfp'))]
+
+    def _set_nam_macro(self, namcontents, namlocal, macro, value):
+        """Set a namelist macro and log it!"""
+        namcontents.setmacro(macro, value)
+        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
         """Apply a namelist delta depending on the cycle of the binary."""
@@ -282,32 +283,32 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
         if rh.resource.cycle >= 'cy41':
             if 'NAMARG' in namcontents:
                 opts_arg = self.spawn_command_options()
-                logger.info('Setup macro CEXP=%s in %s', opts_arg['name'], namlocal)
-                namcontents.setmacro('CEXP', opts_arg['name'])
-                logger.info('Setup macro TIMESTEP=%g in %s', opts_arg['timestep'], namlocal)
-                namcontents.setmacro('TIMESTEP', opts_arg['timestep'])
+                self._set_nam_macro(namcontents, namlocal, 'CEXP', opts_arg['name'])
+                self._set_nam_macro(namcontents, namlocal, 'TIMESTEP', opts_arg['timestep'])
                 fcstop = '{:s}{:d}'.format(opts_arg['fcunit'], opts_arg['fcterm'])
-                logger.info('Setup macro FCSTOP=%s in %s', fcstop, namlocal)
-                namcontents.setmacro('FCSTOP', fcstop)
+                self._set_nam_macro(namcontents, namlocal, 'FCSTOP', fcstop)
                 nam_updated = True
             else:
                 logger.info('No NAMARG block in %s', namlocal)
 
         if self.member is not None:
-            namcontents.setmacro('MEMBER', self.member)
-            namcontents.setmacro('PERTURB', self.member)
+            for macro_name in ('MEMBER', 'PERTURB'):
+                self._set_nam_macro(namcontents, namlocal, macro_name, self.member)
             nam_updated = True
-            logger.info('Setup macro MEMBER=%s in %s', self.member, namlocal)
-            logger.info('Setup macro PERTURB=%s in %s', self.member, namlocal)
-
         return nam_updated
 
     def prepare_namelists(self, rh, opts=None):
         """Update each of the namelists."""
-        for namrh in self.find_namelists(opts):
+        namcandidates = self.find_namelists(opts)
+        self.system.subtitle('Namelist candidates')
+        for nam in namcandidates:
+            nam.quickview()
+        for namrh in namcandidates:
             namc = namrh.contents
             if self.prepare_namelist_delta(rh, namc, namrh.container.actualpath()):
-                namc.rewrite(namrh.container)
+                if namc.dumps_needs_update:
+                    logger.info('Rewritting the %s namelists file.', namrh.container.actualpath())
+                    namc.rewrite(namrh.container)
 
     def prepare(self, rh, opts):
         """Set some variables according to target definition."""
@@ -317,5 +318,6 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     def execute_single(self, rh, opts):
         """Standard IFS-Like execution parallel execution."""
-        self.system.ls(output='dirlst')
+        if rh.resource.cycle < 'cy46':
+            self.system.ls(output='dirlst')
         super(IFSParallel, self).execute_single(rh, opts)

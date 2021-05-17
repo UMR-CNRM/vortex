@@ -180,7 +180,7 @@ def freeze_cycle(t, cycle, force=False, verbose=True, genvpath='genv', gcopath='
 
     # Remove unwanted definitions
     for prefix in ('PACK', 'SRC'):
-        for key in defs.keys():
+        for key in list(defs.keys()):
             if key.startswith(prefix):
                 del defs[key]
 
@@ -288,7 +288,7 @@ def unfreeze_cycle(t, delcycle, fake=True, verbose=True, genvpath='genv', gcopat
 
         # these keys are always ignored
         for prefix in ('PACK', 'SRC'):
-            for key in genvdict.keys():
+            for key in list(genvdict.keys()):
                 if key.startswith(prefix):
                     del genvdict[key]
 

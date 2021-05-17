@@ -59,3 +59,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Uuid4UnamedSingleFile
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

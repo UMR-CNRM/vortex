@@ -302,13 +302,6 @@ class ExtendedFtplib(object):
         rc = False
         try:
             self.retrbinary('RETR ' + source, target.write)
-        except (ValueError, TypeError, IOError) as e:
-            logger.error('FTP could not get %s: %s', repr(source), str(e))
-            raise
-        except ftplib.all_errors as e:
-            logger.error('FTP internal exception %s: %s', repr(source), str(e))
-            raise
-        else:
             if xdestination:
                 target.seek(0, io.SEEK_END)
                 if self.size(source) == target.tell():
@@ -355,13 +348,13 @@ class ExtendedFtplib(object):
         self.rmkdir(destination)
         try:
             self.delete(destination)
-            logger.warning('Replacing <file:%s>', str(destination))
+            logger.info('Replacing <file:%s>', str(destination))
         except ftplib.error_perm:
-            logger.warning('Creating <file:%s>', str(destination))
+            logger.info('Creating <file:%s>', str(destination))
         except (ValueError, TypeError, IOError,
                 ftplib.error_proto, ftplib.error_reply, ftplib.error_temp) as e:
-            logger.critical('Serious delete trouble <file:%s> <error:%s>',
-                            str(destination), str(e))
+            logger.error('Serious delete trouble <file:%s> <error:%s>',
+                         str(destination), str(e))
 
         logger.info('FTP <put:%s>', str(destination))
         rc = False
@@ -374,13 +367,6 @@ class ExtendedFtplib(object):
 
         try:
             self.storbinary('STOR ' + destination, inputsrc)
-        except (ValueError, IOError, TypeError) as e:
-            logger.error('FTP could not put %s: %s', repr(source), str(e))
-            raise
-        except ftplib.all_errors as e:
-            logger.error('FTP could not put %s: %s', repr(source), str(e))
-            raise
-        else:
             if exact:
                 if self.size(destination) == size:
                     rc = True
@@ -723,7 +709,9 @@ class AutoRetriesFtp(StdFtp):
         wftplogin = self._retry_wrapped_callable(self._actual_login,
                                                  retrycount=self.retrycount_login,
                                                  retrydelay=self.retrydelay_login,
-                                                 exceptions_extras=[ftplib.error_perm, socket.error, ])
+                                                 exceptions_extras=[ftplib.error_perm,
+                                                                    socket.error,
+                                                                    EOFError])
         return wftplogin(*args)
 
     def _retry_wrapped_callable(self, func, retrycount=None, retrydelay=None,
@@ -1497,33 +1485,33 @@ class AssistedSsh(Ssh):
         >>> print(ssh1, ssh1.remote)
         <vortex.tools.net.AssistedSsh object at 0x7fac3bb19810> localhost
         >> ssh1.execute("echo -n 'My name is: '; hostname")
-        ['My name is: beaufixlogin3']
+        ['My name is: belenoslogin3']
 
     - Using virtual nodes names (let's consider here that "network" nodes are
       defined in the current target-?.ini configuration file)::
 
         >>> ssh2 = AssistedSsh(sh, 'network', virtualnode=True)
         >>> print(ssh2, ssh2.targets)  # The list of possible network nodes
-        ['beaufixlogin0', 'beaufixlogin1', 'beaufixlogin2', 'beaufixlogin3', ]
+        ['belenoslogin0', 'belenoslogin1', 'belenoslogin2', 'belenoslogin3', ]
         >>> print(ssh2, ssh2.remote)  # Pick one randomly
-        'beaufixlogin2'
+        'belenoslogin2'
 
     - The multiple retries concept::
 
         >>> ssh3 = AssistedSsh(sh, 'network', virtualnode=True, maxtries=3)
         >>> print(ssh3, ssh3.remote)  # Pick one randomly
-        'beaufixlogin0'
+        'belenoslogin0'
         >>> ssh3.execute("false")
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:00][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=2/3)...
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:01][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:01][vortex.tools.net][wrapped:1296][INFO]: Trying again (retries=3/3)...
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:02][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (3) was reached...
         False
@@ -1533,7 +1521,7 @@ class AssistedSsh(Ssh):
         >>> ssh4 = AssistedSsh(sh, 'network', virtualnode=True,  fatal=True)
         >>> ssh4.execute("false")
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0878][WARNING]:
-            Bad return code [1] for ['ssh', '-x', 'beaufixlogin0', 'false']
+            Bad return code [1] for ['ssh', '-x', 'belenoslogin0', 'false']
         # [2018/02/19-11:29:00][vortex.tools.systems][spawn:0885][WARNING]: Carry on because fatal is off
         # [2018/02/19-11:29:02][vortex.tools.net][wrapped:1268][ERROR]: The maximum number of retries (1) was reached...
         RuntimeError: Could not execute the SSH command.

@@ -7,6 +7,8 @@ TODO: module documentation.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import contextlib
+
 from bronx.fancies import loggers
 
 from vortex.layout.nodes import Task
@@ -24,7 +26,7 @@ class OpTask(Task):
 
     _tag_topcls = False
 
-    def report_execution_error(self, exc):  # @UnusedVariable
+    def report_execution_error(self, exc, **kw_infos):  # @UnusedVariable
         """Report any execution error."""
         listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         self.sh.header('Send a mail due to an execution error')
@@ -36,11 +38,15 @@ class OpTask(Task):
         extras.setdefault('gnamespace', self.conf.get('gnamespace', 'opgco.cache.fr'))
         super(OpTask, self).defaults(extras)
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Cleanup promises on exit."""
-        # Note: If an MTOOL like tool was to be used, this should be changed...
-        self.ticket.context.clear_promises()
-        super(OpTask, self).__exit__(exc_type, exc_value, traceback)
+    @contextlib.contextmanager
+    def isolate(self):
+        """In Op Jobs always clear un-honored promises."""
+        with super(OpTask, self).isolate():
+            try:
+                yield
+            finally:
+                # Note: If an MTOOL like tool was to be used, this should be changed...
+                self.ticket.context.clear_promises()
 
 
 class MissingObsMixin(object):
@@ -56,9 +62,9 @@ class MissingObsMixin(object):
             logger.warning('Exception caught: %s', str(exc))
             return True, dict()
         else:
-            return super(self.__class__, self).filter_execution_warning(exc)
+            return False, dict()
 
-    def missing_obs_report(self, exc):
+    def missing_obs_report(self, exc, **kw_infos):
         """Report (e-mail) any Bator failure."""
         listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         outstr = ("Les bases ODB suivantes ont rencontré des problèmes lors de " +

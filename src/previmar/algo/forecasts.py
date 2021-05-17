@@ -88,6 +88,17 @@ class SurgesCouplingForecasts(Parallel):
                 default  = 180,
                 optional = True,
             ),
+            savdeb = dict(
+                info     = "Term min of saving tide files",
+                default  = 0,
+                optional = True,
+            ),
+
+            rstdeb = dict(
+                info     = "Term min of saving restart files",
+                default  = 24,
+                optional = True,
+            ),
             rstfin = dict(
                 info     = "Term max of saving restart files",
                 default  = 6,
@@ -128,11 +139,20 @@ class SurgesCouplingForecasts(Parallel):
 
             # Creation Dico des valeurs/cle a changer selon experience
             dico = {}
-            if r.resource.param == 'ms':  # tideonly experiment
+            if r.resource.param == 'red':  # restart experiment
                 dico["heures"] = term
-                dico["savfin"] = term
+                dico["savdeb"] = str(self.savdeb)
+                dico["savfin"] = str(self.savdeb)
+                dico["rstdeb"] = str(self.rstdeb)
                 dico["rstfin"] = str(self.rstfin)
                 dico["dateT0"] = date
+            elif r.resource.param == 'ms':  # tideonly experiment
+                dico["heures"] = term
+                dico["savdeb"] = str(self.savdeb)
+                dico["savfin"] = term
+                dico["rstdeb"] = str(self.rstdeb)
+                dico["rstfin"] = str(self.rstfin)
+                dico["dateT0"] = "-1"
             else:  # full experiment
                 dico["heures"] = term
                 dico["savfin"] = term

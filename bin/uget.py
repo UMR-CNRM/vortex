@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
-from bronx.fancies.display import query_yes_no_quit, print_tablelike
+from bronx.fancies.display import print_tablelike
 from bronx.syntax.decorators import nicedeco
 from bronx.stdtypes.tracking import MappingTracker
 from footprints import proxy as fpx
@@ -37,8 +37,7 @@ import vortex
 from vortex.tools.net import uriparse
 from vortex.tools.systems import ExecutionError
 
-from gco.data.stores import UgetStore
-from gco.syntax.stdattrs import UgetId
+from gco.syntax.stdattrs import AbstractUgetId
 from gco.tools import genv, uenv
 
 vortex.logger.setLevel(logging.WARNING)
@@ -46,6 +45,21 @@ vortex.logger.setLevel(logging.WARNING)
 sh = vortex.ticket().sh
 gl = vortex.ticket().glove
 tg = sh.target()
+
+if sh.env.true('VORTEX_UGET_TESTMODE'):
+    from sandbox.data.providers import UgetIdDemo as UgetId
+    from sandbox.data.stores import UgetDemoStore as UgetStore
+    netloc_prefix = 'uget-demo'
+
+    # No confirmation needed in testmode
+    def query_yes_no_quit(*kargs, **kwargs):
+        return "yes"
+
+else:
+    from bronx.fancies.display import query_yes_no_quit
+    from gco.data.stores import UgetStore
+    from gco.syntax.stdattrs import UgetId
+    netloc_prefix = 'uget'
 
 
 def ugetid_doc(func):
@@ -74,14 +88,15 @@ class WeakUgetStore(UgetStore):
         info = 'Uget weak access',
         attr = dict(
             netloc = dict(
-                values   = ['uget.weak.fr'],
+                values   = ['{:s}.weak.fr'.format(netloc_prefix)],
             ),
         )
     )
 
     def alternates_netloc(self):
         """Tuple of alternates domains names, e.g. ``cache`` and ``archive``."""
-        return ('uget.hack.fr', 'uget.archive.fr')
+        return ('{:s}.hack.fr'.format(netloc_prefix),
+                '{:s}.archive.fr'.format(netloc_prefix))
 
 
 class UGetShell(cmd.Cmd):
@@ -134,8 +149,11 @@ class UGetShell(cmd.Cmd):
             self._cliconfig_set('storage', None)
             self._cliconfig_set('location', None)
         # Initialise the stores
-        self._storehack = fpx.store(scheme='uget', netloc='uget.hack.fr')
-        self._storehackrw = fpx.store(scheme='uget', netloc='uget.hack.fr', readonly=False)
+        self._storehack = fpx.store(scheme='uget',
+                                    netloc='{:s}.hack.fr'.format(netloc_prefix))
+        self._storehackrw = fpx.store(scheme='uget',
+                                      netloc='{:s}.hack.fr'.format(netloc_prefix),
+                                      readonly=False)
         self._update_stores(storage=self._cliconfig_get('storage'))
 
     # A whole bunch of utility functions
@@ -176,10 +194,16 @@ class UGetShell(cmd.Cmd):
 
     def _update_stores(self, **kwargs):
         """Re-create the archive stores (using the **kwargs** options)."""
-        self._storearch = fpx.store(scheme='uget', netloc='uget.archive.fr', **kwargs)
-        self._storearchrw = fpx.store(scheme='uget', netloc='uget.archive.fr',
-                                      readonly=False, **kwargs)
-        self._storeweak = fpx.store(scheme='uget', netloc='uget.weak.fr', **kwargs)
+        self._storearch = fpx.store(scheme='uget',
+                                    netloc='{:s}.archive.fr'.format(netloc_prefix),
+                                    **kwargs)
+        self._storearchrw = fpx.store(scheme='uget',
+                                      netloc='{:s}.archive.fr'.format(netloc_prefix),
+                                      readonly=False,
+                                      **kwargs)
+        self._storeweak = fpx.store(scheme='uget',
+                                    netloc='{:s}.weak.fr'.format(netloc_prefix),
+                                    **kwargs)
 
     def _valid_syntax(self, regex, line):
         """Check that the user input matches **regex**.
@@ -406,7 +430,9 @@ class UGetShell(cmd.Cmd):
 
     def _uenv_contents(self, shortid):
         try:
-            theenv = uenv.contents('uget:' + shortid, scheme='uget', netloc='uget.weak.fr')
+            theenv = uenv.contents('uget:' + shortid,
+                                   scheme='uget',
+                                   netloc='{:s}.weak.fr'.format(netloc_prefix))
         except (IOError, OSError, uenv.UenvError) as e:
             self._error('Error getting uenv data: {!s}'.format(e))
             uenv.clearall()
@@ -549,7 +575,7 @@ class UGetShell(cmd.Cmd):
                     return False
                 outlist = list()
                 for k, v in sorted(myenv.items()):
-                    if isinstance(v, UgetId):
+                    if isinstance(v, AbstractUgetId):
                         chkres = {stname: self._instore_check(st, v)
                                   for stname, st in self._storelist}
                         rstack = self._single_check(chkres)
@@ -795,7 +821,7 @@ class UGetShell(cmd.Cmd):
                 if not myenv:
                     return False
                 for _, v in sorted(myenv.items()):
-                    if isinstance(v, UgetId):
+                    if isinstance(v, AbstractUgetId):
                         chkres = self._instore_check(self._storehack, v)
                         if len(chkres) == 1 and chkres[0][0]:
                             # "Simple" non-monthly case
@@ -971,7 +997,20 @@ class UGetShell(cmd.Cmd):
         Remove all the element of the Hack store that are available in the Archive store.
         """
         to_delete = list()
-        s_uris = [f.lstrip('/').split('/') for f in self._storehack.cache.catalog()]
+        s_uris = set()
+        for hack_f in self._storehack.cache.catalog():
+            s_uri = hack_f.lstrip('/').split('/')
+            if len(s_uri) >= 3:
+                if s_uri[1] not in ('data', 'env'):
+                    print("The '{:s}' file exists in the Uget's hack store. ".format(hack_f) +
+                          "This is odd since the second level of directory should be either " +
+                          "'data' or 'env'.")
+                else:
+                    s_uris.add(tuple(s_uri[:3]))
+            else:
+                print("The '{:s}' file exists in the Uget's hack store. ".format(hack_f) +
+                      "This is odd. Ingoring it.")
+        s_uris = sorted(s_uris)
         h_uris = [self._uri(self._storehack, (f[1], '{:s}@{:s}'.format(f[2], f[0])))
                   for f in s_uris]
         a_uris = [self._uri(self._storearch, (f[1], '{:s}@{:s}'.format(f[2], f[0])))

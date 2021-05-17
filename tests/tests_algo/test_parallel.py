@@ -273,6 +273,10 @@ class TestParallel(unittest.TestCase):
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
         self.assertCmdl('mpirun -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
+        algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='mpirun'))
+        _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
+                                                     mpirun_mpiopts='--mca truc 1 --mca truc 2'))
+        self.assertCmdl('mpirun -mca truc 1 -mca truc 2 -npernode 4 -np 8 {pwd:s}/fake -joke yes', args)
         # SRUN
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='srun'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10)))
@@ -357,8 +361,10 @@ class TestParallel(unittest.TestCase):
                         "{pwd:s}/fake -joke yes", args)
         algo = self._fix_algo(fp.proxy.component(engine='parallel', mpiname='openmpi'))
         _, args = algo._bootstrap_mpitool(bin0, dict(mpiopts=dict(nn=2, nnp=4, openmp=10),
-                                                     openmpi_opt_bindingmethod='native', ))
-        self.assertCmdl("openmpi -oversubscribe -rankfile ./global_envelope_rankfile " +
+                                                     openmpi_opt_bindingmethod='native',
+                                                     openmpi_mpiopts='--mca truc1 "^complex" --mca truc2 simple'))
+        self.assertCmdl("openmpi -mca truc1 ^complex -mca truc2 simple " +
+                        "-oversubscribe -rankfile ./global_envelope_rankfile " +
                         "-x OMP_NUM_THREADS=10 -np 8 ./global_wrapstd_wrapper.py " +
                         "{pwd:s}/fake -joke yes",
                         args)

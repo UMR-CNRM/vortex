@@ -18,6 +18,7 @@ from vortex.data.flow import FlowResource
 from vortex.data.contents import JsonDictContent, TextContent
 from vortex.syntax.stdattrs import number_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert
+from common.data.logs import use_flow_logs_stack
 from common.data.modelstates import Historic
 
 #: No automatic export
@@ -108,6 +109,7 @@ class SingularVector(Historic):
         return 'SVARPE' + '{0:03d}'.format(self.number) + '+0000'
 
 
+@use_flow_logs_stack
 class NormCoeff(FlowResource):
     """
     Coefficient used to normalize the singular vectors or the bred modes.
@@ -238,6 +240,7 @@ class SampleContent(JsonDictContent):
         return me == other
 
 
+@use_flow_logs_stack
 @namebuilding_delete('src')
 class PopulationList(FlowResource):
     """
@@ -350,6 +353,7 @@ class ClustContent(TextContent):
         return self.data[idx - 1]
 
 
+@use_flow_logs_stack
 @namebuilding_delete('src')
 class GeneralCluster(FlowResource):
     """

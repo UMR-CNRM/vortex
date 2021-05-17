@@ -103,9 +103,12 @@ class ServerSyncSimpleSocket(ServerSyncTool):
 
     def __init__(self, *args, **kw):
         super(ServerSyncSimpleSocket, self).__init__(*args, **kw)
-        # Create the sockect
+        # Create the socket
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._socket.bind((socket.getfqdn(), 0))
+        try:
+            self._socket.bind((socket.getfqdn(), 0))
+        except socket.error:
+            self._socket.bind(('localhost', 0))
         self._socket.settimeout(self.checkinterval)
         self._socket.listen(1)
         # Current connection
