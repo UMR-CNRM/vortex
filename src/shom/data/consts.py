@@ -19,7 +19,8 @@ class Hycom3dConsts(GenvModelResource):
             attr=dict(
                 pack=dict(values=["naming"]),
                 gvar=dict(default="[model]_[pack]_[rank]_tar"),
-                rank=dict(type=int)
+                rank=dict(type=int),
+                model=dict(values=["hycom3d"] )
             ),
         )
     ]
@@ -40,7 +41,8 @@ class Hycom3dGeoConsts(GenvModelGeoResource):
                     "nest", "regional", "tide", "run",
                     "postprod", "savefield", "split"]),
                 gvar=dict(default="[model]_[pack]_[gdomain]_[rank]_tar"),
-                rank=dict(type=int)
+                rank=dict(type=int),
+                model=dict(values=["hycom3d"])
             ),
         )
     ]

@@ -23,6 +23,7 @@ class Hycom3dIBCRegridcdfBinary(Binary):
             attr=dict(
                 gvar=dict(default="master_hycom3d_ibc_regridcdf"),
                 kind=dict(values=["horizontal_regridder"]),
+                model=dict(values=["hycom3d"])
             ),
         ),
     ]
@@ -48,6 +49,7 @@ class Hycom3dIBCIniconBinary(Binary):
             attr=dict(
                 gvar=dict(default="master_hycom3d_ibc_inicon"),
                 kind=dict(values=["vertical_regridder"]),
+                model=dict(values=["hycom3d"])
             ),
         ),
     ]
@@ -76,6 +78,9 @@ class Hycom3dSpNudgeDemerliacBinary(Binary):
                 kind=dict(
                     values=["demerliac_filter"],
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         ),
     ]
@@ -102,6 +107,9 @@ class Hycom3dSpNudgeSpectralBinary(Binary):
                 kind=dict(
                     values=["spectral_filter"],
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         ),
     ]
@@ -126,6 +134,9 @@ class Hycom3dModelBinary(OceanographicModel):
                 gvar = dict(
                     default='master_hycom3d_oceanmodel_[gdomain]'
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         )
     ]
@@ -147,6 +158,9 @@ class Hycom3dPostProdFilterBinary(Binary):
                 ),
                 kind=dict(
                     values=["postprod_filter"],
+                ),
+                model=dict(
+                    values=["hycom3d"],
                 ),
             ),
         ),
@@ -180,6 +194,9 @@ class Hycom3dPostProdVertInterpolationBinary(Binary):
                 kind=dict(
                     values=["postprod_vertinterpolation"],
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         ),
     ]
@@ -210,6 +227,9 @@ class Hycom3dPostProdTempConversionBinary(Binary):
                 ),
                 kind=dict(
                     values=["postprod_tempconversion"],
+                ),
+                model=dict(
+                    values=["hycom3d"],
                 ),
             ),
         ),
