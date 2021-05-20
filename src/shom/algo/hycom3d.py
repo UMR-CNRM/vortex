@@ -35,10 +35,6 @@ class Hycom3dCompilator(Expresso):
                 type=dict,
                 default={},
             ),
-            env_context=dict(
-                info="hycom3d context",
-                values=["prepost", "model"]
-            ),
         ),
     )
 
@@ -65,11 +61,6 @@ class Hycom3dIBCRunTime(Expresso):
             attr=dict(
                 kind=dict(
                     values=["hycom3d_ibc_run_time"],
-                ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
                 ),
                 terms=dict(type=list),
             ),
@@ -99,7 +90,6 @@ class Hycom3dIBCRunHorizRegridcdf(BlindRun):
             attr=dict(
                 kind=dict(values=["hycom3d_ibc_run_horiz_regridcdf"]),
                 method=dict(type=int),
-                pad=dict(type=float),
             ),
         ),
     ]
@@ -305,11 +295,6 @@ class Hycom3dSpectralNudgingRunPrepost(Expresso):
                 kind=dict(
                     values=["hycom3d_spnudge_prepost"],
                 ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
             ),
         ),
     ]
@@ -336,11 +321,6 @@ class Hycom3dSpectralNudgingRunDemerliac(BlindRun):
             attr=dict(
                 kind=dict(
                     values=["hycom3d_spnudge_demerliac"],
-                ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
                 ),
             ),
         ),
@@ -395,11 +375,6 @@ class Hycom3dSpectralNudgingRunSpectralPreproc(Expresso):
                 kind=dict(
                     values=["hycom3d_spnudge_spectral_preproc"],
                 ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
             ),
         ),
     ]
@@ -434,11 +409,6 @@ class Hycom3dSpectralNudgingRunSpectral(BlindRun):
             attr=dict(
                 kind=dict(
                     values=["hycom3d_spnudge_spectral"],
-                ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
                 ),
             ),
         ),
@@ -497,11 +467,6 @@ class Hycom3dModelRunPreproc(Expresso):
                 kind=dict(
                     values=["hycom3d_model_preproc"],
                 ),
-                rank=dict(
-                    default=0,
-                    type=int,
-                    optional=True,
-                ),
                 restart=dict(
                     default=True,
                     type=bool,
@@ -550,10 +515,6 @@ class Hycom3dModelRun(Parallel):
                     optional=True,
                     type=dict,
                     default={},
-                ),
-                env_context=dict(
-                    info="hycom3d context",
-                    values=["prepost", "model"]
                 ),
             ),
         ),
