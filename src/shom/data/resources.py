@@ -82,6 +82,9 @@ class Hycom3dInterpOutput(GeoFlowResource):
                     values=["time", "space"],
                     optional=True
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         ),
     ]
@@ -116,6 +119,9 @@ class Hycom3dModelInput(GeoFlowResource):
                 format=dict(
                     values=["a", "b", "nc"],
                 ),
+                model=dict(
+                    values=["hycom3d"],
+                ),
             ),
         ),
     ]
@@ -146,6 +152,9 @@ class Hycom3dRiversModelInput(Hycom3dModelInput):
                 ),
                 format=dict(
                     values=['r', 'nc'],
+                ),
+                model=dict(
+                    values=["hycom3d"],
                 ),
             ),
         )
@@ -180,7 +189,9 @@ class Hycom3dInitialCondition(InitialCondition):
                     values=["cdf", "res", "netcdf", "binary"],
                     optional=True
                 ),
- 
+                model=dict(
+                    values=["hycom3d"],
+                ), 
             ),
         ),
     ]
@@ -238,6 +249,9 @@ class Hycom3dModelOutput(Analysis):
                 ),
                 nativefmt=dict(
                     values=["netcdf", "nc"],
+                ),
+                model=dict(
+                    values=["hycom3d"],
                 ),
             )
         )
