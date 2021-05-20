@@ -21,7 +21,7 @@ class Hycom3dIBCRegridcdfBinary(Binary):
         dict(
             info="Binary that regrids initial conditions netcdf files",
             attr=dict(
-                gvar=dict(default="master_hycom3d_ibc_regridcdf", optional=True),
+                gvar=dict(default="master_hycom3d_ibc_regridcdf"),
                 kind=dict(values=["horizontal_regridder"]),
             ),
         ),
@@ -46,7 +46,7 @@ class Hycom3dIBCIniconBinary(Binary):
         dict(
             info="Binary that computes initial conditions for HYCOM",
             attr=dict(
-                gvar=dict(default="master_hycom3d_ibc_inicon", optional=True),
+                gvar=dict(default="master_hycom3d_ibc_inicon"),
                 kind=dict(values=["vertical_regridder"]),
             ),
         ),
@@ -71,8 +71,7 @@ class Hycom3dSpNudgeDemerliacBinary(Binary):
             info="Binary that apply Demerliac filter HYCOM Spectral Nugding",
             attr=dict(
                 gvar=dict(
-                    default="master_hycom3d_spnudge_demerliac",
-                    optional=True
+                    default="master_hycom3d_spnudge_demerliac"
                 ),
                 kind=dict(
                     values=["demerliac_filter"],
@@ -98,8 +97,7 @@ class Hycom3dSpNudgeSpectralBinary(Binary):
             info="Binary that apply spectral filter HYCOM Spectral Nugding",
             attr=dict(
                 gvar=dict(
-                    default="master_hycom3d_spnudge_spectral",
-                    optional=True
+                    default="master_hycom3d_spnudge_spectral"
                 ),
                 kind=dict(
                     values=["spectral_filter"],
@@ -126,8 +124,7 @@ class Hycom3dModelBinary(OceanographicModel):
             info="Binary of the model",
             attr= dict(
                 gvar = dict(
-                    default='master_hycom3d_oceanmodel_[gdomain]',
-                    optional=True
+                    default='master_hycom3d_oceanmodel_[gdomain]'
                 ),
             ),
         )
@@ -146,8 +143,7 @@ class Hycom3dPostProdFilterBinary(Binary):
             info="Binary that applies filtering in time over Hycom outputs",
             attr=dict(
                 gvar=dict(
-                    default="master_hycom3d_postprod_timefilter",
-                    optional=True
+                    default="master_hycom3d_postprod_timefilter"
                 ),
                 kind=dict(
                     values=["postprod_filter"],
@@ -179,8 +175,7 @@ class Hycom3dPostProdVertInterpolationBinary(Binary):
             info="Binary that verticaly interpolates",
             attr=dict(
                 gvar=dict(
-                    default="master_hycom3d_postprod_vertinterpolation",
-                    optional=True
+                    default="master_hycom3d_postprod_vertinterpolation"
                 ),
                 kind=dict(
                     values=["postprod_vertinterpolation"],
@@ -211,8 +206,7 @@ class Hycom3dPostProdTempConversionBinary(Binary):
             info="Binary that converts potential to insitu temperature for dataSHOM production",
             attr=dict(
                 gvar=dict(
-                    default="master_hycom3d_postprod_tempconversion",
-                    optional=True
+                    default="master_hycom3d_postprod_tempconversion"
                 ),
                 kind=dict(
                     values=["postprod_tempconversion"],

@@ -176,8 +176,6 @@ class Hycom3dIBCRunVerticalInicon(BlindRun):
             nx=self._specs["nx"],
             ny=self._specs["ny"],
             nz=self._specs["nz"],
-            sshmin=str(self.sshmin),
-            cmoy=str(self.cmoy),
             cstep="0")
 
 
