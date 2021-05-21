@@ -403,16 +403,11 @@ class MpiTool(footprints.FootprintBase):
             sh = self.system
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
-<<<<<<< HEAD
-                #libs = sh.ldd(mpirun_path)
-                libs = sh.ldd(mpi_lib)
-=======
                 try:
                     libs = sh.ldd(mpirun_path)
                 except ExecutionError:
                     # This may happen if the mpirun binary is statically linked
                     libs = []
->>>>>>> 5fa498c... Bugfix for mpitools (if mpirun is static)
                 if any([libname is None for libname in libs.values()]):
                     libscache = dict()
                     for binary in self.binaries:
