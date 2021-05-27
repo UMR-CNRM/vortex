@@ -176,6 +176,8 @@ class Hycom3dIBCRunVerticalInicon(BlindRun):
             nx=self._specs["nx"],
             ny=self._specs["ny"],
             nz=self._specs["nz"],
+            cmoy=self.cmoy,
+            sshmin=self.sshmin,
             cstep="0")
 
 
@@ -464,6 +466,11 @@ class Hycom3dModelRunPreproc(Expresso):
             attr=dict(
                 kind=dict(
                     values=["hycom3d_model_preproc"],
+                ),
+                rank=dict(
+                    optional=True,
+                    default=0,
+                    type=int,
                 ),
                 restart=dict(
                     default=True,

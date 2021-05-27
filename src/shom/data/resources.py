@@ -83,7 +83,7 @@ class Hycom3dInterpOutput(GeoFlowResource):
                     optional=True
                 ),
                 model=dict(
-                    values=["hycom3d"],
+                    values=["hycom3d", "psy4"],
                 ),
             ),
         ),
