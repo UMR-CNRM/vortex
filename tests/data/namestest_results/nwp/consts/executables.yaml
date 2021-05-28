@@ -1,0 +1,45 @@
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: null
+      compiler_version: null
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: &id001 !test_names.core.TestParameters
+        cutoff: assim
+        cycle: cy42_op2.67
+        date: 2018010100
+        geometry: global1198
+        gnamespace: gco.multi.fr
+        model: arpege
+        namespace: vortex.multi.fr
+        vapp: arpege
+        vconf: 4dvarfr
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.IMPI512IFC1601.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: null
+      compiler_version: TOTO
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.TOTO.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: 9x
+      compiler_version: null
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.IMPI512IFC1601.9x.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: 9x
+      compiler_version: TOTO
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.TOTO.9x.exe

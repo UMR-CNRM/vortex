@@ -31,7 +31,7 @@ class FooResource(object):
         if prkind in ('genv', 'uenv'):
             return self.gvar
         elif prkind in ('gget', 'uget'):
-            return '.m01'  # Simulate a monthly data
+            return dict(suffix='.m01')  # Simulate a monthly data
         else:
             raise ValueError
 

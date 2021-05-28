@@ -1,0 +1,30 @@
+default:
+    style: olive
+    sets:
+        # Arpege world
+        -   date: 2018010100
+            geometry: global1198
+            cutoff: assim
+            model: arpege
+            namespace: vortex.multi.fr
+            cycle: cy42_op2.67
+            gnamespace: 'gco.multi.fr'
+            vapp: arpege
+            vconf: 4dvarfr
+
+register:
+    genv:
+        - cy42_op2.67
+
+todo:
+    # An IFS executable
+    -   commons:
+            genv: 'cy42_op2.67'
+        tests:
+            - kind: ifsmodel
+              compiler_version:
+                  - null
+                  - TOTO
+              compiler_option:
+                  - null
+                  - 9x

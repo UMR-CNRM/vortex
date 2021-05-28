@@ -109,7 +109,7 @@ class Resource(footprints.FootprintBase):
 
     def gget_basename(self):
         """Duck typing: return an empty string by default."""
-        return ''
+        return dict()
 
     def uget_basename(self):
         """Proxy to :meth:`gget_basename`."""

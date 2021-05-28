@@ -10,7 +10,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import vortex
 
 from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle
+from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco
 
 #: No automatic export
 __all__ = []
@@ -47,6 +47,7 @@ class IFSModel(NWPModel):
 
     _footprint = [
         arpifs_cycle,
+        gmkpack_compiler_identification_deco,
         gvar,
         dict(
             info = 'IFS Model',
