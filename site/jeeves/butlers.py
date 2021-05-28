@@ -5,7 +5,7 @@
 TODO module description.
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
 import os
@@ -269,7 +269,7 @@ class PidFile(object):
         if pid is None:
             pid = os.getpid()
         os.ftruncate(self.fd, 0)
-        os.write(self.fd, "%d\n" % int(pid))
+        os.write(self.fd, b"%d\n" % int(pid))
         os.fsync(self.fd)
 
     def delfile(self):

@@ -1,4 +1,4 @@
-#!/opt/softs/anaconda3/envs/Python27/bin/python -u
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -7,8 +7,7 @@ Leave it to Jeeves.
 A basic launching interface to Jeeves' services !
 """
 
-from __future__ import print_function, division
-# from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import os
 import re
