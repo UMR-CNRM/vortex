@@ -273,7 +273,7 @@ class OpJobAssistant(OpJobAssistantTest):
 
 
 class _ReportContext(object):
-    """Context manager that print a report."""
+    """Context manager that prints a report."""
 
     def __init__(self, task, ticket):
         self._task = task
@@ -291,7 +291,7 @@ class _ReportContext(object):
 
 
 class InputReportContext(_ReportContext):
-    """Context manager that print a report on inputs."""
+    """Context manager that prints a report on inputs."""
 
     def __init__(self, task, ticket,
                  alternate_tplid='mode_secours',
@@ -329,7 +329,7 @@ class InputReportContext(_ReportContext):
 
 
 class OutputReportContext(_ReportContext):
-    """Context manager that print a report on outputs."""
+    """Context manager that prints a report on outputs."""
 
     def __init__(self, task, ticket, fatal_tplid='output_error'):
         super(OutputReportContext, self).__init__(task, ticket)
@@ -374,7 +374,7 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
 
     :param str kind: kind use to route
     :param str or dict productid: (use selkeyproductid to define the dictionary key)
-    :param str shhost: tranfertnode
+    :param str sshhost: tranfertnode
     :param dict optfilter: dictionary (used to allow routing)
     :param str soprano_target: str (piccolo or piccolo-int)
     :param str routingkey: the BD routing key
@@ -434,8 +434,7 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
     :param bool useterm: if True use rh.resource.term for progress bar
     :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
 
-    example of use for 'sharedadvance'(this code must be implemented in the task.py)::
-
+    example of use for 'sharedadvance' (this code must be implemented in the task.py)::
         >>> import multiprocessing as mp
         >>> avancement = mp.Value('i', 0)
         >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)

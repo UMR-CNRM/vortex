@@ -340,7 +340,7 @@ class Deposit(getbytag.GetByTag):
             return None, None
 
     def _first_clean(self):
-        """Run at deposit creation: set ``_last_clean``to force cleaning at initialization."""
+        """Run at deposit creation: set ``_last_clean`` to force cleaning at initialization."""
         if not self.cleaning:
             return
         self._lastclean = datetime.now() - timedelta(hours=1, seconds=self.minclean)

@@ -643,7 +643,7 @@ class DiagPE(BlindRun, DrHookDecoMixin, EcGribDecoMixin):
             if self.fatal:
                 self.delayed_exception_add(newexc, traceback=False)
             else:
-                logger.info("Fatal is false consequently no exception is recorder. It would look like this:")
+                logger.info("Fatal is false consequently no exception is recorded. It would look like this:")
                 print(newexc)
         members = sorted(members)
 

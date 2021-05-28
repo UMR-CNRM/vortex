@@ -214,12 +214,12 @@ class GRIBFilter(_GenericFilter):
         for a_filter in self._filters:
             f_name = outfile_fmt.format(filtername=a_filter['filter_name'])
             out_filelist.append(f_name)
-            # It would be a lot better to use io.opern but grib_api is very anoing !
+            # It would be a lot better to use io.open but grib_api is very annoying !
             out_data.append(open(f_name, 'wb'))
         if self.concatenate:
             f_name = outfile_fmt.format(filtername=self.CONCATENATE_FILTER)
             out_filelist.append(f_name)
-            # It would be a lot better to use io.opern but grib_api is very anoing !
+            # It would be a lot better to use io.open but grib_api is very annoying !
             out_cat = open(f_name, 'wb')
 
         with usepygram.epy_env_prepare(sessions.current()):

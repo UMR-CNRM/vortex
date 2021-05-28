@@ -559,7 +559,7 @@ class HideService(Service):
         return hidden_path
 
     def __call__(self, filename):
-        """Main action: hide a cheap copy this file under a unique name."""
+        """Main action: hide a cheap copy of this file under a unique name."""
 
         actual_rootdir = self.rootdir or self.find_rootdir(filename)
         destination = self.sh.path.join(
