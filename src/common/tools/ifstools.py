@@ -126,17 +126,22 @@ class IfsOutputsConfigurator(IfsOutputsAbstractConfigurator):
         """Setup a given kind of output data (in a generic way)."""
         if terms is not None:
             sign = -1 if self.fcterm_unit == 'h' else 1
+            with_minutes = any([t.minute > 0 for t in terms])
             self._clean_namvar(namct0, 'NFR{:s}'.format(what), namname)
             self._clean_namvar(namct0, 'N{:s}TS'.format(what), namname)
             self._clean_namvar(namct0, 'N{:s}TSMIN'.format(what), namname)
             self._set_namvar_value(namct1, 'N1{:s}'.format(what), 1 if terms else 0, namname)
             if terms:
                 self._set_namvar_value(namct0, 'N{:s}TS(0)'.format(what), sign * len(terms), namname)
+                if with_minutes:
+                    if 'cy46' <= self.cycle < 'cy47':  # Temporary fix for cy46 only
+                        self._set_namvar_value(namct0, 'N{:s}TSMIN(0)'.format(what),
+                                               len(terms), namname)
                 logger.info('Setting up N%sTS and N%sTSMIN in &%s (file: %s)',
                             what, what, namct0.name, namname)
                 for i, t in enumerate(terms):
                     namct0['N{:s}TS({:d})'.format(what, i + 1)] = sign * t.hour
-                if any([t.minute > 0 for t in terms]):
+                if with_minutes:
                     for i, t in enumerate(terms):
                         namct0['N{:s}TSMIN({:d})'.format(what, i + 1)] = t.minute
 

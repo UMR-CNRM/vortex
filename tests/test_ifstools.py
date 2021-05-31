@@ -161,6 +161,21 @@ class TestIfsOutputsConfigurator(unittest.TestCase):
         self.assertEqual(_RES_NAM46_4,
                          nstart.dumps(sorting=FIRST_ORDER_SORTING, block_sorting=True))
 
+    def test_outputs_conf_cy46_t1(self):
+        ct = self._load_tool('arpege', 'cy46t1', 'h')
+        nstart = self._load_nam(_PRE_NAM46)
+        ct.modelstate = [1, 3, 6, 12]
+        ct.spectral_diag = None
+        ct.post_processing = []
+        ct.surf_modelstate = [1, '3:15']
+        self.assertTrue(ct(nstart, 'fake.4'))
+        # This part is cy46 specific
+        self.assertEqual(nstart['NAMCT0']['NSFXHISTSMIN(0)'], 2)
+        del nstart['NAMCT0']['NSFXHISTSMIN(0)']
+        # End of cy46 part
+        self.assertEqual(_RES_NAM46_2,
+                         nstart.dumps(sorting=FIRST_ORDER_SORTING, block_sorting=True))
+
 
 if __name__ == "__main__":
     unittest.main()
