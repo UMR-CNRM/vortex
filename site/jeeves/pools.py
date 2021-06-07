@@ -2,7 +2,11 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO module description.
+Handle
+
+- standard Requests for Jeeves
+- Deposits (named pools elsewhere) to contain them
+
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals

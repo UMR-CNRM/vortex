@@ -9,10 +9,10 @@ A basic launching interface to Jeeves' services !
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import argparse
 import os
 import re
 import sys
-import argparse
 
 vortexbase = re.sub(os.path.sep + 'bin$', '',
                     os.path.dirname(os.path.realpath(__file__)))

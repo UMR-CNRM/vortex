@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO module description.
+Build some simple questions for Jeeves
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals

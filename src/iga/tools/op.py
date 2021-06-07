@@ -5,26 +5,30 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
-import six
 from tempfile import mkdtemp
 
-from bronx.fancies import loggers
-import bronx.stdtypes.date
+import six
 
-import vortex  # @UnusedImport
-from vortex.tools.actions import actiond as ad
+import bronx.stdtypes.date
+import vortex
+from bronx.fancies import loggers
+from iga.tools import actions, services
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
+from vortex.tools.actions import actiond as ad
 
 #: No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
+# prevent IDEs from removing seemingly unused imports
+assert any([actions, services])
 
 
 class OpJobAssistantTest(JobAssistant):
@@ -121,7 +125,8 @@ class OpJobAssistantTest(JobAssistant):
             if anydate is None:
                 anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
                 anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
-                rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+                rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'),
+                                                    time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
                 if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
@@ -171,8 +176,6 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
         t.sh.highlight('Setting up OP Actions')
-        import iga.tools.services  # @UnusedImport
-        import iga.tools.actions  # @UnusedImport
 
         ad.add(vortex.tools.actions.EcflowGateway())
 
@@ -206,6 +209,7 @@ class OpJobAssistantTest(JobAssistant):
         if cycle in genv.cycles():
             logger.info('Cycle %s already registered', cycle)
         else:
+            genvdef = None
             if t.env.OP_GCOCACHE:
                 genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
             else:
@@ -227,7 +231,10 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
-        """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
+        """Exit from OP session after a crash but simulating a happy ending.
+
+        Use only in a test environment.
+        """
         ad.ecflow_abort()
         print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
@@ -238,7 +245,6 @@ class OpJobAssistantTest(JobAssistant):
 
 
 class OpJobAssistant(OpJobAssistantTest):
-
     _footprint = dict(
         info = 'Op Job assistant.',
         attr = dict(
@@ -255,9 +261,11 @@ class OpJobAssistant(OpJobAssistantTest):
         if 'DMT_PATH_EXEC' in t.env():
             option_insertion = ('--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' +
                                 t.env['DMT_DATE_PIVOT'] + ' --job-path=' +
-                                re.sub(r'.*vortex/', '', t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) +
+                                re.sub(r'.*vortex/', '',
+                                       t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) +
                                 ' --log=' +
-                                re.sub(r'.*oldres/', '', t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR']))
+                                re.sub(r'.*oldres/', '',
+                                       t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR']))
             if 'DATA_OUTPUT_ARCH_PATH' in t.env:
                 option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
             tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
@@ -417,6 +425,7 @@ def opphase_hook_factory(optfilter=None):
 
     :param dict optfilter: (used to allow routing)
     """
+
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
@@ -438,8 +447,8 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
         >>> import multiprocessing as mp
         >>> avancement = mp.Value('i', 0)
         >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
-
     """
+
     def hook_ecfmeter(t, rh):  # @UnusedVariable
         max_value = int(maxvalue)
         current_value = 0

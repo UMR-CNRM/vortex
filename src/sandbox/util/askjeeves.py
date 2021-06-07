@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+A place to test callback functions for Jeeves.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import time
@@ -88,7 +88,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
     Activation of a vortex context.
     """
     from vortex.util.worker import VortexWorker
-    rc, value = True, 'Yo'
+    value = 'Yo'
     logger.loglevel = 'info'
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
     with VortexWorker(logger=logger, modules=('common', 'olive')) as vwork:
@@ -98,8 +98,8 @@ def test_vortex(pnum, ask, config, logger, **kw):
         duration = 1
         try:
             duration = float(data.duration)
-        except Exception:
-            logger.error('Bad duration type', duration=data.duration)
+        except ValueError:
+            logger.error('Bad duration:', duration=data.duration)
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)
         logger.info('TestVortex', todo=ask.todo, pnum=pnum, ticket=vwork.vortex.ticket().tag,
@@ -108,6 +108,10 @@ def test_vortex(pnum, ask, config, logger, **kw):
 
 
 def test_direct_call_to_a_jeeves_callback():
+    """Run a jeeves async callback as if it was called by jeeves.
+
+    This may be run interactively in a debugger.
+    """
     import os
     from jeeves import pools
     from jeeves import butlers

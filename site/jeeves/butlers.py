@@ -2,32 +2,37 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO module description.
+Daemon related classes:
+
+- Generic base class for a daemon with pid file handling and a shareable logger
+- HouseKeeping (internal configuration handling)
+
+Jeeves inherits both of them and handles the asynchronous multiprocessing.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-import os
-import platform
-import time
 import fcntl
 import io
 import json
+import multiprocessing
+import os
+import platform
 import resource
 import signal
-import traceback
 import subprocess
-import multiprocessing
-
+import sys
+import time
+import traceback
 from ast import literal_eval
 from datetime import datetime
 from signal import SIGTERM
+
+import six
 from six.moves.configparser import SafeConfigParser
 
 import footprints
 from . import pools
-
 
 #: No automatic export
 __all__ = []
