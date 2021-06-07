@@ -3,6 +3,8 @@
 
 """
 OPE Services: routing files.
+
+20210528 - PL updated and adapted for python3 compatibility
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -13,8 +15,7 @@ import pprint
 import footprints
 import vortex
 from bronx.stdtypes import date
-from iga.tools import actions
-from iga.tools import services
+from iga.tools import actions, services
 from vortex import toolbox
 from vortex.tools.actions import actiond as ad
 
@@ -44,12 +45,12 @@ def list_actions():
     sh.subtitle('available actions')
     print(pprint.pformat(ad.actions))
     sh.subtitle('existing handlers')
-    print(pprint.pformat(ad.items()))
+    print(pprint.pformat(list(ad.items())))
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
         status = [h.status() for h in handlers]
-        print(act, ':', pprint.pformat(zip(status, handlers)))
+        print(act, ':', pprint.pformat(list(zip(status, handlers))))
     print()
 
 
@@ -70,12 +71,11 @@ def test_route():
 
     resuldir = rundir
 
-    # agt_fake_cmd is defined in target-xxx.ini to be 'router_fake.sh',
-    # a script installed along with the real route_p[ae].bin binaries,
-    # but that logs commands instead of executing them.
-    # To see what happened, use:
-    #    cat $TMPDIR/vortex/router_fake.log
-    toolbox.defaults(
+    # agt_fake_cmd is defined in target-machine.ini [agt] to be 'router_fake.sh',
+    # which is a script installed along with the real route_p[ae].bin binaries,
+    # that simply logs commands instead of executing them, in:
+    #     $TMPDIR/vortex/router_fake.log
+    fake_opts = dict(
         resuldir=resuldir,
         agt_pa_cmd='agt_fake_cmd',
         agt_pe_cmd='agt_fake_cmd',
@@ -83,32 +83,36 @@ def test_route():
     )
 
     if sh.sysname == 'Darwin':
-        # cd  ~/tmp/vortex
-        # ln -s ~/at_work/dev/vortex/dev/services/validation/router_fake.sh ./
-        # ln -s router_fake.sh router_pa.sh
-        # ln -s router_fake.sh router_pe.sh
-        toolbox.defaults(
-            agt_path='/Users/pascal/tmp/vortex',
+        # in target-machine.ini, please give access to the local
+        # version of router_fake.sh this way:
+        # [services]
+        #     agt_path = /Users/pascal/proc/vortex/examples/ope
+
+        # replace the distant call by a local one
+        fake_opts.update(
             sshhost=sh.hostname,
         )
 
-    with open('tempo.dta', 'w') as fp:
+        # and have the minimal mandatory soprano env variables
+        e.DMT_DATE_PIVOT = date.synop().ymdhms  # e.g. 20210528120000
+
+    with open('tempo.dta', 'wt') as fp:
         contents = "Test VORTEX - " + stime + '\n'
         fp.write(contents)
     print("contents:", contents)
-    print("md5 =", hashlib.md5(contents).hexdigest())
+    print("md5 =", hashlib.md5(contents.encode()).hexdigest())
 
     sh.subtitle('BDAP')
-    ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10', term=84,
-             targetname='exemple_bdap.dta')
+    ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10',
+             term=84, targetname='exemple_bdap.dta', **fake_opts)
 
     # This BDPE call should succeed (to piccolo, not to piccolo-int).
     sh.subtitle('BDPE')
-    ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe', term=36,
-             targetname='exemple_bdpe.dta')
+    ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe',
+             term=36, targetname='exemple_bdpe.dta', **fake_opts)
 
     sh.subtitle('BDM')
-    ad.route(kind='bdm', filename='tempo.dta', productid=4242)
+    ad.route(kind='bdm', filename='tempo.dta', productid=4242, **fake_opts)
 
     sh.subtitle('results')
     print("log files were created in", resuldir)
