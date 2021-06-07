@@ -12,6 +12,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import argparse
 import os
 import re
+import shlex
 import sys
 
 vortexbase = re.sub(os.path.sep + 'bin$', '',
@@ -54,11 +55,20 @@ def get_options():
     return parser.parse_args()
 
 
+def add_args(s):
+    """Add args to the command line, expressed like in a shell"""
+    sys.argv.extend([os.path.expanduser(u) for u in shlex.split(s)])
+
+
 if __name__ == "__main__":
+
+    # add options for debugging
+    # add_args('start test')
 
     opts = get_options()
 
-    j = Jeeves(tag=opts.tagname, loglevel=opts.loglevel)
+    myname = os.path.basename(__file__)
+    j = Jeeves(tag=opts.tagname, procname=myname, loglevel=opts.loglevel)
 
     if opts.action == 'start':
         j.start(mkdaemon=not opts.foreground)
@@ -70,7 +80,7 @@ if __name__ == "__main__":
         j.restart()
 
     else:
-        print('Unknown command')
+        print('Unknown command:', opts.action)
         sys.exit(2)
 
     sys.exit(0)

@@ -198,6 +198,8 @@ class ExitHandler(object):
         sys.exit(0)
 
     def __enter__(self):
+        moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
+        self.daemon.info('Context enter ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
         old_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
         if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
             if not self.on_stack:
@@ -214,7 +216,8 @@ class ExitHandler(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Be sure to call all registered callbacks at exit time."""
-        self.daemon.info('Context exit ' + repr(self.daemon))
+        moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
+        self.daemon.info('Context exit ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
         self.daemon.info('Context exit ' + repr(exc_type))
         if hasattr(exc_value, 'message') and exc_value.message:
             self.daemon.critical('Context exit', error=exc_value)
@@ -225,8 +228,8 @@ class ExitHandler(object):
             print('-' * 80, "\n")
         else:
             self.daemon.info('Context exit', value=exc_value)
-        for callback in [x for x in self.on_exit if x is not None]:
-            self.daemon.info('Context callback ' + repr(callback))
+        for i, callback in enumerate([x for x in self.on_exit if x is not None]):
+            self.daemon.info('Context exit callback ' + str(i) + ' : ' + repr(callback))
             callback()
         return True
 
@@ -312,31 +315,29 @@ class PidFile(object):
             return False
 
         p = subprocess.Popen(
-            ['ps', '-o', 'comm', '-p', str(int(contents))],
+            ['ps', '-o', 'command', '-p', str(int(contents))],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, u_stderr = p.communicate()
-        if stdout == "COMM\n":
+        stdout, u_stderr = [six.ensure_text(stream) for stream in p.communicate()]
+        if stdout == 'COMMAND\n':
             return False
 
-        if self.procname in stdout[stdout.find("\n") + 1:]:
-            return True
-
-        return False
+        command = stdout[stdout.find("\n") + 1:]
+        return self.procname in command and 'python' in command.lower()
 
 
 class BaseDaemon(object):
     """
     A generic daemon class.
-    Thanks to Sander Marechal : http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+    Thanks to Sander Marechal : https://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
     With some modifications and PidFile creation.
 
     Usage: subclass the BaseDaemon class and override the run() method
     """
 
-    def __init__(self, tag='test', pidfile=None, loglevel=1, inifile=None, redirect=None):
+    def __init__(self, tag='test', pidfile=None, procname='python', loglevel=1, inifile=None, redirect=None):
         self._tag = tag
-        self._pidfile = PidFile(tag=tag, filename=pidfile)
+        self._pidfile = PidFile(tag=tag, filename=pidfile, procname=procname)
         self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
         self._rundir = os.getcwd()
         self._logger = None
@@ -418,7 +419,8 @@ class BaseDaemon(object):
         """
         Do the UNIX double-fork magic, see Stevens' "Advanced
         Programming in the UNIX Environment" for details (ISBN 0201563177)
-        http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+        https://www.oreilly.com/library/view/python-cookbook/0596001673/ch06s08.html
+        https://gist.github.com/Ma233/dd1f2f93db5378a29a3d1848288f520e
         """
         try:
             pid = os.fork()
@@ -489,6 +491,7 @@ class BaseDaemon(object):
         self.info('Process', pidfile=self.pidfile.filename)
         self.info('Process', rundir=self.rundir)
         self.info('Process', tmpdir=self.tmpdir)
+        self.info('Process', python=sys.version.replace('\n', ' '))
 
     def bye(self):
         """Nice exit."""
@@ -496,7 +499,7 @@ class BaseDaemon(object):
         self.info('Bye folks...')
 
     def exit_callbacks(self):
-        """Return a list of callbacks to be launch before daemon exit."""
+        """Return a list of callbacks to be launched before the daemon exits."""
         return (self.bye,)
 
     def start(self, mkdaemon=True):
