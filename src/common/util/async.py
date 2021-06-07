@@ -2,13 +2,14 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Callback functions for Jeeves.
+If needed, VORTEX must be loaded via a VortexWorker in this context.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from vortex.util.worker import VortexWorker
 from vortex.tools import compression, systems
+from vortex.util.worker import VortexWorker
 
 #: No automatic export
 __all__ = []
@@ -150,7 +151,6 @@ def system_noop(pnum, ask, config, logger, **opts):
     Used to desactivate jeeves when mirroring the operational suite.
     """
     logger.info('Noop', todo=ask.todo, pnum=pnum, opts=opts)
-    value = dict(rpool='error')
 
     with VortexWorker(logger=logger) as vwork:
         sh = vwork.vortex.sh()

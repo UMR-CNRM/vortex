@@ -17,6 +17,7 @@ Functions
 ---------
 
 .. autofunction:: dayfile_report
+.. autofunction:: system_route
 
 Classes
 -------

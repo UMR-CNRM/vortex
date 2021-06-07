@@ -20,4 +20,3 @@ Functions
 .. autofunction:: system_cp
 .. autofunction:: system_scp
 .. autofunction:: system_noop
-
