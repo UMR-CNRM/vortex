@@ -122,3 +122,8 @@ class VortexWorker(object):
         else:
             self.logger.warning('VORTEX exit')
         return True
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(verbose=False)

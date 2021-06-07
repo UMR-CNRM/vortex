@@ -22,8 +22,8 @@ def _double_ssh(sh, loginnode, transfernode):
 
     May return None when network problems occur.
     """
-    cmd = 'ssh {} ssh {} hostname -s'.format(loginnode, transfernode)
-    rc = sh.spawn(cmd, shell=True, output=True, fatal=False)
+    cmd = ['ssh', '-x', loginnode, 'ssh', '-x', transfernode, 'hostname']
+    rc = sh.spawn(cmd, shell=False, output=True, fatal=False)
     if not rc:
         return None
     return rc[0]
@@ -159,3 +159,13 @@ def system_noop(pnum, ask, config, logger, **opts):
         value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
     return pnum, vwork.rc, value
+
+
+if __name__ == '__main__':
+    import vortex
+
+    t = vortex.ticket()
+    sh = t.sh
+    sh.trace = True
+    sh.verbose = True
+    print(_double_ssh(sh, 'beaufixoper', 'beaufixtransfert-agt'))
