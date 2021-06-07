@@ -9,11 +9,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import io
 import re
+from pprint import pformat
 from tempfile import mkdtemp
 
 import six
 
 import bronx.stdtypes.date
+import footprints
 import vortex
 from bronx.fancies import loggers
 from iga.tools import actions, services
@@ -183,6 +185,7 @@ class OpJobAssistantTest(JobAssistant):
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
+        print('+ JEEVES jroute =', t.env.get('jroute'))
 
         # ----------------------------------------------------------------------
         t.sh.highlight('START message to op MESSDAYF reporting file')
@@ -375,14 +378,61 @@ def filteractive(r, dic):
     return filter_active
 
 
-def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None,
+def defer_route(t, rh, jeeves_opts, route_opts):
+    """Send to jeeves all the information needed to handle asynchronously
+    the grib filtering and then call the routing service.
+    """
+    print(t.prompt, 'routing rh  :', rh.idcard())
+    print(t.prompt, 'jeeves_opts :', pformat(jeeves_opts))
+    print(t.prompt, 'route_opts  :', pformat(route_opts))
+
+    effective_path = t.sh.path.abspath(rh.container.localpath())
+
+    # get the filter definition (if any)
+    filtername = jeeves_opts['filtername']
+    if filtername:
+        filters = [
+            request.rh.contents.data
+            for request in t.context.sequence.effective_inputs(
+                role='GRIBFilteringRequest',
+                kind='filtering_request', )
+            if request.rh.contents.data['filter_name'] == filtername
+        ]
+        if len(filters) == 1:
+            jeeves_opts.update(
+                filterdefinition=filters[0],
+            )
+        else:
+            raise ValueError('filtername not found in the effective_inputs: %s', filtername)
+
+    # get a service able to create the hidden copy
+    fmt = rh.container.actualfmt
+    hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
+
+    # complete the request
+    jeeves_opts.update(
+        todo='route',
+        jname=t.env.get('jroute'),
+        source=hide(effective_path),
+        fmt=fmt,
+        route_opts=route_opts,
+        original=effective_path,
+        rhandler=rh.as_dict(),
+        rlocation=rh.location(),
+    )
+
+    # post the request to jeeves
+    return ad.jeeves(**jeeves_opts)
+
+
+def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
                          routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
-                         header_infile=True, **kw):
+                         header_infile=True, deferred=True, filtername=None, **kw):
     """Hook functions factory to route files while the execution is running.
 
     :param str kind: kind use to route
     :param str or dict productid: (use selkeyproductid to define the dictionary key)
-    :param str sshhost: tranfertnode
+    :param str sshhost: transfertnode. Use None to avoid ssh from the agt node to itself.
     :param dict optfilter: dictionary (used to allow routing)
     :param str soprano_target: str (piccolo or piccolo-int)
     :param str routingkey: the BD routing key
@@ -390,6 +440,8 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
     :param str targetname:
     :param dict transmet:
     :param bool header_infile: use to add transmet header in routing file
+    :param bool deferred: don't route now, ask jeeves to filter if needed, then route
+    :param str filtername: name of the grib filter to be applied by the jeeves callback
     """
 
     def hook_route(t, rh):
@@ -409,13 +461,20 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
         if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term') and 'term' not in kwargs:
-            kwargs['term'] = rh.resource.term
+            kwargs['term'] = rh.resource.term.export_dict()
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
         if filteractive(rh, optfilter):
-            ad.route(** kwargs)
-            print(t.prompt, 'routing file = ', rh)
+            if deferred:
+                print(t.prompt, 'asking jeeves to route file =', pformat(rh))
+                jeeves_opts = dict(
+                    filtername=filtername,
+                )
+                defer_route(t, rh, jeeves_opts, kwargs)
+            else:
+                print(t.prompt, 'routing file =', rh)
+                ad.route(**kwargs)
 
     return hook_route
 
