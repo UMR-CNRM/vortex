@@ -9,10 +9,6 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-from collections import defaultdict
-import footprints
-import six
-import vortex.toolbox
 
 from vortex.algo.components import AlgoComponent
 logger = loggers.getLogger(__name__)
@@ -38,12 +34,12 @@ class S2m_ensemble_postprocessing(AlgoComponent):
                 info = "Variable names to be post-processed",
                 type = list,
                 optional = False
-                ),
+            ),
             engine = dict(
                 optional    = True,
                 default     = 's2m',
                 values      = ['s2m']
-                ),
+            ),
             datebegin=dict(
                 info="Date in the namelist to run PREP.",
                 type=Date,
@@ -51,9 +47,10 @@ class S2m_ensemble_postprocessing(AlgoComponent):
             dateend=dict(
                 info="Date in the namelist to stop OFFLINE.",
                 type=Date,
-                default=None),
+                default=None
             ),
-        )
+        ),
+    )
 
     def execute(self, rh, opts):
         # get input resources

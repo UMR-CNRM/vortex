@@ -133,7 +133,10 @@ class GridTarget(GenvModelGeoResource):
 
 
 class Prosnow_SetUp_Global(GenvModelResource):
-    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    Prosnow general setup file.
+    """
 
     _footprint = dict(
         attr = dict(
@@ -155,13 +158,16 @@ class Prosnow_SetUp_Global(GenvModelResource):
 
 
 class Prosnow_SetUp_Resort(GenvModelResource):
-
-    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    Prosnow ski-resort setup file.
+    """
 
     _footprint = dict(
         attr = dict(
             kind = dict(
-                values = ['sru', 'sru_flat', 'pgd_spinup', 'prep_spinup', 'water', 'snow_nogro', 'snow_nosm', 'snow_noobs', 'obs_empty'],
+                values = ['sru', 'sru_flat', 'pgd_spinup', 'prep_spinup', 'water', 'snow_nogro', 'snow_nosm',
+                          'snow_noobs', 'obs_empty'],
             ),
             nativefmt = dict(
                 values  = ['ascii', 'netcdf'],

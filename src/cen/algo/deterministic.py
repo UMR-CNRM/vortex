@@ -317,8 +317,11 @@ class Interpol_Forcing(Parallel):
 
 @echecker.disabled_if_unavailable
 class Prosnow_Parallel(Surfex_Parallel):
-
-    ''' This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    It adds snow management specificities by ski resorts to standard SURFEX-Crocus algo components.
+    machine
+    """
 
     _footprint = dict(
         info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
@@ -344,19 +347,20 @@ class Prosnow_Parallel(Surfex_Parallel):
         my_name_PREP = 'PREP_' + dateend_str + '.nc'
 
         old_prep = prep_tomodify(my_name_PREP)
-        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc', 'prep_fillup_5.nc', 'variables', my_name_PREP)
+        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc',
+                                              'prep_fillup_5.nc', 'variables', my_name_PREP)
 
         return new_prep
 
     def execute(self, rh, opts):
 
-            # Insert water consumption in namelist (before running surfex)
-            self.prosnow_modify_namelist()
+        # Insert water consumption in namelist (before running surfex)
+        self.prosnow_modify_namelist()
 
-            # Call execute of Surfex_Parallel
-            # Note that modify_namelist and modify_prep methods of the mother class
-            # still have to be called in the following instruction
-            super(Prosnow_Parallel, self).execute(rh, opts)
+        # Call execute of Surfex_Parallel
+        # Note that modify_namelist and modify_prep methods of the mother class
+        # still have to be called in the following instruction
+        super(Prosnow_Parallel, self).execute(rh, opts)
 
-            # Insert snow height in prep (after running surfex)
-            self.prosnow_modify_prep()
+        # Insert snow height in prep (after running surfex)
+        self.prosnow_modify_prep()

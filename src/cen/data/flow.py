@@ -183,6 +183,7 @@ class Pro(SurfaceIO):
     def realkind(self):
         return "PRO"
 
+
 class Postproc(SurfaceIO):
     """Class for post-processed SURFEX/Crocus output files."""
     _footprint = [

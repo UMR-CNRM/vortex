@@ -15,6 +15,7 @@ from vortex.algo.components import DelayedAlgoComponentError
 
 logger = loggers.getLogger(__name__)
 
+
 class S2MTaskMixIn(object):
     """Usefull addtions for any S2M task."""
 
@@ -204,7 +205,7 @@ class S2MTaskMixIn(object):
         if self.conf.geometry.area == "postes":
             # no sytron members for postes geometry
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
-        elif sytron==False:
+        elif not sytron:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
@@ -268,8 +269,14 @@ class S2MTaskMixIn(object):
 
     def get_safran_sources(self, list_datebegin):
 
-        source_app = dict(datebegin={str(datebegin): 'arpege' if datebegin >= Date(2002, 8, 1) else 'ifs' for datebegin in list_datebegin})
-        source_conf = dict(datebegin={str(datebegin): '4dvarfr' if datebegin >= Date(2002, 8, 1) else 'era40' for datebegin in list_datebegin})
+        source_app = dict(
+            datebegin={str(datebegin):
+                       'arpege' if datebegin >= Date(2002, 8, 1) else 'ifs' for datebegin in list_datebegin})
+
+        source_conf = dict(
+            datebegin={str(datebegin):
+                       '4dvarfr' if datebegin >= Date(2002, 8, 1) else 'era40' for datebegin in list_datebegin})
+
         return source_app, source_conf
 
     def get_list_seasons(self, datebegin, dateend):
@@ -287,3 +294,9 @@ class S2MTaskMixIn(object):
             datebegin_input = dateend_input
 
         return list_dates_begin_input
+
+    def get_info_output(self):
+        if hasattr(self.conf, "writesx"):
+            return 'vortex.sxcen.fr', 'sxcen.cnrm.meteo.fr', self.conf.writesx
+        else:
+            return 'vortex.multi.fr', None, None
