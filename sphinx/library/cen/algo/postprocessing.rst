@@ -1,5 +1,5 @@
 :mod:`cen.algo.postprocessing` --- TODO description
-===========================================
+===================================================
 
 .. automodule:: cen.algo.postprocessing
    :synopsis: TODO description
