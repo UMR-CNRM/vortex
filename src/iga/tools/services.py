@@ -1080,8 +1080,7 @@ class OpMailService(TemplatedMailService):
         )
     )
 
-    def __init__(self, *args, **kw):
-        super(OpMailService, self).__init__(*args, **kw)
+    _TEMPLATES_SUBDIR = 'opmails'
 
     def deactivated(self):
         """Tells if opmail is deactivated : OP_MAIL set to 0"""
@@ -1108,13 +1107,6 @@ class OpMailService(TemplatedMailService):
         else:
             sdict.setdefault('MEMBER_S1_FR_FR', '')
         return sdict
-
-    def _template_name_rewrite(self, tplguess):
-        if not tplguess.startswith('@opmails/'):
-            tplguess = '@opmails/' + tplguess
-        if not tplguess.endswith('.tpl'):
-            tplguess += '.tpl'
-        return tplguess
 
     def header(self):
         """String prepended to the message body."""
