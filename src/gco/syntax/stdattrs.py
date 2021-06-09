@@ -200,6 +200,8 @@ def genv_ifs_compiler_convention(cls):
                 b_dict['compiler_version'] = self.compiler_version
             if getattr(self, 'compiler_option', None):
                 b_dict['compiler_option'] = self.compiler_option
+            if getattr(self, 'cycle', None):
+                b_dict['cycle'] = self.cycle
             return b_dict
 
         cls.gget_basename = gget_basename

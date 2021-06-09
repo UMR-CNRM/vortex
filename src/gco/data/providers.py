@@ -13,7 +13,7 @@ from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import Namespace
 
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import GgetId, UgetId, AbstractUgetId
+from gco.syntax.stdattrs import GgetId, UgetId, AbstractUgetId, ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []
@@ -39,12 +39,20 @@ def _gget_entry_rewrite(gget_entry, **basename_info):
     if 'suffix' in basename_info:
         gget_entry += basename_info['suffix']
     if 'compiler_version' in basename_info or 'compiler_option' in basename_info:
+        cycle = basename_info.get('cycle', ArpIfsSimplifiedCycle('cy01'))
         s_gget_entry = gget_entry.split('.')
-        if len(s_gget_entry) < 4 and s_gget_entry[-1] != 'exe':
-            raise ValueError('Got the following key: {:s}. Something like *.VERSION.OPT.exe is expected.'
-                             .format(gget_entry))
-        s_gget_entry[-2] = basename_info.get('compiler_option', s_gget_entry[-2])
-        s_gget_entry[-3] = basename_info.get('compiler_version', s_gget_entry[-3])
+        if cycle >= 'cy46t2' or cycle >= 'cy46t1_op1':
+            if len(s_gget_entry) < 5 and s_gget_entry[-1] != 'exe':
+                raise ValueError('Got the following key: {:s}. Something like *.VERSION.OPT.NN.exe is expected.'
+                                 .format(gget_entry))
+            s_gget_entry[-3] = basename_info.get('compiler_option', s_gget_entry[-3])
+            s_gget_entry[-4] = basename_info.get('compiler_version', s_gget_entry[-4])
+        else:
+            if len(s_gget_entry) < 4 and s_gget_entry[-1] != 'exe':
+                raise ValueError('Got the following key: {:s}. Something like *.VERSION.OPT.exe is expected.'
+                                 .format(gget_entry))
+            s_gget_entry[-2] = basename_info.get('compiler_option', s_gget_entry[-2])
+            s_gget_entry[-3] = basename_info.get('compiler_version', s_gget_entry[-3])
         gget_entry = '.'.join(s_gget_entry)
     return gget_entry
 

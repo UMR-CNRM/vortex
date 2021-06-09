@@ -28,3 +28,8 @@ todo:
               compiler_option:
                   - null
                   - 9x
+            - kind: ifsmodel
+              compiler_option: 9x
+              cycle:
+                  - cy46t1_op1.05
+                  - cy48

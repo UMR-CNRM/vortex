@@ -43,3 +43,21 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.TOTO.9x.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: 9x
+      cycle: cy46t1_op1.05
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.9x.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      compiler_option: 9x
+      cycle: cy48
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.9x.2y.exe
