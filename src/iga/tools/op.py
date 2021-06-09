@@ -223,7 +223,7 @@ class OpJobAssistantTest(JobAssistant):
         """Exit from OP session."""
         ad.report(kind='dayfile', mode='FIN')
         ad.ecflow_complete()
-        print('Well done Denis !')
+        print('Well done IGA !')
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
