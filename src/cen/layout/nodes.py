@@ -294,9 +294,3 @@ class S2MTaskMixIn(object):
             datebegin_input = dateend_input
 
         return list_dates_begin_input
-
-    def get_info_output(self):
-        if hasattr(self.conf, "writesx"):
-            return 'vortex.sxcen.fr', 'sxcen.cnrm.meteo.fr', self.conf.writesx
-        else:
-            return 'vortex.multi.fr', None, None
