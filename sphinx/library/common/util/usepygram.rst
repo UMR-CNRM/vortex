@@ -40,6 +40,8 @@ Functions
 
 .. autofunction:: add_poles_to_GLOB_file
 
+.. autofunction:: add_poles_to_reglonlat_file
+
 Classes
 -------
 
