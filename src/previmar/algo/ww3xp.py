@@ -80,7 +80,7 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
 
     def prepare(self, rh, opts):
         super(Ww3, self).prepare(rh, opts)
-        self.io_poll_sleep = 30
+        self.io_poll_sleep = 15
         sstepout='{0:d}'.format(int(self.stepout.length/3600))
         self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh,stepout=sstepout)
         self.flyput = True
@@ -120,6 +120,8 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
     def postfix(self, rh, opts):
         """Manually call the iopoll method to deal with the latest files."""
         if self.flyput:
+            self.manual_flypolling_job()
+            time.sleep(2)
             self.manual_flypolling_job()
         super(Ww3, self).postfix(rh, opts)
 
