@@ -308,6 +308,7 @@ class WamGridPost(GenvModelResource):
     def realkind(self):
         return 'wampreproc'
 
+
 class WW3Preproc(GenvModelResource):
     """
     Class of a ww3 model constants
@@ -334,6 +335,7 @@ class WW3Preproc(GenvModelResource):
     @property
     def realkind(self):
         return 'ww3preproc'
+
 
 class InputConfWW3(GenvModelResource):
     """Config file for ww3 processes"""
@@ -368,6 +370,7 @@ class InputConfWW3(GenvModelResource):
     def realkind(self):
         return 'inputconfww3'
 
+
 class WW3InterpConst(GenvModelResource):
     """
     Class of a ww3 model results interpolation constant
@@ -395,6 +398,7 @@ class WW3InterpConst(GenvModelResource):
     def realkind(self):
         return 'interpolateconst'
 
+
 class WW3ConNctoGrib(GenvModelResource):
     """
     Class of a convertion from nc to grib constant
@@ -421,4 +425,3 @@ class WW3ConNctoGrib(GenvModelResource):
     @property
     def realkind(self):
         return 'const_ncgrb'
-

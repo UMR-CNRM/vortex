@@ -61,6 +61,7 @@ class BlkdatNamFiles(ModelResource):
     def realkind(self):
         return "blkdat_nam_file"
 
+
 class NamelistWW3(Namelist):
     """
     Namelists of pre- and postprocessing of WW3.
@@ -73,20 +74,22 @@ class NamelistWW3(Namelist):
                 values   = ['ww3nam', ],
             ),
             binary = dict(
-                values   = ['ww3_prnc', 'ww3_bound', 'spectra_mfwam_to_ww3', 'ww3', 'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb'],
+                values   = ['ww3_prnc', 'ww3_bound', 'spectra_mfwam_to_ww3', 'ww3',
+                            'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb'],
                 optional = False,
             ),
             model = dict(
-                values   = ['ww3',],
+                values   = ['ww3', ],
             ),
             gvar = dict(
-                values   = ['NAMELIST_' + x.upper() for x in ['ww3','ww3_prnc', 'ww3_bound', 'spectra_mfwam_to_ww3', 'ww3_ounf', 'ww3_ounp','ww3_ncgrb']],
+                values   = ['NAMELIST_' + x.upper() for x in ['ww3', 'ww3_prnc', 'ww3_bound', 'spectra_mfwam_to_ww3', 'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb']],
             ),
         )
     )
     @property
     def realkind(self):
         return "ww3_nam_file"
+
 
 class WW3ConfigFiles(Namelist):
     """TODO: Class documentation."""
@@ -100,17 +103,17 @@ class WW3ConfigFiles(Namelist):
                     values = ["ww3config"]
                 ),
                 model = dict(
-                    values   = ['ww3',],
+                    values   = ['ww3', ],
                 ),
                 clscontents = dict(
                     default = DataTemplate
                 ),
                 binary = dict(
-                    values   = [ 'ww3_shel', 'ww3_ounf', 'ww3_ounp'],
+                    values   = ['ww3_shel', 'ww3_ounf', 'ww3_ounp'],
                     optional = False,
                 ),
                 gvar = dict(
-                    values   = ['NAMELIST_' + x.upper() for x in [ 'ww3_shel', 'ww3_ounf', 'ww3_ounp']],
+                    values   = ['NAMELIST_' + x.upper() for x in ['ww3_shel', 'ww3_ounf', 'ww3_ounp']],
                 ),
 
             )
@@ -120,4 +123,3 @@ class WW3ConfigFiles(Namelist):
     @property
     def realkind(self):
         return "ww3_config_file"
-

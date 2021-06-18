@@ -412,7 +412,7 @@ class InterpWave(BlackBox):
     def realkind(self):
         return 'InterpWave'
 
-##########################################################################################
+
 class ConversionWindWW3(BlackBox):
     """A tool to convert wind fields to ww3 format"""
     _footprint = [
@@ -436,8 +436,6 @@ class ConversionWindWW3(BlackBox):
         return 'ConvertWindWW3'
 
 
-
-
 class ConversionSpecWW3Ascii(BlackBox):
     """A tool to convert spectra from mfwam to ww3 ascii"""
     _footprint = [
@@ -459,6 +457,7 @@ class ConversionSpecWW3Ascii(BlackBox):
     @property
     def realkind(self):
         return 'ConvertMfwam2WW3Ascii'
+
 
 class BoundariesConditionWw3(BlackBox):
     """A tool to compute ww3 boundaries conditions"""
@@ -492,10 +491,10 @@ class ConversionWW3Netcdf(BlackBox):
             info = 'A tool to convert  ww3 result',
             attr = dict(
                 kind = dict(
-                    values = ['convNetcdfPts','convNetcdfSurf']
+                    values = ['convNetcdfPts', 'convNetcdfSurf']
                 ),
                 fields = dict(
-                    values = ['ww3_ounp','ww3_ounf']
+                    values = ['ww3_ounp', 'ww3_ounf']
                 ),
                 model = dict(
                     values = ['ww3']
@@ -510,6 +509,7 @@ class ConversionWW3Netcdf(BlackBox):
     @property
     def realkind(self):
         return 'ConvWW3Netcdf'
+
 
 class InterpolationUGnc(BlackBox):
     """A tool to interpolate ww3 parameter nc file to regular grid"""
@@ -555,4 +555,3 @@ class ConversionNcGrib(BlackBox):
     @property
     def realkind(self):
         return 'convertncgrb'
-
