@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This package handles MPI interface objects responsible of parallel executions.

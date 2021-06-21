@@ -1,15 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
 This example runs a simple Hello world script, created on the fly.
 It should run everywhere.
 
+Ok 20210621 - LFM
 Ok 20200724 - PL python3 compatibility
 Ok 20180731 - GR
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
+
+import sys
 
 import common
 import vortex
@@ -29,7 +31,7 @@ sh.cd(working_directory, create=True)
 print("Working directory: {}".format(sh.pwd()))
 
 # Create a script on the fly for the demo to be self-contained
-script = r"""#!/usr/bin/env python
+script = ('#!{!s}'.format(sys.executable) + r"""
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -44,7 +46,7 @@ print("Current path: {}".format(my_path))
 print("Directory content:")
 pprint.pprint(os.listdir(my_path))
 print("\nCommand line arguments:", sys.argv[1:])
-""".encode('utf-8')
+""").encode('utf-8')
 
 # Write this script into an executable file using Vortex
 script_name = "Hello_world.py"

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 # Status : OK (v0.6.21)
 

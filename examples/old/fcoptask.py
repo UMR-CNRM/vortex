@@ -1,4 +1,3 @@
-#!/opt/softs/python/2.7.5/bin/python -u
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals, division

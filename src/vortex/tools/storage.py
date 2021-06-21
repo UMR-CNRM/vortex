@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This package handles :class:`Storage` objects that could be in charge of

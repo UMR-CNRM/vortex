@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This module provides some pre-defined attributes descriptions or combined sets

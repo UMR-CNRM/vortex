@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 # vim: set ts=4 sw=4 expandtab et:
 
 from __future__ import print_function, absolute_import, unicode_literals, division

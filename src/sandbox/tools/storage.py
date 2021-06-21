@@ -1,4 +1,4 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This module contains "fake" storage tools for demonstration purposes.
