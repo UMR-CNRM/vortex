@@ -90,7 +90,7 @@ class GentleTalk(object):
         except ValueError:
             try:
                 value = self.levels.index(value.upper())
-            except Exception:
+            except (AttributeError, ValueError):
                 value = -1
         if 0 <= value <= len(self.levels):
             self._loglevel = value
@@ -127,10 +127,8 @@ class GentleTalk(object):
                 color=getattr(self, level.upper()),
                 endcolor=self.ENDC
             )
-            mutex = multiprocessing.Lock()
-            mutex.acquire()
-            print(msg)
-            mutex.release()
+            with multiprocessing.Lock():
+                print(msg)
 
     def debug(self, msg, *args, **kw):
         """Logger factorization."""
@@ -629,7 +627,7 @@ class HouseKeeping(object):
         for pool in [x.lower() for x in footprints.util.mktuple(ask.data)]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
-                self.warning('Switch pool', active=status)
+                self.warning('Switch pool', pool=pool, active=status)
                 self.config[poolcfg]['active'] = status
                 thispool = pools.get(tag=pool)
                 thispool.active = status
@@ -649,7 +647,7 @@ class HouseKeeping(object):
             actioncfg = 'action_' + action
             if actioncfg not in self.config:
                 self.config[actioncfg] = dict()
-            self.warning('Switch action', active=status)
+            self.warning('Switch action', action=action, active=status)
             self.config[actioncfg]['active'] = status
         return True
 
@@ -784,7 +782,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             with io.open(jsonfile, 'rb') as fd:
                 obj = json.load(fd)
             obj = pools.Request(**obj)
-        except Exception:
+        except (ValueError, AttributeError, OSError):
             self.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
             self.migrate(pool, item, target='error')
         return obj
@@ -808,37 +806,47 @@ class Jeeves(BaseDaemon, HouseKeeping):
         return sys.modules.get(modname)
 
     def async_callback(self, result):
-        """Get result from async pool processing."""
-        if result:
-            pnum = None
-            prc = None
-            pvalue = None
-            try:
-                pnum, prc, pvalue = result
-                if prc:
-                    self.info('Return', pnum=pnum, result=pvalue)
-                else:
-                    self.error('Return', pnum=pnum, error=pvalue)
-            except Exception as trouble:
-                self.critical('Callback', error=trouble, result=result)
-            finally:
-                if pnum is not None and pnum in self.asynchronous:
-                    jpool, jfile, u_asyncr = self.asynchronous[pnum]
-                    poolbase = pools.get(tag=jpool)
-                    pooltarget = None
-                    if prc:
-                        try:
-                            pooltarget = pvalue.get('rpool', None)
-                        except Exception:
-                            pass
-                    else:
-                        pooltarget = 'retry'
-                    self.migrate(poolbase, jfile, target=pooltarget)
-                    del self.asynchronous[pnum]
-                else:
-                    self.error('Unknown asynchronous process', pnum=pnum)
-        else:
+        """Get result from async pool processing.
+
+        Async callbacks should return a tuple (pnum, prc, pvalue):
+           pnum   = The unique id they received as first argument
+           prc    = False to ask for retry
+                    True when the task is over, be it a success or a failure
+                        The default destination is 'done' (target='out' of the 'pool_process' config)
+                        Errors are send to the 'error' pool with pvalue = dict(rpool='error')
+           pvalue = a dict. May contain anything, but the only key used at present is 'rpool',
+                    and only when prc is True
+        """
+
+        if not result:
             self.error('Undefined result from asynchronous processing')
+            return
+
+        pnum = prc = pvalue = None
+        try:
+            pnum, prc, pvalue = result
+            if prc:
+                self.info('Return', pnum=pnum, result=pvalue)
+            else:
+                self.error('Return', pnum=pnum, error=pvalue)
+        except Exception as trouble:
+            self.critical('Callback', error=trouble, result=result)
+        finally:
+            if pnum is not None and pnum in self.asynchronous:
+                jpool, jfile, u_asyncr = self.asynchronous[pnum]
+                poolbase = pools.get(tag=jpool)
+                pooltarget = None
+                if prc:
+                    try:
+                        pooltarget = pvalue.get('rpool', None)
+                    except Exception:
+                        pass
+                else:
+                    pooltarget = 'retry'
+                self.migrate(poolbase, jfile, target=pooltarget)
+                del self.asynchronous[pnum]
+            else:
+                self.error('Unknown asynchronous process', pnum=pnum)
 
     def dispatch(self, func, ask, acfg, jpool, jfile):
         """Multiprocessing dispatching."""
@@ -879,57 +887,59 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if tp is None:
             return False
 
+        if ask.todo not in self.config['driver'].get('actions', tuple()):
+            self.error('Unregistered', action=ask.todo)
+            self.migrate(tp, jfile, target='ignore')
+            return False
+
         rc = True
         dispatched = False
         rctarget = 'error'
-        if ask.todo in self.config['driver'].get('actions', tuple()):
-            action = 'action_' + ask.todo
-            if action in self.config:
-                acfg = self.config[action]
-            else:
-                self.warning('Undefined', action=ask.todo)
-                acfg = dict(
-                    dispatch=False,
-                    module='internal',
-                    entry=ask.todo,
-                )
-            if acfg.get('active', True):
-                thismod = acfg.get('module', 'internal')
-                thisname = acfg.get('entry', ask.todo)
-                self.info(
-                    'Processing',
-                    action=ask.todo,
-                    function=thisname,
-                    module=thismod,
-                )
-                if thismod == 'internal':
-                    thisfunc = getattr(self, 'internal_' + thisname, None)
-                else:
-                    thismobj = self.import_module(thismod)
-                    if thismobj:
-                        thisfunc = getattr(thismobj, thisname, None)
-                    else:
-                        self.error('Import failed', module=acfg.get('module'))
-                        thisfunc = None
-                if thisfunc is None or not callable(thisfunc):
-                    self.error('Not a function', entry=thisname)
-                    rc = False
-                else:
-                    if acfg.get('dispatch', False):
-                        rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
-                        dispatched = True
-                    else:
-                        try:
-                            rc = apply(thisfunc, (ask,), ask.opts)
-                        except Exception as trouble:
-                            self.error('Trouble', action=ask.todo, error=trouble)
-                            rc = False
-            else:
-                self.warning('Inactive', action=ask.todo)
-                rctarget = 'ignore'
+
+        action = 'action_' + ask.todo
+        if action in self.config:
+            acfg = self.config[action]
         else:
-            self.error('Unregistered', action=ask.todo)
-            rc = False
+            self.debug('Undefined', action=ask.todo)
+            acfg = dict(
+                dispatch=False,
+                module='internal',
+                entry=ask.todo,
+            )
+
+        if acfg.get('active', True):
+            thismod = acfg.get('module', 'internal')
+            thisname = acfg.get('entry', ask.todo)
+            self.info(
+                'Processing',
+                action=ask.todo,
+                function=thisname,
+                module=thismod,
+            )
+            if thismod == 'internal':
+                thisfunc = getattr(self, 'internal_' + thisname, None)
+            else:
+                thismobj = self.import_module(thismod)
+                if thismobj:
+                    thisfunc = getattr(thismobj, thisname, None)
+                else:
+                    self.error('Import failed', module=acfg.get('module'))
+                    thisfunc = None
+            if thisfunc is None or not callable(thisfunc):
+                self.error('Not a function', entry=thisname)
+                rc = False
+            else:
+                if acfg.get('dispatch', False):
+                    rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
+                    dispatched = True
+                else:
+                    try:
+                        rc = thisfunc(ask, **ask.opts)
+                    except Exception as trouble:
+                        self.error('Trouble', action=ask.todo, error=trouble)
+                        rc = False
+        else:
+            self.warning('Inactive', action=ask.todo)
             rctarget = 'ignore'
 
         if rc:
@@ -984,7 +994,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             tnext = datetime.now()
             ttime = (tnext - tprev).total_seconds()
             if not silent:
-                self.info('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
+                self.debug('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
             tprev = tnext
             tbusy = False
 

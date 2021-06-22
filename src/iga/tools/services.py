@@ -468,6 +468,7 @@ class RoutingService(Service):
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
+                print('\n\t'.join(rc))
             else:
                 sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)
