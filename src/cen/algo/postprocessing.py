@@ -23,7 +23,7 @@ class S2m_ensemble_postprocessing(AlgoComponent):
     """
     S2M ensemble forecast postprocessing.
 
-    Current use : Get ensemble median of "fresh snow" (12-hourly and daily accumulation for the Bulletin 4 saisons)
+    Current use : Get deciles of "fresh snow" (12-hourly and daily accumulation for the Bulletin 4 saisons)
     """
     _footprint = dict(
         info = 'Algo component for post-processing of s2m ensemble simulations',
