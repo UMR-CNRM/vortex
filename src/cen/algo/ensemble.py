@@ -29,7 +29,8 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract, forcinput_changedates
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract,\
+        forcinput_changedates
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -97,8 +98,6 @@ class _S2MWorker(VortexWorkerBlindRun):
 
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
-        #for line in self.system.dir():
-        #    print(line)
 
 
 class GuessWorker(_S2MWorker):
@@ -1061,7 +1060,7 @@ class SurfexWorker(_S2MWorker):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingWorker(TaylorVortexWorker):
-    """This algo component is designed to run a SURFEX experiment without MPI parallelization."""
+    """This algo component is designed to prepare a SURFEX Forcing file (change of geometry)."""
 
     _footprint = dict(
         info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
@@ -1249,7 +1248,7 @@ class Guess(ParaExpresso):
 
 
 class S2MComponent(ParaBlindRun):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SAFRAN executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1310,7 +1309,7 @@ class S2MComponent(ParaBlindRun):
             self.delayed_exception_add(S2MMissingDeterministicError(self.role_deterministic_namebuilder()),
                                        traceback=True)
         avail_members = deterministic_member +\
-                        self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
+            self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
 
         subdirs = list()
         for am in avail_members:
@@ -1333,7 +1332,7 @@ class S2MComponent(ParaBlindRun):
         """Get the subdirectories from the effective inputs"""
         deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
         avail_members = deterministic_member +\
-                        self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
+            self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
         subdirs = list()
         cpl_model = list()
         for am in avail_members:
@@ -1356,7 +1355,7 @@ class S2MComponent(ParaBlindRun):
 
 
 class S2MReanalysis(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SAFRAN reanalyses in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1431,7 +1430,7 @@ class S2MReanalysis(S2MComponent):
 
 
 class S2MReforecast(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SAFRAN reforecasts in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1484,7 +1483,7 @@ class S2MReforecast(S2MComponent):
 
 @echecker.disabled_if_unavailable
 class SurfexComponent(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SURFEX executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1584,7 +1583,7 @@ class SurfexComponent(S2MComponent):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingComponent(TaylorRun):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that prepares several forcing files in parallel (changes of geometry)."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1649,7 +1648,7 @@ class PrepareForcingComponent(TaylorRun):
 
 @echecker.disabled_if_unavailable
 class SurfexComponentMultiDates(SurfexComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SURFEX in parallel (including several dates for reforecasts)."""
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
@@ -1716,8 +1715,10 @@ class SurfexComponentMultiDates(SurfexComponent):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingComponentForecast(PrepareForcingComponent):
-
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (several members in parallel)
+    """
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel',
@@ -1760,10 +1761,13 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
     def role_ref_namebuilder(self):
         return 'Forcing'
 
+
 @echecker.disabled_if_unavailable
 class ExtractForcingWorker(PrepareForcingWorker):
-
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    """
 
     _footprint = dict(
         info = 'Prepare forcing for PROSNOW simulations - deterministic case',
@@ -1782,14 +1786,12 @@ class ExtractForcingWorker(PrepareForcingWorker):
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
         datebegin_str = self.datebegin.strftime('%Y%m%d%H')
-        dateend_str   = self.dateend.strftime('%Y%m%d%H')
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
 
-        dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_'     + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_' + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
-        dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_'  + datebegin_str + '_' + dateend_str + '.nc'
-        dir_file_4 = rundir                           + '/SRU.txt'
-
-        # ------------------- #
+        dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_4 = rundir + '/SRU.txt'
 
         # A) Init, Analysis, ST:
 
@@ -1827,8 +1829,11 @@ class ExtractForcingWorker(PrepareForcingWorker):
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
-
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    with specific adaptations for short term forecast
+    """
 
     _footprint = dict(
         info = 'Prepare forcing for PROSNOW simulations - ST forecast',
@@ -1851,8 +1856,11 @@ class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
 
 @echecker.disabled_if_unavailable
 class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
-
-    ''' This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).'''
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    with specific adaptations for seasonal forecasts
+    """
 
     _footprint = dict(
         info = 'Prepare forcing for PROSNOW simulations - LT forecast',

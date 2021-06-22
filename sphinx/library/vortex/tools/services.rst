@@ -67,3 +67,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AbstractRdTemplatedMailService
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
