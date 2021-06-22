@@ -49,8 +49,9 @@ def system_ftput(pnum, ask, config, logger, **opts):
         rawftput = opts.get('rawftput', False)
     trynum = 0
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = False
         sh.ftpflavour = systems.FTP_FLAVOUR.STD  # Because errors are handled directly by jeeves
 
@@ -94,8 +95,9 @@ def system_cp(pnum, ask, config, logger, **opts):
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
     value = dict(rpool='retry')
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
         data = vwork.get_dataset(ask)
         logger.info('cp', source=data.source, destination=data.destination)
@@ -122,8 +124,9 @@ def system_scp(pnum, ask, config, logger, **opts):
 
     phasemode = opts.get('phasemode', False)
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
 
         data = vwork.get_dataset(ask)
@@ -152,8 +155,9 @@ def system_noop(pnum, ask, config, logger, **opts):
     """
     logger.info('Noop', todo=ask.todo, pnum=pnum, opts=opts)
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
         data = vwork.get_dataset(ask)
         value = dict(clear=sh.rm(data.source, fmt=data.fmt))

@@ -90,9 +90,12 @@ def test_vortex(pnum, ask, config, logger, **kw):
     from vortex.util.worker import VortexWorker
     value = 'Yo'
     logger.loglevel = 'info'
+
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
-    with VortexWorker(logger=logger, modules=('common', 'olive')) as vwork:
-        sh = vwork.vortex.sh()
+
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, modules=('common', 'olive'), profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
         data = vwork.get_dataset(ask)
         duration = 1
@@ -102,7 +105,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
             logger.error('Bad duration:', duration=data.duration)
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)
-        logger.info('TestVortex', todo=ask.todo, pnum=pnum, ticket=vwork.vortex.ticket().tag,
+        logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag,
                     logname=data.logname)
     return pnum, vwork.rc, value
 

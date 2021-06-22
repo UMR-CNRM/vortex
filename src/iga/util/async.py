@@ -52,10 +52,11 @@ def dayfile_report(pnum, ask, config, logger, **kw):
     """Standard old fashion reporting to messdayf daemon."""
     logger.info('dayfile_report', todo=ask.todo, pnum=pnum, opts=kw)
     value = None
-    with VortexWorker(logger=logger) as vwork:
-        logger.loglevel = 'debug'
-        logger.debug('Vortex', todo=ask.todo, pnum=pnum, ticket=vwork.vortex.ticket().tag)
-        sh = vwork.vortex.sh()
+
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
+        logger.info('Vortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag)
         data = vwork.get_dataset(ask)
         logger.debug('Reporting to', pnum=pnum, target=data.target)
         sh.filecocoon(data.target)
