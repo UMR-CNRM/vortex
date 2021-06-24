@@ -22,6 +22,10 @@ todo:
             genv: 'cy42_op2.67'
         tests:
             - kind: ifsmodel
+              flavour:
+                  - null
+                  - singleprecision
+            - kind: ifsmodel
               compiler_version:
                   - null
                   - TOTO

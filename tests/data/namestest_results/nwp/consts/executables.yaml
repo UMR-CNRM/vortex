@@ -61,3 +61,19 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.9x.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      flavour: null
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.IMPI512IFC1601.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      flavour: singleprecision
+      genv: cy42_op2.67
+      kind: ifsmodel
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.IMPI512IFC1601.2ys.exe

@@ -15,6 +15,8 @@ from functools import total_ordering
 
 import footprints
 
+from vortex.syntax.stddeco import namebuilding_append
+
 #: Export some new class for attributes in footprint objects, eg : GenvKey
 __all__ = ['GenvKey', 'GenvDomain']
 
@@ -228,4 +230,42 @@ gmkpack_compiler_identification = footprints.Footprint(
 gmkpack_compiler_identification_deco = footprints.DecorativeFootprint(
     gmkpack_compiler_identification,
     decorator=[genv_ifs_compiler_convention, ]
+)
+
+
+def genv_executable_flavour(cls):
+    """Add the necessary method to the "flavour" in Genv."""
+    original_genv_basename = getattr(cls, 'genv_basename', None)
+    if original_genv_basename is not None:
+
+        def genv_basename(self):
+            """Just retrieve a potential gvar attribute."""
+            gvar = original_genv_basename(self)
+            if getattr(self, 'flavour', None):
+                gvar += '_' + {'singleprecision': 'SP'
+                               }.get(self.flavour, self.flavour).upper()
+            return gvar
+
+        cls.genv_basename = genv_basename
+    return cls
+
+
+#: Usual definition of the ``flavour`` attribute.
+executable_flavour = footprints.Footprint(
+    info='Add the executable flavour attribute to the resource',
+    attr=dict(
+        flavour=dict(
+            info="The executable flavour (This may influence the Genv's key choice).",
+            values=['singleprecision', ],
+            optional=True,
+        ),
+    ),
+)
+
+
+#: Usual definition of the ``flavour``.
+executable_flavour_deco = footprints.DecorativeFootprint(
+    executable_flavour,
+    decorator=[genv_executable_flavour,
+               namebuilding_append('src', lambda self: [self.flavour])]
 )
