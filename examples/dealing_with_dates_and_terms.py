@@ -4,6 +4,7 @@
 """
 This example shows a few typical use cases of dates and terms.
 
+Ok 20210201 - LFM
 Ok 20180731 - GR
 """
 

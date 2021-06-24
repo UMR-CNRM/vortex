@@ -17,6 +17,11 @@ npchecker = externalcode.ExternalCodeImportChecker('numpy')
 with npchecker as npregister:
     import numpy as np  # @UnusedImport
 
+# NetCDF4 is not mandatory
+nc4checker = externalcode.ExternalCodeImportChecker('netdcf4')
+with nc4checker as npregister:
+    import netCDF4  # @UnusedImport
+
 
 class utDocTests(unittest.TestCase):
 
@@ -45,6 +50,13 @@ class utDocTests(unittest.TestCase):
     def test_doctests_w_numpy(self):
         from bronx.meteo import thermo
         self.assert_doctests(thermo)
+
+    @unittest.skipUnless(npchecker.is_available() and
+                         nc4checker.is_available(),
+                         "The numpy or netCDF4 package is unavailable.")
+    def test_doctests_w_numpy_netcdf4(self):
+        from bronx.datagrip import netcdf
+        self.assert_doctests(netcdf)
 
 
 if __name__ == '__main__':

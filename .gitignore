@@ -46,10 +46,14 @@ _ExportXML
 # Mr Developer
 .mr.developer.cfg
 
-# Eclipse unwanted files
+# Eclipse/PyCharm unwanted files
 .settings
 .project
 .pydevproject
+.idea
+
+# Pycharm unwanted files
+.idea
 
 # Kate unwanted file
 *.kate-swp

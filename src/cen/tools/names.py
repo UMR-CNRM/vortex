@@ -2,10 +2,9 @@
 # -*- coding:Utf-8 -*-
 
 """
-Functions and tools to handle resources names or other kind of names.
-
-Any "name building" object, must conform to the :class:`AbstractVortexNameBuilder`
-abstract class interface.
+Specific namebuilders for CEN flow resources.
+The main specificity is the date managment in file names : CEN files are
+often associated to a period rather than a given time.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -111,7 +110,6 @@ class CenFlatNameBuilder(AbstractActualCenNameBuilder):
     )
 
     # A Vortex basename may include the following bits
-
     def _pack_std_basename_flowtuff(self, d):
         name = ''
         if d['flow'] is not None:
@@ -121,7 +119,6 @@ class CenFlatNameBuilder(AbstractActualCenNameBuilder):
         return name
 
     # Methods that generates pathnames
-
     def _pack_pathname_std(self, d):
         pathbits = self._pack_pathname_init(d)
         self._pack_pathname_append_scenario(pathbits, d)

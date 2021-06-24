@@ -18,7 +18,9 @@ Package
 Included Modules
 ----------------
 
+:mod:`cen.tools.actions`
 :mod:`cen.tools.names`
+:mod:`cen.tools.services`
 
 
 .. hints

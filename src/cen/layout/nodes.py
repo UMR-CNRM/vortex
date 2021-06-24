@@ -2,13 +2,18 @@
 # -*- coding:Utf-8 -*-
 
 """
-This modules defines the base nodes of the logical layout
-for any :mod:`vortex` experiment.
+This modules defines specific CEN addons for the Task base class.
+Multiple inheritence together with the standard Task class is required to use this module.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
+from bronx.fancies import loggers
+from vortex.tools.actions import actiond as ad
+from vortex.algo.components import DelayedAlgoComponentError
+
+logger = loggers.getLogger(__name__)
 
 
 class S2MTaskMixIn(object):
@@ -23,26 +28,53 @@ class S2MTaskMixIn(object):
         """Define the behaviour in case of errors.
 
         For S2M chain, the errors do not raise exception if the deterministic
-        run or if more than 30 members are available.
+        run and if less than 5 members produce errors.
+        Note than unavailability of members do not produce errors managed by effective_inputs), therefore more than
+        5 errors is a critical anomaly.
         """
 
         warning = {}
-        nerrors = len(list(enumerate(exc)))
-        warning["nfail"] = nerrors
-        determinitic_error = False
+        accept_errors = False
 
-        for i, e in enumerate(exc):   # @UnusedVariable
-            if hasattr(e, 'deterministic'):
-                if e.deterministic:
-                    determinitic_error = True
+        if isinstance(exc, DelayedAlgoComponentError):
+            nerrors = len(list(enumerate(exc)))
+            warning["nfail"] = nerrors
+            determinitic_error = False
 
-                warning["deterministic"] = e.deterministic
+            for e in exc:
+                if hasattr(e, 'deterministic'):
+                    if e.deterministic:
+                        determinitic_error = True
 
-        accept_errors = not determinitic_error or nerrors < 5
+                    warning["deterministic"] = e.deterministic
 
-        if accept_errors:
-            print(self.warningmessage(nerrors, exc))
+            accept_errors = not determinitic_error and nerrors < 5
+
         return accept_errors, warning
+
+    def s2moper_report_execution_warning(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M warning',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
+
+    def s2moper_report_execution_error(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M fatal error',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
@@ -54,9 +86,9 @@ class S2MTaskMixIn(object):
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
-        warningline = "!" * 40 + "\n"
+        warningline = "\n" + "!" * 40 + "\n"
         warningmessage = (warningline + "ALERT :" + str(nerrors) +
-                          " members produced a delayed exception.\n" +
+                          " members produced a delayed exception." +
                           warningline + str(exc) + warningline)
         return warningmessage
 
@@ -164,7 +196,7 @@ class S2MTaskMixIn(object):
 
         return rundate_prep, alternates
 
-    def get_list_members(self):
+    def get_list_members(self, sytron=True):
         if not self.conf.nmembers:
             raise ValueError
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
@@ -172,6 +204,8 @@ class S2MTaskMixIn(object):
 
         if self.conf.geometry.area == "postes":
             # no sytron members for postes geometry
+            return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
+        elif not sytron:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
@@ -182,10 +216,7 @@ class S2MTaskMixIn(object):
 
     def get_list_geometry(self, meteo="safran"):
 
-        if not hasattr(self.conf, "interpol"):
-            self.conf.interpol = False
-
-        if self.conf.interpol:
+        if hasattr(self.conf, "geoin"):
             return [self.conf.geoin]
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
@@ -236,6 +267,18 @@ class S2MTaskMixIn(object):
         else:
             return meteo, "meteo"
 
+    def get_safran_sources(self, list_datebegin):
+
+        source_app = dict(
+            datebegin={str(datebegin):
+                       'arpege' if datebegin >= Date(2002, 8, 1) else 'ifs' for datebegin in list_datebegin})
+
+        source_conf = dict(
+            datebegin={str(datebegin):
+                       '4dvarfr' if datebegin >= Date(2002, 8, 1) else 'era40' for datebegin in list_datebegin})
+
+        return source_app, source_conf
+
     def get_list_seasons(self, datebegin, dateend):
 
         list_dates_begin_input = list()
@@ -251,3 +294,51 @@ class S2MTaskMixIn(object):
             datebegin_input = dateend_input
 
         return list_dates_begin_input
+
+    def extract_massif(self, massif_to_extract, rawfile, filetype='pro'):
+
+        from snowtools.utils.prosimu import prosimu
+        import numpy as np
+        from netCDF4 import Dataset
+        
+        f = prosimu(rawfile)
+        time, units = f.readtime_for_copy()
+        massifs = f.read_var('massif_num') if filetype == 'pro' else f.read_var('massif_number')
+        mask = np.where(massifs == massif_to_extract)
+
+        # Création du fichier de sortie contenant uniquement le massif désiré
+        newfile = '{0:s}_massif{1:d}.nc'.format(rawfile.rstrip('.nc'), massif_to_extract)
+        outputs = Dataset(newfile, 'w', format='NETCDF4')
+        outputs.createDimension('time', time.shape[0])
+        outputs.createDimension('points', np.size(f.read_var('ZS')[mask]))
+
+        # for time
+
+        # Choose variables and fill the NETCDF file
+        #my_list = [x.encode('ascii') for x in f.listvar()]
+        outputs.createVariable('time', np.float64, ('time'), fill_value=-9999)
+        outputs['time'].use_nc_get_vars(time)
+
+        if filetype == 'pro': 
+            VAR_1D = ['ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
+            VAR_2D = ['TG1', 'TG4', 'MMP_VEG', 'DRAIN_ISBA', 'RUNOFF_ISBA',
+                   'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA', 'WBT']
+        elif filetype == 'forcing':
+            VAR_1D = ['ZS', 'aspect', 'slope', 'massif_number']
+            VAR_2D = ['Rainf', 'Snowf', 'Tair', 'Qair', 'PSurf', 'Wind_DIR',
+                    'Wind', 'LWdown', 'DIR_SWdown', 'SCA_SWdown', 'NEB', 'HUMREL']
+
+        for var1 in VAR_1D:
+                outputs.createVariable(var1, np.float64, ('points'), fill_value=-9999)
+                outputs[var1][:] = f.read_var(var1)[mask]
+
+        for var2 in VAR_2D:
+                outputs.createVariable(
+                    var2, np.float64, ('time', 'points'), fill_value=-9999)
+                outputs[var2][:] = f.read_var(var2)[:, mask]
+
+        print("Le fichier {0:s} a bien été créé".format(newfile))
+
+        # Close new NETCDF file and remove the old file
+        outputs.close()
+

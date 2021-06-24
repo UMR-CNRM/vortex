@@ -37,6 +37,10 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Prosnow_Parallel
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. hints
 .. .. autodata:: XXX

@@ -392,13 +392,19 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
 
-    def _std_move(self, source, destination, intent='in', pack=False):
+    def _std_move(self, source, destination, intent=None, pack=False):
         """Extended mv for (possibly) multi lfi file."""
-        st = self._std_prepare(source, destination, intent)
-        if st.rc == 0:
-            st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
-                                     ['-intent={}'.format(intent), source, destination],
-                                     output=False)
+        if self.is_xlfi(source):
+            if intent is None:
+                intent = 'inout' if self.sh.access(source, self.sh.W_OK) else 'in'
+            st = self._std_prepare(source, destination, intent)
+            if st.rc == 0:
+                st.rc = self._spawn_wrap('move', (['-pack', ] if pack else []) +
+                                         ['-intent={}'.format(intent), source, destination],
+                                         output=False)
+        else:
+            st = LFI_Status()
+            st.rc = self.sh.mv(source, destination)
         return st
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move
@@ -618,19 +624,17 @@ class LFI_Tool_Py(LFI_Tool_Raw):
 
     lfi_cp = lfi_copy = fa_cp = fa_copy = _std_copy
 
-    def _std_move(self, source, destination, intent='in', pack=False):
+    def _std_move(self, source, destination, intent=None, pack=False):
         """Extended mv for (possibly) multi lfi file."""
         if self.is_xlfi(source):
+            if intent is None:
+                intent = 'inout' if self.sh.access(source, self.sh.W_OK) else 'in'
             st = self.lfi_cp(source, destination, intent=intent, pack=pack)
             if st:
                 st = self.lfi_rm(source)
         else:
             st = LFI_Status()
             st.rc = self.sh.mv(source, destination)
-            if intent == 'in':
-                self.sh.chmod(destination, 0o444)
-            else:
-                self.sh.chmod(destination, 0o644)
         return st
 
     lfi_mv = lfi_move = fa_mv = fa_move = _std_move

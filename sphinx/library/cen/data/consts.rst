@@ -33,3 +33,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: Prosnow_SetUp_Global
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Prosnow_SetUp_Resort
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

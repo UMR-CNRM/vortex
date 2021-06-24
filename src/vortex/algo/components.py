@@ -23,6 +23,10 @@ Such classes are based on the :mod:`taylorism` (the developer should be familiar
 with this package) and uses "Worker" classes provided in the
 :mod:`vortex.tools.parallelism` package.
 
+A few examples of AlgoComponent classes are shipped with the code
+(see :ref:`examples_algo`). In addition to the documentation provided
+in :ref:`stepbystep-index`, it might help.
+
 When class inheritance is not applicable or ineffective, The AlgoComponent's
 Mixins are a powerful tool to mutualise some pieces of code. See the
 :class:`AlgoComponentDecoMixin` class documentation for more details.
@@ -38,7 +42,7 @@ import multiprocessing
 import shlex
 import sys
 import tempfile
-import traceback
+import traceback as py_traceback
 
 import six
 
@@ -588,7 +592,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             print('Exception type: {!s}'.format(exc_type))
             print('Exception info: {!s}'.format(exc_value))
             print('Traceback:')
-            print("\n".join(traceback.format_tb(exc_traceback)))
+            print("\n".join(py_traceback.format_tb(exc_traceback)))
         self._delayed_excs.append(exc)
 
     def algoassert(self, assertion, msg=''):
@@ -723,7 +727,8 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
                                                         io_poll_args, io_poll_kwargs)
                 self._flyput_job_internal_put(data)
             except Exception as trouble:
-                logger.error('Polling trouble: %s', str(trouble))
+                logger.error('Polling trouble: %s. %s',
+                             str(trouble), py_traceback.format_exc())
                 redo = False
             finally:
                 event_free.set()
@@ -860,7 +865,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
             print('Exception type: {!s}'.format(exc_type))
             print('Exception info: {!s}'.format(exc_value))
             print('Traceback:')
-            print("\n".join(traceback.format_tb(exc_traceback)))
+            print("\n".join(py_traceback.format_tb(exc_traceback)))
             # Alert the main process of the error
             self._server_event.set()
 
@@ -1866,7 +1871,8 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
                 tasks=(self.env.VORTEX_IOSERVER_TASKS or
                        master.options.get('nnp', master.tasks)),
                 openmp=(self.env.VORTEX_IOSERVER_OPENMP or
-                        master.options.get('openmp', master.openmp)))
+                        master.options.get('openmp', master.openmp)),
+                iolocation=self.iolocation)
             io.options = {x[3:]: opts[x]
                           for x in opts.keys() if x.startswith('io_')}
             io.master = master.master
@@ -1891,6 +1897,12 @@ class ParallelIoServerMixin(AlgoComponentMpiDecoMixin):
         if not io and self.env.get('VORTEX_IOSERVER_INCORE_TASKS', None) is not None:
             if hasattr(master, 'incore_iotasks'):
                 master.incore_iotasks = self.env.VORTEX_IOSERVER_INCORE_TASKS
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_FIXER', None) is not None:
+            if hasattr(master, 'incore_iotasks_fixer'):
+                master.incore_iotasks_fixer = self.env.VORTEX_IOSERVER_INCORE_FIXER
+        if not io and self.env.get('VORTEX_IOSERVER_INCORE_DIST', None) is not None:
+            if hasattr(master, 'incore_iodist'):
+                master.incore_iodist = self.env.VORTEX_IOSERVER_INCORE_DIST
         if io:
             rh.append(rh[0])
             if master.group is None:

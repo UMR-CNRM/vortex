@@ -2,7 +2,7 @@
 # -*- coding:Utf-8 -*-
 
 """
-TODO: Module documentation.
+S2M executions flow resources.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -164,10 +164,10 @@ class SurfaceForcing(SurfaceIO):
 
 
 class Pro(SurfaceIO):
-    """Class for the safrane output files."""
+    """Class for the SURFEX/Crocus output files."""
     _footprint = [
         dict(
-            info = 'Safran-produced forcing file',
+            info = 'Surfex-simulated snowpack files',
             attr = dict(
                 kind = dict(
                     values = ['SnowpackSimulation'],
@@ -182,6 +182,27 @@ class Pro(SurfaceIO):
     @property
     def realkind(self):
         return "PRO"
+
+
+class Postproc(SurfaceIO):
+    """Class for post-processed SURFEX/Crocus output files."""
+    _footprint = [
+        dict(
+            info = 'Post-processed Surfex-simulated snowpack files',
+            attr = dict(
+                kind = dict(
+                    values = ['SnowpackSimulation'],
+                ),
+                model = dict(
+                    values = ['postproc'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return "POSTPROC"
 
 
 @namebuilding_delete('src')

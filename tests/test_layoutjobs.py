@@ -141,6 +141,7 @@ class TestMkjobDetect(unittest.TestCase):
                  'vapp': 'arpege',
                  'vconf': '4dvarfr',
                  'verbose': 'verbose',
+                 'warmstart': False,
                  'xpid': 'ABCD'})
 
             self.assertEqual(

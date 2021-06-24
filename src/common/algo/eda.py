@@ -165,8 +165,7 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
                                                                              namcontents,
                                                                              namlocal)
         if self.actual_nbe is not None:
-            namcontents.setmacro('NBE', self.actual_nbe)
-            logger.info('Setup macro NBE=%s in %s', self.actual_nbe, namlocal)
+            self._set_nam_macro(namcontents, namlocal, 'NBE', self.actual_nbe)
             nam_updated = True
         return nam_updated
 
@@ -265,10 +264,15 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                 d_members = sorted([sec.rh.provider.member for sec in d_sections])
                 d_formats = set([sec.rh.container.actualfmt for sec in d_sections])
                 d_blocks[a_date] = (d_members, d_formats)
-            a_date, (eff_members, eff_formats) = d_blocks.popitem()
+            ref_date, (eff_members, eff_formats) = d_blocks.popitem()
             for a_date, a_data in d_blocks.items():
-                self.algoassert(a_data[0] == eff_members, "Inconsistent members list.")
-                self.algoassert(a_data[1] == eff_formats, "Inconsistent formats list.")
+                self.algoassert(a_data[0] == eff_members,
+                                "Inconsistent members list (date={!s} vs {!s})."
+                                .format(a_date, ref_date))
+                self.algoassert(a_data[1] == eff_formats,
+                                "Inconsistent formats list (date={!s} vs {!s})."
+                                .format(a_date, ref_date))
+            d_blocks[ref_date] = (eff_members, eff_formats)
             if eff_members and self.nbmember is None:
                 # Here, NBE is the number of members for one date
                 self._actual_nbe = len(eff_members)
@@ -305,7 +309,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                     mypadding = None
                     for p in paddingstuff:
                         if getattr(p.rh.resource, 'ipert',
-                                   getattr(p.rh.resource, 'number', None) == i):
+                                   getattr(p.rh.resource, 'number', None)) == i:
                             mypadding = p
                             break
                         else:
@@ -331,8 +335,7 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
                                                                                            namcontents,
                                                                                            namlocal)
         if self.actual_nresx is not None:
-            namcontents.setmacro('NRESX', self.actual_nresx)
-            logger.info('Setup macro NRESX=%s in %s', self.actual_nresx, namlocal)
+            self._set_nam_macro(namcontents, namlocal, 'NRESX', self.actual_nresx)
             nam_updated = True
         return nam_updated
 
@@ -605,7 +608,7 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
             self.system.softlink(repname, radical.format(num))
-        # Requesting Hybrid cimputations ?
+        # Requesting Hybrid computations ?
         if self.hybrid:
             hybstuff = self.context.sequence.effective_inputs(role=self._HYBRID_CLIM_ROLE)
             hybformat = hybstuff[0].rh.container.actualfmt

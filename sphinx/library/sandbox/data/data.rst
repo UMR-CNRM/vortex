@@ -16,5 +16,8 @@ Package
 Included Modules
 ----------------
 
+* :mod:`sandbox.data.executables`
 * :mod:`sandbox.data.flow`
 * :mod:`sandbox.data.gridfiles`
+* :mod:`sandbox.data.providers`
+* :mod:`sandbox.data.stores`

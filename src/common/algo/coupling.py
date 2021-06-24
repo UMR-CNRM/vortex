@@ -453,9 +453,10 @@ class C901(IFSParallel):
         )
         for namelist in input_namelist:
             namcontents = namelist.rh.contents
-            logger.info('Setup macro LLCLIM=%s in %s', self.clim, namelist.rh.container.actualpath())
-            namcontents.setmacro('LLCLIM', self.clim)
-            namcontents.rewrite(namelist.rh.container)
+            self._set_nam_macro(namcontents, namelist.rh.container.actualpath(),
+                                'LLCLIM', self.clim)
+            if namcontents.dumps_needs_update:
+                namcontents.rewrite(namelist.rh.container)
 
         for current_validity in input_validity[0]:
             # Deal with constant input files (gridpoint and spectral)

@@ -149,6 +149,15 @@ class Resource(footprints.FootprintBase):
         this_args.update(kw)
         return self.clscontents(**this_args)
 
+    def stackedstorage_resource(self):
+        """
+        If the present resource supports stacked storage (note: this feature is
+        only available in the Vortex store), return the corresponding resource
+        plus a boolean indicating if data from different members are kept
+        separate.
+        """
+        return None, True
+
 
 class Unknown(Resource):
 

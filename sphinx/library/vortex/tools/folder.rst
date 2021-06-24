@@ -63,6 +63,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: FilesPackShell
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FolderShellsGroup
    :show-inheritance:
    :members:

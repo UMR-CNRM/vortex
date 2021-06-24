@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Algo Components for ensemble S2M simulations.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -13,14 +13,14 @@ from bronx.syntax.externalcode import ExternalCodeImportChecker
 from collections import defaultdict
 import footprints
 import io
-from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun
+from vortex.algo.components import ParaBlindRun, ParaExpresso, TaylorRun, DelayedAlgoComponentError
 from vortex.syntax.stdattrs import a_date
 from vortex.tools.parallelism import VortexWorkerBlindRun, TaylorVortexWorker
 from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
 
 import six
-
+import datetime
 
 logger = loggers.getLogger(__name__)
 
@@ -29,7 +29,8 @@ with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
     from snowtools.tools.update_namelist import update_surfex_namelist_object
-    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask
+    from snowtools.tools.change_forcing import forcinput_select, forcinput_applymask, forcinput_extract,\
+        forcinput_changedates
     from snowtools.utils.infomassifs import infomassifs
     from snowtools.tools.massif_diags import massif_simu
     from snowtools.utils.ESCROCsubensembles import ESCROC_subensembles
@@ -119,8 +120,6 @@ class _S2MWorker(VortexWorkerBlindRun):
 
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
-        for line in self.system.dir():
-            print(line)
 
 
 class GuessWorker(_S2MWorker):
@@ -150,6 +149,11 @@ class GuessWorker(_S2MWorker):
         ebauche = kwargs['ebauche']
         if ebauche and not self.system.path.exists(ebauche):
             self.system.symlink(self.system.path.join(rundir, ebauche), ebauche)
+        self.link_ifnotprovided(self.system.path.join(rundir, 'METADATA.grib'), 'METADATA.grib')
+        for suffix in ['dbf', 'prj', 'qgs', 'qpj', 'shp', 'shx']:
+            shapefile = 'massifs_safran.{0:s}'.format(suffix)
+            self.link_ifnotprovided(self.system.path.join(rundir, shapefile), shapefile) 
+
         list_name = self.system.path.join(thisdir, self.kind + '.out')
         try:
             self.local_spawn(list_name)
@@ -761,7 +765,7 @@ class SytistWorker(_SafranWorker):
 
 
 class S2MExecutionError(ExecutionError):
-    """TODO: Class documentation."""
+    """Execution Error in S2M algo component that should be catched and delayed"""
 
     def __init__(self, model, deterministic, subdir, datebegin, dateend):
         self.model = model
@@ -779,6 +783,22 @@ class S2MExecutionError(ExecutionError):
         red = list(super(S2MExecutionError, self).__reduce__())
         red[1] = tuple([self.model, self.deterministic, self.subdir, self.datebegin,
                         self.dateend])  # Les arguments qui seront passes a __init__
+        return tuple(red)
+
+
+class S2MMissingDeterministicError(DelayedAlgoComponentError):
+    """Exception when no resource is found for a mandatory role although fatal is False in toolbox inputs"""
+
+    def __init__(self, role):
+        self.role = role
+        self.deterministic = True
+
+    def __str__(self):
+        return ("Unable to find the mandatory resource of role : " + self.role)
+
+    def __reduce__(self):
+        red = list(super(S2MMissingDeterministicError, self).__reduce__())
+        red[1] = tuple([self.role, self.deterministic])
         return tuple(red)
 
 
@@ -1024,8 +1044,8 @@ class SurfexWorker(_S2MWorker):
                 # Uncomment these lines to test the behaviour in case of failure of 1 member
                 # if self.subdir == "mb006":
                 #     deterministic = self.subdir == "mb035"
-                #     print("DEBUGINFO")
-                #     print(dir(self))
+                #     # print("DEBUGINFO")
+                #     # print(dir(self))
                 #     rdict['rc'] = S2MExecutionError(self.progname, deterministic,
                 #                                     self.subdir, datebegin_this_run, dateend_this_run)
 
@@ -1067,7 +1087,7 @@ class SurfexWorker(_S2MWorker):
 
 @echecker.disabled_if_unavailable
 class PrepareForcingWorker(TaylorVortexWorker):
-    """This algo component is designed to run a SURFEX experiment without MPI parallelization."""
+    """This algo component is designed to prepare a SURFEX Forcing file (change of geometry)."""
 
     _footprint = dict(
         info = 'AlgoComponent designed to run a SURFEX experiment without MPI parallelization.',
@@ -1115,6 +1135,9 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
         return rdict
 
+    def forcingdir(self, rundir, thisdir):
+        return rundir
+
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
 
         need_other_run = True
@@ -1126,7 +1149,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
 
             if need_other_forcing:
 
-                forcingdir = rundir
+                forcingdir = self.forcingdir(rundir, thisdir)
 
                 if len(self.geometry_in) > 1:
                     print("FORCING AGGREGATION")
@@ -1168,7 +1191,7 @@ class PrepareForcingWorker(TaylorVortexWorker):
             need_other_run = dateend_this_run < self.dateend
 
             if need_save_forcing and not (need_other_run and not need_other_forcing):
-                save_file_period(rundir, "FORCING", dateforcbegin, dateforcend)
+                save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
 
         return rdict
 
@@ -1325,11 +1348,24 @@ class S2MComponent(ParaBlindRun):
         One member is associated to each 'effective input' (inputs that where actually retrieved during the fetch step)
         resource with a role matching the one defined by the 'role_ref_namebuilder' method.
         """
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
+        # Produce a delayed algo component error if no deterministic member in order to let the members run
+        # but crash at the end
+        if len(deterministic_member) < 1:
+            self.delayed_exception_add(S2MMissingDeterministicError(self.role_deterministic_namebuilder()),
+                                       traceback=True)
+        avail_members = deterministic_member +\
+            self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
+
         subdirs = list()
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
+
+        # Add a sytron member (only for child SurfexComponent but done here to test availability of deterministic mb)
+        if self.kind == "ensmeteo+sytron" and len(deterministic_member) == 1:
+            subdirs.append('mb036')
+
         # Ca partait d'une bonne idee mais en pratique il y a plein de cas particuliers
         # pour lesquels ca pose probleme : reanalyse safran, surfex postes, etc
         # self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
@@ -1356,7 +1392,10 @@ class S2MComponent(ParaBlindRun):
         'True' value indicates the essential(s) member(s).
         In case there is no 'source_conf' attribute, all members are considered as essential members.
         """
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        """Get the subdirectories from the effective inputs"""
+        deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
+        avail_members = deterministic_member +\
+            self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
         subdirs = list()
         cpl_model = list()
         for am in avail_members:
@@ -1371,13 +1410,17 @@ class S2MComponent(ParaBlindRun):
 
         return cpl_model
 
-    def role_ref_namebuilder(self):
+    def role_deterministic_namebuilder(self):
+        """Defines the role of the effective inputs to take as reference to define the deterministic member"""
+        return 'Ebauche_Deterministic'
+
+    def role_members_namebuilder(self):
         """Defines the role of the effective inputs to take as reference to define the different members"""
         return 'Ebauche'
 
 
 class S2MReanalysis(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SAFRAN reanalyses in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1452,7 +1495,7 @@ class S2MReanalysis(S2MComponent):
 
 
 class S2MReforecast(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SAFRAN reforecasts in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1490,7 +1533,7 @@ class S2MReforecast(S2MComponent):
         self._default_post_execute(rh, opts)
 
     def get_individual_instructions(self, rh, opts):
-        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        avail_members = self.context.sequence.effective_inputs(role=self.role_members_namebuilder())
         subdirs = list()
         list_dates_begin = list()
         list_dates_end = list()
@@ -1505,7 +1548,7 @@ class S2MReforecast(S2MComponent):
 
 @echecker.disabled_if_unavailable
 class SurfexComponent(S2MComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SURFEX executions in parallel."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1594,23 +1637,24 @@ class SurfexComponent(S2MComponent):
                 # Therefore it is necessary to reduce subdirs to 1 single element for each member
                 subdirs = list(set(map(self.system.path.dirname, subdirs)))
 
-            if self.kind == "ensmeteo+sytron":
-                subdirs.append('mb036')
             return subdirs
 
-    def role_ref_namebuilder(self):
+    def role_members_namebuilder(self):
         return 'Forcing'
+
+    def role_deterministic_namebuilder(self):
+        return 'Forcing_Deterministic'
 
 
 @echecker.disabled_if_unavailable
 class PrepareForcingComponent(TaylorRun):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that prepares several forcing files in parallel (changes of geometry)."""
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['prepareforcing']
+                values = ['prepareforcing', 'extractforcing']
             ),
             engine = dict(
                 values = ['s2m']),
@@ -1663,18 +1707,13 @@ class PrepareForcingComponent(TaylorRun):
         pass
 
     def get_subdirs(self, rh, opts):
-        print(type(self.datebegin))
-        print(self.datebegin)
 
         return [begin.year for begin in self.datebegin]
-
-    def role_ref_namebuilder(self):
-        return 'Forcing'
 
 
 @echecker.disabled_if_unavailable
 class SurfexComponentMultiDates(SurfexComponent):
-    """AlgoComponent that runs several executions in parallel."""
+    """AlgoComponent that runs several SURFEX in parallel (including several dates for reforecasts)."""
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
@@ -1737,3 +1776,171 @@ class SurfexComponentMultiDates(SurfexComponent):
         ddict.pop('dateinit')
 
         return ddict
+
+
+@echecker.disabled_if_unavailable
+class PrepareForcingComponentForecast(PrepareForcingComponent):
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (several members in parallel)
+    """
+
+    _footprint = dict(
+        info = 'AlgoComponent that runs several executions in parallel',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast', 'extractforcing_LTforecast']
+            )
+        )
+    )
+
+    def _default_common_instructions(self, rh, opts):
+
+        ddict = super(PrepareForcingComponent, self)._default_common_instructions(rh, opts)
+        for attribute in self.footprint_attributes:
+            if attribute in ['datebegin', 'dateend']:
+                ddict[attribute] = getattr(self, attribute)[0][0]
+            else:
+                ddict[attribute] = getattr(self, attribute)
+
+        return ddict
+
+    def execute(self, rh, opts):
+
+        self._default_pre_execute(rh, opts)
+        common_i = self._default_common_instructions(rh, opts)
+        subdirs = self.get_subdirs(rh, opts)
+        self._add_instructions(common_i, dict(subdir=subdirs))
+        self._default_post_execute(rh, opts)
+
+    def get_subdirs(self, rh, opts):
+
+        avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
+        subdirs = list()
+        for am in avail_members:
+            if am.rh.container.dirname not in subdirs:
+                subdirs.append(am.rh.container.dirname)
+
+        return subdirs
+
+    def role_ref_namebuilder(self):
+        return 'Forcing'
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorker(PrepareForcingWorker):
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    """
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - deterministic case',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing']
+            ),
+        )
+    )
+
+    def forecasttype(self):
+
+        forecast_type = 'determ'
+        return forecast_type
+
+    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+
+        datebegin_str = self.datebegin.strftime('%Y%m%d%H')
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
+
+        dir_file_1 = self.forcingdir(rundir, thisdir) + '/FORCING_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_2 = self.forcingdir(rundir, thisdir) + '/FORCING_out_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_' + datebegin_str + '_' + dateend_str + '.nc'
+        dir_file_4 = rundir + '/SRU.txt'
+
+        # A) Init, Analysis, ST:
+
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+        if self.forecasttype() != 'LT':
+            rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # B) LT - Climatology:
+
+        # Change dates of the climatology to the current season
+        if self.forcingdir(rundir, thisdir) == thisdir:
+            if self.forecasttype() == 'LT':
+                if int(self.datebegin.strftime('%m')) >= 8:
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')), 8, 1, 6, 0)
+                else:
+                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')) - 1, 8, 1, 6, 0)
+                forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
+
+        # C) LT - Hindcast:
+
+        # Projection of forcing files on the slopes, creation of LAT,LOT
+#         rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
+
+        # D) Whenever necessary:
+
+        # Extraction of SRU geometry
+        forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
+        self.system.mv(dir_file_1, dir_file_3)
+        self.system.mv(dir_file_2, dir_file_1)
+
+        # ------------------- #
+
+        return rdict
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    with specific adaptations for short term forecast
+    """
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - ST forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_STforecast']
+            )
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+
+        return thisdir
+
+    def forecasttype(self):
+
+        forecast_type = 'ST'
+        return forecast_type
+
+
+@echecker.disabled_if_unavailable
+class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
+    """
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
+    It adapts forcing files to a ski resort geometry (worker for 1 member)
+    with specific adaptations for seasonal forecasts
+    """
+
+    _footprint = dict(
+        info = 'Prepare forcing for PROSNOW simulations - LT forecast',
+        attr = dict(
+            kind = dict(
+                values = ['extractforcing_LTforecast']
+            ),
+        )
+    )
+
+    def forcingdir(self, rundir, thisdir):
+
+        return thisdir
+
+    def forecasttype(self):
+
+        forecast_type = 'LT'
+        return forecast_type

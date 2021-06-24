@@ -264,10 +264,11 @@ class JsonDictContent(AlmostDictContent):
         t = sessions.current()
         container.close()
         # In Python 2, json.dumps returns 'str', not unicode...
-        with container.preferred_decoding(byte=False if six.PY3 else True):
-            with container.preferred_write():
-                iod = container.iodesc()
-                t.sh.json_dump(self.data, iod, indent=4)
+        with container.iod_context():
+            with container.preferred_decoding(byte=False if six.PY3 else True):
+                with container.preferred_write():
+                    iod = container.iodesc()
+                    t.sh.json_dump(self.data, iod, indent=4)
         container.updfill(True)
 
 
@@ -343,9 +344,10 @@ class AlmostListContent(DataContent):
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         container.close()
-        with container.preferred_decoding(byte=False):
-            for xline in self:
-                container.write(xline)
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                for xline in self:
+                    container.write(xline)
 
     def sort(self, **sort_opts):
         """Sort the current object."""
@@ -401,9 +403,10 @@ class TextContent(AlmostListContent):
     def rewrite(self, container):
         """Write the text contents in the specified container."""
         container.close()
-        with container.preferred_decoding(byte=False):
-            for item in self:
-                container.write(self.formatted_data(item) + '\n')
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                for item in self:
+                    container.write(self.formatted_data(item) + '\n')
 
 
 class DataRaw(AlmostListContent):
@@ -454,8 +457,9 @@ class DataTemplate(DataContent):
     def rewrite(self, container):
         """Write the list contents in the specified container."""
         container.close()
-        with container.preferred_decoding(byte=False):
-            container.write(self.data)
+        with container.iod_context():
+            with container.preferred_decoding(byte=False):
+                container.write(self.data)
 
 
 class FormatAdapter(DataContent):

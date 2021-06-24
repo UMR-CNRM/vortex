@@ -134,7 +134,7 @@ a_arpifs_cycle = dict(info="An Arpege/IFS cycle name",
 arpifs_cycle = footprints.Footprint(info='An abstract arpifs_cycle in GCO convention',
                                     attr=dict(cycle=a_arpifs_cycle))
 
-uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>\w+))')
+uget_sloppy_id_regex = re.compile(r'(?P<shortuget>(?P<id>\S+)@(?P<location>[-\w]+))')
 uget_id_regex = r'(?P<fulluget>u(?:get|env):' + uget_sloppy_id_regex.pattern + ')'
 uget_id_regex_only = re.compile('^' + uget_id_regex + '$')
 uget_id_regex = re.compile(r'\b' + uget_id_regex + r'\b')
@@ -148,8 +148,11 @@ class GgetId(six.text_type):
         return six.text_type.__new__(cls, value)
 
 
-class UgetId(six.text_type):
+class AbstractUgetId(six.text_type):
     """Basestring wrapper for Uget Ids."""
+
+    _ALLOWED_LOCATIONS = ()
+    _OUTCAST_LOCATIONS = ()
 
     def __new__(cls, value):
         vmatch = uget_id_regex_only.match(value)
@@ -158,6 +161,10 @@ class UgetId(six.text_type):
         me = six.text_type.__new__(cls, value)
         me._id = vmatch.group('id')
         me._location = vmatch.group('location')
+        if me._location in set(cls._OUTCAST_LOCATIONS):
+            raise ValueError('Invalid UgetId (got "{:s}"). Outcast Location.'.format(value))
+        if cls._ALLOWED_LOCATIONS and me._location not in set(cls._ALLOWED_LOCATIONS):
+            raise ValueError('Invalid UgetId (got "{:s}"). Disallowed location'.format(value))
         return me
 
     @property
@@ -174,3 +181,8 @@ class UgetId(six.text_type):
 
     def monthlyshort(self, month):
         return self._id + '.m{:02d}'.format(month) + '@' + self._location
+
+
+class UgetId(AbstractUgetId):
+
+    _OUTCAST_LOCATIONS = ('demo', )

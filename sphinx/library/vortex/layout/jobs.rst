@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: JobAssistantAutodirPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: JobAssistantMtoolPlugin
    :show-inheritance:
    :members:
@@ -52,6 +57,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: JobAssistantAppWideLockPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: JobAssistantRdMailSetupPlugin
    :show-inheritance:
    :members:
    :member-order: alphabetical

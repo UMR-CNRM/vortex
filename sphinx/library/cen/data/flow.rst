@@ -48,6 +48,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: Postproc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SnowObs
    :show-inheritance:
    :members:
