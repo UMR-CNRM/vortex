@@ -159,8 +159,8 @@ Pre-defined sets
 .. autodata:: opsuites
 
 
-Modeule Interface
------------------
+Module Interface
+----------------
 
 .. autofunction:: show
 
