@@ -721,12 +721,12 @@ class _ConvNetcdfGribAlgoWorker (VortexWorkerBlindRun):
                 param = fname.split('_')[1]
                 param = param.split('.')[0]
                 file_cst = "fic_constantes_{0:s}".format(param)
-                term = Time(self.dateval-self.datpivot)
+                term = Time(self.dateval - self.datpivot)
                 # Split the case of analysis and forecast
-                if( term <= Period( 0)):
+                if(term <= Period(0)):
                     fic_prod = "{0:s}_{1:s}_{2:s}.grb".format(head_filename, param, self.dateval.ymdh)
                 else:
-                    fic_prod = "{0:s}_{1:s}_{2:s}{3:s}.grb".format(head_filename, param, self.datpivot.ymdh,term.fmth)
+                    fic_prod = "{0:s}_{1:s}_{2:s}{3:s}.grb".format(head_filename, param, self.datpivot.ymdh, term.fmth)
                 # set of namelist
                 namcontents.setmacro("NOM_PARAM", param)
                 namcontents.setmacro('FILENAME', fname)

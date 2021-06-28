@@ -524,7 +524,7 @@ class WWW3FieldOut(FlowResource):
                 values = ['ww3outsurf'],
             ),
             nativefmt = dict(
-                values = ['netcdf','grib'],
+                values = ['netcdf', 'grib'],
                 # default = 'netcdf',
             ),
             param = dict(
