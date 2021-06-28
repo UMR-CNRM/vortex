@@ -862,13 +862,15 @@ class Jeeves(BaseDaemon, HouseKeeping):
         opts = ask.opts.copy()
         for extra in [x for x in acfg.get('options', tuple()) if x not in opts]:
             opts[extra] = acfg.get(extra, None)
+        logger_dup = self.logger.clone(pnum)
+        logger_dup.loglevel = acfg.get('loglevel', 'info')
         try:
             self.asynchronous[pnum] = (
                 jpool,
                 jfile,
                 self.ppool.apply_async(
                     func=func,
-                    args=(pnum, ask, self.config.copy(), self.logger.clone(pnum)),
+                    args=(pnum, ask, self.config.copy(), logger_dup),
                     kwds=opts,
                     callback=self.async_callback
                 )
