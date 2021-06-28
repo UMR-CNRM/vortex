@@ -82,7 +82,7 @@ class NamelistWW3(Namelist):
                 values   = ['ww3', ],
             ),
             gvar = dict(
-                values   = ['NAMELIST_' + x.upper() for x in ['ww3', 'ww3_prnc', 'ww3_bound', 
+                values   = ['NAMELIST_' + x.upper() for x in ['ww3', 'ww3_prnc', 'ww3_bound',
                             'spectra_mfwam_to_ww3', 'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb']],
             ),
         )
