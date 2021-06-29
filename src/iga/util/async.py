@@ -16,8 +16,10 @@ from pprint import pformat
 import six
 
 from common.tools.grib import GRIBFilter
+from footprints import proxy as fpx
 from iga.tools import actions, services
 from vortex.tools.actions import actiond as ad
+from vortex.tools.net import uriparse
 from vortex.util.worker import VortexWorker
 
 #: No automatic export
@@ -86,6 +88,18 @@ def system_route(pnum, ask, config, logger, **opts):
         # not before python3.2: tempfile.TemporaryDirectory
         tmpdir = tempfile.mkdtemp(prefix=data.source + '_', suffix='.tmp')
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
+
+            # assert the source is there
+            logger.info('Source = ' + data.source)
+            if not sh.path.exists(data.source):
+                logger.warning('Source file is missing - trying to recover from the cache')
+                uri = uriparse(data.rlocation)
+                astore = fpx.store(**uri)
+                astore.get(uri, data.source, dict(fmt=data.fmt))
+
+            if not sh.path.exists(data.source):
+                return pnum, True, dict(pool='error')
+                logger.error('The source file is definitely missing - sorry')
 
             # apply filtering, or at least ask for concatenation
             logger.info('filtername=' + (data.filtername or 'concatenation'))
