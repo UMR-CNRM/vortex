@@ -19,9 +19,11 @@ def test_foo(pnum, ask, config, logger, **kw):
 
     Simple sleep.
     """
-    rc, value = True, 'Yo'
+
     logger.loglevel = 'debug'
-    logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
+    profile = config['driver'].get('profile', None)
+    logger.info('External', todo=ask.todo, pnum=pnum, profile=profile, opts=kw)
+    rc, value = True, None
     try:
         duration = 0.1
         try:
@@ -31,7 +33,9 @@ def test_foo(pnum, ask, config, logger, **kw):
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)
     except Exception as trouble:
-        rc, value = False, str(trouble)
+        logger.error('An exception occurred during execution:' + str(trouble))
+        rc, value = False, dict(rpool='error')
+
     return pnum, rc, value
 
 
@@ -48,14 +52,17 @@ def test_bar(pnum, ask, config, logger, **kw):
     """
     import os
     logger.loglevel = 'info'
-    logger.info('test_bar', todo=ask.todo, pnum=pnum, opts=kw)
+    try:
+        profile = config['driver'].get('profile', None)
+    except (AttributeError, TypeError):
+        profile = None
+    logger.info('test_bar', todo=ask.todo, pnum=pnum, profile=profile, opts=kw)
     selector = ask.data.get('selector', None)
     logger.info('\t', data=ask.data, pwd=os.getcwd())
-    rc, value = True, None
 
     if selector is None:
-        logger.warn('no selector given')
-        rc, value = -1, "no selector"
+        logger.error('no selector given')
+        rc, value = False, dict(rpool='error')
 
     elif selector == 'slow_write':
         finalpath = ask.data.get('filepath', None)
@@ -66,6 +73,7 @@ def test_bar(pnum, ask, config, logger, **kw):
                 fp.flush()
                 time.sleep(3)
         os.rename(temporary, finalpath)
+        rc, value = True, None
 
     elif selector == 'timestamp':
         filepath = ask.data.get('filepath', 'test_bar.txt')
@@ -74,10 +82,11 @@ def test_bar(pnum, ask, config, logger, **kw):
         now_time = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
         with io.open(filepath, 'a+') as fp:
             fp.write('test_bar stamp - ask time {} - run time {} - {}\n'.format(ask_time, now_time, message))
+        rc, value = True, None
 
     else:
-        logger.warn('selector unknown: ', selector=selector)
-        rc, value = -1, "bad selector"
+        logger.warning('selector unknown: ', selector=selector)
+        rc, value = False, dict(rpool='error')
 
     return pnum, rc, value
 
@@ -88,7 +97,6 @@ def test_vortex(pnum, ask, config, logger, **kw):
     Activation of a vortex context.
     """
     from vortex.util.worker import VortexWorker
-    value = 'Yo'
     logger.loglevel = 'info'
 
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
@@ -103,11 +111,11 @@ def test_vortex(pnum, ask, config, logger, **kw):
             duration = float(data.duration)
         except ValueError:
             logger.error('Bad duration:', duration=data.duration)
-        logger.warning('Sleep', duration=duration)
+        logger.info('Sleep', duration=duration)
         time.sleep(duration)
         logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag,
                     logname=data.logname)
-    return pnum, vwork.rc, value
+    return pnum, vwork.rc, None
 
 
 def test_direct_call_to_a_jeeves_callback():

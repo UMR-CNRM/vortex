@@ -809,13 +809,16 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """Get result from async pool processing.
 
         Async callbacks should return a tuple (pnum, prc, pvalue):
-           pnum   = The unique id they received as first argument
-           prc    = False to ask for retry
-                    True when the task is over, be it a success or a failure
-                        The default destination is 'done' (target='out' of the 'pool_process' config)
-                        Errors are send to the 'error' pool with pvalue = dict(rpool='error')
-           pvalue = a dict. May contain anything, but the only key used at present is 'rpool',
-                    and only when prc is True
+
+        - pnum   = The unique id they received as first argument
+        - prc    = True for success, False (or None) for failure
+        - pvalue = a dict, may contain anything, but the key 'rpool' may be used to indicate
+          in which pool the json request must be moved.
+
+           - If the operation was successfull, the default target pool is taken from the
+             configuration, e.g. pool_process ('run') -> pool_out ('done')
+           - In case of failure, the default target is 'retry'. To send a request to the
+             'error' pool, use pvalue = dict(rpool='error')
         """
 
         if not result:
@@ -836,12 +839,11 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 jpool, jfile, u_asyncr = self.asynchronous[pnum]
                 poolbase = pools.get(tag=jpool)
                 pooltarget = None
-                if prc:
-                    try:
-                        pooltarget = pvalue.get('rpool', None)
-                    except Exception:
-                        pass
-                else:
+                try:
+                    pooltarget = pvalue.get('rpool', None)
+                except AttributeError:
+                    pass
+                if not prc and pooltarget is None:
                     pooltarget = 'retry'
                 self.migrate(poolbase, jfile, target=pooltarget)
                 del self.asynchronous[pnum]

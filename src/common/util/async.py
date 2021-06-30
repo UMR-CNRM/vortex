@@ -56,10 +56,15 @@ def system_ftput(pnum, ask, config, logger, **opts):
         sh.ftpflavour = systems.FTP_FLAVOUR.STD  # Because errors are handled directly by jeeves
 
         data = vwork.get_dataset(ask)
+        logger.info('ftput', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         if phasemode:
             data.hostname = _double_ssh(sh, data.phase_loginnode, data.phase_transfernode)
             if data.hostname is None:
-                return pnum, vwork.rc, value
+                return pnum, False, dict(rpool='retry')
 
         cpipeline = (None if not hasattr(data, 'cpipeline') or not data.cpipeline
                      else compression.CompressionPipeline(sh, data.cpipeline))
@@ -86,7 +91,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
                 value = dict(clear=sh.rm(data.source, fmt=data.fmt))
                 break
 
-    return pnum, vwork.rc, value
+    return pnum, putrc and vwork.rc, value
 
 
 def system_cp(pnum, ask, config, logger, **opts):
@@ -101,6 +106,10 @@ def system_cp(pnum, ask, config, logger, **opts):
         sh.trace = True
         data = vwork.get_dataset(ask)
         logger.info('cp', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         try:
             rc = sh.cp(data.source, data.destination, fmt=data.fmt)
         except Exception as e:
@@ -109,7 +118,7 @@ def system_cp(pnum, ask, config, logger, **opts):
         if rc:
             value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
-    return pnum, vwork.rc, value
+    return pnum, rc and vwork.rc, value
 
 
 def system_scp(pnum, ask, config, logger, **opts):
@@ -130,10 +139,15 @@ def system_scp(pnum, ask, config, logger, **opts):
         sh.trace = True
 
         data = vwork.get_dataset(ask)
+        logger.info('scp', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         if phasemode:
             data.hostname = _double_ssh(sh, data.phase_loginnode, data.phase_transfernode)
             if data.hostname is None:
-                return pnum, vwork.rc, value
+                return pnum, False, value
         logger.info('scp host', hostname=data.hostname, logname=data.logname)
         logger.info('scp data', source=data.source, destination=data.destination)
         try:
@@ -145,7 +159,7 @@ def system_scp(pnum, ask, config, logger, **opts):
         if putrc:
             value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
-    return pnum, vwork.rc, value
+    return pnum, putrc and vwork.rc, value
 
 
 def system_noop(pnum, ask, config, logger, **opts):

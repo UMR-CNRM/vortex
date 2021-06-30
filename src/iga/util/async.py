@@ -98,8 +98,8 @@ def system_route(pnum, ask, config, logger, **opts):
                 astore.get(uri, data.source, dict(fmt=data.fmt))
 
             if not sh.path.exists(data.source):
-                return pnum, True, dict(pool='error')
                 logger.error('The source file is definitely missing - sorry')
+                return pnum, False, dict(rpool='error')
 
             # apply filtering, or at least ask for concatenation
             logger.info('filtername=' + (data.filtername or 'concatenation'))
@@ -113,7 +113,7 @@ def system_route(pnum, ask, config, logger, **opts):
             if len(filtered) != 1:
                 logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
                 logger.error('Nothing will be routed, please fix the script.')
-                return pnum, True, dict(rpool='error')
+                return pnum, False, dict(rpool='error')
             route_source = filtered[0]
 
             # activate services or not according to jeeves' configuration
