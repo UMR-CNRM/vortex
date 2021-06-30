@@ -16,7 +16,6 @@ from previmar.data.contents import SurgeTemplate
 from common.data.namelists import Namelist
 from vortex.data.contents import DataTemplate
 
-
 #: No automatic export
 __all__ = []
 
@@ -63,8 +62,10 @@ class BlkdatNamFiles(ModelResource):
 
 
 class NamelistWW3(Namelist):
-    """
-    Namelists of pre- and postprocessing of WW3.
+    """Namelists of pre- and postprocessing of WW3.
+
+    :note: (LFM) The need for this new class is not obvious to me. Why is it not
+           enough to use the bare Namelist class?
     """
 
     _footprint = dict(
@@ -87,39 +88,42 @@ class NamelistWW3(Namelist):
             ),
         )
     )
+
     @property
     def realkind(self):
         return "ww3_nam_file"
 
 
 class WW3ConfigFiles(Namelist):
-    """TODO: Class documentation."""
+    """TODO: Class documentation.
 
-    _footprint = [
+    :note: (LFM) These files are not namelist but they inherit from `Namelist`.
+           I don't see the logic behind this. An alternative would be
+           `common.data.configfiles.AsciiConfig`
+    """
 
-        dict(
-            info = " list to tweak",
-            attr = dict(
-                kind = dict(
-                    values = ["ww3config"]
-                ),
-                model = dict(
-                    values   = ['ww3', ],
-                ),
-                clscontents = dict(
-                    default = DataTemplate
-                ),
-                binary = dict(
-                    values   = ['ww3_shel', 'ww3_ounf', 'ww3_ounp'],
-                    optional = False,
-                ),
-                gvar = dict(
-                    values   = ['NAMELIST_' + x.upper() for x in ['ww3_shel', 'ww3_ounf', 'ww3_ounp']],
-                ),
+    _footprint = dict(
+        info = " list to tweak",
+        attr = dict(
+            kind = dict(
+                values = ["ww3config"]
+            ),
+            model = dict(
+                values   = ['ww3', ],
+            ),
+            clscontents = dict(
+                default = DataTemplate
+            ),
+            binary = dict(
+                values   = ['ww3_shel', 'ww3_ounf', 'ww3_ounp'],
+                optional = False,
+            ),
+            gvar = dict(
+                values   = ['NAMELIST_' + x.upper() for x in ['ww3_shel', 'ww3_ounf', 'ww3_ounp']],
+            ),
 
-            )
         )
-    ]
+    )
 
     @property
     def realkind(self):

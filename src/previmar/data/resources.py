@@ -13,6 +13,7 @@ from bronx.stdtypes.date import Date, Time, Period
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition, Historic
+from vortex.syntax.stdattrs import term_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from .contents import AltidataContent
 
@@ -383,10 +384,15 @@ class SARdataWave(GenericWaveSatelliteData):
         return 'SARdataWave'
 
 
+@namebuilding_append('src', lambda s: s.fields)
 class ForcingWindNetcdf(GeoFlowResource):
-    """Class for netcdf  wind forcing for WW3"""
+    """Class for netcdf  wind forcing for WW3.
+
+    :note: (LFM) Useless ? see `common.data.boundaries.ExternalForcing`
+           or `common.data.boundaries.ExternalTimePeriodForcing`
+    """
     _footprint = dict(
-        info = ('wind forcing for ww3 input'),
+        info = 'wind forcing for ww3 input',
         attr = dict(
             kind = dict(
                 values = ['windNetcdf'],
@@ -410,6 +416,7 @@ class ForcingWindNetcdf(GeoFlowResource):
         return 'WindNetcdf'
 
 
+@namebuilding_append('src', lambda s: s.fields)
 class TarResultBoundww3(GeoFlowResource):
     """Class for ww3 boundaries spectra converted from mfwam  (tar file: ww3....spec)."""
     _footprint = dict(
@@ -432,14 +439,17 @@ class TarResultBoundww3(GeoFlowResource):
         )
     )
 
+    # LFM: realkind is mandatory. Please define it!
+    @property
+    def realkind(self):
+        return 'tarspecmfwam2ww3'
 
-@namebuilding_insert('radical', lambda s: s.fields)
-@namebuilding_delete('src')
-@namebuilding_delete('fmt')
+
+@namebuilding_append('src', lambda s: s.field)
 class Ww3IntermediateResults(GeoFlowResource):
-    """Class for ww3 Intermediate result (.ww3)"""
+    """Class for ww3 Intermediate result (.ww3)."""
     _footprint = dict(
-        info = ' ww3 format files',
+        info = 'ww3 format files',
         attr = dict(
             kind = dict(
                 values = ['ww3IntermedResult'],
@@ -454,104 +464,132 @@ class Ww3IntermediateResults(GeoFlowResource):
         )
     )
 
+    # LFM: realkind is mandatory. Please define it!
+    @property
+    def realkind(self):
+        return 'ww3IntermedResult'
 
-@namebuilding_insert('radical', lambda s: s.fields + "_" + s.dateval.ymdh)
+
+@namebuilding_append('src', lambda s: s.dateval.ymdh)
 class Ww3DatedIntermediateResults(Ww3IntermediateResults):
-    """Class for ww3 Intermediate result (.ww3) with a date"""
-    _footprint = dict(
-        info = ' ww3 format dated files',
-        attr = dict(
-            kind = dict(
-                values = ['ww3DatedIntermedResult'],
-            ),
-            dateval = dict(
-                type = Date,
-                optional = False,
-            ),
-            term = dict(
-                type = Time,
-                optional = True,
-            ),
+    """Class for ww3 Intermediate result (.ww3) with a date.
+
+    :note: (LFM) This resource already has a date/cutoff attribute (inherited
+           from `GeoFlowResource`). What is the meaning of `dateval`? Because
+           of its name, one may assume that it refers to the validity date:
+           let's hope not because it will be redundant with term (since the
+           validity date is date + term).
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = ' ww3 format dated files',
+            attr = dict(
+                kind = dict(
+                    values = ['ww3DatedIntermedResult'],
+                ),
+                dateval = dict(
+                    info = 'TODO comment.',
+                    type = Date,
+                ),
+                term = dict(
+                    optional = True
+                )
+            )
         )
-    )
+    ]
 
 
-@namebuilding_insert('radical', lambda s: s.fields + "_" + s.dateval.ymdh)
+@namebuilding_append('src', lambda s: s.fields)
+@namebuilding_append('src', lambda s: s.dateval.ymdh)
 class WW3Out(GeoFlowResource):
-    """Class for ww3 parameters output raw netcdf"""
-    _footprint = dict(
-        info = 'ww3 parameters output raw netcdf',
-        attr = dict(
-            kind = dict(
-                values = ['ww3outpts', 'ww3outsurf'],
-            ),
-            nativefmt = dict(
-                values  = ['tar'],
-                default = 'tar',
-            ),
-            fields = dict(
-                values = ['out_pnt', 'out_grd', 'out_reg'],
-            ),
-            model = dict(
-                values = ['ww3'],
-            ),
-            dateval = dict(
-                type = Date,
-                optional = False,
-            ),
-            term = dict(
-                type = Time,
-                optional = True,
-            ),
+    """Class for ww3 parameters output raw netcdf.
+
+    :note: (LFM) is it netcdf or tar ? (the documentation contredict itself)
+
+    :note: (LFM) idem for `dateval`.
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'ww3 parameters output raw netcdf',
+            attr = dict(
+                kind = dict(
+                    values = ['ww3outpts', 'ww3outsurf'],
+                ),
+                nativefmt = dict(
+                    values  = ['tar'],
+                    default = 'tar',
+                ),
+                fields = dict(
+                    values = ['out_pnt', 'out_grd', 'out_reg'],
+                ),
+                model = dict(
+                    values = ['ww3'],
+                ),
+                dateval = dict(
+                    info='TODO comment.',
+                    type = Date,
+                ),
+                term = dict(
+                    optional = True,
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         return 'WW3Out'
 
 
-@namebuilding_insert('radical', lambda s: s.header + '_' + s.param + '_' + s.datpivot.ymdh +
-                     '_' + s.term.fmth + '_' + s.origin + '.' + s.nativefmt)
-@namebuilding_delete('src')
-@namebuilding_delete('fmt')
+@namebuilding_append('src', lambda s: s.header, none_discard=True)
+@namebuilding_append('src', lambda s: s.param)
+@namebuilding_append('src', lambda s: s.origin)
+@namebuilding_append('src', lambda s: s.datpivot.ymdh)
 class WWW3FieldOut(FlowResource):
-    """Class for ww3 parameters output (nc)"""
-    _footprint = dict(
-        info = 'ww3 parameters output',
-        attr = dict(
-            kind = dict(
-                values = ['ww3outsurf'],
-            ),
-            nativefmt = dict(
-                values = ['netcdf', 'grib'],
-                # default = 'netcdf',
-            ),
-            param = dict(
-                optional = False,
-            ),
-            header = dict(
-                optional = True,
-            ),
-            origin = dict(
-                # optional = False,
-                values = ['ana', 'fcst'],
-                optional = False,
-            ),
-            model = dict(
-                values = ['ww3'],
-            ),
-            datpivot = dict(
-                type = Date,
-                optional = False,
-            ),
-            term = dict(
-                type = Time,
-                optional = True,
-            ),
+    """Class for ww3 parameters output (nc).
 
+    :note: (LFM) The documentation implies that these are fields. What is the
+           geometry?
+
+    :note: (LFM) idem for `dateval`.
+
+    :note: (LFM) The `common.data.modelstates.Historic` class is available. Why WW3
+           outputs should use a dedicated class?
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'ww3 parameters output',
+            attr = dict(
+                kind = dict(
+                    values = ['ww3outsurf'],
+                ),
+                nativefmt = dict(
+                    values = ['netcdf', 'grib'],
+                ),
+                param = dict(
+                ),
+                header = dict(
+                    optional = True,
+                ),
+                origin = dict(
+                    values = ['ana', 'fcst'],
+                ),
+                model = dict(
+                    values = ['ww3'],
+                ),
+                datpivot = dict(
+                    info='TODO comment.',
+                    type = Date,
+                ),
+                term = dict(
+                    optional = True,
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

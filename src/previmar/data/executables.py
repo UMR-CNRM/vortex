@@ -13,6 +13,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
 from vortex.data.executables import BlackBox, Script, OceanographicModel
+from vortex.syntax.stdattrs import model
 from gco.syntax.stdattrs import gdomain, gvar
 
 #: No automatic export
@@ -414,18 +415,21 @@ class InterpWave(BlackBox):
 
 
 class ConversionWindWW3(BlackBox):
-    """A tool to convert wind fields to ww3 format"""
+    """A tool to convert wind fields to ww3 format."""
     _footprint = [
         gvar,
-        gdomain,
+        model,
         dict(
             info = 'A tool to convert wind to ww3 format',
             attr = dict(
                 kind = dict(
-                    values = ['convertWindWw3']
+                    values  = ['convertWindWw3']
+                ),
+                model = dict(
+                    values  = ['ww3']
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_prnc',
+                    default = 'master_[model]_prnc',
                 ),
             )
         )
@@ -437,18 +441,21 @@ class ConversionWindWW3(BlackBox):
 
 
 class ConversionSpecWW3Ascii(BlackBox):
-    """A tool to convert spectra from mfwam to ww3 ascii"""
+    """A tool to convert spectra from mfwam to ww3 ascii."""
     _footprint = [
         gvar,
-        gdomain,
+        model,
         dict(
             info = 'A tool to convert mfwam spectra to ww3 ascii',
             attr = dict(
                 kind = dict(
-                    values = ['specmfwam2ww3']
+                    values  = ['specmfwam2ww3']
+                ),
+                model = dict(
+                    values  = ['ww3']
                 ),
                 gvar = dict(
-                    default  = 'master_ww3_bound_ascii',
+                    default  = 'master_[model]_bound_ascii',
                 ),
             )
         )
@@ -460,18 +467,21 @@ class ConversionSpecWW3Ascii(BlackBox):
 
 
 class BoundariesConditionWw3(BlackBox):
-    """A tool to compute ww3 boundaries conditions"""
+    """A tool to compute ww3 boundaries conditions."""
     _footprint = [
         gvar,
-        gdomain,
+        model,
         dict(
             info = 'A tool to compute ww3 boundaries conditions',
             attr = dict(
                 kind = dict(
-                    values = ['boundww3']
+                    values  = ['boundww3']
+                ),
+                model=dict(
+                    values  = ['ww3']
                 ),
                 gvar = dict(
-                    default  = 'master_[model]_bound',
+                    default = 'master_[model]_bound',
                 ),
             )
         )
@@ -483,10 +493,10 @@ class BoundariesConditionWw3(BlackBox):
 
 
 class ConversionWW3Netcdf(BlackBox):
-    """A tool to convert  ww3 result (to nc file)"""
+    """A tool to convert  ww3 result (to nc file)."""
     _footprint = [
         gvar,
-        gdomain,
+        model,
         dict(
             info = 'A tool to convert  ww3 result',
             attr = dict(
@@ -512,10 +522,9 @@ class ConversionWW3Netcdf(BlackBox):
 
 
 class InterpolationUGnc(BlackBox):
-    """A tool to interpolate ww3 parameter nc file to regular grid"""
+    """A tool to interpolate ww3 parameter nc file to regular grid."""
     _footprint = [
         gvar,
-        gdomain,
         dict(
             info = 'A tool to interpolate to regular grid',
             attr = dict(
@@ -535,10 +544,9 @@ class InterpolationUGnc(BlackBox):
 
 
 class ConversionNcGrib(BlackBox):
-    """A tool to convert netcdf fields fo grib fields"""
+    """A tool to convert netcdf fields fo grib fields."""
     _footprint = [
         gvar,
-        gdomain,
         dict(
             info = 'Conversion nc to grib',
             attr = dict(

@@ -53,3 +53,12 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Abstract Classes
+----------------
+
+.. autoclass:: AbstractWw3ParaBlindRun
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
