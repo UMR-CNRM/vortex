@@ -473,6 +473,9 @@ class UtSimpleWorkflow(TestCase):
             with self.assertRaises(HandlerError):
                 rhs_2[0].wait(sleep=0.1, timeout=0.2, fatal=True)
             self.assertFalse(rhs_2[1].wait(sleep=0.1, timeout=0.2, fatal=False))
+            pr_getter_file = rhs_2[0].mkgetpr()
+            self.assertTrue(self.sh.path.exists(pr_getter_file))
+            self.sh.rm(pr_getter_file)
             # Input (original files)
             rhs_1 = toolbox.input(now=True, verbose=False,
                                   **desc_i1)
