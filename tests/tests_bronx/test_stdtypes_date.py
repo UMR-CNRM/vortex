@@ -5,6 +5,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 from calendar import IllegalMonthError
 from datetime import datetime, timedelta
+import pickle
 from unittest import TestCase, main
 
 from bronx.stdtypes import date
@@ -77,6 +78,8 @@ class utDate(TestCase):
 
         rv = date.Date(float(1))
         self.assertEqual(rv.compact(), "19700101000001")
+
+        self.assertEqual(pickle.loads(pickle.dumps(rv)), rv)
 
     def test_date_format(self):
         rv = date.Date("2011-07-26T021314Z")
@@ -413,6 +416,7 @@ class utJeffrey(TestCase):
         self.assertEqual(obj.days, 14)
         self.assertEqual(obj.seconds, 24967)
         self.assertEqual(obj.microseconds, 42)
+        self.assertEqual(pickle.loads(pickle.dumps(obj)), obj)
 
     def test_period_utilities(self):
         obj_sec = 86410
@@ -478,6 +482,7 @@ class utTime(TestCase):
     def test_time_basics(self):
         t = date.Time(0)
         self.assertEqual(str(t), '00:00')
+        self.assertEqual(pickle.loads(pickle.dumps(t)), t)
 
         for pred in (128, '128:00',
                      'T128', 'T128:00', 'T128:00Z', 'T128H00', 'T128H00Z',
@@ -733,6 +738,7 @@ class utTimeInt(TestCase):
         t = date.TimeInt(0)
         self.assertEqual(str(t), '0')
         self.assertEqual(t.str_time, '0000:00')
+        self.assertEqual(pickle.loads(pickle.dumps(t)), t)
 
         t = date.TimeInt(128)
         self.assertEqual(str(t), '128')
@@ -740,6 +746,7 @@ class utTimeInt(TestCase):
 
         t = date.TimeInt('16:30')
         self.assertEqual(str(t), '0016:30')
+        self.assertEqual(pickle.loads(pickle.dumps(t)), t)
 
         t = date.TimeInt('0007:45')
         self.assertEqual(str(t), '0007:45')
@@ -963,6 +970,8 @@ class utMonth(TestCase):
         rv = date.Month(2, 2014)
         self.assertEqual(rv.month, 2)
         self.assertEqual(rv.year, 2014)
+
+        self.assertEqual(pickle.loads(pickle.dumps(rv)), rv)
 
         rv = date.Month(2, year=2014)
         self.assertEqual(rv.month, 2)

@@ -712,7 +712,11 @@ class Period(datetime.timedelta):
 
     def __reduce__(self):
         """Return a compatible args sequence for the Period constructor (used by :mod:`pickle`)."""
-        return (self.__class__, (self.isoformat(),))
+        return self.__class__, (self.days, self.seconds, self.microseconds)
+
+    def __reduce_ex__(self, protocol):
+        """Otherwise datetime.timedelta's __reduce_ex__ method may be called."""
+        return self.__reduce__()
 
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
@@ -924,7 +928,7 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
             ld = [int(x) for x in args
                   if isinstance(x, (int, float)) or (isinstance(x, six.string_types) and re.match(r'\d+$', x))]
         if not ld:
-            raise ValueError("Initial Date value unknown")
+            raise ValueError("Initial Date value unknown (args: {!s}, kw: {!s})".format(args, kw))
         newdate = datetime.datetime.__new__(cls, *ld)
         if deltas:
             newdate += sum([Period(d) for d in deltas], Period(0))
@@ -1029,7 +1033,11 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
 
     def __reduce__(self):
         """Return a compatible args sequence for the Date constructor (used by :mod:`pickle`)."""
-        return (self.__class__, (self.iso8601(),))
+        return self.__class__, (self.year, self.month, self.day, self.hour, self.minute, self.second)
+
+    def __reduce_ex__(self, protocol):
+        """Otherwise datetime.datetime's __reduce_ex__ method might be called."""
+        return self.__reduce__()
 
     def __deepcopy__(self, memo):
         newinstance = type(self)(self)
