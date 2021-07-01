@@ -174,7 +174,7 @@ class Prosnow_SetUp_Resort(GenvModelResource):
                 values  = ['ascii', 'netcdf'],
             ),
             resort = dict(
-                info = "The ski resort name."
+                values = ['saisies', 'plagne', 'soldeu','peyra','saetde'],
             ),
             gvar = dict(
                 default = '[kind]_[resort]',
