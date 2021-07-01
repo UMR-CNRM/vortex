@@ -1,6 +1,8 @@
 #!$python $pyopts
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os, sys, io, glob, datetime
 
 exit_value = 0
@@ -10,7 +12,10 @@ sync_name = sys.argv[0].lstrip('./')
 with io.open(sync_name + '.log', 'a') as flog:
 
     def logging(*msg):
-        flog.write(unicode(' '.join([str(m) for m in msg]) + '\n'))
+        if sys.version_info.major == 2:
+            flog.write(unicode(' '.join([str(m) for m in msg]) + '\n'))
+        else:
+            flog.write(' '.join([str(m) for m in msg]) + '\n')
 
     logging('-' * 80)
     logging('Sync tool:', sync_name)

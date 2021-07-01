@@ -28,6 +28,7 @@ from vortex.layout.dataflow import SectionFatalError
 from vortex.tools.delayedactions import AbstractFileBasedDelayedActionsHandler, d_action_status
 from vortex.tools.prestaging import PrestagingTool, prestaging_p
 from vortex.tools.storage import FixedEntryCache
+from vortex.tools.systems import ExecutionError
 
 MYPYFILE = os.path.abspath(__file__)
 
@@ -456,6 +457,8 @@ class UtSimpleWorkflow(TestCase):
             desc_o1.update(kind=['utest1', 'utest2'], local='[kind]_get', experiment='CBA1')
             desc_i2 = self.default_fp_stuff
             desc_i2.update(kind=['utest1', 'utest2'], local='[kind]_getbis', experiment='CBA1')
+            desc_i3 = self.default_fp_stuff
+            desc_i3.update(kind=['utest1', 'utest2'], local='[kind]_getter', experiment='CBA1')
             # Promises
             rhs_p = toolbox.promise(now=True, verbose=True, role='PromiseTester',
                                     **desc_o1)
@@ -467,15 +470,19 @@ class UtSimpleWorkflow(TestCase):
             # Input (promised files)
             rhs_2 = toolbox.input(now=True, verbose=False, expected=True, batch=batch,
                                   **desc_i2)
+            rhs_3 = toolbox.input(now=True, verbose=False, expected=True, batch=batch,
+                                  **desc_i3)
             for rh in rhs_2:
                 self.assertTrue(rh.is_expected())
                 self.assertFalse(rh.is_grabable())
             with self.assertRaises(HandlerError):
                 rhs_2[0].wait(sleep=0.1, timeout=0.2, fatal=True)
             self.assertFalse(rhs_2[1].wait(sleep=0.1, timeout=0.2, fatal=False))
-            pr_getter_file = rhs_2[0].mkgetpr()
-            self.assertTrue(self.sh.path.exists(pr_getter_file))
-            self.sh.rm(pr_getter_file)
+            # Test the Arome/Arpege script based sync system
+            pr_getter_file0 = rhs_3[0].mkgetpr()
+            self.assertTrue(self.sh.path.exists(pr_getter_file0))
+            pr_getter_file1 = rhs_3[1].mkgetpr()
+            self.assertTrue(self.sh.path.exists(pr_getter_file1))
             # Input (original files)
             rhs_1 = toolbox.input(now=True, verbose=False,
                                   **desc_i1)
@@ -501,6 +508,17 @@ class UtSimpleWorkflow(TestCase):
                 self.assertFalse(rh.is_expected())
             self.assertTrue(self.sh.diff(rhs_1[0].container.localpath(),
                                          rhs_2[0].container.localpath()))
+            # Effect on the sync scripts
+            self.sh.spawn(['./' + pr_getter_file0, ])
+            self.assertTrue(self.sh.path.exists(rhs_3[0].container.localpath()))
+            self.assertTrue(self.sh.readlink(rhs_3[0].container.localpath()))
+            self.assertIntegrity(rhs_3[0])
+            with self.assertRaises(ExecutionError):
+                self.sh.spawn(['./' + pr_getter_file1, ])
+            self.assertTrue(self.sh.rclast, 2)
+            # Some cleaning for the next iteration
+            self.sh.remove(pr_getter_file0)
+            self.sh.remove(pr_getter_file1)
             # Cleaning
             for rh in rhs_1:
                 rh.clear()
