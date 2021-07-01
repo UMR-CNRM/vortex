@@ -152,7 +152,7 @@ class VortexWorker(object):
             import traceback
             tb_sep = '-' * 80 + "\n"
             tb_str = str(exc_value) + "\n"
-            if exc_value.message:
+            if hasattr(exc_value, 'message') and exc_value.message:
                 tb_str += '{sep:s}Exception message: {exc.message:s}\n{sep:s}'.format(
                     sep=tb_sep, exc=exc_value
                 )
