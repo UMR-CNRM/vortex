@@ -99,27 +99,36 @@ def test_vortex(pnum, ask, config, logger, **kw):
     from vortex.util.worker import VortexWorker
     logger.loglevel = 'info'
 
+    logger.debug('External', todo=ask.todo, pnum=pnum, opts=kw)
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
+    logger.warning('External', todo=ask.todo, pnum=pnum, opts=kw)
+    logger.error('External', todo=ask.todo, pnum=pnum, opts=kw)
+    logger.critical('External', todo=ask.todo, pnum=pnum, opts=kw)
 
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, modules=('common', 'olive'), profile=profile) as vwork:
         sh = vwork.session.sh
         sh.trace = True
+        logger.debug('Test Level DEBUG', vwork=vwork)
+        logger.info('Test Level INFO', vwork=vwork)
+        logger.warning('Test Level WARNING', vwork=vwork)
+        logger.error('Test Level ERROR', vwork=vwork)
+        logger.critical('Test Level CRITICAL', vwork=vwork)
+
         data = vwork.get_dataset(ask)
         duration = 1
         try:
             duration = float(data.duration)
-        except ValueError:
-            logger.error('Bad duration:', duration=data.duration)
+        except (ValueError, AttributeError):
+            logger.error('Bad or no duration in data:', data=data)
         logger.info('Sleep', duration=duration)
         time.sleep(duration)
-        logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag,
-                    logname=data.logname)
+        logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag)
     return pnum, vwork.rc, None
 
 
-def test_direct_call_to_a_jeeves_callback():
-    """Run a jeeves async callback as if it was called by jeeves.
+def test_direct_call_to_a_jeeves_callback(cb_function):
+    """Run a jeeves async callback as if it was called by jeeves, but from the main process.
 
     This may be run interactively in a debugger.
     """
@@ -129,19 +138,28 @@ def test_direct_call_to_a_jeeves_callback():
 
     # common part
     logger = butlers.GentleTalk()
-    jname = 'async'
+    jname = 'test'
     jpath = os.path.expanduser('~/jeeves/' + jname + '/depot')
     jfile = 'vortex'
     jtag = jpath + '/' + jfile
     fulltalk = dict(user='user', jtag=jtag, mail=None, apps='play', conf='sandbox', task='interactif', )
 
     # specifics
+    cb_function_name = cb_function.__name__
     now = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
-    data = dict(selector='timestamp', ask_time=now, message='test callback', filepath='test_bar.txt', )
-    fulltalk.update(todo='test_bar', data=data)
+    data = dict(selector='timestamp', ask_time=now, message='test callback ' + cb_function_name,
+                duration=1, filepath=cb_function_name + '.txt', )
+    fulltalk.update(todo=cb_function_name, data=data)
+
+    # generate a json for reference
     request = pools.Request(**fulltalk)
-    test_bar(1, request, None, logger)
+    request.dump()
+    print('request dumped to', request.last)
+
+    # and directly call the fonction
+    config = dict(driver=dict(profile='research'))
+    cb_function(1, request, config, logger)
 
 
 if __name__ == '__main__':
-    test_direct_call_to_a_jeeves_callback()
+    test_direct_call_to_a_jeeves_callback(cb_function=test_vortex)
