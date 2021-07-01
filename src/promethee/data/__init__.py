@@ -10,6 +10,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from . import flow
 from . import executables
 from . import gridfiles
+from . import resources
 
 #: No automatic export
 __all__ = []

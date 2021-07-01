@@ -37,6 +37,16 @@ todo:
                     - INT
             -   prefered_target: INT
                 forbidden_target: OPER
+            -   soprano_domain:
+                  - oper
+                  - int
+                  - null
+                bdpe_timeout: 5
+                bdpe_retries: 1
+                allow_archive:
+                  - True
+                  - False
+                  - null
             -   bdpeid: 13709
                 fields: seaice_conc
                 origin: safosi_hn

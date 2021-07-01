@@ -7,7 +7,7 @@ TODO: Module documentation
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-from common.data.consts import GenvModelResource
+from common.data.consts import GenvModelResource, GenvModelGeoResource
 
 #: No automatic export
 __all__ = []
@@ -53,11 +53,11 @@ class Regrid(GenvModelResource):
         return 'regrid'
 
 
-class GribTemplate(GenvModelResource):
-    """File constant for macc/mocage forecast."""
+class GribTemplate(GenvModelGeoResource):
+    """File constant for mocage post."""
 
     _footprint = dict(
-        info = 'Grib template for mocage forecast',
+        info = 'Grib template for mocage post',
         attr = dict(
             kind = dict(
                 values   = ['gribtpl'],
@@ -67,7 +67,7 @@ class GribTemplate(GenvModelResource):
                 default  = 2,
             ),
             gvar = dict(
-                default  = 'gribtpl_cams'
+                default  = 'GRIB_TEMPLATE_PREVAIR_[geometry::area]'
             ),
         )
     )

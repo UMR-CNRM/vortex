@@ -1,13 +1,15 @@
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      allow_archive: null
+      bdpe_retries: 1
+      bdpe_timeout: 5
       bdpeid: 10550
       fields: sst
-      forbidden_target: OPER
       kind: rawfields
       namespace: bdpe.archive.fr
       nativefmt: netcdf
       origin: ostia
-      prefered_target: INT
+      soprano_domain: null
     results: !test_names.core.TestResults
     - default: &id001 !test_names.core.TestParameters
         cutoff: assim
@@ -19,7 +21,7 @@
         namespace: vortex.multi.fr
         vapp: arome
         vconf: 3dvarfr
-      location: bdpe://bdpe.archive.fr/OPER_OPER_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_5_1/20180101T0000P/BDPE_10550+00:00
     - default: &id002 !test_names.core.TestParameters
         cutoff: assim
         cycle: cy42_op2.67
@@ -30,7 +32,158 @@
         namespace: vortex.multi.fr
         vapp: arpege
         vconf: 4dvarfr
-      location: bdpe://bdpe.archive.fr/OPER_OPER_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: null
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: int
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_False_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: null
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_False_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: false
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: false
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: int
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_False_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: false
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_False_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_False_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: true
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: null
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_True_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_True_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: true
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: int
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_True_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_int_True_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      allow_archive: true
+      bdpe_retries: 1
+      bdpe_timeout: 5
+      bdpeid: 10550
+      fields: sst
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      soprano_domain: oper
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_True_5_1/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_oper_True_5_1/20180101T0000P/BDPE_10550+00:00
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      bdpeid: 10550
+      fields: sst
+      forbidden_target: OPER
+      kind: rawfields
+      namespace: bdpe.archive.fr
+      nativefmt: netcdf
+      origin: ostia
+      prefered_target: INT
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
+    - default: *id002
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 10550
@@ -42,9 +195,9 @@
       prefered_target: null
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 10550
@@ -56,9 +209,9 @@
       prefered_target: INT
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_10550+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_10550+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 13709
@@ -69,9 +222,9 @@
       origin: safosi_hn
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_13709+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_13709+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       bdpeid: 13709
@@ -84,9 +237,9 @@
       stage: extract
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_13709+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_DEV_False/20180101T0000P/BDPE_13709+00:00
+      location: bdpe://bdpe.archive.fr/SEC_OPER_dev_False_10_3/20180101T0000P/BDPE_13709+00:00
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       allow_archive: false
@@ -98,9 +251,9 @@
       unknown: true
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+00:00
+      location: bdpe://bdpe.archive.fr/OPER_INT_dev_False_10_3/most_recent/BDPE_43+00:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+00:00
+      location: bdpe://bdpe.archive.fr/OPER_INT_dev_False_10_3/most_recent/BDPE_43+00:00
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       allow_archive: false
@@ -112,9 +265,9 @@
       unknown: true
     results: !test_names.core.TestResults
     - default: *id001
-      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+42:00
+      location: bdpe://bdpe.archive.fr/OPER_INT_dev_False_10_3/most_recent/BDPE_43+42:00
     - default: *id002
-      location: bdpe://bdpe.archive.fr/OPER_INT_False/most_recent/BDPE_43+42:00
+      location: bdpe://bdpe.archive.fr/OPER_INT_dev_False_10_3/most_recent/BDPE_43+42:00
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       fields: seaice

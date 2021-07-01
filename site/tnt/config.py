@@ -193,9 +193,11 @@ def read_directives(filename):
         try:
             sys.dont_write_bytecode = True
             if sys.version_info.major == 3 and sys.version_info.minor >= 4:
+                from importlib.machinery import SourceFileLoader  # @UnresolvedImport
                 import importlib.util as imputil  # @UnresolvedImport
-                spec = imputil.spec_from_file_location(os.path.basename(filename),
-                                                       os.path.abspath(filename))
+                spec = imputil.spec_from_loader('tnt.tnt_raw_configuration_module',
+                                                SourceFileLoader('tnt.tnt_raw_configuration_module',
+                                                                 os.path.abspath(filename)))
                 m = imputil.module_from_spec(spec)
                 spec.loader.exec_module(m)
             else:

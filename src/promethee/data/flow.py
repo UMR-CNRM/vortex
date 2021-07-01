@@ -15,6 +15,30 @@ from promethee.syntax.stdattrs import version_deco, task_deco
 __all__ = []
 
 
+class PrometheeInputs(FlowResource):
+    """Tar with gribs extracted from the BDAP database"""
+
+    _footprint = dict(
+        info = "Tar from soprano. Specific to promethee.",
+        attr = dict(
+            kind = dict(
+                values = ["promethee_inputs"]
+            ),
+            model = dict(
+                values = ['promethee', ]
+            ),
+            nativefmt = dict(
+                values = ["tar"],
+                default = "tar"
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
+
+
 class PrometheeFlowResource(FlowResource):
     """PrometheeFlowResource : Abstract Class to access all kind of flow resources
     for promethee. A PrometheeFlowResource is a quite common flow resource with a

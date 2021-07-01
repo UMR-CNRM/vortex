@@ -275,6 +275,13 @@ class SopranoProvider(Provider):
             self.config.setall(info)
             return self.config.resolvedpath(resource, self.vapp, self.vconf, sopranomaptag)
 
+        elif self.vapp == 'promethee':
+            info['level_one'] = 'promethee'
+            info['level_two'] = 'alim_hpc'
+            info['level_three'] = '.'
+            self.config.setall(info)
+            return self.config.resolvedpath(resource, self.vapp, self.vconf, 'soprano')
+
         else:
             info['model'] = self.vapp
 

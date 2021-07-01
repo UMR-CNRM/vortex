@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import json
+import six
 import vortex  # noqa: F401
 from vortex.layout.nodes import ConfigSet
 
@@ -44,7 +45,7 @@ def recursive_format(element, **format_kwargs):
         type(element): Formatted given element
 
     """
-    if isinstance(element, (str, unicode)):
+    if isinstance(element, six.string_types):
         try:
             return element.format(**format_kwargs)
         except KeyError:
