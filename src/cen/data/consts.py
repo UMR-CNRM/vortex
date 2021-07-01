@@ -133,9 +133,9 @@ class GridTarget(GenvModelGeoResource):
 
 
 class Prosnow_SetUp_Global(GenvModelResource):
-    """
+    """Prosnow general setup file.
+
     This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
-    Prosnow general setup file.
     """
 
     _footprint = dict(
@@ -174,7 +174,8 @@ class Prosnow_SetUp_Resort(GenvModelResource):
                 values  = ['ascii', 'netcdf'],
             ),
             resort = dict(
-                values = ['saisies', 'plagne', 'soldeu','peyra','saetde'],
+                info    = "The ski resort name.",
+                values  = ['saisies', 'plagne', 'soldeu', 'peyra', 'saetde'],
             ),
             gvar = dict(
                 default = '[kind]_[resort]',

@@ -1822,7 +1822,6 @@ class ExtractForcingWorkerEnsembleForecast(ExtractForcingWorker):
     )
 
     def forcingdir(self, rundir, thisdir):
-
         return thisdir
 
 
