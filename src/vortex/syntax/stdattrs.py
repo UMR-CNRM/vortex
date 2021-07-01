@@ -454,7 +454,9 @@ def _add_month2gget_basename(cls):
 
         def gget_basename(self):
             """GGET specific naming convention."""
-            return original_gget_basename(self) + '.m{!s}'.format(self.month)
+            b_dict = original_gget_basename(self)
+            b_dict['suffix'] = b_dict.get('suffix', '') + '.m{!s}'.format(self.month)
+            return b_dict
 
         cls.gget_basename = gget_basename
     return cls

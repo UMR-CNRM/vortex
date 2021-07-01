@@ -64,7 +64,7 @@ class RawFiles(GeoFlowResource):
         """GGET specific naming convention."""
         if self.ipert is None:
             raise ValueError('ipert is mandatory with the GCO provider')
-        return '.{:03d}.tar'.format(self.ipert)
+        return dict(suffix='.{:03d}.tar'.format(self.ipert))
 
 
 @namebuilding_insert('geo', lambda s: s._geo2basename_info(add_stretching=False))
@@ -111,7 +111,7 @@ class RandBFiles(GeoFlowResource):
         """GGET specific naming convention."""
         if self.ipert is None:
             raise ValueError('ipert is mandatory with the GCO provider')
-        return '.{:03d}.{}'.format(self.ipert, 'fa')
+        return dict(suffix='.{:03d}.{}'.format(self.ipert, 'fa'))
 
 
 class InflationFactor(_BackgroundErrorInfo):
