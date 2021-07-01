@@ -23,26 +23,30 @@ __all__ = []
 
 
 def recursive_format(element, **format_kwargs):
-    """recursive_format : function which applies string formatting to a given
-    element (if of type str or unicode) or recursively applies the string
-    to the sub-elements of the given element (if of type dict or list).
+    """
+    Function which applies string formatting to a given element (if of type
+    str or unicode) or recursively applies the string to the sub-elements of
+    the given element (if of type dict or list).
 
-    Exemples :
+    A few examples:
+
     >>> recursive_format("{son}, I am your father.", son="luke")
     'luke, I am your father'
     >>> recursive_format(u'{daughter} and {son}, I am your father', daughter="leia", son="luke")
     u'leia and luke, I am your father'
     >>> my_kwargs = {"father" : "anakin", "mother": "padme", "son":"luke", "daughter":"leia", "age":42}
-    >>> recursive_format({"A" : "My name is {father}", "B" : "I'm Vader", "C": "My kids are {kids}"}, ``**my_kwargs``)
+    >>> recursive_format({"A" : "My name is {father}", "B" : "I'm Vader", "C": "My kids are {kids}"}, **my_kwargs)
     {"A" : "My name is anakin", "B" : "I used to be fun", "C": "My kids are {kids}"}
-    >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, ``**my_kwargs``)
+    >>> recursive_format({"A":[{"B":{"deeply":"At {age}, I still love {mother}"}}]}, **my_kwargs)
     {"A":[{"B":{"deeply":"At 42, I still love padme"}}]}
 
-    Args:
-        element (any): Element to string-format or dict/list of elements to string-format
+    Arguments description:
 
-    Returns:
-        type(element): Formatted given element
+    * element (any): Element to string-format or dict/list of elements to string-format
+
+    It returns:
+
+    * type(element): Formatted given element
 
     """
     if isinstance(element, six.string_types):
@@ -60,7 +64,7 @@ def recursive_format(element, **format_kwargs):
 
 
 class ConfigSetPromethee(ConfigSet):
-    """ConfigSetPromethee : Custom Promethee application configuration set.
+    """Custom Promethee application configuration set.
 
     It is an extension of the usual vortex.layout.nodes.ConfigSet of a task, composed
     by some environment variables and the constants declared in the .ini
@@ -72,6 +76,7 @@ class ConfigSetPromethee(ConfigSet):
     providers and algo components used in the application. It has been conceived
     to factorize the task writing, and to serialize the resource fetch/backup.
     This configuration file has the following structure:
+
     >>> {
     ...     'providers' : {
     ...         'provider_1': {...},
@@ -102,21 +107,24 @@ class ConfigSetPromethee(ConfigSet):
 
     The ConfigSetPromethee thus assembles the task layout, and full ressources
     handlers can be accessed like a dictionnary through the 'get_step_conf'
-    method. For instance :
+    method. For instance:
+
     >>> conf = ConfigSetPromethee(self.conf, self.ticket)
-    >>> toolbox.input(``**conf.get_step_conf("fetch")["resource_1"]``)
-    {...} (input resource handler combining the 'resource_1' and 'provider_1' as configured later)
-    >>> [toolbox.output(``**rh``) for rh in toolbox.output("backup").values()]
-    {...} (output resource handler combining the 'resource_2' and 'provider_1')
-    {...} (output resource handler combining the 'resource_2' and 'provider_2')
+    >>> toolbox.input(**conf.get_step_conf("fetch")["resource_1"])
+    ... # {...} (input resource handler combining the 'resource_1' and 'provider_1' as configured later)
+    >>> [toolbox.output(**rh) for rh in toolbox.output("backup").values()]
+    ... # {...} (output resource handler combining the 'resource_2' and 'provider_1')
+    ... # {...} (output resource handler combining the 'resource_2' and 'provider_2')
 
     Inheritance:
-        vortex.layout.nodes.ConfigSet
 
-    Args:
-        conf (vortex.layout.nodes.ConfigSet, or dict-like): Classical application
-        configuration set resulting from the env and .ini configuration file parsing.
-        ticket (vortex.sessions.Ticket): Session's ticket.
+    * :class:`vortex.layout.nodes.ConfigSet`
+
+    Arguments description:
+
+    * conf (:class:`vortex.layout.nodes.ConfigSet`, or dict-like): Classical application
+      configuration set resulting from the env and .ini configuration file parsing.
+    * ticket (`class:`vortex.sessions.Ticket`): Session's ticket.
 
     """
     def __init__(self, conf, ticket):
@@ -143,7 +151,6 @@ class ConfigSetPromethee(ConfigSet):
 
         if self.path.isfile(self.jsonconf):
             try:
-                # with open(self.jsonconf) as jsonf:
                 with io.open(self.jsonconf, 'r', encoding='utf-8') as jsonf:
                     self.update(**json.load(jsonf))
             except Exception:
@@ -161,7 +168,8 @@ class ConfigSetPromethee(ConfigSet):
         return self.path.isfile(self.jsonconf)
 
     def update(self, **update_kwargs):
-        """update: update the 'self' config set by adding the 'update_kwargs' to the
+        """
+        Update the 'self' config set by adding the 'update_kwargs' to the
         'self' config set and by recursively formatting its elements according to
         the given 'update_kwargs'.
         """
@@ -170,35 +178,40 @@ class ConfigSetPromethee(ConfigSet):
         self.format(**update_kwargs)
 
     def format(self, **format_kwargs):
-        """format: format recursively the elements of the 'self' config set
+        """
+        Format recursively the elements of the 'self' config set
         according to the given 'format_kwargs'.
         """
         for key, value in self.items():
             self[key] = recursive_format(value, **format_kwargs)
 
     def get_step_conf(self, step):
-        """get_step_conf: Builds the step configuration of an application task
-        and returns all the resource handlers configs to use in the step.
+        """
+        Builds the step configuration of an application task and returns all
+        the resource handlers configs to use in the step.
 
         To do so, it finds all the resources and providers used in the given step
         and combines their configured footprints. The resource handlers configs are
         then accessible like in a dictionnary.
 
         It is important to differentiate the types of steps:
-        - "all", "early-fetch" and "fetch" are input steps. It means that all the
-        given resources are to be processed with a toolbox.input().get()
-        - "compute" is a computational step. The given footprint is an algo component
-        footprint, and thus is to be run like so.
-        - "backup" and "late-backup" are output steps. It means that all the given
-        resources are to be processed with a toolbox.output().put(). Also we
-        can associate several providers to a single resource in the case we would
-        like to feed several providers of a single resource.
 
-        Args:
-            step (str): step name
+        * "all", "early-fetch" and "fetch" are input steps. It means that all the
+          given resources are to be processed with a toolbox.input().get()
+        * "compute" is a computational step. The given footprint is an algo component
+          footprint, and thus is to be run like so.
+        * "backup" and "late-backup" are output steps. It means that all the given
+          resources are to be processed with a toolbox.output().put(). Also we
+          can associate several providers to a single resource in the case we would
+          like to feed several providers of a single resource.
 
-        Returns:
-            dict : Step configuration
+        Arguments description:
+
+        * step (str): step name
+
+        It returns:
+
+        * dict: Step configuration
 
         """
         step_conf = dict()

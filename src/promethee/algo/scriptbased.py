@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Promethee custom Algo Component
+Promethee custom Algo Component.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -15,15 +15,18 @@ __all__ = []
 
 
 class PrometheeAlgo(Expresso):
-    """PrometheeAlgo : This algo component is used for executing Python scripts
-    with args, like a common Python script execution in command line.
+    """
+    This algo component is used for executing Python scripts with args, like a
+    common Python script execution in command line.
 
     For instance : I have a Python3.7 script 'toto.py' which arguments are
-    '-f, --foo', '-b,--bar'. I would usually execute that script with :
+    '-f, --foo', '-b,--bar'. I would usually execute that script with:
+
     >>> python3.7 toto.py --foo 42 --bar 51
 
-    In Vortex, I would get my script as a promethee.data.executable.PrometheeScript,
-    and executing it this way :
+    In Vortex, I would get my script as a :class:`promethee.data.executable.PrometheeScript`,
+    and executing it this way:
+
     >>> tb_script = toolbox.executable(
     ...     kind        = "promethee_script",
     ...     language    = "python",
@@ -41,19 +44,20 @@ class PrometheeAlgo(Expresso):
     fit any Python script execution.
 
     Inheritance:
-        vortex.algo.components.Expresso
+
+    * :class:`vortex.algo.components.Expresso`
 
     Attrs:
-        kind          (str) : Algo kind. Must be 'promethee_algo'.
-        interpreter   (str) : Interpreter to use for executing scripts.
-        engine        (str) : Optionnal engine, default is 'exec'.
-        extendpypath (list) : The list of things to be prepended in the python's path.
-        The added paths must lead to python packages used by the script to execute.
-        Default is [].
-        timeout       (int) : Default timeout (in sec.) used when waiting for
-        an expected resource. Default is 180.
-        cmdline      (dict) : Optionnal command line arguments to pass on to
-        the script to execute.
+
+    * kind (str): Algo kind. Must be 'promethee_algo'.
+    * interpreter (str): Interpreter to use for executing scripts.
+    * engine (str): Optionnal engine, default is 'exec'.
+    * extendpypath (list): The list of things to be prepended in the python's path.
+      The added paths must lead to python packages used by the script to execute.
+      Default is [].
+    * timeout (int): Default timeout (in sec.) used when waiting for an expected resource.
+      Default is 180.
+    * cmdline (dict): Optionnal command line arguments to pass on to the script to execute.
 
     """
 
@@ -69,7 +73,6 @@ class PrometheeAlgo(Expresso):
             ),
             engine = dict(
                 optional    = True,
-                values      = ["exec", "launch", ],
                 default     = "exec",
             ),
             cmdline=dict(

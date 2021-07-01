@@ -23,8 +23,6 @@ __all__ = [
 #: Usual definition for the ``promid`` (*i.e.* promethee production identifier).
 a_promid = dict(
     info="The identifier of the Promethee production (e.g. report name, mask id, zone id, etc.)",
-    type=str,
-    optional=False,
 )
 
 promid = footprints.Footprint(info='Abstract Promethee identifier', attr=dict(promid=a_promid))
@@ -37,7 +35,6 @@ promid_deco = footprints.DecorativeFootprint(
 #: Usual definition for the ``version`` (*e.g.* config version, promethee mask version).
 a_version = dict(
     info="The resource version (i.e. production version).",
-    type=str,
     optional=True,
     default=""
 )
@@ -53,7 +50,6 @@ version_deco = footprints.DecorativeFootprint(
 #: Usual definition for the ``param`` (*i.e.* parameter name).
 a_param = dict(
     info="The weather parameter or field name.",
-    type=str,
     optional=False,
 )
 
@@ -69,8 +65,6 @@ param_deco = footprints.DecorativeFootprint(
 #: dedicated)
 a_task = dict(
     info="The task name for which the resource is dedicated.",
-    type=str,
-    optional=False,
     values=["conf_task", "data_task", "mask_task", "prod_task", "version", "rec_task"]
 )
 
@@ -86,7 +80,6 @@ task_deco = footprints.DecorativeFootprint(
 a_step = dict(
     info="The step (in hours) between two consecutive terms in the resource.",
     type=Time,
-    optional=False,
     values=[1, 3, 6, 12, 24]
 )
 
