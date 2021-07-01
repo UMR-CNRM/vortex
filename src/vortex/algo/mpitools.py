@@ -404,7 +404,7 @@ class MpiTool(footprints.FootprintBase):
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
                 try:
-                    libs = sh.ldd(mpi_lib)
+                    libs = sh.ldd(mpirun_path)
                 except ExecutionError:
                     # This may happen if the mpirun binary is statically linked
                     libs = []
