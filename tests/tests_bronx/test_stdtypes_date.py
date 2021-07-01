@@ -298,6 +298,16 @@ class utDate(TestCase):
         with self.assertRaises(ValueError):
             rv = date.guess('20130631T00')
 
+    def test_date_nivology(self):
+        rv = date.Date("20110726121314")
+        self.assertEqual(rv.nivologyseason_begin,
+                         date.Date("201008010600"))
+        self.assertEqual(rv.nivologyseason, "1011")
+        rv = date.Date("20110926121314")
+        self.assertEqual(rv.nivologyseason_begin,
+                         date.Date("201108010600"))
+        self.assertEqual(rv.nivologyseason, "1112")
+
     def test_date_range(self):
         rv = list(date.daterange('2017110821'))
         self.assertEqual(len(rv), 11)

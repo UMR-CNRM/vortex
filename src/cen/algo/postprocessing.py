@@ -13,8 +13,6 @@ from footprints.stdtypes import FPList
 
 from vortex.algo.components import AlgoComponent
 
-# from cen.syntax.stdattrs import cendateperiod
-
 logger = loggers.getLogger(__name__)
 
 echecker = ExternalCodeImportChecker('snowtools')

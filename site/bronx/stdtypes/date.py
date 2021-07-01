@@ -1338,15 +1338,15 @@ class Date(datetime.datetime, _GetattrCalculatorMixin):
         return out.ymd
 
     @property
+    def nivologyseason_begin(self):
+        """Return the begin date of the current nivology season."""
+        return self.__class__(self.year - 1 if self.month < 8 else self.year, 8, 1, 6, 0)
+
+    @property
     def nivologyseason(self):
         """Return the nivology season of a current date"""
-        if self.month < 8:
-            season_begin = datetime.datetime(self.year - 1, 8, 1)
-            season_end = datetime.datetime(self.year, 7, 31)
-        else:
-            season_begin = datetime.datetime(self.year, 8, 1)
-            season_end = datetime.datetime(self.year + 1, 7, 31)
-
+        season_begin = self.nivologyseason_begin
+        season_end = season_begin + Period('P1Y')
         return season_begin.strftime('%y') + season_end.strftime('%y')
 
 

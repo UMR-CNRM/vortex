@@ -3,6 +3,7 @@
 
 """
 Specific namebuilders for CEN flow resources.
+
 The main specificity is the date managment in file names : CEN files are
 often associated to a period rather than a given time.
 """
