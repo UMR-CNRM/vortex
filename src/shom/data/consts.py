@@ -11,8 +11,9 @@ __all__ = []
 
 # %% Constants
 
-
 class Hycom3dConsts(GenvModelResource):
+    """TODO Class Documentation."""
+
     _footprint = [
         dict(
             info="Hycom3d constants tar file",
@@ -20,7 +21,7 @@ class Hycom3dConsts(GenvModelResource):
                 pack=dict(values=["naming"]),
                 gvar=dict(default="[model]_[pack]_[rank]_tar"),
                 rank=dict(type=int),
-                model=dict(values=["hycom3d"] )
+                model=dict(values=["hycom3d"])
             ),
         )
     ]
@@ -31,6 +32,7 @@ class Hycom3dConsts(GenvModelResource):
 
 
 class Hycom3dGeoConsts(GenvModelGeoResource):
+    """TODO Class Documentation."""
 
     _footprint = [
         gdomain,
@@ -50,4 +52,3 @@ class Hycom3dGeoConsts(GenvModelGeoResource):
     @property
     def realkind(self):
         return "hycom3d_geo_consts"
-

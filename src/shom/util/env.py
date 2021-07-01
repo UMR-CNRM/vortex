@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Utilities about the environment
+Utilities about the environment.
 """
 
 import sys
 
-from vortex import sessions
-
 
 def config_to_env_vars(cfg):
-    """Extract from a ConfigSet options that starts with `env_`"""
+    """Extract from a ConfigSet options that starts with `env_`."""
     env_vars = {}
     for key, value in cfg.items():
         if key.startswith("env_"):
@@ -21,11 +19,8 @@ def config_to_env_vars(cfg):
     return env_vars
 
 
-def stripout_conda_env(env_dict=None):
-    """Remove conda env from PATH, LD_LIBRARY_PATH and C_INCLUDE_PATH"""
-    
-    t = sessions.current()
-    
+def stripout_conda_env(t, env_dict=None):
+    """Remove conda env from PATH, LD_LIBRARY_PATH and C_INCLUDE_PATH."""
     if env_dict is None:
         env_dict = t.sh.environ
     for name, subdir in (
