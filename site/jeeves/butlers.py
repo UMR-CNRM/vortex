@@ -734,7 +734,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             self.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
             # look at the remaining tasks
-            for (pnum, syncinfo) in self.asynchronous.items():
+            for (pnum, syncinfo) in self.asynchronous.copy():
                 self.warning('Task not complete', pnum=pnum)
                 try:
                     jpool, jfile, asyncr = syncinfo
