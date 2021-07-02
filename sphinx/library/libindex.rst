@@ -40,6 +40,7 @@ Roughly, here is a description of the various packages:
   modelling (Meteo-France CNRM/GMGEC and DSM teams)
 * :ref:`sandbox <sandbox-autoindex>`: Some demonstration/test code (note to be
   used in the real world)
+* :ref:`promethee <promethee-autoindex>`: Code dedicated to Meteo-France's Promethee project
 
 Here is the expanded index for all of these packages:
 
@@ -58,3 +59,4 @@ Here is the expanded index for all of these packages:
    previmar/index
    intairpol/index
    sandbox/index
+   promethee/index
