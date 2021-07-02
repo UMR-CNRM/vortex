@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Algo Components for deterministic S2M simulations.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -19,7 +19,7 @@ echecker = ExternalCodeImportChecker('snowtools')
 with echecker:
     from snowtools.tools.change_prep import prep_tomodify
     from snowtools.utils.resources import get_file_period, save_file_period, save_file_date
-    from snowtools.tools.update_namelist import update_surfex_namelist_object
+    from snowtools.tools.update_namelist import update_surfex_namelist_object, update_namelist_var
     from snowtools.tools.initTG import generate_clim
     from snowtools.tools.massif_diags import massif_simu
 
@@ -167,7 +167,7 @@ class Surfex_Parallel(Parallel):
             ),
 
             threshold = dict(
-                info = "The initialization date if different from the starting date.",
+                info = "Threshold on snow water equivalent on August 1st.",
                 type = int,
                 optional = True,
                 default = -999
@@ -304,9 +304,58 @@ class Interpol_Forcing(Parallel):
 
     def execute(self, rh, opts):
 
-        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(kind='forcing')]
+        list_forcings = [x.rh for x in self.context.sequence.effective_inputs(role='Forcing')]
+
+        self.algoassert(len(list_forcings) >= 1)
 
         for forcing in list_forcings:
-            self.system.mv(forcing.rh.container.filename, 'input.nc')
+            self.system.mv(forcing.container.filename, 'input.nc')
             super(Interpol_Forcing, self).execute(rh, opts)
-            self.system.mv('output.nc', forcing.rh.container.filename)
+            self.system.mv('output.nc', forcing.container.filename)
+
+
+@echecker.disabled_if_unavailable
+class Prosnow_Parallel(Surfex_Parallel):
+    """
+    It adds snow management specificities by ski resorts to standard SURFEX-Crocus algo components.
+
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    """
+
+    _footprint = dict(
+        info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
+        attr = dict(
+            insert_data = dict(
+                values = ['prosnow_insert_data', ],
+                type = str,
+            )
+        )
+    )
+
+    def prosnow_modify_namelist(self):
+        new_nam = update_namelist_var("OPTIONS_unmodified.nam", "water.txt")
+        return new_nam
+
+    def prosnow_modify_prep(self):
+        dateend_str = self.dateend.strftime('%Y%m%d%H')
+        my_name_OBS = 'OBS_' + dateend_str + '.nc'
+        my_name_PREP = 'PREP_' + dateend_str + '.nc'
+
+        old_prep = prep_tomodify(my_name_PREP)
+        new_prep = old_prep.insert_snow_depth('SRU.txt', 'snow.txt', my_name_OBS, 'prep_fillup_50.nc',
+                                              'prep_fillup_5.nc', 'variables', my_name_PREP)
+
+        return new_prep
+
+    def execute(self, rh, opts):
+
+        # Insert water consumption in namelist (before running surfex)
+        self.prosnow_modify_namelist()
+
+        # Call execute of Surfex_Parallel
+        # Note that modify_namelist and modify_prep methods of the mother class
+        # still have to be called in the following instruction
+        super(Prosnow_Parallel, self).execute(rh, opts)
+
+        # Insert snow height in prep (after running surfex)
+        self.prosnow_modify_prep()

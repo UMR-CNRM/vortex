@@ -16,9 +16,11 @@ import contextlib
 import hashlib
 import io
 from email import encoders
+import pprint
 from string import Template
 
 from bronx.fancies import loggers
+from bronx.fancies.display import print_tablelike
 from bronx.stdtypes import date
 from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
@@ -716,6 +718,8 @@ class TemplatedMailService(MailService):
         )
     )
 
+    _TEMPLATES_SUBDIR = None
+
     def __init__(self, *args, **kw):
         ticket = kw.pop('ticket', sessions.get())
         super(TemplatedMailService, self).__init__(*args, **kw)
@@ -780,8 +784,11 @@ class TemplatedMailService(MailService):
         return result
 
     def _template_name_rewrite(self, tplguess):
-        if not tplguess.startswith('@'):
-            tplguess = '@' + tplguess
+        base = '@'
+        if self._TEMPLATES_SUBDIR is not None:
+            base = '@{!s}/'.format(self._TEMPLATES_SUBDIR)
+        if not tplguess.startswith(base):
+            tplguess = base + tplguess
         if not tplguess.endswith('.tpl'):
             tplguess += '.tpl'
         return tplguess
@@ -886,3 +893,41 @@ class TemplatedMailService(MailService):
         if self.prepare(add_ons) and not self.deactivated():
             rc = super(TemplatedMailService, self).__call__()
         return rc
+
+
+class AbstractRdTemplatedMailService(TemplatedMailService):
+
+    _abstract = True
+
+    def header(self):
+        """String prepended to the message body."""
+        now = date.now()
+        stamp1 = now.strftime('%A %d %B %Y')
+        stamp2 = now.strftime('%X')
+        return 'Email sent on {} at {} (from: {}).\n--\n\n'.format(stamp1, stamp2,
+                                                                   self.sh.default_target.hostname)
+
+    def substitution_dictionary(self, add_ons=None):
+        sdict = super(AbstractRdTemplatedMailService, self).substitution_dictionary(add_ons=add_ons)
+        sdict['jobid'] = self.sh.guess_job_identifier()
+        # Try to detect MTOOL data (this may be empty if MTOOL is not used):
+        if self.env.MTOOL_STEP:
+            mt_stack = ['\nMTOOL details:', ]
+            mt_items = ['mtool_step_{:s}'.format(i)
+                        for i in ('abort', 'depot', 'spool', 'idnum')
+                        if 'mtool_step_{:s}'.format(i) in self.env]
+            print_tablelike('{:s} = {!s}', mt_items, [self.env[i] for i in mt_items],
+                            output_callback=mt_stack.append)
+            sdict['mtool_info'] = '\n'.join(mt_stack) + '\n'
+        else:
+            sdict['mtool_info'] = ''
+        # The list of footprints' defaults
+        fpdefaults = footprints.setup.defaults
+        sdict['fpdefaults'] = pprint.pformat(fpdefaults, indent=2)
+        # A condensed indication on date/cutoff
+        sdict['timeid'] = fpdefaults.get('date', None)
+        if sdict['timeid']:
+            sdict['timeid'] = sdict['timeid'].vortex(cutoff=fpdefaults.get('cutoff', 'X'))
+        # The generic host/cluster name
+        sdict['host'] = self.sh.default_target.inetname
+        return sdict

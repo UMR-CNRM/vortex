@@ -60,3 +60,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: JobAssistantRdMailSetupPlugin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Specific CEN "genv" resources.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.fancies import loggers
 
-from common.data.consts import GenvModelGeoResource
+from common.data.consts import GenvModelGeoResource, GenvModelResource
 from gco.syntax.stdattrs import gdomain
 
 #: No automatic export
@@ -129,6 +129,58 @@ class GridTarget(GenvModelGeoResource):
             )
         )
     ]
+
+
+class Prosnow_SetUp_Global(GenvModelResource):
+    """Prosnow general setup file.
+
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['prep_fillup_5', 'prep_fillup_50', 'list_updated_variables'],
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf'],
+            ),
+            gvar = dict(
+                default = '[kind]',
+            ),
+        ),
+    )
+
+    @property
+    def realkind(self):
+        return self.kind
+
+
+class Prosnow_SetUp_Resort(GenvModelResource):
+    """
+    Prosnow ski-resort setup file.
+
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
+    """
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['sru', 'sru_flat', 'pgd_spinup', 'prep_spinup', 'water', 'snow_nogro', 'snow_nosm',
+                          'snow_noobs', 'obs_empty'],
+            ),
+            nativefmt = dict(
+                values  = ['ascii', 'netcdf'],
+            ),
+            resort = dict(
+                info    = "The ski resort name.",
+                values  = ['saisies', 'plagne', 'soldeu', 'peyra', 'saetde'],
+            ),
+            gvar = dict(
+                default = '[kind]_[resort]',
+            ),
+        ),
+    )
 
     @property
     def realkind(self):

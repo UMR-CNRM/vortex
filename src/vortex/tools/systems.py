@@ -618,6 +618,15 @@ class System(footprints.FootprintBase):
         """Returns the current active environment."""
         return Environment.current()
 
+    def guess_job_identifier(self):
+        """Try to determine an identification string for the current script."""
+        #       PBS scheduler    SLURM scheduler     Good-old PID
+        env = self.env
+        label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
+        if label == 'localpid':
+            label = six.text_type(self.getpid())
+        return label
+
     def vortex_modules(self, only='.'):
         """Return a filtered list of modules in the vortex package.
 

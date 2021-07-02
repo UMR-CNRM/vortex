@@ -20,6 +20,10 @@ Exceptions
    :members:
    :member-order: alphabetical
 
+.. autoclass:: S2MMissingDeterministicError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 Taylorism workers
 *****************
@@ -89,6 +93,20 @@ Taylorism workers
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ExtractForcingWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExtractForcingWorkerEnsembleForecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ExtractForcingWorkerLTForecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 AlgoComponents
 **************
@@ -128,6 +146,10 @@ AlgoComponents
    :members:
    :member-order: alphabetical
 
+.. autoclass:: PrepareForcingComponentForecast
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. hints
 .. .. autodata:: XXX

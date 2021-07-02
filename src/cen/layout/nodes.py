@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 
 """
-This modules defines the base nodes of the logical layout
-for any :mod:`vortex` experiment.
+This modules defines specific CEN addons for the Task base class.
+Multiple inheritence together with the standard Task class is required to use this module.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
+from bronx.fancies import loggers
+from vortex.tools.actions import actiond as ad
 from vortex.algo.components import DelayedAlgoComponentError
+
+logger = loggers.getLogger(__name__)
 
 
 class S2MTaskMixIn(object):
@@ -19,11 +23,15 @@ class S2MTaskMixIn(object):
     secondassimruntime = Time(hour=9, minute=0)
     monthly_analysis_time = Time(hour=12, minute=0)
 
+    ref_reanalysis = "reanalysis2020.2@lafaysse"  # Current version of S2M reanalysis
+
     def s2moper_filter_execution_error(self, exc):
         """Define the behaviour in case of errors.
 
         For S2M chain, the errors do not raise exception if the deterministic
-        run or if more than 30 members are available.
+        run and if less than 5 members produce errors.
+        Note than unavailability of members do not produce errors managed by effective_inputs), therefore more than
+        5 errors is a critical anomaly.
         """
 
         warning = {}
@@ -41,12 +49,33 @@ class S2MTaskMixIn(object):
 
                     warning["deterministic"] = e.deterministic
 
-            accept_errors = not determinitic_error or nerrors < 5
-
-            if accept_errors:
-                print(self.warningmessage(nerrors, exc))
+            accept_errors = not determinitic_error and nerrors < 5
 
         return accept_errors, warning
+
+    def s2moper_report_execution_warning(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M warning',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
+
+    def s2moper_report_execution_error(self, exc, **kw_infos):
+        if 'nfail' in kw_infos.keys():
+            warning = self.warningmessage(kw_infos['nfail'], exc)
+            logger.warning(warning)
+
+            # Add e-mail
+            ad.mail(
+                subject='S2M fatal error',
+                to='matthieu.lafaysse@meteo.fr',
+                contents=warning,
+            )
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
@@ -58,9 +87,9 @@ class S2MTaskMixIn(object):
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
-        warningline = "!" * 40 + "\n"
+        warningline = "\n" + "!" * 40 + "\n"
         warningmessage = (warningline + "ALERT :" + str(nerrors) +
-                          " members produced a delayed exception.\n" +
+                          " members produced a delayed exception." +
                           warningline + str(exc) + warningline)
         return warningmessage
 
@@ -168,7 +197,7 @@ class S2MTaskMixIn(object):
 
         return rundate_prep, alternates
 
-    def get_list_members(self):
+    def get_list_members(self, sytron=True):
         if not self.conf.nmembers:
             raise ValueError
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
@@ -176,6 +205,8 @@ class S2MTaskMixIn(object):
 
         if self.conf.geometry.area == "postes":
             # no sytron members for postes geometry
+            return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
+        elif not sytron:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 2))
         else:
             return list(range(startmember, lastmember + 1)), list(range(startmember, lastmember + 3))
@@ -186,10 +217,7 @@ class S2MTaskMixIn(object):
 
     def get_list_geometry(self, meteo="safran"):
 
-        if not hasattr(self.conf, "interpol"):
-            self.conf.interpol = False
-
-        if self.conf.interpol:
+        if hasattr(self.conf, "geoin"):
             return [self.conf.geoin]
         else:
             source_safran, block_safran = self.get_source_safran(meteo=meteo)
@@ -239,6 +267,18 @@ class S2MTaskMixIn(object):
                 return "safran", self.get_block_safran_from_geometry()
         else:
             return meteo, "meteo"
+
+    def get_safran_sources(self, list_datebegin):
+
+        source_app = dict(
+            datebegin={str(datebegin):
+                       'arpege' if datebegin >= Date(2002, 8, 1) else 'ifs' for datebegin in list_datebegin})
+
+        source_conf = dict(
+            datebegin={str(datebegin):
+                       '4dvarfr' if datebegin >= Date(2002, 8, 1) else 'era40' for datebegin in list_datebegin})
+
+        return source_app, source_conf
 
     def get_list_seasons(self, datebegin, dateend):
 
