@@ -365,6 +365,7 @@ class InputConfWW3(GenvModelResource):
 
         )
     )
+
     @property
     def realkind(self):
         return 'inputconfww3'
