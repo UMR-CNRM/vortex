@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 TNT stands for "The Namelist Tool".
 

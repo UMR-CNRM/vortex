@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
@@ -1276,8 +1275,12 @@ class Expresso(ExecutableAlgoComponent):
         info = 'AlgoComponent that simply runs a script',
         attr = dict(
             interpreter = dict(
-                info   = 'The interpreter needed to run the script.',
-                values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
+                info     = 'The interpreter needed to run the script.',
+                values   = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
+            ),
+            interpreter_path = dict(
+                info     = 'The interpreter command.',
+                optional = True,
             ),
             engine = dict(
                 values = ['exec', 'launch']
@@ -1290,6 +1293,23 @@ class Expresso(ExecutableAlgoComponent):
             ),
         )
     )
+
+    @property
+    def _actual_interpreter(self):
+        """Return the interpreter command."""
+        if self.interpreter == 'current':
+            if self.interpreter_path is not None:
+                raise ValueError("*interpreter=current* and *interpreter_path* attributes are incompatible")
+            return sys.executable
+        else:
+            if self.interpreter_path is None:
+                return self.interpreter
+            else:
+                if self.system.xperm(self.interpreter_path):
+                    return self.interpreter_path
+                else:
+                    raise AlgoComponentError("The '{:s}' interpreter is not executable"
+                                             .format(self.interpreter_path))
 
     def _interpreter_args_fix(self, rh, opts):
         absexec = self.absexcutable(rh.container.localpath())
@@ -1304,8 +1324,7 @@ class Expresso(ExecutableAlgoComponent):
         using the resource command_line method as args.
         """
         # Generic config
-        actual_interpreter = sys.executable if self.interpreter == 'current' else self.interpreter
-        args = [actual_interpreter, ]
+        args = [self._actual_interpreter, ]
         args.extend(self._interpreter_args_fix(rh, opts))
         args.extend(self.spawn_command_line(rh))
         logger.info('Run script %s', args)
@@ -1342,7 +1361,11 @@ class ParaExpresso(TaylorRun):
                 values = ['current', 'awk', 'ksh', 'bash', 'perl', 'python']
             ),
             engine = dict(
-                values = ['exec', 'launch']
+                values   = ['exec', 'launch']
+            ),
+            interpreter_path = dict(
+                info     = 'The full path to the interpreter.',
+                optional = True,
             ),
             extendpypath = dict(
                 info     = "The list of things to be prepended in the python's path.",

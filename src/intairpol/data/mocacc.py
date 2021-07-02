@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Resources used with MOCAGE Accident (tarfiles, txtfiles, json).

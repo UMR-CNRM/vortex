@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # 09/02/2017
 # Original version: Python 3.5
 #                   Copyright 2001-2017 Python Software Foundation; All Rights Reserved

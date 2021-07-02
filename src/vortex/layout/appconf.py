@@ -1,4 +1,4 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This modules defines objects that any kind of configuration data
