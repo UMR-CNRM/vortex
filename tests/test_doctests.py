@@ -9,6 +9,7 @@ import unittest
 from vortex import sessions
 from vortex.data import geometries
 from vortex.tools import delayedactions
+from vortex.util import worker
 
 from common.tools import partitioning
 from common.tools import conftools as common_conftools
@@ -33,6 +34,7 @@ class UtDocTests(unittest.TestCase):
             a_hub = t.context.delayedactions_hub
             t.sh.rmtree(a_hub.stagedir)
             a_hub.clear()
+        self.assert_doctests(worker)
         self.assert_doctests(partitioning)
         self.assert_doctests(common_conftools)
         self.assert_doctests(interpol_conftools)
