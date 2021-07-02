@@ -19,6 +19,15 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: NamelistWW3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WW3ConfigFiles
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
 
 .. hints
 .. .. autodata:: XXX

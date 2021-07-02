@@ -13,6 +13,7 @@ from bronx.fancies import loggers
 
 from gco.syntax.stdattrs import gdomain
 from common.data.consts import GenvModelResource
+from vortex.data.contents import DataTemplate
 
 #: No automatic export
 __all__ = []
@@ -305,3 +306,115 @@ class WamGridPost(GenvModelResource):
     @property
     def realkind(self):
         return 'wampreproc'
+
+
+class WW3Preproc(GenvModelResource):
+    """Class of a ww3 model constants.
+
+    A Genvkey can be given.
+    """
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'ww3 models const',
+            attr = dict(
+                kind = dict(
+                    values  = ['ww3_preproc'],
+                ),
+                model = dict(
+                    values  = ['ww3'],
+                ),
+                gvar = dict(
+                    default = '[model]_preproc_tgz',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ww3preproc'
+
+
+class InputConfWW3(GenvModelResource):
+    """Config file for ww3 processes."""
+
+    _footprint = dict(
+        info = 'Config file for ww3',
+        attr = dict(
+            kind = dict(
+                values = ['ww3dataconf']
+            ),
+            model = dict(
+                values  = ['ww3'],
+            ),
+            binary = dict(
+                values  = ['bound_ascii'],
+                optional = False,
+            ),
+            field = dict(
+                values  = ['const'],
+                optional = False,
+            ),
+            gvar = dict(
+                default  = '[field]_[model]_[binary]',
+            ),
+            clscontents = dict(
+                default = DataTemplate
+            ),
+
+        )
+    )
+    @property
+    def realkind(self):
+        return 'inputconfww3'
+
+
+class WW3InterpConst(GenvModelResource):
+    """Class of a ww3 model results interpolation constant.
+
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'Interpolation constants',
+        attr = dict(
+            kind = dict(
+                values  = ['interpolateconst'],
+            ),
+            model = dict(
+                values  = ['ww3'],
+            ),
+            gvar = dict(
+                default = '[model]_interpolate_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'interpolateconst'
+
+
+class WW3ConNctoGrib(GenvModelResource):
+    """Class of a convertion from nc to grib constant.
+
+    A Genvkey can be given.
+    """
+    _footprint = dict(
+        info = 'convertion from nc to grib constant',
+        attr = dict(
+            kind = dict(
+                values  = ['const_ncgrb'],
+            ),
+            model = dict(
+                values  = ['ww3'],
+            ),
+            gvar = dict(
+                default = '[model]_nc_grb_tgz',
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'const_ncgrb'
