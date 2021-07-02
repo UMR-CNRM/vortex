@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation.
+Callback functions for Jeeves.
+If needed, VORTEX must be loaded via a VortexWorker in this context.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from vortex.util.worker import VortexWorker
 from vortex.tools import compression, systems
+from vortex.util.worker import VortexWorker
 
 #: No automatic export
 __all__ = []
@@ -21,8 +22,8 @@ def _double_ssh(sh, loginnode, transfernode):
 
     May return None when network problems occur.
     """
-    cmd = 'ssh {} ssh {} hostname -s'.format(loginnode, transfernode)
-    rc = sh.spawn(cmd, shell=True, output=True, fatal=False)
+    cmd = ['ssh', '-x', loginnode, 'ssh', '-x', transfernode, 'hostname']
+    rc = sh.spawn(cmd, shell=False, output=True, fatal=False)
     if not rc:
         return None
     return rc[0]
@@ -47,16 +48,22 @@ def system_ftput(pnum, ask, config, logger, **opts):
         rawftput = opts.get('rawftput', False)
     trynum = 0
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = False
         sh.ftpflavour = systems.FTP_FLAVOUR.STD  # Because errors are handled directly by jeeves
 
         data = vwork.get_dataset(ask)
+        logger.info('ftput', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         if phasemode:
             data.hostname = _double_ssh(sh, data.phase_loginnode, data.phase_transfernode)
             if data.hostname is None:
-                return pnum, vwork.rc, value
+                return pnum, False, dict(rpool='retry')
 
         cpipeline = (None if not hasattr(data, 'cpipeline') or not data.cpipeline
                      else compression.CompressionPipeline(sh, data.cpipeline))
@@ -83,7 +90,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
                 value = dict(clear=sh.rm(data.source, fmt=data.fmt))
                 break
 
-    return pnum, vwork.rc, value
+    return pnum, putrc and vwork.rc, value
 
 
 def system_cp(pnum, ask, config, logger, **opts):
@@ -92,11 +99,16 @@ def system_cp(pnum, ask, config, logger, **opts):
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
     value = dict(rpool='retry')
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
         data = vwork.get_dataset(ask)
         logger.info('cp', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         try:
             rc = sh.cp(data.source, data.destination, fmt=data.fmt)
         except Exception as e:
@@ -105,7 +117,7 @@ def system_cp(pnum, ask, config, logger, **opts):
         if rc:
             value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
-    return pnum, vwork.rc, value
+    return pnum, rc and vwork.rc, value
 
 
 def system_scp(pnum, ask, config, logger, **opts):
@@ -120,15 +132,21 @@ def system_scp(pnum, ask, config, logger, **opts):
 
     phasemode = opts.get('phasemode', False)
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
 
         data = vwork.get_dataset(ask)
+        logger.info('scp', source=data.source, destination=data.destination)
+        if not sh.path.exists(data.source):
+            logger.error('The source file is missing - sorry')
+            return pnum, False, dict(rpool='error')
+
         if phasemode:
             data.hostname = _double_ssh(sh, data.phase_loginnode, data.phase_transfernode)
             if data.hostname is None:
-                return pnum, vwork.rc, value
+                return pnum, False, value
         logger.info('scp host', hostname=data.hostname, logname=data.logname)
         logger.info('scp data', source=data.source, destination=data.destination)
         try:
@@ -140,7 +158,7 @@ def system_scp(pnum, ask, config, logger, **opts):
         if putrc:
             value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
-    return pnum, vwork.rc, value
+    return pnum, putrc and vwork.rc, value
 
 
 def system_noop(pnum, ask, config, logger, **opts):
@@ -149,12 +167,22 @@ def system_noop(pnum, ask, config, logger, **opts):
     Used to desactivate jeeves when mirroring the operational suite.
     """
     logger.info('Noop', todo=ask.todo, pnum=pnum, opts=opts)
-    value = dict(rpool='error')
 
-    with VortexWorker(logger=logger) as vwork:
-        sh = vwork.vortex.sh()
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
         data = vwork.get_dataset(ask)
         value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 
     return pnum, vwork.rc, value
+
+
+if __name__ == '__main__':
+    import vortex
+
+    t = vortex.ticket()
+    sh = t.sh
+    sh.trace = True
+    sh.verbose = True
+    print(_double_ssh(sh, 'beaufixoper', 'beaufixtransfert-agt'))

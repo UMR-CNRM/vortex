@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+A place to test callback functions for Jeeves.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import time
@@ -18,9 +18,11 @@ def test_foo(pnum, ask, config, logger, **kw):
 
     Simple sleep.
     """
-    rc, value = True, 'Yo'
+
     logger.loglevel = 'debug'
-    logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
+    profile = config['driver'].get('profile', None)
+    logger.info('External', todo=ask.todo, pnum=pnum, profile=profile, opts=kw)
+    rc, value = True, None
     try:
         duration = 0.1
         try:
@@ -30,7 +32,9 @@ def test_foo(pnum, ask, config, logger, **kw):
         logger.warning('Sleep', duration=duration)
         time.sleep(duration)
     except Exception as trouble:
-        rc, value = False, str(trouble)
+        logger.error('An exception occurred during execution:' + str(trouble))
+        rc, value = False, dict(rpool='error')
+
     return pnum, rc, value
 
 
@@ -47,14 +51,17 @@ def test_bar(pnum, ask, config, logger, **kw):
     """
     import os
     logger.loglevel = 'info'
-    logger.info('test_bar', todo=ask.todo, pnum=pnum, opts=kw)
+    try:
+        profile = config['driver'].get('profile', None)
+    except (AttributeError, TypeError):
+        profile = None
+    logger.info('test_bar', todo=ask.todo, pnum=pnum, profile=profile, opts=kw)
     selector = ask.data.get('selector', None)
     logger.info('\t', data=ask.data, pwd=os.getcwd())
-    rc, value = True, None
 
     if selector is None:
-        logger.warn('no selector given')
-        rc, value = -1, "no selector"
+        logger.error('no selector given')
+        rc, value = False, dict(rpool='error')
 
     elif selector == 'slow_write':
         finalpath = ask.data.get('filepath', None)
@@ -65,6 +72,7 @@ def test_bar(pnum, ask, config, logger, **kw):
                 fp.flush()
                 time.sleep(3)
         os.rename(temporary, finalpath)
+        rc, value = True, None
 
     elif selector == 'timestamp':
         filepath = ask.data.get('filepath', 'test_bar.txt')
@@ -73,10 +81,11 @@ def test_bar(pnum, ask, config, logger, **kw):
         now_time = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
         with io.open(filepath, 'a+') as fp:
             fp.write('test_bar stamp - ask time {} - run time {} - {}\n'.format(ask_time, now_time, message))
+        rc, value = True, None
 
     else:
-        logger.warn('selector unknown: ', selector=selector)
-        rc, value = -1, "bad selector"
+        logger.warning('selector unknown: ', selector=selector)
+        rc, value = False, dict(rpool='error')
 
     return pnum, rc, value
 
@@ -87,45 +96,69 @@ def test_vortex(pnum, ask, config, logger, **kw):
     Activation of a vortex context.
     """
     from vortex.util.worker import VortexWorker
-    rc, value = True, 'Yo'
     logger.loglevel = 'info'
+
+    logger.debug('External', todo=ask.todo, pnum=pnum, opts=kw)
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
-    with VortexWorker(logger=logger, modules=('common', 'olive')) as vwork:
-        sh = vwork.vortex.sh()
+    logger.warning('External', todo=ask.todo, pnum=pnum, opts=kw)
+    logger.error('External', todo=ask.todo, pnum=pnum, opts=kw)
+    logger.critical('External', todo=ask.todo, pnum=pnum, opts=kw)
+
+    profile = config['driver'].get('profile', None)
+    with VortexWorker(logger=logger, modules=('common', 'olive'), profile=profile) as vwork:
+        sh = vwork.session.sh
         sh.trace = True
+        logger.debug('Test Level DEBUG', vwork=vwork)
+        logger.info('Test Level INFO', vwork=vwork)
+        logger.warning('Test Level WARNING', vwork=vwork)
+        logger.error('Test Level ERROR', vwork=vwork)
+        logger.critical('Test Level CRITICAL', vwork=vwork)
+
         data = vwork.get_dataset(ask)
         duration = 1
         try:
             duration = float(data.duration)
-        except Exception:
-            logger.error('Bad duration type', duration=data.duration)
-        logger.warning('Sleep', duration=duration)
+        except (ValueError, AttributeError):
+            logger.error('Bad or no duration in data:', data=data)
+        logger.info('Sleep', duration=duration)
         time.sleep(duration)
-        logger.info('TestVortex', todo=ask.todo, pnum=pnum, ticket=vwork.vortex.ticket().tag,
-                    logname=data.logname)
-    return pnum, vwork.rc, value
+        logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag)
+    return pnum, vwork.rc, None
 
 
-def test_direct_call_to_a_jeeves_callback():
+def test_direct_call_to_a_jeeves_callback(cb_function):
+    """Run a jeeves async callback as if it was called by jeeves, but from the main process.
+
+    This may be run interactively in a debugger.
+    """
     import os
     from jeeves import pools
     from jeeves import butlers
 
     # common part
     logger = butlers.GentleTalk()
-    jname = 'async'
+    jname = 'test'
     jpath = os.path.expanduser('~/jeeves/' + jname + '/depot')
     jfile = 'vortex'
     jtag = jpath + '/' + jfile
     fulltalk = dict(user='user', jtag=jtag, mail=None, apps='play', conf='sandbox', task='interactif', )
 
     # specifics
+    cb_function_name = cb_function.__name__
     now = time.strftime('%Y%m%d %H:%M:%S', time.localtime())
-    data = dict(selector='timestamp', ask_time=now, message='test callback', filepath='test_bar.txt', )
-    fulltalk.update(todo='test_bar', data=data)
+    data = dict(selector='timestamp', ask_time=now, message='test callback ' + cb_function_name,
+                duration=1, filepath=cb_function_name + '.txt', )
+    fulltalk.update(todo=cb_function_name, data=data)
+
+    # generate a json for reference
     request = pools.Request(**fulltalk)
-    test_bar(1, request, None, logger)
+    request.dump()
+    print('request dumped to', request.last)
+
+    # and directly call the fonction
+    config = dict(driver=dict(profile='research'))
+    cb_function(1, request, config, logger)
 
 
 if __name__ == '__main__':
-    test_direct_call_to_a_jeeves_callback()
+    test_direct_call_to_a_jeeves_callback(cb_function=test_vortex)

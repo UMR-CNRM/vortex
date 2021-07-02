@@ -112,9 +112,9 @@ class Action(object):
                 if a_service is None:
                     logger.warning('Could not find any service for action %s', self.kind)
             else:
-                logger.warning('Non active action %s', self.kind)
+                logger.warning('Action %s is not active', self.kind)
         else:
-            logger.warning('User not authorized to perform %s', self.kind)
+            logger.warning('User is not authorized to perform %s', self.kind)
         return a_service
 
     def execute(self, *args, **kw):

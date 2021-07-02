@@ -18,13 +18,10 @@ Functions
 ---------
 
 .. autofunction:: get_resource_value
-
 .. autofunction:: filteractive
-
+.. autofunction:: defer_route
 .. autofunction:: oproute_hook_factory
-
 .. autofunction:: opphase_hook_factory
-
 .. autofunction:: opecfmeter_hook_factory
 
 Classes

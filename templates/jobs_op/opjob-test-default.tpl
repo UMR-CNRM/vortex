@@ -43,6 +43,7 @@ op_warmstart = $warmstart
 op_refill    = $refill
 op_mail      = $mail
 op_jeeves    = '{0}_$jeeves'.format(op_xpid)
+op_jroute    = '{0}_$jroute'.format(op_xpid)
 op_phase     = $phase
 op_hasmember = $hasmember
 

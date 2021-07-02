@@ -178,7 +178,7 @@ class ManualInputMonitor(_StateFullMembersList):
         :param targets: The list of :class:`InputMonitorEntry` to look after
         :param int caching_freq: We will update the sections statuses every N
             seconds
-        :param int crawling_threshold: Maximum number of section statuses  to
+        :param int crawling_threshold: Maximum number of section statuses to
             update at once
 
         :warning: The state of the sections is looked up by a background process.
@@ -204,7 +204,7 @@ class ManualInputMonitor(_StateFullMembersList):
         # Generate the first list of sections
         toclassify = list(targets)
 
-        # Sort the list of UFOs if sensible (i.e if all resources have a term)
+        # Sort the list of UFOs if sensible (i.e. if all resources have a term)
         has_term = 0
         map_term = defaultdict(int)
         for e in toclassify:
@@ -280,7 +280,7 @@ class ManualInputMonitor(_StateFullMembersList):
         return self._map_stages.get(e.section.stage, onfails)
 
     def _append_entry(self, queue, e):
-        """Add an entry into one of the processing queue."""
+        """Add an entry into one of the processing queues."""
         self._members[queue][e[0]] = e[1]
         e[1].state = queue
 
@@ -344,7 +344,7 @@ class ManualInputMonitor(_StateFullMembersList):
                     kdiff = i - kangaroo_idx
                     exp_compress.append(1 if kdiff >= 0 and kdiff < self._crawling_threshold else 0)
 
-                # Crawl into the chosen items of the  expected list
+                # Crawl into the chosen items of the expected list
                 (visited, found, kangaroo_incr) = (0, 0, 0)
                 for i, (k, e) in enumerate(compress(six.iteritems(self._members[EntrySt.expected]),
                                                     exp_compress)):
@@ -369,7 +369,7 @@ class ManualInputMonitor(_StateFullMembersList):
                                 logger.info("The local resource %s becomes available",
                                             e.section.rh.container.localpath())
                                 # This will crash in case of an error, but this should
-                                # not happens since we checked the resource just above
+                                # not happen since we checked the resource just above
                                 e.section.get(incache=True)
                                 found += 1
                                 res = psi.export_result(k, curtime, e.state, self._find_state(e))
@@ -385,7 +385,7 @@ class ManualInputMonitor(_StateFullMembersList):
                 if kangaroo_idx > len(self._members[EntrySt.expected]) - self._crawling_threshold - 1:
                     kangaroo_idx = 0
 
-                # Effectively updates the internal _members dictionary
+                # Effectively update the internal _members dictionary
                 for r in result_stack:
                     self._key_update(r)
 
@@ -407,7 +407,7 @@ class ManualInputMonitor(_StateFullMembersList):
             self._mperror.set()
 
     def _refresh(self):
-        """Called whenever the user ask something."""
+        """Called whenever the user asks something."""
         # Look into the result queue
         prp = None
         # That's bad...
@@ -500,9 +500,9 @@ class ManualInputMonitor(_StateFullMembersList):
 
 class BasicInputMonitor(ManualInputMonitor):
     """
-    This object looks into the effective_inputs and check regularly the
-    status of each of the sections. If an expected resource is found the
-    "get" command is issued.
+    This object looks into the effective_inputs and checks regularly the
+    status of each section. If an expected resource is found the "get"
+    command is issued.
     """
 
     _mcontainer = OrderedDict
@@ -526,7 +526,7 @@ class BasicInputMonitor(ManualInputMonitor):
             if role is not specified)
         :param int caching_freq: We will update the sections statuses every N
             seconds
-        :param int crawling_threshold: Maximum number of section statuses  to
+        :param int crawling_threshold: Maximum number of section statuses to
             update at once
 
         :warning: The state of the sections is looked up by a background process.
@@ -641,7 +641,7 @@ class BasicGang(_Gang):
         * collectable_partial: At least *minsize* members are available, but some
           of the members are late (because the *waitlimit* time is exceeded) or
           have failed.
-        * failed: There are to much failed members (given *minsize*)
+        * failed: There are to many failed members (given *minsize*)
     """
 
     _mstates = EntrySt
@@ -652,7 +652,7 @@ class BasicGang(_Gang):
         :param int minsize: The minimum size for this Gang to be in a
                             collectable_partial state (0 means that all the
                             members must be available)
-        :param int waitlimit: If > 0, wait no more that N sec after the first change
+        :param int waitlimit: If > 0, wait no more than N sec after the first change
                               of state
         """
         self.minsize = minsize
@@ -736,7 +736,7 @@ class MetaGang(_Gang):
 
     def _refresh_state(self):
         for member in self.memberslist:
-            member.state  # Update the member's state (they might be time dependent
+            member.state  # Update the member's state (they might be time dependent)
         super(MetaGang, self)._refresh_state()
 
 
@@ -749,8 +749,8 @@ class AutoMetaGang(MetaGang):
     def autofill(self, bm, grouping_keys, allowmissing=0, waitlimit=0):
         """
         Crawl into the *bm* :class:`BasicInputMonitor`'s entries, create
-        :class:`BasicGang` objects based on the resource's attribute listed in
-        *grouping_keys* and finally adds these gangs to the current object.
+        :class:`BasicGang` objects based on the resource's attributes listed in
+        *grouping_keys* and finally add these gangs to the current object.
 
         :param vortex.layout.monitor.BasicInputMonitor bm: The BasicInputMonitor
                                                            that will be explored

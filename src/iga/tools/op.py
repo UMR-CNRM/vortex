@@ -4,26 +4,32 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
-import six
+from pprint import pformat
 from tempfile import mkdtemp
 
-from bronx.fancies import loggers
-import bronx.stdtypes.date
+import six
 
-import vortex  # @UnusedImport
-from vortex.tools.actions import actiond as ad
+import bronx.stdtypes.date
+import footprints
+import vortex
+from bronx.fancies import loggers
+from iga.tools import actions, services
 from iga.util import swissknife
 from vortex.layout.dataflow import InputsReportStatus as rStatus
 from vortex.layout.jobs import JobAssistant
+from vortex.tools.actions import actiond as ad
 
 #: No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+
+# prevent IDEs from removing seemingly unused imports
+assert any([actions, services])
 
 
 class OpJobAssistantTest(JobAssistant):
@@ -120,14 +126,15 @@ class OpJobAssistantTest(JobAssistant):
             if anydate is None:
                 anytime = kw.get('runtime', t.env.get('OP_RUNTIME', None))
                 anystep = kw.get('runstep', t.env.get('OP_RUNSTEP', 6))
-                rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'), time=anytime, step=anystep)
+                rundate = bronx.stdtypes.date.synop(delta=kw.get('delta', '-PT2H'),
+                                                    time=anytime, step=anystep)
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
-                if t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'camsfcst' or t.env.OP_VCONF == 'fcst' \
-                   or t.env.OP_VCONF == 'altana':
-                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
-                elif t.env.OP_VAPP == 'mocage' and t.env.OP_VCONF == 'surfana':
-                    rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
+                if t.env.OP_VAPP == 'mocage':
+                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana']:
+                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
+                    elif t.env.OP_VCONF == 'surfana':
+                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
@@ -170,8 +177,6 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self)._actions_setup(t, **kw)
 
         t.sh.highlight('Setting up OP Actions')
-        import iga.tools.services  # @UnusedImport
-        import iga.tools.actions  # @UnusedImport
 
         ad.add(vortex.tools.actions.EcflowGateway())
 
@@ -179,6 +184,7 @@ class OpJobAssistantTest(JobAssistant):
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
+        print('+ JEEVES jroute =', t.env.get('jroute'))
 
         # ----------------------------------------------------------------------
         t.sh.highlight('START message to op MESSDAYF reporting file')
@@ -205,6 +211,7 @@ class OpJobAssistantTest(JobAssistant):
         if cycle in genv.cycles():
             logger.info('Cycle %s already registered', cycle)
         else:
+            genvdef = None
             if t.env.OP_GCOCACHE:
                 genvdef = t.sh.path.join(t.env.OP_GCOCACHE, 'genv', cycle + '.genv')
             else:
@@ -226,7 +233,10 @@ class OpJobAssistantTest(JobAssistant):
         super(OpJobAssistantTest, self).complete()
 
     def rescue(self):
-        """Exit from OP session after a crash but simulating a happy ending. Use only in a test environment."""
+        """Exit from OP session after a crash but simulating a happy ending.
+
+        Use only in a test environment.
+        """
         ad.ecflow_abort()
         print('Bad luck...')
         super(OpJobAssistantTest, self).rescue()
@@ -237,7 +247,6 @@ class OpJobAssistantTest(JobAssistant):
 
 
 class OpJobAssistant(OpJobAssistantTest):
-
     _footprint = dict(
         info = 'Op Job assistant.',
         attr = dict(
@@ -254,9 +263,11 @@ class OpJobAssistant(OpJobAssistantTest):
         if 'DMT_PATH_EXEC' in t.env():
             option_insertion = ('--id ' + t.env['SLURM_JOB_ID'] + ' --date-pivot=' +
                                 t.env['DMT_DATE_PIVOT'] + ' --job-path=' +
-                                re.sub(r'.*vortex/', '', t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) +
+                                re.sub(r'.*vortex/', '',
+                                       t.env['DMT_PATH_EXEC'] + '/' + t.env['DMT_JOB_NAME']) +
                                 ' --log=' +
-                                re.sub(r'.*oldres/', '', t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR']))
+                                re.sub(r'.*oldres/', '',
+                                       t.env['LOG_SBATCH'] + ' --machine ' + t.env['CALCULATEUR']))
             if 'DATA_OUTPUT_ARCH_PATH' in t.env:
                 option_insertion = option_insertion + ' --arch-path=' + t.env['DATA_OUTPUT_ARCH_PATH']
             tfile = t.env['HOME'] + '/tempo/option_insertion.' + t.env['SLURM_JOB_ID'] + '.txt'
@@ -272,7 +283,7 @@ class OpJobAssistant(OpJobAssistantTest):
 
 
 class _ReportContext(object):
-    """Context manager that print a report."""
+    """Context manager that prints a report."""
 
     def __init__(self, task, ticket):
         self._task = task
@@ -290,7 +301,7 @@ class _ReportContext(object):
 
 
 class InputReportContext(_ReportContext):
-    """Context manager that print a report on inputs."""
+    """Context manager that prints a report on inputs."""
 
     def __init__(self, task, ticket,
                  alternate_tplid='mode_secours',
@@ -328,7 +339,7 @@ class InputReportContext(_ReportContext):
 
 
 class OutputReportContext(_ReportContext):
-    """Context manager that print a report on outputs."""
+    """Context manager that prints a report on outputs."""
 
     def __init__(self, task, ticket, fatal_tplid='output_error'):
         super(OutputReportContext, self).__init__(task, ticket)
@@ -366,14 +377,61 @@ def filteractive(r, dic):
     return filter_active
 
 
-def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_target=None,
+def defer_route(t, rh, jeeves_opts, route_opts):
+    """Send to jeeves all the information needed to handle asynchronously
+    the grib filtering and then call the routing service.
+    """
+    print(t.prompt, 'routing rh  :', rh.idcard())
+    print(t.prompt, 'jeeves_opts :', pformat(jeeves_opts))
+    print(t.prompt, 'route_opts  :', pformat(route_opts))
+
+    effective_path = t.sh.path.abspath(rh.container.localpath())
+
+    # get the filter definition (if any)
+    filtername = jeeves_opts['filtername']
+    if filtername:
+        filters = [
+            request.rh.contents.data
+            for request in t.context.sequence.effective_inputs(
+                role='GRIBFilteringRequest',
+                kind='filtering_request', )
+            if request.rh.contents.data['filter_name'] == filtername
+        ]
+        if len(filters) == 1:
+            jeeves_opts.update(
+                filterdefinition=filters[0],
+            )
+        else:
+            raise ValueError('filtername not found in the effective_inputs: %s', filtername)
+
+    # get a service able to create the hidden copy
+    fmt = rh.container.actualfmt
+    hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
+
+    # complete the request
+    jeeves_opts.update(
+        todo='route',
+        jname=t.env.get('jroute'),
+        source=hide(effective_path),
+        fmt=fmt,
+        route_opts=route_opts,
+        original=effective_path,
+        rhandler=rh.as_dict(),
+        rlocation=rh.location(),
+    )
+
+    # post the request to jeeves
+    return ad.jeeves(**jeeves_opts)
+
+
+def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
                          routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
-                         header_infile=True, **kw):
+                         header_infile=True, deferred=True, filtername=None, **kw):
     """Hook functions factory to route files while the execution is running.
 
     :param str kind: kind use to route
     :param str or dict productid: (use selkeyproductid to define the dictionary key)
-    :param str shhost: tranfertnode
+    :param str sshhost: transfertnode. Use None to avoid ssh from the agt node to itself.
     :param dict optfilter: dictionary (used to allow routing)
     :param str soprano_target: str (piccolo or piccolo-int)
     :param str routingkey: the BD routing key
@@ -381,6 +439,8 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
     :param str targetname:
     :param dict transmet:
     :param bool header_infile: use to add transmet header in routing file
+    :param bool deferred: don't route now, ask jeeves to filter if needed, then route
+    :param str filtername: name of the grib filter to be applied by the jeeves callback
     """
 
     def hook_route(t, rh):
@@ -400,13 +460,20 @@ def oproute_hook_factory(kind, productid, sshhost, optfilter=None, soprano_targe
         if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term') and 'term' not in kwargs:
-            kwargs['term'] = rh.resource.term
+            kwargs['term'] = rh.resource.term.export_dict()
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
         if filteractive(rh, optfilter):
-            ad.route(** kwargs)
-            print(t.prompt, 'routing file = ', rh)
+            if deferred:
+                print(t.prompt, 'asking jeeves to route file =', pformat(rh))
+                jeeves_opts = dict(
+                    filtername=filtername,
+                )
+                defer_route(t, rh, jeeves_opts, kwargs)
+            else:
+                print(t.prompt, 'routing file =', rh)
+                ad.route(**kwargs)
 
     return hook_route
 
@@ -416,6 +483,7 @@ def opphase_hook_factory(optfilter=None):
 
     :param dict optfilter: (used to allow routing)
     """
+
     def hook_phase(t, rh):
         if filteractive(rh, optfilter):
             ad.phase(rh)
@@ -433,13 +501,12 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
     :param bool useterm: if True use rh.resource.term for progress bar
     :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
 
-    example of use for 'sharedadvance'(this code must be implemented in the task.py)::
-
+    example of use for 'sharedadvance' (this code must be implemented in the task.py)::
         >>> import multiprocessing as mp
         >>> avancement = mp.Value('i', 0)
         >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
-
     """
+
     def hook_ecfmeter(t, rh):  # @UnusedVariable
         max_value = int(maxvalue)
         current_value = 0

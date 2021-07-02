@@ -24,7 +24,7 @@ class ConfigSet(collections_abc.MutableMapping):
     * ``ConfigSetObject.key = value``
     * ``ConfigSetObject[key] = value``
 
-    Prior to being retrieved, entries ere passed to a
+    Prior to being retrieved, entries are passed to a
     :class:`vortex.util.config.AppConfigStringDecoder` object. It allows to
     describe complex data types (see the :class:`vortex.util.config.AppConfigStringDecoder`
     class documentation).

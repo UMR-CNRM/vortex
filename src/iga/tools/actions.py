@@ -247,7 +247,7 @@ class OpPhase(Action):
         - effective_path: where the resource exists. Might be incache_path, or the
           container's local path.
         - remote_path: the path to use on the remote machine. This is incache_path,
-          but possibly modified according the the basepaths configuration.)
+          but possibly modified according to the basepaths configuration.
         """
         paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]

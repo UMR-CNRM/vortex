@@ -375,6 +375,7 @@ class RoutingService(Service):
             ),
             sshhost   = dict(
                 optional = True,
+                default  = None,
             ),
             maxtries = dict(
                 type     = int,
@@ -387,9 +388,8 @@ class RoutingService(Service):
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
-        self._actual_filename = self.sh.path.abspath(self.filename)
-        self._actual_filename = self.sh.forcepack(self._actual_filename,
-                                                  fmt=self.filefmt)
+        absolute_name = self.sh.path.abspath(self.filename)
+        self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -467,6 +467,7 @@ class RoutingService(Service):
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
+                print('\n\t'.join(rc))
             else:
                 sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)

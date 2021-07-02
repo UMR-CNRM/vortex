@@ -1,8 +1,8 @@
-:mod:`jeeves` --- TODO Module Header
-====================================
+:mod:`jeeves` --- a multipurpose daemon for handling miscellaneous requests
+===========================================================================
 
 .. automodule:: jeeves
-   :synopsis: TODO Module Synopsis
+   :synopsis: a multipurpose daemon for handling miscellaneous requests
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

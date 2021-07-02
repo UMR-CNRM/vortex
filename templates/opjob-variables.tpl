@@ -30,6 +30,7 @@ OTHER VARIABLES :
     - runtime   : Time of the run, default=None. Leave it at None exept if you want to run your job on at specific time.
     - runstep   : Step of the run, default=None.
     - fullplay  : Execution mode : full execution if True, else only inputs are runned. Default=True. Leave it at True.
-    - jeeves    : Name of the jeeves repository, default=async. Leave it at its default value.
+    - jeeves    : Name of the jeeves repository for archive jobs       , default=async. Leave it at its default value.
+    - jroute    : Name of the jeeves repository for filter + route jobs, default=route. Leave it at its default value.
     - package   : Name of the repository where the script to launch is located. Default=Tasks.
     - account   : SBATCH variable. default=mxpt
