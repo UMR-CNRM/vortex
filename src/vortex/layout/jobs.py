@@ -877,6 +877,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
 
     @property
     def mtool_steps(self):
+        """The list of Task' steps asociated a given MTOOL step."""
         steps_map = {'transfer': ('early-fetch', 'fetch', 'backup', 'late-backup'),
                      'fetch': ('early-fetch', ),
                      'compute': ('early-fetch', 'fetch', 'compute', 'backup'),
@@ -886,6 +887,11 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         except KeyError:
             logger.error("Unknown MTOOL step: %s", self.stepid)
             return ()
+
+    @property
+    def is_last(self):
+        """Is it the laste MTOOL step (appart from the cleaning)."""
+        return self.stepid == self.lastid
 
     def plugable_extra_session_setup(self, t, **kw):
         """Set the rundir according to MTTOL's spool."""

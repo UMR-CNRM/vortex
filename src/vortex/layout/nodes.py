@@ -58,11 +58,21 @@ NODE_ON_ERROR = _NodeOnErrorTuple(FAIL='fail',
                                   CONTINUE='continue')
 
 
+class PreviousFailureError(RuntimeError):
+    """This exception is raised in multistep jobs (when a failure already occured)."""
+    pass
+
+
 class NiceLayout(observer.Observer):
     """Some nice method to share between layout items."""
 
     @property
     def tag(self):
+        """Abstract property: have to be defined later on"""
+        raise NotImplementedError
+
+    @property
+    def ticket(self):
         """Abstract property: have to be defined later on"""
         raise NotImplementedError
 
@@ -75,6 +85,10 @@ class NiceLayout(observer.Observer):
     def contents(self):
         """Abstract property: have to be defined later on"""
         raise NotImplementedError
+
+    def highlight(self, *args, **kw):
+        """Proxy to :meth:`~vortex.tools.systems.subtitle` method."""
+        return self.sh.highlight(*args, bchar=' #', bline0=False, **kw)
 
     def subtitle(self, *args, **kw):
         """Proxy to :meth:`~vortex.tools.systems.subtitle` method."""
@@ -96,10 +110,12 @@ class NiceLayout(observer.Observer):
         else:
             print(" + ...\n")
 
+    @property
+    def _ds_extra(self):
+        return {'tag': self.tag, 'class': self.__class__.__name__}
+
     def _nicelayout_init(self, kw):
         """Initialise generic stuff."""
-        self._status = NODE_STATUS.CREATED
-        self._delayed_error_flag = False
         self._on_error = kw.get('on_error', NODE_ON_ERROR.FAIL)
         if self._on_error not in NODE_ON_ERROR:
             raise ValueError('Erroneous value for on_error: {!s}'.format(self._on_error))
@@ -108,6 +124,9 @@ class NiceLayout(observer.Observer):
                                               status=self.status,
                                               on_error=self.on_error))
         self._obs_board.register(self)
+        # Increment the mstep counter
+        self.ticket.datastore.insert('layout_mstep_counter', self._ds_extra,
+                                     self.mstep_counter + 1, readonly=False)
 
     def updobsitem(self, item, info):
         if info.get('observerboard', '') == OBSERVER_TAG:
@@ -117,9 +136,9 @@ class NiceLayout(observer.Observer):
                 # deal with it
                 if o_id == (self.tag, type(self).__name__):
                     if 'new_status' in info:
-                        self._status = info['new_status']
+                        self._store_status(info['new_status'])
                     if info.get('delayed_error_flag', False):
-                        self._delayed_error_flag = True
+                        self._store_delayed_error_flag(True)
             else:
                 if (self.status != NODE_STATUS.CREATED and
                         any([o_id == (k.tag, type(k).__name__) for k in self.contents])):
@@ -133,6 +152,12 @@ class NiceLayout(observer.Observer):
                         self.delayed_error_flag = True
 
     @property
+    def mstep_counter(self):
+        """Count how many times this object was created."""
+        return self.ticket.datastore.get('layout_mstep_counter', self._ds_extra,
+                                         default_payload=0, readonly=False)
+
+    @property
     def on_error(self):
         """How to react on error."""
         return self._on_error
@@ -140,36 +165,59 @@ class NiceLayout(observer.Observer):
     @property
     def delayed_error_flag(self):
         """Return the delayed error flag."""
-        return self._delayed_error_flag
+        return self.ticket.datastore.get('layout_delayed_error_flag', self._ds_extra,
+                                         default_payload=False, readonly=False)
+
+    def _store_delayed_error_flag(self, value):
+        self.ticket.datastore.insert('layout_delayed_error_flag', self._ds_extra,
+                                     value, readonly=False)
 
     @delayed_error_flag.setter
     def delayed_error_flag(self, value):
         """Set the status of the current Node/Driver."""
         if not bool(value):
             raise ValueError('True is the only possible value for delayed_error_flag')
-        if not self._delayed_error_flag:
+        if not self.delayed_error_flag:
             self._obs_board.notify_upd(self, dict(tag=self.tag, typename=type(self).__name__,
                                                   delayed_error_flag=True))
-            self._delayed_error_flag = True
+            self._store_delayed_error_flag(True)
 
     @property
     def status(self):
         """Return the status of the current Node/Driver."""
-        return self._status
+        return self.ticket.datastore.get('layout_status', self._ds_extra,
+                                         default_payload=NODE_STATUS.CREATED, readonly=False)
+
+    @property
+    def status_mstep_counter(self):
+        """Return the number of the multi-step that last updated the status."""
+        return self.ticket.datastore.get('layout_status_mstep', self._ds_extra,
+                                         default_payload=0, readonly=False)
+
+    def _store_status(self, value):
+        self.ticket.datastore.insert('layout_status', self._ds_extra,
+                                     value, readonly=False)
+        self._store_status_mstep_counter()
+
+    def _store_status_mstep_counter(self):
+        self.ticket.datastore.insert('layout_status_mstep', self._ds_extra,
+                                     self.mstep_counter, readonly=False)
 
     @status.setter
     def status(self, value):
         """Set the status of the current Node/Driver."""
         if value not in NODE_STATUS:
             raise ValueError('Erroneous value for the node status: {!s}'.format(value))
-        if value != self._status:
+        if value != self.status:
             self._obs_board.notify_upd(self, dict(tag=self.tag, typename=type(self).__name__,
                                                   previous_status=self.status,
                                                   new_status=value,
                                                   on_error=self.on_error))
             if value == NODE_STATUS.FAILED and self.on_error == NODE_ON_ERROR.DELAYED_FAIL:
                 self.delayed_error_flag = True
-            self._status = value
+            self._store_status(value)
+        else:
+            self._store_status_mstep_counter()
 
     @property
     def any_failure(self):
@@ -179,9 +227,11 @@ class NiceLayout(observer.Observer):
 
     def __str__(self):
         """Print the node's tree."""
-        me = '{:s} ({:s}) -> {:s}'.format(self.tag,
-                                          self.__class__.__name__,
-                                          self.status)
+        me_fmt = '{tag:s} ({what:s}) -> {status:s}'
+        x_status = self.status
+        if x_status == NODE_STATUS.RUNNING and self.status_mstep_counter < self.mstep_counter:
+            x_status = "interrupted because of others errors"
+        me = me_fmt.format(tag=self.tag, what=self.__class__.__name__, status=x_status)
         if self.status == NODE_STATUS.FAILED and self.on_error != NODE_ON_ERROR.FAIL:
             me += ' (but {:s})'.format(self.on_error)
         tree = [me, ] + ['\n'.join('  ' + line for line in str(kid).split('\n'))
@@ -234,6 +284,7 @@ class Node(getbytag.GetByTag, NiceLayout):
             self._cycle_cb = j_assist.register_cycle
             self._subjobok = j_assist.subjob_allowed
             self._subjobtag = j_assist.subjob_tag
+        self._mstep_job_last = kw.pop('mstep_job_last', True)
         self._conf = None
         self._activenode = None
         self._contents = list()
@@ -248,7 +299,9 @@ class Node(getbytag.GetByTag, NiceLayout):
                         special_prefix=self._locprefix,
                         register_cycle_prefix=self._cycle_cb,
                         subjob_tag=self._subjobtag,
-                        subjob_allowed=self._subjobok)
+                        subjob_allowed=self._subjobok,
+                        mstep_job_last=self._mstep_job_last
+                        )
         argsdict.update(self.options)
         return argsdict
 
@@ -314,7 +367,8 @@ class Node(getbytag.GetByTag, NiceLayout):
             ctx.cocoon()
             self._setup_context(ctx)
             oldctx.activate()
-            self.status = NODE_STATUS.READY
+            if self.status == NODE_STATUS.CREATED:
+                self.status = NODE_STATUS.READY
 
     def _setup_context(self, ctx):
         """Setup the newly created context."""
@@ -353,7 +407,8 @@ class Node(getbytag.GetByTag, NiceLayout):
     @contextlib.contextmanager
     def _status_isolation(self, extra_verbose=False):
         """Handle the Node's status updates."""
-        self.status = NODE_STATUS.RUNNING
+        if self.status in (NODE_STATUS.READY, NODE_STATUS.RUNNING):
+            self.status = NODE_STATUS.RUNNING
         try:
             yield
         except Exception:
@@ -370,7 +425,8 @@ class Node(getbytag.GetByTag, NiceLayout):
             if self.on_error == NODE_ON_ERROR.FAIL:
                 raise
         else:
-            self.status = NODE_STATUS.DONE
+            if self.status == NODE_STATUS.RUNNING and self._mstep_job_last:
+                self.status = NODE_STATUS.DONE
 
     def setconf(self, conf_local, conf_global):
         """Build a new conf object for the actual node."""
@@ -385,7 +441,8 @@ class Node(getbytag.GetByTag, NiceLayout):
 
         # This configuration is updated with any section with the current tag name
         updconf = conf_global.get(self.config_tag, dict())
-        self.nicedump(' '.join(('Configuration for', self.realkind, self.tag)), **updconf)
+        if self.mstep_counter <= 1:
+            self.nicedump(' '.join(('Configuration for', self.realkind, self.tag)), **updconf)
         self.conf.update(updconf)
 
         # Add exported local variables
@@ -393,8 +450,9 @@ class Node(getbytag.GetByTag, NiceLayout):
 
         # Add potential options
         if self.options:
-            self.nicedump('Update conf with last minute arguments',
-                          titlecallback=self.subtitle, **self.options)
+            if self.mstep_counter <= 1:
+                self.nicedump('Update conf with last minute arguments',
+                              titlecallback=self.highlight, **self.options)
             self.conf.update(self.options)
 
         if self.activenode:
@@ -420,8 +478,9 @@ class Node(getbytag.GetByTag, NiceLayout):
                      self.env[localvar] != self.conf[localvar[localstrip:]])):
                 autoconf[localvar[localstrip:].lower()] = self.env[localvar]
         if autoconf:
-            self.nicedump('Populate conf with local variables',
-                          titlecallback=self.subtitle, **autoconf)
+            if self.mstep_counter <= 1:
+                self.nicedump('Populate conf with local variables',
+                              titlecallback=self.highlight, **autoconf)
             self.conf.update(autoconf)
 
     def conf2io(self):
@@ -482,6 +541,7 @@ class Node(getbytag.GetByTag, NiceLayout):
                 toolbox.defaults[optk] = self.conf.get(optk)
 
         toolbox.defaults(**extras)
+        self.header('Toolbox defaults')
         toolbox.defaults.show()
 
     def setup(self, **kw):
@@ -492,29 +552,33 @@ class Node(getbytag.GetByTag, NiceLayout):
         self.conf2io()
         self.xp2conf()
         if kw:
-            self.nicedump('Update conf with last minute arguments', **kw)
+            if self.mstep_counter <= 1:
+                self.nicedump('Update conf with last minute arguments', **kw)
             self.conf.update(kw)
         self.cycles()
         self.geometries()
-        self.header('Toolbox defaults')
         self.defaults(kw.get('defaults', dict()))
 
     def summary(self):
         """Dump actual parameters of the configuration."""
-        self.nicedump('Complete parameters', **self.conf)
+        if self.mstep_counter <= 1:
+            self.nicedump('Complete parameters', **self.conf)
+        else:
+            self.header('Complete parameters')
+            print("Silent Node' setup: please refer to the first job step for more details")
 
     def complete(self):
         """Some cleaning and completion status."""
         pass
 
-    def _actual_run(self, nbpass=0, sjob_activated=True):
+    def _actual_run(self, sjob_activated=True):
         """Abstract method: the actual job to do."""
         pass
 
-    def run(self, nbpass=0, sjob_activated=True):
+    def run(self, sjob_activated=True):
         """Execution driver: setup, run, complete... (if needed)."""
         if self.activenode:
-            self._actual_run(nbpass, sjob_activated)
+            self._actual_run(sjob_activated)
 
     def filter_execution_error(self, exc):  # @UnusedVariable
         """
@@ -688,7 +752,7 @@ class Family(Node):
         else:
             return None
 
-    def _actual_run(self, nbpass=0, sjob_activated=True):
+    def _actual_run(self, sjob_activated=True):
         """Execution driver: setup, run kids, complete."""
         launchtool = self._parallel_launchtool
         if launchtool:
@@ -967,7 +1031,7 @@ class Task(Node):
                 t.env.default(VORTEX_IOSERVER_INCORE_DIST=self.conf.io_incore_dist)
         if 'io_openmp' in self.conf:
             t.env.default(VORTEX_IOSERVER_OPENMP=self.conf.io_openmp)
-        if triggered:
+        if triggered and self.mstep_counter <= 1:
             self.nicedump('IOSERVER Environment', **{k: v for k, v in t.env.items()
                                                      if k.startswith('VORTEX_IOSERVER_')})
 
@@ -1049,21 +1113,28 @@ class Task(Node):
             # here.
             pass
 
-    def _actual_run(self, nbpass=0, sjob_activated=True):
+    def _actual_run(self, sjob_activated=True):
         """Execution driver: build, setup, refill, process, complete."""
         sjob_activated = sjob_activated or self._subjobtag == self.tag
         if sjob_activated:
-            try:
+            if self.status == NODE_STATUS.RUNNING:
+                try:
+                    self.build()
+                    self.setup()
+                    self.summary()
+                    self.warmstart()
+                    self.refill()
+                    self.process()
+                except VortexForceComplete:
+                    self.sh.title('Force complete')
+                finally:
+                    self.complete()
+            else:
                 self.build()
-                self.setup()
-                self.summary()
-                self.warmstart()
-                self.refill()
-                self.process()
-            except VortexForceComplete:
-                self.sh.title('Force complete')
-            finally:
-                self.complete()
+                self.subtitle('This task will not run since it failed in a previous step.')
+                raise PreviousFailureError(
+                    'Previous error re-raised from tag={:s}'.format(self.tag)
+                )
 
 
 class Driver(getbytag.GetByTag, NiceLayout):
@@ -1085,11 +1156,11 @@ class Driver(getbytag.GetByTag, NiceLayout):
         if j_assist is not None:
             self._special_prefix = j_assist.special_prefix.upper()
             self._subjob_tag = j_assist.subjob_tag
+        self._mstep_job_last = self._options.get('mstep_job_last', True)
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
         self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
         self._rundate = rundate or t.env.get('{:s}RUNDATE'.format(self._special_prefix))
-        self._nbpass = 0
         self._nicelayout_init(dict())
 
         # Build the tree to schedule
@@ -1149,10 +1220,6 @@ class Driver(getbytag.GetByTag, NiceLayout):
     def rundate(self):
         return self._rundate
 
-    @property
-    def nbpass(self):
-        return self._nbpass
-
     def read_config(self, inifile=None, iniencoding=None):
         """Read specified ``inifile`` initialisation file."""
         if inifile is None:
@@ -1192,7 +1259,10 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._conf = ConfigSet()
         updconf = self.jobconf.get('defaults', dict())
         updconf.update(self.jobconf.get(self.jobname, dict()))
-        self.nicedump('Configuration for job ' + self.jobname, **updconf)
+        if self.mstep_counter <= 1:
+            self.nicedump('Configuration for job ' + self.jobname, **updconf)
+        else:
+            print("Silent Driver' setup: please refer to the first job step for more details")
         self.conf.update(updconf)
 
         # Recursively set the configuration tree and contexts
@@ -1202,25 +1272,26 @@ class Driver(getbytag.GetByTag, NiceLayout):
             node.setconf(self.conf, self.jobconf)
             node.build_context()
 
-        self.status = NODE_STATUS.READY
-        self.header('The various were configured. Here is a Tree-View of the Driver:')
-        print(self)
+        if self.mstep_counter <= 1:
+            self.status = NODE_STATUS.READY
+            self.header('The various nodes were configured. Here is a Tree-View of the Driver:')
+            print(self)
 
     def run(self):
         """Assume recursion of nodes `run` methods."""
-        self._nbpass += 1
         self.status = NODE_STATUS.RUNNING
         try:
             for node in self.contents:
                 with node.isolate():
-                    node.run(nbpass=self.nbpass, sjob_activated=self._subjob_tag is None)
-            self.status = NODE_STATUS.DONE
+                    node.run(sjob_activated=self._subjob_tag is None)
+            if self._mstep_job_last:
+                self.status = NODE_STATUS.DONE
         finally:
             if self.any_failure:
                 self.sh.title('An error occured during job...')
                 print('Here is the tree-view of the present Driver:')
                 print(self)
-            if self.delayed_error_flag and self._subjob_tag is None:
+            if self.delayed_error_flag and self._subjob_tag is None and self._mstep_job_last:
                 # Test on _subjob_tag because we do not want to crash in subjobs
                 raise RuntimeError("One or several error occured during the Driver execution. " +
                                    "The exceptions were delayed but now that the Driver ended let's crash !")

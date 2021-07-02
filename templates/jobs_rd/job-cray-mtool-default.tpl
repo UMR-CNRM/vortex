@@ -88,7 +88,9 @@ ja.add_plugin('mtool', step='[this:number]', stepid='[this:id]', lastid='backup'
 try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options)
 
-    opts = dict(jobassistant=ja, steps=ja.mtool_steps)
+    opts = dict(jobassistant=ja,
+                steps=ja.mtool_steps,
+                mstep_job_last=ja.is_last)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()

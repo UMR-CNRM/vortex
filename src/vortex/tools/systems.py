@@ -583,15 +583,19 @@ class System(footprints.FootprintBase):
                 print(tchar * nbc)
         self.flush_stdall()
 
-    def highlight(self, text='', hchar='----', bchar='#', bline=False):
+    def highlight(self, text='', hchar='----', bchar='#', bline=False, bline0=True):
         """Highlight some text.
 
         :param str text: The text to be highlighted
         :param str hchar: The characters used to frame the text
-        :param bool bline: Adds a blank line
+        :param str bchar: The characters used at the beging
+        :param bool bline: Adds a blank line after
+        :param bool bline0: Adds a blank line before
         """
-        print()
-        print('{0:s} {1:s}  {2:s}  {1:s} {0:s}'.format(bchar, hchar, text))
+        if bline0:
+            print()
+        print('{0:s} {1:s}  {2:s}  {1:s} {3:s}'
+              .format(bchar.rstrip(), hchar, text, bchar.lstrip()))
         if bline:
             print()
         self.flush_stdall()
