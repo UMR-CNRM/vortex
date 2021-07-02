@@ -55,12 +55,12 @@ def setup(t, **kw):
                 #     for jobs running with the SLURM scheduler,
                 #     `paralleljobs_kind='slurm:ssh'` is probably what you need.
                 #     It will launch the family's content on distinct compute
-                #     nodes (you are responsible for requested the appropriate
-                #     number of nodes to the SLURM scheduler
+                #     nodes (you are responsible for requesting the appropriate
+                #     number of nodes to the SLURM scheduler.
 
                 # Looking at the configuration file (section [pjobs_basic_f1]),
-                # you will notice that paralleljobs_limit=2. It impose a limit
-                # to the number of nodes that can run concurrently.
+                # you will notice that paralleljobs_limit=2. It imposes a limit
+                # on the number of nodes that can run concurrently.
 
                 ticket=t, **kw)
         ],

@@ -16,9 +16,9 @@ job will run locally and that the working directory will be located in
 `./run/tmp`. If the job succeeds, the working directory is removed. if it
 fails, the working directory content is moved to `./run/abort`. 
 
-All of the examples available in this directory demonstrate various capabilties
+All of the examples available in this directory demonstrate various capabilities
 of the Vortex's job creation system. To do so, the "fake" task `Beacon` is used
-)see `tasks/commons.py`). It just creates a very small JSON and stores it in
+(see `tasks/commons.py`). It just creates a very small JSON and stores it in
 the cache. For demonstration purposes, the `Beacon` tasks can be asked to fail
 (by setting `failer=True` in the configuration file or at object creation time)  
 
@@ -33,14 +33,14 @@ To launch the demo:
     python ./on_error_feature_job.py
 
 Look at the code in `tasks/on_error_feature.py` in order to get some
-explanation on the `on_error` feature.
+explanations on the `on_error` feature.
 
 In this job, the `ConfigFileAccessJobAssistantPlugin` JobAssistant's plugin
 is used (because `loadedjaplugins = configfile_access` in the configuration)
 file. The code of the plugin can be found in `tasks/commons.py`. Its purpose
 is to access the application's configuration and export (to the environment)
 any entry starting with "useless". This is a way to setup job-wide
-environement variables.
+environment variables.
 
 ## Demonstration of the `LoopFamily` class
 
@@ -54,8 +54,8 @@ To launch the demo:
 
 The `Beacon` task will be started on :
 
-* Several dates ("2020102918", 2020103018" and "2020103118". We will see we
-  "2020110118" is "ignored")
+* Several dates ("2020102918", 2020103018" and "2020103118".
+  The code explains why "2020110118" is "ignored")
 * And several members (the member's list lies in the configuration file)
 
 Look at the code in `tasks/loop_family1` for more explanations.
@@ -70,8 +70,8 @@ To launch the demo:
         rundate=2020102918
     python ./active_cb_job.py
 
-The `active_callback` feature allows to activate some nodes only on particular
-conditions. In this example, too instances of the `Beacon` task will be
+The `active_callback` feature makes it possible to activate some nodes only on particular
+conditions. In this example, two instances of the `Beacon` task will be
 started if the member's number is even (only one instance otherwise).
 
 Look at the code in `tasks/active_cb.py` for more explanations.
@@ -86,8 +86,7 @@ To launch the first demo:
         rundate=2020102918
     python ./paralleljobs_basic_job.py
 
-The `paralleljobs` feature allows to execute the content of a Family in
-parallel. 
+The `paralleljobs` feature allows executing the content of a Family in parallel. 
 
 Look at the code in `tasks/paralleljobs_basic.py` for more explanations.
 
@@ -99,7 +98,7 @@ To launch the second demo:
         rundate=2020102918
     python ./paralleljobs_workshares_job.py
 
-In addition to the `paralleljobs` feature it uses the `WorkshareFamily` to
+In addition to the `paralleljobs` feature, it uses the `WorkshareFamily` to
 provide additional flexibility.
 
 Look at the code in `tasks/paralleljobs_workshares.py` for more explanations.
