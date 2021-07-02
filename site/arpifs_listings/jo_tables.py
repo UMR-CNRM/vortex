@@ -37,7 +37,10 @@ def _compute_diff(exp, ref):
     if ref != 0:
         reldiff = float(diff) / float(ref)
     else:
-        reldiff = 0
+        if exp != 0:
+            reldiff = 1
+        else:
+            reldiff = 0
     return diff, reldiff
 
 

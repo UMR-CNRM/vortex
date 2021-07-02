@@ -1,0 +1,165 @@
+=== DEBUT DE PROGRAMME D'EXTRACTION ===
+               v. 1.2.6
+===     POUR LE 20210414000000.     ===
+
+
+---> tentative d'extraction pour 'AEOLUSWIND' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.aeolus
+records read: 132
+-- cutoff pour AEOLUSWIND : 20210414021006
+
+---> tentative d'extraction pour 'AIRSBT' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.airsbt
+*** WARNING : extraction incorrecte.
+
+---> tentative d'extraction pour 'TOVSAMSUB' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 0
+*** WARNING : fichier vide ou absent.
+
+---> tentative d'extraction pour 'TOVSAMSUB' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 2218
+-- cutoff pour TOVSAMSUB : 20210414021006
+-- concatenation des TOVSAMSUB activee dans BUFR.tovamsub
+
+---> tentative d'extraction pour 'TOVSAMSUB' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 1031
+-- cutoff pour TOVSAMSUB : 20210414021007
+-- concatenation des TOVSAMSUB activee dans BUFR.tovamsub
+
+---> tentative d'extraction pour 'TOVSAMSUB' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 2588
+-- cutoff pour TOVSAMSUB : 20210414021008
+-- concatenation des TOVSAMSUB activee dans BUFR.tovamsub
+
+---> tentative d'extraction pour 'SAPHIR' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.saphir
+records read: 244
+-- cutoff pour SAPHIR : 20210414021008
+
+---> tentative d'extraction pour 'TOVSAMSUA' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 0
+*** WARNING : fichier vide ou absent.
+
+---> tentative d'extraction pour 'TOVSAMSUA' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 929
+-- cutoff pour TOVSAMSUA : 20210414021008
+-- concatenation des TOVSAMSUA activee dans BUFR.tovamsua
+
+---> tentative d'extraction pour 'TOVSAMSUA' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 0
+*** WARNING : fichier vide ou absent.
+
+---> tentative d'extraction pour 'TOVSAMSUA' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 251
+-- cutoff pour TOVSAMSUA : 20210414021009
+-- concatenation des TOVSAMSUA activee dans BUFR.tovamsua
+
+---> tentative d'extraction pour 'TOVSAMSUA' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 1549
+-- cutoff pour TOVSAMSUA : 20210414021009
+-- concatenation des TOVSAMSUA activee dans BUFR.tovamsua
+
+---> tentative d'extraction pour 'AMSR' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.amsr
+records read: 2482
+-- cutoff pour AMSR : 20210414021012
+
+--- Nombre d'extractions demandees    : 13
+----------   extractions erronees     :  1
+----------   extractions fichier vide :  3
+----------   extractions sans fichier :  0
+
+----------   extractions avec fichier :  9
+
+--- Nombre de concatenations          :  2
+
+--- Nombre de fichiers resultants     :  5
+
+===  FIN DE PROGRAMME D'EXTRACTION  ===
+=== DEBUT DE PROGRAMME D'EXTRACTION ===
+               v. 1.2.6
+===     POUR LE 20210414000000.     ===
+
+
+---> tentative d'extraction pour 'ATMS' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.atms
+records read: 6063
+-- cutoff pour ATMS : 20210414021007
+
+---> tentative d'extraction pour 'GEOWIND' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 785
+-- cutoff pour GEOWIND : 20210414021007
+-- concatenation des GEOWIND activee dans BUFR.geowind
+
+---> tentative d'extraction pour 'SATWIND' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:tmp_Bufr_99999
+records read: 2199
+-- cutoff pour SATWIND : 20210414021009
+-- concatenation des SATWIND activee dans BUFR.geowind
+
+---> tentative d'extraction pour 'SSMIS' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.ssmis
+records read: 16082
+-- cutoff pour SSMIS : 20210414021010
+
+---> tentative d'extraction pour 'ASCAT' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.ascat
+records read: 1987
+-- cutoff pour ASCAT : 20210414021011
+
+---> tentative d'extraction pour 'KUSCAT' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.kuscat
+*** WARNING : extraction incorrecte.
+
+---> tentative d'extraction pour 'GMI' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.gmi
+records read: 2440
+-- cutoff pour GMI : 20210414021012
+
+---> tentative d'extraction pour 'MWRI' sur /usr/local/sopra/neons_db_bdm
+nom fich:/dev/null
+nom fich bufr:BUFR.mwri
+*** WARNING : extraction incorrecte.
+
+--- Nombre d'extractions demandees    :  8
+----------   extractions erronees     :  2
+----------   extractions fichier vide :  0
+----------   extractions sans fichier :  0
+
+----------   extractions avec fichier :  6
+
+--- Nombre de concatenations          :  1
+
+--- Nombre de fichiers resultants     :  5
+
+===  FIN DE PROGRAMME D'EXTRACTION  ===

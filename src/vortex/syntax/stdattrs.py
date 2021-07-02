@@ -45,7 +45,7 @@ utilities = set(['batodb'])
 
 #: Known formats
 knownfmt = set([
-    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
+    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist', 'bdmbufr_listing',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
     'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
@@ -454,7 +454,9 @@ def _add_month2gget_basename(cls):
 
         def gget_basename(self):
             """GGET specific naming convention."""
-            return original_gget_basename(self) + '.m{!s}'.format(self.month)
+            b_dict = original_gget_basename(self)
+            b_dict['suffix'] = b_dict.get('suffix', '') + '.m{!s}'.format(self.month)
+            return b_dict
 
         cls.gget_basename = gget_basename
     return cls

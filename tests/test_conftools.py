@@ -744,9 +744,98 @@ class TimeSerieConfToolTest(unittest.TestCase):
 
 
 # ------------------------------------------------------------------------------
+# A few tests on the ArpIfsForecastTermConfTool
+
+@loggers.unittestGlobalLevel(tloglevel)
+class ArpIfsForecastTermConfToolTest(unittest.TestCase):
+
+    _FCTERMS = dict(production={0: 102, 12: 24, "default": 24},
+                    assim={"default": 6})
+    _HIST_TERMS = dict(production={"default": "0-47-6,48-finalterm-12"},
+                       assim={"default": "0,3,6"})
+    _SDI_TERMS = dict(production={"default": None, 0: "1:30,3,6"},
+                      assim={"default": "3,6"})
+    _DIAG_TERMS = dict(default={"default": "0-47-3,48-finalterm-6"})
+    _EXTRA_TERMS = dict(
+        aero=dict(production={0: "0-48-3"}),
+        foo=dict(default={"default": "2,3"})
+    )
+
+    def _basic_wtools(self, ** kwargs):
+        basic = dict(
+            kind='arpifs_fcterms',
+            fcterm_unit='hour',
+            fcterm_def=self._FCTERMS,
+            hist_terms_def=self._HIST_TERMS,
+            norm_terms_def=self._SDI_TERMS,
+            diag_fp_terms_def=self._DIAG_TERMS,
+            extra_fp_terms_def=self._EXTRA_TERMS
+        )
+        basic.update(kwargs)
+        return footprints.proxy.conftool(** basic)
+
+    def test_raise(self):
+        with self.assertRaises(ValueError):
+            self._basic_wtools(extra_fp_terms_def=dict(diag=1))
+        with self.assertRaises(ValueError):
+            self._basic_wtools(extra_fp_terms_def=dict(assim=dict(default=0)))
+        with self.assertRaises(ValueError):
+            self._basic_wtools(hist_terms_def=dict(assim=0))
+        with self.assertRaises(ValueError):
+            self._basic_wtools(hist_terms_def=dict(bling={"default": None, 0: "1:30,3,6"},
+                                                   assim={"default": "3,6"}))
+        with self.assertRaises(ValueError):
+            self._basic_wtools(hist_terms_def=dict(production={"default": None, 'aerdf': "1:30,3,6"},
+                                                   assim={"default": "3,6"}))
+        wtool = self._basic_wtools(hist_terms_def=dict(assim={"default": "abc,3,6"}))
+        with self.assertRaises(ValueError):
+            wtool.hist_terms('assim', '1:33')
+        wtool = self._basic_wtools(fcterm_unit='timestep')
+        with self.assertRaises(ValueError):
+            # Because SDI terms has minutes in it
+            wtool.norm_terms('production', 0)
+
+    def test_inline(self):
+        wtool = self._basic_wtools()
+        self.assertTrue(isinstance(wtool.fcterm('production', 0), int))
+        self.assertEqual(['0001:30', '0003:00', '0006:00'],
+                         wtool.norm_terms('production', 0))
+        self.assertEqual([2, 3],
+                         wtool.foo_terms('production', 0))
+        self.assertEqual([],
+                         wtool.diag_terms_fplist('production', 0))
+        self.assertEqual(wtool.inline_terms('production', 0),
+                         wtool.no_inline.diag_terms('production', 0))
+        self.assertEqual([],
+                         wtool.no_inline.inline_terms('production', 0))
+        self.assertEqual(rangex("0-47-3,48-102:00-6"),
+                         wtool.inline_terms('production', 0))
+        self.assertEqual([2, 3, 9, 15, 21, 27, 33, 39, 45],
+                         wtool.extra_hist_terms('production', 0))
+        self.assertEqual(['aero', 'foo'],
+                         wtool.fpoff_items('production', 0))
+        self.assertEqual([0, 2, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48],
+                         wtool.fpoff_terms('production', 0))
+        wtool = self._basic_wtools(norm_terms_def=None, fcterm_unit='timestep')
+        self.assertTrue(isinstance(wtool.fcterm('production', 0), int))
+
+    def test_offline(self):
+        wtool = self._basic_wtools(use_inline_fp=False)
+        self.assertEqual([],
+                         wtool.inline_terms('production', 0))
+        self.assertEqual([2, 3, 9, 15, 21, 27, 33, 39, 45, 54, 66, 78, 90, 102],
+                         wtool.extra_hist_terms('production', 0))
+        self.assertEqual(footprints.FPList(rangex("0-47-3,48-102:00-6")),
+                         wtool.diag_terms_fplist('production', 0))
+        self.assertEqual(['aero', 'diag', 'foo'],
+                         wtool.fpoff_items('production', 0))
+        self.assertEqual(rangex("0,2,3-47-3,48-102:00-6"),
+                         wtool.fpoff_terms('production', 0))
+
+
+# ------------------------------------------------------------------------------
 # A few tests on the MOCAGE domain config (NB: Most of the test are performed
 # by the doctest).
-
 
 @loggers.unittestGlobalLevel(tloglevel)
 class IntairpolHHDictTest(unittest.TestCase):

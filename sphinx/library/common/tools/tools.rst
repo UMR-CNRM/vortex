@@ -25,6 +25,7 @@ Modules
 * :mod:`common.tools.drhook`
 * :mod:`common.tools.grib`
 * :mod:`common.tools.gribdiff`
+* :mod:`common.tools.ifstools`
 * :mod:`common.tools.igastuff`
 * :mod:`common.tools.mars`
 * :mod:`common.tools.odb`

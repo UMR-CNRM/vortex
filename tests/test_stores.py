@@ -30,7 +30,7 @@ class AbstractTestStores(unittest.TestCase):
         self.sh.target(hostname='unittest', inetname='unittest',
                        inifile=os.path.join(DATAPATHTEST, 'target-test.ini'),
                        sysname='Local')  # Trick the vortex's system !
-        self.tmpdir = tempfile.mkdtemp(suffix='_test_stores')
+        self.tmpdir = self.sh.path.realpath(tempfile.mkdtemp(suffix='_test_stores'))
         self.oldpwd = self.sh.pwd()
         self.sh.cd(self.tmpdir)
 

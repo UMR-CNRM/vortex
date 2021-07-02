@@ -334,6 +334,7 @@ def geopotentiel2zs(t, rh, rhsource, pack=None):
 @epygram_checker.disabled_if_unavailable(version='1.3.4')
 def add_poles_to_GLOB_file(filename):
     """
+    DEPRECATED: please use add_poles_to_reglonlat_file instead
     Add poles to a GLOB* regular FA Lon/Lat file that do not contain them.
     """
     import numpy
@@ -367,6 +368,89 @@ def add_poles_to_GLOB_file(filename):
             newdata[1:-1, :] = fld.data[...]
             newdata[0, :] = newdata[1, :].mean()
             newdata[-1, :] = newdata[-2, :].mean()
+            # clone field with new geometry
+            fld = fpx.fields.almost_clone(fld, geometry=newgeom)
+            fld.data = newdata
+            # get initial compression
+            write_args = dict(compression=rin.fieldscompression[fld.fid['FA']])
+        rout.writefield(fld, **write_args)
+
+
+@epygram_checker.disabled_if_unavailable(version='1.3.4')
+def add_poles_to_reglonlat_file(filename):
+    """
+    Add pole(s) to a regular FA Lon/Lat file that do not contain them.
+    """
+    import numpy
+    rin = epygram.formats.resource(filename, 'r')
+    filename_out = filename + '+poles'
+    rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
+                                    validity=epygram.base.FieldValidity(
+                                        date_time=rin.validity.get(),
+                                        term=date.Period(0, 0, 0)),
+                                    processtype=rin.processtype,
+                                    cdiden=rin.cdiden)
+    assert rin.geometry.name == 'regular_lonlat', "This file's geometry is not regular lon/lat, cannot add pole(s)."
+    # determine what is to be done
+    resolution = rin.geometry.grid['Y_resolution'].get('degrees')
+    latmin = rin.geometry.gimme_corners_ll()['ll'][1]
+    latmax = rin.geometry.gimme_corners_ll()['ul'][1]
+    # south
+    south = False
+    if abs(-90. - latmin) <= epygram.config.epsilon:
+        logger.info("This file already contains south pole")
+    elif abs((-90. + resolution) - latmin) <= epygram.config.epsilon:
+        south = True
+    else:
+        logger.info("This file south border is too far from south pole to add it.")
+    # north
+    north = False
+    if abs(90. - latmax) <= epygram.config.epsilon:
+        logger.info("This file already contains north pole")
+    elif abs((90. - resolution) - latmax) <= epygram.config.epsilon:
+        north = True
+    else:
+        logger.info("This file north border is too far from north pole to add it.")
+    if not north and not south:
+        raise epygram.epygramError("Nothing to do")
+    # prepare new geom
+    geom = rin.readfield('SURFGEOPOTENTIEL').geometry
+    newdims = copy.deepcopy(geom.dimensions)
+    newgrid = copy.deepcopy(geom.grid)
+    if north and south:
+        newdims['Y'] += 2
+    else:
+        newdims['Y'] += 1
+    if south:
+        newgrid['input_lon'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][0], 'degrees')
+        newgrid['input_lat'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][1] - resolution, 'degrees')
+        newgrid['input_position'] = (0, 0)
+    else:  # north only: 0,0 has not changed
+        newgrid['input_lon'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][0], 'degrees')
+        newgrid['input_lat'] = epygram.util.Angle(geom.gimme_corners_ll()['ll'][1], 'degrees')
+        newgrid['input_position'] = (0, 0)
+    newgeom = fpx.geometrys.almost_clone(geom,
+                                         dimensions=newdims,
+                                         grid=newgrid)
+    # loop on fields
+    for f in rin.listfields():
+        if f == 'SPECSURFGEOPOTEN':
+            continue  # meaningless in lonlat clims
+        fld = rin.readfield(f)
+        write_args = {}
+        if isinstance(fld, epygram.fields.H2DField):
+            # compute poles data value as mean of last latitude circle
+            newdata = numpy.zeros((newdims['Y'], newdims['X']))
+            if south and north:
+                newdata[1:-1, :] = fld.data[...]
+                newdata[0, :] = newdata[1, :].mean()
+                newdata[-1, :] = newdata[-2, :].mean()
+            elif south:
+                newdata[1:, :] = fld.data[...]
+                newdata[0, :] = newdata[1, :].mean()
+            elif north:
+                newdata[:-1, :] = fld.data[...]
+                newdata[-1, :] = newdata[-2, :].mean()
             # clone field with new geometry
             fld = fpx.fields.almost_clone(fld, geometry=newgeom)
             fld.data = newdata

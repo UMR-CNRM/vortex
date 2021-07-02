@@ -13,7 +13,7 @@ from vortex.data.providers import Provider
 from vortex.syntax.stdattrs import Namespace
 
 from gco.tools import genv, uenv
-from gco.syntax.stdattrs import GgetId, UgetId, AbstractUgetId
+from gco.syntax.stdattrs import GgetId, UgetId, AbstractUgetId, ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []
@@ -32,6 +32,29 @@ _COMMON_GCO_FP = dict(
         values=['gco.cache.fr', 'gco.meteo.fr', 'gco.multi.fr'],
         default=Namespace('gco.meteo.fr'),
     ))
+
+
+def _gget_entry_rewrite(gget_entry, **basename_info):
+    """Theak the ggek identifier based on the *basename_info* dictionary."""
+    if 'suffix' in basename_info:
+        gget_entry += basename_info['suffix']
+    if 'compiler_version' in basename_info or 'compiler_option' in basename_info:
+        cycle = basename_info.get('cycle', ArpIfsSimplifiedCycle('cy01'))
+        s_gget_entry = gget_entry.split('.')
+        if cycle >= 'cy46t2' or cycle >= 'cy46t1_op1':
+            if len(s_gget_entry) < 5 and s_gget_entry[-1] != 'exe':
+                raise ValueError('Got the following key: {:s}. Something like *.VERSION.OPT.NN.exe is expected.'
+                                 .format(gget_entry))
+            s_gget_entry[-3] = basename_info.get('compiler_option', s_gget_entry[-3])
+            s_gget_entry[-4] = basename_info.get('compiler_version', s_gget_entry[-4])
+        else:
+            if len(s_gget_entry) < 4 and s_gget_entry[-1] != 'exe':
+                raise ValueError('Got the following key: {:s}. Something like *.VERSION.OPT.exe is expected.'
+                                 .format(gget_entry))
+            s_gget_entry[-2] = basename_info.get('compiler_option', s_gget_entry[-2])
+            s_gget_entry[-3] = basename_info.get('compiler_version', s_gget_entry[-3])
+        gget_entry = '.'.join(s_gget_entry)
+    return gget_entry
 
 
 class GcoProvider(Provider):
@@ -93,7 +116,7 @@ class GGet(GcoProvider):
 
     def basename(self, resource):
         """Concatenation of gget attribute and current resource basename."""
-        return self.gget + resource.basename(self.realkind)
+        return _gget_entry_rewrite(self.gget, ** resource.basename(self.realkind))
 
 
 class GEnv(GcoProvider):
@@ -155,7 +178,8 @@ class GEnv(GcoProvider):
         if gkey not in gconf:
             logger.error('Key <%s> unknown in cycle <%s>', gkey, self.genv)
             raise ValueError('Unknow gvar ' + gkey)
-        return gconf[gkey] + resource.basename(GGet.footprint_clsrealkind())
+        return _gget_entry_rewrite(gconf[gkey],
+                                   ** resource.basename(GGet.footprint_clsrealkind()))
 
 
 class _UtypeProvider(Provider):
@@ -208,8 +232,10 @@ class AbstractUGetProvider(_UtypeProvider):
 
     def basename(self, resource):
         """Concatenation of gget attribute and current resource basename."""
-        return '{0.id:s}{1:s}@{0.location:s}'.format(self.uget,
-                                                     resource.basename(self.realkind))
+        return '{1:s}@{0.location:s}'.format(
+            self.uget,
+            _gget_entry_rewrite(self.uget.id, ** resource.basename(self.realkind))
+        )
 
 
 class UGetProvider(AbstractUGetProvider):
@@ -291,11 +317,14 @@ class AbstractUEnvProvider(_UtypeProvider):
         """
         theid = self._get_id(resource)
         if isinstance(theid, AbstractUgetId):
-            return ('{0.id:s}{1:s}@{0.location:s}'.
-                    format(theid, resource.basename(AbstractUGetProvider.footprint_clsrealkind())))
+            return '{1:s}@{0.location:s}'.format(
+                theid,
+                _gget_entry_rewrite(theid.id,
+                                    ** resource.basename(AbstractUGetProvider.footprint_clsrealkind()))
+            )
         else:
-            return '{0:s}{1:s}'.format(theid,
-                                       resource.basename(GGet.footprint_clsrealkind()))
+            return _gget_entry_rewrite(theid,
+                                       ** resource.basename(GGet.footprint_clsrealkind()))
 
 
 class UEnvProvider(AbstractUEnvProvider):

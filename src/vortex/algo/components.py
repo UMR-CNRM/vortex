@@ -671,7 +671,7 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
 
     def flyput_outputmapping(self, item):
         """Map output to another filename."""
-        return item
+        return item, 'unknown'
 
     def _flyput_job_internal_search(self, io_poll_method, io_poll_args, io_poll_kwargs):
         data = list()
@@ -689,24 +689,23 @@ class AlgoComponent(six.with_metaclass(AlgoComponentMeta, footprints.FootprintBa
     def _flyput_job_internal_put(self, data):
         for thisdata in data:
             if self.flymapping:
-                mappeddata = self.flyput_outputmapping(thisdata)
+                mappeddata, mappedfmt = self.flyput_outputmapping(thisdata)
                 if not mappeddata:
                     raise AlgoComponentError('The mapping method failed for {:s}.'.format(thisdata))
+                if thisdata != mappeddata:
+                    logger.info('Linking <%s> to <%s> (fmt=%s) before put',
+                                thisdata, mappeddata, mappedfmt)
+                    self.system.cp(thisdata, mappeddata, intent='in', fmt=mappedfmt)
             else:
                 mappeddata = thisdata
             candidates = [x for x in self.promises
                           if x.rh.container.abspath == self.system.path.abspath(mappeddata)]
             if candidates:
-                logger.info('Polled data is promised <%s>', thisdata)
+                logger.info('Polled data is promised <%s>', mappeddata)
                 bingo = candidates.pop()
-                if thisdata != mappeddata:
-                    logger.info('Linking <%s> to <%s> (fmt=%s) before put',
-                                thisdata, mappeddata, bingo.rh.container.actualfmt)
-                    self.system.cp(thisdata, mappeddata, intent='in',
-                                   fmt=bingo.rh.container.actualfmt)
                 bingo.put(incache=True)
             else:
-                logger.warning('Polled data not promised <%s>', thisdata)
+                logger.warning('Polled data not promised <%s>', mappeddata)
 
     def flyput_job(self, io_poll_method, io_poll_args, io_poll_kwargs,
                    event_complete, event_free, queue_context):

@@ -939,7 +939,7 @@ class Handler(object):
             pr_getter = self.container.localpath() + '.getpr'
         t = self._cur_session
         tpl = config.load_template(t, tplfile)
-        with io.open(pr_getter, 'wb') as fd:
+        with io.open(pr_getter, 'w', encoding='utf-8') as fd:
             fd.write(tpl.substitute(
                 python=py_exec,
                 pyopts=py_opts,

@@ -1,0 +1,28 @@
+default:
+    style: olive
+    sets:
+        -   date: 2021041500
+            geometry: glob11
+            cutoff: assim
+            model: mocage
+            namespace: vortex.multi.fr
+            cycle: mo11_mocage@surfana-main.08
+            gnamespace: 'gco.multi.fr'
+            vapp: mocage
+            vconf: surfana
+
+register:
+    genv:
+        - mo11_mocage@surfana-main.08
+
+todo:
+    -   commons:
+            genv: '[cycle]'
+        tests:
+            -   kind: firecst
+            -   kind: gribtpl
+                edition:
+                    - null
+                    - 1
+            -   kind: chemical_surf
+            -   kind: emiss_cst

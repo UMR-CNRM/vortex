@@ -7,6 +7,8 @@ Some useful hooks.
 
 from __future__ import print_function, absolute_import, division, unicode_literals
 
+import functools
+
 from bronx.fancies import loggers
 
 #: No automatic export
@@ -47,3 +49,24 @@ def concatenate(t, rh, *rhlist):
                     while stuff:
                         myfh.write(stuff)
                         stuff = afh.read(blocksize)
+
+
+def insert_cutoffs(t, rh, rh_cutoff_source, fuse_per_obstype=False):
+    """Read the cutoff from *rh_cutoff_source* and feed them into *rh*.
+
+    If *fuse_per_obstype* is ``True``, the latest cutoff of a given obstype
+    will be used for all the occurences of this obstype.
+    """
+    import vortex.tools.listings
+    assert vortex.tools.listings
+    if rh_cutoff_source.container.actualfmt == 'bdmbufr_listing':
+        c_disp_callback = functools.partial(
+            rh_cutoff_source.contents.data.cutoffs_dispenser,
+            fuse_per_obstype=fuse_per_obstype
+        )
+    else:
+        raise RuntimeError("Incompatible < {!s} > ressource handler".format(rh_cutoff_source))
+    # Fill the gaps in the original request
+    rh.contents.add_cutoff_info(c_disp_callback())
+    # Actually save the result to file
+    rh.save()

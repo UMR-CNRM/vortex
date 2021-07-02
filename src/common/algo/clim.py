@@ -809,9 +809,9 @@ class _AddPolesWorker(TaylorVortexWorker):
     )
 
     def vortex_task(self, **_):
-        from common.util.usepygram import add_poles_to_GLOB_file, epy_env_prepare
+        from common.util.usepygram import add_poles_to_reglonlat_file, epy_env_prepare
         with epy_env_prepare(self.ticket):
-            add_poles_to_GLOB_file(self.filename)
+            add_poles_to_reglonlat_file(self.filename)
 
 
 class Festat(Parallel):
