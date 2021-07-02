@@ -149,6 +149,8 @@ class BdpeProvider(Provider):
     def basename(self, resource):
         """Something like 'BDPE_num+term'."""
         myterm = getattr(resource, 'term', Time(0))
+        if int(myterm) < 0:
+            myterm = Time(9000) - myterm
         return 'BDPE_{}+{!s}'.format(self.bdpeid, myterm)
 
     def pathname(self, resource):
