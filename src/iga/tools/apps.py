@@ -26,7 +26,7 @@ class OpTask(Task):
 
     _tag_topcls = False
 
-    def report_execution_error(self, exc):  # @UnusedVariable
+    def report_execution_error(self, exc, **kw_infos):  # @UnusedVariable
         """Report any execution error."""
         listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         self.sh.header('Send a mail due to an execution error')
@@ -62,9 +62,9 @@ class MissingObsMixin(object):
             logger.warning('Exception caught: %s', str(exc))
             return True, dict()
         else:
-            return super(self.__class__, self).filter_execution_warning(exc)
+            return False, dict()
 
-    def missing_obs_report(self, exc):
+    def missing_obs_report(self, exc, **kw_infos):
         """Report (e-mail) any Bator failure."""
         listing = self.env.getvar('RUNDIR') + '/opview/' + self.tag + '/NODE.001_01'
         outstr = ("Les bases ODB suivantes ont rencontré des problèmes lors de " +

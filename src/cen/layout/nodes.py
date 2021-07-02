@@ -9,6 +9,7 @@ for any :mod:`vortex` experiment.
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from bronx.stdtypes.date import yesterday, Date, Period, Time
+from vortex.algo.components import DelayedAlgoComponentError
 
 
 class S2MTaskMixIn(object):
@@ -27,21 +28,25 @@ class S2MTaskMixIn(object):
         """
 
         warning = {}
-        nerrors = len(list(enumerate(exc)))
-        warning["nfail"] = nerrors
-        determinitic_error = False
+        accept_errors = False
 
-        for i, e in enumerate(exc):   # @UnusedVariable
-            if hasattr(e, 'deterministic'):
-                if e.deterministic:
-                    determinitic_error = True
+        if isinstance(exc, DelayedAlgoComponentError):
+            nerrors = len(list(enumerate(exc)))
+            warning["nfail"] = nerrors
+            determinitic_error = False
 
-                warning["deterministic"] = e.deterministic
+            for e in exc:
+                if hasattr(e, 'deterministic'):
+                    if e.deterministic:
+                        determinitic_error = True
 
-        accept_errors = not determinitic_error or nerrors < 5
+                    warning["deterministic"] = e.deterministic
 
-        if accept_errors:
-            print(self.warningmessage(nerrors, exc))
+            accept_errors = not determinitic_error or nerrors < 5
+
+            if accept_errors:
+                print(self.warningmessage(nerrors, exc))
+
         return accept_errors, warning
 
     def reforecast_filter_execution_error(self, exc):
