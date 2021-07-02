@@ -785,11 +785,16 @@ class FootprintBaseMeta(type):
         d['_fp_auth'] = hash(d['__module__'] + '.' + n)
         active_accessors = access.attr_descriptors()
         for k in thisfp.attr.keys():
+            k_info = thisfp.attr[k].get('info', None)
+            if setup.docstrings > 1:
+                k_info = (k_info or '').rstrip('.') + ' (see the documentation above for more details).'
             if isinstance(thisfp.attr[k]['access'], access.FootprintAttrDescriptor):
-                d[k] = thisfp.attr[k]['access'](k, auth=d['_fp_auth'])
+                d[k] = thisfp.attr[k]['access'](k, auth=d['_fp_auth'], doc=k_info)
             else:
                 try:
-                    d[k] = active_accessors[thisfp.attr[k]['access']](k, auth=d['_fp_auth'])
+                    d[k] = active_accessors[thisfp.attr[k]['access']](
+                        k, auth=d['_fp_auth'], doc=k_info
+                    )
                 except AttributeError:
                     logger.error('Could not find any local descriptor with acces mode %s',
                                  thisfp.attr['access'])
