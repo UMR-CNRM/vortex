@@ -227,7 +227,7 @@ _abs_surfex_forcing_fp = footprints.DecorativeFootprint(
                 default='atm',
             ),
             nativefmt=dict(
-                values=['netcdf', 'ascii'],
+                values=['netcdf', 'ascii', 'tar'],
                 default='netcdf',
             ),
         )
