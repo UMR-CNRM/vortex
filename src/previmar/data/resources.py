@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+MARINE RESOURCES
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -444,7 +444,7 @@ class TarResultBoundww3(GeoFlowResource):
         return 'tarspecmfwam2ww3'
 
 
-@namebuilding_append('src', lambda s: s.field)
+@namebuilding_append('src', lambda s: s.fields)
 class Ww3IntermediateResults(GeoFlowResource):
     """Class for ww3 Intermediate result (.ww3)."""
     _footprint = dict(
@@ -478,6 +478,11 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
            of its name, one may assume that it refers to the validity date:
            let's hope not because it will be redundant with term (since the
            validity date is date + term).
+         : (AD) you guess well. It is date + term. I have done it because I
+           didn't know how to make a calculation in namebuilding_append. I
+           have tried in vain with several attempts of syntax. I have get 
+           around my problem by creating this attribute. But I will be very
+           interested by coding it properly.
     """
     _footprint = [
         term_deco,
@@ -488,7 +493,7 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
                     values = ['ww3DatedIntermedResult'],
                 ),
                 dateval = dict(
-                    info = 'TODO comment.',
+                    info = 'validity date',
                     type = Date,
                 ),
                 term = dict(
