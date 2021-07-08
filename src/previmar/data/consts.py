@@ -2,7 +2,7 @@
 
 
 """
-TODO: Module documentation
+CONSTANT DATA FOR MARINE PRODUCTION
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -373,8 +373,6 @@ class InputConfWW3(GenvModelResource):
 
 class WW3InterpConst(GenvModelResource):
     """Class of a ww3 model results interpolation constant.
-
-    A Genvkey can be given.
     """
     _footprint = dict(
         info = 'Interpolation constants',
@@ -398,8 +396,6 @@ class WW3InterpConst(GenvModelResource):
 
 class WW3ConNctoGrib(GenvModelResource):
     """Class of a convertion from nc to grib constant.
-
-    A Genvkey can be given.
     """
     _footprint = dict(
         info = 'convertion from nc to grib constant',

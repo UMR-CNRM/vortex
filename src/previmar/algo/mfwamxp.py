@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+ALGO FOR MFWAM PRODUCTION
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
