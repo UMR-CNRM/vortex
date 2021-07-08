@@ -184,7 +184,7 @@ class OpJobAssistantTest(JobAssistant):
 
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
         print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
-        print('+ JEEVES jroute =', t.env.get('jroute'))
+        print('+ JEEVES jroute =', t.env.get('op_jroute'))
 
         # ----------------------------------------------------------------------
         t.sh.highlight('START message to op MESSDAYF reporting file')
@@ -411,7 +411,7 @@ def defer_route(t, rh, jeeves_opts, route_opts):
     # complete the request
     jeeves_opts.update(
         todo='route',
-        jname=t.env.get('jroute'),
+        jname=t.env.get('op_jroute'),
         source=hide(effective_path),
         fmt=fmt,
         route_opts=route_opts,
