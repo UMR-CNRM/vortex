@@ -17,6 +17,7 @@ import json
 import multiprocessing
 import os
 import platform
+import re
 import resource
 import signal
 import subprocess
@@ -238,7 +239,8 @@ class PidFile(object):
 
     def __init__(self, tag='default', filename=None, procname='python'):
         if filename is None:
-            filename = os.path.join(os.getcwd(), tag + '-' + platform.node())
+            node = re.sub(r'\..*', '', platform.node())
+            filename = os.path.join(os.getcwd(), tag + '-' + node)
         if not filename.endswith('.pid'):
             filename += '.pid'
         self._filename = os.path.realpath(filename)
@@ -340,7 +342,8 @@ class BaseDaemon(object):
         self._logger = None
         self._loglevel = loglevel
         self._stdin = os.devnull
-        self._redirect = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
+        node = re.sub(r'\..*', '', platform.node())
+        self._redirect = os.path.realpath(redirect or tag + '-' + node + '.log')
         self._daemonized = False
         self._inifile = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
