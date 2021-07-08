@@ -435,20 +435,8 @@ class Ww3IntermediateResults(GeoFlowResource):
         return 'ww3IntermedResult'
 
 
-@namebuilding_append('src', lambda s: s.dateval.ymdh)
 class Ww3DatedIntermediateResults(Ww3IntermediateResults):
     """Class for ww3 Intermediate result (.ww3) with a date.
-
-    :note: (LFM) This resource already has a date/cutoff attribute (inherited
-           from `GeoFlowResource`). What is the meaning of `dateval`? Because
-           of its name, one may assume that it refers to the validity date:
-           let's hope not because it will be redundant with term (since the
-           validity date is date + term).
-         : (AD) you guess well. It is date + term. I have done it because I
-           didn't know how to make a calculation in namebuilding_append. I
-           have tried in vain with several attempts of syntax. I have get 
-           around my problem by creating this attribute. But I will be very
-           interested by coding it properly.
     """
     _footprint = [
         term_deco,
@@ -458,24 +446,24 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
                 kind = dict(
                     values = ['ww3DatedIntermedResult'],
                 ),
-                dateval = dict(
-                    info = 'validity date',
-                    type = Date,
-                ),
                 term = dict(
-                    optional = True
+                    optional = False,
+                    type     = Time,
                 )
             )
         )
     ]
 
+    def namebuilding_info(self):
+        """Adding of fields and validity date."""
+        bdict = super(Ww3DatedIntermediateResults, self).namebuilding_info()
+        dateval=self.date+self.term
+        bdict['src'].append(dateval.ymdh)
+        return bdict
 
-@namebuilding_append('src', lambda s: s.fields)
-@namebuilding_append('src', lambda s: s.dateval.ymdh)
+
 class WW3Out(GeoFlowResource):
     """Class for ww3 parameters output tar of raw netcdf.
-
-    :note: (LFM) idem for `dateval`.
     """
     _footprint = [
         term_deco,
@@ -495,12 +483,9 @@ class WW3Out(GeoFlowResource):
                 model = dict(
                     values = ['ww3'],
                 ),
-                dateval = dict(
-                    info='validity date',
-                    type = Date,
-                ),
                 term = dict(
-                    optional = True,
+                    optional = False,
+                    type = Time,
                 ),
             )
         )
@@ -509,3 +494,11 @@ class WW3Out(GeoFlowResource):
     @property
     def realkind(self):
         return 'WW3Out'
+
+    def namebuilding_info(self):
+        """Adding of fields and validity date."""
+        bdict = super(WW3Out, self).namebuilding_info()
+        bdict['src'].append(self.fields)
+        dateval=self.date+self.term
+        bdict['src'].append(dateval.ymdh)
+        return bdict

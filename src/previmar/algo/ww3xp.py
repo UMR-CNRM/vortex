@@ -273,7 +273,7 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
 
     def _add_section_instructions(self, common_i, section):
         file_in = section.rh.container.localpath()
-        dateval = section.rh.resource.dateval
+        dateval = section.rh.resource.date + section.rh.resource.term
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     dateval=[dateval, ]))
@@ -360,7 +360,7 @@ class InterpolateUGncAlgo(AbstractWw3ParaBlindRun):
 
     def _add_section_instructions(self, common_i, section):
         file_in = section.rh.container.localpath()
-        dateval = section.rh.resource.dateval
+        dateval = section.rh.resource.date + section.rh.resource.term
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     grid=[self.grid, ],
@@ -450,7 +450,7 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
 
     def _add_section_instructions(self, common_i, section):
         file_in = section.rh.container.localpath()
-        dateval = section.rh.resource.dateval
+        dateval = section.rh.resource.date + section.rh.resource.term
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     datpivot=[self.datpivot, ],
