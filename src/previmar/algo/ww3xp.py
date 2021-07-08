@@ -317,7 +317,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             # copy of namelist and constant files
             sh.cp(sh.path.join(cwd, consttar), consttar)
             sh.smartuntar(consttar, sh.path.join(cwd, self.file_in + '.process.d'),
-                uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+                    uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
             dictkeyvalue = dict()
             dictkeyvalue["yyyymmdd"] = self.dateval.ymd
             dictkeyvalue["hhmmss"] = self.dateval.hm + '00'
@@ -395,9 +395,9 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
         output_files = set()
         with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
             cwdp = sh.pwd()
-            sh.smartuntar(sh.path.join(cwd, self.file_in) ,sh.path.join(cwd,
-                self.file_in + '.process.d'),
-                uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+            sh.smartuntar(sh.path.join(cwd, self.file_in), sh.path.join(cwd,
+                    self.file_in + '.process.d'),
+                    uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
             untared_files = sh.ls('ww3.*nc')
             with io.open('interpolateUG_nc.list', 'w') as flist:
                 for fname in untared_files:
@@ -495,11 +495,11 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
         with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
             # copy of nc and constant files
             sh.smartuntar(sh.path.join(cwd, self.file_in), sh.path.join(cwd,
-                self.file_in + '.process.d'),
-                uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+                    self.file_in + '.process.d'),
+                    uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
             sh.cp(sh.path.join(cwd, consttar), consttar)
             sh.smartuntar(consttar, sh.path.join(cwd, self.file_in + '.process.d'),
-                uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+                    uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
             for fname in sh.ls('ww3.*nc'):
                 # Retrieval of param and filename without nc
                 head_filename = fname.split('_')[0]
@@ -512,7 +512,7 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                     fic_prod = "{0:s}_{1:s}_{2:s}.grb".format(head_filename, param, self.dateval.ymdh)
                 else:
                     fic_prod = "{0:s}_{1:s}_{2:s}{3:04d}.grb".format(head_filename, param, self.datpivot.ymdh,
-                               int(term / 3600))
+                                int(term / 3600))
                 # set of namelist
                 namcontents.setmacro("NOM_PARAM", param)
                 namcontents.setmacro('FILENAME', fname)
