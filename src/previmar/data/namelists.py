@@ -12,7 +12,6 @@ from bronx.stdtypes.date import Date
 from vortex.data.outflow import ModelResource
 from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
-from common.data.namelists import Namelist
 from vortex.data.contents import DataTemplate
 from common.data.configfiles import AsciiConfig
 
@@ -62,7 +61,7 @@ class BlkdatNamFiles(ModelResource):
 
 
 class WW3ConfigFiles(AsciiConfig):
-    """ WW3 namelists with necessary modification of the contents
+    """WW3 namelists with necessary modification of the contents
     """
 
     _footprint = dict(

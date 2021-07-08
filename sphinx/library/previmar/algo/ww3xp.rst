@@ -19,11 +19,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ConvNetcdfGribAlgoold
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ConvertSpecWW3AsciiAlgo
    :show-inheritance:
    :members:
@@ -49,10 +44,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Ww3_ounpAlgo_para
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 
 Abstract Classes

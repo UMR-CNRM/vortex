@@ -457,7 +457,7 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
     def namebuilding_info(self):
         """Adding of fields and validity date."""
         bdict = super(Ww3DatedIntermediateResults, self).namebuilding_info()
-        dateval=self.date+self.term
+        dateval = self.date + self.term
         bdict['src'].append(dateval.ymdh)
         return bdict
 
@@ -499,6 +499,6 @@ class WW3Out(GeoFlowResource):
         """Adding of fields and validity date."""
         bdict = super(WW3Out, self).namebuilding_info()
         bdict['src'].append(self.fields)
-        dateval=self.date+self.term
+        dateval = self.date + self.term
         bdict['src'].append(dateval.ymdh)
         return bdict
