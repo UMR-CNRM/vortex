@@ -489,7 +489,6 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             raise IOError("No or too much constant files for convertion to grib")
         consttar=constcandidate[0].rh.container.localpath()
         headconst=consttar.split('_')[0]+'_'+consttar.split('_')[1]
-        logger.info("yoyo %s",headconst)
 
         cwd = sh.pwd()
         output_files = set()
