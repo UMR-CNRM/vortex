@@ -252,9 +252,10 @@ class FullPosServer(IFSParallel):
         for out_re, data in self._flyput_mapping_d.items():
             m_re = out_re.match(sh.path.basename(item))
             if m_re:
-                return sh.path.join(sh.path.dirname(item),
-                                    data[0].format(m_re.group('fpdom'),
-                                                   m_re.group('suffix')))
+                return (sh.path.join(sh.path.dirname(item),
+                                     data[0].format(m_re.group('fpdom'),
+                                                    m_re.group('suffix'))),
+                        data[1])
 
     @cached_property
     def inputs(self):

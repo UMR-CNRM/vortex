@@ -71,7 +71,7 @@ a_task = dict(
     info="The task name for which the resource is dedicated.",
     type=str,
     optional=False,
-    values=["conf_task", "data_task", "mask_task", "prod_task", "version"]
+    values=["conf_task", "data_task", "mask_task", "prod_task", "version", "rec_task"]
 )
 
 task = footprints.Footprint(info='Abstract task name', attr=dict(task=a_task))

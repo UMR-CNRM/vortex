@@ -1080,9 +1080,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
         self._conf = None
 
         # Set default parameters for the actual job
-        if options is None:
-            raise ValueError('An `option` argument needs to be specified.')
-        self._options = options
+        self._options = dict() if options is None else options
         self._special_prefix = self._options.get('special_prefix', 'OP_').upper()
         self._subjob_tag = self._options.get('subjob_tag', None)
         j_assist = self._options.get('jobassistant', None)

@@ -9,6 +9,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 
 import io
 import json
+import six
 import vortex  # noqa: F401
 from vortex.layout.nodes import ConfigSet
 
@@ -19,7 +20,6 @@ import footprints
 logger = footprints.loggers.getLogger(__name__)
 
 __all__ = []
-
 
 def recursive_format(element, **format_kwargs):
     """recursive_format : function which applies string formatting to a given
@@ -44,7 +44,7 @@ def recursive_format(element, **format_kwargs):
         type(element): Formatted given element
 
     """
-    if isinstance(element, (str, unicode)):
+    if isinstance(element, six.string_types):
         try:
             return element.format(**format_kwargs)
         except KeyError:

@@ -47,7 +47,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto', 'chimique', 'volcan', 'indonesie'):
+                   'reuaro01', 'ctbto') or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -741,6 +741,9 @@ def global_snames(resource, provider):
     elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'ctbto':
         bname = 'ctbto_in.tar'
 
+    elif resource.realkind == 'promethee_inputs':
+        bname= 'alim_hpc_promethee_' + resource.date.ymdhms + '.tar'
+    
     elif resource.realkind == 'mocacc_emis_and_nwp_inputs' and vconf == 'chimique':
         bname = '7960.tar'
 

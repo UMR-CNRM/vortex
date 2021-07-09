@@ -176,9 +176,9 @@ class FolderShell(addons.FtrawEnableAddon):
                     # Old-style DDH packs (produced by Olive)
                     with self.sh.secure_directory_move(destination):
                         self.sh.mkdir(destination)
-                    for item in unpacked:
-                        self.sh.wpermtree(item, force=True)
-                        self.sh.mv(item, self.sh.path.join(destination, item))
+                        for item in unpacked:
+                            self.sh.wpermtree(item, force=True)
+                            self.sh.mv(item, self.sh.path.join(destination, item))
             else:
                 logger.error('Nothing to unpack')
         except Exception as trouble:
