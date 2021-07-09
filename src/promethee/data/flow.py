@@ -15,7 +15,7 @@ from promethee.syntax.stdattrs import version_deco, task_deco
 __all__ = []
 
 class PrometheeInputs(FlowResource):
-    """Tar with gribs extracted from the BDAP database"""
+    """Tar with gribs extracted from the BDAP database."""
 
     _footprint = dict(
         info = "Tar from soprano. Specific to promethee.",
@@ -24,7 +24,7 @@ class PrometheeInputs(FlowResource):
                 values = ["promethee_inputs"]
             ),
             model = dict(
-                values = ['promethee', ]
+                values = ['promethee']
             ),
             nativefmt = dict(
                 values = ["tar"],
@@ -35,31 +35,36 @@ class PrometheeInputs(FlowResource):
 
     @property
     def realkind(self):
-        return self.kind
+        return 'promethee_inputs'
 
 
 class PrometheeFlowResource(FlowResource):
-    """PrometheeFlowResource : Abstract Class to access all kind of flow resources
-    for promethee. A PrometheeFlowResource is a quite common flow resource with a
+    """Abstract Class to access all kind of flow resources for promethee.
+
+    A PrometheeFlowResource is a quite common flow resource with a
     version tag and is related to a specific Promethee task.
 
     It designates all the resources used in the Promethee flow, such as:
-        - config files,
-        - log files,
-        - archive files (containing configs or output productions).
+
+    * config files,
+    * log files,
+    * archive files (containing configs or output productions).
 
     Inheritance:
-        vortex.data.flow.FlowResource
+
+    * :class:`vortex.data.flow.FlowResource`
 
     Attrs:
-        kind        (str) : Resource's kind.
-        date (bronx.stdtypes.date.Datetime) : The generating process run date.
-        cutoff      (str) : The cutoff type of the generating process.
-        model       (str) : The model name (from a source code perspective).
-        nativefmt   (str) : The resource's storage format.
-        task        (str) : The task name for which the resource is designed. Among
-        "conf_task", "data_task", "mask_task", "prod_task" and "version".
-        version     (str) : The resource version.
+
+    * kind (str): Resource's kind.
+    * date (:class:`bronx.stdtypes.date.Date`) : The generating process run date.
+    * cutoff (str): The cutoff type of the generating process.
+    * model (str): The model name (from a source code perspective).
+    * nativefmt (str): The resource's storage format.
+    * task (str): The task name for which the resource is designed. Among
+      "conf_task", "data_task", "mask_task", "prod_task" and "version".
+    * version (str): The resource version.
+
     """
 
     _abstract = True
@@ -67,8 +72,13 @@ class PrometheeFlowResource(FlowResource):
         task_deco,
         version_deco,
         dict(
-            info = "Abstract FlowResource for a Promethee usage. It is a flow resource"
-            " that has a version tag and is related to a specific task.",
+            info = ("Abstract FlowResource for a Promethee usage. It is a flow resource" +
+                    " that has a version tag and is related to a specific task."),
+            attr = dict(
+                model = dict(
+                    values = ['promethee']
+                )
+            ),
         )
     ]
 
@@ -78,17 +88,21 @@ class PrometheeFlowResource(FlowResource):
 
 
 class PrometheeJson(PrometheeFlowResource):
-    """PrometheeJson : Specific PrometheeFlowResource designed for Json files.
+    """Specific PrometheeFlowResource designed for Json files.
+
     It concerns the Promethee config and log files.
 
     Inheritance:
-        PrometheeFlowResource
+
+    * :class:`PrometheeFlowResource`
 
     Attrs:
-        kind (str) : The resource kind. Among 'config' and 'log'.
-        nativefmt (str) : The resource's storage format. Must be 'json'.
-        clscontents (type) : Must be JsonDictContent.
-        * and all the other PrometheeFlowResource attributes.
+
+    * kind (str): The resource kind. Among 'config' and 'log'.
+    * nativefmt (str): The resource's storage format. Must be 'json'.
+    * clscontents (type): Must be JsonDictContent.
+    * and all the other PrometheeFlowResource attributes.
+
     """
 
     _footprint = dict(
@@ -111,17 +125,21 @@ class PrometheeJson(PrometheeFlowResource):
 
 
 class PrometheeArchive(PrometheeFlowResource):
-    """PrometheeArchive : specific PrometheeFlowResource designed archive files.
+    """Specific PrometheeFlowResource designed archive files.
+
     It concerns the Promethee input containing all the configurations files, and
     the Promethee output containing all the production files.
 
     Inheritance:
-        PrometheeFlowResource
+
+    * :class:`PrometheeFlowResource`
 
     Attrs:
-        kind (str) : The resource kind. Must be 'archive'.
-        nativefmt (str) : The resource's storage format. Among 'tgz' or 'tar'.
-        * and all the other PrometheeFlowResource attributes.
+
+    * kind (str): The resource kind. Must be 'archive'.
+    * nativefmt (str): The resource's storage format. Among 'tgz' or 'tar'.
+    * and all the other PrometheeFlowResource attributes.
+
     """
 
     _footprint = dict(

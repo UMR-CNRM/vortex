@@ -14,6 +14,11 @@
 Classes
 -------
 
+.. autoclass:: PrometheeInputs
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: PrometheeJson
    :show-inheritance:
    :members:

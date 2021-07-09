@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Promethee executable script
+Promethee executable script.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -14,17 +14,18 @@ __all__ = []
 
 
 class PrometheeScript(Script):
-    """PrometheeScript : Python script, which could be executed
-    with command line arguments.
+    """Python script, which could be executed with command line arguments.
 
     This kind of executable resource can be properly executed using
-    a promethee.algo.scriptbased.PrometheeAlgo.
+    a :class:`promethee.algo.scriptbased.PrometheeAlgo`.
 
     For instance : I have a Python3.7 script 'toto.py' which arguments are
-    '-f, --foo', '-b,--bar'. I would usually execute that script with :
+    '-f, --foo', '-b,--bar'. I would usually execute that script with:
+
     >>> python3.7 toto.py --foo 42 --bar 51
 
-    In Vortex, I would get my script and executing it this way :
+    In Vortex, I would get my script and executing it this way:
+
     >>> tb_script = toolbox.executable(
     ...     kind        = "promethee_script",
     ...     language    = "python",
@@ -42,11 +43,13 @@ class PrometheeScript(Script):
     fit any Python script execution.
 
     Inheritance:
-        vortex.data.executables.Script
+
+    * :class:`vortex.data.executables.Script`
 
     Attrs:
-        kind (str) : Executable kind. Must be 'promethee_script'.
-        language (str) : Script language. Must be 'python'.
+
+    * kind (str): Executable kind. Must be 'promethee_script'.
+    * language (str): Script language. Must be 'python'.
 
     """
     _footprint = dict(
@@ -65,15 +68,14 @@ class PrometheeScript(Script):
     )
 
     def command_line(self, **kwargs):
-        """command_line : method which a create a command line to pass on
-        to the script out of given kwargs.
+        """Out of *kwargs*, create a command line to pass on to the script.
 
-        Returns:
-            str : Command line to pass on to the script
+        It returns:
+
+        * str: Command line to pass on to the script
 
         """
         cmdline = " ".join(
             ["--{} {}".format(key, value) for key, value in kwargs.items()]
         )
-        print(cmdline)
         return cmdline
