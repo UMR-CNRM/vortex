@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-ALGO FOR WW3 PRODUCTION
+Algo for WW3 production.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -125,11 +125,6 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
     def postfix(self, rh, opts):
         """Manually call the iopoll method to deal with the latest files."""
         if self.flyput:
-            self.manual_flypolling_job()
-            # At the end of the run, 2 time step of outputs are missing
-            # because there is a delay in iopoll_ww3.
-            # It is necessary to launch twice flypolling
-            time.sleep(2)
             self.manual_flypolling_job()
         super(Ww3, self).postfix(rh, opts)
 
@@ -506,13 +501,13 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 param = fname.split('_')[1]
                 param = param.split('.')[0]
                 file_cst = "{0:s}_{1:s}".format(headconst, param)
-                term = (self.dateval - self.datpivot).total_seconds()
+                term = (self.dateval - self.datpivot).time
                 # Split the case of analysis and forecast
                 if term <= 0:
                     fic_prod = "{0:s}_{1:s}_{2:s}.grb".format(head_filename, param, self.dateval.ymdh)
                 else:
                     fic_prod = "{0:s}_{1:s}_{2:s}{3:04d}.grb".format(head_filename, param, self.datpivot.ymdh,
-                                                                     int(term / 3600))
+                                                                     term.hour)
                 # set of namelist
                 namcontents.setmacro("NOM_PARAM", param)
                 namcontents.setmacro('FILENAME', fname)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-MARINE NAMELISTS
+Marine namelists.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -9,10 +9,11 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
+from vortex.data.contents import DataTemplate
 from vortex.data.outflow import ModelResource
+from vortex.syntax.stdattrs import model_deco
 from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
-from vortex.data.contents import DataTemplate
 from common.data.configfiles import AsciiConfig
 
 #: No automatic export
@@ -61,32 +62,25 @@ class BlkdatNamFiles(ModelResource):
 
 
 class WW3ConfigFiles(AsciiConfig):
-    """WW3 namelists with necessary modification of the contents
-    """
+    """WW3 namelists with necessary modification of the contents."""
 
-    _footprint = dict(
-        info = " namelists to tweak",
-        attr = dict(
-            kind = dict(
-                values = ["ww3config"]
-            ),
-            model = dict(
-                values   = ['ww3', ],
-            ),
-            clscontents = dict(
-                default = DataTemplate
-            ),
-            binary = dict(
-                values   = ['ww3_shel', 'ww3_ounf', 'ww3_ounp'],
-                optional = False,
-            ),
-            date = dict(
-                optional = False,
-                type = Date,
-            ),
-
+    _footprint = [
+        model_deco,
+        dict(
+            info = " namelists to tweak",
+            attr = dict(
+                kind = dict(
+                    values = ["ww3config"]
+                ),
+                model = dict(
+                    values   = ['ww3', ],
+                ),
+                clscontents = dict(
+                    default = DataTemplate
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):

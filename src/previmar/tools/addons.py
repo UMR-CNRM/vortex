@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-MARINE ADDONS
+Marine addons.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

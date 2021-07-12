@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-MARINE RESOURCES
+Marine resources.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -445,23 +445,13 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
             attr = dict(
                 kind = dict(
                     values = ['ww3DatedIntermedResult'],
-                ),
-                term = dict(
-                    optional = False,
-                    type     = Time,
                 )
             )
         )
     ]
 
-    def namebuilding_info(self):
-        """Adding of fields and validity date."""
-        bdict = super(Ww3DatedIntermediateResults, self).namebuilding_info()
-        dateval = self.date + self.term
-        bdict['src'].append(dateval.ymdh)
-        return bdict
 
-
+@namebuilding_append('src', lambda s: s.fields)
 class WW3Out(GeoFlowResource):
     """Class for ww3 parameters output tar of raw netcdf.
     """
@@ -483,10 +473,6 @@ class WW3Out(GeoFlowResource):
                 model = dict(
                     values = ['ww3'],
                 ),
-                term = dict(
-                    optional = False,
-                    type = Time,
-                ),
             )
         )
     ]
@@ -494,11 +480,3 @@ class WW3Out(GeoFlowResource):
     @property
     def realkind(self):
         return 'WW3Out'
-
-    def namebuilding_info(self):
-        """Adding of fields and validity date."""
-        bdict = super(WW3Out, self).namebuilding_info()
-        bdict['src'].append(self.fields)
-        dateval = self.date + self.term
-        bdict['src'].append(dateval.ymdh)
-        return bdict

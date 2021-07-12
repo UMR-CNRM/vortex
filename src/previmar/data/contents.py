@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-CONTENTS FOR MARINE PRODUCTION
+Contents for marine production.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
