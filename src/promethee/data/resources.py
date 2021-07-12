@@ -25,8 +25,8 @@ class PrometheeNoDateBdpeResource(Resource):
         version_deco,
         dict(
             info = ("Undated BDPE resource for Promethee usage. " +
-                "It is a resource that has version, model, " +
-                "and cutoff tags and is related to a specific task."),
+                    "It is a resource that has version, model, " +
+                    "and cutoff tags and is related to a specific task."),
             attr = dict(
                 kind = dict(
                     values = ["bdpe"]

@@ -1,5 +1,5 @@
 :mod:`promethee.data.resources` --- Custom Promethee unclassifiable resources
-===========================================================================
+=============================================================================
 
 .. automodule:: promethee.data.resources
    :synopsis: Custom Promethee unclassifiable resources
