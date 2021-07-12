@@ -21,6 +21,7 @@ logger = footprints.loggers.getLogger(__name__)
 
 __all__ = []
 
+
 def recursive_format(element, **format_kwargs):
     """
     Function which applies string formatting to a given element (if of type

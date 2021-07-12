@@ -14,6 +14,7 @@ from promethee.syntax.stdattrs import version_deco, task_deco
 #: No automatic export
 __all__ = []
 
+
 class PrometheeInputs(FlowResource):
     """Tar with gribs extracted from the BDAP database."""
 
