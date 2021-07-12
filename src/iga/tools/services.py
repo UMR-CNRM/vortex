@@ -262,7 +262,7 @@ class AlarmProxyService(AlarmService):
             sshobj = self.sh.ssh(hostname=self.sshhost)
         rc = sshobj.execute(command)
         if not rc:
-            logger.warning("Remote execution failed: " + command)
+            logger.warning('Remote execution failed: ' + command)
         return rc
 
 
@@ -466,14 +466,17 @@ class RoutingService(Service):
 
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
+                logger.info('direct spawn: ' + cmdline)
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
-                print('\n\t'.join(rc))
             else:
+                logger.info('ssh on agt node:' + cmdline)
                 sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)
         else:
+            logger.info('ssh on node ' + self.sshhost + ': ' + cmdline)
             sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
             rc = sshobj.execute(cmdline)
+        logger.info('rc: ' + str(rc))
 
         if self._actual_targetname:
             self.sh.remove(self._actual_targetname)

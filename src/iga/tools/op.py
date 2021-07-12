@@ -381,11 +381,9 @@ def defer_route(t, rh, jeeves_opts, route_opts):
     """Send to jeeves all the information needed to handle asynchronously
     the grib filtering and then call the routing service.
     """
-    print(t.prompt, 'routing rh  :', rh.idcard())
-    print(t.prompt, 'jeeves_opts :', pformat(jeeves_opts))
-    print(t.prompt, 'route_opts  :', pformat(route_opts))
-
     effective_path = t.sh.path.abspath(rh.container.localpath())
+    logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
+    logger.info('route_opts :\n\t' + pformat(route_opts))
 
     # get the filter definition (if any)
     filtername = jeeves_opts['filtername']
@@ -466,13 +464,13 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
 
         if filteractive(rh, optfilter):
             if deferred:
-                print(t.prompt, 'asking jeeves to route file =', pformat(rh))
+                logger.info('asking jeeves to route handler ' + str(rh))
                 jeeves_opts = dict(
                     filtername=filtername,
                 )
                 defer_route(t, rh, jeeves_opts, kwargs)
             else:
-                print(t.prompt, 'routing file =', rh)
+                logger.info('routing handler ' + str(rh))
                 ad.route(**kwargs)
 
     return hook_route
