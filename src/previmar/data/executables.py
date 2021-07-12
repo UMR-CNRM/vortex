@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 TODO: Module documentation
@@ -13,6 +12,7 @@ from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
 from vortex.data.executables import BlackBox, Script, OceanographicModel
+from vortex.syntax.stdattrs import model
 from gco.syntax.stdattrs import gdomain, gvar
 
 #: No automatic export
@@ -411,3 +411,154 @@ class InterpWave(BlackBox):
     @property
     def realkind(self):
         return 'InterpWave'
+
+
+class ConversionWindWW3(BlackBox):
+    """A tool to convert wind fields to ww3 format."""
+    _footprint = [
+        gvar,
+        model,
+        dict(
+            info = 'A tool to convert wind to ww3 format',
+            attr = dict(
+                kind = dict(
+                    values  = ['convertWindWw3']
+                ),
+                model = dict(
+                    values  = ['ww3']
+                ),
+                gvar = dict(
+                    default = 'master_[model]_prnc',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ConvertWindWW3'
+
+
+class ConversionSpecWW3Ascii(BlackBox):
+    """A tool to convert spectra from mfwam to ww3 ascii."""
+    _footprint = [
+        gvar,
+        model,
+        dict(
+            info = 'A tool to convert mfwam spectra to ww3 ascii',
+            attr = dict(
+                kind = dict(
+                    values  = ['specmfwam2ww3']
+                ),
+                model = dict(
+                    values  = ['ww3']
+                ),
+                gvar = dict(
+                    default  = 'master_[model]_bound_ascii',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ConvertMfwam2WW3Ascii'
+
+
+class BoundariesConditionWw3(BlackBox):
+    """A tool to compute ww3 boundaries conditions."""
+    _footprint = [
+        gvar,
+        model,
+        dict(
+            info = 'A tool to compute ww3 boundaries conditions',
+            attr = dict(
+                kind = dict(
+                    values  = ['boundww3']
+                ),
+                model=dict(
+                    values  = ['ww3']
+                ),
+                gvar = dict(
+                    default = 'master_[model]_bound',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'BoundWW3'
+
+
+class ConversionWW3Netcdf(BlackBox):
+    """A tool to convert  ww3 result (to nc file)."""
+    _footprint = [
+        gvar,
+        model,
+        dict(
+            info = 'A tool to convert  ww3 result',
+            attr = dict(
+                kind = dict(
+                    values = ['convNetcdfPts', 'convNetcdfSurf']
+                ),
+                fields = dict(
+                    values = ['ww3_ounp', 'ww3_ounf']
+                ),
+                model = dict(
+                    values = ['ww3']
+                ),
+                gvar = dict(
+                    default = 'master_[fields]',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'ConvWW3Netcdf'
+
+
+class InterpolationUGnc(BlackBox):
+    """A tool to interpolate ww3 parameter nc file to regular grid."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'A tool to interpolate to regular grid',
+            attr = dict(
+                kind = dict(
+                    values = ['interpnc']
+                ),
+                gvar = dict(
+                    default  = 'master_interpolateugnc',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'interpnc'
+
+
+class ConversionNcGrib(BlackBox):
+    """A tool to convert netcdf fields fo grib fields."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Conversion nc to grib',
+            attr = dict(
+                kind = dict(
+                    values = ['convncgrb']
+                ),
+                gvar = dict(
+                    default  = 'master_nc_grb',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'convertncgrb'

@@ -1,5 +1,4 @@
-#!/usr/bin/env python2.7
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 """
 Generate and put fake promises (for test purposes).
 """

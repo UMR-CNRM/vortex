@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Various tools to interact with the SWAPP system.
@@ -33,13 +32,8 @@ STEPFILE_MAX_SIZE = 2097152  # 2Mb
 
 
 def olive_label(sh, env, target=None):
-    """Return a nice label string for sms monitoring."""
-
-    label = env.PBS_JOBID or env.SLURM_JOB_ID or 'localpid'
-
-    if label == 'localpid':
-        label = six.text_type(sh.getpid())
-
+    """Return a nice label string for SMS monitoring."""
+    label = sh.guess_job_identifier()
     if env.MTOOL_STEP:
         depot = env.MTOOL_STEP_DEPOT or env.MTOOL_STEP_STORE
         renum = re.search(r'\/mstep_(\d+)', depot)
@@ -52,7 +46,6 @@ def olive_label(sh, env, target=None):
             label = label + '.' + target
         label = ':'.join(reversed(label.split('.')))
         label = '--'.join((label, 'mtool:' + num))
-
     return label
 
 

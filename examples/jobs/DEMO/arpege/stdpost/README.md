@@ -41,7 +41,7 @@ To launch the demo:
 
 It does the same thing as previously but, in this example, input files
 can be expected (e.g. promised by other tasks) and dealt with in arbitrary
-order. More over, the output files are promised (consequently they are stored
+order. Moreover, the output files are promised (consequently they are stored
 in the cache as soon as they are produced). 
 
 To iterate on several dates (within a same job):
@@ -67,16 +67,16 @@ To launch the demo:
 
 It does the same thing as previously but, in this example, an external script
 is used in order to compute the md5 sum: From a pure python point of view, this
-is useless however it acts as an example since most users want to launch their
+is useless ; however it acts as an example since most users want to launch their
 own script/program to compute some post processing.
 
-The script as a 1 second sleep inside; consequently the sequential processing
-of each of the input file takes a while.
+The script has a 1 second sleep inside ; consequently the sequential processing
+of each of the input files takes a while.
 
 ## Parallel script based post-processing
 
 A parallelized version was created in order to counteract the 1 second sleep.
-It rely on the `taylorism` package that launches several instances of the script
+It relies on the `taylorism` package that launches several instances of the script
 concurrently. To launch the demo:
 
     cd jobs
@@ -85,7 +85,7 @@ concurrently. To launch the demo:
         rundate=2020102918
     python ./single_s_para_job.py
 
-Note: The same task file is used (`single_s_stdpost`) but the job as a
+Note: The same task file is used (`single_s_stdpost`) but the job has a
 different name (`single_s_para_job` instead of `single_s_job`). It allows us
 to specify different configuration data (see `conf/arpege_stdpost.ini`) in
 order to activate the parallelized version or not. It is one of the beauty

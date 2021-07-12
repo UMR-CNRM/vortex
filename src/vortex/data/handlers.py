@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -191,7 +190,7 @@ class Handler(object):
         return self._observer
 
     def observers(self):
-        """Remote objects observing the current resource handler... and my be some others."""
+        """Remote objects observing the current resource handler... and maybe others."""
         return self._observer.observers()
 
     def observed(self):
@@ -231,8 +230,7 @@ class Handler(object):
     def external_stage_update(self, newstage):
         """This method must not be used directly by users!
 
-        Update the stage upon request (e.g. the file has been fetched by another
-        process).
+        Update the stage upon request (e.g. the file has been fetched by another process).
         """
         self._stage.append(newstage)
         if newstage in ('get', ):
@@ -463,7 +461,7 @@ class Handler(object):
                             if store.delayed:
                                 logger.warning("The resource is expected... let's say that's fine.")
                             else:
-                                # Create the content manually and drop it when we are done.
+                                # Create the contents manually and drop it when we are done.
                                 contents = self.resource.contents_handler(datafmt=mycontainer.actualfmt)
                                 contents.slurp(mycontainer)
                                 rst = contents.metadata_check(self.resource, delta=self._mddelta)
@@ -550,7 +548,7 @@ class Handler(object):
             rst = self.contents.metadata_check(self.resource,
                                                delta=self._mddelta)
             if not rst:
-                logger.info("We are now cleaning up the container and data content.")
+                logger.info("We are now cleaning up the container and data contents.")
                 self.reset_contents()
                 self.clear()
         # For the record...
@@ -574,7 +572,7 @@ class Handler(object):
         return rst
 
     def _actual_get(self, **extras):
-        """Internal method in charge of the getting the resource.
+        """Internal method in charge of getting the resource.
 
         If requested, it will check the metadata of the resource and apply the
         hook functions.
@@ -608,9 +606,9 @@ class Handler(object):
         """Internal method in charge of requesting an earlyget on the resource.
 
         :return: ``None`` if earlyget is unavailable (depending on the store's kind
-            and resource it can be perfetcly fine). ``True`` if the resource was
+            and resource it can be perfectly fine). ``True`` if the resource was
             actually fetched (no need to call :meth:`finaliseget`). Some kind of
-            non-null identifier that will ne used to call :meth:`finaliseget`.
+            non-null identifier that will be used to call :meth:`finaliseget`.
         """
         store = self.store
         if store:
@@ -677,7 +675,7 @@ class Handler(object):
                                 logger.info("Alternate is on. The local file exists. The container is virtual.")
                                 rst = True
                         else:
-                            logger.info("The resource is already here but doesn't matches the RH description :-(")
+                            logger.info("The resource is already here but doesn't match the RH description :-(")
                             cur_tracker[iotarget].match_rh('get', self, verbose=True)
                             self._updstage('void', insitu=True)
                 # Bloody hell, the localpath doesn't exist
@@ -693,7 +691,7 @@ class Handler(object):
                     rst = True
                 else:
                     if self.container.exists():
-                        logger.warning('The resource is already here: That should not happen at this stage !')
+                        logger.warning('The resource is already here: that should not happen at this stage !')
                     rst = callback(**extras)
         else:
             logger.error('Could not get an incomplete rh %s', self)
@@ -719,10 +717,10 @@ class Handler(object):
 
         It records in the current context that, at some point in the future, we will
         retrieve the present resource. It can be useful for some kind of stores
-        (and useless to other). For example, when using a store that targets a mass
+        (and useless to others). For example, when using a store that targets a mass
         archive system, this information can be used to ask for several files at
-        once which accelerate the overall process and optimise the tape's drivers
-        usage. On the other, for a cache based store, it does not make much sense
+        once, which accelerates the overall process and optimises the tape's drivers
+        usage. On the other hand, for a cache based store, it does not make much sense
         since the data is readily available on disk.
 
         Return values can be:
@@ -735,10 +733,10 @@ class Handler(object):
         * ``True`` if the resource has actually been retrieved through the provider
           and fed into the current container.
 
-        In any case, the :meth:`finaliseget` method should be called latter on
+        In any case, the :meth:`finaliseget` method should be called later on
         to actually retrieve the resource and feed the container. When ``True``
         is returned by the :meth:`earlyget` method, the :meth:`finaliseget` call
-        can be made also it is useless.
+        can be made although it is useless.
 
         Like with the :meth:`get` method, the behaviour of this method depends
         on the **insitu** and **alternate** options:
@@ -762,8 +760,8 @@ class Handler(object):
         When the :meth:`earlyget` method had previously been called, the
         :meth:`finaliseget` can be called to finalise the ``get`` sequence.
 
-        When :meth:`finaliseget`, if the return code is non-zero, the resource
-        has been retrieved and fed into te container.
+        When :meth:`finaliseget` returns, if the return code is non-zero, the resource
+        has been retrieved and fed into the container.
 
         :raises HandlerError: if :meth:`earlyget` is not called prior to this
                               method.
@@ -820,8 +818,7 @@ class Handler(object):
     def insitu_quickget(self, alternate=False, **extras):
         """This method attempts a straightforward insitu get.
 
-        It is designed to minimise the amount of outputs when everything goes
-        smoothly.
+        It is designed to minimise the amount of outputs when everything goes smoothly.
         """
         rst = False
         if self.complete:
@@ -939,7 +936,7 @@ class Handler(object):
             pr_getter = self.container.localpath() + '.getpr'
         t = self._cur_session
         tpl = config.load_template(t, tplfile)
-        with io.open(pr_getter, 'wb') as fd:
+        with io.open(pr_getter, 'w', encoding='utf-8') as fd:
             fd.write(tpl.substitute(
                 python=py_exec,
                 pyopts=py_opts,
@@ -958,9 +955,9 @@ class Handler(object):
             return None
 
     def is_grabable(self, check_exists=False):
-        """Return if an expected resource is availlable or not.
+        """Return if an expected resource is available or not.
 
-        Note: If it returns True, the user still need to :meth:`get` the resource.
+        Note: If it returns True, the user still needs to :meth:`get` the resource.
         """
         rc = True
         if self.is_expected():

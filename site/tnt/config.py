@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 A bunch of classes and functions that deal with TNT configuration files and
 directives.

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -13,7 +12,7 @@ from common.data.consts import GenvModelResource, GenvModelGeoResource
 __all__ = []
 
 
-class StaticSurfaceEmissions(GenvModelResource):
+class StaticSurfaceEmissions(GenvModelGeoResource):
     """Emissions files collected by international community."""
 
     _footprint = dict(
@@ -23,7 +22,7 @@ class StaticSurfaceEmissions(GenvModelResource):
                 values  = ['emiss_cst'],
             ),
             gvar = dict(
-                default = 'surface_emissions_files'
+                default = 'surface_emissions_[geometry::area]'
             ),
         )
     )
@@ -135,6 +134,25 @@ class CfcScenario(GenvModelResource):
     @property
     def realkind(self):
         return 'cfc_scenario'
+
+
+class CfcScenarioComplement(CfcScenario):
+    """WMO CFC Clim"""
+    _footprint = dict(
+        info = 'Initial CFC concentration clim file',
+        attr = dict(
+            kind = dict(
+                values  = ['cfc_scenario_complement'],
+            ),
+            gvar = dict(
+                default = 'scenario_cfc_complement'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'cfc_scenario_complement'
 
 
 class TopScenario(GenvModelResource):

@@ -70,3 +70,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: InputConfWW3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WW3ConNctoGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WW3InterpConst
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WW3Preproc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

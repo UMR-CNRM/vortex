@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Specific CEN tools.
@@ -7,7 +6,7 @@ Specific CEN tools.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from . import names
+from . import names, actions, services
 
 #: No automatic export
 __all__ = []

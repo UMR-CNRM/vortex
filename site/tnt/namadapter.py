@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Adapter classes for namelist's parsers.
 

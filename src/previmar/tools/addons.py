@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -28,5 +27,5 @@ class MarineAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_marine', 'iopoll_waves',  # IO polling
+    _addonslist = ('iopoll_marine', 'iopoll_waves', 'iopoll_ww3'  # IO polling
                    )

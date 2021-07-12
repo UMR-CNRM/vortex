@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -57,6 +56,38 @@ oops_members_terms_lists = footprints.Footprint(
         ),
     )
 )
+
+#: Usual definition of the ``outputid`` attribute
+a_outputid = dict(
+    info="The identifier for the encoding of post-processed fields.",
+    optional=True,
+)
+
+#: Usual Footprint of the ``outputid`` attribute.
+outputid = footprints.Footprint(attr=dict(outputid=a_outputid))
+
+
+def _apply_outputid(cls):
+    """Decorator that tweak the class in order to add OUTPUTID on the namelist"""
+    orig_pnd = getattr(cls, 'prepare_namelist_delta', None)
+    if orig_pnd is None:
+        raise ImportError('_apply_outputid can not be applied on {!s}'.format(cls))
+
+    def prepare_namelist_delta(self, rh, namcontents, namlocal):
+        namw = orig_pnd(self, rh, namcontents, namlocal)
+        if self.outputid is not None and any(['OUTPUTID' in nam_b.macros()
+                                              for nam_b in namcontents.values()]):
+            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
+            namw = True
+        return namw
+
+    cls.prepare_namelist_delta = prepare_namelist_delta
+    return cls
+
+
+#: Decorated footprint for the ``outputid`` attribute
+outputid_deco = footprints.DecorativeFootprint(outputid,
+                                               decorator=[_apply_outputid, ])
 
 
 def show():

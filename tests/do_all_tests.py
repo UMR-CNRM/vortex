@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# The default interpreter is used but feel free to run this with either Python2.7
+# The default Python3 interpreter is used but feel free to run this with either Python2.7
 # or Python3.5 (and above)
 
 from __future__ import print_function, absolute_import, unicode_literals, division

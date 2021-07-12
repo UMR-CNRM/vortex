@@ -1,11 +1,14 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-TODO module description.
+Handle
+
+- standard Requests for Jeeves
+- Deposits (named pools elsewhere) to contain them
+
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import json
@@ -340,7 +343,7 @@ class Deposit(getbytag.GetByTag):
             return None, None
 
     def _first_clean(self):
-        """Run at deposit creation: set ``_last_clean``to force cleaning at initialization."""
+        """Run at deposit creation: set ``_last_clean`` to force cleaning at initialization."""
         if not self.cleaning:
             return
         self._lastclean = datetime.now() - timedelta(hours=1, seconds=self.minclean)
@@ -376,7 +379,8 @@ class Deposit(getbytag.GetByTag):
                     oldfiles[0].split('.')[1] + '-' + oldfiles[-1].split('.')[1] + '.zip'
                 )
                 self.logger.info('Zip', path=zipname, maxtime=cleaningtime, size=len(oldfiles))
-                with zipfile.ZipFile(zipname, 'w') as pzip:
+                with zipfile.ZipFile(zipname, 'w', compression=zipfile.ZIP_DEFLATED,
+                                     allowZip64=True) as pzip:
                     for xfile in oldfiles:
                         actualfile = os.path.join(self.path, xfile)
                         pzip.write(actualfile, xfile)

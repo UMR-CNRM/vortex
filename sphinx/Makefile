@@ -2,7 +2,7 @@
 # General options
 
 # Path to the Python interpreter
-PYTHON        = python
+PYTHON        = python3
 
 # Path to Vortex's doc checker
 CHECKDOC      = ../project/bin/checkdoc.py

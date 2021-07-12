@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Abstract class for any "Resource". "Resource" objects describe what is in this
@@ -109,7 +108,7 @@ class Resource(footprints.FootprintBase):
 
     def gget_basename(self):
         """Duck typing: return an empty string by default."""
-        return ''
+        return dict()
 
     def uget_basename(self):
         """Proxy to :meth:`gget_basename`."""

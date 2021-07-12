@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -578,3 +577,34 @@ class MetaDataReader(footprints.FootprintBase):
 
     def __str__(self):
         return six.text_type(self._data)
+
+
+class FormatAdapterAbstractImplementation(footprints.FootprintBase):
+    """
+    The minimal set of attributes needed to create a class that is compatible
+    with the :class:`FormatAdapter` content.
+    """
+
+    _abstract = True
+    _collector = ('dataformat',)
+    _footprint = dict(
+        attr=dict(
+            filename=dict(
+                info="Path to the target data.",
+            ),
+            openmode=dict(
+                info="File open-mode.",
+                values=['r', 'rw'],
+                default='r',
+                optional=True,
+            ),
+            fmtdelayedopen=dict(
+                info="Delay the opening of the listing file.",
+                type=bool,
+                default=True,
+                optional=True,
+            ),
+            format=dict(
+            ),
+        )
+    )

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Wrappers above usual AlgoComponents.
 """
@@ -44,6 +43,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
 
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
         from davai_tbx.expertise import task_status  # @UnresolvedImport
+        from davai_tbx.util import context_info_for_task_summary  # @UnresolvedImport
         status = task_status['X']
         # check reference and mention if reference was crashed too
         ref_summary = [s for s in self.context.sequence.effective_inputs(role=('Reference',
@@ -59,8 +59,9 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             status = task_status.get('X:R?', task_status['X'])
         # then write summary in promise
         summary = {'Status': status,
+                   'Context': context_info_for_task_summary(self.context),
                    'Exception': str(e),
-                   'Updated': date.now().isoformat().split('.')[0]}
+                   'Updated': date.utcnow().isoformat().split('.')[0]}
         promise = [x for x in self.promises
                    if x.role == 'TaskSummary']
         if len(promise) == 1:

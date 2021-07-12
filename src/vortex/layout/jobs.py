@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This modules defines helpers to build job's scripts.
@@ -878,6 +877,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
 
     @property
     def mtool_steps(self):
+        """The list of Task' steps asociated a given MTOOL step."""
         steps_map = {'transfer': ('early-fetch', 'fetch', 'backup', 'late-backup'),
                      'fetch': ('early-fetch', ),
                      'compute': ('early-fetch', 'fetch', 'compute', 'backup'),
@@ -887,6 +887,11 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         except KeyError:
             logger.error("Unknown MTOOL step: %s", self.stepid)
             return ()
+
+    @property
+    def is_last(self):
+        """Is it the laste MTOOL step (appart from the cleaning)."""
+        return self.stepid == self.lastid
 
     def plugable_extra_session_setup(self, t, **kw):
         """Set the rundir according to MTTOL's spool."""
@@ -1183,3 +1188,26 @@ class JobAssistantAppWideLockPlugin(JobAssistantPlugin):
         """Should be called when a job fails."""
         if self._appwide_lock_acquired is not False:
             self._appwide_lock_release(t)
+
+
+class JobAssistantRdMailSetupPlugin(JobAssistantPlugin):
+    """Activate/Deactivate mail actions for R&D tasks."""
+
+    _footprint = dict(
+        info='JobAssistant to deal with application wide locks.',
+        attr = dict(
+            kind=dict(
+                values=['rd_mail_setup', ]
+            ),
+        )
+    )
+
+    def plugable_actions_setup(self, t, **kw):
+        """Acquire the lock on job startup."""
+        if self.masterja.conf.get('mail_to', None):
+            todo = {a for a in ad.actions
+                    if a.endswith('mail') and a not in ('mail', 'opmail')}
+            for candidate in todo:
+                for action in ad.candidates(candidate):
+                    logger.info('Activating the << %s >> action.', action.kind)
+                    action.on()

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -29,6 +28,7 @@ from vortex.algo.components import AlgoComponentError
 import vortex.layout.monitor as _lmonitor
 
 from .ifsroot import IFSParallel
+from common.syntax.stdattrs import outputid_deco
 
 #: No automatic export
 __all__ = []
@@ -166,77 +166,76 @@ class FullPosServer(IFSParallel):
     _SERVERSYNC_RUNONSTARTUP = False
     _SERVERSYNC_STOPONEXIT = False
 
-    _footprint = dict(
-        attr = dict(
-            kind = dict(
-                values   = ['fpserver', ],
-            ),
-            outputid = dict(
-                info     = "The identifier for the encoding of post-processed fields.",
-                optional = True,
-            ),
-            outdirectories = dict(
-                info     = "The list of possible output directories.",
-                type     = footprints.stdtypes.FPList,
-                default  = footprints.stdtypes.FPList(['.', ]),
-                optional = True,
-            ),
-            append_domain = dict(
-                info     = ("If defined, the output file for domain append_domain " +
-                            "will be made a copy of the input file (prior to the " +
-                            "server run"),
-                optional = True,
-            ),
-            basedate=dict(
-                info     = "The run date of the coupling generating process",
-                type     = Date,
-                optional = True
-            ),
-            xpname = dict(
-                default  = 'FPOS'
-            ),
-            conf = dict(
-                default  = 903,
-            ),
-            timestep=dict(
-                default  = 1.,
-            ),
-            timeout = dict(
-                type     = int,
-                optional = True,
-                default  = 300,
-            ),
-            refreshtime = dict(
-                info     = "How frequently are the expected input files looked for ? (seconds)",
-                type     = int,
-                optional = True,
-                default  = 20,
-            ),
-            server_run = dict(
-                # This is a rw attribute: it will be managed internally
-                values   = [True, False]
-            ),
-            serversync_method = dict(
-                default  = 'simple_socket',
-            ),
-            serversync_medium = dict(
-                default  = 'nextfile_wait',
-            ),
-            maxpollingthreads = dict(
-                type     = int,
-                optional = True,
-                default  = 8,
-            ),
-            flypoll = dict(
-                default  = 'internal',
-            ),
-            defaultformat = dict(
-                info = "Format for the legacy output files.",
-                default = 'fa',
-                optional = True
+    _footprint = [
+        outputid_deco,
+        dict(
+            attr = dict(
+                kind = dict(
+                    values   = ['fpserver', ],
+                ),
+                outdirectories = dict(
+                    info     = "The list of possible output directories.",
+                    type     = footprints.stdtypes.FPList,
+                    default  = footprints.stdtypes.FPList(['.', ]),
+                    optional = True,
+                ),
+                append_domain = dict(
+                    info     = ("If defined, the output file for domain append_domain " +
+                                "will be made a copy of the input file (prior to the " +
+                                "server run"),
+                    optional = True,
+                ),
+                basedate=dict(
+                    info     = "The run date of the coupling generating process",
+                    type     = Date,
+                    optional = True
+                ),
+                xpname = dict(
+                    default  = 'FPOS'
+                ),
+                conf = dict(
+                    default  = 903,
+                ),
+                timestep=dict(
+                    default  = 1.,
+                ),
+                timeout = dict(
+                    type     = int,
+                    optional = True,
+                    default  = 300,
+                ),
+                refreshtime = dict(
+                    info     = "How frequently are the expected input files looked for ? (seconds)",
+                    type     = int,
+                    optional = True,
+                    default  = 20,
+                ),
+                server_run = dict(
+                    # This is a rw attribute: it will be managed internally
+                    values   = [True, False]
+                ),
+                serversync_method = dict(
+                    default  = 'simple_socket',
+                ),
+                serversync_medium = dict(
+                    default  = 'nextfile_wait',
+                ),
+                maxpollingthreads = dict(
+                    type     = int,
+                    optional = True,
+                    default  = 8,
+                ),
+                flypoll = dict(
+                    default  = 'internal',
+                ),
+                defaultformat = dict(
+                    info = "Format for the legacy output files.",
+                    default = 'fa',
+                    optional = True
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -646,8 +645,6 @@ class FullPosServer(IFSParallel):
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
         super(FullPosServer, self).prepare_namelist_delta(rh, namcontents, namlocal)
-        if self.outputid:
-            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
         # With cy43: &NAMCT0 CSCRIPT_PPSERVER=__SERVERSYNC_SCRIPT__, /
         if self.inputs.anyexpected:
             self._set_nam_macro(namcontents, namlocal, 'SERVERSYNC_SCRIPT',
@@ -763,6 +760,8 @@ class FullPosServer(IFSParallel):
             ordered_processing = (self.xxtmapping or
                                   any([o_rh.resource.fp_terms is not None
                                        for o_rh in self.object_namelists]))
+            if ordered_processing:
+                logger.info('Input data will be processed chronologicaly.')
 
             # IO poll settings
             self.io_poll_kwargs['nthreads'] = self.maxpollingthreads
@@ -786,25 +785,27 @@ class FullPosServer(IFSParallel):
             for istuff, iguesses in zip(self.inputs.tododata, self.inputs.guessdata):
                 iinputs = {_lmonitor.InputMonitorEntry(s) for s in istuff.values()}
                 iinputs |= {_lmonitor.InputMonitorEntry(g.sec) for g in iguesses}
+                iterm = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
+                                                 self.inputs.firstprefix].rh)
                 all_entries.update(iinputs)
                 bgang = _lmonitor.BasicGang()
-                bgang.info = (istuff, iguesses)
                 bgang.add_member(* iinputs)
+                igang = _lmonitor.MetaGang()
+                igang.info = (istuff, iguesses, iterm)
+                igang.add_member(bgang)
                 # If needed, wait for the previous terms to complete
                 if ordered_processing:
-                    my_term = self._actual_term(istuff[self._MODELSIDE_INPUTPREFIX0 +
-                                                       self.inputs.firstprefix].rh)
-                    if cur_term is not None and cur_term != my_term:
+                    if cur_term is not None and cur_term != iterm:
                         # Detect term's change
                         prev_term_gangs = cur_term_gangs
                         cur_term_gangs = set()
                     if prev_term_gangs:
                         # Wait for the gangs of the previous terms
-                        bgang.add_member(* prev_term_gangs)
+                        igang.add_member(* prev_term_gangs)
                     # Save things up for the next time
-                    cur_term_gangs.add(bgang)
-                    cur_term = my_term
-                metagang.add_member(bgang)
+                    cur_term_gangs.add(igang)
+                    cur_term = iterm
+                metagang.add_member(igang)
             bm = _lmonitor.ManualInputMonitor(self.context, all_entries,
                                               caching_freq=self.refreshtime,)
 
@@ -814,13 +815,20 @@ class FullPosServer(IFSParallel):
             server_stopped = False
             with bm:
                 while not bm.all_done or len(bm.available) > 0:
+
+                    # Fetch available inputs and sort them
+                    ibatch = list()
                     while metagang.has_collectable():
                         thegang = metagang.pop_collectable()
-                        (istuff, iguesses) = thegang.info
+                        ibatch.append(thegang.info)
+                    ibatch.sort(key=lambda item: item[2])  # Sort according to the term
+
+                    # Deal with the various available inputs
+                    for (istuff, iguesses, iterm) in ibatch:
                         sh.highlight("The Fullpos Server is triggered (step={:d})..."
                                      .format(current_i))
 
-                        # Link for the initfile (if needed)
+                        # Link for the init file (if needed)
                         if current_i == 0 and not self.inputs.inidata:
                             for iprefix, isec in istuff.items():
                                 i_init = '{:s}{:s}INIT'.format(iprefix, self.xpname)

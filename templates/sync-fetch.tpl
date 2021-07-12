@@ -1,6 +1,8 @@
 #!$python $pyopts
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function, absolute_import, unicode_literals, division
+
 import os, sys, io, glob, json, time, datetime
 
 exit_value = 0
@@ -10,7 +12,10 @@ sync_name = sys.argv[0].lstrip('./')
 with io.open(sync_name + '.log', mode='a', buffering=1) as flog:
 
     def logging(*msg):
-        flog.write(unicode(' '.join([str(m) for m in msg]) + '\n'))
+        if sys.version_info.major == 2:
+            flog.write(unicode(' '.join([str(m) for m in msg]) + '\n'))
+        else:
+            flog.write(' '.join([str(m) for m in msg]) + '\n')
 
     logging('-' * 80)
     logging('Sync tool:', sync_name)
@@ -32,7 +37,7 @@ with io.open(sync_name + '.log', mode='a', buffering=1) as flog:
     promise_info = None
 
     if os.stat(promise_file).st_size < 4096:
-        with open(promise_file, 'rb') as fd:
+        with io.open(promise_file, 'r') as fd:
             promise_info = json.load(fd)
     else:
         logging('Sync size:', 'promise file is far too big')

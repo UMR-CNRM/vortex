@@ -1,30 +1,24 @@
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
-      cycle: mo11_mocage@fcst-main.07
-      date: 2021033112
       edition: null
       genv: '[cycle]'
-      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: &id001 !test_names.core.TestParameters
-        cutoff: assim
-        cycle: mo07_mocage@camsfcst-main.05
-        date: 2018010100
-        geometry: glob22
+        cutoff: production
+        cycle: mo11_mocage@fcst-main.08
+        date: 2021041500
+        geometry: glob11
         gnamespace: gco.multi.fr
         model: mocage
         namespace: vortex.multi.fr
         vapp: mocage
-        vconf: camsfcst
+        vconf: fcst
       location: gget://gco.multi.fr/tampon/grib.template.prevair.GLOB11.01
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
-      cycle: mo11_mocage@fcst-main.07
-      date: 2021033112
       edition: 1
       genv: '[cycle]'
-      geometry: glob11
       kind: gribtpl
     results: !test_names.core.TestResults
     - default: *id001
@@ -35,18 +29,18 @@
       kind: chemical_surf
     results: !test_names.core.TestResults
     - default: *id001
-      location: gget://gco.multi.fr/tampon/cams.table.chemscheme.surf.02
+      location: gget://gco.multi.fr/tampon/cams.table.chemscheme.surf.04
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       genv: '[cycle]'
       kind: emiss_cst
     results: !test_names.core.TestResults
     - default: *id001
-      location: gget://gco.multi.fr/tampon/cams.surface.emissions.03.tgz
+      location: gget://gco.multi.fr/tampon/surface.emissions.glob11.02.tgz
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       genv: '[cycle]'
       kind: firecst
     results: !test_names.core.TestResults
     - default: *id001
-      location: gget://gco.multi.fr/tampon/cams.config.fires.02.tgz
+      location: gget://gco.multi.fr/tampon/cams.config.fires.05.tgz

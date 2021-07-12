@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -26,7 +25,10 @@ logger = loggers.getLogger(__name__)
 
 
 class Coupling(FullPos):
-    """Coupling for IFS-like LAM Models."""
+    """Coupling for IFS-like LAM Models.
+
+    OBSOLETE a/c cy46 (use the 903 configuration / fullpos server instead).
+    """
 
     _footprint = dict(
         info = "Create coupling files for a Limited Area Model.",
@@ -200,7 +202,10 @@ class Coupling(FullPos):
 
 
 class CouplingLAM(Coupling):
-    """Coupling for LAM to LAM Models (useless beyond cy40)."""
+    """Coupling for LAM to LAM Models (useless beyond cy40).
+
+    OBSOLETE a/c cy40.
+    """
 
     _footprint = dict(
         info = "Create coupling files for a Limited Area Model (useless beyond cy40).",
@@ -356,7 +361,7 @@ class Prep(BlindRun, DrHookDecoMixin):
 
 
 class C901(IFSParallel):
-    """Run of C931 configuration"""
+    """Run of C901 configuration."""
 
     _footprint = dict(
         info = "Run C901 configuration",

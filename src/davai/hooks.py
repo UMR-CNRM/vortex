@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Hooks for special DAVAI processings.
 """
@@ -19,10 +18,18 @@ logger = loggers.getLogger(__name__)
 
 
 def take_the_DAVAI_train(t, rh,
-                         fatal=True):
+                         fatal=True,
+                         wagons='__all__'):
     """Usual double put of summaries for DAVAI."""
-    send_to_DAVAI_server(t, rh, fatal=fatal)
-    throw_summary_on_stack(t, rh)
+    if wagons == '__all__':
+        wagons = ['ciboulai', 'stack']
+    elif isinstance(wagons, str):
+        wagons = wagons.split(',')
+    # call sub-puts
+    if 'ciboulai' in wagons:
+        send_to_DAVAI_server(t, rh, fatal=fatal)
+    if 'stack' in wagons:
+        throw_summary_on_stack(t, rh)
 
 
 def throw_summary_on_stack(t, rh):

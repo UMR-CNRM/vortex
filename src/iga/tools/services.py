@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -376,6 +375,7 @@ class RoutingService(Service):
             ),
             sshhost   = dict(
                 optional = True,
+                default  = None,
             ),
             maxtries = dict(
                 type     = int,
@@ -388,9 +388,8 @@ class RoutingService(Service):
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
-        self._actual_filename = self.sh.path.abspath(self.filename)
-        self._actual_filename = self.sh.forcepack(self._actual_filename,
-                                                  fmt=self.filefmt)
+        absolute_name = self.sh.path.abspath(self.filename)
+        self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -468,6 +467,7 @@ class RoutingService(Service):
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
                 rc = self.sh.spawn(cmdline, shell=True, output=True)
+                print('\n\t'.join(rc))
             else:
                 sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                 rc = sshobj.execute(cmdline)
@@ -1080,8 +1080,7 @@ class OpMailService(TemplatedMailService):
         )
     )
 
-    def __init__(self, *args, **kw):
-        super(OpMailService, self).__init__(*args, **kw)
+    _TEMPLATES_SUBDIR = 'opmails'
 
     def deactivated(self):
         """Tells if opmail is deactivated : OP_MAIL set to 0"""
@@ -1108,13 +1107,6 @@ class OpMailService(TemplatedMailService):
         else:
             sdict.setdefault('MEMBER_S1_FR_FR', '')
         return sdict
-
-    def _template_name_rewrite(self, tplguess):
-        if not tplguess.startswith('@opmails/'):
-            tplguess = '@opmails/' + tplguess
-        if not tplguess.endswith('.tpl'):
-            tplguess += '.tpl'
-        return tplguess
 
     def header(self):
         """String prepended to the message body."""

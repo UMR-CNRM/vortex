@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -21,6 +20,7 @@ from vortex.syntax.stdattrs import model
 from vortex.util.structs import ShellEncoder
 from .ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
+from common.syntax.stdattrs import outputid_deco
 
 
 #: No automatic export
@@ -32,36 +32,62 @@ logger = loggers.getLogger(__name__)
 class Forecast(IFSParallel):
     """Forecast for IFS-like Models."""
 
-    _footprint = dict(
-        info = "Run a forecast with Arpege/IFS.",
-        attr = dict(
-            kind = dict(
-                values   = ['forecast', 'fc'],
-                remap    = dict(forecast = 'fc')
-            ),
-            flyargs = dict(
-                default = ('ICMSH', 'PF'),
-            ),
-            xpname = dict(
-                default  = 'FCST'
-            ),
-            ddhpack = dict(
-                info        = "After run, gather the DDH output file in directories.",
-                type        = bool,
-                optional    = True,
-                default     = False,
-                doc_zorder  = -5,
-            ),
-            outputid = dict(
-                info        = "The identifier for the encoding of post-processed fields.",
-                optional    = True,
+    _footprint = [
+        outputid_deco,
+        dict(
+            info = "Run a forecast with Arpege/IFS.",
+            attr = dict(
+                kind = dict(
+                    values   = ['forecast', 'fc'],
+                    remap    = dict(forecast = 'fc')
+                ),
+                hist_terms = dict(
+                    info     = "The list of terms when historical file production is requested.",
+                    type     = footprints.FPList,
+                    optional = True,
+                ),
+                surfhist_terms = dict(
+                    info     ="The list of terms when surface file production is requested.",
+                    type     = footprints.FPList,
+                    optional = True,
+                ),
+                pos_terms=dict(
+                    info     = "The list of terms when post-processed data is requested.",
+                    type     = footprints.FPList,
+                    optional = True,
+                ),
+                s_norm_terms=dict(
+                    info     = "The list of terms when spectal norms should be computed.",
+                    type     = footprints.FPList,
+                    optional = True,
+                ),
+                flyargs = dict(
+                    default  = ('ICMSH', 'PF'),
+                ),
+                xpname = dict(
+                    default  = 'FCST'
+                ),
+                ddhpack = dict(
+                    info        = "After run, gather the DDH output file in directories.",
+                    type        = bool,
+                    optional    = True,
+                    default     = False,
+                    doc_zorder  = -5,
+                ),
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
         return 'forecast'
+
+    def _outputs_configurator(self, bin_rh):
+        return footprints.proxy.ifsoutputs_configurator(
+            model=self.model,
+            cycle=bin_rh.resource.cycle,
+            fcterm_unit=self.fcunit,
+        )
 
     def prepare(self, rh, opts):
         """Default pre-link for the initial condition file"""
@@ -111,12 +137,18 @@ class Forecast(IFSParallel):
                                                                 kind='namelist')]
 
     def prepare_namelist_delta(self, rh, namcontents, namlocal):
-        namw = super(Forecast, self).prepare_namelist_delta(rh, namcontents, namlocal)
-        if self.outputid is not None and any(['OUTPUTID' in nam_b.macros()
-                                              for nam_b in namcontents.values()]):
-            self._set_nam_macro(namcontents, namlocal, 'OUTPUTID', self.outputid)
-            namw = True
-        return namw
+        nam_updated = super(Forecast, self).prepare_namelist_delta(
+            rh, namcontents, namlocal
+        )
+        if namlocal == 'fort.4':
+            o_conf = self._outputs_configurator(rh)
+            o_conf.modelstate = self.hist_terms
+            o_conf.surf_modelstate = self.surfhist_terms
+            o_conf.post_processing = self.pos_terms
+            o_conf.spectral_diag = self.s_norm_terms
+            nam_updated_bis = o_conf(namcontents, namlocal)
+            nam_updated = nam_updated or nam_updated_bis
+        return nam_updated
 
     def postfix(self, rh, opts):
         """Find out if any special resources have been produced."""
@@ -243,6 +275,7 @@ class LAMForecast(Forecast):
 
 
 class DFIForecast(LAMForecast):
+    """OBSOLETE CODE: do not use."""
 
     _footprint = dict(
         info = "Run a forecast with an Arpege/IFS like Limited Area Model (with DFIs).",
@@ -263,7 +296,10 @@ class DFIForecast(LAMForecast):
 
 
 class FullPos(IFSParallel):
-    """FUllpos for geometries transforms in IFS-like Models."""
+    """Fullpos for geometries transforms in IFS-like Models.
+
+    OBSOLETE a/c cy46 (use the 903 configuration / fullpos server instead).
+    """
 
     _abstract = True
     _footprint = dict(
@@ -293,7 +329,10 @@ class FullPos(IFSParallel):
 
 
 class FullPosGeo(FullPos):
-    """FUllpos for geometries transforms in IFS-like Models."""
+    """Fullpos for geometries transforms in IFS-like Models.
+
+    OBSOLETE a/c cy46 (use the 903 configuration / fullpos server instead).
+    """
 
     _footprint = dict(
         info = "Run a fullpos to interpolate to a new geometry",
@@ -401,7 +440,10 @@ class FullPosGeo(FullPos):
 
 
 class FullPosBDAP(FullPos):
-    """Post-processing for IFS-like Models."""
+    """Post-processing for IFS-like Models.
+
+    OBSOLETE a/c cy46 (use the 903 configuration / fullpos server instead).
+    """
 
     _footprint = dict(
         info = "Run a fullpos to post-process raw model outputs",

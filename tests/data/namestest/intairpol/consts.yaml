@@ -1,33 +1,28 @@
 default:
     style: olive
     sets:
-        -   date: 2018010100
-            geometry: glob22
-            cutoff: assim
+        -   date: 2021041500
+            geometry: glob11
+            cutoff: production
             model: mocage
             namespace: vortex.multi.fr
-            cycle: mo07_mocage@camsfcst-main.05
+            cycle: mo11_mocage@fcst-main.08
             gnamespace: 'gco.multi.fr'
             vapp: mocage
-            vconf: camsfcst
+            vconf: fcst
 
 register:
     genv:
-        - mo07_mocage@camsfcst-main.05
-        - mo11_mocage@fcst-main.07
+        - mo11_mocage@fcst-main.08
 
 todo:
     -   commons:
             genv: '[cycle]'
         tests:
-            -   kind: emiss_cst
-            -   kind: chemical_surf
             -   kind: firecst
-            # incompatible change at the time of unification
             -   kind: gribtpl
-                date: 2021033112
-                cycle: mo11_mocage@fcst-main.07
-                geometry: glob11
                 edition:
                     - null
                     - 1
+            -   kind: chemical_surf
+            -   kind: emiss_cst

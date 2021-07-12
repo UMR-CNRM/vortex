@@ -40,3 +40,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: CutoffDispenser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: BdmBufrListingsFormatAdapter
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

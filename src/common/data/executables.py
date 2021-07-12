@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Various Resources for executables used in NWP.
@@ -10,7 +9,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import vortex
 
 from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle
+from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
 
 #: No automatic export
 __all__ = []
@@ -47,6 +46,8 @@ class IFSModel(NWPModel):
 
     _footprint = [
         arpifs_cycle,
+        executable_flavour_deco,
+        gmkpack_compiler_identification_deco,
         gvar,
         dict(
             info = 'IFS Model',
