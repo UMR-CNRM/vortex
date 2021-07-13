@@ -11,7 +11,6 @@ from . import flow
 from . import executables
 from . import gridfiles
 from . import outflow
-from . import resources
 
 #: No automatic export
 __all__ = []
