@@ -250,7 +250,7 @@ class PidFile(object):
     def reset(self):
         """Create the pid file (would erase an older one) and lock it."""
         try:
-            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR)
+            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR, 0o644)
         except IOError as iotrouble:
             sys.exit('Failed to open pidfile: %s' % str(iotrouble))
         assert not fcntl.flock(self._fd, fcntl.LOCK_EX)
