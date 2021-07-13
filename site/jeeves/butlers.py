@@ -476,6 +476,7 @@ class BaseDaemon(object):
                 os.rename(self.stdout, os.path.join(
                     newpath, oldname + '.' + pools.timestamp()
                 ))
+            os.umask(0o0022)
             stdnew = open(self.stdout, 'a+', 1)
             os.dup2(stdnew.fileno(), sys.stdout.fileno())
             os.dup2(stdnew.fileno(), sys.stderr.fileno())
