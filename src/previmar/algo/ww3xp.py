@@ -15,6 +15,7 @@ __all__ = []
 import io
 import time
 import footprints
+import vortex
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period
@@ -166,6 +167,10 @@ class Ww3_ounpAlgo(BlindRun):
                 info='Time between the beginning of the simulation and the run date',
                 type = Time,
             ),
+            rundate = dict(
+                info = 'Run date',
+                type = Date,
+            ),
         )
     )
 
@@ -178,7 +183,7 @@ class Ww3_ounpAlgo(BlindRun):
             raise IOError("No or too much namelists for WW3_ounp")
 
         namcontents = namcandidate[0].rh.contents
-        rundate = namcandidate[0].rh.resource.date
+        rundate = self.rundate
         start_date = rundate - self.anaterm
         logger.info("substituted values %s  %s", start_date.ymd, start_date.hm + '00')
         dictkeyvalue = dict()
@@ -501,13 +506,13 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 param = fname.split('_')[1]
                 param = param.split('.')[0]
                 file_cst = "{0:s}_{1:s}".format(headconst, param)
-                term = (self.dateval - self.datpivot).time
+                term = (self.dateval - self.datpivot).total_seconds()
                 # Split the case of analysis and forecast
                 if term <= 0:
                     fic_prod = "{0:s}_{1:s}_{2:s}.grb".format(head_filename, param, self.dateval.ymdh)
                 else:
                     fic_prod = "{0:s}_{1:s}_{2:s}{3:04d}.grb".format(head_filename, param, self.datpivot.ymdh,
-                                                                     term.hour)
+                                                                     int(term / 3600))
                 # set of namelist
                 namcontents.setmacro("NOM_PARAM", param)
                 namcontents.setmacro('FILENAME', fname)
