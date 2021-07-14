@@ -152,7 +152,7 @@ def makejob(job):
         print(_INFO_PRINT_FMT.format(k, v))
 
     if not opts['name']:
-        vortex.logger.error('A job name sould be provided.')
+        vortex.logger.error('A job name should be provided.')
         exit(1)
 
     corejob, tplconf = mkjob(t, auto_options_filter=('extra_wrapper',
@@ -166,7 +166,7 @@ def makejob(job):
         print(_INFO_PRINT_FMT.format(k, v))
 
     def _wrap_launch(jobfile):
-        """Launch the **jobfile** script using **extra_wrapper*."""
+        """Launch the **jobfile** script using **extra_wrapper**."""
         if not t.sh.path.isabs(jobfile):
             jobfile = t.sh.path.abspath(jobfile)
         t.sh.xperm(jobfile, force=True)
