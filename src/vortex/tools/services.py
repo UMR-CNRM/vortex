@@ -545,7 +545,7 @@ class HideService(Service):
     )
 
     def find_rootdir(self, filename):
-        """Find a path for hidding files on the same filesystem."""
+        """Find a path for hiding files on the same filesystem."""
         username = self.sh.getlogname()
         work_dir = self.sh.path.join(self.sh.find_mount_point(filename), 'work')
         if not self.sh.path.exists(work_dir):
@@ -553,7 +553,7 @@ class HideService(Service):
             fullpath = self.sh.path.realpath(filename)
             if username not in fullpath:
                 logger.error('No login <%s> in path <%s>', username, fullpath)
-                raise ValueError('Login name not in actual path for hidding data')
+                raise ValueError('Login name not in actual path for hiding data')
             work_dir = fullpath.partition(username)[0]
             logger.warning("using work_dir = <%s>", work_dir)
         hidden_path = self.sh.path.join(work_dir, username, self.headdir)
