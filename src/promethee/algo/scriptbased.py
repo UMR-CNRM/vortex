@@ -68,8 +68,8 @@ class PrometheeAlgo(Expresso):
                 values      = ["promethee_algo"],
             ),
             interpreter = dict(
-                info        = "The interpreter needed to run the script.",
-                values      = ["python3.7", "/opt/softs/anaconda3/bin/python", "python", ],
+                optional    = True,
+                default     = "python"
             ),
             engine = dict(
                 optional    = True,
