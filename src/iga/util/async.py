@@ -84,8 +84,9 @@ def system_route(pnum, ask, config, logger, **opts):
         sh.trace = False
         data = vwork.get_dataset(ask)
 
-        # not before python3.2: tempfile.TemporaryDirectory
-        tmpdir = tempfile.mkdtemp(prefix=data.source + '_', suffix='.tmp')
+        tmpdir = '/chaine/utmp/mxpt001/route/' + sh.path.basename(data.source)
+        logger.info('data.source is    = ' + data.source)
+        logger.info('working in tmpdir = ' + tmpdir)
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
 
             # assert the source is there
