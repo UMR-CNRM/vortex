@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -17,7 +17,7 @@ logger = loggers.getLogger(__name__)
 
 
 class IO_Poll_Marine(addons.Addon):
-    """TODO: Class documentation."""
+    """Polling of the outputs to collect in real-time"""
     _footprint = dict(
         info = 'Default io_poll marine system interface',
         attr = dict(

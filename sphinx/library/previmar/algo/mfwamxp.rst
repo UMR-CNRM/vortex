@@ -1,8 +1,8 @@
-:mod:`previmar.algo.mfwamxp` --- TODO description
-=================================================
+:mod:`previmar.algo.mfwamxp` --- Algo for MFWAM production
+==========================================================
 
 .. automodule:: previmar.algo.mfwamxp
-   :synopsis: TODO description
+   :synopsis: Algo for MFWAM production
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

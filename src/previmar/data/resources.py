@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine resources.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -384,38 +384,6 @@ class SARdataWave(GenericWaveSatelliteData):
 
 
 @namebuilding_append('src', lambda s: s.fields)
-class ForcingWindNetcdf(GeoFlowResource):
-    """Class for netcdf  wind forcing for WW3.
-
-    :note: (LFM) Useless ? see `common.data.boundaries.ExternalForcing`
-           or `common.data.boundaries.ExternalTimePeriodForcing`
-    """
-    _footprint = dict(
-        info = 'wind forcing for ww3 input',
-        attr = dict(
-            kind = dict(
-                values = ['windNetcdf'],
-            ),
-            nativefmt = dict(
-                values  = ['netcdf'],
-                default = 'netcdf',
-            ),
-            fields = dict(
-                values = ['wind'],
-            ),
-            model = dict(
-                values = ['ww3'],
-            ),
-
-        )
-    )
-
-    @property
-    def realkind(self):
-        return 'WindNetcdf'
-
-
-@namebuilding_append('src', lambda s: s.fields)
 class TarResultBoundww3(GeoFlowResource):
     """Class for ww3 boundaries spectra converted from mfwam  (tar file: ww3....spec)."""
     _footprint = dict(
@@ -438,13 +406,12 @@ class TarResultBoundww3(GeoFlowResource):
         )
     )
 
-    # LFM: realkind is mandatory. Please define it!
     @property
     def realkind(self):
         return 'tarspecmfwam2ww3'
 
 
-@namebuilding_append('src', lambda s: s.field)
+@namebuilding_append('src', lambda s: s.fields)
 class Ww3IntermediateResults(GeoFlowResource):
     """Class for ww3 Intermediate result (.ww3)."""
     _footprint = dict(
@@ -463,21 +430,13 @@ class Ww3IntermediateResults(GeoFlowResource):
         )
     )
 
-    # LFM: realkind is mandatory. Please define it!
     @property
     def realkind(self):
         return 'ww3IntermedResult'
 
 
-@namebuilding_append('src', lambda s: s.dateval.ymdh)
 class Ww3DatedIntermediateResults(Ww3IntermediateResults):
     """Class for ww3 Intermediate result (.ww3) with a date.
-
-    :note: (LFM) This resource already has a date/cutoff attribute (inherited
-           from `GeoFlowResource`). What is the meaning of `dateval`? Because
-           of its name, one may assume that it refers to the validity date:
-           let's hope not because it will be redundant with term (since the
-           validity date is date + term).
     """
     _footprint = [
         term_deco,
@@ -486,13 +445,6 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
             attr = dict(
                 kind = dict(
                     values = ['ww3DatedIntermedResult'],
-                ),
-                dateval = dict(
-                    info = 'TODO comment.',
-                    type = Date,
-                ),
-                term = dict(
-                    optional = True
                 )
             )
         )
@@ -500,18 +452,13 @@ class Ww3DatedIntermediateResults(Ww3IntermediateResults):
 
 
 @namebuilding_append('src', lambda s: s.fields)
-@namebuilding_append('src', lambda s: s.dateval.ymdh)
 class WW3Out(GeoFlowResource):
-    """Class for ww3 parameters output raw netcdf.
-
-    :note: (LFM) is it netcdf or tar ? (the documentation contredict itself)
-
-    :note: (LFM) idem for `dateval`.
+    """Class for ww3 parameters output tar of raw netcdf.
     """
     _footprint = [
         term_deco,
         dict(
-            info = 'ww3 parameters output raw netcdf',
+            info = 'ww3 parameters output tar',
             attr = dict(
                 kind = dict(
                     values = ['ww3outpts', 'ww3outsurf'],
@@ -526,13 +473,6 @@ class WW3Out(GeoFlowResource):
                 model = dict(
                     values = ['ww3'],
                 ),
-                dateval = dict(
-                    info='TODO comment.',
-                    type = Date,
-                ),
-                term = dict(
-                    optional = True,
-                ),
             )
         )
     ]
@@ -540,56 +480,3 @@ class WW3Out(GeoFlowResource):
     @property
     def realkind(self):
         return 'WW3Out'
-
-
-@namebuilding_append('src', lambda s: s.header, none_discard=True)
-@namebuilding_append('src', lambda s: s.param)
-@namebuilding_append('src', lambda s: s.origin)
-@namebuilding_append('src', lambda s: s.datpivot.ymdh)
-class WWW3FieldOut(FlowResource):
-    """Class for ww3 parameters output (nc).
-
-    :note: (LFM) The documentation implies that these are fields. What is the
-           geometry?
-
-    :note: (LFM) idem for `dateval`.
-
-    :note: (LFM) The `common.data.modelstates.Historic` class is available. Why WW3
-           outputs should use a dedicated class?
-    """
-    _footprint = [
-        term_deco,
-        dict(
-            info = 'ww3 parameters output',
-            attr = dict(
-                kind = dict(
-                    values = ['ww3outsurf'],
-                ),
-                nativefmt = dict(
-                    values = ['netcdf', 'grib'],
-                ),
-                param = dict(
-                ),
-                header = dict(
-                    optional = True,
-                ),
-                origin = dict(
-                    values = ['ana', 'fcst'],
-                ),
-                model = dict(
-                    values = ['ww3'],
-                ),
-                datpivot = dict(
-                    info='TODO comment.',
-                    type = Date,
-                ),
-                term = dict(
-                    optional = True,
-                ),
-            )
-        )
-    ]
-
-    @property
-    def realkind(self):
-        return 'WW3OutField'

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine namelists.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -9,11 +9,12 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date
 
+from vortex.data.contents import DataTemplate
 from vortex.data.outflow import ModelResource
+from vortex.syntax.stdattrs import model_deco
 from gco.syntax.stdattrs import gvar, gdomain
 from previmar.data.contents import SurgeTemplate
-from common.data.namelists import Namelist
-from vortex.data.contents import DataTemplate
+from common.data.configfiles import AsciiConfig
 
 #: No automatic export
 __all__ = []
@@ -60,69 +61,26 @@ class BlkdatNamFiles(ModelResource):
         return "blkdat_nam_file"
 
 
-class NamelistWW3(Namelist):
-    """Namelists of pre- and postprocessing of WW3.
+class WW3ConfigFiles(AsciiConfig):
+    """WW3 namelists with necessary modification of the contents."""
 
-    :note: (LFM) The need for this new class is not obvious to me. Why is it not
-           enough to use the bare Namelist class?
-    """
-
-    _footprint = dict(
-        info = 'Namelist of pre- and postprocessing of WW3',
-        attr = dict(
-            kind = dict(
-                values   = ['ww3nam', ],
-            ),
-            binary = dict(
-                values   = ['ww3_prnc', 'ww3_bound', 'spectra_mfwam_to_ww3', 'ww3',
-                            'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb'],
-                optional = False,
-            ),
-            model = dict(
-                values   = ['ww3', ],
-            ),
-            gvar = dict(
-                values   = ['NAMELIST_' + x.upper() for x in ['ww3', 'ww3_prnc', 'ww3_bound',
-                            'spectra_mfwam_to_ww3', 'ww3_ounf', 'ww3_ounp', 'ww3_ncgrb']],
-            ),
+    _footprint = [
+        model_deco,
+        dict(
+            info = " namelists to tweak",
+            attr = dict(
+                kind = dict(
+                    values = ["ww3config"]
+                ),
+                model = dict(
+                    values   = ['ww3', ],
+                ),
+                clscontents = dict(
+                    default = DataTemplate
+                ),
+            )
         )
-    )
-
-    @property
-    def realkind(self):
-        return "ww3_nam_file"
-
-
-class WW3ConfigFiles(Namelist):
-    """TODO: Class documentation.
-
-    :note: (LFM) These files are not namelist but they inherit from `Namelist`.
-           I don't see the logic behind this. An alternative would be
-           `common.data.configfiles.AsciiConfig`
-    """
-
-    _footprint = dict(
-        info = " list to tweak",
-        attr = dict(
-            kind = dict(
-                values = ["ww3config"]
-            ),
-            model = dict(
-                values   = ['ww3', ],
-            ),
-            clscontents = dict(
-                default = DataTemplate
-            ),
-            binary = dict(
-                values   = ['ww3_shel', 'ww3_ounf', 'ww3_ounp'],
-                optional = False,
-            ),
-            gvar = dict(
-                values   = ['NAMELIST_' + x.upper() for x in ['ww3_shel', 'ww3_ounf', 'ww3_ounp']],
-            ),
-
-        )
-    )
+    ]
 
     @property
     def realkind(self):

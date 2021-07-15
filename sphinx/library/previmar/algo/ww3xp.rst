@@ -1,8 +1,8 @@
-:mod:`previmar.algo.ww3xp` --- TODO description
-=================================================
+:mod:`previmar.algo.ww3xp` --- Algo for WW3 production
+======================================================
 
 .. automodule:: previmar.algo.ww3xp
-   :synopsis: TODO description
+   :synopsis: Algo for WW3 production
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
@@ -15,11 +15,6 @@ Classes
 -------
 
 .. autoclass:: ConvNetcdfGribAlgo
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: ConvNetcdfGribAlgoold
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -49,10 +44,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Ww3_ounpAlgo_para
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 
 Abstract Classes
