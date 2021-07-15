@@ -15,7 +15,6 @@ __all__ = []
 import io
 import time
 import footprints
-import vortex
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period
