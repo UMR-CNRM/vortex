@@ -17,6 +17,7 @@ import json
 import multiprocessing
 import os
 import platform
+import re
 import resource
 import signal
 import subprocess
@@ -238,7 +239,8 @@ class PidFile(object):
 
     def __init__(self, tag='default', filename=None, procname='python'):
         if filename is None:
-            filename = os.path.join(os.getcwd(), tag + '-' + platform.node())
+            node = re.sub(r'\..*', '', platform.node())
+            filename = os.path.join(os.getcwd(), tag + '-' + node)
         if not filename.endswith('.pid'):
             filename += '.pid'
         self._filename = os.path.realpath(filename)
@@ -248,7 +250,7 @@ class PidFile(object):
     def reset(self):
         """Create the pid file (would erase an older one) and lock it."""
         try:
-            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR)
+            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR, 0o644)
         except IOError as iotrouble:
             sys.exit('Failed to open pidfile: %s' % str(iotrouble))
         assert not fcntl.flock(self._fd, fcntl.LOCK_EX)
@@ -340,7 +342,8 @@ class BaseDaemon(object):
         self._logger = None
         self._loglevel = loglevel
         self._stdin = os.devnull
-        self._redirect = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
+        node = re.sub(r'\..*', '', platform.node())
+        self._redirect = os.path.realpath(redirect or tag + '-' + node + '.log')
         self._daemonized = False
         self._inifile = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
@@ -473,6 +476,7 @@ class BaseDaemon(object):
                 os.rename(self.stdout, os.path.join(
                     newpath, oldname + '.' + pools.timestamp()
                 ))
+            os.umask(0o0022)
             stdnew = open(self.stdout, 'a+', 1)
             os.dup2(stdnew.fileno(), sys.stdout.fileno())
             os.dup2(stdnew.fileno(), sys.stderr.fileno())
