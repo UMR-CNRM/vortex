@@ -2002,10 +2002,16 @@ class PicklePro(AlgoComponent):
     )
 
     def execute(self, rh, opts):
+        # In order to produce the Prep and Pro pickle, CrocoPp requires:
+        #   - the assimilation variables (vars)
+        #   - the post-processing variables (ppvars)
+        # these lists are written in options.vars and options.ppvars
+        # But here, the options object is not available: these variables are thus read from the namelist.
         print('cwd', os.getcwd())
+
+        # read the options in the namelist
         n = NamelistParser()
         N = n.parse('conf/OPTIONS.nam')
-        print('NAM_obs', N['NAM_OBS'].COBS_M)
         # issue when only assim 1 var, causing the .join to crash
         if isinstance(N['NAM_OBS'].COBS_M, str) or 'unicode' in str(type(N['NAM_OBS'].COBS_M)):
             assimvars_list = [N['NAM_OBS'].COBS_M]
