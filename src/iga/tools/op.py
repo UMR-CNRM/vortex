@@ -359,7 +359,8 @@ def get_resource_value(r, key):
     try:
         kw = dict(area=lambda r: r.resource.geometry.area,
                   term=lambda r: r.resource.term,
-                  fields=lambda r: r.resource.fields)
+                  fields=lambda r: r.resource.fields,
+                  experiment=lambda r: r.provider.experiment)
         return kw[key](r)
     except AttributeError as e:
         logger.error(e)
