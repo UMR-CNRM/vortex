@@ -21,43 +21,6 @@ class Foo(object):
 
 # Tests for footprints util
 
-class utDictMerge(TestCase):
-
-    def test_dictmerge_orthogonal(self):
-        rv = util.dictmerge(
-            dict(a=2, c='foo'),
-            dict(b=7),
-        )
-        self.assertDictEqual(rv, dict(a=2, b=7, c='foo'))
-
-    def test_dictmerge_overlap1(self):
-        rv = util.dictmerge(
-            dict(a=2, c='foo'),
-            dict(b=7, c='updatedfoo'),
-        )
-        self.assertDictEqual(rv, dict(a=2, b=7, c='updatedfoo'))
-
-    def test_dictmerge_overlap2(self):
-        rv = util.dictmerge(
-            dict(a=2, c='foo'),
-            dict(b=7, c=dict(val='updatedfoo')),
-        )
-        self.assertDictEqual(rv, dict(a=2, b=7, c=dict(val='updatedfoo')))
-
-    def test_dictmerge_recursive(self):
-        rv = util.dictmerge(
-            dict(a=2, c=dict(val='foo', other=dict(arg='hop'), bonus=1)),
-            dict(b=7, c=dict(val='updatedfoo', other=dict(arg='hip', foo=False))),
-        )
-        self.assertDictEqual(rv, dict(a=2, b=7, c=dict(val='updatedfoo', other=dict(arg='hip', foo=False), bonus=1)))
-        # NB: FPDicts are not merged recursively
-        rv = util.dictmerge(
-            dict(a=2, c=dict(val='foo', other=dict(arg='hop'), bonus=1)),
-            dict(b=7, c=FPDict(val='updatedfoo', other=dict(arg='hip', foo=False))),
-        )
-        self.assertDictEqual(rv, dict(a=2, b=7, c=FPDict(val='updatedfoo', other=dict(arg='hip', foo=False))))
-
-
 # A pure internal usage
 
 class utList2Dict(TestCase):
@@ -82,20 +45,6 @@ class utList2Dict(TestCase):
             ('attr', 'only'),
         )
         self.assertEqual(rv, dict(attr=dict(foo=2, more='hip'), only=dict(k1='v1', k2='v2')))
-
-
-# A pure internal usage
-
-class utMktuple(TestCase):
-
-    def test_mktuple_direct(self):
-        self.assertTupleEqual(util.mktuple([1, 2, 3]), (1, 2, 3))
-        self.assertTupleEqual(util.mktuple((1, 2, 3)), (1, 2, 3))
-        self.assertSetEqual(set(util.mktuple(set([1, 2, 3]))), set((1, 2, 3)))
-
-    def test_mktuple_weird(self):
-        thefoo = Foo()
-        self.assertTupleEqual(util.mktuple(thefoo), (thefoo, ))
 
 
 # In-place substitution in lists

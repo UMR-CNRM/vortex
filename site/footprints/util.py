@@ -16,48 +16,20 @@ import string
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import timeintrangex
+from bronx.syntax import dictmerge as _b_dictmerge
+from bronx.syntax import mktuple as _b_mktuple
 
 #: No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
 
+# For legacy calls
+dictmerge = _b_dictmerge
+mktuple = _b_mktuple
 
-def dictmerge(d1, d2):
-    """Merge two dictionaries *d1* and *d2* with a recursive function.
-
-    * *d1* and *d2* can be dictionaries of dictionaries;
-    * The result is in *d1*. If keys exist in *d1* and *d2*, *d1* keys are
-      replaced by *d2* keys.
-
-    Examples::
-
-        >>> a = {'name':'clim','attr':{'model':{'values':('arpege','arome')}}}
-        >>> b = {'name':'clim model','attr':{'truncation':{'type':'int','optional':'False'}}}
-        >>> (dictmerge(a, b) ==
-        ...  {'name': 'clim model', 'attr': {'model': {'values': ('arpege', 'arome')},
-        ...                                  'truncation': {'type': 'int', 'optional': 'False'}}})
-        True
-
-        >>> (dictmerge({'a':'1'}, {'b':'2'}) ==
-        ...  {'a': '1', 'b': '2'})
-        True
-
-        >>> (dictmerge({'a':'1','c':{'d':'3','e':'4'},'i':{'b':'2','f':{'g':'5'}}}, {'c':{'h':'6', 'e':'7'}}) ==
-        ...  {'a': '1', 'i': {'b': '2', 'f': {'g': '5'}}, 'c': {'h': '6', 'e': '7', 'd': '3'}})
-        True
-
-    """
-    for key, value in six.iteritems(d2):
-        if isinstance(value, dict) and not value.__class__.__name__.startswith('FP'):
-            if key in d1 and isinstance(d1[key], dict) and not value.__class__.__name__.startswith('FP'):
-                dictmerge(d1[key], d2[key])
-            else:
-                d1[key] = copy.deepcopy(value)
-        else:
-            d1[key] = value
-
-    return d1
+# For legacy calls to footprints.util.rangex...
+rangex = timeintrangex
 
 
 def list2dict(a, klist):
@@ -72,18 +44,6 @@ def list2dict(a, klist):
                 ad.update(item)
             a[k] = ad
     return a
-
-
-def mktuple(obj):
-    """Make a tuple from any kind of object."""
-    if isinstance(obj, list) or isinstance(obj, set) or isinstance(obj, tuple):
-        return tuple(obj)
-    else:
-        return (obj,)
-
-
-# For legacy calls to footprints.util.rangex...
-rangex = timeintrangex
 
 
 def inplace(desc, key, value, globs=None):

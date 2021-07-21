@@ -15,6 +15,7 @@ Mode specialised version are also provided for various physical models:
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+from bronx.syntax import mktuple
 import footprints
 
 from .resources import Resource
@@ -132,7 +133,7 @@ class GnuScript(Executable):
     def command_line(self, **opts):
         """Returns a blank separated list of options."""
         return ' '.join(['--' + k + ' ' + ' '.join([str(x)
-                                                    for x in footprints.util.mktuple(v)])
+                                                    for x in mktuple(v)])
                          for k, v in opts.items()])
 
 
