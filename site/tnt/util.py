@@ -29,10 +29,10 @@ def set_verbose(verbose, filename):
         fmt=('# [%(name)s@{:s}][%(funcName)s:%(lineno)04d][%(levelname)s]: %(message)s'
              .format(os.path.basename(filename)))
     )
-    old_lformat = loggers.console.formatter
+    old_lformat = loggers.default_console.formatter
     old_tntstack_level = tntstacklog.level
     old_tnt_level = tntlog.level
-    loggers.console.setFormatter(new_lformat)
+    loggers.default_console.setFormatter(new_lformat)
     tntstacklog.setLevel('INFO')
     tntlog.setLevel('INFO' if verbose else 'WARNING')
     try:
@@ -40,7 +40,7 @@ def set_verbose(verbose, filename):
     finally:
         tntstacklog.setLevel(old_tntstack_level)
         tntlog.setLevel(old_tnt_level)
-        loggers.console.setFormatter(old_lformat)
+        loggers.default_console.setFormatter(old_lformat)
 
 
 def process_namelist(filename, directives,

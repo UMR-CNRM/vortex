@@ -44,8 +44,6 @@ footprints.priorities.set_before('debug', 'olive', 'oper')
 #: Shortcut to Vortex's root logger
 logger = bloggers.getLogger('vortex')
 
-bloggers.defaultrootname = 'vortex'
-
 # Populate a fake proxy module with footprints shortcuts
 
 from . import proxy
