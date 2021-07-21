@@ -31,7 +31,7 @@ from signal import SIGTERM
 import six
 from six.moves.configparser import SafeConfigParser
 
-import footprints
+from bronx.syntax import dictmerge, mktuple
 from . import pools
 
 #: No automatic export
@@ -619,7 +619,7 @@ class HouseKeeping(object):
         """Update the current configuration and display it."""
         if ask.data is not None and isinstance(ask.data, dict):
             self.internal_show(actualcfg=ask.data, scope='update')
-            footprints.util.dictmerge(self.config, ask.data)
+            dictmerge(self.config, ask.data)
             return True
         else:
             self.error('Not a valid update', data=type(ask.data))
@@ -627,7 +627,7 @@ class HouseKeeping(object):
 
     def internal_switch_pool(self, ask, status=False):
         """Update active parameters for pools."""
-        for pool in [x.lower() for x in footprints.util.mktuple(ask.data)]:
+        for pool in [x.lower() for x in mktuple(ask.data)]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
                 self.warning('Switch pool', pool=pool, active=status)
@@ -646,7 +646,7 @@ class HouseKeeping(object):
 
     def internal_switch_action(self, ask, status=False):
         """Update active parameters for an action."""
-        for action in [x.lower() for x in footprints.util.mktuple(ask.data)]:
+        for action in [x.lower() for x in mktuple(ask.data)]:
             actioncfg = 'action_' + action
             if actioncfg not in self.config:
                 self.config[actioncfg] = dict()

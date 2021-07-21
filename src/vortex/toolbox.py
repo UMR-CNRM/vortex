@@ -16,6 +16,7 @@ import traceback
 
 from bronx.fancies import loggers
 from bronx.stdtypes.history import History
+from bronx.syntax import mktuple
 
 import footprints
 
@@ -268,7 +269,7 @@ def add_section(section, args, kw):
     # Third, collect arguments for triggering some hook
     hooks = dict()
     for ahook in [x for x in kw.keys() if x.startswith('hook_')]:
-        cbhook = footprints.util.mktuple(kw.pop(ahook))
+        cbhook = mktuple(kw.pop(ahook))
         cbfunc = cbhook[0]
         if not callable(cbfunc):
             cbfunc = t.sh.import_function(cbfunc)

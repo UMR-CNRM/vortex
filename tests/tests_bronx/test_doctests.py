@@ -9,6 +9,7 @@ from bronx.datagrip import namelist, varbcheaders
 from bronx.fancies import display, language, loggers
 from bronx.patterns import getbytag, observer
 from bronx.stdtypes import date, history, tracking, xtemplates
+from bronx import syntax as b_syntax_init
 from bronx.syntax import externalcode, iterators, minieval, parsing
 
 # Numpy is not mandatory
@@ -44,6 +45,7 @@ class utDocTests(unittest.TestCase):
         self.assert_doctests(iterators)
         self.assert_doctests(minieval)
         self.assert_doctests(parsing)
+        self.assert_doctests(b_syntax_init)
 
     @unittest.skipUnless(npchecker.is_available(), "The numpy package is unavailable.")
     def test_doctests_w_numpy(self):

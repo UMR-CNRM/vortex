@@ -17,11 +17,7 @@ Interface
 
 .. autofunction:: expand
 
-.. autofunction:: dictmerge
-
 .. autofunction:: list2dict
-
-.. autofunction:: mktuple
 
 
 Base Classes
