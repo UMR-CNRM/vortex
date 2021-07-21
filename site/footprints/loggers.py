@@ -22,14 +22,14 @@ from bronx.fancies import loggers as _b_loggers
 _ALIASES = dict()
 _ALIASES.update(dict(roots=_b_loggers.roots,
                      lognames=_b_loggers.lognames,
-                     formats=_b_loggers.formats,
-                     console=_b_loggers.console,
+                     formats=_b_loggers.predefined_formats,
+                     console=_b_loggers.default_console,
                      getLogger=_b_loggers.getLogger,
                      setGlobalLevel=_b_loggers.setGlobalLevel,
                      setRootLogger=_b_loggers.setRootLogger,
                      setLogMethods=_b_loggers.setLogMethods,
                      getActualLevel=_b_loggers.getActualLevel,
-                     LoggingFilter=_b_loggers.LoggingFilter,
+                     LoggingFilter=_b_loggers.PromptAwareLoggingFilter,
                      SlurpHandler=_b_loggers.SlurpHandler,
                      )
                 )

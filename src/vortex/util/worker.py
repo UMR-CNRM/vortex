@@ -7,6 +7,9 @@ by a PoolWorker process of the Jeeves daemon.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+import six
+import logging
+
 from bronx.fancies import loggers
 
 logger = loggers.getLogger(__name__)
@@ -54,12 +57,8 @@ class VortexWorker(object):
     _PRIVATESESSION = None
     _PRIVATEMODULES = set()
 
-    def __init__(self, modules=tuple(), verbose=False, logger=None, profile=None,
-                 logmap=('debug', 'info', 'warning'),
-                 logmsg='Vortex context log gateway'):
+    def __init__(self, modules=tuple(), verbose=False, logger=None, profile=None):
         self._logger = logger
-        self._logmap = logmap
-        self._logmsg = logmsg
         self._modules = modules
         self._context_lock = False
         self._context_prev_ticket = None
@@ -70,14 +69,6 @@ class VortexWorker(object):
     @property
     def logger(self):
         return self._logger
-
-    @property
-    def logmap(self):
-        return self._logmap
-
-    @property
-    def logmsg(self):
-        return self._logmsg
 
     @property
     def modules(self):
@@ -111,26 +102,33 @@ class VortexWorker(object):
         return AttrDict(ask.data)
 
     def reset_loggers(self, logger):
-        import footprints as fp
-        loggers.setLogMethods(logger, methods=self.logmap)
-        if self.verbose:
-            fp.collectors.logger.debug(self.logmsg)
-            fp.collectors.logger.info(self.logmsg)
-            fp.collectors.logger.warning(self.logmsg)
-            fp.collectors.logger.error(self.logmsg)
-            fp.collectors.logger.critical(self.logmsg)
+        if six.PY2:
+            # NB: Nothing to do with Python3 since the root logger that was
+            #     setup by the logfacility is already being used by
+            #     bronx.fancies.loggers and more generally logging
+            loggers.setLogMethods(logger, methods=('debug', 'info', 'warning'))
+        if not self.verbose and six.PY3:
+            # footprints & bronx can be very talkative... we try to limit that !
+            global_level = logger.getEffectiveLevel()
+            f_logger = loggers.getLogger('footprints')
+            b_logger = loggers.getLogger('bronx')
+            if global_level <= logging.INFO and not self.verbose:
+                f_logger.setLevel(logging.INFO)
+                b_logger.setLevel(logging.INFO)
+            else:
+                f_logger.setLevel(logging.NOTSET)
+                b_logger.setLevel(logging.NOTSET)
 
     def __enter__(self, *args):
         if self._context_lock:
             raise RuntimeError('Imbricated context manager calls are forbidden.')
         self._context_lock = True
-        import vortex
-        # Do questionable things on Vortex loggers
         if self.logger is None:
-            self._logger = vortex.logger
+            self._logger = logger
         else:
             self.reset_loggers(self.logger)
         # Activate our own session
+        import vortex
         self._context_prev_ticket = vortex.sessions.current()
         if not self.session.active:
             self.session.activate()
@@ -148,20 +146,23 @@ class VortexWorker(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Well... nothing much to do..."""
         if exc_value is not None:
-            import traceback
-            tb_sep = '-' * 80 + "\n"
-            tb_str = str(exc_value) + "\n"
-            if hasattr(exc_value, 'message') and exc_value.message:
-                tb_str += '{sep:s}Exception message: {exc.message:s}\n{sep:s}'.format(
-                    sep=tb_sep, exc=exc_value
+            if six.PY2:
+                import traceback
+                tb_sep = '-' * 80 + "\n"
+                tb_str = str(exc_value) + "\n"
+                if hasattr(exc_value, 'message') and exc_value.message:
+                    tb_str += '{sep:s}Exception message: {exc.message:s}\n{sep:s}'.format(
+                        sep=tb_sep, exc=exc_value
+                    )
+                tb_str += '{sep:s}{tb:s}\n{sep:s}'.format(
+                    sep=tb_sep, tb=traceback.format_tb(exc_traceback)
                 )
-            tb_str += '{sep:s}{tb:s}\n{sep:s}'.format(
-                sep=tb_sep, tb=traceback.format_tb(exc_traceback)
-            )
-            self.logger.critical('VORTEX exits on error. Traceback gives:\n%s', tb_str)
+                self.logger.critical('VORTEX exits on error. Traceback gives:\n%s', tb_str)
+            else:
+                self.logger.critical('VORTEX exits on error', exc_info=exc_value)
             self.rc = False
         else:
-            self.logger.info('VORTEX exits nicely.')
+            self.logger.debug('VORTEX exits nicely.')
         self._context_prev_ticket.activate()
         self._context_lock = False
         return True

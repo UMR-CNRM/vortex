@@ -190,15 +190,14 @@ def _tb_isolate(t, loglevel):
     recordswitch = ctx.record
     if recordswitch:
         ctx.record_off()
-    # Possibly change the log level if necessary
-    if loglevel is not None:
-        oldlevel = t.loglevel
-        t.setloglevel(loglevel.upper())
     try:
-        yield
-    finally:
         if loglevel is not None:
-            t.setloglevel(oldlevel)
+            # Possibly change the log level if necessary
+            with loggers.contextboundGlobalLevel(loglevel):
+                yield
+        else:
+            yield
+    finally:
         if recordswitch:
             ctx.record_on()
 

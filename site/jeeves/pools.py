@@ -252,6 +252,8 @@ class Deposit(getbytag.GetByTag):
         self._tryclean = None
         self._lastclean = None
         self._minclean = duration_to_seconds(minclean)
+        # Create all the necessary directories just before the first clean-up
+        self.cocoon()
         self._first_clean()
 
     @property

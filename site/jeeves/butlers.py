@@ -23,7 +23,6 @@ import signal
 import subprocess
 import sys
 import time
-import traceback
 from ast import literal_eval
 from datetime import datetime
 from signal import SIGTERM
@@ -33,6 +32,7 @@ from six.moves.configparser import SafeConfigParser
 
 from bronx.syntax import dictmerge, mktuple
 from . import pools
+from . import talking
 
 #: No automatic export
 __all__ = []
@@ -40,130 +40,86 @@ __all__ = []
 LOG_ARCHIVE_PATH = 'archive/log'
 
 
-class GentleTalk(object):
-    """An alternative to the logging interface that can be exchanged between processes."""
+def _jeeves_import_module(modname, logger):
+    """Import the module named ``modname`` with :mod:`importlib` package.
 
-    _levels = ('DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL')
-
-    DEBUG = '\033[94m'
-    INFO = '\033[0m'
-    WARNING = '\033[93m'
-    ERROR = '\033[95m'
-    CRITICAL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-
-    def __init__(self, datefmt='%Y/%m/%d-%H:%M:%S', loglevel=1, taskno=0):
-        self._datefmt = datefmt
-        self._taskno = int(taskno)
-        self.loglevel = loglevel
-
-    def clone(self, taskno):
-        """Clone the actual logger with a different task number."""
-        return self.__class__(datefmt=self.datefmt, loglevel=self.loglevel, taskno=taskno)
-
-    @property
-    def levels(self):
-        return self.__class__._levels
-
-    @property
-    def datefmt(self):
-        return self._datefmt
-
-    @property
-    def taskno(self):
-        return self._taskno
-
-    def _get_loglevel(self):
-        return self._loglevel
-
-    def _set_loglevel(self, value):
-        """
-        @type value: int | str
-        @rtype: None
-        """
+    :param modname: The module name
+    :param logger: A logger object that will be used to comunicate
+    :return: The module object or ``None`` if something goes wrong
+    """
+    if modname not in sys.modules:
         try:
-            value = int(value)
-        except ValueError:
+            import importlib
+        except ImportError as trouble:
+            logger.critical('Importlib failed to load', exc_info=trouble)
+            raise
+        except Exception as trouble:
+            logger.critical('Unexpected failure with importlib', exc_info=trouble)
+            raise
+        else:
             try:
-                value = self.levels.index(value.upper())
-            except (AttributeError, ValueError):
-                value = -1
-        if 0 <= value <= len(self.levels):
-            self._loglevel = value
+                importlib.import_module(modname)
+            except ImportError as trouble:
+                logger.error('Could not import', module=modname, exc_info=trouble)
+                return None
+    return sys.modules.get(modname)
 
-    loglevel = property(_get_loglevel, _set_loglevel)
 
-    @property
-    def levelname(self):
-        return self.levels[self._loglevel]
+def _jeeves_callback_finder(thismod, thisname, logger):
+    """Find and return the ``thisname`` callback in module ``thismode``.
 
-    def _msgfmt(self, level, msg, args, kw):
-        """Formatting log message as `msg <key:value> ...` string."""
-        if self.levels.index(level.upper()) >= self.loglevel:
-            # older messages come with the '%' format syntax, newer with {}
-            if args:
-                if '%' in str(msg):
-                    msg = str(msg) % args
-                else:
-                    msg = str(msg).format(*args)
+    :param thismod: The module name
+    :param thisname: The callback name (it must be a callable)
+    :param logger: A logger object that will be used to comunicate
+    :return: The object reprenting the callback or ``None`` if something goes wrong
+    """
+    thismobj = _jeeves_import_module(thismod, logger)
+    if thismobj:
+        thisfunc = getattr(thismobj, thisname, None)
+        if thisfunc is None and not callable(thisfunc):
+            logger.error('The callback is not a callable', funcname=thisname)
+            thisfunc = None
+    else:
+        logger.error('Import failed', module=thismod)
+        thisfunc = None
+    if thisfunc is None:
+        logger.error('The callback function was not found', funcname=thisname)
+    return thisfunc
+
+
+def _dispatch_func_wrapper(logger_cb, logger_setid_manager, modname, funcname, pnum, ask, config, **kw):
+    """
+    Wrapper exexuted by the pool's worker in order to launch the callback
+    ``funcname`` from module ``modname``.
+
+    :param logger_cb: A callback that can be used to create logger objects
+    :param logger_setid_manager: A context manager class that can be used
+                                 to customise the logging system (in order
+                                 to add the request ID (**pnum**)
+    :param modname: The module name
+    :param funcname: The callback name (it must be a callable)
+    :param pnum: The request ID
+    :param ask: The request itself
+    :param config: The configuration section corresponding to this particular action
+    :param kw: Any other parameter that will be passed to the callback
+    :return: A three-element tuple (request ID, rc, extra_dictionary)
+    """
+    # Setup the logging system in order to display the request ID
+    with logger_setid_manager(pnum):
+        my_logger = logger_cb(__name__)
+        # Add extra layer of security (just in case an exception occurs
+        try:
+            # Look for the desired callback
+            func = _jeeves_callback_finder(modname, funcname, my_logger)
+            if func is None:
+                rc = (pnum, False, dict(rpool="error"))
             else:
-                msg = str(msg)
-            msg += ' ' + ' '.join([
-                '<' + k + ':' + str(v) + '>'
-                for k, v in kw.items()
-            ])
-            thisprocess = multiprocessing.current_process()
-            msg = '{color}# [{0:s}][P{1:06d}][T{2:06d}][{3:13s}:{4:>8s}] {5:s}{endcolor}'.format(
-                datetime.now().strftime(self.datefmt),
-                thisprocess.pid,
-                self.taskno,
-                thisprocess.name,
-                level.upper(),
-                msg,
-                color=getattr(self, level.upper()),
-                endcolor=self.ENDC
-            )
-            with multiprocessing.Lock():
-                print(msg)
-
-    def debug(self, msg, *args, **kw):
-        """Logger factorization."""
-        return self._msgfmt('debug', msg, args, kw)
-
-    def info(self, msg, *args, **kw):
-        """Logger factorization."""
-        return self._msgfmt('info', msg, args, kw)
-
-    def warning(self, msg, *args, **kw):
-        """Logger factorization."""
-        return self._msgfmt('warning', msg, args, kw)
-
-    def error(self, msg, *args, **kw):
-        """Logger factorization."""
-        return self._msgfmt('error', msg, args, kw)
-
-    def critical(self, msg, *args, **kw):
-        """Logger factorization."""
-        return self._msgfmt('critical', msg, args, kw)
-
-
-class GentleTalkMono(GentleTalk):
-    """Monochrome version of the GentleTalk interface."""
-
-    DEBUG = ''
-    INFO = ''
-    WARNING = ''
-    ERROR = ''
-    CRITICAL = ''
-    ENDC = ''
-    BOLD = ''
-    HEADER = ''
-    OKBLUE = ''
-    OKGREEN = ''
+                # Let's go !
+                rc = func(pnum, ask, config, logger_cb(func.__module__), **kw)
+        except Exception as trouble:
+            my_logger.error("Un-handled exception in callback %s.", repr(func), exc_info=trouble)
+            rc = (pnum, False, dict(rpool="error"))
+        return rc
 
 
 class ExitHandler(object):
@@ -197,7 +153,7 @@ class ExitHandler(object):
 
     def __enter__(self):
         moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
-        self.daemon.info('Context enter ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
+        self.daemon.logger.info('Context enter for %s %s', repr(self.daemon), moreinfo)
         old_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
         if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
             if not self.on_stack:
@@ -215,19 +171,15 @@ class ExitHandler(object):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Be sure to call all registered callbacks at exit time."""
         moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
-        self.daemon.info('Context exit ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
-        self.daemon.info('Context exit ' + repr(exc_type))
-        if hasattr(exc_value, 'message') and exc_value.message:
-            self.daemon.critical('Context exit', error=exc_value)
-            print("\n", '-' * 80)
-            print(exc_value.message)
-            print('-' * 80, "\n")
-            print("\n".join(traceback.format_tb(exc_traceback)))
-            print('-' * 80, "\n")
-        else:
-            self.daemon.info('Context exit', value=exc_value)
+        self.daemon.logger.info('Context exit for %s %s', repr(self.daemon), moreinfo)
+        if exc_type is not None:
+            if exc_type is SystemExit and exc_value.code == 0:
+                self.daemon.logger.info('Context exit triggered by a clean sys.exit')
+            else:
+                self.daemon.logger.info('Context exit triggered by an exception.',
+                                        exc_info=exc_value)
         for i, callback in enumerate([x for x in self.on_exit if x is not None]):
-            self.daemon.info('Context exit callback ' + str(i) + ' : ' + repr(callback))
+            self.daemon.logger.info('Context exit callback %d: %s', i, repr(callback))
             callback()
         return True
 
@@ -334,12 +286,13 @@ class BaseDaemon(object):
     Usage: subclass the BaseDaemon class and override the run() method
     """
 
-    def __init__(self, tag='test', pidfile=None, procname='python', loglevel=1, inifile=None, redirect=None):
+    def __init__(self, tag='test', pidfile=None, procname='python', loglevel='INFO', inifile=None, redirect=None):
         self._tag = tag
         self._pidfile = PidFile(tag=tag, filename=pidfile, procname=procname)
         self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
         self._rundir = os.getcwd()
         self._logger = None
+        self._logfacility = None
         self._loglevel = loglevel
         self._stdin = os.devnull
         node = re.sub(r'\..*', '', platform.node())
@@ -383,33 +336,35 @@ class BaseDaemon(object):
 
     @property
     def loglevel(self):
+        """The root loger loglevel."""
         return self._loglevel
+
+    @loglevel.setter
+    def loglevel(self, value):
+        oldvalue = self._loglevel
+        self._loglevel = value
+        self._logger = None
+        self.logger.warning('Jeeves loglevel changed from %s to %s.' +
+                            'This will only take effect when pool-workers restart.',
+                            oldvalue, value)
+
+    @property
+    def logfacility(self):
+        """A LogFacility instance that provide the necessary features to deal with logging."""
+        if self._logfacility is None:
+            if six.PY2:
+                self._logfacility = talking.LegacyLogfacility()
+            else:
+                self._logfacility = talking.LoggingBasedLogFacility()
+        return self._logfacility
 
     @property
     def logger(self):
+        """A logger instance for the daemon class."""
         if self._logger is None:
-            self._logger = GentleTalkMono(loglevel=self.loglevel)
+            self.logfacility.worker_log_setup(self.loglevel)
+            self._logger = self.logfacility.worker_get_logger(__name__)
         return self._logger
-
-    def debug(self, msg, **kw):
-        """Logger factorization."""
-        return self.logger.debug(msg, **kw)
-
-    def info(self, msg, **kw):
-        """Logger factorization."""
-        return self.logger.info(msg, **kw)
-
-    def warning(self, msg, **kw):
-        """Logger factorization."""
-        return self.logger.warning(msg, **kw)
-
-    def error(self, msg, **kw):
-        """Logger factorization."""
-        return self.logger.error(msg, **kw)
-
-    def critical(self, msg, **kw):
-        """Logger factorization."""
-        return self.logger.critical(msg, **kw)
 
     @property
     def inifile(self):
@@ -469,6 +424,7 @@ class BaseDaemon(object):
         if self.stdout is not None:
             sys.stdout.flush()
             sys.stderr.flush()
+            os.umask(0o0022)
             if self.stdout and os.path.exists(self.stdout):
                 oldpath, oldname = os.path.split(self.stdout)
                 newpath = os.path.join(oldpath, LOG_ARCHIVE_PATH)
@@ -476,7 +432,6 @@ class BaseDaemon(object):
                 os.rename(self.stdout, os.path.join(
                     newpath, oldname + '.' + pools.timestamp()
                 ))
-            os.umask(0o0022)
             stdnew = open(self.stdout, 'a+', 1)
             os.dup2(stdnew.fileno(), sys.stdout.fileno())
             os.dup2(stdnew.fileno(), sys.stderr.fileno())
@@ -484,24 +439,24 @@ class BaseDaemon(object):
     def header(self):
         """Introduction to logging file..."""
         os.chdir(self.rundir)
-        self.info('Daemon', started=datetime.now())
-        self.info('Daemon', tag=self.tag)
-        self.info('Daemon', kind=self.__class__.__name__)
-        self.info('Daemon', module=self.__module__)
-        self.info('Process', pid=os.getpid())
-        self.info('Process', pidfile=self.pidfile.filename)
-        self.info('Process', rundir=self.rundir)
-        self.info('Process', tmpdir=self.tmpdir)
-        self.info('Process', python=sys.version.replace('\n', ' '))
+        self.logger.info('Daemon', started=datetime.now())
+        self.logger.info('Daemon', tag=self.tag)
+        self.logger.info('Daemon', kind=self.__class__.__name__)
+        self.logger.info('Daemon', module=self.__module__)
+        self.logger.info('Process', pid=os.getpid())
+        self.logger.info('Process', pidfile=self.pidfile.filename)
+        self.logger.info('Process', rundir=self.rundir)
+        self.logger.info('Process', tmpdir=self.tmpdir)
+        self.logger.info('Process', python=sys.version.replace('\n', ' '))
 
     def bye(self):
         """Nice exit."""
         self.pidfile.delfile()
-        self.info('Bye folks...')
+        self.logger.info('Bye folks...')
 
     def exit_callbacks(self):
         """Return a list of callbacks to be launched before the daemon exits."""
-        return (self.bye,)
+        return self.bye,
 
     def start(self, mkdaemon=True):
         """Start the daemon."""
@@ -523,16 +478,19 @@ class BaseDaemon(object):
         # gather std descriptors
         self.ioremap()
 
-        # let's be a bit talkative
-        self.header()
-        if sys.path[0] == '':
-            sys.path.pop(0)
-        sys.path.insert(0, self.rundir)
+        # initialise the logging system
+        with self.logfacility.log_infrastructure():
 
-        # at least, do something...
-        with ExitHandler(self, on_exit=self.exit_callbacks()):
-            self.setup()
-            self.run()
+            # let's be a bit talkative
+            self.header()
+            if sys.path[0] == '':
+                sys.path.pop(0)
+            sys.path.insert(0, self.rundir)
+
+            # at least, do something...
+            with ExitHandler(self, on_exit=self.exit_callbacks()):
+                self.setup()
+                self.run()
 
     def stop(self):
         """Stop the daemon."""
@@ -543,7 +501,7 @@ class BaseDaemon(object):
             print('Daemon not running.')
             return
 
-        # try to nicelly kill the daemon process
+        # try to nicely kill the daemon process
         error = self.pidfile.kill()
         if error:
             self.pidfile.unlock()
@@ -576,28 +534,30 @@ class HouseKeeping(object):
     def internal_reload(self, ask):
         """Proxy to a setup rerun."""
         if ask.data is None:
-            self.error('Reload undefined')
+            self.logger.error('Reload undefined')
             return False
         else:
             self.multi_stop()
             if 'config' in ask.data:
-                self.warning('Rerun setup config')
+                self.logger.warning('Rerun setup config')
                 self.config = self.read_config(self.inifile)
             if 'mkpools' in ask.data:
-                self.warning('Rerun setup mkpools')
+                self.logger.warning('Rerun setup mkpools')
                 self.mkpools(clear=True)
             self.multi_start()
             return True
 
     def internal_level(self, ask):
         """Set a specific log level."""
-        self.logger.loglevel = ask.data
-        self.warning('Switch log', level=self.logger.levelname)
+        self.loglevel = ask.data
+        self.logger.warning('Reloading the process pool...')
+        self.multi_stop(timeout=5)
+        self.multi_start()
         return True
 
     def internal_sleep(self, ask):
         """Make a nap."""
-        self.warning('Sleep', duration=ask.data)
+        self.logger.warning('Sleep', duration=ask.data)
         time.sleep(ask.data)
         return True
 
@@ -605,14 +565,18 @@ class HouseKeeping(object):
         """Display on stdout the current configuration."""
         if actualcfg is None:
             actualcfg = self.config
-        print("\n", '-' * 80)
-        print(scope.upper(), 'CONFIGURATION DISPLAY')
-        print('-' * 80)
+        conf_stack = list()
+        conf_stack.append('-' * 80)
+        conf_stack.append(scope.upper() + ' CONFIGURATION DISPLAY')
+        conf_stack.append('-' * 80)
         for section, infos in sorted(actualcfg.items()):
-            print("\n", ' *', section)
+            conf_stack.append('')
+            conf_stack.append(' * ' + section)
             for k, v in sorted(infos.items()):
-                print('   +', k.ljust(16), '=', v)
-        print("\n", '-' * 80, "\n")
+                conf_stack.append('   + {:<16s} = {!s}'.format(k, v))
+        conf_stack.append('-' * 80)
+        conf_stack.append('')
+        self.logger.warning('Internal show result:\n%s', '\n'.join(conf_stack))
         return True
 
     def internal_update(self, ask):
@@ -622,7 +586,7 @@ class HouseKeeping(object):
             dictmerge(self.config, ask.data)
             return True
         else:
-            self.error('Not a valid update', data=type(ask.data))
+            self.logger.error('Not a valid update', data=type(ask.data))
             return False
 
     def internal_switch_pool(self, ask, status=False):
@@ -630,7 +594,7 @@ class HouseKeeping(object):
         for pool in [x.lower() for x in mktuple(ask.data)]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
-                self.warning('Switch pool', pool=pool, active=status)
+                self.logger.warning('Switch pool', pool=pool, active=status)
                 self.config[poolcfg]['active'] = status
                 thispool = pools.get(tag=pool)
                 thispool.active = status
@@ -650,7 +614,7 @@ class HouseKeeping(object):
             actioncfg = 'action_' + action
             if actioncfg not in self.config:
                 self.config[actioncfg] = dict()
-            self.warning('Switch action', action=action, active=status)
+            self.logger.warning('Switch action', action=action, active=status)
             self.config[actioncfg]['active'] = status
         return True
 
@@ -671,11 +635,11 @@ class Jeeves(BaseDaemon, HouseKeeping):
         config = dict(driver=dict(pools=[]))
         if os.path.exists(filename):
             absfile = os.path.abspath(filename)
-            self.info('Configuration', path=absfile)
+            self.logger.info('Configuration', path=absfile)
             cfg = SafeConfigParser()
             cfg.read(absfile)
 
-            self.info('Configuration', sections=','.join(cfg.sections()))
+            self.logger.info('Configuration', sections=','.join(cfg.sections()))
             for section in cfg.sections():
                 if section not in config:
                     config[section] = dict()
@@ -687,7 +651,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                             v = [x for x in v.replace('\n', '').replace(' ', '').split(',')]
                     config[section][k.lower()] = v
         else:
-            self.error('No configuration', path=filename)
+            self.logger.error('No configuration', path=filename)
         return config
 
     def mkpools(self, clear=False):
@@ -697,10 +661,11 @@ class Jeeves(BaseDaemon, HouseKeeping):
         for pool in self.config['driver'].get('pools', tuple()):
             poolcfg = 'pool_' + pool
             if poolcfg not in self.config:
-                self.warning('No dedicated conf', pool=pool)
+                self.logger.warning('No dedicated conf', pool=pool)
                 self.config[poolcfg] = dict()
-            thispool = pools.get(tag=pool, logger=self.logger, **self.config[poolcfg])
-            thispool.cocoon()
+            thispool = pools.get(tag=pool,
+                                 logger=self.logfacility.worker_get_logger(pools.__name__),
+                                 **self.config[poolcfg])
 
     def setup(self):
         """
@@ -718,36 +683,46 @@ class Jeeves(BaseDaemon, HouseKeeping):
         keeplog = self.config['driver'].get('keeplog', '10d')
         pools.clean_older_files(self.logger, LOG_ARCHIVE_PATH, keeplog, '*.log.*')
 
+    def _worker_init(self, logfacility):
+        """Called each time a pool's worker is created/restarted"""
+        logfacility.worker_log_setup(self.loglevel)
+        me = multiprocessing.current_process()
+        wlogger = logfacility.worker_get_logger(__name__)
+        wlogger.info('PoolWorker initialising or restarting', pid=me.pid, realname=me.name)
+
     def multi_start(self):
         """Start a pool of co-workers processes."""
         self.ptask = 0
         self.asynchronous = dict()
         self.procs = self.config['driver'].get('maxprocs', 4)
         maxtasks = self.config['driver'].get('maxtasks', 64)
-        self.ppool = multiprocessing.Pool(self.procs, None, None, maxtasks)
-        self.info('Start multiprocessing', procs=self.procs)
+        self.ppool = multiprocessing.Pool(self.procs,
+                                          self._worker_init,
+                                          (self.logfacility, ),
+                                          maxtasks)
+        self.logger.info('Multiprocessing pool started', procs=self.procs)
         for child in sorted(multiprocessing.active_children(), key=lambda x: x.pid):
-            self.info('Coprocess', pid=child.pid, alive=child.is_alive(), name=child.name)
+            self.logger.info('Coprocess', pid=child.pid, alive=child.is_alive(), name=child.name)
         return True
 
     def multi_stop(self, timeout=1):
         """Join all active coprocesses."""
         if self.procs:
             # at least, some multiproccessing setup had occured
-            self.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
+            self.logger.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
             # look at the remaining tasks
-            for (pnum, syncinfo) in self.asynchronous.copy():
-                self.warning('Task not complete', pnum=pnum)
+            for (pnum, syncinfo) in self.asynchronous.copy().items():
+                self.logger.warning('Task not complete', pnum=pnum)
                 try:
                     jpool, jfile, asyncr = syncinfo
                     pnum, prc, pvalue = asyncr.get(timeout=timeout)
                 except multiprocessing.TimeoutError:
-                    self.error('Timeout for task', pnum=pnum)
+                    self.logger.error('Timeout for task', pnum=pnum)
                 except Exception as trouble:
-                    self.critical('Trouble in pool', pnum=pnum, error=trouble)
+                    self.logger.critical('Trouble in pool', pnum=pnum, exc_info=trouble)
                 else:
-                    self.info('Return', pnum=pnum, rc=prc, result=pvalue)
+                    self.logger.info('Return', pnum=pnum, rc=prc, result=pvalue)
                     self.migrate(pools.get(tag=jpool), jfile)
                 finally:
                     del self.asynchronous[pnum]
@@ -758,10 +733,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.ppool.terminate()
                 self.ppool.join()
             except Exception as trouble:
-                self.critical('Multiprocessing stop', error=trouble)
-
+                self.logger.critical('Multiprocessing stop failure.', exc_info=trouble)
         else:
-            self.warning('Multi stop without start ?')
+            self.logger.warning('Multi stop without start ?')
 
         return True
 
@@ -772,9 +746,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
             target = pool.migrate(item, target=target)
             rc = pools.get(tag=target)
         except OSError as trouble:
-            self.error('Could not migrate', item=item, error=trouble)
+            self.logger.error('Could not migrate', item=item, exc_info=trouble)
         else:
-            self.info('Migrate', item=item, target=rc.path)
+            self.logger.info('Migrate', item=item, target=rc.path)
         return rc
 
     def json_load(self, pool, item):
@@ -786,27 +760,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 obj = json.load(fd)
             obj = pools.Request(**obj)
         except (ValueError, AttributeError, OSError):
-            self.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
+            self.logger.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
             self.migrate(pool, item, target='error')
         return obj
-
-    def import_module(self, modname):
-        """Import the module named ``modname`` with :mod:`importlib` package."""
-        if modname not in sys.modules:
-            try:
-                import importlib
-            except ImportError:
-                self.critical('Import failed', module='importlib')
-                raise
-            except Exception:
-                self.critical('Unexpected', error=sys.exc_info()[0])
-                raise
-            else:
-                try:
-                    importlib.import_module(modname)
-                except ImportError:
-                    self.error('Could not import', module=modname)
-        return sys.modules.get(modname)
 
     def async_callback(self, result):
         """Get result from async pool processing.
@@ -825,18 +781,18 @@ class Jeeves(BaseDaemon, HouseKeeping):
         """
 
         if not result:
-            self.error('Undefined result from asynchronous processing')
+            self.logger.error('Undefined result from asynchronous processing')
             return
 
         pnum = prc = pvalue = None
         try:
             pnum, prc, pvalue = result
             if prc:
-                self.info('Return', pnum=pnum, result=pvalue)
+                self.logger.info('Return', pnum=pnum, rc=prc, result=pvalue)
             else:
-                self.error('Return', pnum=pnum, error=pvalue)
+                self.logger.error('Return', pnum=pnum, rc=prc, result=pvalue)
         except Exception as trouble:
-            self.critical('Callback', error=trouble, result=result)
+            self.logger.critical('Callback failed to process result', result=result, exc_info=trouble)
         finally:
             if pnum is not None and pnum in self.asynchronous:
                 jpool, jfile, u_asyncr = self.asynchronous[pnum]
@@ -851,9 +807,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.migrate(poolbase, jfile, target=pooltarget)
                 del self.asynchronous[pnum]
             else:
-                self.error('Unknown asynchronous process', pnum=pnum)
+                self.logger.error('Unknown asynchronous process', pnum=pnum)
 
-    def dispatch(self, func, ask, acfg, jpool, jfile):
+    def dispatch(self, modname, funcname, ask, acfg, jpool, jfile):
         """Multiprocessing dispatching."""
         rc = False
         self.ptask += 1
@@ -867,17 +823,23 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 jpool,
                 jfile,
                 self.ppool.apply_async(
-                    func=func,
-                    args=(pnum, ask, self.config.copy(), self.logger.clone(pnum)),
+                    func=_dispatch_func_wrapper,
+                    args=(self.logfacility.worker_logger_cb,
+                          self.logfacility.worker_logger_setid_manager,
+                          modname,
+                          funcname,
+                          pnum,
+                          ask,
+                          self.config.copy()),
                     kwds=opts,
                     callback=self.async_callback
                 )
             )
         except Exception as trouble:
-            self.critical('Dispatch', error=trouble, action=ask.todo)
+            self.logger.critical('Dispatch error', action=ask.todo, exc_info=trouble)
         else:
             rc = True
-            self.info('Dispatch', pnum=pnum, action=ask.todo)
+            self.logger.info('Dispatch', pnum=pnum, action=ask.todo)
         return rc
 
     def process_request(self, pool, jfile):
@@ -893,7 +855,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             return False
 
         if ask.todo not in self.config['driver'].get('actions', tuple()):
-            self.error('Unregistered', action=ask.todo)
+            self.logger.error('Unregistered', action=ask.todo)
             self.migrate(tp, jfile, target='ignore')
             return False
 
@@ -905,7 +867,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if action in self.config:
             acfg = self.config[action]
         else:
-            self.debug('Undefined', action=ask.todo)
+            self.logger.debug('Undefined', action=ask.todo)
             acfg = dict(
                 dispatch=False,
                 module='internal',
@@ -915,36 +877,40 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if acfg.get('active', True):
             thismod = acfg.get('module', 'internal')
             thisname = acfg.get('entry', ask.todo)
-            self.info(
+            self.logger.info(
                 'Processing',
                 action=ask.todo,
                 function=thisname,
                 module=thismod,
             )
-            if thismod == 'internal':
-                thisfunc = getattr(self, 'internal_' + thisname, None)
-            else:
-                thismobj = self.import_module(thismod)
-                if thismobj:
-                    thisfunc = getattr(thismobj, thisname, None)
+            if thismod == 'internal' or not acfg.get('dispatch', False):
+                # The internal or callback will be executed "in place"
+                if thismod == 'internal':
+                    thisfunc = getattr(self, 'internal_' + thisname, None)
                 else:
-                    self.error('Import failed', module=acfg.get('module'))
-                    thisfunc = None
-            if thisfunc is None or not callable(thisfunc):
-                self.error('Not a function', entry=thisname)
-                rc = False
-            else:
-                if acfg.get('dispatch', False):
-                    rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
-                    dispatched = True
+                    thisfunc = _jeeves_callback_finder(thismod, thisname, self.logger)
+                if thisfunc is None or not callable(thisfunc):
+                    self.logger.error('The callback function was not found', funcname=thisname)
+                    rc = False
                 else:
                     try:
-                        rc = thisfunc(ask, **ask.opts)
+                        if thismod == 'internal':
+                            rc = thisfunc(ask, **ask.opts)
+                        else:
+                            rc = thisfunc('000000',
+                                          ask,
+                                          self.config.copy(),
+                                          self.logfacility.worker_get_logger(thisfunc.__module__))
                     except Exception as trouble:
-                        self.error('Trouble', action=ask.todo, error=trouble)
+                        self.logger.error('Trouble', action=ask.todo, exc_info=trouble)
                         rc = False
+            else:
+                # Delegate the execution to the process pool
+                rc = self.dispatch(thismod, thisname, ask, acfg, tp.tag, jfile)
+                dispatched = True
+
         else:
-            self.warning('Inactive', action=ask.todo)
+            self.logger.warning('Inactive', action=ask.todo)
             rctarget = 'ignore'
 
         if rc:
@@ -957,25 +923,25 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
     def exit_callbacks(self):
         """Return a list of callbacks to be launched before daemon exit."""
-        return (self.multi_stop, self.bye)
+        return self.multi_stop, self.bye
 
     def run(self):
         """Infinite work loop."""
 
-        self.info('Just ask Jeeves...')
+        self.logger.info('Just ask Jeeves...')
         self.multi_start()
 
         # migrate existing requests forgotten in processing directory
         thispool = pools.get(tag='process')
         todorun = thispool.contents
         if todorun:
-            self.warning('Remaining requests', num=len(todorun))
+            self.logger.warning('Remaining requests', num=len(todorun))
             for bad in todorun:
                 self.migrate(thispool, bad, target='retry')
 
         # setup default autoexit mode, once for all
         autoexit = self.config['driver'].get('autoexit', 0)
-        self.info('Automatic', autoexit=autoexit)
+        self.logger.info('Automatic', autoexit=autoexit)
 
         # setup silent mode parameters
         maxsleep = self.config['driver'].get('maxsleep', 10)
@@ -999,7 +965,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             tnext = datetime.now()
             ttime = (tnext - tprev).total_seconds()
             if not silent:
-                self.debug('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
+                self.logger.debug('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
             tprev = tnext
             tbusy = False
 
@@ -1010,7 +976,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             # process the input pool first
             thispool = pools.get(tag='in')
             if thispool.active:
-                self.debug('Processing', pool=thispool.tag, path=thispool.path)
+                self.logger.debug('Processing', pool=thispool.tag, path=thispool.path)
 
                 todo = thispool.contents
                 while todo:
@@ -1029,12 +995,12 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         self.process_request(thispool, req)
                     todo = thispool.contents
             else:
-                self.warning('Inactive', pool=thispool.tag, path=thispool.path)
+                self.logger.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
             # then process the retry pool
             thispool = pools.get(tag='retry')
             if thispool.active:
-                self.debug('Processing', pool=thispool.tag, path=thispool.path)
+                self.logger.debug('Processing', pool=thispool.tag, path=thispool.path)
                 # look for previous retry requests
                 todo = thispool.contents
                 stamp = datetime.now()
@@ -1044,7 +1010,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     rtlast = (stamp - rt['last']).total_seconds()
                     if rttotal > rtstop:
                         tbusy = True
-                        self.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
+                        self.logger.warning('Abandonning retry', json=req, nbt=rt['nbt'], totaltime=rttotal)
                         self.migrate(thispool, req, target='error')
                         del self.redo[req]
                     elif rtlast > rt['delay']:
@@ -1052,10 +1018,10 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         rt['nbt'] += 1
                         rt['last'] = stamp
                         rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
-                        self.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
+                        self.logger.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
                         self.migrate(thispool, req)
             else:
-                self.warning('Inactive', pool=thispool.tag, path=thispool.path)
+                self.logger.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
             if not tbusy:
                 # nothing done... so handle sleeping mechanism.
@@ -1064,7 +1030,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 # check if we must exit from current session
                 if autoexit and nbsleep > autoexit:
                     working = False
-                    self.warning('Stop', idle=autoexit)
+                    self.logger.warning('Stop', idle=autoexit)
                     continue
 
                 # do not sleep more than the maxsleep config parameter (in seconds).
@@ -1072,7 +1038,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 if not silent and nbsleep > maxsleep:
                     if nbsleep - maxsleep >= silent_delay:
                         # we have been sleeping chunks of maxsleep seconds more that silent_delay times.
-                        self.warning('Enter silent mode', after=silent_delay)
+                        self.logger.warning('Enter silent mode', after=silent_delay)
                         silent = True
             else:
                 # something has been done in this loop so... reset all sleeping mechanisms.
