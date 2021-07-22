@@ -13,6 +13,7 @@ from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
 from gco.tools import uenv, genv
 
 from davai import util
+from davai.algos.mixins import context_info_for_task_summary
 
 #: No automatic export
 __all__ = []
@@ -215,7 +216,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
         if hasattr(self._inner, 'remember_context'):
-            self._inner.remember_context(self.context)
+            self._inner.remember_context(context_info_for_task_summary(self.context))
         self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 

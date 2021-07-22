@@ -64,7 +64,7 @@ def guess_packname(git_ref,
     :param homepack: home of pack
     :param to_bin: True if the path to binaries subdirectory is requested
     """
-    from ia4h_scm.algos import guess_packname  # @UnresolvedImport
+    from ial_build.algos import guess_packname  # @UnresolvedImport
     return guess_packname(git_ref,
                           compiler_label,
                           packtype,
@@ -92,7 +92,7 @@ def bundle_guess_packname(bundle,
     :param homepack: home of pack
     :param to_bin: True if the path to binaries subdirectory is requested
     """
-    from ia4h_scm.algos import bundle_guess_packname  # @UnresolvedImport
+    from ial_build.algos import bundle_guess_packname  # @UnresolvedImport
     return bundle_guess_packname(bundle,
                                  compiler_label,
                                  packtype,

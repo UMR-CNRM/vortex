@@ -22,7 +22,21 @@ from common.algo.coupling import (Prep, Coupling)
 __all__ = []
 
 
-class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
+def context_info_for_task_summary(context):
+    """Get some infos from context for task summary."""
+    info = {'rundir':context.rundir}
+    for k in ('MTOOL_STEP_ABORT', 'MTOOL_STEP_DEPOT', 'MTOOL_STEP_SPOOL'):
+        v = context.env.get(k, None)
+        if v:
+            info[k] = v
+    if context.rundir and 'MTOOL_STEP_ABORT' in info and 'MTOOL_STEP_SPOOL' in info:
+        abort_dir = context.system.path.join(info['MTOOL_STEP_ABORT'],
+                                             context.rundir[len(info['MTOOL_STEP_SPOOL'])+1:])
+        info['(if aborted)'] = abort_dir
+    return info
+
+
+class _CrashWitnessDecoMixin(_RememberContextDecoMixin):
     """
     Extend Algo Components to catch exceptions in the binary execution,
     notify it into the job summary (witness), and push it.
@@ -41,9 +55,12 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         ),
     )
 
+    @property
+    def context_info_for_task_summary(self):
+        return context_info_for_task_summary(self.context)
+
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
         from davai_tbx.expertise import task_status  # @UnresolvedImport
-        from davai_tbx.util import context_info_for_task_summary  # @UnresolvedImport
         status = task_status['X']
         # check reference and mention if reference was crashed too
         ref_summary = [s for s in self.context.sequence.effective_inputs(role=('Reference',
@@ -59,7 +76,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             status = task_status.get('X:R?', task_status['X'])
         # then write summary in promise
         summary = {'Status': status,
-                   'Context': context_info_for_task_summary(self.context),
+                   'Context': self.context_info_for_task_summary,
                    'Exception': str(e),
                    'Updated': date.utcnow().isoformat().split('.')[0]}
         promise = [x for x in self.promises
