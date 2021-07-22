@@ -300,7 +300,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         if self.is_xlfi(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
-            hostname = self.sh._fix_fthostname(hostname)
+            hostname = self.sh.fix_fthostname(hostname)
 
             st = LFI_Status()
             ftp = self.sh.ftp(hostname, logname, port=port)
@@ -415,7 +415,7 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
         else:
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xlfi files.")
-            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+            logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)

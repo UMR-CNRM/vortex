@@ -1,17 +1,31 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
+
+import contextlib
+
 import six
 
+import os
 import tempfile
 import unittest
 
+from bronx.stdtypes import date as b_date
 from bronx.fancies.loggers import unittestGlobalLevel
 
+from footprints import proxy as fpx
+
 import vortex
+from vortex.data import geometries
 from vortex.layout.jobs import _mkjob_opts_detect_1, _mkjob_opts_detect_2, _mkjob_opts_autoexport
+from vortex.tools.actions import actiond
+import cen.tools.actions
 from vortex.util.config import ExtendedReadOnlyConfigParser
 
+assert cen.tools.actions
+
 tloglevel = 'CRITICAL'
+
+DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
 
 
 @unittestGlobalLevel(tloglevel)
@@ -157,6 +171,133 @@ class TestMkjobDetect(unittest.TestCase):
     member=1,
     newstuff='toto',
     suitebg='oper'""")
+
+
+@unittestGlobalLevel(tloglevel)
+class TestJobAssistant(unittest.TestCase):
+
+    @staticmethod
+    def _givetag():
+        """Return the first available sessions name."""
+        i = 1
+        while 'job_assistant_test{:d}'.format(i) in vortex.sessions.keys():
+            i += 1
+        return 'job_assistant_test{:d}'.format(i)
+
+    def setUp(self):
+        self.rootsession = vortex.sessions.current()
+        self.rootsh = self.rootsession.system()
+        self.oldpwd = self.rootsh.pwd()
+        self.tmpdir = self.rootsh.path.realpath(tempfile.mkdtemp(prefix='simpleworkflow_test_'))
+        # Create a dedicated test
+        self.cursession = vortex.sessions.get(tag=self._givetag(),
+                                              topenv=vortex.rootenv,
+                                              glove=vortex.sessions.getglove())
+        self.cursession.activate()
+        # Tb settings
+        self._tb_verbose = vortex.toolbox.active_verbose
+        self._tb_active = vortex.toolbox.active_now
+        self._tb_clear = vortex.toolbox.active_clear
+        vortex.toolbox.active_verbose = False
+        vortex.toolbox.active_now = False
+        vortex.toolbox.active_clear = False
+
+    def tearDown(self):
+        # Reset tb setting
+        vortex.toolbox.active_verbose = self._tb_verbose
+        vortex.toolbox.active_now = self._tb_active
+        vortex.toolbox.active_clear = self._tb_clear
+        # Reset the session
+        self.cursession.exit()
+        self.rootsession.activate()
+        self.rootsh.cd(self.oldpwd)
+        self.rootsh.remove(self.tmpdir)
+
+    @contextlib.contextmanager
+    def _safe_ja_setup(self, ja, *kargs, **kwargs):
+        t, e, sh = ja.setup(*kargs, **kwargs)
+        try:
+            yield t, e, sh
+        finally:
+            ja.finalise()
+            ja.close()
+
+    def test_bare_ja1(self):
+        ja = fpx.jobassistant(kind='generic',
+                              modules=('vortex.tools.folder', ),
+                              addons=('allfolders', ),
+                              special_prefix="fake_")
+
+        actual_data = dict(vapp='arpege',
+                           vconf='future',
+                           cutoff='assim',
+                           rundate=b_date.Date('2021010100'),
+                           xpid='test1@unit-tester',
+                           jobname='testjob1',
+                           iniconf=os.path.join(DATAPATHTEST, 'ja_test_conf.ini'))
+        actual = {'fake_' + k: v for k, v in actual_data.items()}
+        actual['fake_XPID'] = actual.pop('fake_xpid')
+        actual['trap_number1'] = 1
+        auto_options = dict(member=1)
+        with self._safe_ja_setup(ja, actual=actual, auto_options=auto_options) as (t, e, sh):
+            self.assertIs(t, self.cursession)
+            # Special variables detection
+            specials = actual_data.copy()
+            specials.update(auto_options)
+            self.assertDictEqual(ja.special_variables, specials)
+            # Configuration file reading
+            conf = specials.copy()
+            conf['geometry'] = geometries.get(tag='global798')
+            conf['model'] = 'arpege'
+            conf['cycle'] = 'uenv:pp_pearp.01@demo'
+            conf['ftuser'] = 'toto'
+            self.assertDictEqual(dict(ja.conf), conf)
+            # Early glove setting
+            self.assertEqual(t.glove.vapp, 'arpege')
+            self.assertEqual(t.glove.vconf, 'future')
+            # Environment update according to special variables
+            for k, v in specials.items():
+                self.assertEqual(e['FAKE_' + k], v)
+            # Loaded addons
+            from vortex.tools.folder import available_foldershells
+            self.assertSetEqual(set(sh.loaded_addons()),
+                                set(available_foldershells))
+            # ftuser
+            self.assertEqual(t.glove.getftuser('any.host.com'), 'toto')
+            # Toolbox defaults
+            self.assertTrue(vortex.toolbox.active_verbose)
+            self.assertTrue(vortex.toolbox.active_now)
+            self.assertTrue(vortex.toolbox.active_clear)
+            # Mail is not activated bye default
+            self.assertListEqual(actiond.cenmail_status(), [False, ])
+            # Just to see if it works...
+            ja.complete()
+
+    def test_bare_ja2(self):
+        ja = fpx.jobassistant(kind='generic',
+                              special_prefix="fake_")
+
+        actual_data = dict(jobname='testjob2',
+                           iniconf=os.path.join(DATAPATHTEST, 'ja_test_conf.ini'))
+        actual = {'fake_' + k: v for k, v in actual_data.items()}
+        with self._safe_ja_setup(ja, actual=actual) as (t, e, sh):
+            # ftuser
+            self.assertEqual(t.glove.getftuser('any.host.com'), 'toto')
+            self.assertEqual(t.glove.getftuser('other.host.com'), 'titi')
+
+    def test_japlugin_mail(self):
+        ja = fpx.jobassistant(kind='generic',
+                              special_prefix="fake_")
+        ja.add_plugin('rd_mail_setup')
+
+        actual_data = dict(jobname='testjob3',
+                           iniconf=os.path.join(DATAPATHTEST, 'ja_test_conf.ini'))
+        actual = {'fake_' + k: v for k, v in actual_data.items()}
+        try:
+            with self._safe_ja_setup(ja, actual=actual):
+                self.assertListEqual(actiond.cenmail_status(), [True, ])
+        finally:
+            actiond.cenmail_off()
 
 
 if __name__ == "__main__":

@@ -196,7 +196,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Proceed direct ftp get on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname = self.sh._fix_fthostname(hostname)
+        hostname = self.sh.fix_fthostname(hostname)
         source, destination = self._folder_preftget(source, destination)
         ftp = self.sh.ftp(hostname, logname, port=port)
         if ftp:
@@ -296,7 +296,7 @@ class FolderShell(addons.FtrawEnableAddon):
         """Proceed direct ftp put on the specified target."""
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        hostname = self.sh._fix_fthostname(hostname)
+        hostname = self.sh.fix_fthostname(hostname)
         source = self.sh.path.abspath(source)
 
         ftp = self.sh.ftp(hostname, logname, port=port)
@@ -345,7 +345,7 @@ class FolderShell(addons.FtrawEnableAddon):
             raise IOError("It's not allowed to compress folder like data.")
 
         source, destination = self._folder_preftget(source, destination)
-        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+        logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         rc = False
         loccwd = self.sh.getcwd()
@@ -365,7 +365,7 @@ class FolderShell(addons.FtrawEnableAddon):
             raise IOError("It's not allowed to compress folder like data.")
 
         source = self.sh.path.abspath(source)
-        logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+        logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         ssh = self.sh.ssh(hostname, logname)
         p = self._folder_pack_stream(source)
         rc = ssh.scpput_stream(p.stdout, destination)
