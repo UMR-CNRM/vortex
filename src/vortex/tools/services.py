@@ -715,6 +715,12 @@ class TemplatedMailService(MailService):
             catalog = dict(
                 type     = GenericConfigParser,
             ),
+            dryrun=dict(
+                info     = "Do not actualy send the email. Just render the template.",
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -737,10 +743,6 @@ class TemplatedMailService(MailService):
     def trailer(self):
         """String appended to the message body."""
         return u''
-
-    def deactivated(self):
-        """Return True to eventually prevent the mail from being sent."""
-        return False
 
     def get_catalog_section(self):
         """Read section <id> (a dict-like) from the catalog."""
@@ -890,7 +892,7 @@ class TemplatedMailService(MailService):
         for arg in args:
             add_ons.update(arg)
         rc = False
-        if self.prepare(add_ons) and not self.deactivated():
+        if self.prepare(add_ons) and not self.dryrun:
             rc = super(TemplatedMailService, self).__call__()
         return rc
 

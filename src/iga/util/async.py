@@ -90,9 +90,10 @@ def system_route(pnum, ask, config, logger, **opts):
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
 
             # assert the source is there
-            if not sh.path.exists(data.source):
+            logger.info('Source = ' + data.source)
+            if not sh.path.exists(data.source) and data.fallback_uri is not None:
                 logger.warning('Source file is missing - trying to recover from the cache')
-                uri = uriparse(data.rlocation)
+                uri = uriparse(data.data.fallback_uri)
                 astore = fpx.store(**uri)
                 astore.get(uri, data.source, dict(fmt=data.fmt))
 
@@ -101,21 +102,23 @@ def system_route(pnum, ask, config, logger, **opts):
                 return pnum, False, dict(rpool='error')
 
             # apply filtering, or at least ask for concatenation
-            logger.info('filtername=' + (data.filtername or 'concatenation'))
-            if data.filtername is None:
-                gribfilter = GRIBFilter(concatenate=True)
+            if data.filterdefinition:
+                logger.info('Filtering input data. filtername=%s', data.filterdefinition['filter_name'])
+                if data.fmt == 'grib':
+                    gribfilter = GRIBFilter(concatenate=False)
+                    gribfilter.add_filters(data.filterdefinition)
+                    outfile_fmt = 'GRIBOUTPUT_{filtername:s}.grib'
+                    filtered = gribfilter(data.source, outfile_fmt, intent='in')
+                    if len(filtered) != 1:
+                        logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
+                        logger.error('Nothing will be routed, please fix the script.')
+                        return pnum, False, dict(rpool='error')
+                    route_source = filtered[0]
+                else:
+                    logger.error('Unable to filter format=%s - sorry', data.fmt)
+                    return pnum, False, dict(rpool='error')
             else:
-                gribfilter = GRIBFilter(concatenate=False)
-                gribfilter.add_filters(data.filterdefinition)
-            uri = uriparse(data.rlocation)
-            prefix = re.sub('.' + data.fmt + r'$', '', sh.path.basename(uri['path']), flags=re.I)
-            outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
-            filtered = gribfilter(data.source, outfile_fmt, intent='in')
-            if len(filtered) != 1:
-                logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
-                logger.error('Nothing will be routed, please fix the script.')
-                return pnum, False, dict(rpool='error')
-            route_source = filtered[0]
+                route_source = sh.forcepack(data.source, fmt=data.fmt)
 
             # activate services or not according to jeeves' configuration
             if route_on:
@@ -131,6 +134,7 @@ def system_route(pnum, ask, config, logger, **opts):
             # route the file
             route_opts = data.route_opts
             route_opts.update(
+                defer=False,
                 filename=route_source,
             )
             if nossh:

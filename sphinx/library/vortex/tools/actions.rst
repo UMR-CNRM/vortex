@@ -23,6 +23,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TunableAction
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SendMail
    :show-inheritance:
    :members:

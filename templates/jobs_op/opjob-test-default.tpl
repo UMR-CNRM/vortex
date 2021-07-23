@@ -41,10 +41,6 @@ op_iniconf   = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf
 op_fullplay  = $fullplay
 op_warmstart = $warmstart
 op_refill    = $refill
-op_mail      = $mail
-op_jeeves    = '{0}_$jeeves'.format(op_xpid)
-op_jroute    = '{0}_$jroute'.format(op_xpid)
-op_phase     = $phase
 op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
@@ -84,10 +80,15 @@ for pkind in ($loadedjaplugins):
 try:
     t, e, sh = ja.setup(actual=locals())
     from vortex.tools.actions import actiond as ad
-    ad.opmail_off()
+    # Setup actions
+    ad.jeeves_tune(jname='{0}_$jeeves'.format(op_xpid))
+    ad.opmail_tune(dryrun=not $mail)
+    ad.phase_tune(jname='{0}_phase'.format(op_xpid), dryrun=not $phase)
+    ad.route_tune(jname='{0}_$jroute'.format(op_xpid))
+    # Switch on actions (or not) !
+    ad.opmail_on()
     ad.dmt_off()
     ad.route_off()
-    ad.phase_tune(jname='{0}_phase'.format(op_xpid))
     ad.phase_on()
     opts = dict(jobassistant=ja, play=op_fullplay)
     driver = todo.setup(t, **opts)

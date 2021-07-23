@@ -8,13 +8,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import io
 import re
-from pprint import pformat
 from tempfile import mkdtemp
 
 import six
 
 import bronx.stdtypes.date
-import footprints
 import vortex
 from bronx.fancies import loggers
 from iga.tools import actions, services
@@ -379,51 +377,6 @@ def filteractive(r, dic):
     return filter_active
 
 
-def defer_route(t, rh, jeeves_opts, route_opts):
-    """Send to jeeves all the information needed to handle asynchronously
-    the grib filtering and then call the routing service.
-    """
-    effective_path = t.sh.path.abspath(rh.container.localpath())
-    logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
-    logger.info('route_opts :\n\t' + pformat(route_opts))
-
-    # get the filter definition (if any)
-    filtername = jeeves_opts['filtername']
-    if filtername:
-        filters = [
-            request.rh.contents.data
-            for request in t.context.sequence.effective_inputs(
-                role='GRIBFilteringRequest',
-                kind='filtering_request', )
-            if request.rh.contents.data['filter_name'] == filtername
-        ]
-        if len(filters) == 1:
-            jeeves_opts.update(
-                filterdefinition=filters[0],
-            )
-        else:
-            raise ValueError('filtername not found in the effective_inputs: %s', filtername)
-
-    # get a service able to create the hidden copy
-    fmt = rh.container.actualfmt
-    hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
-
-    # complete the request
-    jeeves_opts.update(
-        todo='route',
-        jname=t.env.get('op_jroute'),
-        source=hide(effective_path),
-        fmt=fmt,
-        route_opts=route_opts,
-        original=effective_path,
-        rhandler=rh.as_dict(),
-        rlocation=rh.location(),
-    )
-
-    # post the request to jeeves
-    return ad.jeeves(**jeeves_opts)
-
-
 def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
                          routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
                          header_infile=True, deferred=True, filtername=None, **kw):
@@ -448,7 +401,7 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
                       filename=rh.container.abspath, filefmt=rh.container.actualfmt,
                       soprano_target=soprano_target, routingkey=routingkey,
                       targetname=targetname, transmet=transmet,
-                      header_infile=header_infile, **kw)
+                      header_infile=header_infile, defer=deferred, **kw)
 
         if selkeyproductid:
             if isinstance(productid, dict):
@@ -464,16 +417,24 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
-        if filteractive(rh, optfilter):
-            if deferred:
-                logger.info('asking jeeves to route handler ' + str(rh))
-                jeeves_opts = dict(
-                    filtername=filtername,
-                )
-                defer_route(t, rh, jeeves_opts, kwargs)
+        if filtername is not None:
+            filters = [
+                request.rh.contents
+                for request in t.context.sequence.effective_inputs(
+                    role='GRIBFilteringRequest',
+                    kind='filtering_request', )
+                if request.rh.contents.data['filter_name'] == filtername
+            ]
+            if len(filters) == 1:
+                kwargs['filterdefinition'] = filters[0]
             else:
-                logger.info('routing handler ' + str(rh))
-                ad.route(**kwargs)
+                raise ValueError('filtername not found in the effective_inputs: %s', filtername)
+        else:
+            kwargs['filterdefinition'] = None
+
+        if filteractive(rh, optfilter):
+            logger.info('routing handler ' + str(rh))
+            ad.route(**kwargs)
 
     return hook_route
 

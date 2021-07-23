@@ -31,10 +31,11 @@ from six import StringIO
 import io
 import locale
 import logging
+from logging.handlers import SysLogHandler
+from pprint import pformat
 import random
 import re
 import socket
-from logging.handlers import SysLogHandler
 
 from bronx.fancies import loggers
 import footprints
@@ -45,6 +46,7 @@ from bronx.stdtypes.date import Time
 from common.tools.agt import agt_actual_command
 from footprints.stdtypes import FPDict
 from iga.tools.transmet import get_ttaaii_transmet_sh
+from vortex.data.contents import DataContent
 from vortex.syntax.stdattrs import DelayedEnvValue
 from vortex.syntax.stdattrs import a_term, a_domain
 from vortex.tools.actions import actiond as ad
@@ -352,11 +354,28 @@ class RoutingService(Service):
     _footprint = dict(
         info = 'Routing services abstract class',
         attr = dict(
+            defer = dict(
+                info     = 'Process the request in an synchronous way using Jeeves.',
+                type     = bool,
+                optional = False,
+                default  = True
+            ),
             filename = dict(
+                info     = 'What is the file we want to send.'
             ),
             filefmt = dict(
+                info     = 'The file format.',
                 optional = True,
                 default  = None
+            ),
+            rhandler_export = dict(
+                info     = 'A representation of the resource handler that issued the request.',
+                type     = footprints.FPDict,
+                optional = True
+            ),
+            rhandler_uri = dict(
+                info     = 'The URI associated with the resource handler that issued the request.',
+                optional = True
             ),
             targetname = dict(
                 optional = True,
@@ -382,14 +401,29 @@ class RoutingService(Service):
                 optional = True,
                 default  = 5,
             ),
+            filterdefinition = dict(
+                info     = 'It might be desirable to filter the data (available for a few formats).',
+                type     = DataContent,
+                optional = True,
+            ),
+            jname = dict(
+                info     = 'When defer is True, what is the name of the Jeeves daemon.',
+                optional = True
+            )
         )
     )
 
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
+        if self.filterdefinition is not None:
+            if not self.defer:
+                raise ValueError('Data Filtering is only allowed in defered mode')
         absolute_name = self.sh.path.abspath(self.filename)
-        self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
+        if self.defer:
+            self._actual_filename = absolute_name
+        else:
+            self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -449,11 +483,7 @@ class RoutingService(Service):
             return False
         return True
 
-    def __call__(self):
-        """Actual service execution."""
-
-        if not self.file_ok():
-            return False
+    def _imediate_processing(self):
 
         if self._actual_targetname:
             if self.sh.path.exists(self._actual_targetname):
@@ -497,6 +527,44 @@ class RoutingService(Service):
             return False
 
         return True
+
+    def _deferred_processing(self):
+
+        # get a service able to create the hidden copy
+        fmt = self.filefmt
+        if ad.jeeves_status():
+            hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
+        else:
+            def hide(x):
+                return x
+
+        # use the footprint to compute the route_opts
+        route_opts = self.footprint_as_shallow_dict()
+        del route_opts['filterdefinition']
+        del route_opts['jname']
+
+        # complete the request
+        jeeves_opts = dict(
+            todo='route',
+            jname=self.jname,
+            source=hide(self._actual_filename),
+            fmt=fmt,
+            fallback_uri=self.rhandler_uri,
+            route_opts=route_opts,
+            original=self._actual_filename,
+            filterdefinition=self.filterdefinition.data,
+        )
+        logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
+
+        # post the request to jeeves
+        return ad.jeeves(**jeeves_opts)
+
+    def __call__(self):
+        """Actual service execution."""
+        if not self.file_ok():
+            return False
+        todo = self._deferred_processing if self.defer else self._imediate_processing
+        return todo()
 
 
 class RoutingUpstreamService(RoutingService):
@@ -1084,10 +1152,6 @@ class OpMailService(TemplatedMailService):
     )
 
     _TEMPLATES_SUBDIR = 'opmails'
-
-    def deactivated(self):
-        """Tells if opmail is deactivated : OP_MAIL set to 0"""
-        return not bool(self.env.get('OP_MAIL', 1))
 
     def substitution_dictionary(self, add_ons=None):
         sdict = super(OpMailService, self).substitution_dictionary(add_ons=add_ons)

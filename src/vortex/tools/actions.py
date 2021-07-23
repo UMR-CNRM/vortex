@@ -16,6 +16,7 @@ import bronx.stdtypes.catalog
 import footprints
 
 from vortex.util.authorizations import is_authorized_user
+from vortex import sessions
 
 #: Export nothing
 __all__ = []
@@ -126,6 +127,74 @@ class Action(object):
         return rc
 
 
+class TunableAction(Action):
+    """An Action that may be tuned
+
+    - may have it's own section in the target configuration files
+    - accepts the syntax `ad.action_tune(key=value)` (which has priority)
+    """
+
+    def __init__(self, configuration=None, **kwargs):
+        super(TunableAction, self).__init__(**kwargs)
+        self._tuning = dict()
+        self._conf_section = None
+        self.configure(configuration)
+
+    @property
+    def _shtarget(self):
+        return sessions.current().sh.default_target
+
+    def configure(self, section, show=False):
+        """Check and set the configuration: a section in the target-xxx.ini file."""
+        self._conf_section = section
+        if section is not None:
+            if section not in self._shtarget.sections():
+                raise KeyError('No section "{}" in "{}"'.format(section, self._shtarget.config.file))
+        if show:
+            self.show_config()
+
+    def tune(self, section=None, **kw):
+        """Add options to override the .ini file configuration.
+
+        ``section`` is a specific section name, or ``None`` for all.
+        """
+        if section is None or section == self._conf_section:
+            self._tuning.update(kw)
+
+    def _get_config_dict(self):
+        final_dict = dict()
+        final_dict.update(self._shtarget.items(self._conf_section))
+        final_dict.update(self._tuning)
+        return final_dict
+
+    def show_config(self):
+        """Show the current configuration (for debugging purposes)."""
+        from pprint import pprint
+        print('\n=== Phase configuration:', self._conf_section)
+        final_dict = dict()
+        if self._conf_section is not None:
+            pprint(self._shtarget.items(self._conf_section))
+            final_dict.update(self._shtarget.items(self._conf_section))
+        if self._tuning:
+            print('\n+++ Fine tuning:')
+            pprint(self._tuning)
+            print('\n+++ Real configuration:')
+            final_dict.update(self._tuning)
+            pprint(final_dict)
+        print()
+
+    def getx(self, key, *args, **kw):
+        """Shortcut to access the configuration overridden by the tuning."""
+        if key in self._tuning:
+            return self._tuning[key]
+        elif self._conf_section is not None:
+            return self._shtarget.getx(key=self._conf_section + ':' + key, *args, **kw)
+        elif 'default' in kw:
+            return kw['default']
+        else:
+            raise KeyError('The "{:s}" entry was not found in any configuration'.format(key))
+
+
 class SendMail(Action):
     """
     Class responsible for sending emails.
@@ -156,19 +225,21 @@ class SSH(Action):
         super(SSH, self).__init__(kind=kind, active=active, service=service)
 
 
-class AskJeeves(Action):
+class AskJeeves(TunableAction):
     """
     Class responsible for posting requests to Jeeves daemon.
     """
 
     def __init__(self, kind='jeeves', service='askjeeves', active=True):
-        super(AskJeeves, self).__init__(kind=kind, active=active, service=service)
+        super(AskJeeves, self).__init__(configuration=None, kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Generic method to perform the action through a service."""
         rc = None
         if 'kind' in kw:
             kw['fwd_kind'] = kw.pop('kind')
+        for k, v in self._get_config_dict():
+            kw.setdefault(k, v)
         service = self.get_active_service(**kw)
         if service:
             talk = {k: v for k, v in kw.items() if k not in service.footprint_attributes}

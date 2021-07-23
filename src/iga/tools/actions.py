@@ -13,7 +13,7 @@ from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
-from vortex.tools.actions import Action, actiond
+from vortex.tools.actions import Action, TunableAction, actiond
 from vortex.tools.services import Directory
 from vortex.util.config import GenericConfigParser
 
@@ -56,14 +56,14 @@ class DMTEvent(Action):
         super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
 
 
-class OpMail(Action):
+class OpMail(TunableAction):
     """
     Class responsible for sending pre-defined mails.
     """
 
-    def __init__(self, kind='opmail', service='opmail', active=True,
+    def __init__(self, kind='opmail', service='opmail', active=False,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(kind=kind, active=active, service=service)
+        super(OpMail, self).__init__(configuration=None, kind=kind, active=active, service=service)
         self.directory = directory or Directory('@opmail-address-book.ini',
                                                 encoding=inputs_charset)
         self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
@@ -75,6 +75,7 @@ class OpMail(Action):
         kw.setdefault('directory', self.directory)
         kw.setdefault('catalog', self.catalog)
         kw.setdefault('inputs_charset', self.inputs_charset)
+        kw.setdefault('dryrun', self.getx('dryrun', default=False))
         return super(OpMail, self).service_info(**kw)
 
     def execute(self, *args, **kw):
@@ -91,21 +92,19 @@ class OpMail(Action):
         return rc
 
 
-class OpPhase(Action):
+class OpPhase(TunableAction):
     """
     Class responsible for phasing resources to a fall-back machine
     or to a redundant filesystem, for crash recovery.
     The configuration must be a section in the target-xxx.ini file.
     """
 
-    def __init__(self, configuration, kind='phase', service=None, active=True):
-        super(OpPhase, self).__init__(kind=kind, active=active, service=service)
+    def __init__(self, configuration, kind='phase', service=None, active=False):
+        if configuration is None:
+            raise ValueError("The configuration argument cannot be `None`")
+        super(OpPhase, self).__init__(configuration=configuration, kind=kind, active=active, service=service)
         self._rhtodo = list()
         self._rhdone = list()
-        self._sh = sessions.system()
-        self._section = None
-        self._tuning = dict()
-        self.configure(configuration)
 
     @staticmethod
     def actions():
@@ -119,54 +118,6 @@ class OpPhase(Action):
         else:
             active_actions = []
         return [OpPhase(action) for action in active_actions]
-
-    @property
-    def sh(self):
-        return self._sh
-
-    @property
-    def shtarget(self):
-        return self.sh.default_target
-
-    @property
-    def section(self):
-        return self._section
-
-    def tune(self, section=None, **kw):
-        """Add options to override the .ini file configuration.
-
-        ``section`` is a specific section name, or ``None`` for all.
-        """
-        if section is None or section == self._section:
-            self._tuning.update(kw)
-
-    def configure(self, section, show=False):
-        """Check and set the configuration: a section in the target-xxx.ini file."""
-        self._section = section
-        if section not in self.shtarget.sections():
-            raise KeyError('No section "{}" in "{}"'.format(section, self.shtarget.config.file))
-        if show:
-            self.show_config()
-
-    def show_config(self):
-        """Show the current configuration (for debugging purposes)."""
-        from pprint import pprint
-        print('\n=== Phase configuration:', self._section)
-        pprint(self.shtarget.items(self._section))
-        if self._tuning:
-            print('\n+++ Fine tuning:')
-            pprint(self._tuning)
-            print('\n+++ Real configuration:')
-            final_dict = dict(self.shtarget.items(self._section))
-            final_dict.update(self._tuning)
-            pprint(final_dict)
-        print()
-
-    def getx(self, key, *args, **kw):
-        """Shortcut to access the configuration overridden by the tuning."""
-        if key in self._tuning:
-            return self._tuning[key]
-        return self.shtarget.getx(key=self._section + ':' + key, *args, **kw)
 
     @property
     def immediate(self):
@@ -226,7 +177,7 @@ class OpPhase(Action):
         t = sessions.current()
         env = t.env
 
-        active = bool(env.get('OP_PHASE', 1))
+        active = not self.getx('dryrun', default=False)
         if not active:
             logger.warning('OpPhase is not active (e.OP_PHASE={})'.format(env.get('OP_PHASE', '<not set>')))
 
@@ -249,16 +200,17 @@ class OpPhase(Action):
         - remote_path: the path to use on the remote machine. This is incache_path,
           but possibly modified according to the basepaths configuration.
         """
+        sh = sessions.current().sh
         paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]
         if first_path == '':
             raise ValueError('No access from a cache to the resource')
-        incache_path = self.sh.path.abspath(first_path)
+        incache_path = sh.path.abspath(first_path)
 
-        if self.sh.path.exists(incache_path):
+        if sh.path.exists(incache_path):
             effective_path = incache_path
         else:
-            effective_path = self.sh.path.abspath(rh.container.localpath())
+            effective_path = sh.path.abspath(rh.container.localpath())
 
         protocol = self.getx('protocol', silent=False)
         jname = self.getx('jname', silent=False)
@@ -267,16 +219,16 @@ class OpPhase(Action):
         basepaths = self.getx('basepaths', default='', aslist=True)
         if basepaths:
             src, dst = basepaths
-            if not self.sh.path.commonpath((incache_path, src,)) == src:
+            if not sh.path.commonpath((incache_path, src,)) == src:
                 dst, src = src, dst
-                if not self.sh.path.commonpath((incache_path, src,)) == src:
+                if not sh.path.commonpath((incache_path, src,)) == src:
                     msg = "Basepaths are incompatible with resource path\n\tpath={}\n\tbasepaths={}".format(
                         incache_path, basepaths)
                     raise ValueError(msg)
             if not src.endswith('/'):
                 src += '/'
             lastpart = incache_path.replace(src, '')
-            remote_path = self.sh.path.join(dst, lastpart)
+            remote_path = sh.path.join(dst, lastpart)
         else:
             remote_path = incache_path
 
@@ -329,7 +281,7 @@ class OpPhase(Action):
             fmt=fmt,
             source=hide(effective_path),
             destination=remote_path,
-            original=self.sh.path.abspath(effective_path),
+            original=sh.path.abspath(effective_path),
             **opts
         )
 
