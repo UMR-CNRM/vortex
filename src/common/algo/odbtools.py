@@ -865,6 +865,95 @@ class OdbMatchup(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
         )
 
 
+class OdbReshuffle(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
+    """Take a bunch of ECMA databases and create new ones with an updated number of pools."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['reshuffle'],
+            ),
+            mpiconflabel = dict(
+                default  = 'mplbased'
+            )
+        )
+    )
+
+    _OUT_DIRECTORY = 'reshuffled'
+    _BARE_OUT_LAYOUT = 'ccma'
+
+    def prepare(self, rh, opts):
+        """Find ODB candidates in input files."""
+
+        # Looking for input observations
+        obs_in_virtual = [
+            x for x in self.lookupodb()
+            if x.rh.resource.part == 'virtual'
+        ]
+        if obs_in_virtual:
+            raise ValueError('Do not input a Virtual database')
+        self.obs_in_parts = [
+            x for x in self.lookupodb()
+            if x.rh.resource.part != 'virtual'
+        ]
+
+        # Find the input layout
+        in_layout = set([x.rh.resource.layout for x in self.obs_in_parts])
+        if len(in_layout) != 1:
+            raise ValueError('Incoherent layout in input databases or no input databases')
+        self.layout_in = in_layout.pop()
+
+        # Some extra settings
+        self.env.update(
+            TO_ODB_FULL=1
+        )
+
+        # prepare the ouputs' directory
+        self.system.mkdir(self._OUT_DIRECTORY)
+
+        super(OdbReshuffle, self).prepare(rh, opts)
+
+    def execute(self, rh, opts):
+        """Loop on available databases."""
+        sh = self.system
+        for a_db in self.obs_in_parts:
+            sh.subtitle('Dealing with {:s}'.format(a_db.rh.container.localpath()))
+
+            ecma_path = sh.path.abspath(a_db.rh.container.localpath())
+            ccma_path = sh.path.abspath(sh.path.join(self._OUT_DIRECTORY,
+                                                     '.'.join([self.layout_in.upper(),
+                                                               a_db.rh.resource.part])))
+            self.odb_create_db(self._BARE_OUT_LAYOUT, dbpath=ccma_path)
+            self.odb.fix_db_path(self.layout_in, ecma_path)
+            self.odb.fix_db_path(self._BARE_OUT_LAYOUT, ccma_path)
+            self.odb.ioassign_gather(ccma_path, ecma_path)
+
+            # Apparently te binary tries to write in the input databse,
+            # no idea why but...
+            self.odb_rw_or_overwrite_method(a_db)
+
+            super(OdbReshuffle, self).execute(rh, opts)
+
+            # CCMA -> ECMA
+            self.odb.change_layout(self._BARE_OUT_LAYOUT, self.layout_in, ccma_path)
+
+    def postfix(self, rh, opts):
+        """Create a virtual database for output data."""
+        self.system.subtitle('Creating the virtual database')
+        with self.system.cdcontext(self._OUT_DIRECTORY):
+            virtual_db = self.odb_merge_if_needed(self.obs_in_parts)
+            logger.info('The output virtual DB was created: %s',
+                        self.system.path.abspath(self.virtualdb))
+
+    def spawn_command_options(self):
+        """Prepare command line options to binary."""
+        return dict(
+            dbin=self.layout_in,
+            dbout=self._BARE_OUT_LAYOUT,
+            npool=self.npool,
+        )
+
+
 class FlagsCompute(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     """Compute observations flags."""
 
