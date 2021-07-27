@@ -977,6 +977,10 @@ class FootprintBase(object):
                 setattr(objcp, a, getattr(self, a))
         return objcp
 
+    def footprint_has_attribute(self, attr):
+        """Check if the footprint contains the **attr** attribute"""
+        return attr in self._attributes
+
     @property
     def footprint_attributes(self):
         """Returns the list of current attributes."""

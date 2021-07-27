@@ -78,10 +78,10 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_cp(self, source, destination, intent='in', silent=False):
         """Extended copy for a folder repository."""
-        rc, source, destination = self.sh.tarfix_out(source, destination)
+        rc, source, destination = self._folder_tarfix_out(source, destination)
         rc = rc and self.sh.cp(source, destination, intent=intent)
         if rc:
-            rc, source, destination = self.tarfix_in(source, destination)
+            rc, source, destination = self._folder_tarfix_in(source, destination)
             if rc and intent == 'inout':
                 self.sh.stderr('chmod', 0o644, destination)
                 oldtrace, self.sh.trace = self.sh.trace, False
@@ -97,17 +97,19 @@ class FolderShell(addons.FtrawEnableAddon):
             if isinstance(source, six.string_types):
                 rc = rc and self.sh.remove(source)
         else:
-            rc, source, destination = self.sh.tarfix_out(source, destination)
+            rc, source, destination = self._folder_tarfix_out(source, destination)
             rc = rc and self.sh.move(source, destination)
             if rc:
-                rc, source, destination = self.tarfix_in(source, destination)
+                rc, source, destination = self._folder_tarfix_in(source, destination)
         return rc
 
     def _folder_forcepack(self, source, destination=None):
         """Returned a path to a packed data."""
         if not self.sh.is_tarname(source):
             destination = (destination if destination else
-                           '{:s}{:s}.{:s}'.format(source, self.sh.safe_filesuffix(), self.tarfix_extension))
+                           '{:s}{:s}.{:s}'.format(source,
+                                                  self.sh.safe_filesuffix(),
+                                                  self._folder_tarfix_extension))
             if not self.sh.path.exists(destination):
                 absdestination = self.sh.path.abspath(destination)
                 with self.sh.cdcontext(self.sh.path.dirname(source)):
@@ -118,8 +120,10 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_forceunpack(self, source):
         """Unpack the data "inplace"."""
-        fakesource = '{:s}{:s}.{:s}'.format(source, self.sh.safe_filesuffix(), self.tarfix_extension)
-        rc, _, _ = self.tarfix_in(fakesource, source)
+        fakesource = '{:s}{:s}.{:s}'.format(source,
+                                            self.sh.safe_filesuffix(),
+                                            self._folder_tarfix_extension)
+        rc, _, _ = self._folder_tarfix_in(fakesource, source)
         return rc
 
     def _folder_pack_stream(self, source, stdout=True):
@@ -189,7 +193,7 @@ class FolderShell(addons.FtrawEnableAddon):
 
     def _folder_anyft_remote_rewrite(self, remote):
         """Add the folder suffix before using file transfert protocols."""
-        return '{:s}.{:s}'.format(remote, self.tarfix_extension)
+        return '{:s}.{:s}'.format(remote, self._folder_tarfix_extension)
 
     def _folder_ftget(self, source, destination, hostname=None, logname=None,
                       port=DEFAULT_FTP_PORT, cpipeline=None):
@@ -385,7 +389,7 @@ class FolderShell(addons.FtrawEnableAddon):
         # The folder must not be compressed
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        ctarget = target + '.{:s}'.format(self.tarfix_extension)
+        ctarget = target + '.{:s}'.format(self._folder_tarfix_extension)
         source, target = self._folder_preftget(source, target)
         # Create a local directory, get the source file and untar it
         loccwd = self.sh.getcwd()
@@ -412,7 +416,7 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
-        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
+        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self._folder_tarfix_extension)
         try:
             rc = self.sh.tar(csource, source)
             if rc:
@@ -437,7 +441,7 @@ class FolderShell(addons.FtrawEnableAddon):
         # The folder must not be compressed
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
-        ctarget = target + '.{:s}'.format(self.tarfix_extension)
+        ctarget = target + '.{:s}'.format(self._folder_tarfix_extension)
         source, target = self._folder_preftget(source, target)
         # Create a local directory, get the source file and untar it
         loccwd = self.sh.getcwd()
@@ -468,7 +472,7 @@ class FolderShell(addons.FtrawEnableAddon):
         if cpipeline is not None:
             raise IOError("It's not allowed to compress folder like data.")
         source = self.sh.path.abspath(source)
-        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self.tarfix_extension)
+        csource = source + self.sh.safe_filesuffix() + '.{:s}'.format(self._folder_tarfix_extension)
         try:
             rc = self.sh.tar(csource, source)
             if rc:
@@ -482,7 +486,7 @@ class FolderShell(addons.FtrawEnableAddon):
         return rc, dict_args
 
     @property
-    def tarfix_extension(self):
+    def _folder_tarfix_extension(self):
         """Return the extension of tar file associated with this extension."""
         if self._COMPRESSED:
             if self._COMPRESSED == 'gz':
@@ -495,7 +499,7 @@ class FolderShell(addons.FtrawEnableAddon):
         else:
             return "tar"
 
-    def tarfix_in(self, source, destination):
+    def _folder_tarfix_in(self, source, destination):
         """Automatically untar **source** if **source** is a tarfile and **destination** is not.
 
         This is called after a copy was blindly done: a ``source='foo.tgz'`` might have
@@ -520,7 +524,7 @@ class FolderShell(addons.FtrawEnableAddon):
             sh.rm(loctmp)
         return (ok, source, destination)
 
-    def tarfix_out(self, source, destination):
+    def _folder_tarfix_out(self, source, destination):
         """Automatically tar **source** if **destination** is a tarfile and **source** is not.
 
         This is called after a copy was blindly done: a directory might have been copied
