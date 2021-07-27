@@ -22,7 +22,7 @@ from glob import glob
 
 import six
 
-import footprints
+from bronx.syntax import mktuple
 from bronx.patterns import getbytag
 
 #: No automatic export
@@ -166,7 +166,7 @@ class Request(object):
         self.opts = dict() if opts is None else dict(opts)
         self.data = data
         self.jtag = jtag
-        self.mail = footprints.util.mktuple(mail)
+        self.mail = mktuple(mail)
         self.conf = conf
         self.apps = apps
         self.info = str(info)
@@ -252,6 +252,8 @@ class Deposit(getbytag.GetByTag):
         self._tryclean = None
         self._lastclean = None
         self._minclean = duration_to_seconds(minclean)
+        # Create all the necessary directories just before the first clean-up
+        self.cocoon()
         self._first_clean()
 
     @property

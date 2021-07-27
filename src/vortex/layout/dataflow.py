@@ -19,9 +19,9 @@ import weakref
 from bronx.compat.moves import collections_abc, re_Pattern
 from bronx.fancies import loggers
 from bronx.patterns import observer
+from bronx.syntax import mktuple
 from bronx.syntax.pretty import EncodedPrettyPrinter
 import footprints
-from footprints.util import mktuple
 
 from vortex.util.roles import setrole
 

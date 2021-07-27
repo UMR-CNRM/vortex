@@ -7,7 +7,6 @@ AlgoComponents based on the :class:`~vortex.algo.components.TaylorRun` class.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-from collections import defaultdict
 import io
 import logging
 import six
@@ -229,11 +228,11 @@ class ParallelSilencer(object):
             self._io_r.record_teefile(self._debugfile)
         self._stream_h = logging.StreamHandler(self._io_r)
         self._stream_h.setLevel(logging.DEBUG)
-        self._stream_h.setFormatter(loggers.console.formatter)
+        self._stream_h.setFormatter(loggers.default_console.formatter)
 
     def _reset_temporary(self):
         """Reset other temporary stuff."""
-        self._removed_h = defaultdict(list)
+        self._removed_h = dict()
         (self._prev_stdo, self._prev_stde) = (None, None)
 
     def __enter__(self):
@@ -243,12 +242,15 @@ class ParallelSilencer(object):
         # Start the recording of the context (to be replayed in the main process)
         self._ctx_r = self._ctx.get_recorder()
         # Reset all the log handlers and slurp everything
-        for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
-            a_logger.addHandler(self._stream_h)
-        for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
-            for a_handler in [h for h in a_logger.handlers if h is not self._stream_h]:
+        r_logger = logging.getLogger()
+        self._removed_h[r_logger] = list(r_logger.handlers)
+        r_logger.addHandler(self._stream_h)
+        for a_handler in self._removed_h[r_logger]:
+            r_logger.removeHandler(a_handler)
+        for a_logger in [logging.getLogger(x) for x in loggers.lognames | loggers.roots]:
+            self._removed_h[a_logger] = list(a_logger.handlers)
+            for a_handler in self._removed_h[a_logger]:
                 a_logger.removeHandler(a_handler)
-                self._removed_h[a_logger].append(a_handler)
         # Do not speak on stdout/err
         self._prev_stdo = sys.stdout
         self._prev_stde = sys.stderr
@@ -270,10 +272,12 @@ class ParallelSilencer(object):
             # Stop recording the context
             self._ctx_r.unregister()
             # Restore the loggers
-            for a_logger in [loggers.getLogger(x) for x in loggers.roots]:
-                a_logger.removeHandler(self._stream_h)
-            for a_logger in [loggers.getLogger(x) for x in loggers.lognames]:
-                for a_handler in self._removed_h[a_logger]:
+            r_logger = logging.getLogger()
+            for a_handler in self._removed_h[r_logger]:
+                r_logger.addHandler(a_handler)
+            r_logger.removeHandler(self._stream_h)
+            for a_logger in [logging.getLogger(x) for x in loggers.roots | loggers.lognames]:
+                for a_handler in self._removed_h.get(a_logger, ()):
                     a_logger.addHandler(a_handler)
             # flush
             self._stream_h.flush()

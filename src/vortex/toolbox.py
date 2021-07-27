@@ -16,6 +16,7 @@ import traceback
 
 from bronx.fancies import loggers
 from bronx.stdtypes.history import History
+from bronx.syntax import mktuple
 
 import footprints
 
@@ -189,15 +190,14 @@ def _tb_isolate(t, loglevel):
     recordswitch = ctx.record
     if recordswitch:
         ctx.record_off()
-    # Possibly change the log level if necessary
-    if loglevel is not None:
-        oldlevel = t.loglevel
-        t.setloglevel(loglevel.upper())
     try:
-        yield
-    finally:
         if loglevel is not None:
-            t.setloglevel(oldlevel)
+            # Possibly change the log level if necessary
+            with loggers.contextboundGlobalLevel(loglevel):
+                yield
+        else:
+            yield
+    finally:
         if recordswitch:
             ctx.record_on()
 
@@ -268,7 +268,7 @@ def add_section(section, args, kw):
     # Third, collect arguments for triggering some hook
     hooks = dict()
     for ahook in [x for x in kw.keys() if x.startswith('hook_')]:
-        cbhook = footprints.util.mktuple(kw.pop(ahook))
+        cbhook = mktuple(kw.pop(ahook))
         cbfunc = cbhook[0]
         if not callable(cbfunc):
             cbfunc = t.sh.import_function(cbfunc)

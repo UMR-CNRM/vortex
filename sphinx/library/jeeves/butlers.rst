@@ -16,16 +16,6 @@ Package
 Classes
 -------
 
-.. autoclass:: GentleTalk
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: GentleTalkMono
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: ExitHandler
    :show-inheritance:
    :members:

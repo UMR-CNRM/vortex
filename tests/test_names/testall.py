@@ -25,6 +25,7 @@ except ImportError:
     logger.error("The PyYAML package seems to be missing. test_names is not usable (skipping tests)")
 
 
+@loggers.unittestGlobalLevel('info')
 class TestNames(TestCase):
     """The TestDriver class to run names tests."""
 

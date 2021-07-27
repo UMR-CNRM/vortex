@@ -6,6 +6,8 @@ A place to test callback functions for Jeeves.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from bronx.fancies import loggers as b_loggers
+
 import io
 import time
 
@@ -18,8 +20,6 @@ def test_foo(pnum, ask, config, logger, **kw):
 
     Simple sleep.
     """
-
-    logger.loglevel = 'debug'
     profile = config['driver'].get('profile', None)
     logger.info('External', todo=ask.todo, pnum=pnum, profile=profile, opts=kw)
     rc, value = True, None
@@ -50,7 +50,6 @@ def test_bar(pnum, ask, config, logger, **kw):
 
     """
     import os
-    logger.loglevel = 'info'
     try:
         profile = config['driver'].get('profile', None)
     except (AttributeError, TypeError):
@@ -96,7 +95,6 @@ def test_vortex(pnum, ask, config, logger, **kw):
     Activation of a vortex context.
     """
     from vortex.util.worker import VortexWorker
-    logger.loglevel = 'info'
 
     logger.debug('External', todo=ask.todo, pnum=pnum, opts=kw)
     logger.info('External', todo=ask.todo, pnum=pnum, opts=kw)
@@ -133,10 +131,10 @@ def test_direct_call_to_a_jeeves_callback(cb_function):
     """
     import os
     from jeeves import pools
-    from jeeves import butlers
+    from jeeves import talking
 
     # common part
-    logger = butlers.GentleTalk()
+    logger = talking.FancyArgsLoggerAdapter(b_loggers.getLogger(__name__), dict())
     jname = 'test'
     jpath = os.path.expanduser('~/jeeves/' + jname + '/depot')
     jfile = 'vortex'

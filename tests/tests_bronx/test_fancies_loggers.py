@@ -16,8 +16,8 @@ class utLogger(TestCase):
         sl = loggers.SlurpHandler(stack)
         lg.addHandler(sl)
         try:
-            clevel = loggers.console.level
-            loggers.console.setLevel('WARNING')
+            clevel = loggers.default_console.level
+            loggers.default_console.setLevel('WARNING')
             lg.info("Will this be replayed ???")
             lg.removeHandler(sl)
             lg.info("This should not be replayed")
@@ -25,7 +25,7 @@ class utLogger(TestCase):
             for r in stack:
                 lg.handle(r)
         finally:
-            loggers.console.setLevel(clevel)
+            loggers.default_console.setLevel(clevel)
 
 
 if __name__ == '__main__':
