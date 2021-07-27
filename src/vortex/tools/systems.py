@@ -464,12 +464,24 @@ class System(footprints.FootprintBase):
         This is the place where the ``self.search`` list is looked for...
         """
         actualattr = None
+        if key.startswith('_'):
+            # Do not attempt to look for hidden attributes
+            raise AttributeError('Method or attribute ' + key + ' not found')
         for shxobj in self.search:
             if hasattr(shxobj, key):
-                actualattr = getattr(shxobj, key)
-                self._xtrack[key] = shxobj
-                break
-        else:
+                if isinstance(shxobj, footprints.FootprintBase) and shxobj.footprint_has_attribute(key):
+                    # Ignore footprint attributes
+                    continue
+                if actualattr is None:
+                    actualattr = getattr(shxobj, key)
+                    self._xtrack[key] = shxobj
+                else:
+                    # Do not warn for a restricted list of keys
+                    if key not in ('stat', ):
+                        logger.warning('System: duplicate entry while looking for key="%s". ' +
+                                       'First result in %s but also available in %s.',
+                                       key, self._xtrack[key], shxobj)
+        if actualattr is None:
             raise AttributeError('Method or attribute ' + key + ' not found')
         if callable(actualattr):
             def osproxy(*args, **kw):
