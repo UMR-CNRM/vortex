@@ -137,6 +137,30 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
             kind = dict(
                 values = ['specww3asciialgo'],
             ),
+            latmin = dict(
+                info='Latitude mininum of the area',
+                type = float,
+                optional = True,
+                default = -90,
+            ),
+            latmax = dict(
+                info='Latitude maximum of the area',
+                type = float,
+                optional = True,
+                default = 90,
+            ),
+            lonmin = dict(
+                info='Longitude mininum of the area',
+                type = float,
+                optional = True,
+                default = 0,
+            ),
+            lonmax = dict(
+                info='Longitude maximum of the area',
+                type = float,
+                optional = True,
+                default = 360,
+            ),
         )
     )
 
@@ -145,6 +169,29 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
         super(ConvertSpecWW3AsciiAlgo, self).prepare(rh, opts)
 
         inputspec = [x.rh for x in self.context.sequence.effective_inputs(role=('BoundarySpectra', ))]
+
+        # Geographical selection of the spectra
+        for fname in [x.container.filename for x in inputspec]:
+            fout=io.open("output.tmp",'w')
+            with io.open(fname,'r') as fin:
+                linestr = fin.readline()
+                while linestr:
+                    line=linestr.split()
+                    nbr=len(line)
+                    if ( nbr == 7):
+                        lat=float(line[1])
+                        lon=float(line[0])
+                    # case of longitude 0° in the domain
+                    if ( self.lonmin > self.lonmax ):
+                        if lat<self.latmax and lat>self.latmin and ( lon<self.lonmax or lon>self.lonmin ) :
+                            fout.write(linestr)
+                    else:
+                        if lat<self.latmax and lat>self.latmin and  lon<self.lonmax and lon>self.lonmin :
+                            fout.write(linestr)
+                    linestr=fin.readline()
+            fout.close()
+            self.system.sh.mv("output.tmp",fname)
+
         with io.open('list_files', 'w') as flist:
             for fname in [x.container.filename for x in inputspec]:
                 flist.write(fname)
