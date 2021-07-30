@@ -105,7 +105,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, modules=('common', 'olive'), profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = True
+        sh.trace = 'log'
         logger.debug('Test Level DEBUG', vwork=vwork)
         logger.info('Test Level INFO', vwork=vwork)
         logger.warning('Test Level WARNING', vwork=vwork)
@@ -119,7 +119,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
         except (ValueError, AttributeError):
             logger.error('Bad or no duration in data:', data=data)
         logger.info('Sleep', duration=duration)
-        time.sleep(duration)
+        sh.sleep(duration)
         logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag)
     return pnum, vwork.rc, None
 

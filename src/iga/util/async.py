@@ -81,7 +81,7 @@ def system_route(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, verbose=True, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = False
+        sh.trace = 'log'
         data = vwork.get_dataset(ask)
 
         tmpdir = '/chaine/utmp/mxpt001/route/' + sh.path.basename(data.source)

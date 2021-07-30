@@ -51,7 +51,7 @@ def system_ftput(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = False
+        sh.trace = 'log'
         sh.ftpflavour = systems.FTP_FLAVOUR.STD  # Because errors are handled directly by jeeves
 
         data = vwork.get_dataset(ask)
@@ -102,7 +102,7 @@ def system_cp(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = True
+        sh.trace = 'log'
         data = vwork.get_dataset(ask)
         logger.info('cp', source=data.source, destination=data.destination)
         if not sh.path.exists(data.source):
@@ -135,7 +135,7 @@ def system_scp(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = True
+        sh.trace = 'log'
 
         data = vwork.get_dataset(ask)
         logger.info('scp', source=data.source, destination=data.destination)
@@ -171,7 +171,7 @@ def system_noop(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = True
+        sh.trace = 'log'
         data = vwork.get_dataset(ask)
         value = dict(clear=sh.rm(data.source, fmt=data.fmt))
 

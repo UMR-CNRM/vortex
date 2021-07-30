@@ -339,7 +339,8 @@ class System(footprints.FootprintBase):
         In addition to footprint's attributes,  the following attribute may be added:
 
             * **prompt** - as a starting comment line in :meth:`title` like methods.
-            * **trace** - as a boolean to mimic ``set -x`` behaviour (default: *False*).
+            * **trace** - if *True* or *"log"* mimic ``set -x`` behaviour (default: *False*).
+              With trace="log", the information is sent through the logger.
             * **timer** - time all the calls to external commands (default: *False*).
             * **output** - as a default value for any external spawning command (default: *True*).
 
@@ -492,12 +493,15 @@ class System(footprints.FootprintBase):
         """Write a formatted message to standard error (if ``self.trace == True``)."""
         count, justnow, = self.history.append(*args)
         if self.trace:
-            sys.stderr.write(
-                "* [{0:s}][{1:d}] {2:s}\n".format(
-                    justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([six.text_type(x) for x in args])
+            if self.trace == 'log':
+                logger.info('[sh:#%d] %s', count, ' '.join([six.text_type(x) for x in args]))
+            else:
+                sys.stderr.write(
+                    "* [{0:s}][{1:d}] {2:s}\n".format(
+                        justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
+                        ' '.join([six.text_type(x) for x in args])
+                    )
                 )
-            )
 
     def flush_stdall(self):
         """Flush stdout and stderr."""
