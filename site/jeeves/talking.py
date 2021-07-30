@@ -29,7 +29,7 @@ def _void_logger_cb(modname):
 
 
 @contextlib.contextmanager
-def _void_logger_setid_manager(taskno):
+def _void_logger_setid_manager(taskno, loglevel):
     """This should configure the logging system in order to display the **taskno**"""
     raise NotImplementedError()
 
@@ -133,12 +133,19 @@ def _logging_based_logger_cb(name=None):
 
 
 @contextlib.contextmanager
-def _logging_logger_setid_manager(taskno):
+def _logging_logger_setid_manager(taskno, loglevel):
     """Configure the logging system in order to display the **taskno**"""
     root = logging.getLogger()
+    # Tweak the loglevel
+    prev_loglevel = root.level
+    try:
+        root.setLevel(loglevel)
+    except ValueError:
+        # Do not crash if an erroneous value is given. Just  do nothing
+        pass
+    # Filtering (that adds the task number)
     removed_filters = collections.defaultdict(list)
     current_filter = IdFilter(taskno)
-    # Filtering (that adds the task number)
     for h in root.handlers:
         for f in h.filters:
             if isinstance(f, IdFilter):
@@ -148,6 +155,7 @@ def _logging_logger_setid_manager(taskno):
     try:
         yield
     finally:
+        root.setLevel(prev_loglevel)
         for h in root.handlers:
             h.removeFilter(current_filter)
             for f in removed_filters[h]:
@@ -217,7 +225,11 @@ class LoggingBasedLogFacility(AbstractLogFacility):
         root_h = logging.handlers.QueueHandler(self._log_queue)
         root.addHandler(root_h)
         # Logging level
-        root.setLevel(loglevel)
+        try:
+            root.setLevel(loglevel)
+        except ValueError:
+            # Do not crash if an erroneous value is given. Just  do nothing
+            pass
 
     @property
     def worker_logger_setid_manager(self):
@@ -374,12 +386,11 @@ def _legacy_logger_cb(name=None):
 
 
 @contextlib.contextmanager
-def _legacy_logger_setid_manager(taskno):
+def _legacy_logger_setid_manager(taskno, loglevel):
     """Update the current GentleTask object qith the **taskno**."""
     global root_gentle_talk
     prev_root_gentle_talk = root_gentle_talk
-    root_gentle_talk = GentleTalkMono(loglevel=prev_root_gentle_talk.loglevel,
-                                      taskno=taskno)
+    root_gentle_talk = GentleTalkMono(loglevel=loglevel, taskno=taskno)
     try:
         yield
     finally:

@@ -53,6 +53,11 @@ def items():
     return Deposit.tag_items()
 
 
+def check(tag):
+    """Check if a pool is already configured."""
+    return Deposit.tag_check(tag)
+
+
 def clear_all():
     """Clear internal references to existing deposits."""
     Deposit.tag_clear()
@@ -396,7 +401,7 @@ class Deposit(getbytag.GetByTag):
         if target is None:
             target = self.target
         if item is not None and target is not None and target != self.tag:
-            target = Deposit(tag=target)
+            target = Deposit(tag=target, logger=self.logger)
             os.rename(os.path.join(self.path, item), os.path.join(target.path, item))
             rc = target.tag
         return rc
