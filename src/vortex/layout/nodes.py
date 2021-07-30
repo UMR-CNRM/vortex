@@ -225,18 +225,43 @@ class NiceLayout(observer.Observer):
         failure = self.status == NODE_STATUS.FAILED
         return failure or any([k.any_failure for k in self.contents])
 
+    def tree_str(self, statuses_filter=(), with_conf=False):
+        """Print the node's tree."""
+        # Kids contribution
+        filtered_kids = [k for k in self.contents
+                         if not statuses_filter or k.status in statuses_filter]
+        kids_str = ['\n'.join('{:s}{:s} {:s}'.format('|' if i == 0 or ikid < len(filtered_kids) - 1 else ' ',
+                                                     '--' if i == 0 else '  ',
+                                                     line)
+                              for i, line in enumerate(kid.tree_str(statuses_filter=statuses_filter,
+                                                                    with_conf=with_conf).split('\n')))
+                    for ikid, kid in enumerate(filtered_kids)]
+        # Myself
+        tree = []
+        if not statuses_filter or self.status in statuses_filter:
+            if len(statuses_filter) != 1:
+                me_fmt = '{tag:s} ({what:s}) -> {status:s}'
+            else:
+                me_fmt = '{tag:s} ({what:s})'
+            x_status = self.status
+            if x_status == NODE_STATUS.RUNNING and self.status_mstep_counter < self.mstep_counter:
+                x_status = "interrupted because of others errors"
+            me = me_fmt.format(tag=self.tag, what=self.__class__.__name__, status=x_status)
+            if self.status == NODE_STATUS.FAILED and self.on_error != NODE_ON_ERROR.FAIL:
+                me += ' (but {:s})'.format(self.on_error)
+            tree.append(me)
+            if with_conf:
+                cd = self.confdiff
+                if cd:
+                    tree.extend(['{:s}      {:s}={!s}'.format('|' if self.contents else ' ', k, v)
+                                 for k, v in sorted(cd.items())])
+        # Myself + kids
+        tree.extend(kids_str)
+        return '\n'.join(tree)
+
     def __str__(self):
         """Print the node's tree."""
-        me_fmt = '{tag:s} ({what:s}) -> {status:s}'
-        x_status = self.status
-        if x_status == NODE_STATUS.RUNNING and self.status_mstep_counter < self.mstep_counter:
-            x_status = "interrupted because of others errors"
-        me = me_fmt.format(tag=self.tag, what=self.__class__.__name__, status=x_status)
-        if self.status == NODE_STATUS.FAILED and self.on_error != NODE_ON_ERROR.FAIL:
-            me += ' (but {:s})'.format(self.on_error)
-        tree = [me, ] + ['\n'.join('  ' + line for line in str(kid).split('\n'))
-                         for kid in self.contents]
-        return '\n'.join(tree)
+        return self.tree_str()
 
 
 class Node(getbytag.GetByTag, NiceLayout):
@@ -285,7 +310,9 @@ class Node(getbytag.GetByTag, NiceLayout):
             self._subjobok = j_assist.subjob_allowed
             self._subjobtag = j_assist.subjob_tag
         self._mstep_job_last = kw.pop('mstep_job_last', True)
+        self._dryrun = kw.pop('dryrun', False)
         self._conf = None
+        self._parentconf = None
         self._activenode = None
         self._contents = list()
         self._nicelayout_init(kw)
@@ -300,7 +327,8 @@ class Node(getbytag.GetByTag, NiceLayout):
                         register_cycle_prefix=self._cycle_cb,
                         subjob_tag=self._subjobtag,
                         subjob_allowed=self._subjobok,
-                        mstep_job_last=self._mstep_job_last
+                        mstep_job_last=self._mstep_job_last,
+                        dryrun=self._dryrun
                         )
         argsdict.update(self.options)
         return argsdict
@@ -330,6 +358,13 @@ class Node(getbytag.GetByTag, NiceLayout):
     @property
     def conf(self):
         return self._conf
+
+    @property
+    def confdiff(self):
+        cs = ConfigSet()
+        cs.update({k: v for k, v in self._conf.items()
+                  if k not in self._parentconf or self._parentconf[k] != v})
+        return cs
 
     @property
     def activenode(self):
@@ -364,7 +399,8 @@ class Node(getbytag.GetByTag, NiceLayout):
         if self.activenode:
             oldctx = self.ticket.context
             ctx = self.ticket.context.newcontext(self.tag, focus=True)
-            ctx.cocoon()
+            if not self._dryrun:
+                ctx.cocoon()
             self._setup_context(ctx)
             oldctx.activate()
             if self.status == NODE_STATUS.CREATED:
@@ -437,6 +473,7 @@ class Node(getbytag.GetByTag, NiceLayout):
         else:
             self._conf = ConfigSet()
             self._conf.update(conf_local)
+        self._parentconf = self._conf.copy()
         self._active = None
 
         # This configuration is updated with any section with the current tag name
@@ -577,6 +614,9 @@ class Node(getbytag.GetByTag, NiceLayout):
 
     def run(self, sjob_activated=True):
         """Execution driver: setup, run, complete... (if needed)."""
+        if self._dryrun:
+            raise RuntimeError('This Node was initialised with "dryrun". ' +
+                               'It is not allowed to call run().')
         if self.activenode:
             self._actual_run(sjob_activated)
 
@@ -1157,6 +1197,7 @@ class Driver(getbytag.GetByTag, NiceLayout):
             self._special_prefix = j_assist.special_prefix.upper()
             self._subjob_tag = j_assist.subjob_tag
         self._mstep_job_last = self._options.get('mstep_job_last', True)
+        self._dryrun = self._options.get('dryrun', False)
         self._iniconf = iniconf or t.env.get('{:s}INICONF'.format(self._special_prefix))
         self._iniencoding = iniencoding or t.env.get('{:s}INIENCODING'.format(self._special_prefix), None)
         self._jobname = jobname or t.env.get('{:s}JOBNAME'.format(self._special_prefix)) or 'void'
@@ -1187,6 +1228,10 @@ class Driver(getbytag.GetByTag, NiceLayout):
     @property
     def conf(self):
         return self._conf
+
+    @property
+    def confdiff(self):
+        return self.conf
 
     @property
     def sh(self):
@@ -1274,11 +1319,15 @@ class Driver(getbytag.GetByTag, NiceLayout):
 
         if self.mstep_counter <= 1:
             self.status = NODE_STATUS.READY
-            self.header('The various nodes were configured. Here is a Tree-View of the Driver:')
-            print(self)
+            if not self._dryrun:
+                self.header('The various nodes were configured. Here is a Tree-View of the Driver:')
+                print(self)
 
     def run(self):
         """Assume recursion of nodes `run` methods."""
+        if self._dryrun:
+            raise RuntimeError('This Driver was initialised with "dryrun". ' +
+                               'It is not allowed to call run().')
         self.status = NODE_STATUS.RUNNING
         try:
             for node in self.contents:
