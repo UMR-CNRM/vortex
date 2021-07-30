@@ -27,7 +27,7 @@ the cache. For demonstration purposes, the `Beacon` tasks can be asked to fail
 To launch the demo:
     
     cd jobs
-    ../vortex/bin/mkjob.py -j profile=void \
+    ../vortex/bin/mkjob.py -j \
         name=on_error_feature_job task=on_error_feature \
         rundate=2020102918
     python ./on_error_feature_job.py
@@ -47,7 +47,7 @@ environment variables.
 To launch the demo:
     
     cd jobs
-    ../vortex/bin/mkjob.py -j profile=void \
+    ../vortex/bin/mkjob.py -j \
         name=loop_family_job1 task=loop_family1 \
         rundates=2020102918-2020110118-PT24H
     python ./loop_family_job1.py
@@ -65,7 +65,7 @@ Look at the code in `tasks/loop_family1` for more explanations.
 To launch the demo:
     
     cd jobs
-    ../vortex/bin/mkjob.py -j profile=void \
+    ../vortex/bin/mkjob.py -j \
         name=active_cb_job task=active_cb \
         rundate=2020102918
     python ./active_cb_job.py
@@ -81,7 +81,7 @@ Look at the code in `tasks/active_cb.py` for more explanations.
 To launch the first demo:
     
     cd jobs
-    ../vortex/bin/mkjob.py -j profile=void \
+    ../vortex/bin/mkjob.py -j \
         name=paralleljobs_basic_job task=paralleljobs_basic \
         rundate=2020102918
     python ./paralleljobs_basic_job.py
@@ -93,7 +93,7 @@ Look at the code in `tasks/paralleljobs_basic.py` for more explanations.
 To launch the second demo:
     
     cd jobs
-    ../vortex/bin/mkjob.py -j profile=void \
+    ../vortex/bin/mkjob.py -j \
         name=paralleljobs_workshares_job task=paralleljobs_workshares \
         rundate=2020102918
     python ./paralleljobs_workshares_job.py
