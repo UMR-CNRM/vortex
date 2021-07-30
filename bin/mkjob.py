@@ -64,6 +64,8 @@ def parse_command_line():
                         'jobs to handle, and exit')
     parser.add_argument('-b', '--backup', nargs='?', const='.backup', help='Save old jobs with the given extension ' +
                         '(default is ".backup") before creating new ones with specified options')
+    parser.add_argument('-d', '--dryrun', help='Dryrun mode: create a report of what would be launched',
+                        action='store_true')
     parser.add_argument('-v', '--verbose', help='verbose mode', action='store_true')
     parser.add_argument('-i', '--info', action='store_true', help='Full list of available ' +
                         'variables that can be used to make an OP job (according to the job template)')
@@ -80,25 +82,31 @@ def parse_command_line():
         with io.open(args.file, 'r') as fp:
             for line in fp.readlines():
                 if bool(line.rstrip()):
-                    job = make_cmdline(line.rstrip())
-                if args.name is None or job['name'] in args.name:
-                    jobs.append(job)
+                    a_job = make_cmdline(line.rstrip())
+                    if args.name is None or a_job['name'] in args.name:
+                        jobs.append(a_job)
 
     elif args.job:
-        job = make_cmdline(args.job)
-        jobs.append(job)
+        a_job = make_cmdline(args.job)
+        jobs.append(a_job)
         if args.write:
             with io.open(args.file, 'a') as fp:
                 fp.write(six.text_type(args.job) + "\n")
 
     if args.add:
         newparams = make_cmdline(args.add)
-        for job in jobs:
-            job.update(newparams)
+        for a_job in jobs:
+            a_job.update(newparams)
 
-    dflt_profile = 'oper' if args.oper else 'test'
-    for job in jobs:
-        job.setdefault('profile', dflt_profile)
+    if args.oper:
+        for a_job in jobs:
+            a_job.setdefault('profile', 'oper')
+
+    if args.dryrun:
+        for a_job in jobs:
+            a_job['template'] = '@job-dryrun.tpl'
+            a_job['extra_wrapper'] = '{injob:s}'
+            a_job['extra_wrapper_keep'] = False
 
     return args, jobs, report
 
@@ -156,8 +164,9 @@ def makejob(job):
         exit(1)
 
     corejob, tplconf = mkjob(t, auto_options_filter=('extra_wrapper',
-                                                     'extra_wrapper_keep'
-                                                     'scriptencoding'),
+                                                     'extra_wrapper_keep',
+                                                     'scriptencoding',
+                                                     'template'),
                              **opts)
 
     t.sh.header('Template configuration')
