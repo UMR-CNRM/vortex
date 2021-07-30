@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.join(vortexbase, 'site'))
 sys.path.insert(0, os.path.join(vortexbase, 'src'))
 
 from jeeves.butlers import Jeeves
+from jeeves import bertie
 
 
 def get_options():
@@ -44,7 +45,7 @@ def get_options():
     parser.add_argument(
         'action',
         help='desired action',
-        choices=['start', 'stop', 'restart'],
+        choices=['start', 'stop', 'restart', 'reload', 'status', 'debug', 'info'],
     )
     parser.add_argument(
         'tagname',
@@ -58,6 +59,19 @@ def get_options():
 def add_args(s):
     """Add args to the command line, expressed like in a shell"""
     sys.argv.extend([os.path.expanduser(u) for u in shlex.split(s)])
+
+
+def check_running_and_depot(j):
+    """Check that the daemon run and that the depot directory exists."""
+    if j.pidfile.is_running():
+        j.pidfile.unlock()
+    else:
+        print('Apparently the Jeeves daemon is not running.')
+        return False
+    if not os.path.isdir('depot'):
+        print('The daemon is running but there is no "depot" directory.')
+        return False
+    return True
 
 
 if __name__ == "__main__":
@@ -78,6 +92,25 @@ if __name__ == "__main__":
 
     elif opts.action == 'restart':
         j.restart()
+
+    elif opts.action == 'reload':
+        if check_running_and_depot(j):
+            bertie.ask_reload()
+            print('The Jeeves Daemon was asked to reload its configuration. Check the logs.')
+
+    elif opts.action == 'status':
+        if check_running_and_depot(j):
+            print('Everything is fine, the Jeeves daemon is running')
+
+    elif opts.action == 'debug':
+        if check_running_and_depot(j):
+            bertie.ask_debug()
+            print('The Jeeves Daemon was asked to switch its default verbosity to DEBUG.')
+
+    elif opts.action == 'info':
+        if check_running_and_depot(j):
+            bertie.ask_info()
+            print('The Jeeves Daemon was asked to switch its default verbosity to INFO.')
 
     else:
         print('Unknown command:', opts.action)
