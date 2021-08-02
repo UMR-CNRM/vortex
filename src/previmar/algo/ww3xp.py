@@ -488,6 +488,9 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
             datpivot = dict(
                 type = Date,
             ),
+            header = dict(
+                type = list,
+            ),
         )
     )
 
@@ -500,7 +503,8 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     datpivot=[self.datpivot, ],
-                                    dateval=[dateval, ]))
+                                    dateval=[dateval, ],
+                                    header=[self.header,]))
 
 
 class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
@@ -517,6 +521,9 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             ),
             dateval = dict(
                 type     = Date,
+            ),
+            header = dict(
+                type  = list,
             ),
         )
     )
@@ -570,9 +577,16 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 namcontents.rewrite(new_nam)
                 new_nam.close()
                 self.local_spawn("output_{0:s}.log".format(fname))
-                for fgrib in sh.ls('ww3.*grb'):
-                    sh.mv(fgrib, cwd)
-                    output_files.add(fgrib)
+            # Split the case of analysis and forecast
+            for dom in self.header:
+                if term <= 0:
+                    fic_prod = "ww3.{0:s}_{1:s}.grb".format(dom, self.dateval.ymdh)
+                else:
+                    fic_prod = "ww3.{0:s}_{1:s}{2:04d}.grb".format(dom, self.datpivot.ymdh,
+                                                                     int(term / 3600))
+                logger.info("yoyo %s",fic_prod)
+                sh.cat('ww3.{0:s}*grb'.format(dom),output=sh.path.join(cwd,fic_prod))
+                output_files.add(fic_prod)
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()
