@@ -36,7 +36,7 @@ def context_info_for_task_summary(context):
     return info
 
 
-class _CrashWitnessDecoMixin(_RememberContextDecoMixin):
+class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Algo Components to catch exceptions in the binary execution,
     notify it into the job summary (witness), and push it.
@@ -60,13 +60,13 @@ class _CrashWitnessDecoMixin(_RememberContextDecoMixin):
         return context_info_for_task_summary(self.context)
 
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
-        from davai_tbx.expertise import task_status  # @UnresolvedImport
+        from ial_expertise.task import task_status  # @UnresolvedImport
         status = task_status['X']
         # check reference and mention if reference was crashed too
         ref_summary = [s for s in self.context.sequence.effective_inputs(role=('Reference',
                                                                                'ContinuityReference',
                                                                                'ConsistencyReference'))
-                       if s.rh.resource.kind == 'taskinfo']
+                       if s.rh.resource.kind in ('taskinfo', 'statictaskinfo')]
         if len(ref_summary) == 1:
             ref_summary = ref_summary[0].rh.contents.data  # slurp
             ref_status = ref_summary.get('Status')
