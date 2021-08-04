@@ -940,10 +940,10 @@ class OdbReshuffle(Parallel, odb.OdbComponentDecoMixin, drhook.DrHookDecoMixin):
     def postfix(self, rh, opts):
         """Create a virtual database for output data."""
         self.system.subtitle('Creating the virtual database')
-        with self.system.cdcontext(self._OUT_DIRECTORY):
-            virtual_db = self.odb_merge_if_needed(self.obs_in_parts)
-            logger.info('The output virtual DB was created: %s',
-                        self.system.path.abspath(self.virtualdb))
+        virtual_db = self.odb_merge_if_needed(self.obs_in_parts,
+                                              subdir=self._OUT_DIRECTORY)
+        logger.info('The output virtual DB was created: %s',
+                    self.system.path.join(self._OUT_DIRECTORY, virtual_db))
 
     def spawn_command_options(self):
         """Prepare command line options to binary."""
