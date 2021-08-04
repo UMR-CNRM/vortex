@@ -56,10 +56,10 @@ def send_to_DAVAI_server(t, rh, fatal=True):  # @UnusedVariables
         summary = t.sh.json_load(rh.container.localpath())
         if rh.resource.kind == 'xpinfo':
             jsonData = {rh.resource.kind: summary}
-        elif rh.resource.kind == 'taskinfo':
+        elif rh.resource.kind in ('taskinfo', 'statictaskinfo'):
             jsonData = {rh.provider.block: {rh.resource.scope: summary}}
         else:
-            raise DavaiException("Only kind=('xpinfo','taskinfo') resources can be sent.")
+            raise DavaiException("Only kind=('xpinfo','taskinfo', 'statictaskinfo') resources can be sent.")
         davai_server_url = t.env.get('DAVAI_SERVER')
         if davai_server_url == '':
             raise DavaiException("DAVAI_SERVER must be defined ! Expected syntax: " + server_syntax)

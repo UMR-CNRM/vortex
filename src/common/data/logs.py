@@ -280,6 +280,41 @@ class TaskInfo(FlowResource):
         return 'taskinfo'
 
 
+@namebuilding_insert('src', lambda s: s.task.split('/').pop())
+@namebuilding_insert('compute', lambda s: s.scope)
+@namebuilding_delete('fmt')
+class StaticTaskInfo(Resource):
+    """Task informations."""
+    _footprint = [
+        dict(
+            info = 'Task informations',
+            attr = dict(
+                task = dict(
+                    optional = True,
+                    default  = 'anonymous'
+                ),
+                kind = dict(
+                    values   = ['statictaskinfo']
+                ),
+                scope = dict(
+                    optional = True,
+                    default  = 'void',
+                ),
+                clscontents = dict(
+                    default = JsonDictContent,
+                ),
+                nativefmt = dict(
+                    default = 'json',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'statictaskinfo'
+
+
 class SectionsSlice(collections_abc.Sequence):
     """Hold a list of dictionaries representing Sections."""
 

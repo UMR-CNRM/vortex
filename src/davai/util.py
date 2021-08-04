@@ -109,7 +109,7 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
 
     :param xpid: experiment identifier
     :param jsonData: data to be sent, formatted as output from json.dumps(...)
-    :param kind: kind of data, among 'xpinfo' or 'taskinfo'
+    :param kind: kind of data, among 'xpinfo' or 'taskinfo'/'statictaskinfo'
     :param fatal: raise errors (or log them and ignore)
 
     Additional kwargs are passed to requests.post()
@@ -117,7 +117,8 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
     # data to be sent to api
     data = {'jsonData': jsonData,
             'xpid': xpid,
-            'type': kind}
+            'type': kind.replace('static', '')}  # FIXME: temporary, make Ciboulai accept 'statictaskinfo' and remove this hack
+            #'type': kind}
     # sending post request and saving response as response object
     try:
         rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data, **kwargs)
@@ -146,7 +147,7 @@ class SummariesStack(object):
     unhandled_flag = 'unhandled_items.whitness'
     trolleytar = 'trolley.tar'
     xpinfo = 'xpinfo.json'
-    # syntax: taskinfo.scope.json
+    # syntax: taskinfo.scope.json or statictaskinfo.scope.json
     _re_tasksummary = re.compile(r'(?P<task>.+)\.(?P<scope>' +
                                  '|'.join(('itself', 'consistency', 'continuity')) +
                                  r')\.json$')
