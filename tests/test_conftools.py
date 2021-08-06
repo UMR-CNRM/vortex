@@ -71,7 +71,7 @@ class Coupling3DVConfToolTest(unittest.TestCase):
                         '21': '1-1-1', '11': '1-1-1', '10': '1-1-1', '13': '1-1-1',
                         '12': '1-1-1', '15': '1-1-1', '14': '1-1-1', '17': '1-1-1',
                         '16': '1-1-1', '19': '1-1-1', '18': '1-1-1', '23': '1-1-1'},
-              'production': {'03': '1-12-1', '00': '1-42-1', '12': '1-36-1',
+              'production': {'03': '1-12-1', '00': ['1-21-1', '22-42-1'], '12': '1-36-1',
                              '15': '1-12-1', '21': '1-12-1', '18': '1-36-1',
                              '09': '1-12-1', '06': '1-36-1'}}
 
@@ -750,9 +750,9 @@ class ArpIfsForecastTermConfToolTest(unittest.TestCase):
 
     _FCTERMS = dict(production={0: 102, 12: 24, "default": 24},
                     assim={"default": 6})
-    _HIST_TERMS = dict(production={"default": "0-47-6,48-finalterm-12"},
+    _HIST_TERMS = dict(production={"default": ["0-47-6", "48-finalterm-12"]},
                        assim={"default": "0,3,6"})
-    _SDI_TERMS = dict(production={"default": None, 0: "1:30,3,6"},
+    _SDI_TERMS = dict(production={"default": None, 0: ("1:30", 3, 6)},
                       assim={"default": "3,6"})
     _DIAG_TERMS = dict(default={"default": "0-47-3,48-finalterm-6"})
     _EXTRA_TERMS = dict(
