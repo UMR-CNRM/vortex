@@ -799,6 +799,8 @@ class ArpIfsForecastTermConfToolTest(unittest.TestCase):
         self.assertTrue(isinstance(wtool.fcterm('production', 0), int))
         self.assertEqual(['0001:30', '0003:00', '0006:00'],
                          wtool.norm_terms('production', 0))
+        self.assertEqual([],
+                         wtool.norm_terms('production', 6))
         self.assertEqual([2, 3],
                          wtool.foo_terms('production', 0))
         self.assertEqual([],

@@ -980,7 +980,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
 
     @staticmethod
     def _cast_timerangex(value):
-        if not isinstance(value, six.string_types):
+        if not (value is None or isinstance(value, six.string_types)):
             if isinstance(value, collections_abc.Iterable):
                 value = ','.join([six.text_type(e) for e in value])
             else:
@@ -1049,7 +1049,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
                     tir = timeintrangex(what)
                 except (TypeError, ValueError):
                     raise ValueError(
-                        'Could not process "{:s} using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
+                        'Could not process "{:s}" using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
                         .format(what, what_desc, cutoff, hh)
                     )
                 if self.fcterm_unit == 'timestep' and not all([isinstance(i, int) for i in tir]):
