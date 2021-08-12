@@ -9,7 +9,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import fcntl
 import io
-import tempfile
+import re
 from pprint import pformat
 
 import six
@@ -90,7 +90,6 @@ def system_route(pnum, ask, config, logger, **opts):
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
 
             # assert the source is there
-            logger.info('Source = ' + data.source)
             if not sh.path.exists(data.source):
                 logger.warning('Source file is missing - trying to recover from the cache')
                 uri = uriparse(data.rlocation)
@@ -108,7 +107,9 @@ def system_route(pnum, ask, config, logger, **opts):
             else:
                 gribfilter = GRIBFilter(concatenate=False)
                 gribfilter.add_filters(data.filterdefinition)
-            outfile_fmt = 'GRIBOUTPUT_{filtername:s}.grib'
+            uri = uriparse(data.rlocation)
+            prefix = re.sub('.' + data.fmt + r'$', '', sh.path.basename(uri['path']), flags=re.I)
+            outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
             filtered = gribfilter(data.source, outfile_fmt, intent='in')
             if len(filtered) != 1:
                 logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
