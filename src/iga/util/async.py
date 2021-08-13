@@ -14,6 +14,7 @@ from pprint import pformat
 
 import six
 
+from common.tools.agt import agt_volatile_path
 from common.tools.grib import GRIBFilter
 from footprints import proxy as fpx
 from iga.tools import actions, services
@@ -85,7 +86,7 @@ def system_route(pnum, ask, config, logger, **opts):
         sh.trace = 'log'
         data = vwork.get_dataset(ask)
 
-        tmpdir = '/chaine/utmp/mxpt001/route/' + sh.path.basename(data.source)
+        tmpdir = sh.path.join(agt_volatile_path(sh), 'route', sh.path.basename(data.source))
         logger.info('data.source is    = ' + data.source)
         logger.info('working in tmpdir = ' + tmpdir)
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
