@@ -560,7 +560,13 @@ class HideService(Service):
     def __call__(self, filename):
         """Main action: hide a cheap copy of this file under a unique name."""
 
-        actual_rootdir = self.rootdir or self.find_rootdir(filename)
+        rootdir = self.rootdir
+        if rootdir is None:
+            rootdir = self.sh.default_target.get('hidden_rootdir', None)
+        if rootdir is not None:
+            rootdir = self.sh.path.expanduser(rootdir)
+
+        actual_rootdir = rootdir or self.find_rootdir(filename)
         destination = self.sh.path.join(
             actual_rootdir,
             '.'.join((
