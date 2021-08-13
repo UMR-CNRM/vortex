@@ -32,7 +32,7 @@ def get_options():
     parser.add_argument(
         '-f',
         '--foreground',
-        help="run in the foreground( don't daemonize)",
+        help="run in the foreground (don't daemonize)",
         action='store_true',
     )
     parser.add_argument(

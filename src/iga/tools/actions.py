@@ -121,6 +121,7 @@ class OpPhase(TunableAction):
 
     @property
     def immediate(self):
+        """Tell whether we are in 'immediate' (or 'atend') mode."""
         mode = self.getx('mode', default='immediate')
         if mode == 'immediate':
             return True
@@ -140,8 +141,8 @@ class OpPhase(TunableAction):
 
         def isiterable(item):
             return (
-                isinstance(item, collections_abc.Iterable) and
-                not isinstance(item, six.string_types)
+                  isinstance(item, collections_abc.Iterable) and
+                  not isinstance(item, six.string_types)
             )
 
         def flatten(iterable):
@@ -160,9 +161,8 @@ class OpPhase(TunableAction):
         sendnow = kw.pop('flush', False) or self.immediate
         if sendnow:
             return self._send(rhs, **kw)
-        else:
-            self._rhtodo.extend(rhs)
-            return True
+        self._rhtodo.extend(rhs)
+        return True
 
     def flush(self, **kw):
         """Send resources accumulated by previous calls."""

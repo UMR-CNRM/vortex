@@ -8,13 +8,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import contextlib
-from datetime import datetime
 import logging
 import logging.handlers
 import multiprocessing
 import re
 import sys
 import traceback
+from datetime import datetime
 
 #: No automatic export
 __all__ = []
@@ -72,6 +72,7 @@ class AbstractLogFacility(object):
         """A shortcut to create a logger (in the daemon process)."""
         return self.worker_logger_cb(name)
 
+
 # -----------------------------------------------------------------------------
 # The LogFacility based on the logging module (Python3 only)
 
@@ -116,7 +117,7 @@ class FancyArgsLoggerAdapter(logging.LoggerAdapter):
     arguments.
     """
 
-    _KW_PRESERVE = ('exc_info', )
+    _KW_PRESERVE = ('exc_info',)
 
     def process(self, msg, kwargs):
         msg += ' ' + ' '.join([
@@ -208,7 +209,7 @@ class LoggingBasedLogFacility(AbstractLogFacility):
         """Start a side process dedicated to the logging system."""
         listener = multiprocessing.Process(name='LogFacilityListener',
                                            target=self._listener_process,
-                                           args=(self._log_queue, ))
+                                           args=(self._log_queue,))
         listener.start()
         try:
             yield listener

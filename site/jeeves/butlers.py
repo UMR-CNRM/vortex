@@ -158,7 +158,7 @@ class ExitHandler(object):
         moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
         self.daemon.logger.info('Context enter for %s %s', repr(self.daemon), moreinfo)
         old_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
-        if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
+        if old_handler not in (signal.SIG_DFL, self.sigterm_handler):
             if not self.on_stack:
                 raise RuntimeError('Handler already registered for SIGTERM: [%r]' % old_handler)
 
@@ -254,6 +254,7 @@ class PidFile(object):
             err = str(err)
             if err.find('No such process') > 0:
                 self.delfile()
+                return None
             else:
                 return str(err)
 
@@ -289,7 +290,8 @@ class BaseDaemon(object):
     Usage: subclass the BaseDaemon class and override the run() method
     """
 
-    def __init__(self, tag='test', pidfile=None, procname='python', loglevel='INFO', inifile=None, redirect=None):
+    def __init__(self, tag='test', pidfile=None, procname='python',
+                 loglevel='INFO', inifile=None, redirect=None):
         self._tag = tag
         self._pidfile = PidFile(tag=tag, filename=pidfile, procname=procname)
         self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
@@ -459,7 +461,7 @@ class BaseDaemon(object):
 
     def exit_callbacks(self):
         """Return a list of callbacks to be launched before the daemon exits."""
-        return self.bye,
+        return (self.bye,)
 
     def start(self, mkdaemon=True):
         """Start the daemon."""
@@ -651,7 +653,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
                         if k.startswith('options') or ',' in v:
-                            v = [x for x in v.replace('\n', '').replace(' ', '').split(',')]
+                            v = v.replace('\n', '').replace(' ', '').split(',')
                     config[section][k.lower()] = v
         else:
             self.logger.error('No configuration', path=filename)
@@ -667,9 +669,9 @@ class Jeeves(BaseDaemon, HouseKeeping):
             if poolcfg not in self.config:
                 self.logger.warning('No dedicated conf', pool=pool)
                 self.config[poolcfg] = dict()
-            thispool = pools.get(tag=pool,
-                                 logger=self.logfacility.worker_get_logger(pools.__name__),
-                                 **self.config[poolcfg])
+            pools.get(tag=pool,
+                      logger=self.logfacility.worker_get_logger(pools.__name__),
+                      **self.config[poolcfg])
 
     def _get_pool(self, tag):
         if pools.check(tag):
@@ -709,7 +711,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         maxtasks = self.config['driver'].get('maxtasks', 64)
         self.ppool = multiprocessing.Pool(self.procs,
                                           self._worker_init,
-                                          (self.logfacility, ),
+                                          (self.logfacility,),
                                           maxtasks)
         self.logger.info('Multiprocessing pool started', procs=self.procs)
         for child in sorted(multiprocessing.active_children(), key=lambda x: x.pid):
@@ -782,8 +784,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
         - pnum   = The unique id they received as first argument
         - prc    = True for success, False (or None) for failure
-        - pvalue = a dict, may contain anything, but the key 'rpool' may be used to indicate
-          in which pool the json request must be moved.
+        - pvalue = a dict, may contain anything, but the key 'rpool' is used to indicate
+          which pool the json request must be moved to.
 
            - If the operation was successfull, the default target pool is taken from the
              configuration, e.g. pool_process ('run') -> pool_out ('done')

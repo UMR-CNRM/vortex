@@ -9,14 +9,13 @@ it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bronx.fancies import loggers
 import bronx.stdtypes.catalog
 import footprints
-
-from vortex.util.authorizations import is_authorized_user
+from bronx.fancies import loggers
 from vortex import sessions
+from vortex.util.authorizations import is_authorized_user
 
 #: Export nothing
 __all__ = []
@@ -170,7 +169,10 @@ class TunableAction(Action):
     def show_config(self):
         """Show the current configuration (for debugging purposes)."""
         from pprint import pprint
-        print('\n=== Phase configuration:', self._conf_section)
+        print('\n=== Action {} configuration:\n{}'.format(
+            self.__class__.__name__,
+            self._conf_section,
+        ))
         final_dict = dict()
         if self._conf_section is not None:
             pprint(self._shtarget.items(self._conf_section))
@@ -294,7 +296,7 @@ class FlowSchedulerGateway(Action):
         rc = None
         service = self.get_active_service(**kw)
         if service and self._schedcmd is not None:
-            kwbis = {k: v for k, v in kw.items() if k in ('critical', )}
+            kwbis = {k: v for k, v in kw.items() if k in ('critical',)}
             rc = getattr(service, self._schedcmd)(*args, **kwbis)
         self._schedcmd = None
         return rc

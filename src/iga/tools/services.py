@@ -23,35 +23,33 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six import StringIO
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import locale
 import logging
-from logging.handlers import SysLogHandler
-from pprint import pformat
 import random
 import re
 import socket
+from logging.handlers import SysLogHandler
+from pprint import pformat
 
-from bronx.fancies import loggers
+import six
+from six import StringIO
+
 import footprints
-
 import vortex
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.date import Time
 from common.tools.agt import agt_actual_command
 from footprints.stdtypes import FPDict
 from iga.tools.transmet import get_ttaaii_transmet_sh
 from vortex.data.contents import DataContent
-from vortex.syntax.stdattrs import DelayedEnvValue
-from vortex.syntax.stdattrs import a_term, a_domain
+from vortex.syntax.stdattrs import DelayedEnvValue, a_domain, a_term
 from vortex.tools.actions import actiond as ad
-from vortex.tools.schedulers import SMS, EcFlow
-from vortex.tools.services import Service, FileReportService, TemplatedMailService
+from vortex.tools.schedulers import EcFlow, SMS
+from vortex.tools.services import FileReportService, Service, TemplatedMailService
 from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
 
@@ -158,7 +156,7 @@ class AlarmService(Service):
 
     def get_syslog(self):
         """Define and return the SyslogHandler to use."""
-        pass
+        return SysLogHandler()
 
     def get_logger_action(self):
         """
@@ -355,26 +353,26 @@ class RoutingService(Service):
         info = 'Routing services abstract class',
         attr = dict(
             defer = dict(
-                info     = 'Process the request in an synchronous way using Jeeves.',
+                info     = 'Process the request asynchronously using Jeeves.',
                 type     = bool,
                 optional = False,
                 default  = True
             ),
             filename = dict(
-                info     = 'What is the file we want to send.'
+                info     = 'Name of the file we want to send.'
             ),
             filefmt = dict(
-                info     = 'The file format.',
+                info     = 'File format.',
                 optional = True,
                 default  = None
             ),
             rhandler_export = dict(
-                info     = 'A representation of the resource handler that issued the request.',
+                info     = 'Representation of the resource handler that issued the request.',
                 type     = footprints.FPDict,
                 optional = True
             ),
             rhandler_uri = dict(
-                info     = 'The URI associated with the resource handler that issued the request.',
+                info     = 'URI associated with the resource handler that issued the request.',
                 optional = True
             ),
             targetname = dict(
@@ -402,12 +400,12 @@ class RoutingService(Service):
                 default  = 5,
             ),
             filterdefinition = dict(
-                info     = 'It might be desirable to filter the data (available for a few formats).',
+                info     = 'Filter to apply before routing (available for a few formats).',
                 type     = DataContent,
                 optional = True,
             ),
             jname = dict(
-                info     = 'When defer is True, what is the name of the Jeeves daemon.',
+                info     = 'Name of the Jeeves daemon to use when defer is True.',
                 optional = True
             )
         )
@@ -418,7 +416,7 @@ class RoutingService(Service):
         super(RoutingService, self).__init__(*args, **kw)
         if self.filterdefinition is not None:
             if not self.defer:
-                raise ValueError('Data Filtering is only allowed in defered mode')
+                raise ValueError('Data Filtering is only allowed in deferred mode')
         absolute_name = self.sh.path.abspath(self.filename)
         if self.defer:
             self._actual_filename = absolute_name
@@ -845,7 +843,7 @@ class DayfileReportService(FileReportService):
         info = 'Historical dayfile reporting service',
         attr = dict(
             kind = dict(
-                values = ['dayfile'],
+                values   = ['dayfile'],
             ),
             message = dict(
                 optional = True,
@@ -880,8 +878,8 @@ class DayfileReportService(FileReportService):
                 alias    = ['async', ],
             ),
             jname=dict(
-                optional=True,
-                default='test',
+                optional = True,
+                default  = 'test',
             ),
         )
     )

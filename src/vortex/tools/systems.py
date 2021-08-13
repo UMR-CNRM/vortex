@@ -294,40 +294,40 @@ class System(footprints.FootprintBase):
         info = 'Default system interface',
         attr = dict(
             hostname = dict(
-                info = "The computer's network name",
+                info     = "The computer's network name",
                 optional = True,
                 default  = platform.node(),
                 alias    = ('nodename',)
             ),
             sysname = dict(
-                info = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
+                info     = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
                 optional = True,
                 default  = platform.system(),
             ),
             arch = dict(
-                info = "The underlying machine type (e.g. i386, x86_64, ...)",
+                info     = "The underlying machine type (e.g. i386, x86_64, ...)",
                 optional = True,
                 default  = platform.machine(),
                 alias    = ('machine',)
             ),
             release = dict(
-                info = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
+                info     = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
                 optional = True,
                 default  = platform.release()
             ),
             version = dict(
-                info = "The underlying system's release version",
+                info     = "The underlying system's release version",
                 optional = True,
                 default  = platform.version()
             ),
             python = dict(
-                info = "The Python's version (e.g 2.7.5)",
-                type = PythonSimplifiedVersion,
+                info     = "The Python's version (e.g 2.7.5)",
+                type     = PythonSimplifiedVersion,
                 optional = True,
                 default  = platform.python_version(),
             ),
             glove = dict(
-                info = "The session's Glove object",
+                info     = "The session's Glove object",
                 optional = True,
                 type     = Glove,
             )

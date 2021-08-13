@@ -4,7 +4,7 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
@@ -13,7 +13,7 @@ import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
+from gco.data.stores import GGET_DEFAULT_CONFIGFILE, GcoStoreConfig
 from gco.tools import genv
 
 #: No automatic export

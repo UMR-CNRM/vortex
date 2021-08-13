@@ -11,10 +11,10 @@ is used.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-import six
 import sys
 from threading import RLock
 
+import six
 
 if six.PY2 or (sys.version_info.major == 3 and sys.version_info.major < 8):
 

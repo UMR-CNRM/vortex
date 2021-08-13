@@ -72,6 +72,7 @@ def system_route(pnum, ask, config, logger, **opts):
     Removes the source on success (should be a hidden copy).
     """
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
+    return_value = dict(rpool='error')
 
     # options from the jeeves .ini configuration
     nossh = opts.get('nossh', False)
@@ -103,14 +104,21 @@ def system_route(pnum, ask, config, logger, **opts):
 
             # apply filtering, or at least ask for concatenation
             if data.filterdefinition:
-                logger.info('Filtering input data. filtername=%s', data.filterdefinition['filter_name'])
+                logger.info('Filtering input data. filtername=%s',
+                            data.filterdefinition['filter_name'])
                 if data.fmt == 'grib':
                     gribfilter = GRIBFilter(concatenate=False)
                     gribfilter.add_filters(data.filterdefinition)
-                    outfile_fmt = 'GRIBOUTPUT_{filtername:s}.grib'
+                    if data.fallback_uri is None:
+                        print('PLPL on fait quoi ?')
+                    uri = uriparse(data.fallback_uri)
+                    prefix = re.sub('.' + data.fmt + r'$', '',
+                                    sh.path.basename(uri['path']), flags=re.I)
+                    outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
                     filtered = gribfilter(data.source, outfile_fmt, intent='in')
                     if len(filtered) != 1:
-                        logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
+                        logger.error('Should have 1 file in gribfilter output, got: %s',
+                                     str(filtered))
                         logger.error('Nothing will be routed, please fix the script.')
                         return pnum, False, dict(rpool='error')
                     route_source = filtered[0]

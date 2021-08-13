@@ -352,15 +352,16 @@ class OutputReportContext(_ReportContext):
             ad.opmail(task=self._task.tag, id=self._fatal_tplid)
 
 
-def get_resource_value(r, key):
+def get_resource_value(rsrc, key):
     """This function returns the resource value."""
     try:
-        kw = dict(area=lambda r: r.resource.geometry.area,
-                  term=lambda r: r.resource.term,
-                  fields=lambda r: r.resource.fields,
-                  experiment=lambda r: r.provider.experiment,
+        kw = dict(
+            area=lambda r: r.resource.geometry.area,
+            term=lambda r: r.resource.term,
+            fields=lambda r: r.resource.fields,
+            experiment=lambda r: r.provider.experiment,
         )
-        return kw[key](r)
+        return kw[key](rsrc)
     except AttributeError as e:
         logger.error(e)
 
@@ -463,9 +464,9 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
     :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
 
     example of use for 'sharedadvance' (this code must be implemented in the task.py)::
-        >>> import multiprocessing as mp
-        >>> avancement = mp.Value('i', 0)
-        >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
+        import multiprocessing as mp
+        avancement = mp.Value('i', 0)
+        hook_meter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
     """
 
     def hook_ecfmeter(t, rh):  # @UnusedVariable

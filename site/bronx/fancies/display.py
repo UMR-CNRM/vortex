@@ -4,11 +4,12 @@
 Various tools designed for interactive scripts.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bronx.compat.moves import collections_abc
 import sys
+
+import six
+from bronx.compat.moves import collections_abc
 
 #: No automatic export
 __all__ = []
@@ -72,7 +73,7 @@ def query_yes_no_quit(question, default="yes"):
         choice = six.moves.input().lower()
         if default is not None and choice == '':
             return default
-        elif choice in valid.keys():
+        elif choice in valid:
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes', 'no' or 'quit'.\n")
@@ -135,8 +136,8 @@ def print_tablelike(fmt, *args, **kwargs):
             newargs.append([("{:<" + str(maxlen) + "s}").format(s) for s in arg])
         else:
             newargs.append(arg)
-    for args in zip(* newargs):
-        cb(fmt.format(* args))
+    for args in zip(*newargs):
+        cb(fmt.format(*args))
 
 
 def join_list_in_proper_english(a_list, l_fmt='{!s}'):
@@ -171,4 +172,5 @@ def join_list_in_proper_english(a_list, l_fmt='{!s}'):
 
 if __name__ == '__main__':
     import doctest
+
     doctest.testmod()

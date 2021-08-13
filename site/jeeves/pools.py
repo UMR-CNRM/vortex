@@ -22,8 +22,8 @@ from glob import glob
 
 import six
 
-from bronx.syntax import mktuple
 from bronx.patterns import getbytag
+from bronx.syntax import mktuple
 
 #: No automatic export
 __all__ = []
@@ -146,14 +146,14 @@ def parent_mkdir(path, mode=0o755):
     return False
 
 
-def seconds_to_now(time):
+def seconds_to_now(atime):
     """Return the time delta in seconds between the current time
-    and the parameter `time`.
+    and the parameter `atime`.
 
-    :param time: datetime object
+    :param atime: datetime object
     :return: delta in seconds
     """
-    return (datetime.now() - time).total_seconds()
+    return (datetime.now() - atime).total_seconds()
 
 
 class Request(object):
@@ -358,19 +358,19 @@ class Deposit(getbytag.GetByTag):
 
     def _real_clean(self):
         """Do the real cleaning."""
-        items = self.contents
+        json_files = self.contents
         justnow = datetime.now()
-        self.logger.debug('status cleaning', path=self.path, len=len(items))
+        self.logger.debug('status cleaning', path=self.path, len=len(json_files))
         self.logger.debug('last cleaning     : %s', self._lastclean)
         self.logger.debug('last try cleaning : %s', self._tryclean)
         self._tryclean = justnow
 
-        cleaningtime, cleaningsize = self._cleaning_condition(items)
+        cleaningtime, cleaningsize = self._cleaning_condition(json_files)
         if cleaningtime:
             oldfiles = list()
-            self.logger.debug('cleaning', path=self.path, len=len(items),
+            self.logger.debug('cleaning', path=self.path, len=len(json_files),
                               len_clean=cleaningsize, maxtime=cleaningtime)
-            for askfile in items:
+            for askfile in json_files:
                 try:
                     askdate = datetime.strptime(askfile.split('.')[1], '%Y%m%d%H%M%S')
                 except ValueError:

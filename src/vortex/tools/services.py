@@ -7,25 +7,24 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six.moves.configparser import NoOptionError, NoSectionError
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import contextlib
 import hashlib
 import io
-from email import encoders
 import pprint
+from email import encoders
 from string import Template
 
+import six
+from six.moves.configparser import NoOptionError, NoSectionError
+
+import footprints
 from bronx.fancies import loggers
 from bronx.fancies.display import print_tablelike
 from bronx.stdtypes import date
 from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
-import footprints
-
 from vortex import sessions
 from vortex.util.config import GenericConfigParser, load_template
 
@@ -321,7 +320,7 @@ class MailService(Service):
             extras = dict()
             if smtpport:
                 extras['port'] = smtpport
-            smtp = smtplib.SMTP(smtpserver, ** extras)
+            smtp = smtplib.SMTP(smtpserver, **extras)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
@@ -401,8 +400,7 @@ class SSHProxy(Service):
             ),
             nodetype = dict(
                 optional = True,
-                values   = ['login', 'transfer', 'transfert', 'network',
-                            'agt', 'syslog'],
+                values   = ['login', 'transfer', 'transfert', 'network', 'agt', 'syslog'],
                 default  = 'network',
                 remap    = dict(transfer = 'transfert'),
             ),
@@ -898,7 +896,6 @@ class TemplatedMailService(MailService):
 
 
 class AbstractRdTemplatedMailService(TemplatedMailService):
-
     _abstract = True
 
     def header(self):
