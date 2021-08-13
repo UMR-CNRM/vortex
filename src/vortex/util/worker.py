@@ -139,9 +139,9 @@ class VortexWorker(object):
                 self.session.sh.import_module(modname)
                 self._PRIVATEMODULES.add(modname)
         # Ok, let's talk...
-        self.logger.info('VORTEX enter glove_profile=%s modules=%s addons=%s ',
-                         self.session.glove.profile,
-                         str(self.modules), str(self.session.sh.loaded_addons()))
+        self.logger.info('VORTEX enter glove_profile=%s ', self.session.glove.profile)
+        self.logger.debug('       modules=%s addons=%s ', self.session.glove.profile,
+                          str(self.modules), str(self.session.sh.loaded_addons()))
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
