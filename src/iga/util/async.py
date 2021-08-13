@@ -92,12 +92,18 @@ def system_route(pnum, ask, config, logger, **opts):
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
 
             # assert the source is there
-            logger.info('Source = ' + data.source)
-            if not sh.path.exists(data.source) and data.fallback_uri is not None:
+            if not sh.path.exists(data.source) and 'fallback_uri' in data:
                 logger.warning('Source file is missing - trying to recover from the cache')
-                uri = uriparse(data.data.fallback_uri)
+                logger.warning('    fallback_uri = {}'.format(data.fallback_uri))
+                uri = uriparse(data.fallback_uri)
                 astore = fpx.store(**uri)
                 astore.get(uri, data.source, dict(fmt=data.fmt))
+
+            if not sh.path.exists(data.source) and 'original' in data:
+                logger.warning('Source file is missing - trying to recover from the original')
+                logger.warning('    original = {}'.format(data.original))
+                if sh.path.exists(data.original):
+                    sh.cp(data.original, data.source, intent="in", fmt=data.fmt)
 
             if not sh.path.exists(data.source):
                 logger.error('The source file is definitely missing - sorry')
@@ -110,11 +116,14 @@ def system_route(pnum, ask, config, logger, **opts):
                 if data.fmt == 'grib':
                     gribfilter = GRIBFilter(concatenate=False)
                     gribfilter.add_filters(data.filterdefinition)
-                    if data.fallback_uri is None:
+                    if 'fallback_uri' not in data:
                         print('PLPL on fait quoi ?')
-                    uri = uriparse(data.fallback_uri)
-                    prefix = re.sub('.' + data.fmt + r'$', '',
-                                    sh.path.basename(uri['path']), flags=re.I)
+                        print('data =', pformat(data))
+                        prefix = 'GRIBOUTPUT'
+                    else:
+                        uri = uriparse(data.fallback_uri)
+                        prefix = re.sub('.' + data.fmt + r'$', '',
+                                        sh.path.basename(uri['path']), flags=re.I)
                     outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
                     filtered = gribfilter(data.source, outfile_fmt, intent='in')
                     if len(filtered) != 1:
