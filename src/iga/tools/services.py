@@ -481,7 +481,7 @@ class RoutingService(Service):
             return False
         return True
 
-    def _imediate_processing(self):
+    def _immediate_processing(self):
 
         if self._actual_targetname:
             if self.sh.path.exists(self._actual_targetname):
@@ -561,8 +561,9 @@ class RoutingService(Service):
         """Actual service execution."""
         if not self.file_ok():
             return False
-        todo = self._deferred_processing if self.defer else self._imediate_processing
-        return todo()
+        if self.defer:
+            return self._deferred_processing()
+        return self._immediate_processing()
 
 
 class RoutingUpstreamService(RoutingService):

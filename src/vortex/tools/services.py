@@ -506,7 +506,7 @@ class JeevesService(Service):
                 data=data,
             )
             jr = bertie.ask(**fulltalk)
-            return (jr.todo, jr.last)
+            return jr.todo, jr.last
         else:
             logger.error('No valid path to jeeves <{!s}>'.format(self.jpath))
             return None
@@ -720,7 +720,7 @@ class TemplatedMailService(MailService):
                 type     = GenericConfigParser,
             ),
             dryrun=dict(
-                info     = "Do not actualy send the email. Just render the template.",
+                info     = "Do not actually send the email. Just render the template.",
                 type     = bool,
                 optional = True,
                 default  = False,

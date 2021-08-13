@@ -49,7 +49,7 @@ class Route(Action):
 
 class DMTEvent(Action):
     """
-    Class responsible for routing data to the Transfer Agent (BDAP, BDPE, BDM).
+    Class responsible for handling Soprano DMT events (mainly for resources availability)
     """
 
     def __init__(self, kind='dmt', service='dmtevent', active=False):

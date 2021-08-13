@@ -151,7 +151,7 @@ def system_route(pnum, ask, config, logger, **opts):
                     sshhost=None,
                 )
             logger.info('Asking for route Services')
-            logger.debug(pformat(route_opts))
+            logger.debug('route_opts = ' + pformat(route_opts))
             ad.route(**route_opts)
 
         return_value = dict(clear=sh.rm(data.source, fmt=data.fmt))
