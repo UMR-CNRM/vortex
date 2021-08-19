@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine tools.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -18,12 +17,12 @@ logger = loggers.getLogger(__name__)
 
 
 class IO_Poll_Marine(addons.Addon):
-    """TODO: Class documentation."""
+    """Polling of the outputs to collect in real-time"""
     _footprint = dict(
         info = 'Default io_poll marine system interface',
         attr = dict(
             kind = dict(
-                values  = ['iopoll_marine', 'iopoll_waves'],
+                values  = ['iopoll_marine', 'iopoll_waves', 'iopoll_ww3'],
             ),
             interpreter = dict(
                 values  = ['bash', 'sh'],
@@ -67,4 +66,15 @@ class IO_Poll_Marine(addons.Addon):
         # Catch the processed file
         rawout = self._spawn(cmd)
         # Cumulative results
+        return rawout
+
+    def iopoll_ww3(self, prefix, datpivot, stepout=3):
+        """Do the actual job of polling files prefixed by ``prefix``."""
+        logger.info("Execution IOPOLL WW3")
+
+        cmd = ['--logout', prefix]
+        cmd.extend(['--datpivot', datpivot])
+        cmd.extend(['--stepout', stepout])
+        logger.info("cmd: %s", cmd)
+        rawout = self._spawn(cmd)
         return rawout

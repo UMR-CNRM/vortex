@@ -1,4 +1,4 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Various Resources for executables used in demo jobs.

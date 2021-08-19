@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: BDMQueryContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BDMQuery
    :show-inheritance:
    :members:

@@ -17,3 +17,5 @@ Functions
 .. autofunction:: update_namelist
 
 .. autofunction:: concatenate
+
+.. autofunction:: insert_cutoffs

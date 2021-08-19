@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Specific CEN "genv" resources.
@@ -133,9 +132,9 @@ class GridTarget(GenvModelGeoResource):
 
 
 class Prosnow_SetUp_Global(GenvModelResource):
-    """
+    """Prosnow general setup file.
+
     This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
-    Prosnow general setup file.
     """
 
     _footprint = dict(
@@ -174,7 +173,8 @@ class Prosnow_SetUp_Resort(GenvModelResource):
                 values  = ['ascii', 'netcdf'],
             ),
             resort = dict(
-                info = "The ski resort name."
+                info    = "The ski resort name.",
+                values  = ['saisies', 'plagne', 'soldeu', 'peyra', 'saetde'],
             ),
             gvar = dict(
                 default = '[kind]_[resort]',

@@ -24,5 +24,12 @@ todo:
             - nativefmt: netcdf 
               term: 72
             - nativefmt: netcdf
+              term: 72
+              filling: corrected_atm
+            - nativefmt: netcdf
               begindate: '2018010100'
               enddate: '2018010400'
+            - nativefmt: netcdf
+              begintime: 0
+              endtime: 72
+              filling: null

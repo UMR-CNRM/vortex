@@ -14,8 +14,8 @@ class ScriptStdpost(Task):
     It also implements:
 
     * Promises on md5 output files;
-    * Automatic diff on outputs in order to check that the results are
-      reprodicible with a reference.
+    * Automatic diff on outputs in order to check that the results
+      reproduce a reference.
     """
 
     def process(self):

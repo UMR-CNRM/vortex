@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # pylint: disable=unused-argument
 
@@ -968,7 +967,7 @@ class ArchiveStore(Store):
             intent=ARCHIVE_PUT_INTENT,
             fmt=options.get('fmt', 'foo'),
             info=options.get('rhandler'),
-            logname=remote['username'],
+            username=remote['username'],
             compressionpipeline=self._actual_cpipeline,
             enforcesync=options.get('enforcesync', False),
             usejeeves=options.get('delayed', None),

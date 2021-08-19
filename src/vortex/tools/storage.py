@@ -1,25 +1,24 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This package handles :class:`Storage` objects that could be in charge of
 hosting data resources both locally ("Cache") or on a remote host "Archive").
 
 * :class:`Storage` is the main abstract class that defines the user-interface for
-  every classes of this module. :meth:`Storage.fullpath`, :meth:`Storage.check`,
+  every class of this module. :meth:`Storage.fullpath`, :meth:`Storage.check`,
   :meth:`Storage.insert`, :meth:`Storage.retrieve` and :meth:`Storage.delete` are
-  frequently used form a user point of view.
+  frequently used from a user point of view.
 * The :class:`Cache` abstract class is a specialisation of the :class:`Storage`
   class that handles data resources locally (i.e. data hosted on the same machine
   that are readily and timelessly accessible). In this module, various concrete
   implementations are provided for this class in order to support various cache
-  flavor.
+  flavors.
 * The :class:`Archive` class (readily usable) is a specialisation of the
   :class:`Storage` class dedicated to data resources stored remotely (e.g on a
   mass archive system).
 
 These classes purely focus on the technical aspects (e.g. how to transfer a given
-filename, directory or file like object to its storage place ?). For :class:`Cache`
+filename, directory or file like object to its storage place). For :class:`Cache`
 based storage it determines the location of the data on the filesystem, in a
 database, ... For :class:`Archive` based storage it smoothly handles communication
 protocol between the local host and the remote archive.

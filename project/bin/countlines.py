@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 """
 project.bin.coutlines -- count the lines of code in the project
@@ -39,7 +39,7 @@ class ClocResult():
     res_fmt = '{:20s}:  {:8d}  {:8d}  {:8d}  {:8d}'
 
     def __init__(self, xmloutput):
-        root = ET.fromstring(re.sub('^\n*', '', xmloutput))
+        root = ET.fromstring(re.sub('^\n*', '', xmloutput.decode()))
         self.languages = {}
         for lang in [l.attrib for l in root.iter('language')]:
             self.languages[lang['name']] = ClocResultLine(lang)
@@ -48,7 +48,7 @@ class ClocResult():
 
     def __str__(self):
         out = [self.res_head, ]
-        for lang, res in self.languages.iteritems():
+        for lang, res in self.languages.items():
             out.append(self.res_fmt.format(lang, *res))
         out.append(self.res_fmt.format('TOTAL', *self.total))
         return '\n'.join(out)

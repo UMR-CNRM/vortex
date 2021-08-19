@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -25,10 +24,10 @@ strongly advised.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-__version__ = '1.8.0'
+__version__ = '1.8.1'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.8.1'
+__nextversion__ = '1.8.2'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []

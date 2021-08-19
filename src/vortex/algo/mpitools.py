@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This package handles MPI interface objects responsible of parallel executions.
@@ -87,6 +86,7 @@ from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
 from vortex.tools.arm import ArmForgeTool
+from vortex.tools.systems import ExecutionError
 from vortex.tools import env
 from vortex.util import config
 
@@ -402,8 +402,11 @@ class MpiTool(footprints.FootprintBase):
             sh = self.system
             mpirun_path = sh.path.join(mpi_tools_dir, 'mpirun')
             if sh.path.exists(mpirun_path):
-                libs = sh.ldd(mpirun_path)
-
+                try:
+                    libs = sh.ldd(mpirun_path)
+                except ExecutionError:
+                    # This may happen if the mpirun binary is statically linked
+                    libs = []
                 if any([libname is None for libname in libs.values()]):
                     libscache = dict()
                     for binary in self.binaries:

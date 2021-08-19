@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 Utility methods widely used in the various TNT utilities.
 """

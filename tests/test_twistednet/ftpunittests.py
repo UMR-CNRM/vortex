@@ -35,6 +35,9 @@ class FtpBasedTestCase(unittest.TestCase):
         # FTP Config
         self.port = get_ftp_port_number()
         self.configure_ftpserver()
+        # Make sure FTP proxies are ignored during tests
+        del self.sh.env['FTP_PROXY']
+        del self.sh.env['VORTEX_FTP_PROXY']
 
     def configure_ftpserver(self):
         from .ftpservers import TestFTPServer, logger

@@ -51,6 +51,14 @@ Classes
    :members:
    :member-order: alphabetical
 
+Exceptions
+----------
+
+.. autoclass:: PreviousFailureError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Utility classes
 ---------------
 

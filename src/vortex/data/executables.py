@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Abstract for any "Resource" class that deal with some kind of :class:`Script` or
@@ -19,7 +18,7 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import footprints
 
 from .resources import Resource
-from vortex.syntax.stdattrs import a_model
+from vortex.syntax.stdattrs import model_deco
 from vortex.util.config import JacketConfigParser
 
 #: No automatic export
@@ -143,10 +142,6 @@ class Binary(Executable):
     _abstract = True
     _footprint = dict(
         attr = dict(
-            compiler = dict(
-                info     = "The compiler label.",
-                optional = True,
-            ),
             static = dict(
                 info     = "Statically linked binary.",
                 type     = bool,
@@ -197,15 +192,17 @@ class NWPModel(Binary):
     """Base class for any Numerical Weather Prediction Model."""
 
     _abstract = True
-    _footprint = dict(
-        info = 'NWP Model',
-        attr = dict(
-            model = a_model,
-            kind = dict(
-                values = ['nwpmodel']
+    _footprint = [
+        model_deco,
+        dict(
+            info = 'NWP Model',
+            attr = dict(
+                kind = dict(
+                    values = ['nwpmodel']
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -220,15 +217,17 @@ class OceanographicModel(Binary):
     """Base class for any Oceanographic Model."""
 
     _abstract = True
-    _footprint = dict(
-        info = 'Oceanographic Model',
-        attr = dict(
-            model = a_model,
-            kind = dict(
-                values = ['oceanmodel']
+    _footprint = [
+        model_deco,
+        dict(
+            info = 'Oceanographic Model',
+            attr = dict(
+                kind = dict(
+                    values = ['oceanmodel']
+                )
             )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -242,16 +241,18 @@ class OceanographicModel(Binary):
 class SurfaceModel(Binary):
 
     _abstract = True
-    _footprint = dict(
-        info = 'Model used for the Safran-Surfex-Mepra chain.',
-        attr = dict(
-            model = a_model,
-            kind  = dict(
-                values = ['surfacemodel', 'snowmodel'],
-                remap = dict(autoremap = 'first'),
+    _footprint = [
+        model_deco,
+        dict(
+            info = 'Model used for the Safran-Surfex-Mepra chain.',
+            attr = dict(
+                kind  = dict(
+                    values = ['surfacemodel', 'snowmodel'],
+                    remap = dict(autoremap = 'first'),
+                ),
             ),
-        ),
-    )
+        )
+    ]
 
     @property
     def realkind(self):
@@ -265,15 +266,17 @@ class SurfaceModel(Binary):
 class ChemistryModel(Binary):
 
     _abstract = True
-    _footprint = dict(
-        info = 'Base class for Chemistry models.',
-        attr = dict(
-            model = a_model,
-            kind  = dict(
-                values = ['chemistrymodel'],
+    _footprint = [
+        model_deco,
+        dict(
+            info = 'Base class for Chemistry models.',
+            attr = dict(
+                kind  = dict(
+                    values = ['chemistrymodel'],
+                ),
             ),
-        ),
-    )
+        )
+    ]
 
     @property
     def realkind(self):

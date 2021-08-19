@@ -28,7 +28,6 @@ Roughly, here is a description of the various packages:
   Meteo-France's operations team;
 * :ref:`ecmwf <ecmwf-autoindex>`: Utility classes to interact with ECMWF's tools
   (ectrans, ecfs, ...)
-
 * :ref:`common <common-autoindex>`: Some common code but mostly Meteo-France's
   NWP related classes
 * :ref:`alpha <alpha-autoindex>`: Code dedicated to Meteo-France's Alpha project
@@ -40,6 +39,7 @@ Roughly, here is a description of the various packages:
   modelling (Meteo-France CNRM/GMGEC and DSM teams)
 * :ref:`sandbox <sandbox-autoindex>`: Some demonstration/test code (note to be
   used in the real world)
+* :ref:`promethee <promethee-autoindex>`: Code dedicated to Meteo-France's Promethee project
 
 Here is the expanded index for all of these packages:
 
@@ -50,11 +50,12 @@ Here is the expanded index for all of these packages:
    olive/index
    iga/index
    ecmwf/index
-
    common/index
    alpha/index
    cen/index
    davai/index
    previmar/index
+   shom/index
    intairpol/index
    sandbox/index
+   promethee/index

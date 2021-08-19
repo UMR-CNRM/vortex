@@ -38,7 +38,7 @@ class TestStdFtp(FtpBasedTestCase):
     _FTPLOGLEVEL = tloglevel
 
     def new_ftp_client(self):
-        return StdFtp(self.sh, 'localhost', self.port)
+        return StdFtp(self.sh, 'localhost', self.port, ignoreproxy=True)
 
     def ftp_client_thook(self):
         pass
@@ -53,11 +53,13 @@ class TestStdFtp(FtpBasedTestCase):
             self.assertEqual(ftpc.host, 'localhost')
             self.assertEqual(ftpc.netpath('toto'),
                              'testlogin@localhost:toto')
+            self.assertEqual(ftpc.logname, 'testlogin')
             ftpc.close()
             ftpc = self.new_ftp_client()
             with self.assertRaises(RuntimeError):
                 ftpc.pwd()
             ftpc.fastlogin(self.user, self.password, delayed=False)
+            self.assertEqual(ftpc.logname, 'testlogin')
             with ftpc:
                 self.assertEqual(ftpc.pwd(), '/')
                 testdata = six.BytesIO()
@@ -111,7 +113,7 @@ class TestAutoRetriesFtp(TestStdFtp):
                                     )
 
     def new_ftp_client(self):
-        return AutoRetriesFtp(self.sh, 'localhost', port=self.port,
+        return AutoRetriesFtp(self.sh, 'localhost', port=self.port, ignoreproxy=True,
                               retrycount_default=2, retrycount_connect=2, retrycount_login=3,
                               retrydelay_default=0.1, retrydelay_connect=0.1, retrydelay_login=0.1)
 
@@ -137,7 +139,7 @@ class TestPooledFtp(TestStdFtp):
             fhnrc.write('machine localhost login {:s} password {:s}'
                         .format(self.user, self.password))
         self.sh.chmod(self._fnrc, 0o600)
-        self._ftppool = FtpConnectionPool(self.sh, self._fnrc)
+        self._ftppool = FtpConnectionPool(self.sh, nrcfile=self._fnrc, ignoreproxy=True)
 
     def tearDown(self):
         self._ftppool.clear()

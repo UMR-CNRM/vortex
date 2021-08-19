@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -491,7 +490,7 @@ class XXTContent(IndexedTable):
         """Return local namelist source in gco set according to second column."""
         return self.xxtpos(1, g, x)
 
-    def mapdomains(self, maxterm=None):
+    def mapdomains(self, maxterm=None, where=None):
         """Return a map of domains associated for each term in selection namelists."""
         mapdom = dict()
         allterms = sorted([Time(x) for x in self.keys()])
@@ -505,25 +504,30 @@ class XXTContent(IndexedTable):
         if (self._cachedomains is None) or (self._cachedomains_term != maxterm):
 
             select_seen = dict()
-            for term in [x for x in allterms if x <= maxterm]:
-                tvalue = self.get(term.fmthm, self.get(six.text_type(term.hour), None))
+            for a_term in [x for x in allterms if x <= maxterm]:
+                tvalue = self.get(a_term.fmthm, self.get(six.text_type(a_term.hour), None))
                 sh = sessions.system()
-                if tvalue[0] is not None and sh.path.exists(tvalue[0]):
-                    # Do not waste time on duplicated selects...
-                    if tvalue[1] not in select_seen:
-                        fortp = NamelistParser()
-                        with io.open(tvalue[0], 'r') as fd:
-                            xx = fortp.parse(fd.read())
-                        domains = set()
-                        for nb in xx.values():
-                            for domlist in [y for x, y in nb.items() if x.startswith('CLD')]:
-                                domains = domains | set(domlist.pop().split(':'))
-                        select_seen[tvalue[1]] = domains
-                    else:
-                        domains = select_seen[tvalue[1]]
-                    mapdom[term.fmthm] = list(domains)
-                    if term.minute == 0:
-                        mapdom[six.text_type(term.hour)] = list(domains)
+                if tvalue[0] is not None:
+                    local_guesses = [tvalue[0], 'fpselect_' + a_term.fmthm]
+                    if where:
+                        local_guesses = [sh.path.join(where, g) for g in local_guesses]
+                    local_guesses = [g for g in local_guesses if sh.path.exists(g)]
+                    if local_guesses:
+                        # Do not waste time on duplicated selects...
+                        if tvalue[1] not in select_seen:
+                            fortp = NamelistParser()
+                            with io.open(local_guesses[0], 'r') as fd:
+                                xx = fortp.parse(fd.read())
+                            domains = set()
+                            for nb in xx.values():
+                                for domlist in [y for x, y in nb.items() if x.startswith('CLD')]:
+                                    domains = domains | set(domlist.pop().split(':'))
+                            select_seen[tvalue[1]] = domains
+                        else:
+                            domains = select_seen[tvalue[1]]
+                        mapdom[a_term.fmthm] = list(domains)
+                        if a_term.minute == 0:
+                            mapdom[six.text_type(a_term.hour)] = list(domains)
 
             self._cachedomains_term = maxterm
             self._cachedomains = mapdom

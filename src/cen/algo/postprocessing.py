@@ -22,8 +22,7 @@ with echecker:
 
 @echecker.disabled_if_unavailable
 class S2m_ensemble_postprocessing(AlgoComponent):
-    """
-    S2M ensemble forecast postprocessing.
+    """S2M ensemble forecast postprocessing.
 
     Current use : Get ensemble deciles of "fresh snow" (12-hourly and daily accumulation for the Bulletin 4 saisons)
     """
@@ -49,11 +48,12 @@ class S2m_ensemble_postprocessing(AlgoComponent):
 
     def execute(self, rh, opts):
         # get input resources
-        avail_forecasts = self.context.sequence.effective_inputs(role="CrocusForecast")  # role="Crocus Forecast"
+        avail_forecasts = self.context.sequence.effective_inputs(role="CrocusForecast")
         # get list of file names
         listforcing = [am.rh.container.filename for am in avail_forecasts]
         # init ensemble postprocessing object
-        ens = EnsemblePostproc(Ensemble(), self.varnames, listforcing, avail_forecasts[0].rh.resource.datebegin,
+        ens = EnsemblePostproc(Ensemble(), self.varnames, listforcing,
+                               avail_forecasts[0].rh.resource.datebegin,
                                avail_forecasts[0].rh.resource.dateend)
         # do postprocessing
         ens.postprocess()

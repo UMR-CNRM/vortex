@@ -85,3 +85,23 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: TarResultBoundww3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: WW3Out
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Ww3DatedIntermediateResults
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: Ww3IntermediateResults
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

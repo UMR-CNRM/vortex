@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -1822,7 +1821,6 @@ class ExtractForcingWorkerEnsembleForecast(ExtractForcingWorker):
     )
 
     def forcingdir(self, rundir, thisdir):
-
         return thisdir
 
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -15,9 +14,11 @@ import six
 import collections
 import functools
 import math
+import re
 
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Date, Time, Period, Month
+from bronx.stdtypes.date import Date, Time, Period, Month, timeintrangex
+from bronx.syntax.decorators import secure_getattr
 from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
 import footprints
@@ -250,7 +251,7 @@ class CouplingOffsetConfTool(ConfTool):
         defined_topdefault = self._DFLT_KEY in r_dict
         top_default = r_dict.pop(self._DFLT_KEY, class_default)
 
-        # Check consitency and replace missing values with defaults
+        # Check consistency and replace missing values with defaults
         for c in self.target_hhs:
             myv = r_dict.setdefault(c, dict())
             # Is there a cutoff specific default ?
@@ -725,6 +726,436 @@ class TimeSerieInputFinderConfTool(ConfTool):
     def term(self, begindate, term):  # @UnusedVariable
         """Find the term of the time serie files."""
         return Time(self.timeserie_step)
+
+
+class ArpIfsForecastTermConfTool(ConfTool):
+    """Deal with any Arpege/IFS model final term and outputs.
+
+
+    The conf tool will look like::
+
+      >>> ct = ArpIfsForecastTermConfTool(kind="arpifs_fcterms",
+      ...                                 fcterm_def=dict(production={0:102, 12:24},
+      ...                                                 assim={"default": 6}),
+      ...                                 hist_terms_def=dict(production={"default":"0-47-6,48-finalterm-12"},
+      ...                                                     assim={"default":"0,3,6"}),
+      ...                                 surf_terms_def=dict(production={"default":None, 0:"3,6"},
+      ...                                                     assim={"default":"3,6"}),
+      ...                                 diag_fp_terms_def=dict(default={"default":"0-47-3,48-finalterm-6"}),
+      ...                                 extra_fp_terms_def=dict(
+      ...                                     aero=dict(production={0:"0-48-3"}),
+      ...                                     foo=dict(default={"default":"2,3"})
+      ...                                     )
+      ...                                 )
+
+    The forecast term ca be retrieved:
+
+      >>> print(ct.fcterm('assim', 6))
+      6
+      >>> print(ct.fcterm('production', 0))
+      102
+      >>> print(ct.fcterm('production', 12))
+      24
+
+    If nothing is defined it crashes:
+
+      >>> print(ct.fcterm('production', 6))
+      Traceback (most recent call last):
+      ...
+      ValueError: Nothing is defined for cutoff="production"/hh="06:00" in "fcterm"
+
+    The list of requested historical terms can be retrieved. It is automaticaly
+    constrained by the forecast term:
+
+      >>> print(','.join([str(t) for t in ct.hist_terms('assim', 6)]))
+      0,3,6
+      >>> print(','.join([str(t) for t in ct.hist_terms('production', 0)]))
+      0,6,12,18,24,30,36,42,48,60,72,84,96
+      >>> print(','.join([str(t) for t in ct.hist_terms('production', 12)]))
+      0,6,12,18,24
+
+    The list of requested Surfex files can be retrieved:
+
+      >>> print(','.join([str(t) for t in ct.surf_terms('assim', 6)]))
+      3,6
+
+    The list of terms produced by the inline fullpos is:
+
+      >>> print(','.join([str(t) for t in ct.inline_terms('assim', 6)]))
+      0,3,6
+      >>> print(','.join([str(t) for t in ct.inline_terms('production', 0)]))
+      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
+      >>> print(','.join([str(t) for t in ct.inline_terms('production', 12)]))
+      0,3,6,9,12,15,18,21,24
+
+    Note: It depends on the value of **use_inline_fp**. If ``False`` an empty
+    list will be returned.
+
+    The inline Fullpos can also be switched-off manually using the `no_inline`
+    property:
+
+      >>> print(','.join([str(t) for t in ct.no_inline.inline_terms('production', 0)]))
+      <BLANKLINE>
+      >>> print(','.join([str(t) for t in ct.no_inline.diag_terms('production', 0)]))
+      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
+
+    The list of terms when some offline fullpos job is needed (for any of the
+    domains):
+
+      >>> print(','.join([str(t) for t in ct.fpoff_terms('assim', 6)]))
+      2,3
+      >>> print(','.join([str(t) for t in ct.fpoff_terms('production', 0)]))
+      0,2,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48
+      >>> print(','.join([str(t) for t in ct.fpoff_terms('production', 12)]))
+      2,3
+
+    The list of terms, in addition to requested historical terms, needed to run
+    offline fullpos job:
+
+      >>> print(','.join([str(t) for t in ct.extra_hist_terms('production', 0)]))
+      2,3,9,15,21,27,33,39,45
+
+    The list of all historical terms (both requested terms and terms required
+    for offline Fullpos)
+
+      >>> print(','.join([str(t) for t in ct.all_hist_terms('production', 0)]))
+      0,2,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,60,72,84,96
+
+    The list of involved Fullpos objects for a given cutoff/hh:
+
+      >>> print(','.join([t for t in ct.fpoff_items('assim', 6)]))
+      foo
+      >>> print(','.join([t for t in ct.fpoff_items('production', 0)]))
+      aero,foo
+      >>> print(','.join([t for t in ct.fpoff_items('production', 0, discard=['aero'])]))
+      foo
+      >>> print(','.join([t for t in ct.fpoff_items('production', 0, only=['foo'])]))
+      foo
+      >>> print(','.join([t for t in ct.fpoff_items('production', 12)]))
+      foo
+
+    The list of terms associated to a given Fullpos object can be obtained:
+
+      >>> print(','.join([str(t) for t in ct.foo_terms('assim', 6)]))
+      2,3
+      >>> print(','.join([str(t) for t in ct.aero_terms('assim', 6)]))
+      <BLANKLINE>
+      >>> print(','.join([str(t) for t in ct.foo_terms('production', 0)]))
+      2,3
+      >>> print(','.join([str(t) for t in ct.aero_terms('production', 0)]))
+      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48
+      >>> print(','.join([str(t) for t in ct.foo_terms('production', 12)]))
+      2,3
+      >>> print(','.join([str(t) for t in ct.aero_terms('production', 12)]))
+      <BLANKLINE>
+
+    It can also be obtained as a FPList objects (if empty, an empty list is returned
+    instead of an FPList object):
+
+      >>> ct.aero_terms_fplist('assim', 6)
+      []
+      >>> print(','.join([str(t) for t in ct.aero_terms_fplist('production', 0)]))
+      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48
+      >>> print(type(ct.aero_terms_fplist('production', 0)).__name__)
+      FPList
+      >>> ct.aero_terms_fplist('production', 12)
+      []
+
+    A mapping dictionary can also be obtained:
+
+      >>> for k, v in sorted(ct.fpoff_terms_map('production', 0).items()):
+      ...     print('{:s}: {:s}'.format(k, ','.join([str(vv) for vv in v])))
+      aero: 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48
+      foo: 2,3
+
+    """
+
+    _footprint = dict(
+        info = "Conf tool that helps setting up Arpege's forecast term and outputs",
+        attr = dict(
+            kind = dict(
+                values= ['arpifs_fcterms', ],
+            ),
+            fcterm_def = dict(
+                info = ("The forecast's term for each cutoff and base time " +
+                        "(e.g ``{'assim':{0:6, 12:6}, 'production':{0:102}}``)"),
+                type = dict,
+            ),
+            fcterm_unit=dict(
+                info="The forecast's term unit (hour or timestep)",
+                values=['hour', 'timestep'],
+                optional=True,
+                default='hour',
+            ),
+            hist_terms_def=dict(
+                info=("The forecast's terms when historical files are needed " +
+                      "(for permanant storage) " +
+                      "(e.g ``{'assim':{default: '0-finalterm-3'}, " +
+                      "'production':{0:'0-23-1,24-finalterm-6}}``)"),
+                type=dict,
+                optional=True,
+            ),
+            surf_terms_def=dict(
+                info=("The forecast's terms when surface files are needed " +
+                      "(for permanant storage) "),
+                type=dict,
+                optional=True,
+            ),
+            norm_terms_def=dict(
+                info="The forecast's terms when spectral norms are computed",
+                type=dict,
+                optional=True,
+            ),
+            diag_fp_terms_def=dict(
+                info="The forecast's terms when fullpos core diagnostics are computed",
+                type=dict,
+                optional=True,
+            ),
+            extra_fp_terms_def=dict(
+                info=("The forecast's terms when extra fullpos diagnostics are computed. " +
+                      "They are always computed by some offline tasks. " +
+                      "The dictionary has an additional level (describing the 'name' of the " +
+                      "extra fullpos processing"),
+                type=dict,
+                optional=True,
+            ),
+            use_inline_fp = dict(
+                info = 'Use inline Fullpos to compute "core_fp_terms"',
+                type = bool,
+                optional = True,
+                default = True,
+            ),
+        )
+    )
+
+    _ACTUAL_T_RE = re.compile(r'(\w+)_terms$')
+    _ACTUAL_FPLIST_T_RE = re.compile(r'(\w+)_terms_fplist$')
+    _UNDEFINED = object()
+
+    def __init__(self, *kargs, **kwargs):
+        super(ArpIfsForecastTermConfTool, self).__init__(*kargs, **kwargs)
+        self._x_fcterm = self._check_data_keys_and_times(self.fcterm_def, 'fcterm_def',
+                                                         cast=self._cast_unique_value)
+        self._x_hist_terms = self._check_data_keys_and_times(self.hist_terms_def, 'hist_terms_def')
+        self._x_surf_terms = self._check_data_keys_and_times(self.surf_terms_def, 'surf_terms_def')
+        self._x_norm_terms = self._check_data_keys_and_times(self.norm_terms_def, 'norm_terms_def')
+        self._x_diag_fp_terms = self._check_data_keys_and_times(self.diag_fp_terms_def, 'diag_fp_terms_def')
+        self._x_extra_fp_terms = dict() if self.extra_fp_terms_def is None else self.extra_fp_terms_def
+        if not all([isinstance(v, dict) for v in self._x_extra_fp_terms.values()]):
+            raise ValueError("extra_fp_terms values need to be dictionaries")
+        self._x_extra_fp_terms = {k: self._check_data_keys_and_times(v,
+                                                                     'extra_fp_terms_def[{:s}]'.format(k))
+                                  for k, v in self._x_extra_fp_terms.items()}
+        self._lookup_cache = dict()
+        self._lookup_rangex_cache = dict()
+        self._no_inline_cache = None
+
+    def _clone(self, **kwargs):
+        my_args = self.footprint_as_shallow_dict()
+        my_args.update(kwargs)
+        return self.__class__(** my_args)
+
+    @property
+    def no_inline(self):
+        """Return a clone of this object with inline fullpos de-activated."""
+        if self._no_inline_cache is None:
+            self._no_inline_cache = self._clone(use_inline_fp=False)
+        return self._no_inline_cache
+
+    @staticmethod
+    def _cast_void(value):
+        return value
+
+    def _cast_unique_value(self, value):
+        if self.fcterm_unit == 'hour':
+            return Time(value)
+        else:
+            return int(value)
+
+    @staticmethod
+    def _check_data_keys(data, dataname):
+        """Check the first level of any input dictionary."""
+        if data is None:
+            return dict(default=dict(default=None))
+        else:
+            if not set(data.keys()) <= {'assim', 'production', 'default'}:
+                raise ValueError('Impoper value ({!s}) for "{:s}".'.format(data, dataname))
+            return data
+
+    def _check_data_keys_and_times(self, data, dataname, cast=None):
+        """Check any input dictionary and convert values."""
+        data = self._check_data_keys(data, dataname)
+        cast = self._cast_void if cast is None else cast
+        new_data = dict()
+        for data_k, data_v in data.items():
+            if not isinstance(data_v, dict):
+                raise ValueError('The {:s} "{:s}" entry should be a dictionary (got "{!s}")'
+                                 .format(dataname, data_k, data_v))
+            try:
+                new_data[data_k] = {'default' if k == 'default' else Time(k): cast(v)
+                                    for k, v in data_v.items()}
+            except ValueError as e:
+                raise ValueError("Error while processing {:s}'s {:s}: ".format(dataname, data_k) +
+                                 "Could not convert to Time (original message '{!s}')".format(e))
+        return new_data
+
+    def _cutoff_hh_lookup(self, what_desc, cutoff, hh, rawdata=None):
+        """Look for a particular cutoff in self._x_what_desc."""
+        if not isinstance(hh, Time):
+            hh = Time(hh)
+        if (what_desc, cutoff, hh) not in self._lookup_cache:
+            if rawdata is None:
+                rawdata = getattr(self, '_x_{:s}'.format(what_desc))
+            cutoff_v = rawdata.get(cutoff, rawdata.get('default', self._UNDEFINED))
+            if cutoff_v is self._UNDEFINED:
+                raise ValueError('Nothing is defined for cutoff="{:s}" in "{:s}"'
+                                 .format(cutoff, what_desc))
+            hh_v = cutoff_v.get(hh, cutoff_v.get('default', self._UNDEFINED))
+            if hh_v is self._UNDEFINED:
+                raise ValueError('Nothing is defined for cutoff="{:s}"/hh="{!s}" in "{:s}"'
+                                 .format(cutoff, hh, what_desc))
+            self._lookup_cache[(what_desc, cutoff, hh)] = hh_v
+        return self._lookup_cache[(what_desc, cutoff, hh)]
+
+    def _cutoff_hh_rangex_lookup(self, what_desc, cutoff, hh, rawdata=None):
+        """Look for a particular cutoff in self._x_what_desc and resolve the rangex."""
+        if (what_desc, cutoff, hh) not in self._lookup_rangex_cache:
+            try:
+                what = self._cutoff_hh_lookup(what_desc, cutoff, hh, rawdata=rawdata)
+            except ValueError:
+                what = None
+            if what is None:
+                self._lookup_rangex_cache[(what_desc, cutoff, hh)] = list()
+            else:
+                finalterm = self._cutoff_hh_lookup('fcterm', cutoff, hh)
+                if 'finalterm' in what:
+                    what = what.replace('finalterm', str(finalterm))
+                try:
+                    tir = timeintrangex(what)
+                except (TypeError, ValueError):
+                    raise ValueError(
+                        'Could not process "{:s} using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
+                        .format(what, what_desc, cutoff, hh)
+                    )
+                if self.fcterm_unit == 'timestep' and not all([isinstance(i, int) for i in tir]):
+                    raise ValueError('No hours/minutes allowed when fcterm_unit is "timestep" ' +
+                                     '(from "{:s}" with cutoff={:s}/hh={!s})'
+                                     .format(what_desc, cutoff, hh))
+                self._lookup_rangex_cache[(what_desc, cutoff, hh)] = sorted(
+                    [t for t in tir if t <= finalterm]
+                )
+        return self._lookup_rangex_cache[(what_desc, cutoff, hh)]
+
+    def fcterm(self, cutoff, hh):
+        """The forecast term for **cutoff** and **hh**."""
+        fcterm = self._cutoff_hh_lookup('fcterm', cutoff, hh)
+        if isinstance(fcterm, Time) and fcterm.minute == 0:
+            return fcterm.hour
+        else:
+            return fcterm
+
+    def hist_terms(self, cutoff, hh):
+        """The list of terms for requested/archived historical files."""
+        return self._cutoff_hh_rangex_lookup('hist_terms', cutoff, hh)
+
+    def surf_terms(self, cutoff, hh):
+        """The list of terms for historical surface files."""
+        return self._cutoff_hh_rangex_lookup('surf_terms', cutoff, hh)
+
+    def norm_terms(self, cutoff, hh):
+        """The list of terms for norm calculations."""
+        return self._cutoff_hh_rangex_lookup('norm_terms', cutoff, hh)
+
+    def inline_terms(self, cutoff, hh):
+        """The list of terms for inline diagnostics."""
+        if self.use_inline_fp:
+            return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
+        else:
+            return list()
+
+    def diag_terms(self, cutoff, hh):
+        """The list of terms for offline diagnostics."""
+        if self.use_inline_fp:
+            return list()
+        else:
+            return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
+
+    def diag_terms_fplist(self, cutoff, hh):
+        """The list of terms for offline diagnostics (as a FPlist)."""
+        flist = self.diag_terms(cutoff, hh)
+        return FPList(flist) if flist else []
+
+    def _extra_fp_terms_item_fplist(self, item, cutoff, hh):
+        flist = self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(item),
+                                              cutoff, hh,
+                                              rawdata=self._x_extra_fp_terms[item])
+        return FPList(flist) if flist else []
+
+    @secure_getattr
+    def __getattr__(self, item):
+        actual_m = self._ACTUAL_T_RE.match(item)
+        actual_fplist_m = self._ACTUAL_FPLIST_T_RE.match(item)
+        if actual_m and actual_m.group(1) in self._x_extra_fp_terms.keys():
+            return functools.partial(self._cutoff_hh_rangex_lookup,
+                                     'extra_fp_terms[{:s}]'.format(actual_m.group(1)),
+                                     rawdata=self._x_extra_fp_terms[actual_m.group(1)])
+        elif actual_fplist_m and actual_fplist_m.group(1) in self._x_extra_fp_terms.keys():
+            return functools.partial(self._extra_fp_terms_item_fplist,
+                                     actual_fplist_m.group(1))
+        else:
+            raise AttributeError('Attribute "{:s}" was not found'.format(item))
+
+    def _fpoff_terms_set(self, cutoff, hh):
+        fpoff_terms = set()
+        for k, v in self._x_extra_fp_terms.items():
+            fpoff_terms.update(self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(k),
+                                                             cutoff, hh, rawdata=v))
+        if not self.use_inline_fp:
+            fpoff_terms.update(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh))
+        return fpoff_terms
+
+    def extra_hist_terms(self, cutoff, hh):
+        """The list of terms for historical file terms solely produced for fullpos use."""
+        fpoff_terms = self._fpoff_terms_set(cutoff, hh)
+        fpoff_terms -= set(self.hist_terms(cutoff, hh))
+        return sorted(fpoff_terms)
+
+    def all_hist_terms(self, cutoff, hh):
+        """The list of terms for all historical file."""
+        all_terms = self._fpoff_terms_set(cutoff, hh)
+        all_terms |= set(self.hist_terms(cutoff, hh))
+        return sorted(all_terms)
+
+    def fpoff_terms(self, cutoff, hh):
+        """The list of terms for offline fullpos."""
+        fpoff_terms = self._fpoff_terms_set(cutoff, hh)
+        return sorted(fpoff_terms)
+
+    def fpoff_items(self, cutoff, hh, discard=None, only=None):
+        """List of active offline post-processing domains."""
+        items = {k
+                 for k, v in self._x_extra_fp_terms.items()
+                 if self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(k),
+                                                  cutoff,
+                                                  hh,
+                                                  rawdata=v)}
+        if not self.use_inline_fp and self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh):
+            items.add('diag')
+        if discard:
+            items -= set(discard)
+        if only:
+            items &= set(only)
+        return sorted(items)
+
+    def fpoff_terms_map(self, cutoff, hh):
+        """The mapping dictionary between offline post-processing terms and domains."""
+        return {k: getattr(self, '{:s}_terms'.format(k))(cutoff, hh)
+                for k in self.fpoff_items(cutoff, hh)}
+
+    def fpoff_terms_fpmap(self, cutoff, hh):
+        """The mapping dictionary between offline post-processing terms and domains (as a FPlist)."""
+        return {k: getattr(self, '{:s}_terms_fplist'.format(k))(cutoff, hh)
+                for k in self.fpoff_items(cutoff, hh)}
 
 
 if __name__ == '__main__':

@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine addons.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -28,5 +27,5 @@ class MarineAddonsGroup(AddonGroup):
         )
     )
 
-    _addonslist = ('iopoll_marine', 'iopoll_waves',  # IO polling
+    _addonslist = ('iopoll_marine', 'iopoll_waves', 'iopoll_ww3'  # IO polling
                    )

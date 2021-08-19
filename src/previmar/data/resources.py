@@ -1,8 +1,7 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
-TODO: Module documentation
+Marine resources.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division
@@ -13,6 +12,7 @@ from bronx.stdtypes.date import Date, Time, Period
 from vortex.data.resources import Resource
 from vortex.data.flow import FlowResource, GeoFlowResource
 from common.data.modelstates import InitialCondition, Historic
+from vortex.syntax.stdattrs import term_deco
 from vortex.syntax.stddeco import namebuilding_delete, namebuilding_insert, namebuilding_append
 from .contents import AltidataContent
 
@@ -381,3 +381,102 @@ class SARdataWave(GenericWaveSatelliteData):
     @property
     def realkind(self):
         return 'SARdataWave'
+
+
+@namebuilding_append('src', lambda s: s.fields)
+class TarResultBoundww3(GeoFlowResource):
+    """Class for ww3 boundaries spectra converted from mfwam  (tar file: ww3....spec)."""
+    _footprint = dict(
+        info = 'tar of ww3 boundaries spectra',
+        attr = dict(
+            kind = dict(
+                values = ['tarspecmfwam2ww3', ],
+            ),
+            nativefmt = dict(
+                values = ['tar'],
+                default = 'tar'
+            ),
+            fields = dict(
+                values = ['specmfwam2ww3'],
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'tarspecmfwam2ww3'
+
+
+@namebuilding_append('src', lambda s: s.fields)
+class Ww3IntermediateResults(GeoFlowResource):
+    """Class for ww3 Intermediate result (.ww3)."""
+    _footprint = dict(
+        info = 'ww3 format files',
+        attr = dict(
+            kind = dict(
+                values = ['ww3IntermedResult'],
+            ),
+            fields = dict(
+                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003'],
+            ),
+            model = dict(
+                values = ['ww3'],
+            ),
+
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'ww3IntermedResult'
+
+
+class Ww3DatedIntermediateResults(Ww3IntermediateResults):
+    """Class for ww3 Intermediate result (.ww3) with a date.
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = ' ww3 format dated files',
+            attr = dict(
+                kind = dict(
+                    values = ['ww3DatedIntermedResult'],
+                )
+            )
+        )
+    ]
+
+
+@namebuilding_append('src', lambda s: s.fields)
+class WW3Out(GeoFlowResource):
+    """Class for ww3 parameters output tar of raw netcdf.
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'ww3 parameters output tar',
+            attr = dict(
+                kind = dict(
+                    values = ['ww3outpts', 'ww3outsurf'],
+                ),
+                nativefmt = dict(
+                    values  = ['tar'],
+                    default = 'tar',
+                ),
+                fields = dict(
+                    values = ['out_pnt', 'out_grd', 'out_reg'],
+                ),
+                model = dict(
+                    values = ['ww3'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WW3Out'

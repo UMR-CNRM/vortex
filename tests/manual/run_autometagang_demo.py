@@ -1,5 +1,4 @@
-#!/usr/bin/env python2.7
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 """
 Run the test of AutoMetaGang class.
 """
