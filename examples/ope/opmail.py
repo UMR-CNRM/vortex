@@ -2,16 +2,25 @@
 # -*- coding: utf-8 -*-
 
 """
-OPE Services: mail and opmail.
+OPE Services: sending Mails.
 
-Please initialize variable 'mail_address' near the end of this script.
-It won't run without this change, to avoid sending emails to unwilling destinees.
+Puts at work some capabilities of the mail and opmail Services.
+
+The opmail Service has been designed to meet operational needs:
+- an adressbook is available for the definition of aliases to address
+  lists, and offers recursive address lists resolution.
+- Vortex maintains a catalog of predefined mails, specified as templates:
+  they may contain variables, automatically resolved at send time.
+
+Ordinary users are not allowed to use this Service, only operational
+and developper profiles can play with this toy.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 import pprint
+import sys
 
 import footprints
 import vortex
@@ -23,6 +32,9 @@ from vortex.tools.actions import actiond as ad
 
 # prevent IDEs from removing seemingly unused imports
 assert any([actions, services])
+
+# don't mix stderr and stdout
+sys.stdout = sys.stderr
 
 t = vortex.ticket()
 e = t.env
@@ -41,14 +53,14 @@ def list_actions():
     """List available actions, their kind and status."""
     sh.title('Actions information')
     sh.subtitle('available actions')
-    print(pprint.pformat(ad.actions))
+    print(ad.actions)
     sh.subtitle('existing handlers')
-    print(pprint.pformat(ad.items()))
+    print(pprint.pformat(list(ad.items())))
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
         status = [h.status() for h in handlers]
-        print(act, ':', pprint.pformat(zip(status, handlers)))
+        print('{:6s}:'.format(act), pprint.pformat(list(zip(status, handlers))))
     print()
 
 
@@ -62,7 +74,7 @@ def more_debug(names=None, level=logging.DEBUG):
     return alogger
 
 
-def check_address(address):
+def check_address(address, smtpuser, smtppass):
     """
     Most of his is not needed, it only simplifies this script maintenance.
     """
@@ -73,23 +85,30 @@ def check_address(address):
     if sh.sysname == 'Darwin':
         if e.HOST == 'douni':
             me = 'lamboley.pascal@free.fr'
-            smtpserver = 'smtp.neuf.fr'
+            smtpserver = 'smtp.orange.fr'
+            smtpport = 587
         else:
-            # me = 'webmcsi@mirage.meteo.fr'
             me = 'pascal.lamboley@meteo.fr'
             smtpserver = 'smtp.meteo.fr'
         toolbox.defaults(smtpserver=smtpserver)  # usually automatic (but not on mac)
+        try:
+            toolbox.defaults(smtpport=smtpport)
+        except NameError:
+            pass
 
     # specific users
     if e.USER == 'lamboleyp':
         me = 'pascal.lamboley@meteo.fr'
     elif e.USER == 'meunierlf':
         me = 'louis-francois.meunier@meteo.fr'
-    elif e.USER == 'rigougyg':
-        me = 'gaelle.rigoudy@meteo.fr'
+        if e.HOST == 'lxgmap45':
+            smtpserver = 'smtp.cnrm.meteo.fr'
+            toolbox.defaults(smtpserver=smtpserver)
+
+    # None is the default value anyway
+    toolbox.defaults(smtpuser=smtpuser, smtppass=smtppass)
 
     address = address or me
-
     if address is None:
         print('Please define "mail_address = your_address" near the end of this script.')
         exit(1)
@@ -97,43 +116,51 @@ def check_address(address):
     return address
 
 
-def test_mail(address):
+def test_mail(address, smtpuser=None, smtppass=None):
     sh.title('Mail Service')
 
-    address = check_address(address)
+    address = check_address(address, smtpuser, smtppass)
 
     # share the sender's address
     t.glove.email = address
 
     # or alternatively
-    # toolbox.defaults(sender=me)
+    # toolbox.defaults(sender=address)
 
     # find images somewhere to test attachments
     pj1 = t.glove.siteconf + '/../sphinx/vortex.jpg'
     pj2 = t.glove.siteconf + '/../sphinx/favicon.png'
 
     ad.mail(
-        to=address,
-        subject="un pangramme, c'est énôrme !!",
-        body="Portez ce vieux whisky au juge blond qui fume: dès Noël "
+        to          = address,
+        subject     = "Un pangramme, c'est énôrme !!",
+        attachments = (pj1, pj2),
+        body        = "Portez ce vieux whisky au juge blond qui fume: dès Noël "
              "où un zéphyr haï le vêt de glaçons würmiens, il dîne "
              "d’exquis rôtis de bœuf au kir et à l’aÿ d’âge mûr, et "
              "cætera, en s'écriant: \"À Â É È Ê Ë Î Ï Ô Ù Û Ü Ç Œ Æ\"."
              "\n\n--\nMail envoyé depuis mon iVortex.",
-        attachments=(pj1, pj2),
     )
 
 
-def test_opmail(address):
+def test_opmail(address, smtpuser=None, smtppass=None):
     sh.title('Opmail Service')
 
-    address = check_address(address)
+    address = check_address(address, smtpuser, smtppass)
 
     # set the sender once and for all
-    t.glove.email = address  # could also be: toolbox.defaults(sender=me)
+    t.glove.email = address
 
     # find an image somewhere to test attachments
     image = t.glove.siteconf + '/../sphinx/vortex.jpg'
+
+    sh.subtitle('send a simple mail')
+    ad.mail(
+        subject     = 'Test vortex: simple mail',
+        to          = address,
+        contents    = 'A simple mail with attachement',
+        attachments = [image],
+    )
 
     # test special cases
     sh.subtitle('op_mail=0: mails are not sent')
@@ -142,20 +169,27 @@ def test_opmail(address):
     ad.opmail(id='test_missing_section')
 
     # test more common cases
+    # when e.op_mail==1, the mail is really sent
+    # when e.op_mail==0, it is built the same way, but only sent to stderr
+    e.env_var = 'from the env !'
     for e.op_mail, op_suite in [(1, 'oper'), (0, 'double')]:
         sh.subtitle('op_mail={} - op_suite={}'.format(e.op_mail, op_suite))
         ad.opmail(
-            id='test',
-            attachments=[image],
-            extra='extra=' + op_suite,
-            to='pascal',
+            id          = 'test',
+            attachments = [image],
+            to          = 'pascal_home',
+            # those are not in the footprint, they will be transmitted
+            # for template variable substitution (case insensitive)
+            extra       = 'extra_' + op_suite,
+            op_suite    = op_suite,
         )
 
 
 # both 'mail' and 'opmail' must be 'on'
-ad.alarm_off()
 ad.mail_on()
 ad.opmail_on()
+
+ad.alarm_off()
 ad.report_off()
 ad.route_off()
 
@@ -165,5 +199,13 @@ logger = more_debug(['iga', ])
 # mail_address = 'firstname.lastname@meteo.fr'
 mail_address = None
 
-test_mail(mail_address)
-test_opmail(mail_address)
+# if needed (tests from home during the COVID crisis...)
+smtpuser = smtppass = None
+
+# Pascal
+mail_address = 'lamboley.pascal@neuf.fr'
+smtpuser = 'lamboley.pascal@orange.fr'
+smtppass = 'TULSORAPA'
+
+test_mail(mail_address, smtpuser, smtppass)
+test_opmail(mail_address, smtpuser, smtppass)
