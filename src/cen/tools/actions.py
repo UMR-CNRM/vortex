@@ -33,5 +33,18 @@ class CenMail(Action):
         kw.setdefault('inputs_charset', self.inputs_charset)
         return super(CenMail, self).service_info(**kw)
 
+    def execute(self, *args, **kw):
+        """
+        Perform the action through a service. Extraneous arguments (not included
+        in the footprint) are collected and explicitely transmitted to the service
+        in a dictionary.
+        """
+        rc = None
+        service = self.get_active_service(**kw)
+        if service:
+            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
+            rc = service(options)
+        return rc
+
 
 actiond.add(CenMail(inputs_charset='utf-8'))
