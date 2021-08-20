@@ -149,9 +149,17 @@ class MailService(Service):
             smtpserver = dict(
                 optional = True,
             ),
-            smtpport = dict(
-                type = int,
+            smtpport=dict(
+                type=int,
                 optional = True,
+            ),
+            smtpuser=dict(
+                optional=True,
+                default=None,
+            ),
+            smtppass=dict(
+                optional=True,
+                default=None,
             ),
             charset = dict(
                 info     = 'The encoding that should be used when sending the email',
@@ -321,7 +329,9 @@ class MailService(Service):
             extras = dict()
             if smtpport:
                 extras['port'] = smtpport
-            smtp = smtplib.SMTP(smtpserver, ** extras)
+            smtp = smtplib.SMTP(smtpserver, **extras)
+            if self.smtpuser and self.smtppass:
+                smtp.login(self.smtpuser, self.smtppass)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
