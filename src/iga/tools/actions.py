@@ -13,9 +13,8 @@ from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
-from vortex.tools.actions import Action, actiond
+from vortex.tools.actions import Action, TemplatedMail, actiond
 from vortex.tools.services import Directory
-from vortex.util.config import GenericConfigParser
 
 #: Export nothing
 __all__ = []
@@ -56,39 +55,22 @@ class DMTEvent(Action):
         super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
 
 
-class OpMail(Action):
+class OpMail(TemplatedMail):
     """
     Class responsible for sending pre-defined mails.
     """
 
     def __init__(self, kind='opmail', service='opmail', active=True,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@opmail-address-book.ini',
+        super(OpMail, self).__init__(kind=kind, active=active, service=service,
+                                     catalog=catalog, inputs_charset=inputs_charset)
+        self.directory = directory or Directory('@{:s}-address-book.ini'.format(kind),
                                                 encoding=inputs_charset)
-        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
-                                                      encoding=inputs_charset)
-        self.inputs_charset = inputs_charset
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""
         kw.setdefault('directory', self.directory)
-        kw.setdefault('catalog', self.catalog)
-        kw.setdefault('inputs_charset', self.inputs_charset)
         return super(OpMail, self).service_info(**kw)
-
-    def execute(self, *args, **kw):
-        """
-        Perform the action through a service. Extraneous arguments (not included
-        in the footprint) are collected and explicitely transmitted to the service
-        in a dictionary.
-        """
-        rc = None
-        service = self.get_active_service(**kw)
-        if service:
-            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
-            rc = service(options)
-        return rc
 
 
 class OpPhase(Action):

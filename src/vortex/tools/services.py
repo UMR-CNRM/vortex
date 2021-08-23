@@ -149,17 +149,15 @@ class MailService(Service):
             smtpserver = dict(
                 optional = True,
             ),
-            smtpport=dict(
-                type=int,
+            smtpport = dict(
+                type     = int,
                 optional = True,
             ),
-            smtpuser=dict(
-                optional=True,
-                default=None,
+            smtpuser = dict(
+                optional = True,
             ),
-            smtppass=dict(
-                optional=True,
-                default=None,
+            smtppass = dict(
+                optional = True,
             ),
             charset = dict(
                 info     = 'The encoding that should be used when sending the email',

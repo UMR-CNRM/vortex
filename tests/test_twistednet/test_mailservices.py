@@ -114,8 +114,9 @@ Subject: =?utf-8?q?Some_extras_=28Toto=29_et_du_fran=C3=A7ais_emb=C3=AAta?=
  =?utf-8?q?nt?=
 
 
-Variable prise dans env  : op_suite =3D oper
+Variable prise dans env  : env_var  =3D from the env !
 Variable prise en add_on : extra    =3D Toto
+Variable prise en add_on : op_suite =3D oper
 Variable manquante       : missing  =3D $missing
 Syntaxe ill=C3=A9gale         : op_suite =3D $(op_suite)
 
@@ -146,8 +147,9 @@ Subject: =?utf-8?q?Mail_with_xpid=3Dabcd_et_du_fran=C3=A7ais_emb=C3=AAtan?=
 --
 
 
-Variable prise dans env  : op_suite =3D oper
+Variable prise dans env  : env_var  =3D from the env !
 Variable prise en add_on : extra    =3D some extra
+Variable prise en add_on : op_suite =3D oper
 Variable manquante       : missing  =3D $missing
 Syntaxe ill=C3=A9gale         : op_suite =3D $(op_suite)
 
@@ -328,8 +330,8 @@ class TestEmailServices(unittest.TestCase):
                                 inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
-                tenv.OP_SUITE = 'oper'
-                eserv(dict(extra='Toto'))
+                tenv.ENV_var = 'from the env !'
+                eserv(dict(extra='Toto', op_suite='oper'))
             self.assertMessage(messages, _REF_TEMPLATED)
             # OpMails
             eserv = fpx.service(kind="opmail",
@@ -343,9 +345,9 @@ class TestEmailServices(unittest.TestCase):
                                 inputs_charset='utf-8',
                                 ** self.servicedefaults)
             with self.env.clone() as tenv:
-                tenv.OP_SUITE = 'oper'
+                tenv.ENV_var = 'from the env !'
                 tenv.OP_XPID = 'ABCD'
                 tenv.user = 'tourist'
-                eserv(dict(extra='some extra'))
+                eserv(dict(extra='some extra', op_suite='oper'))
             self.assertMessage(messages, _REF_IGA.format(vversion=vortex.__version__),
                                igalike=True)

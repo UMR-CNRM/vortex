@@ -3,7 +3,7 @@
 
 """
 Tests for the cenmail Service.
-See aloso: opmail is very close.
+See also: opmail is very close.
 """
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -91,12 +91,14 @@ def check_address(address, smtpuser, smtppass):
         me = 'pascal.lamboley@meteo.fr'
     elif e.USER == 'meunierlf':
         me = 'louis-francois.meunier@meteo.fr'
-        if e.HOST == 'lxgmap45':
+        if e.HOST == 'pxalgo2':
             smtpserver = 'smtp.cnrm.meteo.fr'
             toolbox.defaults(smtpserver=smtpserver)
 
-    # None is the default value anyway
-    toolbox.defaults(smtpuser=smtpuser, smtppass=smtppass)
+    if smtpuser:
+        toolbox.defaults(smtpuser=smtpuser)
+    if smtppass:
+        toolbox.defaults(smtppass=smtppass)
 
     address = address or me
     if address is None:
@@ -104,33 +106,6 @@ def check_address(address, smtpuser, smtppass):
         exit(1)
 
     return address
-
-
-def test_mail(address, smtpuser=None, smtppass=None):
-    sh.title('Mail Service')
-
-    address = check_address(address, smtpuser, smtppass)
-
-    # share the sender's address
-    t.glove.email = address
-
-    # or alternatively
-    # toolbox.defaults(sender=address)
-
-    # find images somewhere to test attachments
-    pj1 = t.glove.siteconf + '/../sphinx/vortex.jpg'
-    pj2 = t.glove.siteconf + '/../sphinx/favicon.png'
-
-    ad.mail(
-        to          = address,
-        subject     = "Un pangramme, c'est énôrme !!",
-        attachments = (pj1, pj2),
-        body        = "Portez ce vieux whisky au juge blond qui fume: dès Noël "
-             "où un zéphyr haï le vêt de glaçons würmiens, il dîne "
-             "d’exquis rôtis de bœuf au kir et à l’aÿ d’âge mûr, et "
-             "cætera, en s'écriant: \"À Â É È Ê Ë Î Ï Ô Ù Û Ü Ç Œ Æ\"."
-             "\n\n--\nMail envoyé depuis mon iVortex.",
-    )
 
 
 def test_cenmail(address, smtpuser=None, smtppass=None):
@@ -141,11 +116,8 @@ def test_cenmail(address, smtpuser=None, smtppass=None):
     # set the sender once and for all
     t.glove.email = address
 
-    # find an image somewhere to test attachments
-    image = t.glove.siteconf + '/../sphinx/vortex.jpg'
-
     sh.subtitle('send a preformatted cenmail')
-    ad.cenmail(id='test_cen', to=address, extra='extra_var')
+    ad.cenmail(id='test_1', to=address, extra='extra_var')
 
 
 # both 'mail' and 'cenmail' must be 'on'
@@ -167,9 +139,8 @@ mail_address = None
 smtpuser = smtppass = None
 
 # Pascal
-mail_address = 'lamboley.pascal@neuf.fr'
-smtpuser = 'lamboley.pascal@orange.fr'
-smtppass = 'TULSORAPA'
+# mail_address = 'lamboley.pascal@neuf.fr'
+# smtpuser = 'lamboley.pascal@orange.fr'
+# smtppass = 'TULSORAPA'
 
-test_mail(mail_address, smtpuser, smtppass)
 test_cenmail(mail_address, smtpuser, smtppass)
