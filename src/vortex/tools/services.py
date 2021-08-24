@@ -150,7 +150,13 @@ class MailService(Service):
                 optional = True,
             ),
             smtpport = dict(
-                type = int,
+                type     = int,
+                optional = True,
+            ),
+            smtpuser = dict(
+                optional = True,
+            ),
+            smtppass = dict(
                 optional = True,
             ),
             charset = dict(
@@ -321,7 +327,9 @@ class MailService(Service):
             extras = dict()
             if smtpport:
                 extras['port'] = smtpport
-            smtp = smtplib.SMTP(smtpserver, ** extras)
+            smtp = smtplib.SMTP(smtpserver, **extras)
+            if self.smtpuser and self.smtppass:
+                smtp.login(self.smtpuser, self.smtppass)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)

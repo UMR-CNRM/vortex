@@ -16,6 +16,7 @@ import bronx.stdtypes.catalog
 import footprints
 
 from vortex.util.authorizations import is_authorized_user
+from vortex.util.config import GenericConfigParser
 
 #: Export nothing
 __all__ = []
@@ -136,6 +137,38 @@ class SendMail(Action):
         if quoteprintable:
             from email import charset
             charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
+
+
+class TemplatedMail(Action):
+    """Abstract class to end email from a given template.
+
+    Do not use directly !
+    """
+    def __init__(self, kind='templatedmail', service='templatedmail', active=True,
+                 catalog=None, inputs_charset=None):
+        super(TemplatedMail, self).__init__(kind=kind, active=active, service=service)
+        self.catalog = catalog or GenericConfigParser('@{:s}-inventory.ini'.format(kind),
+                                                      encoding=inputs_charset)
+        self.inputs_charset = inputs_charset
+
+    def service_info(self, **kw):
+        """Kindly propose the permanent directory and catalog to the final service"""
+        kw.setdefault('catalog', self.catalog)
+        kw.setdefault('inputs_charset', self.inputs_charset)
+        return super(TemplatedMail, self).service_info(**kw)
+
+    def execute(self, *args, **kw):
+        """
+        Perform the action through a service. Extraneous arguments (not included
+        in the footprint) are collected and explicitely transmitted to the service
+        in a dictionary.
+        """
+        rc = None
+        service = self.get_active_service(**kw)
+        if service:
+            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
+            rc = service(options)
+        return rc
 
 
 class Report(Action):
