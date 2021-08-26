@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -34,21 +33,24 @@ models = set([
     'arpege', 'arp', 'arp_court', 'aladin', 'ald', 'arome', 'aro',
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
     'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha', 'eps',
+    'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee',
+    'hycom3d', 'croco'
 ])
 
 #: Possible values for the most common binaries.
 binaries = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
-                'ifs', 'oops', 'assistance', 'arpifs', 'mfwam'])
+                'ifs', 'oops', 'assistance', 'arpifs', 'mfwam', 'ww3', 'ww3_prnc',
+                'ww3_bound', 'ww3_ncgrb'])
 #: Possible values for the most common utility programs.
 utilities = set(['batodb'])
 
 #: Known formats
 knownfmt = set([
-    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist',
+    'auto', 'autoconfig', 'unknown', 'foo', 'arpifslist', 'bdmbufr_listing',
     'ascii', 'txt', 'json', 'fa', 'lfi', 'lfa', 'netcdf', 'grib', 'grib1', 'grib2',
     'bufr', 'hdf5', 'obsoul', 'odb', 'ecma', 'ccma',
-    'bullx', 'sx', 'ddhpack', 'tar', 'rawfiles', 'binary', 'bin',
+    'bullx', 'sx', 'ddhpack', 'tar', 'tgz', 'rawfiles', 'binary', 'bin',
     'obslocationpack', 'obsfirepack', 'wbcpack', 'geo', 'nam', 'png', 'pdf', 'dir/hdr',
     'yml', 'yaml'
 ])
@@ -454,7 +456,9 @@ def _add_month2gget_basename(cls):
 
         def gget_basename(self):
             """GGET specific naming convention."""
-            return original_gget_basename(self) + '.m{!s}'.format(self.month)
+            b_dict = original_gget_basename(self)
+            b_dict['suffix'] = b_dict.get('suffix', '') + '.m{!s}'.format(self.month)
+            return b_dict
 
         cls.gget_basename = gget_basename
     return cls

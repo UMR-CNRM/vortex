@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
@@ -9,9 +8,12 @@ import unittest
 from vortex import sessions
 from vortex.data import geometries
 from vortex.tools import delayedactions
-from common.tools import partitioning
+from vortex.util import worker
 
-from intairpol.tools import conftools
+from common.tools import partitioning
+from common.tools import conftools as common_conftools
+
+from intairpol.tools import conftools as interpol_conftools
 
 
 class UtDocTests(unittest.TestCase):
@@ -25,14 +27,16 @@ class UtDocTests(unittest.TestCase):
         self.assert_doctests(geometries)
         try:
             self.assert_doctests(delayedactions)
-            self.assert_doctests(partitioning)
         finally:
             # Clean the mess
             t = sessions.current()
             a_hub = t.context.delayedactions_hub
             t.sh.rmtree(a_hub.stagedir)
             a_hub.clear()
-        self.assert_doctests(conftools)
+        self.assert_doctests(worker)
+        self.assert_doctests(partitioning)
+        self.assert_doctests(common_conftools)
+        self.assert_doctests(interpol_conftools)
 
 
 if __name__ == '__main__':

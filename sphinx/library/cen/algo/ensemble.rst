@@ -98,7 +98,7 @@ Taylorism workers
    :members:
    :member-order: alphabetical
 
-.. autoclass:: ExtractForcingWorkerSTForecast
+.. autoclass:: ExtractForcingWorkerEnsembleForecast
    :show-inheritance:
    :members:
    :member-order: alphabetical

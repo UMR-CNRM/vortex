@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -151,7 +150,13 @@ class MailService(Service):
                 optional = True,
             ),
             smtpport = dict(
-                type = int,
+                type     = int,
+                optional = True,
+            ),
+            smtpuser = dict(
+                optional = True,
+            ),
+            smtppass = dict(
                 optional = True,
             ),
             charset = dict(
@@ -322,7 +327,9 @@ class MailService(Service):
             extras = dict()
             if smtpport:
                 extras['port'] = smtpport
-            smtp = smtplib.SMTP(smtpserver, ** extras)
+            smtp = smtplib.SMTP(smtpserver, **extras)
+            if self.smtpuser and self.smtppass:
+                smtp.login(self.smtpuser, self.smtppass)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
@@ -556,12 +563,12 @@ class HideService(Service):
                 logger.error('No login <%s> in path <%s>', username, fullpath)
                 raise ValueError('Login name not in actual path for hidding data')
             work_dir = fullpath.partition(username)[0]
-            logger.debug("using work_dir = <%s>", work_dir)
+            logger.warning("using work_dir = <%s>", work_dir)
         hidden_path = self.sh.path.join(work_dir, username, self.headdir)
         return hidden_path
 
     def __call__(self, filename):
-        """Main action: hide a cheap copy this file under a unique name."""
+        """Main action: hide a cheap copy of this file under a unique name."""
 
         actual_rootdir = self.rootdir or self.find_rootdir(filename)
         destination = self.sh.path.join(

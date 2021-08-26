@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -7,13 +6,13 @@ TODO: Module documentation
 
 from __future__ import absolute_import, print_function, division, unicode_literals
 
-from common.data.consts import GenvModelResource
+from common.data.consts import GenvModelResource, GenvModelGeoResource
 
 #: No automatic export
 __all__ = []
 
 
-class StaticSurfaceEmissions(GenvModelResource):
+class StaticSurfaceEmissions(GenvModelGeoResource):
     """Emissions files collected by international community."""
 
     _footprint = dict(
@@ -23,7 +22,7 @@ class StaticSurfaceEmissions(GenvModelResource):
                 values  = ['emiss_cst'],
             ),
             gvar = dict(
-                default = 'surface_emissions_files'
+                default = 'surface_emissions_[geometry::area]'
             ),
         )
     )
@@ -53,11 +52,11 @@ class Regrid(GenvModelResource):
         return 'regrid'
 
 
-class GribTemplate(GenvModelResource):
-    """File constant for macc/mocage forecast."""
+class GribTemplate(GenvModelGeoResource):
+    """File constant for mocage post."""
 
     _footprint = dict(
-        info = 'Grib template for mocage forecast',
+        info = 'Grib template for mocage post',
         attr = dict(
             kind = dict(
                 values   = ['gribtpl'],
@@ -67,7 +66,7 @@ class GribTemplate(GenvModelResource):
                 default  = 2,
             ),
             gvar = dict(
-                default  = 'gribtpl_cams'
+                default  = 'GRIB_TEMPLATE_PREVAIR_[geometry::area]'
             ),
         )
     )
@@ -135,6 +134,25 @@ class CfcScenario(GenvModelResource):
     @property
     def realkind(self):
         return 'cfc_scenario'
+
+
+class CfcScenarioComplement(CfcScenario):
+    """WMO CFC Clim"""
+    _footprint = dict(
+        info = 'Initial CFC concentration clim file',
+        attr = dict(
+            kind = dict(
+                values  = ['cfc_scenario_complement'],
+            ),
+            gvar = dict(
+                default = 'scenario_cfc_complement'
+            ),
+        )
+    )
+
+    @property
+    def realkind(self):
+        return 'cfc_scenario_complement'
 
 
 class TopScenario(GenvModelResource):

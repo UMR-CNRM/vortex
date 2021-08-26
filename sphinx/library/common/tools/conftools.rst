@@ -42,6 +42,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ArpIfsForecastTermConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Exceptions
 ----------
 

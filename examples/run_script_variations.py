@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -96,7 +96,7 @@ sh.cd(working_directory, create=True)
 print("Working directory: {}".format(sh.pwd()))
 
 # Create a script on the fly for the demo to be self-contained
-script = r"""#!/usr/bin/env python
+script = ('#!{!s}'.format(sys.executable) + r"""
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -108,7 +108,7 @@ import sys
 print("Hello world !")
 print("\nCommand line arguments:", sys.argv[1:])
 print("\nVersion of the interpeter:", sys.version_info)
-""".encode('utf-8')
+""").encode('utf-8')
 
 # Write this script into an executable file using Vortex
 script_name = "Hello_world.py"

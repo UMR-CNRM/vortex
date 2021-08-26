@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -216,21 +215,26 @@ class ExternalTimePeriodForcing(_AbstractForcing):
     _footprint = [timeperiod_deco, _abs_external_forcing_fp]
 
 
-_abs_surfex_forcing_fp = footprints.Footprint(
-    info='Coupling/Forcing file for Surfex.',
-    attr=dict(
-        model=dict(
-            values=['surfex', ],
-        ),
-        filling=dict(
-            values=['atm', ],
-            default='atm',
-        ),
-        nativefmt=dict(
-            values=['netcdf', 'ascii'],
-            default='netcdf',
-        ),
-    )
+_abs_surfex_forcing_fp = footprints.DecorativeFootprint(
+    dict(
+        info='Coupling/Forcing file for Surfex.',
+        attr=dict(
+            model=dict(
+                values=['surfex', ],
+            ),
+            filling=dict(
+                optional=True,
+                default='atm',
+            ),
+            nativefmt=dict(
+                values=['netcdf', 'ascii'],
+                default='netcdf',
+            ),
+        )
+    ),
+    decorator=[namebuilding_append('src',
+                                   lambda s: None if s.filling == 'atm' else s.filling,
+                                   none_discard=True)]
 )
 
 

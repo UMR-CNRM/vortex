@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 """
 TNT stands for "The Namelist Tool".
 
@@ -22,4 +24,4 @@ from . import config
 from . import namadapter
 from . import util
 
-__version__ = '1.2.0'
+__version__ = '1.2.2'

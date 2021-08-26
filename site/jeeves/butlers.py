@@ -1,33 +1,38 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
-TODO module description.
+Daemon related classes:
+
+- Generic base class for a daemon with pid file handling and a shareable logger
+- HouseKeeping (internal configuration handling)
+
+Jeeves inherits both of them and handles the asynchronous multiprocessing.
 """
 
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import sys
-import os
-import platform
-import time
 import fcntl
 import io
 import json
+import multiprocessing
+import os
+import platform
+import re
 import resource
 import signal
-import traceback
 import subprocess
-import multiprocessing
-
+import sys
+import time
+import traceback
 from ast import literal_eval
 from datetime import datetime
 from signal import SIGTERM
+
+import six
 from six.moves.configparser import SafeConfigParser
 
 import footprints
 from . import pools
-
 
 #: No automatic export
 __all__ = []
@@ -85,7 +90,7 @@ class GentleTalk(object):
         except ValueError:
             try:
                 value = self.levels.index(value.upper())
-            except Exception:
+            except (AttributeError, ValueError):
                 value = -1
         if 0 <= value <= len(self.levels):
             self._loglevel = value
@@ -122,10 +127,8 @@ class GentleTalk(object):
                 color=getattr(self, level.upper()),
                 endcolor=self.ENDC
             )
-            mutex = multiprocessing.Lock()
-            mutex.acquire()
-            print(msg)
-            mutex.release()
+            with multiprocessing.Lock():
+                print(msg)
 
     def debug(self, msg, *args, **kw):
         """Logger factorization."""
@@ -193,6 +196,8 @@ class ExitHandler(object):
         sys.exit(0)
 
     def __enter__(self):
+        moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
+        self.daemon.info('Context enter ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
         old_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
         if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
             if not self.on_stack:
@@ -209,7 +214,8 @@ class ExitHandler(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         """Be sure to call all registered callbacks at exit time."""
-        self.daemon.info('Context exit ' + repr(self.daemon))
+        moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
+        self.daemon.info('Context exit ' + repr(self.daemon) + ' ' + repr(self) + ' ' + moreinfo)
         self.daemon.info('Context exit ' + repr(exc_type))
         if hasattr(exc_value, 'message') and exc_value.message:
             self.daemon.critical('Context exit', error=exc_value)
@@ -220,8 +226,8 @@ class ExitHandler(object):
             print('-' * 80, "\n")
         else:
             self.daemon.info('Context exit', value=exc_value)
-        for callback in [x for x in self.on_exit if x is not None]:
-            self.daemon.info('Context callback ' + repr(callback))
+        for i, callback in enumerate([x for x in self.on_exit if x is not None]):
+            self.daemon.info('Context exit callback ' + str(i) + ' : ' + repr(callback))
             callback()
         return True
 
@@ -233,7 +239,8 @@ class PidFile(object):
 
     def __init__(self, tag='default', filename=None, procname='python'):
         if filename is None:
-            filename = os.path.join(os.getcwd(), tag + '-' + platform.node())
+            node = re.sub(r'\..*', '', platform.node())
+            filename = os.path.join(os.getcwd(), tag + '-' + node)
         if not filename.endswith('.pid'):
             filename += '.pid'
         self._filename = os.path.realpath(filename)
@@ -243,7 +250,7 @@ class PidFile(object):
     def reset(self):
         """Create the pid file (would erase an older one) and lock it."""
         try:
-            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR)
+            self._fd = os.open(self._filename, os.O_CREAT | os.O_RDWR, 0o644)
         except IOError as iotrouble:
             sys.exit('Failed to open pidfile: %s' % str(iotrouble))
         assert not fcntl.flock(self._fd, fcntl.LOCK_EX)
@@ -269,7 +276,7 @@ class PidFile(object):
         if pid is None:
             pid = os.getpid()
         os.ftruncate(self.fd, 0)
-        os.write(self.fd, "%d\n" % int(pid))
+        os.write(self.fd, b"%d\n" % int(pid))
         os.fsync(self.fd)
 
     def delfile(self):
@@ -307,37 +314,36 @@ class PidFile(object):
             return False
 
         p = subprocess.Popen(
-            ['ps', '-o', 'comm', '-p', str(int(contents))],
+            ['ps', '-o', 'command', '-p', str(int(contents))],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
-        stdout, u_stderr = p.communicate()
-        if stdout == "COMM\n":
+        stdout, u_stderr = [six.ensure_text(stream) for stream in p.communicate()]
+        if stdout == 'COMMAND\n':
             return False
 
-        if self.procname in stdout[stdout.find("\n") + 1:]:
-            return True
-
-        return False
+        command = stdout[stdout.find("\n") + 1:]
+        return self.procname in command and 'python' in command.lower()
 
 
 class BaseDaemon(object):
     """
     A generic daemon class.
-    Thanks to Sander Marechal : http://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
+    Thanks to Sander Marechal : https://www.jejik.com/articles/2007/02/a_simple_unix_linux_daemon_in_python/
     With some modifications and PidFile creation.
 
     Usage: subclass the BaseDaemon class and override the run() method
     """
 
-    def __init__(self, tag='test', pidfile=None, loglevel=1, inifile=None, redirect=None):
+    def __init__(self, tag='test', pidfile=None, procname='python', loglevel=1, inifile=None, redirect=None):
         self._tag = tag
-        self._pidfile = PidFile(tag=tag, filename=pidfile)
+        self._pidfile = PidFile(tag=tag, filename=pidfile, procname=procname)
         self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
         self._rundir = os.getcwd()
         self._logger = None
         self._loglevel = loglevel
         self._stdin = os.devnull
-        self._redirect = os.path.realpath(redirect or tag + '-' + platform.node() + '.log')
+        node = re.sub(r'\..*', '', platform.node())
+        self._redirect = os.path.realpath(redirect or tag + '-' + node + '.log')
         self._daemonized = False
         self._inifile = self._tag if inifile is None else inifile
         if not self._inifile.endswith('.ini'):
@@ -413,7 +419,8 @@ class BaseDaemon(object):
         """
         Do the UNIX double-fork magic, see Stevens' "Advanced
         Programming in the UNIX Environment" for details (ISBN 0201563177)
-        http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
+        https://www.oreilly.com/library/view/python-cookbook/0596001673/ch06s08.html
+        https://gist.github.com/Ma233/dd1f2f93db5378a29a3d1848288f520e
         """
         try:
             pid = os.fork()
@@ -469,6 +476,7 @@ class BaseDaemon(object):
                 os.rename(self.stdout, os.path.join(
                     newpath, oldname + '.' + pools.timestamp()
                 ))
+            os.umask(0o0022)
             stdnew = open(self.stdout, 'a+', 1)
             os.dup2(stdnew.fileno(), sys.stdout.fileno())
             os.dup2(stdnew.fileno(), sys.stderr.fileno())
@@ -484,6 +492,7 @@ class BaseDaemon(object):
         self.info('Process', pidfile=self.pidfile.filename)
         self.info('Process', rundir=self.rundir)
         self.info('Process', tmpdir=self.tmpdir)
+        self.info('Process', python=sys.version.replace('\n', ' '))
 
     def bye(self):
         """Nice exit."""
@@ -491,7 +500,7 @@ class BaseDaemon(object):
         self.info('Bye folks...')
 
     def exit_callbacks(self):
-        """Return a list of callbacks to be launch before daemon exit."""
+        """Return a list of callbacks to be launched before the daemon exits."""
         return (self.bye,)
 
     def start(self, mkdaemon=True):
@@ -621,7 +630,7 @@ class HouseKeeping(object):
         for pool in [x.lower() for x in footprints.util.mktuple(ask.data)]:
             poolcfg = 'pool_' + pool
             if poolcfg in self.config:
-                self.warning('Switch pool', active=status)
+                self.warning('Switch pool', pool=pool, active=status)
                 self.config[poolcfg]['active'] = status
                 thispool = pools.get(tag=pool)
                 thispool.active = status
@@ -641,7 +650,7 @@ class HouseKeeping(object):
             actioncfg = 'action_' + action
             if actioncfg not in self.config:
                 self.config[actioncfg] = dict()
-            self.warning('Switch action', active=status)
+            self.warning('Switch action', action=action, active=status)
             self.config[actioncfg]['active'] = status
         return True
 
@@ -728,7 +737,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             self.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
             # look at the remaining tasks
-            for (pnum, syncinfo) in self.asynchronous.items():
+            for (pnum, syncinfo) in self.asynchronous.copy():
                 self.warning('Task not complete', pnum=pnum)
                 try:
                     jpool, jfile, asyncr = syncinfo
@@ -776,7 +785,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             with io.open(jsonfile, 'rb') as fd:
                 obj = json.load(fd)
             obj = pools.Request(**obj)
-        except Exception:
+        except (ValueError, AttributeError, OSError):
             self.error('Could not load', path=jsonfile, retry=self.redo.pop(item, 0))
             self.migrate(pool, item, target='error')
         return obj
@@ -800,37 +809,49 @@ class Jeeves(BaseDaemon, HouseKeeping):
         return sys.modules.get(modname)
 
     def async_callback(self, result):
-        """Get result from async pool processing."""
-        if result:
-            pnum = None
-            prc = None
-            pvalue = None
-            try:
-                pnum, prc, pvalue = result
-                if prc:
-                    self.info('Return', pnum=pnum, result=pvalue)
-                else:
-                    self.error('Return', pnum=pnum, error=pvalue)
-            except Exception as trouble:
-                self.critical('Callback', error=trouble, result=result)
-            finally:
-                if pnum is not None and pnum in self.asynchronous:
-                    jpool, jfile, u_asyncr = self.asynchronous[pnum]
-                    poolbase = pools.get(tag=jpool)
-                    pooltarget = None
-                    if prc:
-                        try:
-                            pooltarget = pvalue.get('rpool', None)
-                        except Exception:
-                            pass
-                    else:
-                        pooltarget = 'retry'
-                    self.migrate(poolbase, jfile, target=pooltarget)
-                    del self.asynchronous[pnum]
-                else:
-                    self.error('Unknown asynchronous process', pnum=pnum)
-        else:
+        """Get result from async pool processing.
+
+        Async callbacks should return a tuple (pnum, prc, pvalue):
+
+        - pnum   = The unique id they received as first argument
+        - prc    = True for success, False (or None) for failure
+        - pvalue = a dict, may contain anything, but the key 'rpool' may be used to indicate
+          in which pool the json request must be moved.
+
+           - If the operation was successfull, the default target pool is taken from the
+             configuration, e.g. pool_process ('run') -> pool_out ('done')
+           - In case of failure, the default target is 'retry'. To send a request to the
+             'error' pool, use pvalue = dict(rpool='error')
+        """
+
+        if not result:
             self.error('Undefined result from asynchronous processing')
+            return
+
+        pnum = prc = pvalue = None
+        try:
+            pnum, prc, pvalue = result
+            if prc:
+                self.info('Return', pnum=pnum, result=pvalue)
+            else:
+                self.error('Return', pnum=pnum, error=pvalue)
+        except Exception as trouble:
+            self.critical('Callback', error=trouble, result=result)
+        finally:
+            if pnum is not None and pnum in self.asynchronous:
+                jpool, jfile, u_asyncr = self.asynchronous[pnum]
+                poolbase = pools.get(tag=jpool)
+                pooltarget = None
+                try:
+                    pooltarget = pvalue.get('rpool', None)
+                except AttributeError:
+                    pass
+                if not prc and pooltarget is None:
+                    pooltarget = 'retry'
+                self.migrate(poolbase, jfile, target=pooltarget)
+                del self.asynchronous[pnum]
+            else:
+                self.error('Unknown asynchronous process', pnum=pnum)
 
     def dispatch(self, func, ask, acfg, jpool, jfile):
         """Multiprocessing dispatching."""
@@ -871,57 +892,59 @@ class Jeeves(BaseDaemon, HouseKeeping):
         if tp is None:
             return False
 
+        if ask.todo not in self.config['driver'].get('actions', tuple()):
+            self.error('Unregistered', action=ask.todo)
+            self.migrate(tp, jfile, target='ignore')
+            return False
+
         rc = True
         dispatched = False
         rctarget = 'error'
-        if ask.todo in self.config['driver'].get('actions', tuple()):
-            action = 'action_' + ask.todo
-            if action in self.config:
-                acfg = self.config[action]
-            else:
-                self.warning('Undefined', action=ask.todo)
-                acfg = dict(
-                    dispatch=False,
-                    module='internal',
-                    entry=ask.todo,
-                )
-            if acfg.get('active', True):
-                thismod = acfg.get('module', 'internal')
-                thisname = acfg.get('entry', ask.todo)
-                self.info(
-                    'Processing',
-                    action=ask.todo,
-                    function=thisname,
-                    module=thismod,
-                )
-                if thismod == 'internal':
-                    thisfunc = getattr(self, 'internal_' + thisname, None)
-                else:
-                    thismobj = self.import_module(thismod)
-                    if thismobj:
-                        thisfunc = getattr(thismobj, thisname, None)
-                    else:
-                        self.error('Import failed', module=acfg.get('module'))
-                        thisfunc = None
-                if thisfunc is None or not callable(thisfunc):
-                    self.error('Not a function', entry=thisname)
-                    rc = False
-                else:
-                    if acfg.get('dispatch', False):
-                        rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
-                        dispatched = True
-                    else:
-                        try:
-                            rc = apply(thisfunc, (ask,), ask.opts)
-                        except Exception as trouble:
-                            self.error('Trouble', action=ask.todo, error=trouble)
-                            rc = False
-            else:
-                self.warning('Inactive', action=ask.todo)
-                rctarget = 'ignore'
+
+        action = 'action_' + ask.todo
+        if action in self.config:
+            acfg = self.config[action]
         else:
-            self.error('Unregistered', action=ask.todo)
-            rc = False
+            self.debug('Undefined', action=ask.todo)
+            acfg = dict(
+                dispatch=False,
+                module='internal',
+                entry=ask.todo,
+            )
+
+        if acfg.get('active', True):
+            thismod = acfg.get('module', 'internal')
+            thisname = acfg.get('entry', ask.todo)
+            self.info(
+                'Processing',
+                action=ask.todo,
+                function=thisname,
+                module=thismod,
+            )
+            if thismod == 'internal':
+                thisfunc = getattr(self, 'internal_' + thisname, None)
+            else:
+                thismobj = self.import_module(thismod)
+                if thismobj:
+                    thisfunc = getattr(thismobj, thisname, None)
+                else:
+                    self.error('Import failed', module=acfg.get('module'))
+                    thisfunc = None
+            if thisfunc is None or not callable(thisfunc):
+                self.error('Not a function', entry=thisname)
+                rc = False
+            else:
+                if acfg.get('dispatch', False):
+                    rc = self.dispatch(thisfunc, ask, acfg, tp.tag, jfile)
+                    dispatched = True
+                else:
+                    try:
+                        rc = thisfunc(ask, **ask.opts)
+                    except Exception as trouble:
+                        self.error('Trouble', action=ask.todo, error=trouble)
+                        rc = False
+        else:
+            self.warning('Inactive', action=ask.todo)
             rctarget = 'ignore'
 
         if rc:
@@ -976,7 +999,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
             tnext = datetime.now()
             ttime = (tnext - tprev).total_seconds()
             if not silent:
-                self.info('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
+                self.debug('Loop', previous=ttime, busy=tbusy, nbsleep=nbsleep)
             tprev = tnext
             tbusy = False
 

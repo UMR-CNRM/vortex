@@ -43,6 +43,7 @@ op_warmstart = $warmstart
 op_refill    = $refill
 op_mail      = $mail
 op_jeeves    = '{0}_$jeeves'.format(op_xpid)
+op_jroute    = '{0}_$jroute'.format(op_xpid)
 op_phase     = $phase
 op_hasmember = $hasmember
 
@@ -76,9 +77,9 @@ ja = footprints.proxy.jobassistant(kind = 'op_default',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='op_',
                                    )
+ja.add_plugin('epygram_setup')
 for pkind in ($loadedjaplugins):
     ja.add_plugin(pkind)
-
 
 try:
     t, e, sh = ja.setup(actual=locals())

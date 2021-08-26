@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -48,14 +48,14 @@ def list_actions():
     """List available actions, their kind and status."""
     sh.title('Actions information')
     sh.subtitle('available actions')
-    print(pprint.pformat(ad.actions))
+    print(ad.actions)
     sh.subtitle('existing handlers')
-    print(pprint.pformat(ad.items()))
+    print(pprint.pformat(list(ad.items())))
     sh.subtitle('action -> handlers')
     for act in ad.actions:
         handlers = ad.candidates(act)
         status = [h.status() for h in handlers]
-        print(act, ':', pprint.pformat(zip(status, handlers)))
+        print('{:6s}:'.format(act), pprint.pformat(list(zip(status, handlers))))
     print()
 
 
@@ -92,10 +92,11 @@ def test_dayfile():
 
 
 # only reporting needs to be 'on'
+ad.report_on()
+
 ad.alarm_off()
 ad.mail_off()
 ad.opmail_off()
-ad.report_on()
 ad.route_off()
 
 list_actions()

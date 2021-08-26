@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function, absolute_import, unicode_literals
@@ -8,9 +7,19 @@ import tempfile
 import os
 import unittest
 
-from bronx.datagrip.misc import read_dict_in_CSV
+from bronx.syntax.externalcode import ExternalCodeImportChecker
+
+# Yaml is not mandatory
+y_checker = ExternalCodeImportChecker('yaml')
+with y_checker as npregister:
+    import yaml
+
+if y_checker.is_available():
+    assert yaml
+    from bronx.datagrip.misc import read_dict_in_CSV
 
 
+@unittest.skipUnless(y_checker.is_available(), "Yaml is not available")
 class TestDictCSV(unittest.TestCase):
 
     def setUp(self):

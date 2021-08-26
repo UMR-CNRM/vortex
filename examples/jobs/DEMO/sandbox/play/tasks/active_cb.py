@@ -37,7 +37,7 @@ def setup(t, **kw):
 
 # You are invited to run this Driver by yourself... but if you are lazy (or
 # trustful), the execution would result in the following "Tree" for the
-# `active_cb_drv` driver: :
+# `active_cb_drv` driver:
 #
 # active_cb_drv (Driver) -> ready to start
 #   active_cb_members (LoopFamily) -> ready to start

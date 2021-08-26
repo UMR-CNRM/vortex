@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -20,7 +19,6 @@ from vortex.tools.systems import ExecutionError
 from vortex.util.helpers import InputCheckerError
 
 import six
-import datetime
 
 logger = loggers.getLogger(__name__)
 
@@ -791,7 +789,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -1310,7 +1308,7 @@ class S2MComponent(ParaBlindRun):
         deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
         # Produce a delayed algo component error if no deterministic member in order to let the members run
         # but crash at the end
-        if len(deterministic_member) < 1:
+        if len(deterministic_member) < 1 and self.kind != 'ensmeteonodet':
             self.delayed_exception_add(S2MMissingDeterministicError(self.role_deterministic_namebuilder()),
                                        traceback=True)
         avail_members = deterministic_member +\
@@ -1494,7 +1492,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteo+sytron', 'ensmeteo+escroc', 'prepareforcing']
+                values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc', 'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1721,8 +1719,9 @@ class SurfexComponentMultiDates(SurfexComponent):
 @echecker.disabled_if_unavailable
 class PrepareForcingComponentForecast(PrepareForcingComponent):
     """
+    It adapts forcing files to a ski resort geometry (several members in parallel).
+
     This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
-    It adapts forcing files to a ski resort geometry (several members in parallel)
     """
 
     _footprint = dict(
@@ -1770,8 +1769,9 @@ class PrepareForcingComponentForecast(PrepareForcingComponent):
 @echecker.disabled_if_unavailable
 class ExtractForcingWorker(PrepareForcingWorker):
     """
+    It adapts forcing files to a ski resort geometry (worker for 1 member).
+
     This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
-    It adapts forcing files to a ski resort geometry (worker for 1 member)
     """
 
     _footprint = dict(
@@ -1783,13 +1783,10 @@ class ExtractForcingWorker(PrepareForcingWorker):
         )
     )
 
-    def forecasttype(self):
-
-        forecast_type = 'determ'
-        return forecast_type
+    def _prepare_forcing_innertask(self, rundir, thisdir, dir_file_1, rdict):
+        return super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
 
     def _prepare_forcing_task(self, rundir, thisdir, rdict):
-
         datebegin_str = self.datebegin.strftime('%Y%m%d%H')
         dateend_str = self.dateend.strftime('%Y%m%d%H')
 
@@ -1798,29 +1795,7 @@ class ExtractForcingWorker(PrepareForcingWorker):
         dir_file_3 = self.forcingdir(rundir, thisdir) + '/FORCING_in_' + datebegin_str + '_' + dateend_str + '.nc'
         dir_file_4 = rundir + '/SRU.txt'
 
-        # A) Init, Analysis, ST:
-
-        # Projection of forcing files on the slopes, creation of LAT,LOT
-        if self.forecasttype() != 'LT':
-            rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
-
-        # B) LT - Climatology:
-
-        # Change dates of the climatology to the current season
-        if self.forcingdir(rundir, thisdir) == thisdir:
-            if self.forecasttype() == 'LT':
-                if int(self.datebegin.strftime('%m')) >= 8:
-                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')), 8, 1, 6, 0)
-                else:
-                    datebeginseason = datetime.datetime(int(self.datebegin.strftime('%Y')) - 1, 8, 1, 6, 0)
-                forcinput_changedates(dir_file_1, dir_file_1, datebeginseason)
-
-        # C) LT - Hindcast:
-
-        # Projection of forcing files on the slopes, creation of LAT,LOT
-#         rdict = super(ExtractForcingWorker, self)._prepare_forcing_task(rundir, thisdir, rdict)
-
-        # D) Whenever necessary:
+        rdict = self._prepare_forcing_innertask(rundir, thisdir, dir_file_1, rdict)
 
         # Extraction of SRU geometry
         forcinput_extract(dir_file_1, dir_file_2, dir_file_4)
@@ -1833,15 +1808,16 @@ class ExtractForcingWorker(PrepareForcingWorker):
 
 
 @echecker.disabled_if_unavailable
-class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
+class ExtractForcingWorkerEnsembleForecast(ExtractForcingWorker):
     """
-    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
     It adapts forcing files to a ski resort geometry (worker for 1 member)
     with specific adaptations for short term forecast
+
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
     """
 
     _footprint = dict(
-        info = 'Prepare forcing for PROSNOW simulations - ST forecast',
+        info = 'Prepare forcing for PROSNOW simulations - ensemble forecast',
         attr = dict(
             kind = dict(
                 values = ['extractforcing_STforecast']
@@ -1850,21 +1826,16 @@ class ExtractForcingWorkerSTForecast(ExtractForcingWorker):
     )
 
     def forcingdir(self, rundir, thisdir):
-
         return thisdir
-
-    def forecasttype(self):
-
-        forecast_type = 'ST'
-        return forecast_type
 
 
 @echecker.disabled_if_unavailable
-class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
+class ExtractForcingWorkerLTForecast(ExtractForcingWorkerEnsembleForecast):
     """
-    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
     It adapts forcing files to a ski resort geometry (worker for 1 member)
     with specific adaptations for seasonal forecasts
+
+    This class was implemented by C. Carmagnola in May 2019 (PROSNOW project).
     """
 
     _footprint = dict(
@@ -1876,11 +1847,7 @@ class ExtractForcingWorkerLTForecast(ExtractForcingWorker):
         )
     )
 
-    def forcingdir(self, rundir, thisdir):
-
-        return thisdir
-
-    def forecasttype(self):
-
-        forecast_type = 'LT'
-        return forecast_type
+    def _prepare_forcing_innertask(self, rundir, thisdir, dir_file_1, rdict):
+        # Change dates of the climatology to the current season
+        forcinput_changedates(dir_file_1, dir_file_1, self.datebegin.nivologyseason_begin)
+        return rdict

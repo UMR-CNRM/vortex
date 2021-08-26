@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -90,9 +89,18 @@ def defaultinput(options):
     """
     prefix = "d_input_"
     content = dict()
+
+    def export_value(v):
+        if hasattr(v, 'footprint_export'):
+            return v.footprint_export()
+        elif hasattr(v, 'export_dict'):
+            return v.export_dict()
+        else:
+            return v
+
     for k, v in options.items():
         if isinstance(k, six.string_types) and k.startswith(prefix):
-            content[k[len(prefix):]] = v
+            content[k[len(prefix):]] = export_value(v)
     t = sessions.current()
     fileout = six.StringIO()
     t.sh.json_dump([content, ], fileout, indent=4)

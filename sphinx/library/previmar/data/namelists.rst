@@ -20,6 +20,11 @@ Classes
    :member-order: alphabetical
 
 
+.. autoclass:: WW3ConfigFiles
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. hints
 .. .. autodata:: XXX
 .. .. autofunction:: XXX

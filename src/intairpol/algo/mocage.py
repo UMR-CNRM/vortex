@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -20,6 +19,7 @@ from vortex.syntax.stdattrs import a_date, model
 __all__ = []
 
 logger = loggers.getLogger(__name__)
+logger.loglevel = 'debug'
 
 
 class AbstractMocageRoot(Parallel):
@@ -141,30 +141,48 @@ class AbstractMocageRoot(Parallel):
             role='FMFiles',
             kind='gridpoint'
         )
+        # the list of coupling files will be empty for the last 24h section of 96H run with alternates coupling files
+        if len(smterms.keys()) * len(fmterms.keys()) != 0:
+            # Control of the duration of the run depending on the the SM and FM terms available
+            # Min values indicates whether the resources are nominal or alternate resources
+            minsm = max([min(smterms[geo]) for geo in smterms.keys()])
+            maxsm = min([max(smterms[geo]) for geo in smterms.keys()])
+            # 1 SM file per day and per domain : term 0 is used for the coupling of a 24h run
+            maxsm = maxsm - minsm + 24
 
-        # Control of the duration of the run depending on the the SM and FM terms available
-        # Min values indicates whether the resources are nominal or alternate resources
-        minsm = max([min(smterms[geo]) for geo in smterms.keys()])
-        maxsm = min([max(smterms[geo]) for geo in smterms.keys()])
-        # 1 SM file per day and per domain : term 0 is used for the coupling of a 24h run
-        maxsm = maxsm - minsm + 24
+            minfm = max([min(fmterms[geo]) for geo in fmterms.keys()])
+            maxfm = min([max(fmterms[geo]) for geo in fmterms.keys()])
+            maxfm = maxfm - minfm + int(self.cpldelta.total_seconds() // 3600)
 
-        minfm = max([min(fmterms[geo]) for geo in fmterms.keys()])
-        maxfm = min([max(fmterms[geo]) for geo in fmterms.keys()])
-        maxfm = maxfm - minfm + int(self.cpldelta.total_seconds() // 3600)
+            realfcterm = min(maxsm, maxfm, self.fcterm.hour)
+            # When alternative mode detects a lack of coupling files , the coupling frequency
+            # must be evaluated with the effective timesteps of coupling files
+            # the time difference between the two first coupling files of the first domain
+            # corresponds to this new frequency
+            # ##logger.info('fmterms          :      %s', fmterms.keys())
+            realnhcy = fmterms[list(fmterms.keys())[0]][1] - fmterms[list(fmterms.keys())[0]][0]
+        else:
+            maxsm = 0
+            minsm = 0
+            maxfm = 0
+            minfm = 0
+            realfcterm = 0
+            realnhcy = 0
+            logger.critical(' No alternate coupling files available : no run . Stop.')
+            raise ValueError(' No alternate coupling files available : no run . Stop.')
 
-        realfcterm = min(maxsm, maxfm, self.fcterm.hour)
-        logger.info('Min Max( fmterms) : %04d %d', minfm, maxfm)
-        logger.info('Min Max (smterms) : %04d %d', minsm, maxsm)
-        logger.info('self.fcterm.hour  :      %d', self.fcterm.hour)
-        logger.info('Fcterm            :      %d', realfcterm)
-        logger.info('NHCY              :      %s', str(self.nhcy))
+        logger.info('Min_ech Length (fmterms) : %04d %d', minfm, maxfm)
+        logger.info('Min_ech Length (smterms) : %04d %d', minsm, maxsm)
+        logger.info('fcterm from setup :      %d', self.fcterm.hour)
+        logger.info('true Fcterm       :      %d', realfcterm)
+        logger.info('NHCY from setup   :      %s', str(self.nhcy))
+        logger.info('true NHCY         :      %d', realnhcy)
 
         first = self.basedate
         last = self.basedate + date.Period(hours=realfcterm)
 
         if self.fcterm != six.text_type(realfcterm):
-            self.system.title('Forecast final term modified : {0:d} '.format(realfcterm))
+            self.system.title('**WARNING** Forecast final term modified : {0:d} '.format(realfcterm))
 
         self._fix_nam_macro(namrh, 'YYYY1', int(first.year))
         self._fix_nam_macro(namrh, 'YYYY2', int(last.year))
@@ -175,7 +193,12 @@ class AbstractMocageRoot(Parallel):
         self._fix_nam_macro(namrh, 'HH1', int(first.hour))
         self._fix_nam_macro(namrh, 'HH2', int(last.hour))
         # NHCY is expressed in hours...
-        self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600)
+        # if self.nhcy < six.text_type(realnhcy):
+        if (self.nhcy.length // 3600) < realnhcy:
+            self.system.title('**WARNING** Forcing frequency modified : {0:d} '.format(realnhcy))
+            self._fix_nam_macro(namrh, 'NHCY', realnhcy)
+        else:
+            self._fix_nam_macro(namrh, 'NHCY', self.nhcy.length // 3600)
 
         namrh.save()
         namrh.container.cat()

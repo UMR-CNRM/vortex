@@ -1,10 +1,12 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 import io
 import os
 import shutil
 import tempfile
+import time
+import threading
 import unittest
 
 import footprints as fp
@@ -36,10 +38,9 @@ class TestOSExtendedBasics(unittest.TestCase):
 
     def setUp(self):
         # Temporary heaven
-        self.tmpdir = tempfile.mkdtemp(suffix='_test_storage')
+        self.tmpdir = os.path.realpath(tempfile.mkdtemp(suffix='_test_storage'))
         self.startupdir = os.getcwd()
         os.chdir(self.tmpdir)
-        self.create_testfile()
         # Create the system
         gl = fp.proxy.glove()
         self.sh = TestableOSExtended(glove=gl, sysname='UnitTestable')
@@ -47,11 +48,11 @@ class TestOSExtendedBasics(unittest.TestCase):
                        inifile=os.path.join(DATAPATHTEST, 'target-test.ini'),
                        sysname='Linux')
 
-    def create_testfile(self):
+    def create_tfile(self):
         with io.open(self._TESTFILE_DEFAULT, 'w') as fhtest:
             fhtest.write(self._TESTFILE_MSG)
 
-    def assert_testfile(self, path=_TESTFILE_DEFAULT):
+    def assert_tfile(self, path=_TESTFILE_DEFAULT):
         self.assertTrue(os.path.isfile(path))
         with io.open(path, 'r') as fhtest:
             self.assertEqual(fhtest.read(), self._TESTFILE_MSG)
@@ -70,15 +71,16 @@ class TestOSExtendedBasics(unittest.TestCase):
         shutil.rmtree(self.tmpdir)
 
     def test_file_operations(self):
+        self.create_tfile()
         # Cat
         fcat = self.sh.cat(self._TESTFILE_DEFAULT)
         self.assertEqual('\n'.join(fcat), self._TESTFILE_MSG)
         # Simple copy
         self.assertTrue(self.sh.cp(self._TESTFILE_DEFAULT, 'tbis.txt'))
-        self.assert_testfile('tbis.txt')
+        self.assert_tfile('tbis.txt')
         self.assert_not_sameinode(self._TESTFILE_DEFAULT, 'tbis.txt')
         self.assertTrue(self.sh.cp(self._TESTFILE_DEFAULT, 'tter.txt', intent="in"))
-        self.assert_testfile('tter.txt')
+        self.assert_tfile('tter.txt')
         self.assert_sameinode(self._TESTFILE_DEFAULT, 'tter.txt')
         # Mkdir
         self.assertTrue(self.sh.mkdir('testdir'))
@@ -98,12 +100,12 @@ class TestOSExtendedBasics(unittest.TestCase):
         self.sh.softlink('../../../{:s}/tbis.txt'
                          .format(self.sh.path.basename(self.tmpdir)),
                          self.sh.path.join('testdir', 'sub1', 'tlink2.txt'))
-        self.assert_testfile(self.sh.path.join('testdir', 'sub1', 'tlink2.txt'))
+        self.assert_tfile(self.sh.path.join('testdir', 'sub1', 'tlink2.txt'))
         self.sh.softlink(self.sh.path.abspath('tbis.txt'),
                          self.sh.path.join('testdir', 'sub1', 'tlink2abs.txt'))
         self.sh.softlink('../tsfile1',
                          self.sh.path.join('testdir', 'sub1', 'tlink3.txt'))
-        self.assert_testfile(self.sh.path.join('testdir', 'sub1', 'tlink2abs.txt'))
+        self.assert_tfile(self.sh.path.join('testdir', 'sub1', 'tlink2abs.txt'))
         # Valid symlinks
         self.assertEqual(self.sh._validate_symlink_below('tlink0.txt', self.tmpdir),
                          'tbis.txt')
@@ -157,6 +159,35 @@ class TestOSExtendedBasics(unittest.TestCase):
         ))
         self.assert_sameinode(self.sh.path.join('testdir_inout', 'tsfile1'),
                               self.sh.path.join('testdir_inout', 'sub1', 'tlink3.txt'))
+
+    def test_dirlock(self):
+        with self.sh.lockdir_context('toto'):
+            self.sh.mkdir('toto')
+        with self.sh.secure_directory_move('toto'):
+            # Use bare os.mkdir since it would crash if toto already exists
+            os.mkdir('toto')
+
+        def _slow_stuff():
+            with self.sh.secure_directory_move('toto'):
+                # Use bare os.mkdir since it would crash if toto already exists
+                os.mkdir('toto')
+                self.sh.sleep(1)
+            return True
+
+        th1 = threading.Thread(target=_slow_stuff)
+        th2 = threading.Thread(target=_slow_stuff)
+        t0 = time.time()
+        th1.start()
+        th2.start()
+        th1.join(timeout=3)
+        th2.join(timeout=3)
+        t1 = time.time()
+        self.assertFalse(th1.is_alive())
+        self.assertFalse(th2.is_alive())
+        self.assertTrue(t1 - t0 > 1.5)
+        self.assertTrue(t1 - t0 < 2.5)
+        self.assertTrue(self.sh.path.isdir('toto'))
+        self.assertListEqual(self.sh.listdir('.'), ['toto'])
 
 
 if __name__ == "__main__":

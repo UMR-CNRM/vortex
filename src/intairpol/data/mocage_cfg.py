@@ -1,4 +1,4 @@
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Resources to deal with MOCAGE.CFG used to define point source emission.

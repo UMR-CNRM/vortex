@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -39,6 +38,7 @@ import os
 import pickle
 import platform
 import pwd as passwd
+import random
 import re
 import resource
 import shutil
@@ -583,15 +583,19 @@ class System(footprints.FootprintBase):
                 print(tchar * nbc)
         self.flush_stdall()
 
-    def highlight(self, text='', hchar='----', bchar='#', bline=False):
+    def highlight(self, text='', hchar='----', bchar='#', bline=False, bline0=True):
         """Highlight some text.
 
         :param str text: The text to be highlighted
         :param str hchar: The characters used to frame the text
-        :param bool bline: Adds a blank line
+        :param str bchar: The characters used at the beging
+        :param bool bline: Adds a blank line after
+        :param bool bline0: Adds a blank line before
         """
-        print()
-        print('{0:s} {1:s}  {2:s}  {1:s} {0:s}'.format(bchar, hchar, text))
+        if bline0:
+            print()
+        print('{0:s} {1:s}  {2:s}  {1:s} {3:s}'
+              .format(bchar.rstrip(), hchar, text, bchar.lstrip()))
         if bline:
             print()
         self.flush_stdall()
@@ -2014,16 +2018,22 @@ class OSExtended(System):
         """
         Check that **symlink** is relative and that its target is below
         the **valid_below** directory.
+
+        :note: **valid_below** needs to be an absolute canonical path
+               (this is user responsability)
         """
         link_to = self._os.readlink(symlink)
         # Is it relative ?
         if re.match('^([^{0:s}]|..{0:s}|.{0:s})'.format(re.escape(os.path.sep)),
                     link_to):
             symlink_dir = self.path.abspath(self.path.dirname(symlink))
-            abspath_to = self.path.normpath(self.path.join(symlink_dir, link_to))
+            abspath_to = self.path.realpath(
+                self.path.normpath(
+                    self.path.join(symlink_dir, link_to)
+                )
+            )
             # Valid ?
-            abspath_valid_below = self.path.abspath(valid_below)
-            valid = self.path.commonprefix([abspath_valid_below, abspath_to]) == abspath_valid_below
+            valid = self.path.commonprefix([valid_below, abspath_to]) == valid_below
             return (self.path.relpath(abspath_to, start=symlink_dir)
                     if valid else None)
         else:
@@ -2039,7 +2049,8 @@ class OSExtended(System):
         """
         self.stderr('_copydatatree', src, dst)
         with self.mute_stderr():
-            keep_symlinks_below = keep_symlinks_below or src
+            keep_symlinks_below = (keep_symlinks_below or
+                                   self.path.realpath(self.path.abspath(src)))
             names = self._os.listdir(src)
             self._os.makedirs(dst)
             errors = []
@@ -2216,7 +2227,8 @@ class OSExtended(System):
         if self.path.isdir(source):
             self.stderr('hardlink', source, destination,
                         '#', 'directory,', 'readonly={!s}'.format(readonly))
-            keep_symlinks_below = keep_symlinks_below or source
+            keep_symlinks_below = (keep_symlinks_below or
+                                   self.path.realpath(self.path.abspath(source)))
             with self.mute_stderr():
                 # Mimics 'cp -al'
                 names = self._os.listdir(source)
@@ -2475,16 +2487,19 @@ class OSExtended(System):
 
     @contextlib.contextmanager
     def secure_directory_move(self, destination):
-        do_cleanup = (isinstance(destination, six.string_types) and
-                      self.path.exists(destination))
+        with self.lockdir_context(destination + '.vortex-lockdir', sloppy=True):
+            do_cleanup = (isinstance(destination, six.string_types) and
+                          self.path.exists(destination))
+            if do_cleanup:
+                # Warning: Not an atomic portion of code (sorry)
+                tmp_destination = destination + '.olddir' + self.safe_filesuffix()
+                self.move(destination, tmp_destination)
+                yield do_cleanup
+                # End of none atomic part
+            else:
+                yield do_cleanup
         if do_cleanup:
-            # Warning: Not an atomic portion of code (sorry)
-            self.move(destination, destination + '.olddir')
-            yield do_cleanup
-            # End of none atomic part
-            self.remove(destination + '.olddir')
-        else:
-            yield do_cleanup
+            self.remove(tmp_destination)
 
     @fmtshcmd
     def mv(self, source, destination):
@@ -2844,6 +2859,81 @@ class OSExtended(System):
 
         return path
 
+    def _lockdir_create(self, ldir, blocking=False, timeout=300, sleeptime=2):
+        """Pseudo-lock mechanism based on atomic directory creation: acquire lock.
+
+        :param str ldir: The target directory that acts as a lock
+        :param bool blocking: Block (at most **timeout** seconds) until the
+                              lock can be acquired
+        :param float timeout: Block at most timeout seconds (if **blocking** is True)
+        :param float sleeptime: When blocking, wait **sleeptime** seconds between to
+                                attempts to acquire the lock.
+        """
+        rc = None
+        t0 = time.time()
+        while rc is None or (not rc and blocking and time.time() - t0 < timeout):
+            if rc is not None:
+                self.sleep(sleeptime)
+            try:
+                # Important note: os' original mkdir function is used on purpose
+                # since we need to get an error if the target directory already
+                # exists
+                self._os.mkdir(ldir)
+            # Note: OSError + errno check is used to be compatible with Python2.7
+            #       in Python3, it will be wiser to catch directly FileExistsError
+            except OSError as os_e:
+                # To be safe, check the error code carefully
+                if os_e.errno == errno.EEXIST:
+                    rc = False
+                else:
+                    raise
+            else:
+                rc = True
+        return rc
+
+    def _lockdir_destroy(self, ldir):
+        """Pseudo-lock mechanism based on atomic directory creation: release lock.
+
+        :param str ldir: The target directory that acts as a lock
+        """
+        try:
+            self.rmdir(ldir)
+        # Note: OSError + errno check is used to be compatible with Python2.7
+        #       in Python3, it will be wiser to catch directly FileNotFoundError
+        except OSError as os_e:
+            if os_e.errno == errno.ENOENT:
+                # If the directory was already deleted, ok ignore the error
+                logger.warning("'%s' did not exists... that's odd", ldir)
+            else:
+                raise
+
+    @contextlib.contextmanager
+    def lockdir_context(self, ldir,
+                        sloppy=False, timeout=120, sleeptime_min=0.1, sleeptime_max=0.3):
+        """Try to acquire a lock directory and after that remove it.
+
+        :param bool sloppy: If the lock can be acquired after *timeout* second, go on anyway
+        :param float timeout: Block at most timeout seconds
+        :param float sleeptime_min: When blocking, wait at least **sleeptime_min** seconds
+                                    between to attempts to acquire the lock.
+        :param float sleeptime_max: When blocking, wait at most **sleeptime_max** seconds
+                                    between to attempts to acquire the lock.
+        """
+        sleeptime = sleeptime_min + (sleeptime_max - sleeptime_min) * random.random()
+        self.filecocoon(ldir)
+        rc = self._lockdir_create(ldir, blocking=True, timeout=timeout, sleeptime=sleeptime)
+        try:
+            if not rc:
+                msg = "Could not acquire lockdir < {:s} >. Already exists.".format(ldir)
+                if sloppy:
+                    logger.warning(msg + '.. but going on.')
+                else:
+                    raise OSError(msg)
+            yield
+        finally:
+            if rc or sloppy:
+                self._lockdir_destroy(ldir)
+
     @property
     def _appwide_lockbase(self):
         """Compute the path to the application wide locks base directory."""
@@ -2877,27 +2967,10 @@ class OSExtended(System):
                                 attempts to acquire the lock.
         """
         ldir = self._appwide_lockdir_path(label)
-        rc = None
-        t0 = time.time()
-        while rc is None or (not rc and blocking and time.time() - t0 < timeout):
-            if rc is not None:
-                self.sleep(sleeptime)
-            try:
-                # Important note: os' original mkdir function is used on purpose
-                # since we need to get an error if the target directory already
-                # exists
-                self._os.mkdir(ldir)
-            # Note: OSError + errno check is used to be compatible with Python2.7
-            #       in Python3, it will be wiser to catch directly FileExistsError
-            except OSError as os_e:
-                # To be safe, check the error code carefully
-                if os_e.errno == errno.EEXIST:
-                    rc = False
-                else:
-                    raise
-            else:
-                rc = True
-        return rc
+        return self._lockdir_create(ldir,
+                                    blocking=blocking,
+                                    timeout=timeout,
+                                    sleeptime=sleeptime)
 
     def appwide_unlock(self, label):
         """Pseudo-lock mechanism based on atomic directory creation: release lock.
@@ -2905,16 +2978,7 @@ class OSExtended(System):
         :param str label: The name of the desired lock
         """
         ldir = self._appwide_lockdir_path(label)
-        try:
-            self.rmdir(ldir)
-        # Note: OSError + errno check is used to be compatible with Python2.7
-        #       in Python3, it will be wiser to catch directly FileNotFoundError
-        except OSError as os_e:
-            if os_e.errno == errno.ENOENT:
-                # If the directory was already deleted, ok ignore the error
-                logger.warning("'%s' did not exists... that's odd", ldir)
-            else:
-                raise
+        self._lockdir_destroy(ldir)
 
 
 _python27_fp = footprints.Footprint(info='An abstract footprint to be used with the Python27 Mixin',

@@ -80,3 +80,33 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: BoundariesConditionWw3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConversionNcGrib
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConversionSpecWW3Ascii
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConversionWW3Netcdf
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: ConversionWindWW3
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: InterpolationUGnc
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

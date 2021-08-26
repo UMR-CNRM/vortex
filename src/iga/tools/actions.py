@@ -1,23 +1,20 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 Actions specific to operational needs.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
-import collections
 
-from bronx.fancies import loggers
 import footprints
-
+from bronx.compat.moves import collections_abc
+from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
-from vortex.tools.actions import Action, actiond
+from vortex.tools.actions import Action, TemplatedMail, actiond
 from vortex.tools.services import Directory
-from vortex.util.config import GenericConfigParser
 
 #: Export nothing
 __all__ = []
@@ -58,39 +55,22 @@ class DMTEvent(Action):
         super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
 
 
-class OpMail(Action):
+class OpMail(TemplatedMail):
     """
     Class responsible for sending pre-defined mails.
     """
 
     def __init__(self, kind='opmail', service='opmail', active=True,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@opmail-address-book.ini',
+        super(OpMail, self).__init__(kind=kind, active=active, service=service,
+                                     catalog=catalog, inputs_charset=inputs_charset)
+        self.directory = directory or Directory('@{:s}-address-book.ini'.format(kind),
                                                 encoding=inputs_charset)
-        self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
-                                                      encoding=inputs_charset)
-        self.inputs_charset = inputs_charset
 
     def service_info(self, **kw):
         """Kindly propose the permanent directory and catalog to the final service"""
         kw.setdefault('directory', self.directory)
-        kw.setdefault('catalog', self.catalog)
-        kw.setdefault('inputs_charset', self.inputs_charset)
         return super(OpMail, self).service_info(**kw)
-
-    def execute(self, *args, **kw):
-        """
-        Perform the action through a service. Extraneous arguments (not included
-        in the footprint) are collected and explicitely transmitted to the service
-        in a dictionary.
-        """
-        rc = None
-        service = self.get_active_service(**kw)
-        if service:
-            options = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
-            rc = service(options)
-        return rc
 
 
 class OpPhase(Action):
@@ -191,7 +171,7 @@ class OpPhase(Action):
 
         def isiterable(item):
             return (
-                isinstance(item, collections.Iterable) and
+                isinstance(item, collections_abc.Iterable) and
                 not isinstance(item, six.string_types)
             )
 
@@ -249,7 +229,7 @@ class OpPhase(Action):
         - effective_path: where the resource exists. Might be incache_path, or the
           container's local path.
         - remote_path: the path to use on the remote machine. This is incache_path,
-          but possibly modified according the the basepaths configuration.)
+          but possibly modified according to the basepaths configuration.
         """
         paths_in_cache = rh.locate(incache=True, inpromise=False) or ''
         first_path = paths_in_cache.split(';')[0]
@@ -269,9 +249,9 @@ class OpPhase(Action):
         basepaths = self.getx('basepaths', default='', aslist=True)
         if basepaths:
             src, dst = basepaths
-            if not incache_path.startswith(src):
-                dst, src = basepaths
-                if not incache_path.startswith(src):
+            if not self.sh.path.commonpath((incache_path, src,)) == src:
+                dst, src = src, dst
+                if not self.sh.path.commonpath((incache_path, src,)) == src:
                     msg = "Basepaths are incompatible with resource path\n\tpath={}\n\tbasepaths={}".format(
                         incache_path, basepaths)
                     raise ValueError(msg)
@@ -316,7 +296,7 @@ class OpPhase(Action):
         elif protocol == 'cp':
             if effective_path == remote_path:
                 msg = "Cannot locally phase file onto itself."
-                msg += "path={} basepaths={}".format(effective_path, basepaths)
+                msg += "\npath={}\nbasepaths={}".format(effective_path, basepaths)
                 raise ValueError(msg)
             jeeves_opts.update(
                 todo='cp',

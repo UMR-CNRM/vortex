@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -318,30 +317,26 @@ class Interpol_Forcing(Parallel):
 @echecker.disabled_if_unavailable
 class Prosnow_Parallel(Surfex_Parallel):
     """
-    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
     It adds snow management specificities by ski resorts to standard SURFEX-Crocus algo components.
-    machine
+
+    This class was implemented by C. Carmagnola in April 2019 (PROSNOW project).
     """
 
     _footprint = dict(
         info = 'AlgoComponent designed to run SURFEX experiments over large domains with MPI parallelization.',
         attr = dict(
             insert_data = dict(
-                default = 'prosnow_insert_data',
+                values = ['prosnow_insert_data', ],
                 type = str,
-                optional = False,
             )
         )
     )
 
     def prosnow_modify_namelist(self):
-
         new_nam = update_namelist_var("OPTIONS_unmodified.nam", "water.txt")
-
         return new_nam
 
     def prosnow_modify_prep(self):
-
         dateend_str = self.dateend.strftime('%Y%m%d%H')
         my_name_OBS = 'OBS_' + dateend_str + '.nc'
         my_name_PREP = 'PREP_' + dateend_str + '.nc'

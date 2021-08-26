@@ -28,6 +28,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: TemplatedMail
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Report
    :show-inheritance:
    :members:

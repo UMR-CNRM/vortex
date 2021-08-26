@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This modules defines specific CEN addons for the Task base class.
@@ -23,6 +22,8 @@ class S2MTaskMixIn(object):
     firstassimruntime = Time(hour=6, minute=0)
     secondassimruntime = Time(hour=9, minute=0)
     monthly_analysis_time = Time(hour=12, minute=0)
+
+    ref_reanalysis = "reanalysis2020.2@lafaysse"  # Current version of S2M reanalysis
 
     def s2moper_filter_execution_error(self, exc):
         """Define the behaviour in case of errors.
@@ -58,11 +59,12 @@ class S2MTaskMixIn(object):
             logger.warning(warning)
 
             # Add e-mail
-            ad.mail(
-                subject='S2M warning',
-                to='matthieu.lafaysse@meteo.fr',
-                contents=warning,
-            )
+            ad.cenmail(to=self.conf.mail_to, id='s2mdev_warning', report=warning)
+            # ad.mail(
+            #     subject='S2M warning',
+            #     to='matthieu.lafaysse@meteo.fr',
+            #     contents=warning,
+            # )
 
     def s2moper_report_execution_error(self, exc, **kw_infos):
         if 'nfail' in kw_infos.keys():
@@ -70,11 +72,12 @@ class S2MTaskMixIn(object):
             logger.warning(warning)
 
             # Add e-mail
-            ad.mail(
-                subject='S2M fatal error',
-                to='matthieu.lafaysse@meteo.fr',
-                contents=warning,
-            )
+            ad.cenmail(to=self.conf.mail_to, id='s2mdev_error', report=warning)
+            # ad.mail(
+            #     subject='S2M fatal error',
+            #     to='matthieu.lafaysse@meteo.fr',
+            #     contents=warning,
+            # )
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}

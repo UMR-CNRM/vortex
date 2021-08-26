@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -126,7 +125,7 @@ class BackgroundStdError(_BackgroundErrorInfo):
 
     def gget_basename(self):
         """GGET specific naming convention."""
-        return '.m{:02d}'.format(self.date.month)
+        return dict(suffix='.m{:02d}'.format(self.date.month))
 
 
 @namebuilding_append('src', lambda s: s.variable)

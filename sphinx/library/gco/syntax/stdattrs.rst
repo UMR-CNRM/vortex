@@ -14,8 +14,30 @@ Package
 .. autodata:: __all__
 
 
-Classes
--------
+Pre-defined attributes as abstract decorative footprints
+--------------------------------------------------------
+
+.. autodata:: gmkpack_compiler_identification_deco
+
+.. autodata:: executable_flavour_deco
+
+
+Pre-defined attributes as abstract footprints
+---------------------------------------------
+
+.. autodata:: gvar
+
+.. autodata:: gdomain
+
+.. autodata:: arpifs_cycle
+
+.. autodata:: gmkpack_compiler_identification
+
+.. autodata:: executable_flavour
+
+
+Datatypes
+---------
 
 .. autoclass:: GenvKey
    :show-inheritance:
@@ -46,3 +68,11 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+
+Decorators
+----------
+
+.. autofunction:: genv_ifs_compiler_convention
+
+.. autofunction:: genv_executable_flavour

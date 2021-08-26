@@ -20,40 +20,40 @@ def setup(t, **kw):
             LoopFamily(
                 tag='lfamily1_dates',
 
-                # Look for a `rundates` entry in `self.conf` (this entry have
+                # Look for a `rundates` entry in `self.conf` (this entry has
                 # to be a list): we will loop on this entry.
                 loopconf='rundates',
 
                 # When iterating, a `rundate` entry will be added to `self.conf`
                 # (this is the "control variable" of the loop). The name of such
-                # control variable is prescribed by `loopvariable`. In this
+                # a control variable is prescribed by `loopvariable`. In this
                 # example `loopvariable` could actually be omitted because the
-                # default behaviour is to use the value of `loopconf` minus
-                # the final "s" (i.e. `loopconf` should be a plural noun).
+                # default behaviour is to use the value of `loopconf` without
+                # the final "s" (i.e. `loopconf` should be a plural form).
                 loopvariable='rundate',
 
                 # Below the hood, the LoopFamily class will create clones of its
                 # `nodes` argument content. However, since each tag needs to be
                 # unique, the clone will be tagged with the original tag name
-                # plus an additional string tha con be customised using `loopsuffix`
+                # plus an additional string that can be customised using `loopsuffix`
                 loopsuffix='+d{0.ymdh:s}',  # This string will be formatted using
                                             # the loop control variable as a first
                                             # and unique argument
-                # NB: The default is loopsuffix='+X{0!s}' where X is the the `
-                #     loopvariable` name. Depending on your needs, it might
-                #     be decent enough (also it's a bit long).
+                # NB: The default is loopsuffix='+X{0!s}' where X is the
+                #     `loopvariable` name. Depending on your needs, it might
+                #     be decent enough (although it's a bit long).
 
-                # When iterating, a `rundate` entry is a added to `self.conf`.
+                # When iterating, a `rundate` entry is added to `self.conf`.
                 # Actually, `rundate_prev` and `rundate_next` will also be added.
                 # By default, for the first (resp. last) item of the loop,
-                # `rundate_prev=None` (resp. `rundate_next=None`). Sometime, it
+                # `rundate_prev=None` (resp. `rundate_next=None`). Sometimes, it
                 # is desirable to change this behaviour and to force the LoopFamily
                 # to keep the first (resp. last) element of `loopconf` in "spare" in
                 # order to properly initialise `rundate_prev` (resp. `rundate_next`).
-                # That's why the `loopneedprev` and `loopneednext` arguments are for.
+                # That's what the `loopneedprev` and `loopneednext` arguments are for.
                 loopneednext=True,
                 # Because loopneednext=`True`, in this example we won't iterate on
-                # the last element of the `rundates` list which ensures that the
+                # the last element of the `rundates` list, which ensures that the
                 # `self.conf.rundate_next` always has a well defined value.
 
                 nodes=[
@@ -80,7 +80,7 @@ def setup(t, **kw):
 
 # You are invited to run this Driver by yourself... but if you are lazy (or
 # trustful), the execution would result in the following "Tree" for the
-# `lfamily1_drv` driver: :
+# `lfamily1_drv` driver:
 #
 # lfamily1_drv (Driver) -> ready to start
 #   lfamily1_dates (LoopFamily) -> ready to start

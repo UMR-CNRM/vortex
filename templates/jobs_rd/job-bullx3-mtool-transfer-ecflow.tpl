@@ -90,7 +90,9 @@ try:
     t, e, sh = ja.setup(actual=locals(), auto_options=auto_options, flowscheduler=flowscheduler)
     sh.ftraw = True # To activate ftserv
 
-    opts = dict(jobassistant=ja, steps=('refill', ) if rd_refill else ja.mtool_steps)
+    opts = dict(jobassistant=ja,
+                steps=('refill', ) if rd_refill else ja.mtool_steps,
+                mstep_job_last=ja.is_last)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()

@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-# -*- coding:Utf-8 -*-
+# -*- coding: utf-8 -*-
 
 """
 This package handles targets computers objects that could in charge of
@@ -363,11 +362,11 @@ class Target(fp.FootprintBase):
             return ((kmatch.group(1) not in self.specialnodes) or
                     any([self.hostname.startswith(s)
                          for s in self.specialnodes[kmatch.group(1)]]))
-        raise AttributeError('The "{:s}" does not exists.'.format(key))
+        raise AttributeError('The key "{:s}" does not exist.'.format(key))
 
 
 class LocalTarget(Target):
-    """A very generic class usable for most of the computers."""
+    """A very generic class usable for most computers."""
 
     _footprint = dict(
         info = 'Nice local target',

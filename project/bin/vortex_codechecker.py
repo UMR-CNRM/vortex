@@ -317,7 +317,7 @@ class AstroidChecker(object):
         self._builtin_bl = dict(builtinblacklist) if builtinblacklist else dict()
 
     def _astroid_imports_tree_recurse(self,
-                                      tree: typing.Union[astroid.ALL_NODE_CLASSES],
+                                      tree: astroid.node_classes.NodeNG,
                                       imports: DictOfImports,
                                       l_whitelist: typing.Set[str]):
         """Identify all the import statements in a given source tree.
@@ -350,7 +350,7 @@ class AstroidChecker(object):
             else:
                 self._astroid_imports_tree_recurse(node, imports, l_whitelist)
 
-    def _astroid_attr_recurse(self, attr: typing.Union[astroid.ALL_NODE_CLASSES]) -> str:
+    def _astroid_attr_recurse(self, attr: astroid.node_classes.NodeNG) -> str:
         """Parse recursively any Attribute astroid node.
 
         This may fail and return ``None``
@@ -365,7 +365,7 @@ class AstroidChecker(object):
             return None
 
     def _astroid_names_tree_recurse(self,
-                                    tree: typing.Union[astroid.ALL_NODE_CLASSES],
+                                    tree: astroid.node_classes.NodeNG,
                                     names: SetOfNames):
         """
         Parse recursively the whole source tree looking for names that are
