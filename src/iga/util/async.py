@@ -109,22 +109,23 @@ def system_route(pnum, ask, config, logger, **opts):
                 logger.error('The source file is definitely missing - sorry')
                 return pnum, False, dict(rpool='error')
 
-            # apply filtering, or at least ask for concatenation
+            # decide on an informative target name pattern (for AGT logs)
+            if 'fallback_uri' in data:
+                uri = uriparse(data.fallback_uri)
+                info_path = uri['path']
+            else:
+                info_path = data.original
+            prefix = re.sub(r'\.{}$'.format(data.fmt), '',
+                            sh.path.basename(info_path), flags=re.I)
+            outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
+
+            # apply filtering or concatenate
             if data.filterdefinition:
                 logger.info('Filtering input data. filtername=%s',
                             data.filterdefinition['filter_name'])
                 if data.fmt == 'grib':
                     gribfilter = GRIBFilter(concatenate=False)
                     gribfilter.add_filters(data.filterdefinition)
-                    if 'fallback_uri' not in data:
-                        print('PLPL on fait quoi ?')
-                        print('data =', pformat(data))
-                        prefix = 'GRIBOUTPUT'
-                    else:
-                        uri = uriparse(data.fallback_uri)
-                        prefix = re.sub('.' + data.fmt + r'$', '',
-                                        sh.path.basename(uri['path']), flags=re.I)
-                    outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
                     filtered = gribfilter(data.source, outfile_fmt, intent='in')
                     if len(filtered) != 1:
                         logger.error('Should have 1 file in gribfilter output, got: %s',
@@ -136,7 +137,8 @@ def system_route(pnum, ask, config, logger, **opts):
                     logger.error('Unable to filter format=%s - sorry', data.fmt)
                     return pnum, False, dict(rpool='error')
             else:
-                route_source = sh.forcepack(data.source, fmt=data.fmt)
+                outfile = outfile_fmt.format(filtername='concatenate')
+                route_source = sh.forcepack(data.source, destination=outfile, fmt=data.fmt)
 
             # activate services or not according to jeeves' configuration
             if route_on:
