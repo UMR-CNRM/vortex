@@ -537,7 +537,7 @@ class RoutingService(Service):
                 return x
 
         # use the footprint to compute the route_opts
-        route_opts = self.footprint_as_shallow_dict()
+        route_opts = self.footprint_export()
         del route_opts['filterdefinition']
         del route_opts['jname']
 
