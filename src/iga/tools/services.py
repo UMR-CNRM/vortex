@@ -550,7 +550,7 @@ class RoutingService(Service):
             fallback_uri=self.rhandler_uri,
             route_opts=route_opts,
             original=self._actual_filename,
-            filterdefinition=self.filterdefinition.data,
+            filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
         )
         logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
 
