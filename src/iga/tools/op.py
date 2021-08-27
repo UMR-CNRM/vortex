@@ -418,6 +418,8 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
+        kwargs['rhandler_uri'] = rh.location()
+
         if filtername is not None:
             filters = [
                 request.rh.contents
