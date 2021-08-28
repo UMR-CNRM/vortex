@@ -25,14 +25,14 @@ import sys
 import time
 from ast import literal_eval
 from datetime import datetime
+from random import randint
 from signal import SIGTERM
 
 import six
 from six.moves.configparser import SafeConfigParser
 
 from bronx.syntax import dictmerge, mktuple
-from . import pools
-from . import talking
+from . import pools, talking
 
 #: No automatic export
 __all__ = []
@@ -1031,7 +1031,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         tbusy = True
                         rt['nbt'] += 1
                         rt['last'] = stamp
-                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow) + randint(-5, 5)))
                         self.logger.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
                         self.migrate(thispool, req)
             else:
