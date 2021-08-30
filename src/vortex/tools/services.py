@@ -358,6 +358,7 @@ class ReportService(Service):
 class FileReportService(ReportService):
     """Building the report as a simple file."""
 
+    _abstract = True
     _footprint = dict(
         info = 'File Report services class',
         attr = dict(
