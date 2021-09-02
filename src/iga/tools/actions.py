@@ -38,7 +38,7 @@ class SendAlarm(Action):
         return super(SendAlarm, self).service_info(**kw)
 
 
-class Route(Action):
+class Route(TunableAction):
     """
     Class responsible for routing data to the Transfer Agent (BDAP, BDPE, BDM).
     """
