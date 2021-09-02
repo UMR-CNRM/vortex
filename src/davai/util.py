@@ -117,8 +117,7 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
     # data to be sent to api
     data = {'jsonData': jsonData,
             'xpid': xpid,
-            'type': kind.replace('static', '')}  # FIXME: temporary, make Ciboulai accept 'statictaskinfo' and remove this hack
-            #'type': kind}
+            'type': kind}
     # sending post request and saving response as response object
     try:
         rc, status, headers, rdata = http_post_data(url=davai_server_post_url, data=data, **kwargs)

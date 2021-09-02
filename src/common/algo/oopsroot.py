@@ -456,6 +456,7 @@ class OOPSMinim(OOPSODB):
             ),
             withscreening = dict(
                 type = bool,
+                optional = True,
                 default = False,
             ),
         )

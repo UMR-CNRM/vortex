@@ -17,6 +17,7 @@ from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
 from common.algo.clim import (BuildPGD, BuildPGD_MPI)
 from common.algo.coupling import (Prep, Coupling)
+from common.algo.fpserver import FullPosServer
 
 #: No automatic export
 __all__ = []
@@ -143,6 +144,10 @@ class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
 
 
 class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosServer_CrashWitness(FullPosServer, _CrashWitnessDecoMixin):
     pass
 
 

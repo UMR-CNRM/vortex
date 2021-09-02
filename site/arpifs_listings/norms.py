@@ -48,6 +48,8 @@ _re_fields_oops = r'(?P<subroutine>field:(copy (rhs)|(self))|(interp in))'
 _re_fields_oopsIFS = r'(?P<subroutine>FieldsIFS)'
 _re_ifs_propagate = r'(?P<subroutine>ifs_propagate_c)'
 _re_wrmlppa = r'(?P<subroutine>WRMLPPA)'
+_re_sugridf = r'(?P<subroutine>SUGRIDF)'
+_re_sugridug = r'(?P<subroutine>SUGRIDUG)'
 CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
              'openfa': r'\s*' + _re_openfa + r':\s+' + _re_unit + r'\s+' + _re_filename + r'\s*$',
              'nstep_stepo': r'\s*NSTEP =\s+' + _re_nstep + r'\s+' + _re_stepo + r'\s+' + _re_cdconf + r'\s*$',
@@ -62,6 +64,8 @@ CNT_steps = {'openfa_info': r'\s*' + _re_openfa + r':' + _re_comment + r'\s*$',
              'fields_oopsIFS': r'\s*' + _re_fields_oopsIFS + r'\s*$',
              'ifs_propagate_oops': r'\s*' + _re_ifs_propagate + r'\s*1\s*$',
              'wrmlppa': r'\s*' + _re_wrmlppa + r'\s+NSTEP=\s+' + _re_nstep + r'\s+CDCONF=' + _re_cdconf + r'\s*$',
+             'sugridf': r'\s*' + _re_sugridf + r'\s*:\s*' + _re_comment + r'\s*$',
+             'sugridug': r'\s*' + _re_sugridug + r'\s*:\s*' + _re_comment + r'\s*$',
              }
 CNT_steps = {k: re.compile(v) for k, v in CNT_steps.items()}
 
