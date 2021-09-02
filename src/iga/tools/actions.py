@@ -75,7 +75,6 @@ class OpMail(TunableAction):
         kw.setdefault('directory', self.directory)
         kw.setdefault('catalog', self.catalog)
         kw.setdefault('inputs_charset', self.inputs_charset)
-        kw.setdefault('dryrun', self.getx('dryrun', default=False))
         return super(OpMail, self).service_info(**kw)
 
     def execute(self, *args, **kw):

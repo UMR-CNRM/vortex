@@ -152,6 +152,11 @@ class TunableAction(Action):
         if show:
             self.show_config()
 
+    def service_info(self, **kw):
+        for k, v in self._get_config_dict().items():
+            kw.setdefault(k, v)
+        return super(TunableAction, self).service_info(**kw)
+
     def tune(self, section=None, **kw):
         """Add options to override the .ini file configuration.
 
@@ -240,8 +245,6 @@ class AskJeeves(TunableAction):
         rc = None
         if 'kind' in kw:
             kw['fwd_kind'] = kw.pop('kind')
-        for k, v in self._get_config_dict():
-            kw.setdefault(k, v)
         service = self.get_active_service(**kw)
         if service:
             talk = {k: v for k, v in kw.items() if k not in service.footprint_attributes}
