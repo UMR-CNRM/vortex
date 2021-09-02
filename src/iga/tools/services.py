@@ -407,7 +407,13 @@ class RoutingService(Service):
             jname = dict(
                 info     = 'Name of the Jeeves daemon to use when defer is True.',
                 optional = True
-            )
+            ),
+            dryrun = dict(
+                info     = "Post to Jeeves in defer mode, else only show what would be routed.",
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -483,6 +489,8 @@ class RoutingService(Service):
 
     def _immediate_processing(self):
 
+        logger.debug('immediate route - fp = %s', self.footprint_export())
+
         if self._actual_targetname:
             if self.sh.path.exists(self._actual_targetname):
                 raise ValueError("Won't overwrite file '{}'".format(self._actual_targetname))
@@ -495,23 +503,37 @@ class RoutingService(Service):
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
                 logger.info('direct spawn: ' + cmdline)
-                rc = self.sh.spawn(cmdline, shell=True, output=True)
+                if self.dryrun:
+                    rc = True
+                else:
+                    rc = self.sh.spawn(cmdline, shell=True, output=True)
             else:
                 logger.info('ssh on agt node:' + cmdline)
-                sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
-                rc = sshobj.execute(cmdline)
+                if self.dryrun:
+                    rc = True
+                else:
+                    sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
+                    rc = sshobj.execute(cmdline)
         else:
             logger.info('ssh on node ' + self.sshhost + ': ' + cmdline)
-            sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
-            rc = sshobj.execute(cmdline)
-        logger.info('rc: ' + str(rc))
+            if self.dryrun:
+                rc = True
+            else:
+                sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
+                rc = sshobj.execute(cmdline)
+        if self.dryrun:
+            logger.info('dryrun mode - the routing command WAS NOT executed:')
+            logger.info('\t' + cmdline)
+        else:
+            logger.info('rc: ' + str(rc))
 
         if self._actual_targetname:
             self.sh.remove(self._actual_targetname)
 
-        logfile = 'routage.' + date.today().ymd
-        ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
-                  resuldir=self.resuldir, filename=logfile)
+        if not self.dryrun:
+            logfile = 'routage.' + date.today().ymd
+            ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
+                      resuldir=self.resuldir, filename=logfile)
 
         if not rc:
             # BDM call has no term
@@ -552,7 +574,8 @@ class RoutingService(Service):
             original=self._actual_filename,
             filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
         )
-        logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
+
+        logger.debug('posting to jeeves with jeeves_opts:\n\t%s', pformat(jeeves_opts))
 
         # post the request to jeeves
         return ad.jeeves(**jeeves_opts)
@@ -733,11 +756,12 @@ class BdpeService(RoutingService):
 
     def bdpe_log(self):
         """Additionnal log file specific to BDPE calls."""
-        text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
-               "{0.routingkey}".format(self, mode='routage par cle')
-        logfile = 'log_envoi_bdpe.' + self.aammjj
-        ad.report(kind='dayfile', message=text, resuldir=self.resuldir,
-                  filename=logfile, mode='RAW')
+        if not self.dryrun:
+            text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
+                   "{0.routingkey}".format(self, mode='routage par cle')
+            logfile = 'log_envoi_bdpe.' + self.aammjj
+            ad.report(kind='dayfile', message=text, resuldir=self.resuldir,
+                      filename=logfile, mode='RAW')
 
     def get_logline(self):
         """Build the line to send to IGA main routing log file."""
