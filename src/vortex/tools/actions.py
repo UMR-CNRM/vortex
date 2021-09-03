@@ -14,6 +14,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 import bronx.stdtypes.catalog
 import footprints
 from bronx.fancies import loggers
+from bronx.fancies.display import dict_as_str
 from vortex import sessions
 from vortex.util.authorizations import is_authorized_user
 
@@ -82,6 +83,14 @@ class Action(object):
         self._active = False
         return self._active
 
+    def info(self):
+        """Informative string (may serve debugging purposes)."""
+        return '{} Action {} (kind={})'.format(
+            'ON ' if self.status() else 'OFF',
+            self.__class__.__name__,
+            self.kind,
+        )
+
     def service_kind(self, **kw):
         """Actual service kind name to be used for footprint evaluation."""
         return self.service
@@ -136,21 +145,35 @@ class TunableAction(Action):
     def __init__(self, configuration=None, **kwargs):
         super(TunableAction, self).__init__(**kwargs)
         self._tuning = dict()
-        self._conf_section = None
-        self.configure(configuration)
+        self._conf_section = configuration
+        self._conf_dict = None
 
     @property
     def _shtarget(self):
+        """Warning: this may be a `vortex.syntax.stdattrs.DelayedInit` object
+        during Vortex initialization and may not have a `sections()` method
+        nor a `config` property."""
         return sessions.current().sh.default_target
 
-    def configure(self, section, show=False):
-        """Check and set the configuration: a section in the target-xxx.ini file."""
-        self._conf_section = section
-        if section is not None:
-            if section not in self._shtarget.sections():
-                raise KeyError('No section "{}" in "{}"'.format(section, self._shtarget.config.file))
-        if show:
-            self.show_config()
+    @property
+    def _conf_items(self):
+        """Check and return the configuration: a section in the target-xxx.ini file.
+
+        If the configuration is None, an attempt is made to use the Action's kind.
+        Don't use before Vortex initialization is done (see `_shtarget`)."""
+        if self._conf_dict is None:
+            if self._conf_section is None:
+                if self.kind in self._shtarget.sections():
+                    self._conf_section = self.kind
+            else:
+                if self._conf_section not in self._shtarget.sections():
+                    raise KeyError('No section "{}" in "{}"'.format(self._conf_section,
+                                                                    self._shtarget.config.file))
+            if self._conf_section is None:
+                self._conf_dict = dict()
+            else:
+                self._conf_dict = self._shtarget.items(self._conf_section)
+        return self._conf_dict
 
     def service_info(self, **kw):
         for k, v in self._get_config_dict().items():
@@ -167,28 +190,27 @@ class TunableAction(Action):
 
     def _get_config_dict(self):
         final_dict = dict()
-        final_dict.update(self._shtarget.items(self._conf_section))
+        final_dict.update(self._conf_items)
         final_dict.update(self._tuning)
         return final_dict
 
-    def show_config(self):
-        """Show the current configuration (for debugging purposes)."""
-        from pprint import pprint
-        print('\n=== Action {} configuration:\n{}'.format(
-            self.__class__.__name__,
-            self._conf_section,
-        ))
-        final_dict = dict()
+    def info(self):
+        """Informative string (may serve debugging purposes)."""
+        s = super(TunableAction, self).info() + ' - tunable\n'
+        mix = dict()
+        mix.update(self._conf_items)
+        mix.update(self._tuning)
+        prt = dict()
+        for k, v in mix.items():
+            if k in self._tuning:
+                prt['++ ' + k] = '{} (was: {})'.format(v, str(
+                    self._conf_items[k]) if k in self._conf_items else '<not set>')
+            else:
+                prt['   ' + k] = v
         if self._conf_section is not None:
-            pprint(self._shtarget.items(self._conf_section))
-            final_dict.update(self._shtarget.items(self._conf_section))
-        if self._tuning:
-            print('\n+++ Fine tuning:')
-            pprint(self._tuning)
-            print('\n+++ Real configuration:')
-            final_dict.update(self._tuning)
-            pprint(final_dict)
-        print()
+            s += ' ' * 4 + 'configuration: ' + self._conf_section + '\n'
+        s += dict_as_str(prt, prefix=4)
+        return s.strip()
 
     def getx(self, key, *args, **kw):
         """Shortcut to access the configuration overridden by the tuning."""

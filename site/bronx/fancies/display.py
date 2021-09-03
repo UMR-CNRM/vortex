@@ -170,6 +170,38 @@ def join_list_in_proper_english(a_list, l_fmt='{!s}'):
     return outstr
 
 
+def dict_as_str(adict, prefix=0, indent=3):
+    """Nicely aligned string representation of a dictionary.
+
+    :param dict adict: the dictionary to format
+    :param int prefix: number of leading spaces
+    :param int indent: number of additionnal spaces when recurring
+    :return str: the formatted string representation
+
+    >>> d = dict(a=1, abracadabra=42, more=dict(b=2, babylou=69))
+    >>> dict_as_str(d, prefix=4, indent=2)
+    '    a          : 1\\n    abracadabra: 42\\n    more\\n      b      : 2\\n      babylou: 69\\n'
+    >>> print(dict_as_str(d, prefix=4, indent=2), end='')
+        a          : 1
+        abracadabra: 42
+        more
+          b      : 2
+          babylou: 69
+    """
+    if len(adict) == 0:
+        return ''
+    maxlen = max([len(k) for k in adict])
+    s = ''
+    for key, value in sorted(adict.items()):
+        spaces = ' ' * (maxlen - len(key))
+        if isinstance(value, dict):
+            s += ' ' * prefix + key
+            s += '\n' + dict_as_str(value, prefix + indent, indent)
+        else:
+            s += ' ' * prefix + key + spaces + ': ' + str(value) + '\n'
+    return s
+
+
 if __name__ == '__main__':
     import doctest
 
