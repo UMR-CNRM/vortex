@@ -55,7 +55,8 @@ def parse_command_line():
     parser.add_argument('-j', '--job', nargs='+', help="Command line containing " +
                         "all informations to make one specific job, ex : \n name=jobname task=taskname")
     parser.add_argument('-o', '--oper', action='store_true', help='Activate oper specifications ' +
-                        'in the jobs (op_mail=True, ad.route_on(),... The default option is the test configuration')
+                        'in the jobs (phase, mail, route, dmt... The default option is the test '
+                        'configuration')
     parser.add_argument('-a', '--add', nargs='+', help='Add (and replace if necessary) argument(s) to the ' +
                         'description of all the jobs concerned.')
     parser.add_argument('-w', '--write', action='store_true', help="If -j option is activated, " +
@@ -121,7 +122,7 @@ def list_variables():
     core = load_template(t, '@opjob-variables.tpl')
     with io.open(core.srcfile, 'r') as f:
         for line in f:
-            print(line)
+            print(line.strip())
 
 
 def add_report(report, jobname, oper, backup=None):

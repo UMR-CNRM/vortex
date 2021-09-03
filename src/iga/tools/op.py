@@ -164,9 +164,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _toolbox_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
-        opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
-            jname=opd.get('op_jeeves', None),
             sender='admin_prod_sc@meteo.fr',
         )
 
@@ -179,10 +177,7 @@ class OpJobAssistantTest(JobAssistant):
         ad.add(vortex.tools.actions.EcflowGateway())
 
         print('+ ECFLOW candidates =', ad.candidates('ecflow'))
-
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
-        print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
-        print('+ JEEVES jroute =', t.env.get('op_jroute'))
 
         # ----------------------------------------------------------------------
         t.sh.highlight('START message to op MESSDAYF reporting file')
