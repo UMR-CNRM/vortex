@@ -91,7 +91,9 @@ class Service(footprints.FootprintBase):
         """
         if as_var is None:
             as_var = key.upper()
-        value = getattr(self, key, self.env.get(as_var, None))
+        value = getattr(self, key, None)
+        if not value:
+            value = self.env.get(as_var, None)
         if not value:
             if as_conf is None:
                 as_conf = 'services:' + key.lower()
