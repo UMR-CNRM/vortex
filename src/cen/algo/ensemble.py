@@ -1587,7 +1587,7 @@ class PrepareForcingComponent(TaylorRun):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['prepareforcing', 'extractforcing']
+                values = ['prepareforcing', 'extractforcing', 'shadowsforcing']
             ),
             engine = dict(
                 values = ['s2m']),
@@ -1602,11 +1602,14 @@ class PrepareForcingComponent(TaylorRun):
             geometry_in = dict(
                 info = "Area information in case of an execution on a massif geometry",
                 type = footprints.stdtypes.FPList,
+                optional=True,
                 default = None
             ),
             geometry_out = dict(
                 info = "The resource's massif geometry.",
                 type = str,
+                optional=True,
+                default=None
             ),
         )
     )
@@ -1845,4 +1848,54 @@ class ExtractForcingWorkerLTForecast(ExtractForcingWorkerEnsembleForecast):
     def _prepare_forcing_innertask(self, rundir, thisdir, dir_file_1, rdict):
         # Change dates of the climatology to the current season
         forcinput_changedates(dir_file_1, dir_file_1, self.datebegin.nivologyseason_begin)
+        return rdict
+
+
+@echecker.disabled_if_unavailable
+class ShadowsForcingWorker(PrepareForcingWorker):
+    """
+    It only applies shadows to a forcing file without any change of geometry (worker for 1 member).
+
+    """
+
+    _footprint = dict(
+        info = 'Apply shadows',
+        attr = dict(
+            kind = dict(
+                values = ['shadowsforcing']
+            ),
+
+            geometry_out = dict(
+                info="The resource's massif geometry.",
+                type=str,
+                optional = True,
+                default = None
+            )
+        )
+    )
+
+    def _prepare_forcing_task(self, rundir, thisdir, rdict):
+
+        need_other_forcing = True
+        datebegin_this_run = self.datebegin
+
+        while need_other_forcing:
+
+            forcingdir = self.forcingdir(rundir, thisdir)
+
+            # Get the first file covering part of the whole simulation period
+            dateforcbegin, dateforcend = get_file_period("FORCING", forcingdir,
+                                                         datebegin_this_run, self.dateend)
+
+            self.system.mv("FORCING.nc", "FORCING_OLD.nc")
+            forcinput_applymask(["FORCING_OLD.nc"], "FORCING.nc")
+
+            dateend_this_run = min(self.dateend, dateforcend)
+
+            # Prepare next iteration if needed
+            datebegin_this_run = dateend_this_run
+            need_other_forcing = dateend_this_run < self.dateend
+
+            save_file_period(forcingdir, "FORCING", dateforcbegin, dateforcend)
+
         return rdict
