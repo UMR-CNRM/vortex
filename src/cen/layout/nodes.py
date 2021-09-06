@@ -297,3 +297,51 @@ class S2MTaskMixIn(object):
             datebegin_input = dateend_input
 
         return list_dates_begin_input
+
+    def extract_massif(self, massif_to_extract, rawfile, filetype='pro'):
+
+        from snowtools.utils.prosimu import prosimu
+        import numpy as np
+        from netCDF4 import Dataset
+        
+        f = prosimu(rawfile)
+        time, units = f.readtime_for_copy()
+        massifs = f.read_var('massif_num') if filetype == 'pro' else f.read_var('massif_number')
+        mask = np.where(massifs == massif_to_extract)
+
+        # Création du fichier de sortie contenant uniquement le massif désiré
+        newfile = '{0:s}_massif{1:d}.nc'.format(rawfile.rstrip('.nc'), massif_to_extract)
+        outputs = Dataset(newfile, 'w', format='NETCDF4')
+        outputs.createDimension('time', time.shape[0])
+        outputs.createDimension('points', np.size(f.read_var('ZS')[mask]))
+
+        # for time
+
+        # Choose variables and fill the NETCDF file
+        #my_list = [x.encode('ascii') for x in f.listvar()]
+        outputs.createVariable('time', np.float64, ('time'), fill_value=-9999)
+        outputs['time'].use_nc_get_vars(time)
+
+        if filetype == 'pro': 
+            VAR_1D = ['ZS', 'aspect', 'slope', 'massif_num', 'longitude', 'latitude']
+            VAR_2D = ['TG1', 'TG4', 'MMP_VEG', 'DRAIN_ISBA', 'RUNOFF_ISBA',
+                   'SNOMLT_ISBA', 'WSN_T_ISBA', 'DSN_T_ISBA', 'WBT']
+        elif filetype == 'forcing':
+            VAR_1D = ['ZS', 'aspect', 'slope', 'massif_number']
+            VAR_2D = ['Rainf', 'Snowf', 'Tair', 'Qair', 'PSurf', 'Wind_DIR',
+                    'Wind', 'LWdown', 'DIR_SWdown', 'SCA_SWdown', 'NEB', 'HUMREL']
+
+        for var1 in VAR_1D:
+                outputs.createVariable(var1, np.float64, ('points'), fill_value=-9999)
+                outputs[var1][:] = f.read_var(var1)[mask]
+
+        for var2 in VAR_2D:
+                outputs.createVariable(
+                    var2, np.float64, ('time', 'points'), fill_value=-9999)
+                outputs[var2][:] = f.read_var(var2)[:, mask]
+
+        print("Le fichier {0:s} a bien été créé".format(newfile))
+
+        # Close new NETCDF file and remove the old file
+        outputs.close()
+

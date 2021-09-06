@@ -37,7 +37,13 @@ with echecker:
 
 
 class _S2MWorker(VortexWorkerBlindRun):
-    """This algo component is designed to run an S2M task without MPI parallelization."""
+    """
+    This abstract  worker is designed to run one execution of any S2M task without MPI parallelization
+    (deterministic or ensemble-like simulations) in association with an Algo Component inheriting from an 
+    'S2MComponent' or 'Guess' Algo Component.
+    A single worker is thus a deterministic execution of a given binary with a specific environment that can be run in
+    parallel with other workers (executions of the same binary with different environments).
+    """
 
     _abstract = True
     _footprint = dict(
@@ -56,6 +62,17 @@ class _S2MWorker(VortexWorkerBlindRun):
     )
 
     def vortex_task(self, **kwargs):
+        """
+        Main method, the first that is executed at the initialization of the worker.
+        Its purpose is to set the worker's specific sub-environment (move to the potential corresponding sub-directory)
+        and to return the output state of the worker (stored in the 'rdict' dictionary) to the main Algo component
+        (the Boss).
+        Any overloading of this method or any sub-method called must return such dictionary storing potential execution
+        errors. As a consequence, any part of code within the worker that might raise a python Exception must be
+        encapsulated in a try/except instruction in order to catch any exception, put it into the 'rdict' output and
+        return it to the Boss where all exceptions should be managed properly.
+        """
+
         rdict = dict(rc=True)
         rundir = self.system.getcwd()
         if self.subdir is not self.system.path.dirname(rundir):
@@ -70,7 +87,12 @@ class _S2MWorker(VortexWorkerBlindRun):
         return rdict
 
     def _commons(self, rundir, thisdir, rdict):
-        pass
+        """
+        Abstract method called by the main vortex_task method to set up the worker
+        environment (links to common files, name of execution listings,...) and launch
+        the executable or call the method that launches it.
+        """
+        raise NotImplementedError
 
     def mv_if_exists(self, local, dest):
         """Move a file if it exists (intended to deal with output files)."""
@@ -125,6 +147,11 @@ class GuessWorker(_S2MWorker):
         ebauche = kwargs['ebauche']
         if ebauche and not self.system.path.exists(ebauche):
             self.system.symlink(self.system.path.join(rundir, ebauche), ebauche)
+        self.link_ifnotprovided(self.system.path.join(rundir, 'METADATA.grib'), 'METADATA.grib')
+        for suffix in ['dbf', 'prj', 'qgs', 'qpj', 'shp', 'shx']:
+            shapefile = 'massifs_safran.{0:s}'.format(suffix)
+            self.link_ifnotprovided(self.system.path.join(rundir, shapefile), shapefile) 
+
         list_name = self.system.path.join(thisdir, self.kind + '.out')
         try:
             self.local_spawn(list_name)
@@ -1246,7 +1273,22 @@ class Guess(ParaExpresso):
 
 
 class S2MComponent(ParaBlindRun):
-    """AlgoComponent that runs several SAFRAN executions in parallel."""
+    """
+    This Algo Component is designed to manage any S2M task without MPI parallelization (deterministic or
+    ensemble-like simulations). Ensemble-like simulations include real ensemble simulations (many executions
+    of the same simulation with different initial conditions or configurations) and multi-year simulations
+    (associating each year to one member) that can run in parallel.
+    The different members of an ensemble simulation are identified by an input resource that differ between
+    the members (defined by the method 'role_ref_namebuilder' that can be overloaded). For each identified member,
+    a worker inheriting from '_S2MWorker' is generated and the different workers run in parallel.
+    The S2MComponent plays the role of a 'Boss' (see Taylorism package) that allocates the different executions of
+    the same binary to workers and analyses their feedbacks to look for execution errors and adopt its behavior
+    consequently as defined in the methods *filter_execution_error of the class S2MTaskMixIn(object)
+    from vortex.src.layout.nodes module.
+    It implies that this algo Component is designed to work with a Task inheriting from 'S2MTaskMixIn'
+    (src.cen.layout.nodes module) and explicitly defining the 'filter_execution_error' method to be called
+    (for example in an operational task : filter_execution_error = S2MTaskMixIn.s2moper_filter_execution_error).
+    """
 
     _footprint = dict(
         info = 'AlgoComponent that runs several executions in parallel.',
@@ -1299,7 +1341,11 @@ class S2MComponent(ParaBlindRun):
         pass
 
     def get_subdirs(self, rh, opts):
-        """Get the subdirectories from the effective inputs"""
+        """
+        Get the different member's subdirectories.
+        One member is associated to each 'effective input' (inputs that where actually retrieved during the fetch step)
+        resource with a role matching the one defined by the 'role_ref_namebuilder' method.
+        """
         deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
         # Produce a delayed algo component error if no deterministic member in order to let the members run
         # but crash at the end
@@ -1323,10 +1369,27 @@ class S2MComponent(ParaBlindRun):
         # self.algoassert(len(set(subdirs)) == len(set([am.rh.provider.member for am in avail_members])))
 
         # Crash if subdirs is an empty list (it means that there is not any input available)
+        # TODO : modifier en python3
         self.algoassert(len(subdirs) >= 1)
         return subdirs
 
     def get_origin(self, rh, opts):
+        """
+        Get the status (essential or secondary) or of the different members :
+            - the fail of an essential member automatically leads to the crash of the whole task (for example the
+            deterministic member of the PEARP-S2M operational chain)
+            - the fail of a secondary member is not automatically fatal for the task (it depends on
+            the number of secondary members that crashed)
+
+        Each member is associated to a specific input resource (see method 'get_subdirs') which is also
+        a VORTEX Resource object. This method uses the optional 'source_conf' footprint of this object to determine
+        the essential member(s) (with source_conf='4dvarfr' whereas for standard PEARP members, source_conf='pearp' 
+        in the case of the PEARP-S2M operational chain).
+
+        This method returns a list of boolean with an order matching the one of the different members and where a
+        'True' value indicates the essential(s) member(s).
+        In case there is no 'source_conf' attribute, all members are considered as essential members.
+        """
         """Get the subdirectories from the effective inputs"""
         deterministic_member = self.context.sequence.effective_inputs(role=self.role_deterministic_namebuilder())
         avail_members = deterministic_member +\
@@ -1346,9 +1409,11 @@ class S2MComponent(ParaBlindRun):
         return cpl_model
 
     def role_deterministic_namebuilder(self):
+        """Defines the role of the effective inputs to take as reference to define the deterministic member"""
         return 'Ebauche_Deterministic'
 
     def role_members_namebuilder(self):
+        """Defines the role of the effective inputs to take as reference to define the different members"""
         return 'Ebauche'
 
 
