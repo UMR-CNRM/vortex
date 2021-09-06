@@ -173,7 +173,7 @@ class S2MTaskMixIn(object):
                     year = self.conf.rundate.year - 1
                 else:
                     year = self.conf.rundate.year
-                rundate_prep = Date(year, 8, 4, 3)
+                rundate_prep = Date(year, 8, 5, 3)
                 alternates.append((rundate_prep - Period(days=1), "assimilation"))
                 alternates.append((rundate_prep - Period(days=2), "assimilation"))
                 alternates.append((rundate_prep - Period(days=3), "assimilation"))
