@@ -247,6 +247,10 @@ class _SafranWorker(_S2MWorker):
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
+            # In case no observation file is found at the given path, SAFRAN also check if it is 
+            # in the current repository, so the following is optionnal (that's the reason the
+            # "reanalysis_with_rr_arpege" works even if the execution is "analysis" and 
+            # observation files are individual ones).
             _OP_files_common.extend(['OPA', 'OPR', 'OPS', 'OPT'])
 
         for op_file in _OP_files_common:
