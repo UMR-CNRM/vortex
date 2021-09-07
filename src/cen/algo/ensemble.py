@@ -244,6 +244,12 @@ class _SafranWorker(_S2MWorker):
             # In reanalysis tasks the parallelisation is made over the seasons so
             # the observations are "individal files"
             _OP_files_individual.extend(['OPA', 'OPR', 'OPS', 'OPT'])
+            # Un-comment the following lines to run a re-analysis without observation assimilation.
+            # It is also necessary to modify the safran_reanalysis task to force the execution
+            # of syrpluie and prevent the execution of sypluie
+#            import glob
+#            for obs in glob.glob('S????????') + glob.glob('T????????') + glob.glob('R????????'):
+#                self.system.remove(obs)
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
