@@ -147,11 +147,6 @@ class GuessWorker(_S2MWorker):
         ebauche = kwargs['ebauche']
         if ebauche and not self.system.path.exists(ebauche):
             self.system.symlink(self.system.path.join(rundir, ebauche), ebauche)
-        self.link_ifnotprovided(self.system.path.join(rundir, 'METADATA.grib'), 'METADATA.grib')
-        for suffix in ['dbf', 'prj', 'qgs', 'qpj', 'shp', 'shx']:
-            shapefile = 'massifs_safran.{0:s}'.format(suffix)
-            self.link_ifnotprovided(self.system.path.join(rundir, shapefile), shapefile) 
-
         list_name = self.system.path.join(thisdir, self.kind + '.out')
         try:
             self.local_spawn(list_name)
