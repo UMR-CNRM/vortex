@@ -691,7 +691,7 @@ def global_snames(resource, provider):
         else:
             bname = 'allsop'
 
-    elif resource.realkind == 'forcing' and resource.model == 'ww3': 
+    elif resource.realkind == 'forcing' and resource.model == 'ww3':
         if resource.filling == 'wind':
             bname = 'wind_{:s}'.format(resource.date.hh)
 

@@ -172,25 +172,25 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
 
         # Geographical selection of the spectra
         for fname in [x.container.filename for x in inputspec]:
-            fout=io.open("output.tmp",'w')
-            with io.open(fname,'r') as fin:
+            fout = io.open("output.tmp", 'w')
+            with io.open(fname, 'r') as fin:
                 linestr = fin.readline()
                 while linestr:
-                    line=linestr.split()
-                    nbr=len(line)
-                    if ( nbr == 7):
-                        lat=float(line[1])
-                        lon=float(line[0])
+                    line = linestr.split()
+                    nbr = len(line)
+                    if (nbr == 7):
+                        lat = float(line[1])
+                        lon = float(line[0])
                     # case of longitude 0° in the domain
-                    if ( self.lonmin > self.lonmax ):
-                        if lat<self.latmax and lat>self.latmin and ( lon<self.lonmax or lon>self.lonmin ) :
+                    if (self.lonmin > self.lonmax):
+                        if lat < self.latmax and lat > self.latmin and (lon < self.lonmax or lon > self.lonmin):
                             fout.write(linestr)
                     else:
-                        if lat<self.latmax and lat>self.latmin and  lon<self.lonmax and lon>self.lonmin :
+                        if lat < self.latmax and lat > self.latmin and lon < self.lonmax and lon > self.lonmin:
                             fout.write(linestr)
-                    linestr=fin.readline()
+                    linestr = fin.readline()
             fout.close()
-            self.system.sh.mv("output.tmp",fname)
+            self.system.sh.mv("output.tmp", fname)
 
         with io.open('list_files', 'w') as flist:
             for fname in [x.container.filename for x in inputspec]:
@@ -367,7 +367,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             sh.softlink(sh.path.join(cwd, self.file_in), 'out_grd.ww3')
             # copy of namelist and constant files
             for preproc_file in self.preproc:
-                sh.cp(sh.path.join(cwd,preproc_file),preproc_file)
+                sh.cp(sh.path.join(cwd, preproc_file), preproc_file)
             dictkeyvalue = dict()
             dictkeyvalue["yyyymmdd"] = self.dateval.ymd
             dictkeyvalue["hhmmss"] = self.dateval.hm + '00'
@@ -508,7 +508,7 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
                                dict(file_in=[file_in, ],
                                     datpivot=[self.datpivot, ],
                                     dateval=[dateval, ],
-                                    header=[self.header,]))
+                                    header=[self.header, ]))
 
 
 class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
@@ -587,9 +587,9 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                     fic_prod = "ww3.{0:s}_{1:s}.grb".format(dom, self.dateval.ymdh)
                 else:
                     fic_prod = "ww3.{0:s}_{1:s}{2:04d}.grb".format(dom, self.datpivot.ymdh,
-                                                                     int(term / 3600))
-                logger.info("yoyo %s",fic_prod)
-                sh.cat('ww3.{0:s}*grb'.format(dom),output=sh.path.join(cwd,fic_prod))
+                               int(term / 3600))
+                logger.info("yoyo %s", fic_prod)
+                sh.cat('ww3.{0:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
                 output_files.add(fic_prod)
 
         # Deal with promised resources
