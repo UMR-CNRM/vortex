@@ -311,6 +311,10 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
                 info='Time between the beginning of the simulation and the run date',
                 type = Time,
             ),
+            preproc = dict(
+                info = 'List of constant files for bathymetry and grids',
+                type = footprints.FPList,
+            ),
         )
     )
 
@@ -322,6 +326,7 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
         dateval = section.rh.resource.date + section.rh.resource.term
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
+                                    preproc=[self.preproc, ],
                                     dateval=[dateval, ]))
 
 
@@ -337,6 +342,10 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             dateval = dict(
                 type    = Date,
             ),
+            preproc = dict(
+                info = 'List of constant files for bathymetry and grids',
+                type = footprints.FPList,
+            ),
         )
     )
 
@@ -350,10 +359,6 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             raise IOError("No or too much namelists for WW3_ounf")
         nam_file = namcandidate[0].rh.container.localpath()
         namcontents = namcandidate[0].rh.contents
-        constcandidate = self.context.sequence.effective_inputs(role=('ConstantData'),)
-        if len(constcandidate) != 1:
-            raise IOError("No or too much constant files for WW3_ounf")
-        consttar = constcandidate[0].rh.container.localpath()
 
         # Prepare the working directory
         cwd = sh.pwd()
@@ -361,9 +366,8 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
         with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
             sh.softlink(sh.path.join(cwd, self.file_in), 'out_grd.ww3')
             # copy of namelist and constant files
-            sh.cp(sh.path.join(cwd, consttar), consttar)
-            sh.smartuntar(consttar, sh.path.join(cwd, self.file_in + '.process.d'),
-                          uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+            for preproc_file in self.preproc:
+                sh.cp(sh.path.join(cwd,preproc_file),preproc_file)
             dictkeyvalue = dict()
             dictkeyvalue["yyyymmdd"] = self.dateval.ymd
             dictkeyvalue["hhmmss"] = self.dateval.hm + '00'
