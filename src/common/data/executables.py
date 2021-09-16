@@ -509,6 +509,15 @@ class MasterDiag(BlackBox):
         dict(
             info = 'MasterDiag abstract class utility for diagnostics computation',
             attr = dict(
+                gvar=dict(
+                    default='master_diag_[diagnostic]'
+                ),
+                diagnostic=dict(
+                    info="The type of diagnostic to be performed.",
+                    optional=True,
+                    values=['voisin', 'neighbour', 'aromepi', 'labo'],
+                    remap=dict(neighbour='voisin'),
+                ),
                 kind = dict(
                     values   = ['masterdiag', 'masterdiagpi'],
                     remap    = dict(masterdiagpi='masterdiag'),
@@ -526,19 +535,10 @@ class MasterDiagLabo(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle after the 46th."""
 
     _footprint = [
-        gvar,
         dict(
-            info = 'MasterDiag utility for diagnostics computation',
             attr = dict(
-                gvar = dict(
-                    default  = 'master_diag_[diagnostic]'
-                ),
                 diagnostic = dict(
-                    info     = "The type of diagnostic to be performed.",
-                    optional = True,
                     default  = 'labo',
-                    values   = ['voisin', 'neighbour', 'aromepi'],
-                    remap    = dict(neighbour='voisin'),
                 )
             ),
             only = dict(
@@ -556,20 +556,10 @@ class MasterDiagPi(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle before the 46th."""
 
     _footprint = [
-        arpifs_cycle,
-        gvar,
         dict(
-            info = 'MasterDiag utility for diagnostics computation',
             attr = dict(
-                gvar = dict(
-                    default  = 'master_diag_[diagnostic]'
-                ),
                 diagnostic = dict(
-                    info     = "The type of diagnostic to be performed.",
-                    optional = True,
                     default  = 'aromepi',
-                    values   = ['voisin', 'neighbour', 'aromepi'],
-                    remap    = dict(neighbour='voisin'),
                 )
             ),
             only=dict(
