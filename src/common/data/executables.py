@@ -9,7 +9,8 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 import vortex
 
 from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco, ArpIfsSimplifiedCycle
+from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
+from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []
@@ -520,6 +521,7 @@ class MasterDiag(BlackBox):
     def realkind(self):
         return 'masterdiag'
 
+
 class MasterDiagLabo(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle after the 46th."""
 
@@ -548,6 +550,7 @@ class MasterDiagLabo(MasterDiag):
     @property
     def realkind(self):
         return 'masterdiag'
+
 
 class MasterDiagPi(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle before the 46th."""
@@ -578,6 +581,7 @@ class MasterDiagPi(MasterDiag):
     @property
     def realkind(self):
         return 'masterdiag'
+
 
 class IOPoll(Script):
     """
