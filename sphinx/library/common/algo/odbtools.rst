@@ -49,6 +49,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: OdbReshuffle
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: FlagsCompute
    :show-inheritance:
    :members:

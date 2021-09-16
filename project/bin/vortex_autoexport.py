@@ -26,7 +26,7 @@ import tempfile
 import time
 import subprocess
 import traceback
-from six.moves.configparser import SafeConfigParser
+from six.moves.configparser import ConfigParser
 import pprint
 import socket
 import string
@@ -756,7 +756,7 @@ def main():
 
     # Load the configuration file and create the targets
     targets = dict()
-    cparser = SafeConfigParser()
+    cparser = ConfigParser()
     cparser.read(args.conf)
     for section in cparser.sections():
         if ((len(args.targets) == 0 and
