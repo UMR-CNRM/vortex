@@ -7,6 +7,7 @@ AlgoComponents dedicated to the coupling between NWP models.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import re
+import footprints
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
@@ -14,6 +15,7 @@ from bronx.stdtypes import date
 from common.algo.ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
 from vortex.algo.components import AlgoComponentError, BlindRun, Parallel
+from vortex.algo.components import AlgoComponentDecoMixin
 from vortex.layout.dataflow import intent
 
 from .forecasts import FullPos
@@ -221,28 +223,23 @@ class CouplingLAM(Coupling):
         opts = super(CouplingLAM, self).spawn_command_options()
         opts['model'] = 'aladin'
         return opts
-    
-    
-class Prep(BlindRun, DrHookDecoMixin):
-    """Coupling/Interpolation of Surfex files."""
 
-    _footprint = dict(
-        info = "Coupling/Interpolation of Surfex files.",
-        attr = dict(
-            kind = dict(
-                values   = ['prep'],
-            ),
-            underlyingformat = dict(
-                values   = ['fa', 'lfi'],
-                optional = True,
-                default  = 'fa'
+
+class PrepDicoMixin(AlgoComponentDecoMixin):
+    """Allow addon checking and format manipulation for both
+    Parallel and non Parallel Coupling/Interpolation of Surfex files.
+    """
+
+    _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
+        info="underlying format used in Prep and Prepd classes",
+        attr=dict(
+            underlyingformat=dict(
+                values=['fa', 'lfi'],
+                optional=True,
+                default='fa'
             )
         )
-    )
-
-    def __init__(self, *kargs, **kwargs):
-        super(Prep, self).__init__(*kargs, **kwargs)
-        self._addon_checked = None
+    ),)
 
     def _check_addons(self):
         if self._addon_checked is None:
@@ -269,6 +266,23 @@ class Prep(BlindRun, DrHookDecoMixin):
             if not self.system.path.exists(output_name):
                 logger.info("Linking %s to %s", localpath, output_name)
                 self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
+
+    
+class Prep(BlindRun, DrHookDecoMixin, PrepDicoMixin):
+    """Coupling/Interpolation of Surfex files."""
+
+    _footprint = dict(
+        info = "Coupling/Interpolation of Surfex files.",
+        attr = dict(
+            kind = dict(
+                values   = ['prep'],
+            )
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(Prep, self).__init__(*kargs, **kwargs)
+        self._addon_checked = None
 
     def _process_outputs(self, binrh, section, output_clim, output_name):
         (radical, outfmt) = (self.system.path.splitext(section.rh.container.localpath())[0],
@@ -359,7 +373,7 @@ class Prep(BlindRun, DrHookDecoMixin):
             sh.rmall('PREP1.*')
 
 
-class Prepd(Parallel):
+class Prepd(Parallel, PrepDicoMixin):
     """Coupling/Interpolation of Surfex files. Manage date."""
 
     _footprint = dict(
@@ -368,48 +382,16 @@ class Prepd(Parallel):
             kind = dict(
                 values   = ['prepd'],
             ),
-            underlyingformat = dict(
-                values   = ['fa', 'lfi'],
-                optional = True,
-                default  = 'fa'
-            ),
             basedate = dict(
                 type     = date.Date,
                 optional = True
-            ),
+            )
         )
     )
 
     def __init__(self, *kargs, **kwargs):
         super(Prepd, self).__init__(*kargs, **kwargs)
         self._addon_checked = None
-
-    def _check_addons(self):
-        if self._addon_checked is None:
-            self._addon_checked = ('sfx' in self.system.loaded_addons() and
-                                   'lfi' in self.system.loaded_addons())
-        if not self._addon_checked:
-            raise RuntimeError("The sfx addon is needed... please load it.")
-
-    def _do_input_format_change(self, section, output_name):
-        (localpath, infmt) = (section.rh.container.localpath(),
-                              section.rh.container.actualfmt)
-        self.system.subtitle("Processing inputs")
-        if section.rh.container.actualfmt != self.underlyingformat:
-            if infmt == 'fa' and self.underlyingformat == 'lfi':
-                if self.system.path.exists(output_name):
-                    raise IOError("The %s file already exists.", output_name)
-                self._check_addons()
-                logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
-                self.system.sfx_fa2lfi(localpath, output_name)
-            else:
-                raise RuntimeError("Format conversion from %s to %s is not possible",
-                                   infmt, self.underlyingformat)
-        else:
-            if not self.system.path.exists(output_name):
-                logger.info("Linking %s to %s", localpath, output_name)
-                self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
-
 
     def _set_nam_macro(self, namcontents, namlocal, macro, value):
         """Set a namelist macro and log it!"""
