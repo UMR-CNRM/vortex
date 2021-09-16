@@ -236,7 +236,7 @@ class SendMail(Action):
             charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
 
 
-class Report(Action):
+class Report(TunableAction):
     """
     Class responsible for sending reports.
     """
