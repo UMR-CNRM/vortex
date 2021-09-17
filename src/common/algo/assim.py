@@ -489,37 +489,35 @@ class IceNetCDF2Ascii(BlindRun):
 
 
 class ForceAtmo(BlindRun):
-      """ correct Forcing """
-      _footprint = dict(
-          info = 'Forcing Atmo',
-          attr = dict(
-              kind = dict(
-                  values = ['forcing_atmo'],
-              ),
-              basedate=dict(
-                  info="The run date of the coupling generating process",
-                  type=date.Date,
-                  optional=True
-              ),
-          )
-      )
+    """correct Forcing"""
+    footprint = dict(
+        info='Forcing Atmo',
+        attr=dict(
+            kind=dict(
+                values=['forcing_atmo'],
+            ),
+            basedate=dict(
+                info="The run date of the coupling generating process",
+                type=date.Date,
+                optional=True
+            ),
+        )
+    )
 
-      def _set_nam_macro(self, namcontents, namlocal, macro, value):
-          """Set a namelist macro and log it!"""
-          namcontents.setmacro(macro, value)
-          logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
+    def _set_nam_macro(self, namcontents, namlocal, macro, value):
+        """Set a namelist macro and log it!"""
+        namcontents.setmacro(macro, value)
+        logger.info('Setup macro %s=%s in %s', macro, str(value), namlocal)
 
-      def prepare(self, rh, opts):
-          """Default pre-link for namelist file and domain change."""
-          super(ForceAtmo, self).prepare(rh, opts)
-          namrh = self.context.sequence.effective_inputs(kind=('namelist'))
-          namrh = namrh[0].rh
-          namcontents = namrh.contents
-          namlocal = namrh.container.actualpath()
-          self._set_nam_macro(namcontents, namlocal, 'YYYY', int(self.basedate.year))
-          self._set_nam_macro(namcontents, namlocal, 'MM', int(self.basedate.month))
-          self._set_nam_macro(namcontents, namlocal, 'DD', int(self.basedate.day))
-          namrh.save()
-          namrh.container.cat()
-
-
+    def prepare(self, rh, opts):
+        """Default pre-link for namelist file and domain change."""
+        super(ForceAtmo, self).prepare(rh, opts)
+        namrh = self.context.sequence.effective_inputs(kind=('namelist'))
+        namrh = namrh[0].rh
+        namcontents = namrh.contents
+        namlocal = namrh.container.actualpath()
+        self._set_nam_macro(namcontents, namlocal, 'YYYY', int(self.basedate.year))
+        self._set_nam_macro(namcontents, namlocal, 'MM', int(self.basedate.month))
+        self._set_nam_macro(namcontents, namlocal, 'DD', int(self.basedate.day))
+        namrh.save()
+        namrh.container.cat()

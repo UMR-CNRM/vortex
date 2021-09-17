@@ -970,7 +970,7 @@ class Surfexoff(BlackBox):
 
 
 class ScriptDataCor(Script):
-    """Class to deal with correction script. """
+    """Class to deal with correction script."""
     _footprint = [
         gvar,
         dict(
@@ -980,7 +980,7 @@ class ScriptDataCor(Script):
                     values = ['script_cor']
                 ),
                 gvar=dict(
-                    values=['scr_forcing_cor','scr_crop_out'],
+                    values=['scr_forcing_cor', 'scr_crop_out'],
                 ),
             )
         )
@@ -989,4 +989,3 @@ class ScriptDataCor(Script):
     @property
     def realkind(self):
         return 'script_cor'
-

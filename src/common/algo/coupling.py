@@ -267,7 +267,7 @@ class PrepDicoMixin(AlgoComponentDecoMixin):
                 logger.info("Linking %s to %s", localpath, output_name)
                 self.system.cp(localpath, output_name, intent=intent.IN, fmt=infmt)
 
-    
+
 class Prep(BlindRun, DrHookDecoMixin, PrepDicoMixin):
     """Coupling/Interpolation of Surfex files."""
 
@@ -417,7 +417,7 @@ class Prepd(Parallel, PrepDicoMixin):
         """Loop on the various initial conditions provided."""
         if opts.get('fortran', True):
             self.export('fortran')
-        logger.info ("Start Prepd.execute ...")
+        logger.info("Start Prepd.execute ...")
         sh = self.system
         cplsec = self.context.sequence.effective_inputs(role=('InitialCondition'), kind=('historic'))
         infile = 'LFI_SURF.{:s}'.format(self.underlyingformat)
