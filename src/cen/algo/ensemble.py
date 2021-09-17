@@ -39,7 +39,7 @@ with echecker:
 class _S2MWorker(VortexWorkerBlindRun):
     """
     This abstract  worker is designed to run one execution of any S2M task without MPI parallelization
-    (deterministic or ensemble-like simulations) in association with an Algo Component inheriting from an 
+    (deterministic or ensemble-like simulations) in association with an Algo Component inheriting from an
     'S2MComponent' or 'Guess' Algo Component.
     A single worker is thus a deterministic execution of a given binary with a specific environment that can be run in
     parallel with other workers (executions of the same binary with different environments).
@@ -1378,7 +1378,7 @@ class S2MComponent(ParaBlindRun):
 
         Each member is associated to a specific input resource (see method 'get_subdirs') which is also
         a VORTEX Resource object. This method uses the optional 'source_conf' footprint of this object to determine
-        the essential member(s) (with source_conf='4dvarfr' whereas for standard PEARP members, source_conf='pearp' 
+        the essential member(s) (with source_conf='4dvarfr' whereas for standard PEARP members, source_conf='pearp'
         in the case of the PEARP-S2M operational chain).
 
         This method returns a list of boolean with an order matching the one of the different members and where a
