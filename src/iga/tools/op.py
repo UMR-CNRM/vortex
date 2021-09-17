@@ -426,7 +426,7 @@ def defer_route(t, rh, jeeves_opts, route_opts):
 
 def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
                          routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
-                         header_infile=True, deferred=True, filtername=None, **kw):
+                         header_infile=True, deferred=True, filtername=None, selkeyfiltername=None, **kw):
     """Hook functions factory to route files while the execution is running.
 
     :param str kind: kind use to route
@@ -467,9 +467,17 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
         if filteractive(rh, optfilter):
             if deferred:
                 logger.info('asking jeeves to route handler ' + str(rh))
-                jeeves_opts = dict(
-                    filtername=filtername,
-                )
+                if selkeyfiltername:
+                    if isinstance(filtername, dict):
+                        jeeves_opts = dict(
+                            filtername=filtername[get_resource_value(rh, selkeyfiltername)],
+                        )
+                        logger.info('filtername key : %s ', get_resource_value(rh, selkeyfiltername))
+                    else:
+                        jeeves_opts = dict(
+                            filtername=filtername,
+                        )
+                        logger.warning('filtername is not a dict : %s', filtername)
                 defer_route(t, rh, jeeves_opts, kwargs)
             else:
                 logger.info('routing handler ' + str(rh))
