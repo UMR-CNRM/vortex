@@ -461,7 +461,7 @@ class RoutingService(Service):
     def aammjj(self):
         """Date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)."""
         envkey = 'DMT_DATE_PIVOT'
-        default = date.now().compact(),
+        default = date.now().compact()
         stamp = self.env.get(envkey, default)
         return stamp[:8]
 
