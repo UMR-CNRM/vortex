@@ -35,8 +35,8 @@ if six.PY2 or (sys.version_info.major == 3 and sys.version_info.major < 8):
             try:
                 cache = instance.__dict__
             except AttributeError:  # not all objects have __dict__ (e.g. class defines slots)
-                raise TypeError("No '__dict__' attribute on {!r} instance to cache {!r} property.",
-                                type(instance).__name__, self.__name__)
+                raise TypeError("No '__dict__' attribute on {!r} instance to cache {!r} property.".format(
+                                type(instance).__name__, self.__name__))
             val = cache.get('_autocache_' + self.__name__, _NOT_FOUND)
             if val is _NOT_FOUND:
                 with self.lock:

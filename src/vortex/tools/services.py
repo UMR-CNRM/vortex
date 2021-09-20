@@ -511,7 +511,7 @@ class JeevesService(Service):
             jr = bertie.ask(**fulltalk)
             return jr.todo, jr.last
         else:
-            logger.error('No valid path to jeeves <{!s}>'.format(self.jpath))
+            logger.error('No valid path to jeeves <%s>', self.jpath)
             return None
 
 
@@ -816,7 +816,7 @@ class TemplatedMailService(MailService):
             try:
                 tpl = load_template(self.ticket, tplfile, encoding=self.inputs_charset)
             except ValueError as exc:
-                logger.error('{}'.format(exc.message))
+                logger.error('%s', exc.message)
                 return None
         message = self.substitute(tpl, tpldict)
         return self.header() + message + self.trailer()

@@ -271,7 +271,7 @@ class OpPhase(TunableAction):
                 todo='cp',
             )
         else:
-            raise ValueError('Phase: unknown protocol %s.', protocol)
+            raise ValueError('Phase: unknown protocol {!s}.'.format(protocol))
 
         # common part (create the hidden copy when config problems are over)
         fmt = rh.container.actualfmt

@@ -90,7 +90,7 @@ class LogFacility(int):
             try:
                 value = SysLogHandler.facility_names[value]
             except KeyError:
-                logger.error('Could not get a SysLog value for name ' + value)
+                logger.error('Could not get a SysLog value for name %s', value)
                 raise
         if value not in SysLogHandler.facility_names.values():
             raise ValueError('Not a SysLog facility value: {!s}'.format(value))
@@ -262,7 +262,7 @@ class AlarmProxyService(AlarmService):
             sshobj = self.sh.ssh(hostname=self.sshhost)
         rc = sshobj.execute(command)
         if not rc:
-            logger.warning('Remote execution failed: ' + command)
+            logger.warning('Remote execution failed: %s', command)
         return rc
 
 
@@ -502,20 +502,20 @@ class RoutingService(Service):
 
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
-                logger.info('direct spawn: ' + cmdline)
+                logger.info('direct spawn: %s', cmdline)
                 if self.dryrun:
                     rc = True
                 else:
                     rc = self.sh.spawn(cmdline, shell=True, output=True)
             else:
-                logger.info('ssh on agt node:' + cmdline)
+                logger.info('ssh on agt node: %s', cmdline)
                 if self.dryrun:
                     rc = True
                 else:
                     sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
                     rc = sshobj.execute(cmdline)
         else:
-            logger.info('ssh on node ' + self.sshhost + ': ' + cmdline)
+            logger.info('ssh on node %s: %s', self.sshhost, cmdline)
             if self.dryrun:
                 rc = True
             else:
@@ -523,9 +523,9 @@ class RoutingService(Service):
                 rc = sshobj.execute(cmdline)
         if self.dryrun:
             logger.info('dryrun mode - the routing command WAS NOT executed:')
-            logger.info('\t' + cmdline)
+            logger.info('\t%s', cmdline)
         else:
-            logger.info('rc: ' + str(rc))
+            logger.info('rc: %s', rc)
 
         if self._actual_targetname:
             self.sh.remove(self._actual_targetname)

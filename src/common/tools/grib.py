@@ -177,7 +177,7 @@ class GRIBFilter(_GenericFilter):
         """
 
         if not self._sh.path.exists(gribfile):
-            raise IOError("%s doesn't exists", gribfile)
+            raise IOError("{!s} doesn't exist".format(gribfile))
 
         # We just want to concatenate files...
         if not self._filters:
