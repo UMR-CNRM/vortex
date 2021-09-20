@@ -246,7 +246,7 @@ class AlarmProxyService(AlarmService):
         record. Get this string and transmit it to the remote unix command.
         """
         if self.deactivated():
-            return
+            return True
 
         # get the formatted message from the logger
         message = self.memory_message()
@@ -470,8 +470,7 @@ class RoutingService(Service):
         if self.targetname is not None:
             return self.sh.path.join(self.sh.path.dirname(self._actual_filename),
                                      self.targetname)
-        else:
-            return None
+        return None
 
     @property
     def routing_name(self):
@@ -488,6 +487,7 @@ class RoutingService(Service):
         return True
 
     def _immediate_processing(self):
+        """Execution in immediate mode: do it now."""
 
         logger.debug('immediate route - fp = %s', self.footprint_export())
 
@@ -549,6 +549,7 @@ class RoutingService(Service):
         return True
 
     def _deferred_processing(self):
+        """Execution in deferred mode: ask jeeves to do it."""
 
         # get a service able to create the hidden copy
         fmt = self.filefmt
@@ -849,8 +850,7 @@ class TransmetService(BdpeService):
         """Actual service execution."""
         if self.routing_name:
             return super(TransmetService, self).__call__()
-        else:
-            return False
+        return False
 
 
 class DayfileReportService(FileReportService):
@@ -1036,11 +1036,12 @@ class SMSOpService(SMS):
             self.logdate(varname='date_end', status='aborted', comment=rc)
         else:
             self.logdate(varname='date_end', status='complete', comment=rc)
+
         if rc in (0, 98, 99):
             return True
-        else:
-            self.abort()
-            return False
+
+        self.abort()
+        return False
 
 
 class EcFlowOpService(EcFlow):
@@ -1078,9 +1079,9 @@ class EcFlowOpService(EcFlow):
             self.logdate(varname='date_end', status='complete', comment=rc)
         if rc in (0, 98, 99):
             return True
-        else:
-            self.abort()
-            return False
+
+        self.abort()
+        return False
 
 
 class DMTEventService(Service):

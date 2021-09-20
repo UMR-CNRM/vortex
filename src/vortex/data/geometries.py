@@ -308,7 +308,7 @@ class HorizontalGeometry(Geometry):
     @property
     def coordinates(self):
         if any([getattr(self, x) is None for x in ('lonmin', 'latmin', 'nlat', 'nlon', 'resolution')]):
-            return
+            return dict()
         coordinates = dict(lonmin=self.lonmin, latmin=self.latmin)
         coordinates['latmax'] = self.latmin + self.resolution * (self.nlat - 1)
         coordinates['lonmax'] = self.lonmin + self.resolution * (self.nlon - 1)

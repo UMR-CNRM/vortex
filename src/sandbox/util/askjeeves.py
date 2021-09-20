@@ -54,7 +54,6 @@ def test_bar(pnum, ask, config, logger, **kw):
         - stamp : write a timestamp to a file
 
     """
-    import os
     try:
         profile = config['driver'].get('profile', None)
     except (AttributeError, TypeError):
@@ -129,14 +128,11 @@ def test_vortex(pnum, ask, config, logger, **kw):
     return pnum, vwork.rc, None
 
 
-def test_direct_call_to_a_jeeves_callback(cb_function):
+def directly_call_jeeves_callback(cb_function):
     """Run a jeeves async callback as if it was called by jeeves, but from the main process.
 
     This may be run interactively in a debugger.
     """
-    import os
-    from jeeves import pools
-    from jeeves import talking
 
     # common part
     logger = talking.FancyArgsLoggerAdapter(b_loggers.getLogger(__name__), dict())
@@ -183,7 +179,7 @@ def execute_a_json_askfile(jsonfile):
                 v = literal_eval(v)
             except (SyntaxError, ValueError):
                 if k.startswith('options') or ',' in v:
-                    v = [x for x in v.replace('\n', '').replace(' ', '').split(',')]
+                    v = v.replace('\n', '').replace(' ', '').split(',')
             config[section][k.lower()] = v
 
     # what do we have to do (jeeves.butlers.Jeeves.process_request())
@@ -221,7 +217,7 @@ def execute_a_json_askfile(jsonfile):
 if __name__ == '__main__':
     print('current working directory:', os.getcwd())
 
-    # test_direct_call_to_a_jeeves_callback(cb_function=test_vortex)
+    # directly_call_jeeves_callback(cb_function=test_vortex)
 
     json_concat = "ask.20210827192526.221655.P006488.pascal.vortex.json"
     json_synopsis = "ask.20210827192526.248749.P006488.pascal.vortex.json"

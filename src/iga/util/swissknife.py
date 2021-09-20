@@ -97,9 +97,11 @@ class MonthlyItem(object):
         self.fmt = loopdict['before'] + '{:0' + str(width) + 'd}' + loopdict['after']
 
     def is_monthly(self, value):
+        """Tell wheteher value corresponds to a loop generated set."""
         return self.regex.match(value)
 
     def names(self, value):
+        """Generator for the loop generated set corresponding to this value."""
         for num in range(self.start, self.stop + 1):
             yield value + self.fmt.format(num)
 

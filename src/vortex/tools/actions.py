@@ -216,12 +216,14 @@ class TunableAction(Action):
         """Shortcut to access the configuration overridden by the tuning."""
         if key in self._tuning:
             return self._tuning[key]
-        elif self._conf_section is not None:
+
+        if self._conf_section is not None:
             return self._shtarget.getx(key=self._conf_section + ':' + key, *args, **kw)
-        elif 'default' in kw:
+
+        if 'default' in kw:
             return kw['default']
-        else:
-            raise KeyError('The "{:s}" entry was not found in any configuration'.format(key))
+
+        raise KeyError('The "{:s}" entry was not found in any configuration'.format(key))
 
 
 class SendMail(Action):
@@ -313,8 +315,8 @@ class FlowSchedulerGateway(Action):
         """
         if service is None:
             raise ValueError('The service name must be provided')
-        super(FlowSchedulerGateway, self).__init__(kind=kind, active=active,
-                                                   service=service, permanent=permanent)
+        super(FlowSchedulerGateway, self).__init__(
+            kind=kind, active=active, service=service, permanent=permanent)
 
     def gateway(self, *args, **kw):
         """Ask the Scheduler to run any (but known) command."""
@@ -402,7 +404,7 @@ class Dispatcher(bronx.stdtypes.catalog.Catalog):
     @property
     def actions(self):
         """A set of kind names of actual actions registered in that Dispatcher."""
-        return set([x.kind for x in self.items()])
+        return {x.kind for x in self.items()}
 
     def candidates(self, kind):
         """Return a selection of the dispatcher's items with the specified ``kind``."""

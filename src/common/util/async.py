@@ -182,7 +182,7 @@ if __name__ == '__main__':
     import vortex
 
     t = vortex.ticket()
-    sh = t.sh
-    sh.trace = True
-    sh.verbose = True
-    print(_double_ssh(sh, 'beaufixoper', 'beaufixtransfert-agt'))
+    main_sh = t.sh
+    main_sh.trace = True
+    main_sh.verbose = True
+    print(_double_ssh(main_sh, 'beaufixoper', 'beaufixtransfert-agt'))

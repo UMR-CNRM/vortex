@@ -19,4 +19,4 @@ Functions
 .. autofunction:: test_foo
 .. autofunction:: test_bar
 .. autofunction:: test_vortex
-.. autofunction:: test_direct_call_to_a_jeeves_callback
+.. autofunction:: directly_call_jeeves_callback
