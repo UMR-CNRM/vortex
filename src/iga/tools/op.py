@@ -359,52 +359,70 @@ def get_resource_value(rsrc, key):
         return kw[key](rsrc)
     except AttributeError as e:
         logger.error(e)
+    return None
 
 
-def filteractive(r, dic):
+def filteractive(rsrc, dic):
     """This function returns the filter status."""
     filter_active = True
     if dic is not None:
-        for k, w in six.iteritems(dic):
-            if not get_resource_value(r, k) in w:
-                logger.info('filter not active : {} = {} actual value : {}'.
-                            format(k, w, get_resource_value(r, k)))
+        for key, ok_values in six.iteritems(dic):
+            if not get_resource_value(rsrc, key) in ok_values:
+                logger.info('filter not active: key %s has value %s, accepted values: %s',
+                            key, get_resource_value(rsrc, key), ok_values)
                 filter_active = False
     return filter_active
 
 
 def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
-                         routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
-                         header_infile=True, deferred=True, filtername=None, **kw):
+                         routingkey=None, selkeyproductid=None,
+                         targetname=None, transmet=None, header_infile=True,
+                         filtername=None, selkeyfiltername=None,
+                         deferred=True, **kw):
     """Hook functions factory to route files while the execution is running.
-
-    :param str kind: kind use to route
+    :param str kind: the kind of route to use ('bdap', 'bdpe'...)
     :param str or dict productid: (use selkeyproductid to define the dictionary key)
     :param str sshhost: transfertnode. Use None to avoid ssh from the agt node to itself.
-    :param dict optfilter: dictionary (used to allow routing)
-    :param str soprano_target: str (piccolo or piccolo-int)
+    :param dict optfilter: dictionary used to allow routing or not
+    :param str soprano_target: piccolo or piccolo-int
     :param str routingkey: the BD routing key
     :param str selkeyproductid: (example: area, term, fields ...)
     :param str targetname:
     :param dict transmet:
-    :param bool header_infile: use to add transmet header in routing file
+    :param bool header_infile: add transmet header in routing file
+    :param str or dict filtername: name of the grib filter to apply (or None)
+    .                             (use selkeyfiltername to use the dict/key approach)
+    :param str selkeyfiltername: the key to use in filtername when it is a dict
     :param bool deferred: don't route now, ask jeeves to filter if needed, then route
-    :param str filtername: name of the grib filter to be applied by the jeeves callback
     """
 
     def hook_route(t, rh):
-        kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
-                      filename=rh.container.abspath, filefmt=rh.container.actualfmt,
-                      soprano_target=soprano_target, routingkey=routingkey,
-                      targetname=targetname, transmet=transmet,
+        kwargs = dict(kind=kind, sshhost=sshhost, filename=rh.container.abspath,
+                      filefmt=rh.container.actualfmt, soprano_target=soprano_target,
+                      routingkey=routingkey, targetname=targetname, transmet=transmet,
                       header_infile=header_infile, defer=deferred, **kw)
 
+        real_productid = productid
         if selkeyproductid:
             if isinstance(productid, dict):
-                kwargs['productid'] = productid[get_resource_value(rh, selkeyproductid)]
-                logger.info('productid key : %s ', get_resource_value(rh, selkeyproductid))
+                key = get_resource_value(rh, selkeyproductid)
+                real_productid = productid[key]
+                logger.info('productid (key %s): %s', key, real_productid)
             else:
-                logger.warning('productid is not a dict : %s', productid)
+                logger.warning('productid is not a dict (selkey=%s ignored): %s',
+                               selkeyproductid, productid)
+        kwargs['productid'] = real_productid
+
+        real_filtername = filtername
+        if selkeyfiltername:
+            if isinstance(filtername, dict):
+                key = get_resource_value(rh, selkeyfiltername)
+                real_filtername = filtername[key]
+                logger.info('filtername (key %s): %s', key, real_filtername)
+            else:
+                logger.warning('filtername is not a dict (selkey=%s ignored): %s',
+                               selkeyfiltername, filtername)
+        kwargs['filtername'] = real_filtername
 
         if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
@@ -415,23 +433,24 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
 
         kwargs['rhandler_uri'] = rh.location()
 
-        if filtername is not None:
+        if real_filtername is not None:
             filters = [
                 request.rh.contents
                 for request in t.context.sequence.effective_inputs(
                     role='GRIBFilteringRequest',
                     kind='filtering_request', )
-                if request.rh.contents.data['filter_name'] == filtername
+                if request.rh.contents.data['filter_name'] == real_filtername
             ]
             if len(filters) == 1:
                 kwargs['filterdefinition'] = filters[0]
             else:
-                raise ValueError('filtername not found in the effective_inputs: %s', filtername)
+                raise ValueError('filtername not found in the effective_inputs: {!s}'
+                                 .format(real_filtername))
         else:
             kwargs['filterdefinition'] = None
 
         if filteractive(rh, optfilter):
-            logger.info('routing handler ' + str(rh))
+            logger.info('routing handler %s', rh)
             ad.route(**kwargs)
 
     return hook_route
