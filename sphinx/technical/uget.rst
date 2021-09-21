@@ -40,7 +40,7 @@ Avant la première utilisation
 
 * charger Genv/Gget (dans votre *profile*, si ce n'est pas déjà fait)::
 
-    export PATH=/home/mf/dp/marp/martinezs/public/bin:$PATH
+    export PATH=/home/mf/dp/marp/gco/public/bin:$PATH
 
 * charger Vortex (dans votre *profile*, si ce n'est pas déjà fait)::
 
@@ -389,7 +389,7 @@ Environnement
 
 * le Vortex préconisé sur Bull se trouve sous : ``/home/mf/dp/marp/verolive/vortex/vortex-olive``
 * ``uget.py`` se trouve sous: ``/home/mf/dp/marp/verolive/vortex/vortex-olive/bin/uget.py``
-* Genv/Gget se trouve sous: ``/home/mf/dp/marp/martinezs/public/bin/``
+* Genv/Gget se trouve sous: ``/home/mf/dp/marp/gco/public/bin``
 * le répertoire de travail uenv/uget est : ``$HOME/.vortexrc/hack/uget/$USER/``
 
     * ``env/`` : fichiers de conf (*i.e.* définition des "cycles" *uenv*)

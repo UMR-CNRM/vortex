@@ -110,7 +110,7 @@ class MonthlyHandler(object):
 
     The configuration is directly taken from the gget command::
 
-        ~martinezs/apps/gco_toolbox/default/conf/gget/extension.conf
+        ~gco/apps/gco_toolbox/default/conf/gget/extension.conf
 
     """
 
