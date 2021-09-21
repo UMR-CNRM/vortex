@@ -366,11 +366,6 @@ class RoutingService(Service):
                 optional = True,
                 default  = None
             ),
-            rhandler_export = dict(
-                info     = 'Representation of the resource handler that issued the request.',
-                type     = footprints.FPDict,
-                optional = True
-            ),
             rhandler_uri = dict(
                 info     = 'URI associated with the resource handler that issued the request.',
                 optional = True
