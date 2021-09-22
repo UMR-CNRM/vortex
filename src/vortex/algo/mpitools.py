@@ -805,7 +805,7 @@ class MpiTool(footprints.FootprintBase):
                              errors='replace') as sfh:
                     for (i, l) in enumerate(sfh):
                         if i == 0:
-                            self.system.subtitle('rank {:d}: stdout/err'.format(rank))
+                            self.system.highlight('rank {:d}: stdout/err'.format(rank))
                         print(l.rstrip('\n'))
                 self.system.remove(outf)
         if self.envelope and self.system.path.exists(self._envelope_wrapper_name):
@@ -827,7 +827,7 @@ class MpiTool(footprints.FootprintBase):
             ]
         else:
             logger.info('No loop option in current parallel execution.')
-        self.system.subtitle('Namelist candidates')
+        self.system.highlight('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
         return namcandidates

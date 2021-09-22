@@ -286,7 +286,7 @@ class _NWPIoServerMixin(object):
         if 'VORTEX_IOSERVER_PIOMODEL' in self.env:
             namio.pioprocr_MDL = self.env.VORTEX_IOSERVER_PIOMODEL
 
-        self.system.subtitle('Parallel io server namelist for {:s}'.format(namlocal))
+        self.system.highlight('Parallel io server namelist for {:s}'.format(namlocal))
         print(namio.dumps())
 
         return True
@@ -308,7 +308,7 @@ class _NWPIoServerMixin(object):
         ioserv_filelist = set()
         ioserv_prefixes = set()
         iofile_re = re.compile(r'((ICMSH|PF|GRIBPF).*\+\d+(?::\d+)?(?:\.sfx)?)(?:\..+)?$')
-        self.system.subtitle('Dealing with IO directories')
+        self.system.highlight('Dealing with IO directories')
         iodirs = self._nwp_ioserv_iodirs()
         if iodirs:
             logger.info('List of IO directories: %s', ','.join(iodirs))
