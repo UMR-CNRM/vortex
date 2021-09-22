@@ -478,6 +478,10 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
                             filtername=filtername,
                         )
                         logger.warning('filtername is not a dict : %s', filtername)
+                else:
+                    jeeves_opts = dict(
+                        filtername=filtername,
+                    )
                 defer_route(t, rh, jeeves_opts, kwargs)
             else:
                 logger.info('routing handler ' + str(rh))
