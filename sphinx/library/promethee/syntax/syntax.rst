@@ -8,8 +8,6 @@
 .. sectionauthor:: The Vortex Team
 .. versionadded:: 1.8.0
 
-.. autodata:: __all__
-
 
 Package
 -------
