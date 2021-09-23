@@ -150,7 +150,7 @@ class OpJobAssistantTest(JobAssistant):
 
         t.sh.highlight("Setting up the s2m path")
         # t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
-        t.env.setvar("SNOWTOOLS_CEN", t.env.get('OP_ROOTAPP','/home/ch/mxpt001/vortex') + '/snowtools')
+        t.env.setvar("SNOWTOOLS_CEN", t.env.get('OP_ROOTAPP', '/home/ch/mxpt001/vortex') + '/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)

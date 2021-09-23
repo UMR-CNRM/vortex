@@ -139,10 +139,7 @@ class OpPhase(TunableAction):
         """
 
         def isiterable(item):
-            return (
-                  isinstance(item, collections_abc.Iterable) and
-                  not isinstance(item, six.string_types)
-            )
+            return isinstance(item, collections_abc.Iterable) and not isinstance(item, six.string_types)
 
         def flatten(iterable):
             """Recursively flattens an iterable.

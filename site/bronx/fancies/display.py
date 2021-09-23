@@ -144,7 +144,7 @@ def join_list_in_proper_english(a_list, l_fmt='{!s}'):
     """Join a list using commas + a final 'and' word if needed.
 
     :param a_list: any iterable object to be concatenated
-    :param str a_fmt: The Python's format applied to each **a_list** item
+    :param str l_fmt: The Python's format applied to each **a_list** item
 
     :example: Ask something to someone...
 
@@ -179,8 +179,6 @@ def dict_as_str(adict, prefix=0, indent=3):
     :return str: the formatted string representation
 
     >>> d = dict(a=1, abracadabra=42, more=dict(b=2, babylou=69))
-    >>> dict_as_str(d, prefix=4, indent=2)
-    '    a          : 1\\n    abracadabra: 42\\n    more\\n      b      : 2\\n      babylou: 69\\n'
     >>> print(dict_as_str(d, prefix=4, indent=2), end='')
         a          : 1
         abracadabra: 42

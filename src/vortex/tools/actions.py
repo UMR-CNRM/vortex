@@ -152,7 +152,8 @@ class TunableAction(Action):
     def _shtarget(self):
         """Warning: this may be a `vortex.syntax.stdattrs.DelayedInit` object
         during Vortex initialization and may not have a `sections()` method
-        nor a `config` property."""
+        nor a `config` property.
+        """
         return sessions.current().sh.default_target
 
     @property
@@ -160,7 +161,8 @@ class TunableAction(Action):
         """Check and return the configuration: a section in the target-xxx.ini file.
 
         If the configuration is None, an attempt is made to use the Action's kind.
-        Don't use before Vortex initialization is done (see `_shtarget`)."""
+        Don't use before Vortex initialization is done (see `_shtarget`).
+        """
         if self._conf_dict is None:
             if self._conf_section is None:
                 if self.kind in self._shtarget.sections():
