@@ -19,4 +19,6 @@ Functions
 .. autofunction:: test_foo
 .. autofunction:: test_bar
 .. autofunction:: test_vortex
+.. autofunction:: execute_a_json_askfile
 .. autofunction:: directly_call_jeeves_callback
+

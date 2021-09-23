@@ -1095,7 +1095,7 @@ class OSExtended(System):
     def cdcontext(self, path, create=False, clean_onexit=False):
         """
         Returns a new :class:`CdContext` context manager initialised with the
-        **path** and **create** arguments.
+        **path**, **create** and **clean_onexit** arguments.
         """
         return CdContext(self, path, create, clean_onexit)
 
