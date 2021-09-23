@@ -501,7 +501,8 @@ class LopezMix(BlackBox):
 
 
 class MasterDiag(BlackBox):
-    """Abstract class fot a binary to compute a diagnostic with some gribs."""
+    """Abstract class for a binary to compute a diagnostic with some gribs."""
+
     _abstract = True
     _footprint = [
         arpifs_cycle,
@@ -509,19 +510,19 @@ class MasterDiag(BlackBox):
         dict(
             info = 'MasterDiag abstract class utility for diagnostics computation',
             attr = dict(
-                gvar=dict(
-                    default='master_diag_[diagnostic]'
-                ),
-                diagnostic=dict(
-                    info="The type of diagnostic to be performed.",
-                    optional=True,
-                    values=['voisin', 'neighbour', 'aromepi', 'labo'],
-                    remap=dict(neighbour='voisin'),
+                gvar = dict(
+                    default  = 'master_diag_[diagnostic]'
                 ),
                 kind = dict(
                     values   = ['masterdiag', 'masterdiagpi'],
                     remap    = dict(masterdiagpi='masterdiag'),
-                )
+                ),
+                diagnostic = dict(
+                    info     = "The type of diagnostic to be performed.",
+                    optional = True,
+                    values   = ['voisin', 'neighbour', 'aromepi', 'labo'],
+                    remap    = dict(neighbour='voisin'),
+                ),
             )
         )
     ]
@@ -534,43 +535,31 @@ class MasterDiag(BlackBox):
 class MasterDiagLabo(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle after the 46th."""
 
-    _footprint = [
-        dict(
-            attr = dict(
-                diagnostic = dict(
-                    default  = 'labo',
-                )
-            ),
-            only = dict(
-                after_cycle =ArpIfsSimplifiedCycle('cy46')
+    _footprint = dict(
+        attr = dict(
+            diagnostic = dict(
+                default  = 'labo',
             )
+        ),
+        only = dict(
+            after_cycle = ArpIfsSimplifiedCycle('cy46')
         )
-    ]
-
-    @property
-    def realkind(self):
-        return 'masterdiag'
+    )
 
 
 class MasterDiagPi(MasterDiag):
     """binary to compute a diagnostic with some gribs for cycle before the 46th."""
 
-    _footprint = [
-        dict(
-            attr = dict(
-                diagnostic = dict(
-                    default  = 'aromepi',
-                )
-            ),
-            only=dict(
-                before_cycle=ArpIfsSimplifiedCycle('cy46')
+    _footprint = dict(
+        attr = dict(
+            diagnostic = dict(
+                default  = 'aromepi',
             )
+        ),
+        only=dict(
+            before_cycle = ArpIfsSimplifiedCycle('cy46')
         )
-    ]
-
-    @property
-    def realkind(self):
-        return 'masterdiag'
+    )
 
 
 class IOPoll(Script):
