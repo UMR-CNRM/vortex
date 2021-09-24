@@ -364,7 +364,7 @@ class NormsComparison(object):
     Handling of the differences between two Norm objects.
     """
 
-    def __init__(self, test_norm, ref_norm, only=None):
+    def __init__(self, test_norm, ref_norm, only=None, hide_equal_norms=False):
         """
 
         **test_norm** and **ref_norm** supposed to be of type Norm.
@@ -378,6 +378,7 @@ class NormsComparison(object):
         self.test_norm = test_norm
         self.ref_norm = ref_norm
         self.only = only
+        self.hide_equal_norms = hide_equal_norms
 
         self._compare()
 
@@ -385,7 +386,8 @@ class NormsComparison(object):
         """Compute comparisons."""
         self.sp_comp, self.gp_comp = compare_norms(self.test_norm,
                                                    self.ref_norm,
-                                                   self.only)
+                                                   self.only,
+                                                   self.hide_equal_norms)
 
     def get_worst(self, ntype='both'):
         """
@@ -429,6 +431,7 @@ def compare_normsets(test, ref, mode,
                      which='first_and_last_spectral',
                      out=sys.stdout,
                      onlymaxdiff=False,
+                     hide_equal_norms=False,
                      plot_out='norms_diff.png'):
     """
     Compare 2 Normset objects.
@@ -479,11 +482,15 @@ def compare_normsets(test, ref, mode,
         normsout = collections.OrderedDict()
     for i in steps:
         norm_comp = NormsComparison(test[i],
-                                    ref[i])
+                                    ref[i],
+                                    hide_equal_norms=hide_equal_norms)
         if mode == 'text':
-            out.write(test.norms_at_each_step[i].format_step() + '\n')
-            norm_comp.write(out, onlymaxdiff)
-            out.write('-' * 80 + '\n')
+            if hide_equal_norms and norm_comp.get_worst() == 0:
+                continue
+            else:
+                out.write(test.norms_at_each_step[i].format_step() + '\n')
+                norm_comp.write(out, onlymaxdiff)
+                out.write('-' * 80 + '\n')
         elif 'get_worst' in mode:
             assert onlymaxdiff is True
             worstdigits.append(norm_comp.get_worst('both'))
@@ -542,7 +549,7 @@ def compare_normsets(test, ref, mode,
         return None
 
 
-def compare_norms(test_norm, ref_norm, only=None):
+def compare_norms(test_norm, ref_norm, only=None, hide_equal_norms=False):
     """Compare norms of two Norms objects.
 
     If **only** among ('spectral', 'gridpoint'), only compare the requested
@@ -555,18 +562,26 @@ def compare_norms(test_norm, ref_norm, only=None):
         common_flds = set(test_norm.spnorms.keys()).intersection(set(ref_norm.spnorms.keys()))
         for f in sorted(common_flds):
             try:
-                comp_spnorms[f] = _compare_spnorm_for(f, test_norm, ref_norm)
+                comp = _compare_spnorm_for(f, test_norm, ref_norm)
             except ParsingError:
-                comp_spnorms[f] = PARSING_ERROR_CODE
+                comp = PARSING_ERROR_CODE
+            if hide_equal_norms and comp == 0:
+                pass
+            else:
+                comp_spnorms[f] = comp
 
     if only != 'spectral':
         # gpnorms
         common_flds = set(test_norm.gpnorms.keys()).intersection(set(ref_norm.gpnorms.keys()))
         for f in sorted(common_flds):
             try:
-                comp_gpnorms[f] = _compare_gpnorm_for(f, test_norm, ref_norm)
+                comp = _compare_gpnorm_for(f, test_norm, ref_norm)
             except ParsingError:
-                comp_gpnorms[f] = PARSING_ERROR_CODE
+                comp = PARSING_ERROR_CODE
+            if hide_equal_norms and comp == 0:
+                pass
+            else:
+                comp_gpnorms[f] = comp
 
     return (comp_spnorms, comp_gpnorms)
 

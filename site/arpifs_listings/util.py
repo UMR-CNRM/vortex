@@ -183,6 +183,8 @@ def get_worst(a_list):
     """
     if FOUND_NAN_ERROR_CODE in a_list:
         worst = FOUND_NAN_ERROR_CODE
+    elif len(a_list) == 0:
+        worst = 0
     else:
         worst = max(a_list)
     return worst
