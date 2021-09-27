@@ -46,11 +46,10 @@ _ExportXML
 # Mr Developer
 .mr.developer.cfg
 
-# Eclipse/PyCharm unwanted files
+# Eclipse unwanted files
 .settings
 .project
 .pydevproject
-.idea
 
 # Pycharm unwanted files
 .idea
