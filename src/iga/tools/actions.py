@@ -63,7 +63,7 @@ class OpMail(TemplatedMail):
 
     def __init__(self, kind='opmail', service='opmail', active=False,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(configuration=None, kind=kind, active=active, service=service,
+        super(OpMail, self).__init__(kind=kind, active=active, service=service,
                                      catalog=catalog, inputs_charset=inputs_charset)
         self.directory = directory or Directory('@{:s}-address-book.ini'.format(kind),
                                                 encoding=inputs_charset)
