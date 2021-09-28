@@ -1,60 +1,59 @@
-:mod:`common.algo.odbtools` --- Algo components for observations processing
-===========================================================================
+:mod:`jeeves.talking` --- Everything related to log recording
+=============================================================
 
-.. automodule:: common.algo.odbtools
-   :synopsis: Algo components for observations processing
+.. automodule:: jeeves.talking
+   :synopsis: Everything related to log recording
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team
-.. versionadded:: 0.9
-
-Package
--------
+.. versionadded:: 1.8.2
 
 .. autodata:: __all__
 
-Exceptions
-----------
-
-.. autoclass:: Raw2OdbExecutionError
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
 
 Classes
 -------
 
-.. autoclass:: Raw2ODBparallel
+.. autoclass:: AbstractLogFacility
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Bateur
+.. autoclass:: LoggingBasedLogFacility
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: OdbAverage
+.. autoclass:: LegacyLogfacility
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: OdbCompress
+
+Utility Classes
+---------------
+
+.. autoclass:: ShortenProcessName
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: OdbMatchup
+.. autoclass:: IdFilter
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: OdbReshuffle
+.. autoclass:: FancyArgsLoggerAdapter
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: FlagsCompute
+.. autoclass:: GentleTalk
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: GentleTalkMono
    :show-inheritance:
    :members:
    :member-order: alphabetical

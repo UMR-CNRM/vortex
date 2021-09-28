@@ -5,10 +5,15 @@ from __future__ import print_function, absolute_import, unicode_literals, divisi
 import tempfile
 from unittest import TestCase, main
 
+from bronx.fancies import loggers
+
 import vortex
 from vortex import sessions
 
+tloglevel = 'critical'
 
+
+@loggers.unittestGlobalLevel(tloglevel)
 class UtSession(TestCase):
 
     @staticmethod
@@ -21,8 +26,6 @@ class UtSession(TestCase):
 
     def setUp(self):
         self.rootsession = sessions.current()
-        self.oldlog = self.rootsession.loglevel
-        self.rootsession.critical()  # Decrease loglevel
         self.sh = self.rootsession.system()
         self.tmpdir = self.sh.path.realpath(tempfile.mkdtemp(prefix='test_sessions_stuff_'))
         self.sh.cd(self.sh.path.dirname(self.tmpdir))
@@ -32,7 +35,6 @@ class UtSession(TestCase):
         self.tag1 = self._givetag(self.tag0)
 
     def tearDown(self):
-        self.rootsession.setloglevel(self.oldlog)
         self.rootsession.activate()
         self.sh.cd(self.oldpwd)
         self.sh.remove(self.tmpdir)

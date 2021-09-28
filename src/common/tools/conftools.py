@@ -16,6 +16,7 @@ import functools
 import math
 import re
 
+from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Date, Time, Period, Month, timeintrangex
 from bronx.syntax.decorators import secure_getattr
@@ -936,15 +937,20 @@ class ArpIfsForecastTermConfTool(ConfTool):
         super(ArpIfsForecastTermConfTool, self).__init__(*kargs, **kwargs)
         self._x_fcterm = self._check_data_keys_and_times(self.fcterm_def, 'fcterm_def',
                                                          cast=self._cast_unique_value)
-        self._x_hist_terms = self._check_data_keys_and_times(self.hist_terms_def, 'hist_terms_def')
-        self._x_surf_terms = self._check_data_keys_and_times(self.surf_terms_def, 'surf_terms_def')
-        self._x_norm_terms = self._check_data_keys_and_times(self.norm_terms_def, 'norm_terms_def')
-        self._x_diag_fp_terms = self._check_data_keys_and_times(self.diag_fp_terms_def, 'diag_fp_terms_def')
+        self._x_hist_terms = self._check_data_keys_and_times(self.hist_terms_def, 'hist_terms_def',
+                                                             cast=self._cast_timerangex)
+        self._x_surf_terms = self._check_data_keys_and_times(self.surf_terms_def, 'surf_terms_def',
+                                                             cast=self._cast_timerangex)
+        self._x_norm_terms = self._check_data_keys_and_times(self.norm_terms_def, 'norm_terms_def',
+                                                             cast=self._cast_timerangex)
+        self._x_diag_fp_terms = self._check_data_keys_and_times(self.diag_fp_terms_def, 'diag_fp_terms_def',
+                                                                cast=self._cast_timerangex)
         self._x_extra_fp_terms = dict() if self.extra_fp_terms_def is None else self.extra_fp_terms_def
         if not all([isinstance(v, dict) for v in self._x_extra_fp_terms.values()]):
             raise ValueError("extra_fp_terms values need to be dictionaries")
         self._x_extra_fp_terms = {k: self._check_data_keys_and_times(v,
-                                                                     'extra_fp_terms_def[{:s}]'.format(k))
+                                                                     'extra_fp_terms_def[{:s}]'.format(k),
+                                                                     cast=self._cast_timerangex)
                                   for k, v in self._x_extra_fp_terms.items()}
         self._lookup_cache = dict()
         self._lookup_rangex_cache = dict()
@@ -971,6 +977,15 @@ class ArpIfsForecastTermConfTool(ConfTool):
             return Time(value)
         else:
             return int(value)
+
+    @staticmethod
+    def _cast_timerangex(value):
+        if not (value is None or isinstance(value, six.string_types)):
+            if isinstance(value, collections_abc.Iterable):
+                value = ','.join([six.text_type(e) for e in value])
+            else:
+                value = six.text_type(value)
+        return value
 
     @staticmethod
     def _check_data_keys(data, dataname):
@@ -1034,7 +1049,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
                     tir = timeintrangex(what)
                 except (TypeError, ValueError):
                     raise ValueError(
-                        'Could not process "{:s} using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
+                        'Could not process "{:s}" using timeintrangex (from "{:s}" with cutoff={:s}/hh={!s})'
                         .format(what, what_desc, cutoff, hh)
                     )
                 if self.fcterm_unit == 'timestep' and not all([isinstance(i, int) for i in tir]):

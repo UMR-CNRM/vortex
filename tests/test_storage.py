@@ -19,6 +19,8 @@ import tempfile
 import time
 import unittest
 
+from bronx.fancies import loggers
+
 import footprints as fp
 
 import vortex  # @UnusedImport
@@ -73,6 +75,9 @@ owners=malicious
 """
 
 
+tloglevel = 'critical'
+
+
 class EmptyMarketPlaceCache(MarketPlaceCache):
 
     _footprint = dict(
@@ -85,6 +90,7 @@ class EmptyMarketPlaceCache(MarketPlaceCache):
     )
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class TestCacheStorage(unittest.TestCase):
 
     _REMAPS = [
@@ -148,7 +154,6 @@ class TestCacheStorage(unittest.TestCase):
         self.t = vortex.sessions.get(tag='storage_test_view',
                                      topenv=vortex.rootenv, glove=gl)
         self.t.activate()
-        self.t.critical()  # Decrease verbosity a lot !
         self.sh = self.t.system()
         self.sh.target(hostname='unittest', inetname='unittest',
                        sysname='Local')  # Trick the vortex's system !

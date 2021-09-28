@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # encoding: utf-8
 
 """
@@ -82,12 +82,13 @@ sys.path.insert(0, os.path.join(vortexbase, 'src'))
 locale.setlocale(locale.LC_ALL, os.environ.get('VORTEX_DEFAULT_ENCODING', str('en_US.UTF-8')))
 
 import footprints as fp
+from bronx.fancies import loggers
 from bronx.system import interrupt
 from bronx.stdtypes import date
 import vortex
 
 # Main script logger
-logger = fp.loggers.getLogger(__name__)
+logger = loggers.getLogger(__name__)
 
 
 class ExtraArgumentError(Exception):
@@ -255,7 +256,7 @@ def main():
         (loglevel_main, loglevel_fp) = ('DEBUG', 'INFO')
     else:
         (loglevel_main, loglevel_fp) = ('DEBUG', 'DEBUG')
-    vortex.logger.setLevel(loglevel_main)
+    loggers.setGlobalLevel(loglevel_main)
     fp.logger.setLevel(loglevel_fp)
     del args.verbose
 
