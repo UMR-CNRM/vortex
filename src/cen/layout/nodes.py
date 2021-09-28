@@ -59,11 +59,7 @@ class S2MTaskMixIn(object):
             logger.warning(warning)
 
             # Add e-mail
-            ad.mail(
-                subject='S2M warning',
-                to='matthieu.lafaysse@meteo.fr',
-                contents=warning,
-            )
+            ad.cenmail(to=self.conf.mail_to, id='s2mdev_warning', report=warning)
 
     def s2moper_report_execution_error(self, exc, **kw_infos):
         if 'nfail' in kw_infos.keys():
@@ -71,11 +67,7 @@ class S2MTaskMixIn(object):
             logger.warning(warning)
 
             # Add e-mail
-            ad.mail(
-                subject='S2M fatal error',
-                to='matthieu.lafaysse@meteo.fr',
-                contents=warning,
-            )
+            ad.cenmail(to=self.conf.mail_to, id='s2mdev_error', report=warning)
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}

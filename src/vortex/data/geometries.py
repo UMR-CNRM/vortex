@@ -44,7 +44,7 @@ For example, let's build a new gaussian grid::
     ...                          truncation=2198,  # The linear truncation
     ...                          stretching=2.1, area='France',  # 2.1 stretching over France
     ...                          new=True)  # Mandatory to create new geometries
-    <vortex.data.geometries.GaussGeometry object at 0x...>
+    <vortex.data.geometries.GaussGeometry (tag='global2198') object at 0x...>
     >>> print(geometries.Geometry("global2198"))
     <vortex.data.geometries.GaussGeometry | tag='global2198' id='My own gaussian geometry' tl=2198 c=2.1>
 
@@ -144,6 +144,12 @@ class Geometry(bronx.patterns.getbytag.GetByTag):
     def tag_clean(self, tag):
         """Geometries id tags are lower case."""
         return tag.lower()
+
+    def __repr__(self):
+        """Nicer represenation for geometries."""
+        return '<{0:s}.{1:s} (tag=\'{2:s}\') object at {3:#x}>'.format(
+            self.__module__, self.__class__.__name__, self.tag, id(self)
+        )
 
     def export_dict(self):
         return self.tag

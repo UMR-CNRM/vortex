@@ -151,7 +151,13 @@ class MailService(Service):
                 optional = True,
             ),
             smtpport = dict(
-                type = int,
+                type     = int,
+                optional = True,
+            ),
+            smtpuser = dict(
+                optional = True,
+            ),
+            smtppass = dict(
                 optional = True,
             ),
             charset = dict(
@@ -323,6 +329,8 @@ class MailService(Service):
             if smtpport:
                 extras['port'] = smtpport
             smtp = smtplib.SMTP(smtpserver, **extras)
+            if self.smtpuser and self.smtppass:
+                smtp.login(self.smtpuser, self.smtppass)
             smtp.sendmail(self.sender, self.to.split(), msgcorpus)
             smtp.quit()
         return len(msgcorpus)
@@ -722,7 +730,7 @@ class TemplatedMailService(MailService):
             catalog = dict(
                 type     = GenericConfigParser,
             ),
-            dryrun=dict(
+            dryrun = dict(
                 info     = "Do not actually send the email. Just render the template.",
                 type     = bool,
                 optional = True,
@@ -905,6 +913,7 @@ class TemplatedMailService(MailService):
 
 
 class AbstractRdTemplatedMailService(TemplatedMailService):
+
     _abstract = True
 
     def header(self):

@@ -13,7 +13,7 @@ from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from vortex.data.handlers import Handler
 from vortex.toolbox import sessions
-from vortex.tools.actions import Action, TunableAction, actiond
+from vortex.tools.actions import Action, TunableAction, TemplatedMail, actiond
 from vortex.tools.services import Directory
 from vortex.util.config import GenericConfigParser
 
@@ -56,15 +56,16 @@ class DMTEvent(Action):
         super(DMTEvent, self).__init__(kind=kind, active=active, service=service)
 
 
-class OpMail(TunableAction):
+class OpMail(TemplatedMail):
     """
     Class responsible for sending pre-defined mails.
     """
 
     def __init__(self, kind='opmail', service='opmail', active=False,
                  directory=None, catalog=None, inputs_charset=None):
-        super(OpMail, self).__init__(configuration=None, kind=kind, active=active, service=service)
-        self.directory = directory or Directory('@opmail-address-book.ini',
+        super(OpMail, self).__init__(configuration=None, kind=kind, active=active, service=service,
+                                     catalog=catalog, inputs_charset=inputs_charset)
+        self.directory = directory or Directory('@{:s}-address-book.ini'.format(kind),
                                                 encoding=inputs_charset)
         self.catalog = catalog or GenericConfigParser('@opmail-inventory.ini',
                                                       encoding=inputs_charset)
