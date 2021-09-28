@@ -775,9 +775,14 @@ class Archive(Storage):
                           cpipeline=compressionpipeline)
             if port is not None:
                 extras['port'] = port
+
             rc = ad.jeeves(
                 hostname=hostname,
-                logname=kwargs.get('username', None),
+                # Explicitly resolve the logname (because jeeves FTP client is not
+                # running with the same glove (i.e. Jeeves ftuser configuration may
+                # be different).
+                logname=self.sh.fix_ftuser(hostname,
+                                           kwargs.get('username', None)),
                 todo='ftput',
                 rhandler=kwargs.get('info', None),
                 source=tempo(local),
