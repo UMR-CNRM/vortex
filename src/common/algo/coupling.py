@@ -4,7 +4,7 @@
 AlgoComponents dedicated to the coupling between NWP models.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import re
 
@@ -258,13 +258,13 @@ class Prep(BlindRun, DrHookDecoMixin):
         if section.rh.container.actualfmt != self.underlyingformat:
             if infmt == 'fa' and self.underlyingformat == 'lfi':
                 if self.system.path.exists(output_name):
-                    raise IOError("The %s file already exists.", output_name)
+                    raise IOError("The file {!r} already exists.".format(output_name))
                 self._check_addons()
                 logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
                 self.system.sfx_fa2lfi(localpath, output_name)
             else:
-                raise RuntimeError("Format conversion from %s to %s is not possible",
-                                   infmt, self.underlyingformat)
+                raise RuntimeError("Format conversion from {!r} to {!r} is not possible".format(
+                                   infmt, self.underlyingformat))
         else:
             if not self.system.path.exists(output_name):
                 logger.info("Linking %s to %s", localpath, output_name)
@@ -287,8 +287,8 @@ class Prep(BlindRun, DrHookDecoMixin):
                 finallfi = '{:s}_interpolated.{:s}'.format(radical, self.underlyingformat)
                 self.system.mv(output_name, finallfi)
             else:
-                raise RuntimeError("Format conversion from %s to %s is not possible",
-                                   outfmt, self.underlyingformat)
+                raise RuntimeError("Format conversion from {!r} to {!r} is not possible".format(
+                                   outfmt, self.underlyingformat))
         else:
             # No format change needed
             logger.info("Moving %s to %s", output_name, finaloutput)
@@ -407,7 +407,8 @@ class C901(IFSParallel):
                 file_name = file_s.rh.container.filename
                 find_elements = re.search(template, file_name)
                 if find_elements is None:
-                    logger.error("The name of the file %s do not follow the template %s.", file_name, template)
+                    logger.error("The name of the file %s do not follow the template %s.",
+                                 file_name, template)
                     raise ValueError("The name of the file do not follow the template.")
                 else:
                     if find_elements.group("prefix") not in result[file_role]:
@@ -439,7 +440,8 @@ class C901(IFSParallel):
         sorted_cst_input_files = self.sort_files_per_prefix(self.LIST_CST_INPUT_FILES, unique=True)
         sorted_input_files = self.sort_files_per_prefix(self.LIST_INPUT_FILES)
 
-        # Determine the validity present for each non constant input files, check that they are the same for all
+        # Determine the validity present for each non constant input files,
+        # check that they are the same for all.
         # Also create the list of the filenames that should be deleted
         input_validity = list()
         for file_role in sorted_input_files:
@@ -449,7 +451,8 @@ class C901(IFSParallel):
         test_wrong_input_validity = True
         for i in range(1, len(input_validity)):
             test_wrong_input_validity = test_wrong_input_validity and (input_validity[0] == input_validity[i])
-        self.algoassert(test_wrong_input_validity, "The files of each type must have the same validity dates.")
+        self.algoassert(test_wrong_input_validity,
+                        "The files of each type must have the same validity dates.")
 
         # Modify namelist
         input_namelist = self.context.sequence.effective_inputs(

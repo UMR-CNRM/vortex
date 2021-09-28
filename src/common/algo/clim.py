@@ -4,7 +4,7 @@
 Common AlgoComponnent to build model's climatology files.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 import io
@@ -157,8 +157,7 @@ class FinalizePGD(AlgoComponent):
         pgdin = self.context.sequence.effective_inputs(role=('InputPGD',))
         self.algoassert(len(pgdin) == 1, "One and only one InputPGD has to be provided")
         if self.system.path.exists(self.pgd_out_name):
-            raise IOError("The output pgd file %s already exists.",
-                          self.pgd_out_name)
+            raise IOError("The output pgd file {!r} already exists.".format(self.pgd_out_name))
         # copy fields
         with epy_env_prepare(self.ticket):
             epyclim = clim[0].rh.contents.data
@@ -371,7 +370,7 @@ class MakeLAMDomain(AlgoComponent):
         namelists = dm.output.lam_geom2namelists(geometry,
                                                  truncation=self.truncation,
                                                  orography_subtruncation=self.orography_truncation,
-                                                 ** dm_extra_params)
+                                                 **dm_extra_params)
         dm.output.write_namelists(namelists, prefix=self.geometry.tag)
 
 
@@ -664,7 +663,7 @@ class MakeBDAPDomain(AlgoComponent):
             resolution_y=dict(
                 info="Y resolution in degrees (if different from X).",
                 type=float,
-                optional=True,
+                optional = True,
                 default = None,
             ),
             boundaries = dict(
@@ -862,7 +861,8 @@ class Festat(Parallel):
         for sec in insec:
             i += 1
             self.system.symlink(sec.rh.container.actualpath(),
-                                "{prefix}{number}".format(prefix=self.prefix, number=str(i).zfill(self.nb_digits)))
+                                "{prefix}{number}".format(prefix=self.prefix,
+                                                          number=str(i).zfill(self.nb_digits)))
         # Put the number of sections and the prefix of the input files in the namelist
         namcontents = input_namelist.contents
         logger.info('Setup macro CNAME=%s in %s', self.prefix, input_namelist.container.actualpath())
@@ -878,7 +878,8 @@ class Festat(Parallel):
         # Rename stabal files
         list_stabal = self.system.glob("stab*")
         for stabal in list_stabal:
-            self.system.mv(stabal, "{stabal}.ncases_{ncases}".format(stabal=stabal, ncases=self._nb_input_files))
+            self.system.mv(stabal,
+                           "{stabal}.ncases_{ncases}".format(stabal=stabal, ncases=self._nb_input_files))
         # Deal with diag files
         list_diag_stat = self.system.glob("co*y")
         if len(list_diag_stat) > 0:

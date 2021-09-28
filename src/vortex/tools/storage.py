@@ -30,18 +30,18 @@ allows to customise the way data are accessed leaving the :class:`Store` objects
 unchanged.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from collections import defaultdict
-from datetime import datetime
 import ftplib
 import re
 import time
+from collections import defaultdict
+from datetime import datetime
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes.history import History
 from bronx.syntax.decorators import nicedeco
-import footprints
 from vortex import sessions
 from vortex.tools.actions import actiond as ad
 from vortex.tools.systems import istruedef
@@ -58,6 +58,7 @@ logger = loggers.getLogger(__name__)
 
 def do_recording(flag):
     """Add a record line in the History object (if sensible)."""
+
     @nicedeco
     def do_flagged_recording(f):
         def wrapped_action(self, item, *kargs, **kwargs):
@@ -66,17 +67,21 @@ def do_recording(flag):
             infos.update(extrainfos)
             self.addrecord(flag, item, status=rc, **infos)
             return rc
+
         return wrapped_action
+
     return do_flagged_recording
 
 
 @nicedeco
 def enforce_readonly(f):
     """Check that the current storage object is not readonly."""
+
     def wrapped_action(self, item, *kargs, **kwargs):
         if self.readonly:
             raise IOError("This Storage place is readonly.")
         return f(self, item, *kargs, **kwargs)
+
     return wrapped_action
 
 
@@ -525,7 +530,7 @@ class Archive(Storage):
 
     _default_usejeeves = False
 
-    _collector = ('archive', )
+    _collector = ('archive',)
     _footprint = dict(
         info = 'Default archive description',
         attr = dict(
@@ -569,6 +574,7 @@ class Archive(Storage):
 
     def _actual_proxy_method(self, pmethod):
         """Create a proxy method based on the **pmethod** actual method."""
+
         def actual_proxy(item, *kargs, **kwargs):
             path = self._formatted_path(item, **kwargs)
             if path is None:
@@ -706,7 +712,7 @@ class Archive(Storage):
             # Ftp control
             hostname=hostname,
             logname=kwargs.get('username', None),
-            ** extras
+            **extras
         )
         return rc, extras
 
@@ -736,7 +742,7 @@ class Archive(Storage):
         tmplocal = self.context.delayedactions_hub.retrieve(retrieve_id)
         if tmplocal:
             if self.sh.filecocoon(local):
-                rc = self.sh.mv(tmplocal, local, ** extras)
+                rc = self.sh.mv(tmplocal, local, **extras)
             else:
                 raise IOError('Could not cocoon: {!s}'.format(local))
         else:
@@ -762,7 +768,7 @@ class Archive(Storage):
                 hostname=hostname,
                 logname=kwargs.get('username', None),
                 sync=kwargs.get('enforcesync', False),
-                ** extras
+                **extras
             )
         else:
             logger.info('delayed ftpput to ftp://%s/%s (from: %s)', self.storage, item, local)
@@ -783,7 +789,7 @@ class Archive(Storage):
                 source=tempo(local),
                 destination=item,
                 original=self.sh.path.abspath(local),
-                ** extras
+                **extras
             )
         return rc, extras
 
@@ -806,7 +812,6 @@ class Archive(Storage):
 
 
 class FixedEntryCache(Cache):
-
     _abstract = True
     _footprint = dict(
         info = 'Default cache description (with a fixed entry point)',
@@ -858,12 +863,14 @@ class FixedEntryCache(Cache):
 @nicedeco
 def marketplace_check_write_permission(method):
     """Look in the owners list before ny write action."""
+
     def wrapped_method(self, item, *kargs, **kwargs):
         if self.session.glove.user not in self._owners_lookup(item):
             logger.error("You are not listed in the owners list: no write permissions for you !")
             return False, dict()
         else:
             return method(self, item, *kargs, **kwargs)
+
     return wrapped_method
 
 
@@ -1190,8 +1197,8 @@ class Op2ResearchCache(FixedEntryCache):
             fs = self.sh.default_target.get('op:' + self.kind[5:] + 'fs', '')
             mt = self.sh.default_target.get('op:mtooldir', None)
             if mt is None:
-                raise ValueError("The %s cache can't be initialised since op:mtooldir is missing",
-                                 self.kind)
+                raise ValueError("The {!r} cache can't be initialised since op:mtooldir is missing".format(
+                    self.kind))
             cache = fs + mt if mt.startswith('/') else self.sh.path.join(fs, mt)
             cache = self.sh.path.join(cache, 'cache')
         else:

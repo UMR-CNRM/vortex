@@ -4,11 +4,11 @@
 Footprint dynamic configuration.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from bronx.fancies import loggers
-from bronx.stdtypes import dictionaries
 from bronx.patterns import getbytag
+from bronx.stdtypes import dictionaries
 
 from . import reporting
 
@@ -133,7 +133,7 @@ class FootprintSetup(getbytag.GetByTag):
                     setattr(obj, k + 's', v)
         else:
             logger.error('Could not populate a non-module or non-instance object: %s', obj)
-            raise ValueError('Not a module nor an object instance: %s', obj)
+            raise ValueError('Not a module nor an object instance: {!s}'.format(obj))
 
     def _get_defaults(self):
         """Property getter for footprints defaults."""
