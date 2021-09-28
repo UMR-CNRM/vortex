@@ -4,7 +4,7 @@
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import collections
 
@@ -12,6 +12,17 @@ import collections
 class AgtConfigurationError(Exception):
     """Specific Transfer Agent configuration error."""
     pass
+
+
+def agt_volatile_path(sh):
+    """Prefix path to use for the Transfer Agent to consider a file as being "volatile"
+    and hard-linking to it instead of expecting it to be present "later".
+    """
+    config = sh.default_target.config
+    if not config.has_section('agt'):
+        fmt = 'Missing section "agt" in configuration file\n"{}"'
+        raise AgtConfigurationError(fmt.format(config.file))
+    return config.get('agt', 'agt_volatile')
 
 
 def agt_actual_command(sh, binary_name, args, extraenv=None):

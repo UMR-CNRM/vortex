@@ -53,6 +53,11 @@ def ask_debug():
     return ask(todo='level', data='debug')
 
 
+def ask_info():
+    """Switch log verbosity to INFO level."""
+    return ask(todo='level', data='info')
+
+
 def ask_level(value):
     """Switch log verbosity to sepcified level."""
     return ask(todo='level', data=str(value))

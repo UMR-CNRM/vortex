@@ -294,40 +294,40 @@ class System(footprints.FootprintBase):
         info = 'Default system interface',
         attr = dict(
             hostname = dict(
-                info = "The computer's network name",
+                info     = "The computer's network name",
                 optional = True,
                 default  = platform.node(),
                 alias    = ('nodename',)
             ),
             sysname = dict(
-                info = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
+                info     = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
                 optional = True,
                 default  = platform.system(),
             ),
             arch = dict(
-                info = "The underlying machine type (e.g. i386, x86_64, ...)",
+                info     = "The underlying machine type (e.g. i386, x86_64, ...)",
                 optional = True,
                 default  = platform.machine(),
                 alias    = ('machine',)
             ),
             release = dict(
-                info = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
+                info     = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
                 optional = True,
                 default  = platform.release()
             ),
             version = dict(
-                info = "The underlying system's release version",
+                info     = "The underlying system's release version",
                 optional = True,
                 default  = platform.version()
             ),
             python = dict(
-                info = "The Python's version (e.g 2.7.5)",
-                type = PythonSimplifiedVersion,
+                info     = "The Python's version (e.g 2.7.5)",
+                type     = PythonSimplifiedVersion,
                 optional = True,
                 default  = platform.python_version(),
             ),
             glove = dict(
-                info = "The session's Glove object",
+                info     = "The session's Glove object",
                 optional = True,
                 type     = Glove,
             )
@@ -339,7 +339,8 @@ class System(footprints.FootprintBase):
         In addition to footprint's attributes,  the following attribute may be added:
 
             * **prompt** - as a starting comment line in :meth:`title` like methods.
-            * **trace** - as a boolean to mimic ``set -x`` behaviour (default: *False*).
+            * **trace** - if *True* or *"log"* mimic ``set -x`` behaviour (default: *False*).
+              With trace="log", the information is sent through the logger.
             * **timer** - time all the calls to external commands (default: *False*).
             * **output** - as a default value for any external spawning command (default: *True*).
 
@@ -504,12 +505,15 @@ class System(footprints.FootprintBase):
         """Write a formatted message to standard error (if ``self.trace == True``)."""
         count, justnow, = self.history.append(*args)
         if self.trace:
-            sys.stderr.write(
-                "* [{0:s}][{1:d}] {2:s}\n".format(
-                    justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([six.text_type(x) for x in args])
+            if self.trace == 'log':
+                logger.info('[sh:#%d] %s', count, ' '.join([six.text_type(x) for x in args]))
+            else:
+                sys.stderr.write(
+                    "* [{0:s}][{1:d}] {2:s}\n".format(
+                        justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
+                        ' '.join([six.text_type(x) for x in args])
+                    )
                 )
-            )
 
     def flush_stdall(self):
         """Flush stdout and stderr."""
@@ -1103,7 +1107,7 @@ class OSExtended(System):
     def cdcontext(self, path, create=False, clean_onexit=False):
         """
         Returns a new :class:`CdContext` context manager initialised with the
-        **path** and **create** arguments.
+        **path**, **create** and **clean_onexit** arguments.
         """
         return CdContext(self, path, create, clean_onexit)
 

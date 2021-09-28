@@ -2,18 +2,18 @@
 
 """Utility classes to read and compare IFS/Arpege listings."""
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from collections import OrderedDict, defaultdict, deque
 import copy
 import io
 import re
+from collections import OrderedDict, defaultdict, deque
 
-from arpifs_listings import norms, jo_tables, cost_functions, listings
-from bronx.stdtypes.date import Date
 import footprints
-
+from arpifs_listings import cost_functions, jo_tables, listings, norms
+from bronx.stdtypes.date import Date
 from vortex.data.contents import FormatAdapterAbstractImplementation
+
 from . import addons
 
 #: No automatic export
@@ -180,7 +180,6 @@ class ArpIfsListingsTool(addons.Addon):
 
 
 class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
-
     _footprint = dict(
         attr=dict(
             format=dict(

@@ -4,7 +4,7 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import re
@@ -13,7 +13,7 @@ import six
 
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-from gco.data.stores import GcoStoreConfig, GGET_DEFAULT_CONFIGFILE
+from gco.data.stores import GGET_DEFAULT_CONFIGFILE, GcoStoreConfig
 from gco.tools import genv
 
 #: No automatic export
@@ -97,9 +97,11 @@ class MonthlyItem(object):
         self.fmt = loopdict['before'] + '{:0' + str(width) + 'd}' + loopdict['after']
 
     def is_monthly(self, value):
+        """Tell wheteher value corresponds to a loop generated set."""
         return self.regex.match(value)
 
     def names(self, value):
+        """Generator for the loop generated set corresponding to this value."""
         for num in range(self.start, self.stop + 1):
             yield value + self.fmt.format(num)
 

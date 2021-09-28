@@ -9,11 +9,12 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import fcntl
 import io
-import tempfile
+import re
 from pprint import pformat
 
 import six
 
+from common.tools.agt import agt_volatile_path
 from common.tools.grib import GRIBFilter
 from footprints import proxy as fpx
 from iga.tools import actions, services
@@ -72,6 +73,7 @@ def system_route(pnum, ask, config, logger, **opts):
     Removes the source on success (should be a hidden copy).
     """
     logger.info('System', todo=ask.todo, pnum=pnum, opts=opts)
+    return_value = dict(rpool='error')
 
     # options from the jeeves .ini configuration
     nossh = opts.get('nossh', False)
@@ -81,39 +83,62 @@ def system_route(pnum, ask, config, logger, **opts):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, verbose=True, profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = False
+        sh.trace = 'log'
         data = vwork.get_dataset(ask)
 
-        # not before python3.2: tempfile.TemporaryDirectory
-        tmpdir = tempfile.mkdtemp(prefix=data.source + '_', suffix='.tmp')
+        tmpdir = sh.path.join(agt_volatile_path(sh), 'route', sh.path.basename(data.source))
+        logger.info('data.source is    = ' + data.source)
+        logger.info('working in tmpdir = ' + tmpdir)
         with sh.cdcontext(tmpdir, create=True, clean_onexit=True):
 
             # assert the source is there
-            logger.info('Source = ' + data.source)
-            if not sh.path.exists(data.source):
+            if not sh.path.exists(data.source) and 'fallback_uri' in data:
                 logger.warning('Source file is missing - trying to recover from the cache')
-                uri = uriparse(data.rlocation)
+                logger.warning('    fallback_uri = {}'.format(data.fallback_uri))
+                uri = uriparse(data.fallback_uri)
                 astore = fpx.store(**uri)
                 astore.get(uri, data.source, dict(fmt=data.fmt))
+
+            if not sh.path.exists(data.source) and 'original' in data:
+                logger.warning('Source file is missing - trying to recover from the original')
+                logger.warning('    original = {}'.format(data.original))
+                if sh.path.exists(data.original):
+                    sh.cp(data.original, data.source, intent="in", fmt=data.fmt)
 
             if not sh.path.exists(data.source):
                 logger.error('The source file is definitely missing - sorry')
                 return pnum, False, dict(rpool='error')
 
-            # apply filtering, or at least ask for concatenation
-            logger.info('filtername=' + (data.filtername or 'concatenation'))
-            if data.filtername is None:
-                gribfilter = GRIBFilter(concatenate=True)
+            # decide on an informative target name pattern (for AGT logs)
+            if 'fallback_uri' in data:
+                uri = uriparse(data.fallback_uri)
+                info_path = uri['path']
             else:
-                gribfilter = GRIBFilter(concatenate=False)
-                gribfilter.add_filters(data.filterdefinition)
-            outfile_fmt = 'GRIBOUTPUT_{filtername:s}.grib'
-            filtered = gribfilter(data.source, outfile_fmt, intent='in')
-            if len(filtered) != 1:
-                logger.error('Should have 1 file in gribfilter output, got: %s', str(filtered))
-                logger.error('Nothing will be routed, please fix the script.')
-                return pnum, False, dict(rpool='error')
-            route_source = filtered[0]
+                info_path = data.original
+            prefix = re.sub(r'\.{}$'.format(data.fmt), '',
+                            sh.path.basename(info_path), flags=re.I)
+            outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
+
+            # apply filtering or concatenate
+            if data.filterdefinition:
+                logger.info('Filtering input data. filtername=%s',
+                            data.filterdefinition['filter_name'])
+                if data.fmt == 'grib':
+                    gribfilter = GRIBFilter(concatenate=False)
+                    gribfilter.add_filters(data.filterdefinition)
+                    filtered = gribfilter(data.source, outfile_fmt, intent='in')
+                    if len(filtered) != 1:
+                        logger.error('Should have 1 file in gribfilter output, got: %s',
+                                     str(filtered))
+                        logger.error('Nothing will be routed, please fix the script.')
+                        return pnum, False, dict(rpool='error')
+                    route_source = filtered[0]
+                else:
+                    logger.error('Unable to filter format=%s - sorry', data.fmt)
+                    return pnum, False, dict(rpool='error')
+            else:
+                outfile = outfile_fmt.format(filtername='concatenate')
+                route_source = sh.forcepack(data.source, destination=outfile, fmt=data.fmt)
 
             # activate services or not according to jeeves' configuration
             if route_on:
@@ -129,6 +154,7 @@ def system_route(pnum, ask, config, logger, **opts):
             # route the file
             route_opts = data.route_opts
             route_opts.update(
+                defer=False,
                 filename=route_source,
             )
             if nossh:
@@ -136,7 +162,7 @@ def system_route(pnum, ask, config, logger, **opts):
                     sshhost=None,
                 )
             logger.info('Asking for route Services')
-            logger.debug(pformat(route_opts))
+            logger.debug('route_opts = ' + pformat(route_opts))
             ad.route(**route_opts)
 
         return_value = dict(clear=sh.rm(data.source, fmt=data.fmt))

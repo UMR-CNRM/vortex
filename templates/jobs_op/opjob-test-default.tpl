@@ -41,10 +41,6 @@ op_iniconf   = '{0:s}/conf/{1:s}_{2:s}.ini'.format(op_rootapp, op_vapp, op_vconf
 op_fullplay  = $fullplay
 op_warmstart = $warmstart
 op_refill    = $refill
-op_mail      = $mail
-op_jeeves    = '{0}_$jeeves'.format(op_xpid)
-op_jroute    = '{0}_$jroute'.format(op_xpid)
-op_phase     = $phase
 op_hasmember = $hasmember
 
 sys.stderr = sys.stdout
@@ -77,27 +73,53 @@ ja = footprints.proxy.jobassistant(kind = 'op_default',
                                    ldlibs = footprints.stdtypes.FPSet(($ldlibs)),
                                    special_prefix='op_',
                                    )
+
 ja.add_plugin('epygram_setup')
 for pkind in ($loadedjaplugins):
     ja.add_plugin(pkind)
 
 try:
     t, e, sh = ja.setup(actual=locals())
+
+    # Setup actions and show their configuration
     from vortex.tools.actions import actiond as ad
-    ad.opmail_off()
-    ad.dmt_off()
-    ad.route_off()
-    ad.phase_tune(jname='{0}_phase'.format(op_xpid))
+    ad.jeeves_status($jeeves)
+    ad.jeeves_tune(jname='{0}_async'.format(op_xpid))
+    ad.opmail_on()
+    ad.opmail_tune(dryrun=not $mail)
     ad.phase_on()
+    ad.phase_tune(jname='{0}_phase'.format(op_xpid), dryrun=not $phase)
+    ad.route_on()
+    ad.route_tune(jname='{0}_route'.format(op_xpid), dryrun=not $route)
+    ad.report_status($report)
+    ad.report_tune(jname='{0}_messd'.format(op_xpid))
+    ad.alarm_status($alarm)
+    ad.dmt_status($dmt)
+
+    print('Memo of mkjob control arguments (for debugging)')
+    print('   jeeves =', $jeeves)
+    print('   mail   =', $mail)
+    print('   phase  =', $phase)
+    print('   route  =', $route)
+    print('   report =', $report)
+    print('   alarm  =', $alarm)
+    print('   dmt    =', $dmt)
+
+    for action_name in ad.actions:
+        for action in ad.candidates(action_name):
+            print('\n' + action.info())
+
     opts = dict(jobassistant=ja, play=op_fullplay)
     driver = todo.setup(t, **opts)
     driver.setup()
     driver.run()
+
     ja.complete()
+
 except (Exception, SignalInterruptError, KeyboardInterrupt) as trouble:
     ja.fulltraceback(trouble)
     ja.rescue()
+
 finally:
     ja.finalise()
     ja.close()
-

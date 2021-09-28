@@ -23,10 +23,7 @@ This module contains the services specifically needed by the operational suite.
   * formatted dayfile logging with :class:`DayfileReportService`
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six import StringIO
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import io
 import locale
@@ -35,21 +32,24 @@ import random
 import re
 import socket
 from logging.handlers import SysLogHandler
+from pprint import pformat
 
-from bronx.fancies import loggers
+import six
+from six import StringIO
+
 import footprints
-
 import vortex
+from bronx.fancies import loggers
 from bronx.stdtypes import date
 from bronx.stdtypes.date import Time
 from common.tools.agt import agt_actual_command
 from footprints.stdtypes import FPDict
 from iga.tools.transmet import get_ttaaii_transmet_sh
-from vortex.syntax.stdattrs import DelayedEnvValue
-from vortex.syntax.stdattrs import a_term, a_domain
+from vortex.data.contents import DataContent
+from vortex.syntax.stdattrs import DelayedEnvValue, a_domain, a_term
 from vortex.tools.actions import actiond as ad
-from vortex.tools.schedulers import SMS, EcFlow
-from vortex.tools.services import Service, FileReportService, TemplatedMailService
+from vortex.tools.schedulers import EcFlow, SMS
+from vortex.tools.services import FileReportService, Service, TemplatedMailService
 from vortex.tools.systems import LocaleContext
 from vortex.util.config import GenericReadOnlyConfigParser
 
@@ -90,7 +90,7 @@ class LogFacility(int):
             try:
                 value = SysLogHandler.facility_names[value]
             except KeyError:
-                logger.error('Could not get a SysLog value for name ' + value)
+                logger.error('Could not get a SysLog value for name %s', value)
                 raise
         if value not in SysLogHandler.facility_names.values():
             raise ValueError('Not a SysLog facility value: {!s}'.format(value))
@@ -156,7 +156,7 @@ class AlarmService(Service):
 
     def get_syslog(self):
         """Define and return the SyslogHandler to use."""
-        pass
+        return SysLogHandler()
 
     def get_logger_action(self):
         """
@@ -246,7 +246,7 @@ class AlarmProxyService(AlarmService):
         record. Get this string and transmit it to the remote unix command.
         """
         if self.deactivated():
-            return
+            return True
 
         # get the formatted message from the logger
         message = self.memory_message()
@@ -262,7 +262,7 @@ class AlarmProxyService(AlarmService):
             sshobj = self.sh.ssh(hostname=self.sshhost)
         rc = sshobj.execute(command)
         if not rc:
-            logger.warning('Remote execution failed: ' + command)
+            logger.warning('Remote execution failed: %s', command)
         return rc
 
 
@@ -352,11 +352,23 @@ class RoutingService(Service):
     _footprint = dict(
         info = 'Routing services abstract class',
         attr = dict(
+            defer = dict(
+                info     = 'Process the request asynchronously using Jeeves.',
+                type     = bool,
+                optional = False,
+                default  = True
+            ),
             filename = dict(
+                info     = 'Name of the file we want to send.'
             ),
             filefmt = dict(
+                info     = 'File format.',
                 optional = True,
                 default  = None
+            ),
+            rhandler_uri = dict(
+                info     = 'URI associated with the resource handler that issued the request.',
+                optional = True
             ),
             targetname = dict(
                 optional = True,
@@ -382,14 +394,35 @@ class RoutingService(Service):
                 optional = True,
                 default  = 5,
             ),
+            filterdefinition = dict(
+                info     = 'Filter to apply before routing (available for a few formats).',
+                type     = DataContent,
+                optional = True,
+            ),
+            jname = dict(
+                info     = 'Name of the Jeeves daemon to use when defer is True.',
+                optional = True
+            ),
+            dryrun = dict(
+                info     = "Post to Jeeves in defer mode, else only show what would be routed.",
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
     def __init__(self, *args, **kw):
         logger.debug('RoutingService init %s', self.__class__)
         super(RoutingService, self).__init__(*args, **kw)
+        if self.filterdefinition is not None:
+            if not self.defer:
+                raise ValueError('Data Filtering is only allowed in deferred mode')
         absolute_name = self.sh.path.abspath(self.filename)
-        self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
+        if self.defer:
+            self._actual_filename = absolute_name
+        else:
+            self._actual_filename = self.sh.forcepack(absolute_name, fmt=self.filefmt)
 
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
@@ -423,7 +456,7 @@ class RoutingService(Service):
     def aammjj(self):
         """Date from DMT_DATE_PIVOT or from the 'date' command (from mxpt001 scr/debut)."""
         envkey = 'DMT_DATE_PIVOT'
-        default = date.now().compact(),
+        default = date.now().compact()
         stamp = self.env.get(envkey, default)
         return stamp[:8]
 
@@ -432,8 +465,7 @@ class RoutingService(Service):
         if self.targetname is not None:
             return self.sh.path.join(self.sh.path.dirname(self._actual_filename),
                                      self.targetname)
-        else:
-            return None
+        return None
 
     @property
     def routing_name(self):
@@ -449,11 +481,10 @@ class RoutingService(Service):
             return False
         return True
 
-    def __call__(self):
-        """Actual service execution."""
+    def _immediate_processing(self):
+        """Execution in immediate mode: do it now."""
 
-        if not self.file_ok():
-            return False
+        logger.debug('immediate route - fp = %s', self.footprint_export())
 
         if self._actual_targetname:
             if self.sh.path.exists(self._actual_targetname):
@@ -466,24 +497,38 @@ class RoutingService(Service):
 
         if self.sshhost is None:
             if self.sh.default_target.isagtnode:
-                logger.info('direct spawn: ' + cmdline)
-                rc = self.sh.spawn(cmdline, shell=True, output=True)
+                logger.info('direct spawn: %s', cmdline)
+                if self.dryrun:
+                    rc = True
+                else:
+                    rc = self.sh.spawn(cmdline, shell=True, output=True)
             else:
-                logger.info('ssh on agt node:' + cmdline)
-                sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
-                rc = sshobj.execute(cmdline)
+                logger.info('ssh on agt node: %s', cmdline)
+                if self.dryrun:
+                    rc = True
+                else:
+                    sshobj = self.sh.ssh(hostname='agt', virtualnode=True, maxtries=self.maxtries)
+                    rc = sshobj.execute(cmdline)
         else:
-            logger.info('ssh on node ' + self.sshhost + ': ' + cmdline)
-            sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
-            rc = sshobj.execute(cmdline)
-        logger.info('rc: ' + str(rc))
+            logger.info('ssh on node %s: %s', self.sshhost, cmdline)
+            if self.dryrun:
+                rc = True
+            else:
+                sshobj = self.sh.ssh(hostname=self.sshhost, maxtries=self.maxtries)
+                rc = sshobj.execute(cmdline)
+        if self.dryrun:
+            logger.info('dryrun mode - the routing command WAS NOT executed:')
+            logger.info('\t%s', cmdline)
+        else:
+            logger.info('rc: %s', rc)
 
         if self._actual_targetname:
             self.sh.remove(self._actual_targetname)
 
-        logfile = 'routage.' + date.today().ymd
-        ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
-                  resuldir=self.resuldir, filename=logfile)
+        if not self.dryrun:
+            logfile = 'routage.' + date.today().ymd
+            ad.report(kind='dayfile', mode='RAW', message=self.get_logline(),
+                      resuldir=self.resuldir, filename=logfile)
 
         if not rc:
             # BDM call has no term
@@ -497,6 +542,47 @@ class RoutingService(Service):
             return False
 
         return True
+
+    def _deferred_processing(self):
+        """Execution in deferred mode: ask jeeves to do it."""
+
+        # get a service able to create the hidden copy
+        fmt = self.filefmt
+        if ad.jeeves_status():
+            hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
+        else:
+            def hide(x):
+                return x
+
+        # use the footprint to compute the route_opts
+        route_opts = self.footprint_export()
+        del route_opts['filterdefinition']
+        del route_opts['jname']
+
+        # complete the request
+        jeeves_opts = dict(
+            todo='route',
+            jname=self.jname,
+            source=hide(self._actual_filename),
+            fmt=fmt,
+            fallback_uri=self.rhandler_uri,
+            route_opts=route_opts,
+            original=self._actual_filename,
+            filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
+        )
+
+        logger.debug('posting to jeeves with jeeves_opts:\n\t%s', pformat(jeeves_opts))
+
+        # post the request to jeeves
+        return ad.jeeves(**jeeves_opts)
+
+    def __call__(self):
+        """Actual service execution."""
+        if not self.file_ok():
+            return False
+        if self.defer:
+            return self._deferred_processing()
+        return self._immediate_processing()
 
 
 class RoutingUpstreamService(RoutingService):
@@ -604,7 +690,7 @@ class BdpeService(RoutingService):
                 values   = ['bdpe'],
             ),
             soprano_target = dict(
-                values   = ['piccolo', 'piccolo-int'],
+                values   = ['piccolo', 'piccolo-int', 'piccolo-int-sine'],
             ),
             producer = dict(
                 optional = True,
@@ -666,11 +752,12 @@ class BdpeService(RoutingService):
 
     def bdpe_log(self):
         """Additionnal log file specific to BDPE calls."""
-        text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
-               "{0.routingkey}".format(self, mode='routage par cle')
-        logfile = 'log_envoi_bdpe.' + self.aammjj
-        ad.report(kind='dayfile', message=text, resuldir=self.resuldir,
-                  filename=logfile, mode='RAW')
+        if not self.dryrun:
+            text = "envoi_bdpe.{0.producer} {0.productid} {0.taskname} {mode} " \
+                   "{0.routingkey}".format(self, mode='routage par cle')
+            logfile = 'log_envoi_bdpe.' + self.aammjj
+            ad.report(kind='dayfile', message=text, resuldir=self.resuldir,
+                      filename=logfile, mode='RAW')
 
     def get_logline(self):
         """Build the line to send to IGA main routing log file."""
@@ -758,8 +845,7 @@ class TransmetService(BdpeService):
         """Actual service execution."""
         if self.routing_name:
             return super(TransmetService, self).__call__()
-        else:
-            return False
+        return False
 
 
 class DayfileReportService(FileReportService):
@@ -777,7 +863,7 @@ class DayfileReportService(FileReportService):
         info = 'Historical dayfile reporting service',
         attr = dict(
             kind = dict(
-                values = ['dayfile'],
+                values   = ['dayfile'],
             ),
             message = dict(
                 optional = True,
@@ -812,8 +898,8 @@ class DayfileReportService(FileReportService):
                 alias    = ['async', ],
             ),
             jname=dict(
-                optional=True,
-                default='test',
+                optional = True,
+                default  = 'test',
             ),
         )
     )
@@ -945,11 +1031,12 @@ class SMSOpService(SMS):
             self.logdate(varname='date_end', status='aborted', comment=rc)
         else:
             self.logdate(varname='date_end', status='complete', comment=rc)
+
         if rc in (0, 98, 99):
             return True
-        else:
-            self.abort()
-            return False
+
+        self.abort()
+        return False
 
 
 class EcFlowOpService(EcFlow):
@@ -987,9 +1074,9 @@ class EcFlowOpService(EcFlow):
             self.logdate(varname='date_end', status='complete', comment=rc)
         if rc in (0, 98, 99):
             return True
-        else:
-            self.abort()
-            return False
+
+        self.abort()
+        return False
 
 
 class DMTEventService(Service):
@@ -1084,10 +1171,6 @@ class OpMailService(TemplatedMailService):
     )
 
     _TEMPLATES_SUBDIR = 'opmails'
-
-    def deactivated(self):
-        """Tells if opmail is deactivated : OP_MAIL set to 0"""
-        return not bool(self.env.get('OP_MAIL', 1))
 
     def substitution_dictionary(self, add_ons=None):
         sdict = super(OpMailService, self).substitution_dictionary(add_ons=add_ons)

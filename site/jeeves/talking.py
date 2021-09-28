@@ -8,13 +8,13 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import collections
 import contextlib
-from datetime import datetime
 import logging
 import logging.handlers
 import multiprocessing
 import re
 import sys
 import traceback
+from datetime import datetime
 
 #: No automatic export
 __all__ = []
@@ -29,7 +29,7 @@ def _void_logger_cb(modname):
 
 
 @contextlib.contextmanager
-def _void_logger_setid_manager(taskno):
+def _void_logger_setid_manager(taskno, loglevel):
     """This should configure the logging system in order to display the **taskno**"""
     raise NotImplementedError()
 
@@ -71,6 +71,7 @@ class AbstractLogFacility(object):
     def worker_get_logger(self, name=None):
         """A shortcut to create a logger (in the daemon process)."""
         return self.worker_logger_cb(name)
+
 
 # -----------------------------------------------------------------------------
 # The LogFacility based on the logging module (Python3 only)
@@ -116,7 +117,7 @@ class FancyArgsLoggerAdapter(logging.LoggerAdapter):
     arguments.
     """
 
-    _KW_PRESERVE = ('exc_info', )
+    _KW_PRESERVE = ('exc_info',)
 
     def process(self, msg, kwargs):
         msg += ' ' + ' '.join([
@@ -133,12 +134,19 @@ def _logging_based_logger_cb(name=None):
 
 
 @contextlib.contextmanager
-def _logging_logger_setid_manager(taskno):
+def _logging_logger_setid_manager(taskno, loglevel):
     """Configure the logging system in order to display the **taskno**"""
     root = logging.getLogger()
+    # Tweak the loglevel
+    prev_loglevel = root.level
+    try:
+        root.setLevel(loglevel)
+    except ValueError:
+        # Do not crash if an erroneous value is given. Just  do nothing
+        pass
+    # Filtering (that adds the task number)
     removed_filters = collections.defaultdict(list)
     current_filter = IdFilter(taskno)
-    # Filtering (that adds the task number)
     for h in root.handlers:
         for f in h.filters:
             if isinstance(f, IdFilter):
@@ -148,6 +156,7 @@ def _logging_logger_setid_manager(taskno):
     try:
         yield
     finally:
+        root.setLevel(prev_loglevel)
         for h in root.handlers:
             h.removeFilter(current_filter)
             for f in removed_filters[h]:
@@ -200,7 +209,7 @@ class LoggingBasedLogFacility(AbstractLogFacility):
         """Start a side process dedicated to the logging system."""
         listener = multiprocessing.Process(name='LogFacilityListener',
                                            target=self._listener_process,
-                                           args=(self._log_queue, ))
+                                           args=(self._log_queue,))
         listener.start()
         try:
             yield listener
@@ -217,7 +226,11 @@ class LoggingBasedLogFacility(AbstractLogFacility):
         root_h = logging.handlers.QueueHandler(self._log_queue)
         root.addHandler(root_h)
         # Logging level
-        root.setLevel(loglevel)
+        try:
+            root.setLevel(loglevel)
+        except ValueError:
+            # Do not crash if an erroneous value is given. Just  do nothing
+            pass
 
     @property
     def worker_logger_setid_manager(self):
@@ -374,12 +387,11 @@ def _legacy_logger_cb(name=None):
 
 
 @contextlib.contextmanager
-def _legacy_logger_setid_manager(taskno):
+def _legacy_logger_setid_manager(taskno, loglevel):
     """Update the current GentleTask object qith the **taskno**."""
     global root_gentle_talk
     prev_root_gentle_talk = root_gentle_talk
-    root_gentle_talk = GentleTalkMono(loglevel=prev_root_gentle_talk.loglevel,
-                                      taskno=taskno)
+    root_gentle_talk = GentleTalkMono(loglevel=loglevel, taskno=taskno)
     try:
         yield
     finally:

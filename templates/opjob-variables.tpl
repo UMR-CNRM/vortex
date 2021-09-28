@@ -15,11 +15,19 @@ MANDATORY IMPLICIT VARIABLES :
 IMPORTANT BUT NOT NECESSARY MANDATORY VARIABLES :
     - time      : SBATCH variable. Time limit for the job, default=00:20:00. Put it in the conf file if necessary.
     - rundate   : Date and time of the run ('yyyymmddhh' format), default=None. Leave it at None exept if you want to run your job at a specific date.
-    - mail      : Switch mails on or off. This value is automatically set at True with otpion -o and at False in any other case.
     - hasmember : Pick the template with the members. This value is automatically set at False in all cases. If your task uses member, you should switch on True this variable.
     - suitebg   : Backgroud of the application (defines in which environment it takes its resources). If suitebg=None (default mode) it is then set to 'xpid' so if 'xpid' is not oper or dble, suitebg has to be specified with option -a.
     - refill    : Bool that set the step to 'refill' in the 'recextfiles' jobs (see vortex/layout/nodes.py for informations on the steps mecanism), default=False.
     - partition : SBATCH variable. Default=oper, automatically set to ft-oper if refill=True.
+
+VARIABLES THAT SWITCH ACTIONS ON OR OFF :
+    - jeeves    : async job submission. Defaults to True.
+    - mail      : opmail sending.       Defaults to True with option -o, else False (dryrun mode).
+    - phase     : phasing files.        Defaults to True with option -o, else False (dryrun mode).
+    - route     : routing files.        Defaults to True with option -o, else False (dryrun mode).
+    - alarm     : alarms sending.       Defaults to True.
+    - report    : dayfile reporting.    Defaults to True.
+    - dmt       : DMT events handling.  Defaults to True with option -o, else False.
 
 OTHER VARIABLES :
     - python    : Python version, set by default as the one used by Vortex (see the python alias in the .bashrc file).
@@ -30,7 +38,5 @@ OTHER VARIABLES :
     - runtime   : Time of the run, default=None. Leave it at None exept if you want to run your job on at specific time.
     - runstep   : Step of the run, default=None.
     - fullplay  : Execution mode : full execution if True, else only inputs are runned. Default=True. Leave it at True.
-    - jeeves    : Name of the jeeves repository for archive jobs       , default=async. Leave it at its default value.
-    - jroute    : Name of the jeeves repository for filter + route jobs, default=route. Leave it at its default value.
     - package   : Name of the repository where the script to launch is located. Default=Tasks.
     - account   : SBATCH variable. default=mxpt

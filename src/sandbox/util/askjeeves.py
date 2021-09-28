@@ -6,10 +6,15 @@ A place to test callback functions for Jeeves.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bronx.fancies import loggers as b_loggers
-
 import io
+import json
+import os
 import time
+from ast import literal_eval
+from configparser import ConfigParser
+
+from bronx.fancies import loggers as b_loggers
+from jeeves import butlers, pools, talking
 
 #: No automatic export
 __all__ = []
@@ -49,7 +54,6 @@ def test_bar(pnum, ask, config, logger, **kw):
         - stamp : write a timestamp to a file
 
     """
-    import os
     try:
         profile = config['driver'].get('profile', None)
     except (AttributeError, TypeError):
@@ -105,7 +109,7 @@ def test_vortex(pnum, ask, config, logger, **kw):
     profile = config['driver'].get('profile', None)
     with VortexWorker(logger=logger, modules=('common', 'olive'), profile=profile) as vwork:
         sh = vwork.session.sh
-        sh.trace = True
+        sh.trace = 'log'
         logger.debug('Test Level DEBUG', vwork=vwork)
         logger.info('Test Level INFO', vwork=vwork)
         logger.warning('Test Level WARNING', vwork=vwork)
@@ -119,19 +123,16 @@ def test_vortex(pnum, ask, config, logger, **kw):
         except (ValueError, AttributeError):
             logger.error('Bad or no duration in data:', data=data)
         logger.info('Sleep', duration=duration)
-        time.sleep(duration)
+        sh.sleep(duration)
         logger.info('TestVortex', todo=ask.todo, pnum=pnum, session=vwork.session.tag)
     return pnum, vwork.rc, None
 
 
-def test_direct_call_to_a_jeeves_callback(cb_function):
+def directly_call_jeeves_callback(cb_function):
     """Run a jeeves async callback as if it was called by jeeves, but from the main process.
 
     This may be run interactively in a debugger.
     """
-    import os
-    from jeeves import pools
-    from jeeves import talking
 
     # common part
     logger = talking.FancyArgsLoggerAdapter(b_loggers.getLogger(__name__), dict())
@@ -158,5 +159,66 @@ def test_direct_call_to_a_jeeves_callback(cb_function):
     cb_function(1, request, config, logger)
 
 
+def execute_a_json_askfile(jsonfile):
+    """Execute a json file like jeeves would, but in a debuggable direct call."""
+
+    # read the json request (jeeves.butlers.Jeeves.json_load())
+    with io.open(os.path.expanduser(jsonfile), 'rb') as fd:
+        obj = json.load(fd)
+    ask = pools.Request(**obj)
+
+    # read jeeves config (jeeves.butlers.Jeeves.read_config())
+    cfg = ConfigParser()
+    cfg.read(os.path.expanduser('../../../conf/jeeves-test.ini'))
+    config = dict(driver=dict(pools=[]))
+    for section in cfg.sections():
+        if section not in config:
+            config[section] = dict()
+        for k, v in cfg.items(section):
+            try:
+                v = literal_eval(v)
+            except (SyntaxError, ValueError):
+                if k.startswith('options') or ',' in v:
+                    v = v.replace('\n', '').replace(' ', '').split(',')
+            config[section][k.lower()] = v
+
+    # what do we have to do (jeeves.butlers.Jeeves.process_request())
+    action = 'action_' + ask.todo
+    if action in cfg:
+        acfg = cfg[action]
+    else:
+        raise ValueError('Cannot find action ' + action)
+    thismod = acfg.get('module', 'internal')
+    thisname = acfg.get('entry', ask.todo)
+
+    # options from the config, overridden by the json 'opts' if any
+    # (variant of jeeves.butlers.Jeeves.dispatch())
+    opts = ask.opts.copy()
+    options = acfg.get('options', '').split(',')
+    print(type(options), options)
+    for extra in [x for x in options
+                  if x not in opts]:
+        opts[extra] = acfg.get(extra, None)
+        print('opts["{}"]={}'.format(extra, opts[extra]))
+
+    # build the arguments (ibidem)
+    logfacility = talking.LoggingBasedLogFacility()
+    args = (
+        logfacility.worker_logger_cb,
+        logfacility.worker_logger_setid_manager,
+        'info', thismod, thisname, '001', ask, config.copy()
+    )
+
+    # and this is what the subprocess calls !
+    rc = butlers._dispatch_func_wrapper(*args, **opts)
+    print('rc =', rc)
+
+
 if __name__ == '__main__':
-    test_direct_call_to_a_jeeves_callback(cb_function=test_vortex)
+    print('current working directory:', os.getcwd())
+
+    # directly_call_jeeves_callback(cb_function=test_vortex)
+
+    json_concat = "ask.20210827192526.221655.P006488.pascal.vortex.json"
+    json_synopsis = "ask.20210827192526.248749.P006488.pascal.vortex.json"
+    execute_a_json_askfile('~/jeeves/keep/' + json_concat)

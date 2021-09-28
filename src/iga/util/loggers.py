@@ -4,7 +4,7 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import logging
 
@@ -14,6 +14,7 @@ __all__ = []
 
 class MyLogger(object):
     """docstring for MyLogger"""
+
     def __init__(self):
         self.logger = iga_logger()
 

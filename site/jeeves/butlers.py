@@ -25,14 +25,14 @@ import sys
 import time
 from ast import literal_eval
 from datetime import datetime
+from random import randint
 from signal import SIGTERM
 
 import six
 from six.moves.configparser import SafeConfigParser
 
 from bronx.syntax import dictmerge, mktuple
-from . import pools
-from . import talking
+from . import pools, talking
 
 #: No automatic export
 __all__ = []
@@ -87,7 +87,9 @@ def _jeeves_callback_finder(thismod, thisname, logger):
     return thisfunc
 
 
-def _dispatch_func_wrapper(logger_cb, logger_setid_manager, modname, funcname, pnum, ask, config, **kw):
+def _dispatch_func_wrapper(logger_cb, logger_setid_manager, loglevel,
+                           modname, funcname, pnum, ask, config,
+                           **kw):
     """
     Wrapper exexuted by the pool's worker in order to launch the callback
     ``funcname`` from module ``modname``.
@@ -96,6 +98,7 @@ def _dispatch_func_wrapper(logger_cb, logger_setid_manager, modname, funcname, p
     :param logger_setid_manager: A context manager class that can be used
                                  to customise the logging system (in order
                                  to add the request ID (**pnum**)
+    :param loglevel: The desired loglevel
     :param modname: The module name
     :param funcname: The callback name (it must be a callable)
     :param pnum: The request ID
@@ -105,9 +108,9 @@ def _dispatch_func_wrapper(logger_cb, logger_setid_manager, modname, funcname, p
     :return: A three-element tuple (request ID, rc, extra_dictionary)
     """
     # Setup the logging system in order to display the request ID
-    with logger_setid_manager(pnum):
+    with logger_setid_manager(pnum, loglevel):
         my_logger = logger_cb(__name__)
-        # Add extra layer of security (just in case an exception occurs
+        # Add extra layer of security (just in case an exception occurs)
         try:
             # Look for the desired callback
             func = _jeeves_callback_finder(modname, funcname, my_logger)
@@ -155,7 +158,7 @@ class ExitHandler(object):
         moreinfo = str(multiprocessing.current_process()) + ' ' + str(os.getpid())
         self.daemon.logger.info('Context enter for %s %s', repr(self.daemon), moreinfo)
         old_handler = signal.signal(signal.SIGTERM, self.sigterm_handler)
-        if (old_handler != signal.SIG_DFL) and (old_handler != self.sigterm_handler):
+        if old_handler not in (signal.SIG_DFL, self.sigterm_handler):
             if not self.on_stack:
                 raise RuntimeError('Handler already registered for SIGTERM: [%r]' % old_handler)
 
@@ -251,6 +254,7 @@ class PidFile(object):
             err = str(err)
             if err.find('No such process') > 0:
                 self.delfile()
+                return None
             else:
                 return str(err)
 
@@ -286,14 +290,15 @@ class BaseDaemon(object):
     Usage: subclass the BaseDaemon class and override the run() method
     """
 
-    def __init__(self, tag='test', pidfile=None, procname='python', loglevel='INFO', inifile=None, redirect=None):
+    def __init__(self, tag='test', pidfile=None, procname='python',
+                 loglevel='INFO', inifile=None, redirect=None):
         self._tag = tag
         self._pidfile = PidFile(tag=tag, filename=pidfile, procname=procname)
         self._tmpdir = os.path.join(os.environ['HOME'], 'tmp')
         self._rundir = os.getcwd()
         self._logger = None
         self._logfacility = None
-        self._loglevel = loglevel
+        self._loglevel = loglevel.upper()
         self._stdin = os.devnull
         node = re.sub(r'\..*', '', platform.node())
         self._redirect = os.path.realpath(redirect or tag + '-' + node + '.log')
@@ -342,11 +347,11 @@ class BaseDaemon(object):
     @loglevel.setter
     def loglevel(self, value):
         oldvalue = self._loglevel
-        self._loglevel = value
+        self._loglevel = value.upper()
         self._logger = None
-        self.logger.warning('Jeeves loglevel changed from %s to %s.' +
+        self.logger.warning('Jeeves loglevel changed from %s to %s. ' +
                             'This will only take effect when pool-workers restart.',
-                            oldvalue, value)
+                            oldvalue, value.upper())
 
     @property
     def logfacility(self):
@@ -456,7 +461,7 @@ class BaseDaemon(object):
 
     def exit_callbacks(self):
         """Return a list of callbacks to be launched before the daemon exits."""
-        return self.bye,
+        return (self.bye,)
 
     def start(self, mkdaemon=True):
         """Start the daemon."""
@@ -648,10 +653,11 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         v = literal_eval(v)
                     except (SyntaxError, ValueError):
                         if k.startswith('options') or ',' in v:
-                            v = [x for x in v.replace('\n', '').replace(' ', '').split(',')]
+                            v = v.replace('\n', '').replace(' ', '').split(',')
                     config[section][k.lower()] = v
         else:
             self.logger.error('No configuration', path=filename)
+            sys.exit('No configuration (path={!s})'.format(filename))
         return config
 
     def mkpools(self, clear=False):
@@ -663,9 +669,16 @@ class Jeeves(BaseDaemon, HouseKeeping):
             if poolcfg not in self.config:
                 self.logger.warning('No dedicated conf', pool=pool)
                 self.config[poolcfg] = dict()
-            thispool = pools.get(tag=pool,
-                                 logger=self.logfacility.worker_get_logger(pools.__name__),
-                                 **self.config[poolcfg])
+            pools.get(tag=pool,
+                      logger=self.logfacility.worker_get_logger(pools.__name__),
+                      **self.config[poolcfg])
+
+    def _get_pool(self, tag):
+        if pools.check(tag):
+            return pools.get(tag=tag)
+        else:
+            return pools.get(tag=tag,
+                             logger=self.logfacility.worker_get_logger(pools.__name__))
 
     def setup(self):
         """
@@ -698,7 +711,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         maxtasks = self.config['driver'].get('maxtasks', 64)
         self.ppool = multiprocessing.Pool(self.procs,
                                           self._worker_init,
-                                          (self.logfacility, ),
+                                          (self.logfacility,),
                                           maxtasks)
         self.logger.info('Multiprocessing pool started', procs=self.procs)
         for child in sorted(multiprocessing.active_children(), key=lambda x: x.pid):
@@ -707,7 +720,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
     def multi_stop(self, timeout=1):
         """Join all active coprocesses."""
-        if self.procs:
+        if hasattr(self, 'procs') and self.procs:
             # at least, some multiproccessing setup had occured
             self.logger.info('Terminate', procs=self.procs, remaining=len(self.asynchronous))
 
@@ -723,7 +736,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     self.logger.critical('Trouble in pool', pnum=pnum, exc_info=trouble)
                 else:
                     self.logger.info('Return', pnum=pnum, rc=prc, result=pvalue)
-                    self.migrate(pools.get(tag=jpool), jfile)
+                    self.migrate(self._get_pool(jpool), jfile)
                 finally:
                     del self.asynchronous[pnum]
 
@@ -744,7 +757,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         rc = None
         try:
             target = pool.migrate(item, target=target)
-            rc = pools.get(tag=target)
+            rc = self._get_pool(target)
         except OSError as trouble:
             self.logger.error('Could not migrate', item=item, exc_info=trouble)
         else:
@@ -771,8 +784,8 @@ class Jeeves(BaseDaemon, HouseKeeping):
 
         - pnum   = The unique id they received as first argument
         - prc    = True for success, False (or None) for failure
-        - pvalue = a dict, may contain anything, but the key 'rpool' may be used to indicate
-          in which pool the json request must be moved.
+        - pvalue = a dict, may contain anything, but the key 'rpool' is used to indicate
+          which pool the json request must be moved to.
 
            - If the operation was successfull, the default target pool is taken from the
              configuration, e.g. pool_process ('run') -> pool_out ('done')
@@ -796,7 +809,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         finally:
             if pnum is not None and pnum in self.asynchronous:
                 jpool, jfile, u_asyncr = self.asynchronous[pnum]
-                poolbase = pools.get(tag=jpool)
+                poolbase = self._get_pool(jpool)
                 pooltarget = None
                 try:
                     pooltarget = pvalue.get('rpool', None)
@@ -826,6 +839,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                     func=_dispatch_func_wrapper,
                     args=(self.logfacility.worker_logger_cb,
                           self.logfacility.worker_logger_setid_manager,
+                          acfg.get('loglevel', self.loglevel).upper(),
                           modname,
                           funcname,
                           pnum,
@@ -932,7 +946,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
         self.multi_start()
 
         # migrate existing requests forgotten in processing directory
-        thispool = pools.get(tag='process')
+        thispool = self._get_pool('process')
         todorun = thispool.contents
         if todorun:
             self.logger.warning('Remaining requests', num=len(todorun))
@@ -974,7 +988,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 pool.clean()
 
             # process the input pool first
-            thispool = pools.get(tag='in')
+            thispool = self._get_pool('in')
             if thispool.active:
                 self.logger.debug('Processing', pool=thispool.tag, path=thispool.path)
 
@@ -998,7 +1012,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                 self.logger.warning('Inactive', pool=thispool.tag, path=thispool.path)
 
             # then process the retry pool
-            thispool = pools.get(tag='retry')
+            thispool = self._get_pool('retry')
             if thispool.active:
                 self.logger.debug('Processing', pool=thispool.tag, path=thispool.path)
                 # look for previous retry requests
@@ -1017,7 +1031,7 @@ class Jeeves(BaseDaemon, HouseKeeping):
                         tbusy = True
                         rt['nbt'] += 1
                         rt['last'] = stamp
-                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow)))
+                        rt['delay'] = min(rtceil, max(1, int(rt['delay'] * rtslow) + randint(-5, 5)))
                         self.logger.warning('Retry', json=req, nbt=rt['nbt'], nextdelay=rt['delay'])
                         self.migrate(thispool, req)
             else:
