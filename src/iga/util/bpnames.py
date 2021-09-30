@@ -47,7 +47,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto') or vapp == 'promethee':
+                   'reuaro01', 'ctbto', 'medaroifs') or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -677,7 +677,7 @@ def global_snames(resource, provider):
         else:
             bname = dict(sentinel1='SENT1').get(resource.satellite, resource.satellite)
 
-    elif resource.realkind == 'forcing' and resource.model in ('mfwam', 'ww3'):
+    elif resource.realkind == 'forcing' and resource.model == 'mfwam':
         if resource.filling == 'wind':
 
             if hasattr(resource, 'term'):
@@ -698,6 +698,10 @@ def global_snames(resource, provider):
             bname = 'courant_{:s}'.format(resource.date.hh)
         else:
             bname = 'allsop'
+
+    elif resource.realkind == 'forcing' and resource.model == 'ww3':
+        if resource.filling == 'wind':
+            bname = 'wind_{:s}'.format(resource.date.hh)
 
     elif resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
