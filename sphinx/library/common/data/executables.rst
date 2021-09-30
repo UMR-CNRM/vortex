@@ -81,6 +81,16 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: MasterDiagLabo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MasterDiagPi
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: IOAssign
    :show-inheritance:
    :members:
