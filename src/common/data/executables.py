@@ -8,7 +8,7 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import vortex
 
-from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
+from vortex.data.executables import Script, GnuScript, BlackBox, NWPModel, SurfaceModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
 
@@ -915,6 +915,30 @@ class Festat(BlackBox):
                 ),
                 gvar = dict(
                     optional = True,
+                ),
+            )
+        )
+    ]
+
+
+class EnsembleDiagScript(GnuScript):
+    """Script to compute some ensemble diagnostics."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info='Script to compute some ensemble diagnostics.',
+            attr=dict(
+                kind=dict(
+                    values = ["ens_diag_script", ],
+                ),
+                scope=dict(
+                    values = ["generic", ],
+                    optional = True,
+                    default = "generic",
+                ),
+                gvar=dict(
+                    default = "master_ensdiag_[scope]",
                 ),
             )
         )
