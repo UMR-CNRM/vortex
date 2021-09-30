@@ -6,13 +6,13 @@ objects are in charge of manipulating data between the working directory and
 the various caches or archives".
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
+import functools
 import io
 import re
 import six
 import sys
-import functools
 
 import bronx.fancies.dump
 from bronx.fancies import loggers
@@ -145,7 +145,7 @@ class Handler(object):
             self._notifyhash(oldhash)
             self.reset_contents()
         else:
-            raise ValueError('This value is not a plain Resource <%s>', value)
+            raise ValueError('This value is not a plain Resource <{!s}>'.format(value))
 
     resource = property(_get_resource, _set_resource)
 
@@ -161,7 +161,7 @@ class Handler(object):
             self._notifyhash(oldhash)
             self.reset_contents()
         else:
-            raise ValueError('This value is not a plain Provider <%s>', value)
+            raise ValueError('This value is not a plain Provider <{!s}>'.format(value))
 
     provider = property(_get_provider, _set_provider)
 
@@ -176,7 +176,7 @@ class Handler(object):
             self._container = value
             self._notifyhash(oldhash)
         else:
-            raise ValueError('This value is not a plain Container <%s>', value)
+            raise ValueError('This value is not a plain Container <{!s}>'.format(value))
 
     container = property(_get_container, _set_container)
 
@@ -251,7 +251,7 @@ class Handler(object):
 
     def _notifyhash(self, oldhash):
         """Notify that the hashkey has changed."""
-        self._observer.notify_upd(self, dict(oldhash=oldhash,))
+        self._observer.notify_upd(self, dict(oldhash=oldhash, ))
 
     def is_expected(self):
         """Return a boolean value according to the last stage value (expected or not)."""
@@ -321,7 +321,7 @@ class Handler(object):
                 if fatal:
                     raise
                 else:
-                    return ('OOPS: {!s} (but fatal is False)' .format(e))
+                    return 'OOPS: {!s} (but fatal is False)'.format(e)
             return self._lasturl
         else:
             logger.warning('Resource handler %s could not build location', self)
@@ -652,8 +652,9 @@ class Handler(object):
                                                            for s in cur_seq.effective_inputs()]):
                             self.container.updfill(True)
                             self._updstage('get', insitu=True)
-                            logger.info('The <%s> resource is already here and matches the RH description :-)',
-                                        self.container.iotarget())
+                            logger.info(
+                                'The <%s> resource is already here and matches the RH description :-)',
+                                self.container.iotarget())
                     else:
                         # This may happen if fatal=False and the local file was fetched
                         # by an alternate
@@ -776,7 +777,7 @@ class Handler(object):
                 # Delayed get not available... do the usual get !
                 e_opts = self._latest_earlyget_opts.copy()
                 e_opts['insitu'] = False
-                return self._get_proxy(self._actual_get, ** e_opts)
+                return self._get_proxy(self._actual_get, **e_opts)
             else:
                 alternate = self._latest_earlyget_opts.get('alternate', False)
                 if alternate and self.container.exists():
@@ -801,7 +802,7 @@ class Handler(object):
                             logger.warning('Delayed get failed ! Reverting to the usual get.')
                             e_opts = self._latest_earlyget_opts.copy()
                             e_opts['insitu'] = False
-                            return self._get_proxy(self._actual_get, ** e_opts)
+                            return self._get_proxy(self._actual_get, **e_opts)
                         else:
                             rst = self._postproc_get(store, rst, self._latest_earlyget_opts)
                     else:

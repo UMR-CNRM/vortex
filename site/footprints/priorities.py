@@ -4,11 +4,11 @@
 Footprint utilities to handle the ``priority`` footprint's attribute.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
-
-import six
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import functools
+
+import six
 
 __all__ = ['top', ]
 
@@ -179,7 +179,7 @@ class PrioritySet(object):
         """Returns the relative position of the priority named ``tag``."""
         tag = tag.upper()
         if tag not in self._levels:
-            raise ValueError('No such level priority %s', tag)
+            raise ValueError('No such level priority: {!s}'.format(tag))
         return self._levels.index(tag)
 
     def rerank(self, tag, upd):

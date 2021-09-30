@@ -410,7 +410,7 @@ class Context(getbytag.GetByTag, observer.Observer):
         as well as the default ``focus``.
         """
         if name in self.__class__.tag_keys():
-            raise RuntimeError("A context with tag=%s already exists.", name)
+            raise RuntimeError("A context with tag={!s} already exists.".format(name))
         newctx = self.__class__(tag=name, topenv=self.env, path=self.path)
         if focus:
             self.__class__.set_focus(newctx)
