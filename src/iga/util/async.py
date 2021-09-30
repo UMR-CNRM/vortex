@@ -139,6 +139,10 @@ def system_route(pnum, ask, config, logger, **opts):
             else:
                 outfile = outfile_fmt.format(filtername='concatenate')
                 route_source = sh.forcepack(data.source, destination=outfile, fmt=data.fmt)
+                # forecepack does nothing on not-split gribs: let's explitcitly hardlink to outfile
+                if route_source != outfile:
+                    sh.cp(data.source, outfile, intent="in", fmt='grib')
+                    route_source = outfile
 
             # activate services or not according to jeeves' configuration
             if route_on:
