@@ -15,6 +15,7 @@ default:
 register:
     genv:
         - cy42_op2.67
+        - 'al42_arome@pe-op3.03'
 
 todo:
     # An IFS executable
@@ -37,3 +38,10 @@ todo:
               cycle:
                   - cy46t1_op1.05
                   - cy48
+    # Diag PI/Labo Diagnostic
+    -   commons:
+            kind: masterdiag
+            genv: 'al42_arome@pe-op3.03'
+        tests:
+            - cycle: cy42_op2.67
+            - cycle: cy46t1_op1.10

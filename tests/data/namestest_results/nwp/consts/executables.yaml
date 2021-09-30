@@ -77,3 +77,19 @@
     results: !test_names.core.TestResults
     - default: *id001
       location: gget://gco.multi.fr/tampon/cy42_masterodb-op2.09.IMPI512IFC1601.2ys.exe
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cycle: cy42_op2.67
+      genv: al42_arome@pe-op3.03
+      kind: masterdiag
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/aropi03_diag-pe.08.IMPI512IFC1601.2y.exe
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      cycle: cy46t1_op1.10
+      genv: al42_arome@pe-op3.03
+      kind: masterdiag
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/labo03_diag-pe.08.IMPI512IFC1601.2y.exe
