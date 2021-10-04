@@ -318,7 +318,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         """Post-processing of a single output grib."""
         logger.info("Starting the post-processing")
 
-        sh = self.system.sh
+        sh = self.system
         logger.info("Post-processing of %s", self.file_in)
 
         # Prepare the working directory
