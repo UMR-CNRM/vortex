@@ -706,7 +706,7 @@ class JobAssistant(footprints.FootprintBase):
         else:
             self._printfmt('\n** Cycle << {!s} >> is to be registered **', cycle)
             genv.autofill(cycle)
-            self._printfmt(genv.as_rawstr(cycle=cycle))
+            print(genv.as_rawstr(cycle=cycle))
 
     @_extendable
     def complete(self):
@@ -726,7 +726,7 @@ class JobAssistant(footprints.FootprintBase):
         self._printfmt('Exception type: {!s}', exc_type)
         self._printfmt('Exception info: {!s}', latest_error)
         t.sh.header('Traceback Error / BEGIN')
-        self._printfmt("\n".join(traceback.format_tb(exc_traceback)))
+        print("\n".join(traceback.format_tb(exc_traceback)))
         t.sh.header('Traceback Error / END')
 
     @_extendable
