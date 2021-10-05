@@ -413,6 +413,9 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         )
         if self.system.path.exists(self.ioassign):
             self._x_ioassign = self.system.path.abspath(self.ioassign)
+        else:
+            # Legacy...
+            self._x_ioassign = self.ioassign
 
     def _odbobj_setup(self, rh, opts):  # @UnusedVariable
         """Setup the ODB object."""
