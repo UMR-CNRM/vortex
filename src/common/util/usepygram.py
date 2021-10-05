@@ -49,6 +49,7 @@ __all__ = []
 @epygram_checker.disabled_if_unavailable
 def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
     """Clone any existing fields ending with``source`` to some new field."""
+    datain.open()
     # Prepare sources names
     if not isinstance(sources, (list, tuple, set)):
         sources = [sources, ]
@@ -104,6 +105,7 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
 
     if addedfields:
         dataout.close()
+    datain.close()
     return addedfields
 
 
