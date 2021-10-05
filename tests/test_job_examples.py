@@ -170,6 +170,7 @@ class TestJobExamples(unittest.TestCase):
             self.assertNotInCache(i_helper, 'DEMO/20201029T1800P/on_error1_f2/beacon.arpege.json')
             self.assertNotInCache(i_helper, 'DEMO/20201029T1800P/on_error2_f2/beacon.arpege.json')
             self.assertInCache(i_helper, 'DEMO/20201029T1800P/on_error_t3/beacon.arpege.json')
+            self.assertInCache(i_helper, 'DEMO/20201029T1800P/on_error_t4/beacon.arpege.json')
         with self.isolate_job(my_appdir) as i_helper:
             i_helper.run_mkjob(['name=loop_family_job1', 'task=loop_family1',
                                 'rundates=2020102918-2020103118-PT24H',
