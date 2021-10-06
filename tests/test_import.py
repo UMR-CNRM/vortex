@@ -32,7 +32,8 @@ non_standard_dep = {'yaml': ['bronx.datagrip.misc',
                     'netCDF4': ['bronx.datagrip.netcdf', ],
                     'matplotlib': ['bronx.graphics.colormapping',
                                    'bronx.graphics.axes'],
-                    'configparser': ['sandbox.util.askjeeves'],}
+                    'configparser': ['sandbox.util.askjeeves'],
+                    }
 
 tloglevel = 'critical'
 

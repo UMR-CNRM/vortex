@@ -381,26 +381,28 @@ class utFootprint(TestCase):
         def groundvalues():
             return dict(cool=2)
 
-        footprints.setup.callback = groundvalues
-        self.assertIsInstance(footprints.setup.callback, type(groundvalues))
+        try:
+            footprints.setup.callback = groundvalues
+            self.assertIsInstance(footprints.setup.callback, type(groundvalues))
 
-        rv = fp._findextras(dict())
-        self.assertIsInstance(rv, dict)
-        self.assertDictEqual(rv, dict(cool=2))
+            rv = fp._findextras(dict())
+            self.assertIsInstance(rv, dict)
+            self.assertDictEqual(rv, dict(cool=2))
 
-        rv = fp._findextras(dict(foo='notused'))
-        self.assertIsInstance(rv, dict)
-        self.assertDictEqual(rv, dict(cool=2))
+            rv = fp._findextras(dict(foo='notused'))
+            self.assertIsInstance(rv, dict)
+            self.assertDictEqual(rv, dict(cool=2))
 
-        obj = FootprintTestOne(kind='hop', someint=7)
-        self.assertIsInstance(obj, FootprintTestOne)
+            obj = FootprintTestOne(kind='hop', someint=7)
+            self.assertIsInstance(obj, FootprintTestOne)
 
-        rv = fp._findextras(dict(foo='notused', good=obj))
-        self.assertIsInstance(rv, dict)
-        self.assertDictEqual(rv, dict(cool=2, kind='hop', someMixedCase=None,
-                                      someint=7, somestr='this'))
+            rv = fp._findextras(dict(foo='notused', good=obj))
+            self.assertIsInstance(rv, dict)
+            self.assertDictEqual(rv, dict(cool=2, kind='hop', someMixedCase=None,
+                                          someint=7, somestr='this'))
 
-        footprints.setup.callback = callback_ori
+        finally:
+            footprints.setup.callback = callback_ori
 
     def test_footprint_addextras(self):
         fp = self.fpbis

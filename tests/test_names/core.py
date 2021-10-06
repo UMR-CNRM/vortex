@@ -204,7 +204,7 @@ class TestDriver(object):
         try:
             with contextboundGlobalLevel(loglevel):
                 # A new session is created for each TestDriver object
-                gl = vortex.sessions.getglove(user='tourist')
+                gl = vortex.sessions.getglove(tag='test_names', user='tourist')
                 t = vortex.sessions.get(tag='nametest_{:s}'.format(self._inihash), glove=gl, active=True)
                 logger.debug("Session %s/tag=%s/active=%s", str(t), t.tag, str(t.active))
                 t.env.MTOOLDIR = '/'

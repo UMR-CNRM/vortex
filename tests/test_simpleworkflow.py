@@ -16,6 +16,7 @@ import tempfile
 from unittest import TestCase, main
 
 from bronx.fancies import loggers
+import footprints
 
 import vortex
 from vortex import sessions, toolbox
@@ -380,7 +381,7 @@ class UtSimpleWorkflow(TestCase):
         # Create a dedicated test
         self.cursession = sessions.get(tag=self._givetag(),
                                        topenv=vortex.rootenv,
-                                       glove=self.rootsession.glove)
+                                       glove=footprints.proxy.glove())
         self.cursession.activate()
         self.cursession.rundir = self.tmpdir
         self.cursession.context.cocoon()

@@ -188,11 +188,11 @@ class TestJobAssistant(unittest.TestCase):
         self.rootsession = vortex.sessions.current()
         self.rootsh = self.rootsession.system()
         self.oldpwd = self.rootsh.pwd()
-        self.tmpdir = self.rootsh.path.realpath(tempfile.mkdtemp(prefix='simpleworkflow_test_'))
+        self.tmpdir = self.rootsh.path.realpath(tempfile.mkdtemp(prefix='jobassistant_test_'))
         # Create a dedicated test
         self.cursession = vortex.sessions.get(tag=self._givetag(),
                                               topenv=vortex.rootenv,
-                                              glove=vortex.sessions.getglove())
+                                              glove=fpx.glove())
         self.cursession.activate()
         # Tb settings
         self._tb_verbose = vortex.toolbox.active_verbose
