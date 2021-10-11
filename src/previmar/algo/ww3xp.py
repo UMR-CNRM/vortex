@@ -190,7 +190,7 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
                             fout.write(linestr)
                     linestr = fin.readline()
             fout.close()
-            self.system.sh.mv("output.tmp", fname)
+            self.system.mv("output.tmp", fname)
 
         with io.open('list_files', 'w') as flist:
             for fname in [x.container.filename for x in inputspec]:
@@ -198,7 +198,7 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
                 flist.write('\n')
 
         # Creation of results directory
-        self.system.sh.mkdir('spectre')
+        self.system.mkdir('spectre')
 
 
 class Ww3_ounpAlgo(BlindRun):
@@ -352,7 +352,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Netcdf extraction of a single time step output field file."""
 
-        sh = self.system.sh
+        sh = self.system
         logger.info("Extraction of netcdf of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistWw3Ounf'),)
         if len(namcandidate) != 1:
@@ -438,7 +438,7 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Interpolation of a single time step."""
 
-        sh = self.system.sh
+        sh = self.system
         logger.info("Interpolation of %s", self.file_in)
         # Prepare the working directory
         cwd = sh.pwd()
@@ -534,7 +534,7 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
 
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Grib conversion for a single time step."""
-        sh = self.system.sh
+        sh = self.system
         logger.info("Conversion of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistNcGrb'),)
         if len(namcandidate) != 1:
