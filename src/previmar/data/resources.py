@@ -480,3 +480,33 @@ class WW3Out(GeoFlowResource):
     @property
     def realkind(self):
         return 'WW3Out'
+
+@namebuilding_append('src', lambda s: s.fields)
+class DatedBathy(GeoFlowResource):
+    """Class for bathymetry with a date.
+    """
+    _footprint = [
+        term_deco,
+        dict(
+            info = 'dated bathymetry',
+            attr = dict(
+                kind = dict(
+                    values = ['datedbathymetry'],
+                ),
+                nativefmt = dict(
+                    values  = ['grib'],
+                    default = 'grib',
+                ),
+                fields = dict(
+                    values = ['bathy',],
+                ),
+                model = dict(
+                    values = ['ww3'],
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'WW3Out'
