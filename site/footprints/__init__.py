@@ -27,7 +27,7 @@ from .stdtypes import *
 #: No automatic export
 __all__ = []
 
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 
 __tocinfoline__ = 'A generic multi-purpose fabric for objects with tunable footprints'
 
@@ -976,6 +976,10 @@ class FootprintBase(object):
             for a in [x for x in self.__dict__.keys() if not x.startswith('_')]:
                 setattr(objcp, a, getattr(self, a))
         return objcp
+
+    def footprint_has_attribute(self, attr):
+        """Check if the footprint contains the **attr** attribute"""
+        return attr in self._attributes
 
     @property
     def footprint_attributes(self):

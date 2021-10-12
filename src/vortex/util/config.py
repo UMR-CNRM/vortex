@@ -519,7 +519,7 @@ class DelayedConfigParser(GenericConfigParser):
             if attr in filter(lambda x: not x.startswith('_'),
                               dir(_DEFAULT_CONFIG_PARSER) + ['setall', 'save']):
                 object.__getattribute__(self, 'refresh')()
-        except StandardError:
+        except Exception:
             logger.critical('Trouble getattr %s < %s >', attr, self)
         return object.__getattribute__(self, attr)
 

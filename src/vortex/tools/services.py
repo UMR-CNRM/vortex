@@ -7,25 +7,24 @@ With the abstract class Service (inheritating from FootprintBase)
 a default Mail Service is provided.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
-
-import six
-from six.moves.configparser import NoOptionError, NoSectionError
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import contextlib
 import hashlib
 import io
-from email import encoders
 import pprint
+from email import encoders
 from string import Template
 
+import six
+from six.moves.configparser import NoOptionError, NoSectionError
+
+import footprints
 from bronx.fancies import loggers
 from bronx.fancies.display import print_tablelike
 from bronx.stdtypes import date
 from bronx.stdtypes.dictionaries import UpperCaseDict
 from bronx.syntax.pretty import EncodedPrettyPrinter
-import footprints
-
 from vortex import sessions
 from vortex.util.config import GenericConfigParser, load_template
 
@@ -92,7 +91,9 @@ class Service(footprints.FootprintBase):
         """
         if as_var is None:
             as_var = key.upper()
-        value = getattr(self, key, self.env.get(as_var, None))
+        value = getattr(self, key, None)
+        if not value:
+            value = self.env.get(as_var, None)
         if not value:
             if as_conf is None:
                 as_conf = 'services:' + key.lower()
@@ -367,6 +368,7 @@ class ReportService(Service):
 class FileReportService(ReportService):
     """Building the report as a simple file."""
 
+    _abstract = True
     _footprint = dict(
         info = 'File Report services class',
         attr = dict(
@@ -409,8 +411,7 @@ class SSHProxy(Service):
             ),
             nodetype = dict(
                 optional = True,
-                values   = ['login', 'transfer', 'transfert', 'network',
-                            'agt', 'syslog'],
+                values   = ['login', 'transfer', 'transfert', 'network', 'agt', 'syslog'],
                 default  = 'network',
                 remap    = dict(transfer = 'transfert'),
             ),
@@ -516,9 +517,9 @@ class JeevesService(Service):
                 data=data,
             )
             jr = bertie.ask(**fulltalk)
-            return (jr.todo, jr.last)
+            return jr.todo, jr.last
         else:
-            logger.error('No valid path to jeeves <{!s}>'.format(self.jpath))
+            logger.error('No valid path to jeeves <%s>', self.jpath)
             return None
 
 
@@ -553,7 +554,7 @@ class HideService(Service):
     )
 
     def find_rootdir(self, filename):
-        """Find a path for hidding files on the same filesystem."""
+        """Find a path for hiding files on the same filesystem."""
         username = self.sh.getlogname()
         work_dir = self.sh.path.join(self.sh.find_mount_point(filename), 'work')
         if not self.sh.path.exists(work_dir):
@@ -561,7 +562,7 @@ class HideService(Service):
             fullpath = self.sh.path.realpath(filename)
             if username not in fullpath:
                 logger.error('No login <%s> in path <%s>', username, fullpath)
-                raise ValueError('Login name not in actual path for hidding data')
+                raise ValueError('Login name not in actual path for hiding data')
             work_dir = fullpath.partition(username)[0]
             logger.warning("using work_dir = <%s>", work_dir)
         hidden_path = self.sh.path.join(work_dir, username, self.headdir)
@@ -570,7 +571,13 @@ class HideService(Service):
     def __call__(self, filename):
         """Main action: hide a cheap copy of this file under a unique name."""
 
-        actual_rootdir = self.rootdir or self.find_rootdir(filename)
+        rootdir = self.rootdir
+        if rootdir is None:
+            rootdir = self.sh.default_target.get('hidden_rootdir', None)
+        if rootdir is not None:
+            rootdir = self.sh.path.expanduser(rootdir)
+
+        actual_rootdir = rootdir or self.find_rootdir(filename)
         destination = self.sh.path.join(
             actual_rootdir,
             '.'.join((
@@ -723,6 +730,12 @@ class TemplatedMailService(MailService):
             catalog = dict(
                 type     = GenericConfigParser,
             ),
+            dryrun = dict(
+                info     = "Do not actually send the email. Just render the template.",
+                type     = bool,
+                optional = True,
+                default  = False,
+            ),
         )
     )
 
@@ -745,10 +758,6 @@ class TemplatedMailService(MailService):
     def trailer(self):
         """String appended to the message body."""
         return u''
-
-    def deactivated(self):
-        """Return True to eventually prevent the mail from being sent."""
-        return False
 
     def get_catalog_section(self):
         """Read section <id> (a dict-like) from the catalog."""
@@ -815,7 +824,7 @@ class TemplatedMailService(MailService):
             try:
                 tpl = load_template(self.ticket, tplfile, encoding=self.inputs_charset)
             except ValueError as exc:
-                logger.error('{}'.format(exc.message))
+                logger.error('%s', exc.message)
                 return None
         message = self.substitute(tpl, tpldict)
         return self.header() + message + self.trailer()
@@ -898,7 +907,7 @@ class TemplatedMailService(MailService):
         for arg in args:
             add_ons.update(arg)
         rc = False
-        if self.prepare(add_ons) and not self.deactivated():
+        if self.prepare(add_ons) and not self.dryrun:
             rc = super(TemplatedMailService, self).__call__()
         return rc
 

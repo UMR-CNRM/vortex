@@ -20,3 +20,4 @@ Functions
 ---------
 
 .. autofunction:: agt_actual_command
+.. autofunction:: agt_volatile_path

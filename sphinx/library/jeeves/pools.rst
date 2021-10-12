@@ -26,6 +26,8 @@ Interface functions
 
 .. autofunction:: items
 
+.. autofunction:: check
+
 .. autofunction:: clear_all
 
 .. autofunction:: timestamp

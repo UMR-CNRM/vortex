@@ -15,6 +15,9 @@ import os
 import tempfile
 from unittest import TestCase, main
 
+from bronx.fancies import loggers
+import footprints
+
 import vortex
 from vortex import sessions, toolbox
 from vortex.data.abstractstores import CACHE_GET_INTENT_DEFAULT, MultiStore
@@ -30,6 +33,8 @@ from vortex.tools.storage import FixedEntryCache
 from vortex.tools.systems import ExecutionError
 
 MYPYFILE = os.path.abspath(__file__)
+
+tloglevel = 'critical'
 
 
 # The test cache Storage Object
@@ -357,6 +362,7 @@ def toto_hook(t, rh, msg='Toto was here...'):
     rh.save()
 
 
+@loggers.unittestGlobalLevel(tloglevel)
 class UtSimpleWorkflow(TestCase):
 
     @staticmethod
@@ -375,9 +381,8 @@ class UtSimpleWorkflow(TestCase):
         # Create a dedicated test
         self.cursession = sessions.get(tag=self._givetag(),
                                        topenv=vortex.rootenv,
-                                       glove=self.rootsession.glove)
+                                       glove=footprints.proxy.glove())
         self.cursession.activate()
-        self.cursession.critical()   # Decrease loglevel a lot !
         self.cursession.rundir = self.tmpdir
         self.cursession.context.cocoon()
         self.cursession.glove.vapp = 'arpege'

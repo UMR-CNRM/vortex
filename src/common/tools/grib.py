@@ -4,14 +4,13 @@
 TODO: Module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import six
 import json
 
-from bronx.fancies import loggers
 import footprints
-
+from bronx.fancies import loggers
 from vortex import sessions
 from vortex.algo.components import AlgoComponentError
 from vortex.layout.contexts import Context
@@ -178,7 +177,7 @@ class GRIBFilter(_GenericFilter):
         """
 
         if not self._sh.path.exists(gribfile):
-            raise IOError("%s doesn't exists", gribfile)
+            raise IOError("{!s} doesn't exist".format(gribfile))
 
         # We just want to concatenate files...
         if not self._filters:

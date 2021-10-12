@@ -51,10 +51,10 @@ with io.open(sync_name + '.log', mode='a', buffering=1) as flog:
             itself = promise_info.get('itself', None)
             logging('Sync self:', itself)
 
-            time_sleep = os.environ.get('VORTEX_TIME_SLEEP', 10)
+            time_sleep = int(os.environ.get('VORTEX_TIME_SLEEP', 10))
             logging('Sync time:', time_sleep)
 
-            time_retry = os.environ.get('VORTEX_TIME_RETRY', 12)
+            time_retry = int(os.environ.get('VORTEX_TIME_RETRY', 12))
             logging('Sync redo:', time_retry)
 
             nb = 0

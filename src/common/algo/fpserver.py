@@ -265,8 +265,9 @@ class FullPosServer(IFSParallel):
         inisec = self.context.sequence.effective_inputs(role=self._INITIALCONDITION_ROLE)
         if inisec:
             for s in inisec:
-                iprefix = ((self._INITIALCONDITION_ROLE.match(s.role) or
-                            self._INITIALCONDITION_ROLE.match(s.atlernate)).group(1) or
+                iprefix = (self._INITIALCONDITION_ROLE.match(s.alternate
+                                                             if s.role is None else
+                                                             s.role).group(1) or
                            self._MODELSIDE_INPUTPREFIX1)
                 fprefix = self._MODELSIDE_INPUTPREFIX0 + iprefix
                 if fprefix in discovered.inidata:
@@ -285,8 +286,9 @@ class FullPosServer(IFSParallel):
             todosec0 = sorted(todosec0, key=lambda s: self._actual_term(s.rh))
         if todosec0:
             for iseq, s in enumerate(todosec0):
-                rprefix = ((self._INPUTDATA_ROLE.match(s.role) or
-                            self._INPUTDATA_ROLE.match(s.atlernate)).group(1) or
+                rprefix = (self._INPUTDATA_ROLE.match(s.alternate
+                                                      if s.role is None else
+                                                      s.role).group(1) or
                            self._MODELSIDE_INPUTPREFIX1)
                 todosec1[rprefix].append(s)
                 if iseq == 0:

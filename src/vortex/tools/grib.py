@@ -90,18 +90,19 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         for pname in args:
             for objpath in self.sh.glob(pname):
                 if self.is_xgrib(objpath):
-                    idx = self._std_grib_index_get(objpath)
-                    target_dirs = set()
-                    for a_mpart in idx:
-                        target_dirs.add(self.sh.path.dirname(a_mpart))
-                        rc = rc and self.sh._backend_rm(a_mpart)
-                    for a_dir in target_dirs:
-                        # Only if the directory is empty
-                        if not self.sh.listdir(a_dir):
-                            rc = rc and self.sh._backend_rm(a_dir)
-                    rc = rc and self.sh._backend_rm(objpath)
+                    with self.sh.mute_stderr():
+                        idx = self._std_grib_index_get(objpath)
+                        target_dirs = set()
+                        for a_mpart in idx:
+                            target_dirs.add(self.sh.path.dirname(a_mpart))
+                            rc = rc and self._backend_rm(a_mpart)
+                        for a_dir in target_dirs:
+                            # Only if the directory is empty
+                            if not self.sh.listdir(a_dir):
+                                rc = rc and self._backend_rm(a_dir)
+                        rc = rc and self._backend_rm(objpath)
                 else:
-                    rc = rc and self.sh._backend_rm(objpath)
+                    rc = rc and self._backend_rm(objpath)
         return rc
 
     grib_rm = grib_remove = _std_remove
@@ -112,21 +113,22 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             rc = True
             if isinstance(destination, six.string_types) and not pack:
-                idx = self._std_grib_index_get(source)
-                destdir = self.sh.path.abspath(self.sh.path.expanduser(destination) + ".d")
-                rc = rc and self.sh.mkdir(destdir)
-                target_idx = list()
-                for (i, a_mpart) in enumerate(idx):
-                    target_idx.append(self.sh.path.join(destdir, 'GRIB_mpart{:06d}'.format(i)))
-                    rc = rc and self.sh._backend_cp(a_mpart, target_idx[-1], intent=intent)
-                    rc = rc and self._std_grib_index_write(destination, target_idx)
-                if intent == 'in':
-                    self.sh.chmod(destination, 0o444)
+                with self.sh.mute_stderr():
+                    idx = self._std_grib_index_get(source)
+                    destdir = self.sh.path.abspath(self.sh.path.expanduser(destination) + ".d")
+                    rc = rc and self.sh.mkdir(destdir)
+                    target_idx = list()
+                    for (i, a_mpart) in enumerate(idx):
+                        target_idx.append(self.sh.path.join(destdir, 'GRIB_mpart{:06d}'.format(i)))
+                        rc = rc and self._backend_cp(a_mpart, target_idx[-1], intent=intent)
+                        rc = rc and self._std_grib_index_write(destination, target_idx)
+                    if intent == 'in':
+                        self.sh.chmod(destination, 0o444)
             else:
                 rc = rc and self.xgrib_pack(source, destination)
         else:
             # Usual file or file descriptor
-            rc = self.sh._backend_cp(source, destination, intent=intent)
+            rc = self._backend_cp(source, destination, intent=intent)
         return rc
 
     grib_cp = grib_copy = _std_copy
@@ -196,7 +198,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
-            hostname = self.sh._fix_fthostname(hostname)
+            hostname = self.sh.fix_fthostname(hostname)
             ftp = self.sh.ftp(hostname, logname, port=port)
             if ftp:
                 packed_size = self._packed_size(source)
@@ -250,7 +252,7 @@ class GRIB_Tool(addons.FtrawEnableAddon):
         if self.is_xgrib(source):
             if cpipeline is not None:
                 raise IOError("It's not allowed to compress xgrib files.")
-            logname = self.sh._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+            logname = self.sh.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
             ssh = self.sh.ssh(hostname, logname)
             permissions = ssh.get_permissions(source)
             # remove the .d companion directory (scp_stream removes the destination)

@@ -311,11 +311,20 @@ class OdbDriver(object):
         layout, dbpath, _ = self._process_layout_dbpath(layout, dbpath)
         layout_new = layout_new.upper()
         logger.info('ODB: changing layout (%s -> %s) for %s.', layout, layout_new, dbpath)
+        to_cleanup = set()
         for f in self.sh.ls(dbpath):
+            if self.sh.path.islink(self.sh.path.join(dbpath, f)):
+                fullpath = self.sh.path.join(dbpath, f)
+                target = self.sh.readlink(fullpath)
+                self.sh.unlink(fullpath)
+                self.sh.symlink(target.replace(layout, layout_new),
+                                fullpath.replace(layout, layout_new))
+                continue
             if f in [n.format(layout) for n in ('{:s}.dd', '{:s}.flags')]:
                 self.sh.mv(self.sh.path.join(dbpath, f),
                            self.sh.path.join(dbpath, f.replace(layout, layout_new)))
-            if f in [n.format(layout) for n in ('{:s}.iomap', '{:s}.sch', 'IOASSIGN')]:
+            if f in [n.format(layout) for n in ('{:s}.iomap', '{:s}.sch',
+                                                '{:s}.IOASSIGN', 'IOASSIGN.{:s}', 'IOASSIGN')]:
                 tmp_target = self.sh.path.join(dbpath, f + '.tmp_new')
                 with io.open(self.sh.path.join(dbpath, f), 'r') as inodb:
                     with io.open(tmp_target, 'w') as outodb:
@@ -324,10 +333,9 @@ class OdbDriver(object):
                 self.sh.mv(tmp_target,
                            self.sh.path.join(dbpath, f.replace(layout, layout_new)))
                 if layout in f:
-                    self.sh.rm(self.sh.path.join(dbpath, f))
-            if f in [n.format(layout) for n in ('{:s}.IOASSING', 'IOASSIGN.{:s}')]:
-                # These files/links are not really necessary
-                self.sh.rm(self.sh.path.join(dbpath, f))
+                    to_cleanup.add(self.sh.path.join(dbpath, f))
+        for f_name in to_cleanup:
+            self.sh.rm(f_name)
 
 
 #: Footprint's attributes needed to ODB to setup properly
@@ -403,6 +411,11 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
             env=self.env,
             target=self.target,
         )
+        if self.system.path.exists(self.ioassign):
+            self._x_ioassign = self.system.path.abspath(self.ioassign)
+        else:
+            # Legacy...
+            self._x_ioassign = self.ioassign
 
     def _odbobj_setup(self, rh, opts):  # @UnusedVariable
         """Setup the ODB object."""
@@ -465,7 +478,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         else:
             return None
 
-    def odb_merge_if_needed(self, odbsections):
+    def odb_merge_if_needed(self, odbsections, subdir='.'):
         """
         If multiple ODB databases are listed in the **odsections** section list,
         start an ODB merge.
@@ -475,13 +488,16 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         """
         if len(odbsections) > 1 or self.virtualdb.lower() == 'ecma':
             logger.info('ODB: merge for: %s.', self.virtualdb)
-            virtualdb_path = self.odb.ioassign_merge(
-                layout=self.virtualdb,
-                ioassign=self.ioassign,
-                odbnames=[x.rh.resource.part for x in odbsections],
-                iomerge_path=self._odb_find_ioassign_script('merge'),
-                iocreate_path=self._odb_find_ioassign_script('create')
-            )
+            iomerge_p = self._odb_find_ioassign_script('merge')
+            iocreate_p = self._odb_find_ioassign_script('create')
+            with self.system.cdcontext(subdir):
+                virtualdb_path = self.odb.ioassign_merge(
+                    layout=self.virtualdb,
+                    ioassign=self._x_ioassign,
+                    odbnames=[x.rh.resource.part for x in odbsections],
+                    iomerge_path=iomerge_p,
+                    iocreate_path=iocreate_p,
+                )
         else:
             virtualdb_path = self.system.path.abspath(odbsections[0].rh.container.localpath())
         return virtualdb_path
@@ -496,7 +512,7 @@ class OdbComponentDecoMixin(AlgoComponentDecoMixin):
         dbout = self.odb.ioassign_create(
             layout=layout,
             npool=self.npool,
-            ioassign=self.ioassign,
+            ioassign=self._x_ioassign,
             dbpath=dbpath,
             iocreate_path=self._odb_find_ioassign_script('create')
         )

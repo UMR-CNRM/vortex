@@ -292,21 +292,15 @@ class Ticket(getbytag.GetByTag):
         Explicitly sets the logging level to the ``level`` value.
         Shortcuts such as :method::`debug' or :method:`error` should be used.
         """
-        thislevel = loggers.getActualLevel(level)
-        if thislevel is None:
-            logger.error('Try to set an unknown log level <%s>', level)
-        else:
-            for logname in loggers.roots:
-                r_logger = logging.getLogger(logname)
-                r_logger.setLevel(thislevel)
+        loggers.setGlobalLevel(level)
 
     @property
     def loglevel(self):
         """
         Returns the logging level.
         """
-        logger = logging.getLogger('vortex')
-        return logging.getLevelName(logger.level)
+        v_logger = loggers.getLogger('vortex')
+        return logging.getLevelName(v_logger.getEffectiveLevel())
 
     def idcard(self, indent='+ '):
         """Returns a printable description of the current session."""

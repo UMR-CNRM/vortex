@@ -294,40 +294,40 @@ class System(footprints.FootprintBase):
         info = 'Default system interface',
         attr = dict(
             hostname = dict(
-                info = "The computer's network name",
+                info     = "The computer's network name",
                 optional = True,
                 default  = platform.node(),
                 alias    = ('nodename',)
             ),
             sysname = dict(
-                info = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
+                info     = "The underlying system/OS name (e.g. Linux, Darwin, ...)",
                 optional = True,
                 default  = platform.system(),
             ),
             arch = dict(
-                info = "The underlying machine type (e.g. i386, x86_64, ...)",
+                info     = "The underlying machine type (e.g. i386, x86_64, ...)",
                 optional = True,
                 default  = platform.machine(),
                 alias    = ('machine',)
             ),
             release = dict(
-                info = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
+                info     = "The underlying system's release, (e.g. 2.2.0, NT, ...)",
                 optional = True,
                 default  = platform.release()
             ),
             version = dict(
-                info = "The underlying system's release version",
+                info     = "The underlying system's release version",
                 optional = True,
                 default  = platform.version()
             ),
             python = dict(
-                info = "The Python's version (e.g 2.7.5)",
-                type = PythonSimplifiedVersion,
+                info     = "The Python's version (e.g 2.7.5)",
+                type     = PythonSimplifiedVersion,
                 optional = True,
                 default  = platform.python_version(),
             ),
             glove = dict(
-                info = "The session's Glove object",
+                info     = "The session's Glove object",
                 optional = True,
                 type     = Glove,
             )
@@ -339,7 +339,8 @@ class System(footprints.FootprintBase):
         In addition to footprint's attributes,  the following attribute may be added:
 
             * **prompt** - as a starting comment line in :meth:`title` like methods.
-            * **trace** - as a boolean to mimic ``set -x`` behaviour (default: *False*).
+            * **trace** - if *True* or *"log"* mimic ``set -x`` behaviour (default: *False*).
+              With trace="log", the information is sent through the logger.
             * **timer** - time all the calls to external commands (default: *False*).
             * **output** - as a default value for any external spawning command (default: *True*).
 
@@ -464,12 +465,24 @@ class System(footprints.FootprintBase):
         This is the place where the ``self.search`` list is looked for...
         """
         actualattr = None
+        if key.startswith('_'):
+            # Do not attempt to look for hidden attributes
+            raise AttributeError('Method or attribute ' + key + ' not found')
         for shxobj in self.search:
             if hasattr(shxobj, key):
-                actualattr = getattr(shxobj, key)
-                self._xtrack[key] = shxobj
-                break
-        else:
+                if isinstance(shxobj, footprints.FootprintBase) and shxobj.footprint_has_attribute(key):
+                    # Ignore footprint attributes
+                    continue
+                if actualattr is None:
+                    actualattr = getattr(shxobj, key)
+                    self._xtrack[key] = shxobj
+                else:
+                    # Do not warn for a restricted list of keys
+                    if key not in ('stat', ):
+                        logger.warning('System: duplicate entry while looking for key="%s". ' +
+                                       'First result in %s but also available in %s.',
+                                       key, self._xtrack[key], shxobj)
+        if actualattr is None:
             raise AttributeError('Method or attribute ' + key + ' not found')
         if callable(actualattr):
             def osproxy(*args, **kw):
@@ -492,12 +505,15 @@ class System(footprints.FootprintBase):
         """Write a formatted message to standard error (if ``self.trace == True``)."""
         count, justnow, = self.history.append(*args)
         if self.trace:
-            sys.stderr.write(
-                "* [{0:s}][{1:d}] {2:s}\n".format(
-                    justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
-                    ' '.join([six.text_type(x) for x in args])
+            if self.trace == 'log':
+                logger.info('[sh:#%d] %s', count, ' '.join([six.text_type(x) for x in args]))
+            else:
+                sys.stderr.write(
+                    "* [{0:s}][{1:d}] {2:s}\n".format(
+                        justnow.strftime('%Y/%m/%d-%H:%M:%S'), count,
+                        ' '.join([six.text_type(x) for x in args])
+                    )
                 )
-            )
 
     def flush_stdall(self):
         """Flush stdout and stderr."""
@@ -1091,7 +1107,7 @@ class OSExtended(System):
     def cdcontext(self, path, create=False, clean_onexit=False):
         """
         Returns a new :class:`CdContext` context manager initialised with the
-        **path** and **create** arguments.
+        **path**, **create** and **clean_onexit** arguments.
         """
         return CdContext(self, path, create, clean_onexit)
 
@@ -1453,7 +1469,7 @@ class OSExtended(System):
                 self._current_ftppool.clear()
                 self._current_ftppool = None
 
-    def _fix_fthostname(self, hostname, fatal=True):
+    def fix_fthostname(self, hostname, fatal=True):
         """If *hostname* is None, tries to find a default value for it."""
         if hostname is None:
             hostname = self.glove.default_fthost
@@ -1462,7 +1478,7 @@ class OSExtended(System):
                     raise ValueError('An *hostname* must be provided one way or another')
         return hostname
 
-    def _fix_ftuser(self, hostname, logname, fatal=True, defaults_to_user=True):
+    def fix_ftuser(self, hostname, logname, fatal=True, defaults_to_user=True):
         """Given *hostname*, if *logname* is None, tries to find a default value for it."""
         if logname is None:
             if self.glove is not None:
@@ -1499,7 +1515,7 @@ class OSExtended(System):
               to create and re-use FTP connections; Otherwise a "usual"
               :class:`~vortex.tools.net.AutoRetriesFtp` is returned.
         """
-        logname = self._fix_ftuser(hostname, logname)
+        logname = self.fix_ftuser(hostname, logname)
         if port is None:
             port = DEFAULT_FTP_PORT
         if self.ftpflavour == FTP_FLAVOUR.CONNECTION_POOLS and self._current_ftppool is not None:
@@ -1541,7 +1557,7 @@ class OSExtended(System):
         """
         if isinstance(destination, six.string_types):  # destination may be Virtual
             self.rm(destination)
-        hostname = self._fix_fthostname(hostname)
+        hostname = self.fix_fthostname(hostname)
         ftp = self.ftp(hostname, logname, port=port)
         if ftp:
             try:
@@ -1580,7 +1596,7 @@ class OSExtended(System):
         """
         rc = False
         if self.is_iofile(source):
-            hostname = self._fix_fthostname(hostname)
+            hostname = self.fix_fthostname(hostname)
             ftp = self.ftp(hostname, logname, port=port)
             if ftp:
                 try:
@@ -1629,8 +1645,8 @@ class OSExtended(System):
         if self.ftserv_allowed(source, destination):
             if self.path.exists(source):
                 ftcmd = self.ftputcmd or 'ftput'
-                hostname = self._fix_fthostname(hostname, fatal=False)
-                logname = self._fix_ftuser(hostname, logname, fatal=False)
+                hostname = self.fix_fthostname(hostname, fatal=False)
+                logname = self.fix_ftuser(hostname, logname, fatal=False)
                 extras = list()
                 if not sync:
                     extras.extend(['-q', ])
@@ -1662,8 +1678,8 @@ class OSExtended(System):
         """Get a file using FtServ."""
         if self.ftserv_allowed(source, destination):
             if self.filecocoon(destination):
-                hostname = self._fix_fthostname(hostname, fatal=False)
-                logname = self._fix_ftuser(hostname, logname, fatal=False)
+                hostname = self.fix_fthostname(hostname, fatal=False)
+                logname = self.fix_ftuser(hostname, logname, fatal=False)
                 destination = self.path.expanduser(destination)
                 extras = list()
                 if hostname:
@@ -1693,8 +1709,8 @@ class OSExtended(System):
                 if not self.filecocoon(d):
                     raise IOError('Could not cocoon: {!s}'.format(d))
             extras = list()
-            hostname = self._fix_fthostname(hostname, fatal=False)
-            logname = self._fix_ftuser(hostname, logname, fatal=False)
+            hostname = self.fix_fthostname(hostname, fatal=False)
+            logname = self.fix_ftuser(hostname, logname, fatal=False)
             if hostname:
                 if port is not None:
                     hostname += ':{:s}'.format(port)
@@ -1912,7 +1928,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             compress the data during the file transfer (default: *None*).
         """
-        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+        logname = self.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(source, six.string_types) and cpipeline is None:
@@ -1939,7 +1955,7 @@ class OSExtended(System):
         :param CompressionPipeline cpipeline: If not *None*, the object used to
             uncompress the data during the file transfer (default: *None*).
         """
-        logname = self._fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
+        logname = self.fix_ftuser(hostname, logname, fatal=False, defaults_to_user=False)
         msg = '[hostname={!s} logname={!s}]'.format(hostname, logname)
         ssh = self.ssh(hostname, logname)
         if isinstance(destination, six.string_types) and cpipeline is None:

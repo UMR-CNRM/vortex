@@ -236,12 +236,13 @@ class Target(fp.FootprintBase):
         The result may depend on the current glove (see the :meth:`get`
         method documentation).
         """
-        my_glove_rk = '@' + sessions.current().glove.realkind
-        sections = [x for x in (key, key + my_glove_rk)
-                    if x in self.config.sections()]
         items = dict()
-        for section in sections:
-            items.update(self.config.items(section))
+        if key is not None:
+            my_glove_rk = '@' + sessions.current().glove.realkind
+            sections = [x for x in (key, key + my_glove_rk)
+                        if x in self.config.sections()]
+            for section in sections:
+                items.update(self.config.items(section))
         return items
 
     @classmethod

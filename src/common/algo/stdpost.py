@@ -21,7 +21,7 @@ from taylorism import Boss
 
 from vortex.layout.monitor import BasicInputMonitor, AutoMetaGang, MetaGang, EntrySt, GangSt
 from vortex.algo.components import AlgoComponentDecoMixin, AlgoComponentError, algo_component_deco_mixin_autodoc
-from vortex.algo.components import TaylorRun, BlindRun, ParaBlindRun, Parallel
+from vortex.algo.components import TaylorRun, BlindRun, ParaBlindRun, Parallel, Expresso
 from vortex.syntax.stdattrs import DelayedEnvValue, FmtInt
 from vortex.tools.grib import EcGribDecoMixin
 from vortex.tools.parallelism import TaylorVortexWorker, VortexWorkerBlindRun, ParallelResultParser
@@ -1134,3 +1134,158 @@ class Reverser(BlindRun, DrHookDecoMixin):
         param.container.cat()
         # Call the parent's prepare
         super(Reverser, self).prepare(rh, opts)
+
+
+class DegradedEnsembleDiagError(AlgoComponentError):
+    """Exception raised when some of the members are missing."""
+    pass
+
+
+class FailedEnsembleDiagError(DegradedEnsembleDiagError):
+    """Exception raised when too many members are missing."""
+    pass
+
+
+class PyEnsembleDiag(Expresso):
+    """Execution of diagnostics on grib input (ensemble forecasts specific)."""
+
+    _footprint = dict(
+        attr = dict(
+            kind = dict(
+                values = ['py_diag_ens'],
+            ),
+            timeout = dict(
+                type     = int,
+                optional = True,
+                default  = 900,
+            ),
+            refreshtime = dict(
+                type     = int,
+                optional = True,
+                default  = 20,
+            ),
+            missinglimit = dict(
+                type     = int,
+                optional = True,
+                default  = 0,
+            ),
+            waitlimit = dict(
+                type     = int,
+                optional = True,
+                default  = 900,
+            ),
+        ),
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(PyEnsembleDiag, self).__init__(*kargs, **kwargs)
+        self._cl_args = dict()
+
+    def spawn_command_options(self):
+        """Prepare options for the resource's command line."""
+        return self._cl_args
+
+    def _actual_execute(self, rh, opts, input_rhs, ** infos):
+        """Actually run the script for a specific bunch of input files (**inpu_rhs**)."""
+        output_fname = ('ensdiag_{safeblock:s}_{geometry.tag:s}_{term.fmthm}.grib'
+                        .format(** infos))
+        self._cl_args = dict(flowconf='flowconf.json',
+                             output=output_fname)
+
+        # Create the JSON file that will be ingested by the script
+        self.system.json_dump(
+            dict(date=input_rhs[0].resource.date.ymdhm,
+                 term=infos['term'].fmthm,
+                 geometry=infos['geometry'].tag,
+                 area=infos['geometry'].area,
+                 block=infos['safeblock'],
+                 grib_files=[r.container.localpath() for r in input_rhs],
+                 ),
+            self._cl_args['flowconf']
+        )
+
+        # Actualy run the post-processing script
+        super(PyEnsembleDiag, self).execute(rh, opts)
+
+        # The diagnostic output may be promised
+        for thispromise in [x for x in self.promises
+                            if output_fname == x.rh.container.localpath()]:
+            thispromise.put(incache=True)
+
+    @staticmethod
+    def _gang_txt_id(gang):
+        """A string that identifies the input data currently being processed."""
+        return ("term={term.fmthm:s}, " +
+                "geometry={geometry.tag:s} " +
+                "and block={safeblock:s}").format(** gang.info)
+
+    def _handle_gang_rescue(self, gang):
+        """If some of the entries are missing, create a delayed exception."""
+        if gang.state in (GangSt.pcollectable, GangSt.failed):
+            txt_id = self._gang_txt_id(gang)
+            self.system.subtitle("WARNING: Missing data for " + txt_id)
+            for st in (EntrySt.ufo, EntrySt.failed, EntrySt.expected):
+                if gang.members[st]:
+                    print('Here is the list of Resource Handler with status < {:s} >:'
+                          .format(st))
+                    for i, e in enumerate(gang.members[st]):
+                        e.section.rh.quickview(nb=i + 1, indent=1)
+            self.delayed_exception_add(
+                FailedEnsembleDiagError("Too many inputs are missing for " + txt_id)
+                if gang.state == GangSt.failed else
+                DegradedEnsembleDiagError("Some of the inputs are missing for " + txt_id),
+                traceback=False
+            )
+
+    def execute(self, rh, opts):
+        """Loop on the various grib files provided."""
+
+        # Monitor for the input files
+        bm = BasicInputMonitor(self.context,
+                               caching_freq=self.refreshtime,
+                               role='Gridpoint')
+
+        # Check that the date is consistent among inputs
+        basedates = set()
+        members = set()
+        for rhI in [s.section.rh for s in bm.memberslist]:
+            basedates.add(rhI.resource.date)
+            members.add(rhI.provider.member)
+        if len(basedates) > 1:
+            raise AlgoComponentError('The date must be consistent among the input resources')
+
+        # Setup BasicGangs
+        basicmeta = AutoMetaGang()
+        basicmeta.autofill(bm, ('term', 'safeblock', 'geometry'),
+                           allowmissing=self.missinglimit, waitlimit=self.waitlimit)
+
+        # Now, starts monitoring everything
+        with bm:
+            while basicmeta.has_ufo() or basicmeta.has_pcollectable():
+                for thegang in basicmeta.consume_pcolectable():
+                    txt_id = self._gang_txt_id(thegang)
+                    self.system.title("Dealing with " + txt_id)
+
+                    available = thegang.members[EntrySt.available]
+                    self._handle_gang_rescue(thegang)
+
+                    self._actual_execute(rh, opts,
+                                         [e.section.rh for e in available],
+                                         **thegang.info)
+
+                    self.system.highlight("Done with " + txt_id)
+
+                if basicmeta.has_ufo() and not basicmeta.has_pcollectable():
+                    # Timeout ?
+                    tmout = bm.is_timedout(self.timeout)
+                    if tmout:
+                        break
+                    # Wait a little bit :-)
+                    time.sleep(1)
+                    bm.health_check(interval=30)
+
+        # Warn for failed gangs
+        if basicmeta.members[GangSt.failed]:
+            self.system.title("One or several (term, geometry, block) group(s) could not be processed")
+            for thegang in basicmeta.members[GangSt.failed]:
+                self._handle_gang_rescue(thegang)

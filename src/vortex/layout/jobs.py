@@ -543,8 +543,8 @@ class JobAssistant(footprints.FootprintBase):
             t.sh.highlight('{:s} environment variables'.format(prefix if prefix else 'All'))
             maxlen = max([len(x) for x in filtered])
             for var_name in filtered:
-                print(cls._P_ENVVAR_FMT.format(var_name.ljust(maxlen),
-                                               t.env.native(var_name)))
+                cls._printfmt(cls._P_ENVVAR_FMT,
+                              var_name.ljust(maxlen), t.env.native(var_name))
         return len(filtered)
 
     @_extendable
@@ -553,8 +553,7 @@ class JobAssistant(footprints.FootprintBase):
         prefix = prefix or self.special_prefix
         if self.special_variables:
             filtered = {prefix + k: v for k, v in self.special_variables.items()}
-            print('Copying actual {:s} variables to the environment'
-                  .format(prefix))
+            self._printfmt('Copying actual {:s} variables to the environment', prefix)
             t.env.update(filtered)
             self.print_somevariables(t, prefix=prefix)
 
@@ -564,7 +563,7 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.header('External imports')
         for module in sorted(self.modules):
             importlib.import_module(module)
-            print(self._P_MODULES_FMT.format(module))
+            self._printfmt(self._P_MODULES_FMT, module)
 
     @_extendable
     def _addons_preload(self, t):
@@ -572,17 +571,17 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.header('Add-ons to the shell')
         for addon in self.addons:
             shadd = footprints.proxy.addon(kind=addon, shell=t.sh)
-            print(self._P_ADDON_FMT.format(addon.upper(), shadd))
+            self._printfmt(self._P_ADDON_FMT, addon.upper(), shadd)
 
     @_extendable
     def _system_setup(self, t, **kw):
         """Set usual settings for the system shell."""
         t.sh.header("Session and system basic setup")
-        print('+ Setting "stack" and "memlock" limits to unlimited.')
+        self._printfmt('+ Setting "stack" and "memlock" limits to unlimited.')
         t.sh.setulimit('stack')
         t.sh.setulimit('memlock')
         for ldlib in self.ldlibs:
-            print('+ Prepending "{}" to the LD_LIBRARY_PATH.'.format(ldlib))
+            self._printfmt('+ Prepending "{}" to the LD_LIBRARY_PATH.', ldlib)
             t.env.setgenericpath('LD_LIBRARY_PATH', ldlib, pos=0)
 
     @_extendable
@@ -599,9 +598,32 @@ class JobAssistant(footprints.FootprintBase):
     def _extra_session_setup(self, t, **kw):
         """Additional setup for the session."""
         t.sh.header("Session's final setup")
+        # Handle session's datastore for subjobs
         if self.subjob_tag is not None:
             t.datastore.pickle_load(subjobs._DSTORE_IN.format(self.subjob_fsid))
-            print(('+ The datastore was read from disk: ' + subjobs._DSTORE_IN).format(self.subjob_fsid))
+            self._printfmt('+ The datastore was read from disk: ' + subjobs._DSTORE_IN,
+                           self.subjob_fsid)
+        # Possibly setup the default user names for file-transfers
+        ftuser = self.conf.get('ftuser', None)
+        if ftuser is not None:
+            if isinstance(ftuser, dict):
+
+                for dest, d_ftuser in ftuser.items():
+                    if not (isinstance(dest, six.string_types) and isinstance(d_ftuser, six.string_types)):
+                        logger.error('Improper ftuser configuration (Destination=%s, Logname=%s)',
+                                     dest, d_ftuser)
+                        continue
+                    if dest.lower() == 'default':
+                        self._printfmt('+ Setting the default file-transfer user to: {:s}', d_ftuser)
+                        t.glove.setftuser(d_ftuser)
+                    else:
+                        self._printfmt('+ Setting the {:s} file-transfer user to: {:s}', dest, d_ftuser)
+                        t.glove.setftuser(d_ftuser, dest)
+            elif isinstance(ftuser, six.string_types):
+                self._printfmt('+ Setting the default file-transfer user to: {:s}', ftuser)
+                t.glove.setftuser(ftuser)
+            else:
+                logger.error('Improper ftuser value %s', ftuser)
 
     @_extendable
     def _env_setup(self, t, **kw):
@@ -661,7 +683,7 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.signal_intercept_on()
         # A last word ?
         self._job_final_init(t, **kw)
-        print()
+        self._printfmt('')
         return t, t.env, t.sh
 
     @_extendable
@@ -676,13 +698,13 @@ class JobAssistant(footprints.FootprintBase):
         try:
             cycle = GgetId(cycle)
         except ValueError:
-            print('** Cycle << {!s} >> will auto-register whenever necessary **'.format(cycle))
+            self._printfmt('** Cycle << {!s} >> will auto-register whenever necessary **', cycle)
             return
         from gco.tools import genv
         if cycle in genv.cycles():
-            print('** Cycle << {!s} >> already registered **'.format(cycle))
+            self._printfmt('** Cycle << {!s} >> already registered **', cycle)
         else:
-            print('\n** Cycle << {!s} >> is to be registered **'.format(cycle))
+            self._printfmt('\n** Cycle << {!s} >> is to be registered **', cycle)
             genv.autofill(cycle)
             print(genv.as_rawstr(cycle=cycle))
 
@@ -701,8 +723,8 @@ class JobAssistant(footprints.FootprintBase):
         t = vortex.ticket()
         t.sh.subtitle('Handling exception')
         (exc_type, exc_value, exc_traceback) = sys.exc_info()  # @UnusedVariable
-        print('Exception type: {!s}'.format(exc_type))
-        print('Exception info: {!s}'.format(latest_error))
+        self._printfmt('Exception type: {!s}', exc_type)
+        self._printfmt('Exception info: {!s}', latest_error)
         t.sh.header('Traceback Error / BEGIN')
         print("\n".join(traceback.format_tb(exc_traceback)))
         t.sh.header('Traceback Error / END')
@@ -721,8 +743,8 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.subtitle("Executing JobAssistant's finalise actions")
         if self.subjob_tag is not None:
             t.datastore.pickle_dump(subjobs._DSTORE_OUT.format(self.subjob_fsid, self.subjob_tag))
-            print(('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT)
-                  .format(self.subjob_fsid, self.subjob_tag))
+            self._printfmt('+ The datastore was written to disk: ' + subjobs._DSTORE_OUT,
+                           self.subjob_fsid, self.subjob_tag)
 
     def close(self):
         """This must be the last called method whenever a job finishes."""
@@ -731,10 +753,10 @@ class JobAssistant(footprints.FootprintBase):
         t.sh.signal_intercept_off()
         t.exit()
         if self.unix_exit_code:
-            print('Something went wrong :-(')
+            self._printfmt('Something went wrong :-(')
             exit(self.unix_exit_code)
         if self.subjob_tag:
-            print('Subjob fast exit :-)')
+            self._printfmt('Subjob fast exit :-)')
             exit(0)
 
 
@@ -760,6 +782,10 @@ class JobAssistantPlugin(footprints.FootprintBase):
             if conflicting in [p.kind for p in self.masterja.plugins]:
                 raise RuntimeError('"{:s}" conflicts with "{:s}"'.format(self.kind, conflicting))
 
+    @staticmethod
+    def _printfmt(fmt, *kargs, **kwargs):
+        JobAssistant._printfmt(fmt, *kargs, **kwargs)
+
 
 class JobAssistantTmpdirPlugin(JobAssistantPlugin):
 
@@ -778,7 +804,7 @@ class JobAssistantTmpdirPlugin(JobAssistantPlugin):
         myrundir = kw.get('rundir', None) or t.env.TMPDIR
         if myrundir:
             t.rundir = kw.get('rundir', myrundir)
-            print('+ Current rundir < {:s} >'.format(t.rundir,))
+            self._printfmt('+ Current rundir < {:s} >', t.rundir)
 
 
 class JobAssistantAutodirPlugin(JobAssistantPlugin):
@@ -830,12 +856,12 @@ class JobAssistantAutodirPlugin(JobAssistantPlugin):
     def plugable_extra_session_setup(self, t, **kw):
         """Set the rundir according to the TMPDIR variable."""
         t.rundir = self._autodir_tmpdir(t)
-        print('+ Current rundir < {:s} >'.format(t.rundir,))
+        self._printfmt('+ Current rundir < {:s} >', t.rundir)
 
     def plugable_finalise(self, t):
         """Should be called when a job finishes successfully"""
         if self.cleanup:
-            print('+ Removing the rundir < {:s} >'.format(t.rundir,))
+            self._printfmt('+ Removing the rundir < {:s} >', t.rundir)
             t.sh.cd(t.env.HOME)
             t.sh.rm(self._autodir_tmpdir(t))
 
@@ -897,18 +923,18 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         """Set the rundir according to MTTOL's spool."""
         t.rundir = t.env.MTOOL_STEP_SPOOL
         t.sh.cd(t.rundir)
-        print('+ Current rundir < {:s} >'.format(t.rundir))
+        self._printfmt('+ Current rundir < {:s} >', t.rundir)
         # Load the session's data store
         if self.step > 1 and self.masterja.subjob_tag is None:
             t.datastore.pickle_load()
-            print('+ The datastore was read from disk.')
+            self._printfmt('+ The datastore was read from disk.')
         # Check that the log directory exists
         if "MTOOL_STEP_LOGFILE" in t.env:
             logfile = t.sh.path.normpath(t.env.MTOOL_STEP_LOGFILE)
             logdir = t.sh.path.dirname(logfile)
             if not t.sh.path.isdir(logdir):
                 t.sh.mkdir(logdir)
-            print('+ Current logfile < {:s} >'.format(logfile))
+            self._printfmt('+ Current logfile < {:s} >', logfile)
         # Only allow subjobs in compute steps
         self.masterja.subjob_allowed = self.stepid == 'compute'
 
@@ -926,7 +952,7 @@ class JobAssistantMtoolPlugin(JobAssistantPlugin):
         # Dump the session datastore in the rundir
         if self.masterja.subjob_tag is None:
             t.datastore.pickle_dump()
-            print('+ The datastore is dumped to disk')
+            self._printfmt('+ The datastore is dumped to disk')
 
     def plugable_rescue(self, t):
         """Called at the end of a job when something went wrong.
@@ -1008,8 +1034,8 @@ class JobAssistantFlowSchedPlugin(JobAssistantPlugin):
 
             t.sh.highlight('Flow Scheduler ({:s}) Settings'.format(self.backend))
             ad.flow_info()
-            print('')
-            print('Flow scheduler client path: {:s}'.format(ad.flow_path()))
+            self._printfmt('')
+            self._printfmt('Flow scheduler client path: {:s}', ad.flow_path())
 
             # Initialise the flow scheduler
             mtplug = self._flow_sched_mtool_plugin

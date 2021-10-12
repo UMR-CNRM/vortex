@@ -28,6 +28,8 @@ Interface functions
 
 .. autofunction:: ask_debug
 
+.. autofunction:: ask_info
+
 .. autofunction:: ask_level
 
 .. autofunction:: ask_mute

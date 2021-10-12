@@ -9,12 +9,13 @@ it must deal with the data (given to realize the action) and the action
 to be processed: e.g. mail, routing, alarm.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-from bronx.fancies import loggers
 import bronx.stdtypes.catalog
 import footprints
-
+from bronx.fancies import loggers
+from bronx.fancies.display import dict_as_str
+from vortex import sessions
 from vortex.util.authorizations import is_authorized_user
 from vortex.util.config import GenericConfigParser
 
@@ -83,6 +84,14 @@ class Action(object):
         self._active = False
         return self._active
 
+    def info(self):
+        """Informative string (may serve debugging purposes)."""
+        return '{} Action {} (kind={})'.format(
+            'ON ' if self.status() else 'OFF',
+            self.__class__.__name__,
+            self.kind,
+        )
+
     def service_kind(self, **kw):
         """Actual service kind name to be used for footprint evaluation."""
         return self.service
@@ -127,6 +136,99 @@ class Action(object):
         return rc
 
 
+class TunableAction(Action):
+    """An Action that may be tuned
+
+    - may have it's own section in the target configuration files
+    - accepts the syntax `ad.action_tune(key=value)` (which has priority)
+    """
+
+    def __init__(self, configuration=None, **kwargs):
+        super(TunableAction, self).__init__(**kwargs)
+        self._tuning = dict()
+        self._conf_section = configuration
+        self._conf_dict = None
+
+    @property
+    def _shtarget(self):
+        """Warning: this may be a `vortex.syntax.stdattrs.DelayedInit` object
+        during Vortex initialization and may not have a `sections()` method
+        nor a `config` property.
+        """
+        return sessions.current().sh.default_target
+
+    @property
+    def _conf_items(self):
+        """Check and return the configuration: a section in the target-xxx.ini file.
+
+        If the configuration is None, an attempt is made to use the Action's kind.
+        Don't use before Vortex initialization is done (see `_shtarget`).
+        """
+        if self._conf_dict is None:
+            if self._conf_section is None:
+                if self.kind in self._shtarget.sections():
+                    self._conf_section = self.kind
+            else:
+                if self._conf_section not in self._shtarget.sections():
+                    raise KeyError('No section "{}" in "{}"'.format(self._conf_section,
+                                                                    self._shtarget.config.file))
+            if self._conf_section is None:
+                self._conf_dict = dict()
+            else:
+                self._conf_dict = self._shtarget.items(self._conf_section)
+        return self._conf_dict
+
+    def service_info(self, **kw):
+        for k, v in self._get_config_dict().items():
+            kw.setdefault(k, v)
+        return super(TunableAction, self).service_info(**kw)
+
+    def tune(self, section=None, **kw):
+        """Add options to override the .ini file configuration.
+
+        ``section`` is a specific section name, or ``None`` for all.
+        """
+        if section is None or section == self._conf_section:
+            self._tuning.update(kw)
+
+    def _get_config_dict(self):
+        final_dict = dict()
+        final_dict.update(self._conf_items)
+        final_dict.update(self._tuning)
+        return final_dict
+
+    def info(self):
+        """Informative string (may serve debugging purposes)."""
+        s = super(TunableAction, self).info() + ' - tunable\n'
+        mix = dict()
+        mix.update(self._conf_items)
+        mix.update(self._tuning)
+        prt = dict()
+        for k, v in mix.items():
+            if k in self._tuning:
+                prt['++ ' + k] = '{} (was: {})'.format(v, str(
+                    self._conf_items[k]) if k in self._conf_items else '<not set>')
+            else:
+                prt['   ' + k] = v
+        if self._conf_section is not None:
+            s += ' ' * 4 + 'configuration: ' + self._conf_section + '\n'
+        s += dict_as_str(prt, prefix=4)
+        return s.strip()
+
+    def getx(self, key, *args, **kw):
+        """Shortcut to access the configuration overridden by the tuning."""
+        if key in self._tuning:
+            return self._tuning[key]
+
+        if self._conf_section is not None:
+            return self._shtarget.getx(key=self._conf_section + ':' + key, *args, **kw)
+
+        if 'default' in kw:
+            return kw['default']
+
+        raise KeyError('The "{:s}" entry was not found in any configuration'.format(key))
+
+
 class SendMail(Action):
     """
     Class responsible for sending emails.
@@ -139,14 +241,15 @@ class SendMail(Action):
             charset.add_charset('utf-8', charset.QP, charset.QP, 'utf-8')
 
 
-class TemplatedMail(Action):
+class TemplatedMail(TunableAction):
     """Abstract class to end email from a given template.
 
     Do not use directly !
     """
     def __init__(self, kind='templatedmail', service='templatedmail', active=True,
                  catalog=None, inputs_charset=None):
-        super(TemplatedMail, self).__init__(kind=kind, active=active, service=service)
+        super(TemplatedMail, self).__init__(configuration=None, kind=kind, active=active,
+                                            service=service)
         self.catalog = catalog or GenericConfigParser('@{:s}-inventory.ini'.format(kind),
                                                       encoding=inputs_charset)
         self.inputs_charset = inputs_charset
@@ -171,7 +274,7 @@ class TemplatedMail(Action):
         return rc
 
 
-class Report(Action):
+class Report(TunableAction):
     """
     Class responsible for sending reports.
     """
@@ -189,13 +292,13 @@ class SSH(Action):
         super(SSH, self).__init__(kind=kind, active=active, service=service)
 
 
-class AskJeeves(Action):
+class AskJeeves(TunableAction):
     """
     Class responsible for posting requests to Jeeves daemon.
     """
 
     def __init__(self, kind='jeeves', service='askjeeves', active=True):
-        super(AskJeeves, self).__init__(kind=kind, active=active, service=service)
+        super(AskJeeves, self).__init__(configuration=None, kind=kind, active=active, service=service)
 
     def execute(self, *args, **kw):
         """Generic method to perform the action through a service."""
@@ -248,15 +351,15 @@ class FlowSchedulerGateway(Action):
         """
         if service is None:
             raise ValueError('The service name must be provided')
-        super(FlowSchedulerGateway, self).__init__(kind=kind, active=active,
-                                                   service=service, permanent=permanent)
+        super(FlowSchedulerGateway, self).__init__(
+            kind=kind, active=active, service=service, permanent=permanent)
 
     def gateway(self, *args, **kw):
         """Ask the Scheduler to run any (but known) command."""
         rc = None
         service = self.get_active_service(**kw)
         if service and self._schedcmd is not None:
-            kwbis = {k: v for k, v in kw.items() if k in ('critical', )}
+            kwbis = {k: v for k, v in kw.items() if k in ('critical',)}
             rc = getattr(service, self._schedcmd)(*args, **kwbis)
         self._schedcmd = None
         return rc
@@ -337,7 +440,7 @@ class Dispatcher(bronx.stdtypes.catalog.Catalog):
     @property
     def actions(self):
         """A set of kind names of actual actions registered in that Dispatcher."""
-        return set([x.kind for x in self.items()])
+        return {x.kind for x in self.items()}
 
     def candidates(self, kind):
         """Return a selection of the dispatcher's items with the specified ``kind``."""

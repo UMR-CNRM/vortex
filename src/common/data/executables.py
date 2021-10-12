@@ -8,8 +8,9 @@ from __future__ import print_function, absolute_import, division, unicode_litera
 
 import vortex
 
-from vortex.data.executables import Script, BlackBox, NWPModel, SurfaceModel
+from vortex.data.executables import Script, GnuScript, BlackBox, NWPModel, SurfaceModel
 from gco.syntax.stdattrs import gvar, arpifs_cycle, gmkpack_compiler_identification_deco, executable_flavour_deco
+from gco.syntax.stdattrs import ArpIfsSimplifiedCycle
 
 #: No automatic export
 __all__ = []
@@ -18,7 +19,7 @@ __all__ = []
 def gmkpack_bin_deco(cls):
     """Add the necessary method to look into gmkpack directories."""
     def guess_binary_sources(self, provider):
-        """Return the sources location based on gmkpack layout."""
+        """Return the sources location baseld on gmkpack layout."""
         sh = vortex.ticket().sh
         srcdirs = []
         if provider.realkind == 'remote' and provider.tube in ('file', 'symlink'):
@@ -500,12 +501,14 @@ class LopezMix(BlackBox):
 
 
 class MasterDiag(BlackBox):
-    """A binary to compute a diagnostic with some gribs."""
+    """Abstract class for a binary to compute a diagnostic with some gribs."""
 
+    _abstract = True
     _footprint = [
+        arpifs_cycle,
         gvar,
         dict(
-            info = 'MasterDiag utility for diagnostics computation',
+            info = 'MasterDiag abstract class utility for diagnostics computation',
             attr = dict(
                 gvar = dict(
                     default  = 'master_diag_[diagnostic]'
@@ -517,8 +520,7 @@ class MasterDiag(BlackBox):
                 diagnostic = dict(
                     info     = "The type of diagnostic to be performed.",
                     optional = True,
-                    default  = 'aromepi',
-                    values   = ['voisin', 'neighbour', 'aromepi'],
+                    values   = ['voisin', 'neighbour', 'aromepi', 'labo'],
                     remap    = dict(neighbour='voisin'),
                 ),
             )
@@ -528,6 +530,36 @@ class MasterDiag(BlackBox):
     @property
     def realkind(self):
         return 'masterdiag'
+
+
+class MasterDiagLabo(MasterDiag):
+    """binary to compute a diagnostic with some gribs for cycle after the 46th."""
+
+    _footprint = dict(
+        attr = dict(
+            diagnostic = dict(
+                default  = 'labo',
+            )
+        ),
+        only = dict(
+            after_cycle = ArpIfsSimplifiedCycle('cy46')
+        )
+    )
+
+
+class MasterDiagPi(MasterDiag):
+    """binary to compute a diagnostic with some gribs for cycle before the 46th."""
+
+    _footprint = dict(
+        attr = dict(
+            diagnostic = dict(
+                default  = 'aromepi',
+            )
+        ),
+        only=dict(
+            before_cycle = ArpIfsSimplifiedCycle('cy46')
+        )
+    )
 
 
 class IOPoll(Script):
@@ -883,6 +915,30 @@ class Festat(BlackBox):
                 ),
                 gvar = dict(
                     optional = True,
+                ),
+            )
+        )
+    ]
+
+
+class EnsembleDiagScript(GnuScript):
+    """Script to compute some ensemble diagnostics."""
+
+    _footprint = [
+        gvar,
+        dict(
+            info='Script to compute some ensemble diagnostics.',
+            attr=dict(
+                kind=dict(
+                    values = ["ens_diag_script", ],
+                ),
+                scope=dict(
+                    values = ["generic", ],
+                    optional = True,
+                    default = "generic",
+                ),
+                gvar=dict(
+                    default = "master_ensdiag_[scope]",
                 ),
             )
         )

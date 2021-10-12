@@ -108,6 +108,11 @@ Taylorism workers
    :members:
    :member-order: alphabetical
 
+.. autoclass:: ShadowsForcingWorker
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 AlgoComponents
 **************
 

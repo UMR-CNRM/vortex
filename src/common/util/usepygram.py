@@ -7,17 +7,16 @@ When loaded, this module discards any FootprintBase resource collected as a cont
 in EPyGrAM package.
 """
 
-from __future__ import print_function, absolute_import, division, unicode_literals
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import copy
 
+import footprints
 from bronx.fancies import loggers
 from bronx.stdtypes import date
-from bronx.stdtypes.date import Date, Time, Period
+from bronx.stdtypes.date import Date, Period, Time
 from bronx.syntax.externalcode import ExternalCodeImportChecker
-import footprints
 from footprints import proxy as fpx
-
 from vortex import sessions
 from vortex.data.contents import MetaDataReader
 
@@ -26,6 +25,7 @@ logger = loggers.getLogger(__name__)
 epygram_checker = ExternalCodeImportChecker('epygram')
 with epygram_checker as ec_register:
     import epygram  # @UnusedImport
+
     ec_register.update(version=epygram.__version__)
     try:
         u_unused = epygram.formats.FA
@@ -41,7 +41,6 @@ with epygram_checker as ec_register:
     ec_register.update(needGRIB=hasGRIB)
     logger.info('Epygram %s loaded.', str(epygram.__version__))
 
-
 footprints.proxy.containers.discard_package('epygram', verbose=False)
 
 __all__ = []
@@ -50,6 +49,7 @@ __all__ = []
 @epygram_checker.disabled_if_unavailable
 def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
     """Clone any existing fields ending with``source`` to some new field."""
+    datain.open()
     # Prepare sources names
     if not isinstance(sources, (list, tuple, set)):
         sources = [sources, ]
@@ -105,6 +105,7 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
 
     if addedfields:
         dataout.close()
+    datain.close()
     return addedfields
 
 
@@ -206,7 +207,6 @@ class FaMetadataReader(EpygramMetadataReader):
 
 @epygram_checker.disabled_if_unavailable(version='1.0.0')
 class GribMetadataReader(EpygramMetadataReader):
-
     _footprint = dict(
         info = 'MetaDataReader for the GRIB file format',
         attr = dict(
@@ -309,8 +309,7 @@ def empty_fa(t, rh, empty_name):
             rh.contents.data.close()
             return e
     else:
-        raise IOError('Try to copy header from a missing resource <%s>',
-                      rh.container.localpath())
+        raise IOError('Try to copy header from a missing resource <{!s}>'.format(rh.container.localpath()))
 
 
 @epygram_checker.disabled_if_unavailable(version='1.0.0')
@@ -386,10 +385,12 @@ def add_poles_to_reglonlat_file(filename):
     rout = epygram.formats.resource(filename_out, 'w', fmt=rin.format,
                                     validity=epygram.base.FieldValidity(
                                         date_time=rin.validity.get(),
-                                        term=date.Period(0, 0, 0)),
+                                        term=date.Period(0, 0, 0)
+                                    ),
                                     processtype=rin.processtype,
                                     cdiden=rin.cdiden)
-    assert rin.geometry.name == 'regular_lonlat', "This file's geometry is not regular lon/lat, cannot add pole(s)."
+    assert rin.geometry.name == 'regular_lonlat', \
+        "This file's geometry is not regular lon/lat, cannot add pole(s)."
     # determine what is to be done
     resolution = rin.geometry.grid['Y_resolution'].get('degrees')
     latmin = rin.geometry.gimme_corners_ll()['ll'][1]

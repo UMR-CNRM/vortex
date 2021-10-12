@@ -24,10 +24,10 @@ strongly advised.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
-__version__ = '1.8.1'
+__version__ = '1.8.2'
 __prompt__ = 'Vortex v-' + __version__ + ':'
 
-__nextversion__ = '1.8.2'
+__nextversion__ = '1.8.3'
 __tocinfoline__ = 'VORTEX core package'
 
 __all__ = []
@@ -43,8 +43,6 @@ footprints.priorities.set_before('debug', 'olive', 'oper')
 
 #: Shortcut to Vortex's root logger
 logger = bloggers.getLogger('vortex')
-
-bloggers.defaultrootname = 'vortex'
 
 # Populate a fake proxy module with footprints shortcuts
 

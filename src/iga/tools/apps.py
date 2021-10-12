@@ -4,15 +4,14 @@
 TODO: module documentation.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import contextlib
 
 from bronx.fancies import loggers
-
+from vortex.algo.components import DelayedAlgoComponentError
 from vortex.layout.nodes import Task
 from vortex.tools.actions import actiond as ad
-from vortex.algo.components import DelayedAlgoComponentError
 
 #: No automatic export
 __all__ = []

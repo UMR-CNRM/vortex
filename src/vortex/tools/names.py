@@ -169,7 +169,7 @@ class AbstractActualVortexNameBuilder(AbstractVortexNameBuilder):
         pathbits = []
         for k in ['vapp', 'vconf', 'experiment']:
             if k not in d:
-                raise VortexNameBuilderError('The %s info key is mandatory', k)
+                raise VortexNameBuilderError('The {!r} info key is mandatory'.format(k))
             pathbits.append(six.text_type(d[k]))
         return pathbits
 

@@ -137,6 +137,30 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
             kind = dict(
                 values = ['specww3asciialgo'],
             ),
+            latmin = dict(
+                info='Latitude mininum of the area',
+                type = float,
+                optional = True,
+                default = -90,
+            ),
+            latmax = dict(
+                info='Latitude maximum of the area',
+                type = float,
+                optional = True,
+                default = 90,
+            ),
+            lonmin = dict(
+                info='Longitude mininum of the area',
+                type = float,
+                optional = True,
+                default = 0,
+            ),
+            lonmax = dict(
+                info='Longitude maximum of the area',
+                type = float,
+                optional = True,
+                default = 360,
+            ),
         )
     )
 
@@ -145,13 +169,36 @@ class ConvertSpecWW3AsciiAlgo(BlindRun):
         super(ConvertSpecWW3AsciiAlgo, self).prepare(rh, opts)
 
         inputspec = [x.rh for x in self.context.sequence.effective_inputs(role=('BoundarySpectra', ))]
+
+        # Geographical selection of the spectra
+        for fname in [x.container.filename for x in inputspec]:
+            fout = io.open("output.tmp", 'w')
+            with io.open(fname, 'r') as fin:
+                linestr = fin.readline()
+                while linestr:
+                    line = linestr.split()
+                    nbr = len(line)
+                    if (nbr == 7):
+                        lat = float(line[1])
+                        lon = float(line[0])
+                    # case of longitude 0° in the domain
+                    if (self.lonmin > self.lonmax):
+                        if lat < self.latmax and lat > self.latmin and (lon < self.lonmax or lon > self.lonmin):
+                            fout.write(linestr)
+                    else:
+                        if lat < self.latmax and lat > self.latmin and lon < self.lonmax and lon > self.lonmin:
+                            fout.write(linestr)
+                    linestr = fin.readline()
+            fout.close()
+            self.system.mv("output.tmp", fname)
+
         with io.open('list_files', 'w') as flist:
             for fname in [x.container.filename for x in inputspec]:
                 flist.write(fname)
                 flist.write('\n')
 
         # Creation of results directory
-        self.system.sh.mkdir('spectre')
+        self.system.mkdir('spectre')
 
 
 class Ww3_ounpAlgo(BlindRun):
@@ -264,6 +311,10 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
                 info='Time between the beginning of the simulation and the run date',
                 type = Time,
             ),
+            preproc = dict(
+                info = 'List of constant files for bathymetry and grids',
+                type = footprints.FPList,
+            ),
         )
     )
 
@@ -275,6 +326,7 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
         dateval = section.rh.resource.date + section.rh.resource.term
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
+                                    preproc=[self.preproc, ],
                                     dateval=[dateval, ]))
 
 
@@ -290,23 +342,23 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
             dateval = dict(
                 type    = Date,
             ),
+            preproc = dict(
+                info = 'List of constant files for bathymetry and grids',
+                type = footprints.FPList,
+            ),
         )
     )
 
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Netcdf extraction of a single time step output field file."""
 
-        sh = self.system.sh
+        sh = self.system
         logger.info("Extraction of netcdf of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistWw3Ounf'),)
         if len(namcandidate) != 1:
             raise IOError("No or too much namelists for WW3_ounf")
         nam_file = namcandidate[0].rh.container.localpath()
         namcontents = namcandidate[0].rh.contents
-        constcandidate = self.context.sequence.effective_inputs(role=('ConstantData'),)
-        if len(constcandidate) != 1:
-            raise IOError("No or too much constant files for WW3_ounf")
-        consttar = constcandidate[0].rh.container.localpath()
 
         # Prepare the working directory
         cwd = sh.pwd()
@@ -314,9 +366,8 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
         with sh.cdcontext(sh.path.join(cwd, self.file_in + '.process.d'), create=True):
             sh.softlink(sh.path.join(cwd, self.file_in), 'out_grd.ww3')
             # copy of namelist and constant files
-            sh.cp(sh.path.join(cwd, consttar), consttar)
-            sh.smartuntar(consttar, sh.path.join(cwd, self.file_in + '.process.d'),
-                          uniquelevel_ignore=kwargs.get("uniquelevel_ignore", True))
+            for preproc_file in self.preproc:
+                sh.cp(sh.path.join(cwd, preproc_file), preproc_file)
             dictkeyvalue = dict()
             dictkeyvalue["yyyymmdd"] = self.dateval.ymd
             dictkeyvalue["hhmmss"] = self.dateval.hm + '00'
@@ -387,7 +438,7 @@ class _InterpolateUGncAlgoWorker(VortexWorkerBlindRun):
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Interpolation of a single time step."""
 
-        sh = self.system.sh
+        sh = self.system
         logger.info("Interpolation of %s", self.file_in)
         # Prepare the working directory
         cwd = sh.pwd()
@@ -441,6 +492,9 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
             datpivot = dict(
                 type = Date,
             ),
+            header = dict(
+                type = list,
+            ),
         )
     )
 
@@ -453,7 +507,8 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     datpivot=[self.datpivot, ],
-                                    dateval=[dateval, ]))
+                                    dateval=[dateval, ],
+                                    header=[self.header, ]))
 
 
 class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
@@ -471,12 +526,15 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             dateval = dict(
                 type     = Date,
             ),
+            header = dict(
+                type  = list,
+            ),
         )
     )
 
     def vortex_task(self, **kwargs):  # @UnusedVariable
         """Grib conversion for a single time step."""
-        sh = self.system.sh
+        sh = self.system
         logger.info("Conversion of %s", self.file_in)
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistNcGrb'),)
         if len(namcandidate) != 1:
@@ -523,9 +581,16 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 namcontents.rewrite(new_nam)
                 new_nam.close()
                 self.local_spawn("output_{0:s}.log".format(fname))
-                for fgrib in sh.ls('ww3.*grb'):
-                    sh.mv(fgrib, cwd)
-                    output_files.add(fgrib)
+            # Split the case of analysis and forecast
+            for dom in self.header:
+                if term <= 0:
+                    fic_prod = "ww3.{0:s}_{1:s}.grb".format(dom, self.dateval.ymdh)
+                else:
+                    fic_prod = "ww3.{0:s}_{1:s}{2:04d}.grb".format(dom, self.datpivot.ymdh,
+                                                                   int(term / 3600))
+                logger.info("yoyo %s", fic_prod)
+                sh.cat('ww3.{0:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
+                output_files.add(fic_prod)
 
         # Deal with promised resources
         expected = [x for x in self.context.sequence.outputs()

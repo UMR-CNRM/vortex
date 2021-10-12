@@ -8,13 +8,11 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import io
 import re
-from pprint import pformat
 from tempfile import mkdtemp
 
 import six
 
 import bronx.stdtypes.date
-import footprints
 import vortex
 from bronx.fancies import loggers
 from iga.tools import actions, services
@@ -151,7 +149,8 @@ class OpJobAssistantTest(JobAssistant):
         logger.info('Effective member  = %s', t.env.OP_MEMBER)
 
         t.sh.highlight("Setting up the s2m path")
-        t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
+        # t.env.setvar("SNOWTOOLS_CEN", '/home/ch/mxpt001/vortex/snowtools')
+        t.env.setvar("SNOWTOOLS_CEN", t.env.get('OP_ROOTAPP', '/home/ch/mxpt001/vortex') + '/snowtools')
 
     def _extra_session_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._extra_session_setup(t, **kw)
@@ -166,9 +165,7 @@ class OpJobAssistantTest(JobAssistant):
 
     def _toolbox_setup(self, t, **kw):
         super(OpJobAssistantTest, self)._toolbox_setup(t, **kw)
-        opd = kw.get('actual', dict())
         vortex.toolbox.defaults(
-            jname=opd.get('op_jeeves', None),
             sender='admin_prod_sc@meteo.fr',
         )
 
@@ -181,10 +178,7 @@ class OpJobAssistantTest(JobAssistant):
         ad.add(vortex.tools.actions.EcflowGateway())
 
         print('+ ECFLOW candidates =', ad.candidates('ecflow'))
-
         print('+ JEEVES candidates =', ad.candidates('jeeves'))
-        print('+ JEEVES default =', vortex.toolbox.defaults.get('jname'))
-        print('+ JEEVES jroute =', t.env.get('op_jroute'))
 
         # ----------------------------------------------------------------------
         t.sh.highlight('START message to op MESSDAYF reporting file')
@@ -354,106 +348,82 @@ class OutputReportContext(_ReportContext):
             ad.opmail(task=self._task.tag, id=self._fatal_tplid)
 
 
-def get_resource_value(r, key):
+def get_resource_value(rsrc, key):
     """This function returns the resource value."""
     try:
-        kw = dict(area=lambda r: r.resource.geometry.area,
-                  term=lambda r: r.resource.term,
-                  fields=lambda r: r.resource.fields)
-        return kw[key](r)
+        kw = dict(
+            area=lambda r: r.resource.geometry.area,
+            term=lambda r: r.resource.term,
+            fields=lambda r: r.resource.fields,
+            experiment=lambda r: r.provider.experiment,
+        )
+        return kw[key](rsrc)
     except AttributeError as e:
         logger.error(e)
+    return None
 
 
-def filteractive(r, dic):
+def filteractive(rsrc, dic):
     """This function returns the filter status."""
     filter_active = True
     if dic is not None:
-        for k, w in six.iteritems(dic):
-            if not get_resource_value(r, k) in w:
-                logger.info('filter not active : {} = {} actual value : {}'.
-                            format(k, w, get_resource_value(r, k)))
+        for key, ok_values in six.iteritems(dic):
+            if not get_resource_value(rsrc, key) in ok_values:
+                logger.info('filter not active: key %s has value %s, accepted values: %s',
+                            key, get_resource_value(rsrc, key), ok_values)
                 filter_active = False
     return filter_active
 
 
-def defer_route(t, rh, jeeves_opts, route_opts):
-    """Send to jeeves all the information needed to handle asynchronously
-    the grib filtering and then call the routing service.
-    """
-    effective_path = t.sh.path.abspath(rh.container.localpath())
-    logger.info('jeeves_opts:\n\t' + pformat(jeeves_opts))
-    logger.info('route_opts :\n\t' + pformat(route_opts))
-
-    # get the filter definition (if any)
-    filtername = jeeves_opts['filtername']
-    if filtername:
-        filters = [
-            request.rh.contents.data
-            for request in t.context.sequence.effective_inputs(
-                role='GRIBFilteringRequest',
-                kind='filtering_request', )
-            if request.rh.contents.data['filter_name'] == filtername
-        ]
-        if len(filters) == 1:
-            jeeves_opts.update(
-                filterdefinition=filters[0],
-            )
-        else:
-            raise ValueError('filtername not found in the effective_inputs: %s', filtername)
-
-    # get a service able to create the hidden copy
-    fmt = rh.container.actualfmt
-    hide = footprints.proxy.service(kind='hiddencache', asfmt=fmt)
-
-    # complete the request
-    jeeves_opts.update(
-        todo='route',
-        jname=t.env.get('op_jroute'),
-        source=hide(effective_path),
-        fmt=fmt,
-        route_opts=route_opts,
-        original=effective_path,
-        rhandler=rh.as_dict(),
-        rlocation=rh.location(),
-    )
-
-    # post the request to jeeves
-    return ad.jeeves(**jeeves_opts)
-
-
 def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_target=None,
-                         routingkey=None, selkeyproductid=None, targetname=None, transmet=None,
-                         header_infile=True, deferred=True, filtername=None, **kw):
+                         routingkey=None, selkeyproductid=None,
+                         targetname=None, transmet=None, header_infile=True,
+                         filtername=None, selkeyfiltername=None,
+                         deferred=True, **kw):
     """Hook functions factory to route files while the execution is running.
-
-    :param str kind: kind use to route
+    :param str kind: the kind of route to use ('bdap', 'bdpe'...)
     :param str or dict productid: (use selkeyproductid to define the dictionary key)
     :param str sshhost: transfertnode. Use None to avoid ssh from the agt node to itself.
-    :param dict optfilter: dictionary (used to allow routing)
-    :param str soprano_target: str (piccolo or piccolo-int)
+    :param dict optfilter: dictionary used to allow routing or not
+    :param str soprano_target: piccolo or piccolo-int
     :param str routingkey: the BD routing key
     :param str selkeyproductid: (example: area, term, fields ...)
     :param str targetname:
     :param dict transmet:
-    :param bool header_infile: use to add transmet header in routing file
+    :param bool header_infile: add transmet header in routing file
+    :param str or dict filtername: name of the grib filter to apply (or None)
+    .                             (use selkeyfiltername to use the dict/key approach)
+    :param str selkeyfiltername: the key to use in filtername when it is a dict
     :param bool deferred: don't route now, ask jeeves to filter if needed, then route
-    :param str filtername: name of the grib filter to be applied by the jeeves callback
     """
 
     def hook_route(t, rh):
-        kwargs = dict(kind=kind, productid=productid, sshhost=sshhost,
-                      filename=rh.container.abspath, filefmt=rh.container.actualfmt,
-                      soprano_target=soprano_target, routingkey=routingkey,
-                      targetname=targetname, transmet=transmet,
-                      header_infile=header_infile, **kw)
+        kwargs = dict(kind=kind, sshhost=sshhost, filename=rh.container.abspath,
+                      filefmt=rh.container.actualfmt, soprano_target=soprano_target,
+                      routingkey=routingkey, targetname=targetname, transmet=transmet,
+                      header_infile=header_infile, defer=deferred, **kw)
 
+        real_productid = productid
         if selkeyproductid:
             if isinstance(productid, dict):
-                kwargs['productid'] = productid[get_resource_value(rh, selkeyproductid)]
-                logger.info('productid key : %s ', get_resource_value(rh, selkeyproductid))
+                key = get_resource_value(rh, selkeyproductid)
+                real_productid = productid[key]
+                logger.info('productid (key %s): %s', key, real_productid)
             else:
-                logger.warning('productid is not a dict : %s', productid)
+                logger.warning('productid is not a dict (selkey=%s ignored): %s',
+                               selkeyproductid, productid)
+        kwargs['productid'] = real_productid
+
+        real_filtername = filtername
+        if selkeyfiltername:
+            if isinstance(filtername, dict):
+                key = get_resource_value(rh, selkeyfiltername)
+                real_filtername = filtername[key]
+                logger.info('filtername (key %s): %s', key, real_filtername)
+            else:
+                logger.warning('filtername is not a dict (selkey=%s ignored): %s',
+                               selkeyfiltername, filtername)
+        kwargs['filtername'] = real_filtername
 
         if hasattr(rh.resource, 'geometry'):
             kwargs['domain'] = rh.resource.geometry.area
@@ -462,16 +432,27 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
             if kwargs['transmet']:
                 kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
-        if filteractive(rh, optfilter):
-            if deferred:
-                logger.info('asking jeeves to route handler ' + str(rh))
-                jeeves_opts = dict(
-                    filtername=filtername,
-                )
-                defer_route(t, rh, jeeves_opts, kwargs)
+        kwargs['rhandler_uri'] = rh.location()
+
+        if real_filtername is not None:
+            filters = [
+                request.rh.contents
+                for request in t.context.sequence.effective_inputs(
+                    role='GRIBFilteringRequest',
+                    kind='filtering_request', )
+                if request.rh.contents.data['filter_name'] == real_filtername
+            ]
+            if len(filters) == 1:
+                kwargs['filterdefinition'] = filters[0]
             else:
-                logger.info('routing handler ' + str(rh))
-                ad.route(**kwargs)
+                raise ValueError('filtername not found in the effective_inputs: {!s}'
+                                 .format(real_filtername))
+        else:
+            kwargs['filterdefinition'] = None
+
+        if filteractive(rh, optfilter):
+            logger.info('routing handler %s', rh)
+            ad.route(**kwargs)
 
     return hook_route
 
@@ -500,9 +481,9 @@ def opecfmeter_hook_factory(maxvalue, sharedadvance=None, useterm=False):
     :param sharedadvance: <class 'multiprocessing.sharedctypes.Synchronized'>
 
     example of use for 'sharedadvance' (this code must be implemented in the task.py)::
-        >>> import multiprocessing as mp
-        >>> avancement = mp.Value('i', 0)
-        >>> hook_ecfmeter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
+        import multiprocessing as mp
+        avancement = mp.Value('i', 0)
+        hook_meter = op.opecfmeter_hook_factory(len(tb01), sharedadvance=avancement)
     """
 
     def hook_ecfmeter(t, rh):  # @UnusedVariable

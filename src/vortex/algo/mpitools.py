@@ -85,9 +85,9 @@ import footprints
 from bronx.compat.moves import collections_abc
 from bronx.fancies import loggers
 from bronx.syntax.parsing import xlist_strings
+from vortex.tools import env
 from vortex.tools.arm import ArmForgeTool
 from vortex.tools.systems import ExecutionError
-from vortex.tools import env
 from vortex.util import config
 
 #: No automatic export
@@ -467,7 +467,7 @@ class MpiTool(footprints.FootprintBase):
             elif klast is not None:
                 options[klast][-1].append(optdef)
             else:
-                raise MpiException('Badly shaped mpi option around %s', optdef)
+                raise MpiException('Badly shaped mpi option around {!s}'.format(optdef))
         return options
 
     def _hook_binary_mpiopts(self, binary, options):
@@ -747,8 +747,8 @@ class MpiTool(footprints.FootprintBase):
                                     encoding='utf-8')
         with io.open(self._envelope_wrapper_name, 'w', encoding='utf-8') as fhw:
             fhw.write(
-                wtpl.substitute(** self._envelope_mkwrapper_tplsubs(todostack,
-                                                                    bindingstack))
+                wtpl.substitute(**self._envelope_mkwrapper_tplsubs(todostack,
+                                                                   bindingstack))
             )
         self.system.xperm(self._envelope_wrapper_name, force=True)
         return self._envelope_wrapper_name
@@ -805,7 +805,7 @@ class MpiTool(footprints.FootprintBase):
                              errors='replace') as sfh:
                     for (i, l) in enumerate(sfh):
                         if i == 0:
-                            self.system.subtitle('rank {:d}: stdout/err'.format(rank))
+                            self.system.highlight('rank {:d}: stdout/err'.format(rank))
                         print(l.rstrip('\n'))
                 self.system.remove(outf)
         if self.envelope and self.system.path.exists(self._envelope_wrapper_name):
@@ -827,7 +827,7 @@ class MpiTool(footprints.FootprintBase):
             ]
         else:
             logger.info('No loop option in current parallel execution.')
-        self.system.subtitle('Namelist candidates')
+        self.system.highlight('Namelist candidates')
         for nam in namcandidates:
             nam.quickview()
         return namcandidates
@@ -912,7 +912,7 @@ class MpiTool(footprints.FootprintBase):
         for k, v in confdata.items():
             if k not in self.env:
                 try:
-                    v = six.text_type(v).format(** envsub)
+                    v = six.text_type(v).format(**envsub)
                 except KeyError:
                     logger.warning("Substitution failed for the environment " +
                                    "variable %s. Ignoring it.", k)
@@ -930,7 +930,6 @@ class MpiTool(footprints.FootprintBase):
 
 
 class ConfigurableMpiTool(MpiTool):
-
     _abstract = True
     _footprint = dict(
         attr = dict(
@@ -1175,7 +1174,6 @@ class MpiEnvelopeBit(MpiBinaryDescription):
 
 
 class MpiBinary(MpiBinaryDescription):
-
     _footprint = dict(
         attr = dict(
             distribution=dict(
@@ -1373,7 +1371,7 @@ class SRun(ConfigurableMpiTool):
                                                       hexmask=True)
                 if not ids:
                     raise MpiException('Unable to detect the CPU layout with topology: {:s}'
-                                       .format(self._actual_mpibind_topology,))
+                                       .format(self._actual_mpibind_topology, ))
                 masklist = [m for _, m in zip(range(what[0].options['nnp']),
                                               itertools.cycle(ids))]
                 cmdl.append('mask_cpu:' + ','.join(masklist))

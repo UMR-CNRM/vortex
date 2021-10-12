@@ -4,14 +4,15 @@
 Functions and tools to handle resources names or other kind of names.
 """
 
-from __future__ import print_function, absolute_import, unicode_literals, division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
-import six
 import re
 import sys
 
+import six
+
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Time, Date
+from bronx.stdtypes.date import Date, Time
 
 #: No automatic export
 __all__ = []
@@ -46,7 +47,7 @@ def _reseau_suffix(cutoff, reseau, vconf=None, vapp=None, suffix_r=False):
     elif vconf in ('angola0025', 'assmp1', 'assms1', 'assms2', 'atourxarp01', 'caledaro01',
                    'euratarpc01', 'frangparo0025', 'frangparoifs0025', 'globalarp02',
                    'globalarpc02', 'globalcep01', 'polyaro01',
-                   'reuaro01', 'ctbto') or vapp == 'promethee':
+                   'reuaro01', 'ctbto', 'medaroifs') or vapp == 'promethee':
         reseau_suff = _reseau
     else:
         logger.warning(
@@ -438,22 +439,22 @@ def gridpoint_bnames(resource, provider):
                 model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                              vapp=provider.vapp, vconf=provider.vconf)
                 localname = 'RUN1_HM' + resource.geometry.area + '+' \
-                    + Date(resource.date.ymdh + '/-PT12H').ymdh
+                            + Date(resource.date.ymdh + '/-PT12H').ymdh
             else:
                 pass
         else:
             model_info, suffix = faNames(resource.cutoff, resource.date.hour, resource.model,
                                          vapp=provider.vapp, vconf=provider.vconf)
             localname = 'PF' + model_info + resource.geometry.area + '+' \
-                + resource.term.fmthour + '.' + suffix
+                        + resource.term.fmthour + '.' + suffix
     elif resource.nativefmt == 'grib':
         if resource.model == 'arpege':
             prefix, suffix = gribNames(cutoff, reseau, model, provider.member,
                                        vapp=provider.vapp, vconf=provider.vconf)
             nw_term = "{0:03d}".format(resource.term.hour)
             if provider.member is not None:
-                localname = prefix + '_' + suffix + '_' + six.text_type(provider.member) + '_' \
-                    + resource.geometry.area + '_' + resource.term.fmthour
+                localname = prefix + '_' + suffix + '_' + six.text_type(provider.member)
+                localname += '_' + resource.geometry.area + '_' + resource.term.fmthour
             else:
                 if resource.term.fmthour == '0108' and prefix == 'PE':
                     suffix = 'PM'
@@ -643,11 +644,12 @@ def global_snames(resource, provider):
             # Alpha
             if vapp == 'pprod':
                 if vconf == 'ecmwf2mf@determ':
-                    bname = 'cep_ifs_' + str(resource.date) + '_' + resource.geometry.area + '_ECH{0:04d}'.format(
-                        resource.term.hour) + '.X.grb'
+                    bname = 'cep_ifs_' + str(resource.date) + '_' + resource.geometry.area \
+                            + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
                 elif vconf == 'ecmwf2mf@eps':
-                    bname = 'cep_eps_' + str(resource.date) + '_MB{0:02d}_'.format(
-                        provider.member) + resource.geometry.area + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
+                    bname = 'cep_eps_' + str(resource.date) \
+                            + '_MB{0:02d}_'.format(provider.member) + resource.geometry.area \
+                            + '_ECH{0:04d}'.format(resource.term.hour) + '.X.grb'
             # Others
             else:
                 # For MACC forecast (camsfcst)
@@ -675,21 +677,31 @@ def global_snames(resource, provider):
         else:
             bname = dict(sentinel1='SENT1').get(resource.satellite, resource.satellite)
 
-    elif resource.realkind == 'forcing' and resource.model in ('mfwam', 'ww3'):
+    elif resource.realkind == 'forcing' and resource.model == 'mfwam':
         if resource.filling == 'wind':
 
             if hasattr(resource, 'term'):
-                bname = 'wind_{:s}{:s}'.format('ana' if resource.term in (0, None) else 'fcst', resource.date.hh)
+                bname = 'wind_{:s}{:s}'.format(
+                    'ana' if resource.term in (0, None) else 'fcst',
+                    resource.date.hh
+                )
             elif hasattr(resource, 'endtime'):
                 if resource.endtime == 240:
                     bname = 'vent_{:s}{:s}'.format('prv_long', resource.date.hh)
                 else:
-                    bname = 'vent_{:s}{:s}'.format('ana' if resource.endtime == 0 else 'prv', resource.date.hh)
+                    bname = 'vent_{:s}{:s}'.format(
+                        'ana' if resource.endtime == 0 else 'prv',
+                        resource.date.hh
+                    )
 
         elif resource.filling == 'currents':
             bname = 'courant_{:s}'.format(resource.date.hh)
         else:
             bname = 'allsop'
+
+    elif resource.realkind == 'forcing' and resource.model == 'ww3':
+        if resource.filling == 'wind':
+            bname = 'wind_{:s}'.format(resource.date.hh)
 
     elif resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
