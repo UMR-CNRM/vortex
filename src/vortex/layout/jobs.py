@@ -607,7 +607,6 @@ class JobAssistant(footprints.FootprintBase):
         ftuser = self.conf.get('ftuser', None)
         if ftuser is not None:
             if isinstance(ftuser, dict):
-
                 for dest, d_ftuser in ftuser.items():
                     if not (isinstance(dest, six.string_types) and isinstance(d_ftuser, six.string_types)):
                         logger.error('Improper ftuser configuration (Destination=%s, Logname=%s)',
@@ -624,6 +623,11 @@ class JobAssistant(footprints.FootprintBase):
                 t.glove.setftuser(ftuser)
             else:
                 logger.error('Improper ftuser value %s', ftuser)
+        # Possibly setup the default hostname for file-transfers
+        fthost = self.conf.get('fthost', None)
+        if fthost is not None:
+            t.glove.default_fthost = fthost
+            self._printfmt('+ Setting the default file-transfer hostname to: {:s}', fthost)
 
     @_extendable
     def _env_setup(self, t, **kw):
