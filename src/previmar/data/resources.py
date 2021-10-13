@@ -503,6 +503,9 @@ class DatedBathy(GeoFlowResource):
                 model = dict(
                     values = ['ww3'],
                 ),
+                header = dict(
+                    optional = False,
+                ),
             )
         )
     ]

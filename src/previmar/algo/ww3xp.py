@@ -546,6 +546,8 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             raise IOError("No or too much constant files for convertion to grib")
         consttar = constcandidate[0].rh.container.localpath()
         headconst = consttar.split('_')[0] + '_' + consttar.split('_')[1]
+        # Retrieve of bathy files if present
+        bathycandidate = self.context.sequence.effective_inputs(role=('FixeOutput'),)
 
         cwd = sh.pwd()
         output_files = set()
@@ -588,7 +590,13 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 else:
                     fic_prod = "ww3.{0:s}_{1:s}{2:04d}.grb".format(dom, self.datpivot.ymdh,
                                                                    int(term / 3600))
-                logger.info("yoyo %s", fic_prod)
+
+                # At 0h hindcast bathy should be added if present
+                if self.dateval.ymdh == self.datpivot.ymdh and len(bathycandidate) > 0:
+                    for bathy in bathycandidate:
+                        if bathy.rh.resource.header == dom:
+                            sh.mv(sh.path.join(cwd,bathy.rh.container.localpath()),"ww3.{0:s}_bathy.grb".format(dom))
+
                 sh.cat('ww3.{0:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
                 output_files.add(fic_prod)
 
