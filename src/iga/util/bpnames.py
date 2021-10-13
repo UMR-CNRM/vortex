@@ -702,7 +702,9 @@ def global_snames(resource, provider):
     elif resource.realkind == 'forcing' and resource.model == 'ww3':
         if resource.filling == 'wind':
             bname = 'wind_{:s}'.format(resource.date.hh)
-
+        if resource.filling == 'bathy':
+            bname = 'bathy_'  + resource.geometry.area + '_{:s}' . format(resource.date.hh)
+ 
     elif resource.realkind == 'observations':
         if resource.nativefmt == 'grib':
             if resource.part == 'sev':
