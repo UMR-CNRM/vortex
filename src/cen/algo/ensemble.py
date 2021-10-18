@@ -313,12 +313,16 @@ class _SafranWorker(_S2MWorker):
             if not self.system.path.exists(filename):
                 missing_files = True
         if missing_files:
-            if self.execution not in ['reforecast', ]:
-                rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
-            # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
-            # a climatological guess that is corrected by the observations
-            if self.execution not in ['analysis', 'reanalysis']:
-                outcome = False
+            if filename.startswith('P'):
+                # SAFRAN guess files can be named 'PYYMMDDHH' or 'EYYMMDDHH'
+                rdict, outcome = self.check_mandatory_resources(rdict, 'E' + filename[1:])
+            else:
+                if self.execution not in ['reforecast', ]:
+                    rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
+                # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
+                # a climatological guess that is corrected by the observations
+                if self.execution not in ['analysis', 'reanalysis']:
+                    outcome = False
         return rdict, outcome
 
     def sapdat(self, thisdate, nech=5):
