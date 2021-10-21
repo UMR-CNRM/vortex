@@ -41,7 +41,7 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: CutoffDispenser
+.. autoclass:: ListBasedCutoffDispenser
    :show-inheritance:
    :members:
    :member-order: alphabetical

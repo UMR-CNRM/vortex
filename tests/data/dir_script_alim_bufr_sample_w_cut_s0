@@ -1,0 +1,117 @@
+# Fichier de directives pour le script d'extraction
+
+<extraction>
+   OBS TYPE        : TEMPNEW
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tempnew
+   REFDATA         : BUFR : tempnew
+   SQL WHERE       : and (template = 309052 or (template = 309057 and identificateur = 'ENMI')) and flag_pretr <> 2
+   <batormap>
+      SENSOR       : temp
+      TARGET BASE  : conv
+   </batormap>
+</extraction>
+
+<extraction>
+   OBS TYPE             : SAPHIR
+   CUTOFF               : 20210414021000
+   BINARY OUTPUT        : Y
+   BINARY FILENAME      : BUFR.saphir
+   REFDATA              : BUFR : saphir
+   <batormap>
+      SENSOR            : saphir
+      TARGET BASE       : tovsb
+   </batormap>
+</extraction>
+
+<extraction>
+   OBS TYPE        : MWRI
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.mwri
+   REFDATA         : BUFR : mwri
+   <batormap>
+      SENSOR       : mwri
+      TARGET BASE  : mwri
+   </batormap>
+</extraction>
+
+<extraction>
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tovamsua
+   OBS TYPE        : TOVSAMSUA
+   CUTOFF          : 20210414021000
+   CONCATENATION   : Y
+   SQL WHERE       : and lltbufr_val in ('784')
+   REFDATA         : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>
+<extraction>
+   OBS TYPE             : TOVSAMSUA
+   CUTOFF               : 20210414021000
+   BINARY OUTPUT        : Y
+   BINARY FILENAME      : BUFR.tovamsua
+   CONCATENATION        : Y
+   SQL WHERE            : and lltbufr_val in ('206','209','223') and prod_ori = 74
+   REFDATA              : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>
+<extraction>
+   OBS TYPE        : TOVSAMSUA
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tovamsua
+   CONCATENATION   : Y
+   SQL WHERE       : and lltbufr_val in ('209','223','4','3') and prod_ori = 211
+   REFDATA         : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>
+<extraction>
+   OBS TYPE        : TOVSAMSUA
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tovamsua
+   CONCATENATION   : Y
+   SQL WHERE       : and lltbufr_val in ('5','4','3') and prod_ori = 254 and prod_sec = 0
+   REFDATA         : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>
+<extraction>
+   OBS TYPE        : TOVSAMSUA
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tovamsua
+   CONCATENATION   : Y
+   SQL WHERE       : and lltbufr_val in ('209','223','4','3') and prod_ori in (34,39,40,46,110,2,72,191,204,254) and prod_sec <> 0
+   REFDATA         : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>
+<extraction>
+   OBS TYPE        : TOVSAMSUA
+   CUTOFF          : 20210414021000
+   BINARY OUTPUT   : Y
+   BINARY FILENAME : BUFR.tovamsua
+   CONCATENATION   : Y
+   SQL WHERE       : and lltbufr_val == '666' and prod_ori in (34,39,40,46,110,2,72,191,204,254) and prod_sec <> 0
+   REFDATA         : BUFR : amsua
+   <batormap>
+      SENSOR       : amsua
+      TARGET BASE  : tovsa
+   </batormap>
+</extraction>

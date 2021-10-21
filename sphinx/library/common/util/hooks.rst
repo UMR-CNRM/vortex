@@ -19,3 +19,5 @@ Functions
 .. autofunction:: concatenate
 
 .. autofunction:: insert_cutoffs
+
+.. autofunction:: insert_static_cutoffs

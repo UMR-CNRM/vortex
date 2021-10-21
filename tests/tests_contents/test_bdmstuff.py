@@ -8,12 +8,13 @@ from unittest import main, TestCase
 import os
 
 from bronx.fancies import loggers
-from bronx.stdtypes.date import Date
+from bronx.stdtypes.date import Date, Period
 from footprints import proxy as fpx
 
 from vortex.data.contents import FormatAdapter
-from vortex.tools.listings import CutoffDispenser
+from vortex.tools.listings import ListBasedCutoffDispenser
 from common.data.query import BDMQueryContent
+from common.util.hooks import _new_static_cutoff_dispencer
 
 tloglevel = 'critical'
 
@@ -111,13 +112,31 @@ class UtBdmStuff(TestCase):
         ct.add_cutoff_info(c_disp)
         with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample_w_cut'), 'r') as fh_b:
             self.assertListEqual(ct.data, list(fh_b.readlines()))
+        # Static case
+        ct = self.bdmquery_ct
+        c_disp = _new_static_cutoff_dispencer('2021041400', 'PT2H10M')
+        ct.add_cutoff_info(c_disp)
+        with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample_w_cut_s0'), 'r') as fh_b:
+            self.assertListEqual(ct.data, list(fh_b.readlines()))
+        ct = self.bdmquery_ct
+        c_disp = _new_static_cutoff_dispencer(Date('2021041400'), Period('PT2H10M'))
+        ct.add_cutoff_info(c_disp)
+        with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample_w_cut_s0'), 'r') as fh_b:
+            self.assertListEqual(ct.data, list(fh_b.readlines()))
+        ct = self.bdmquery_ct
+        c_disp = _new_static_cutoff_dispencer(Date('2021041400'),
+                                              {Period('PT2H10M'): [],
+                                               '02:05:00': ['TOVSAMSUA', 'saphir']})
+        ct.add_cutoff_info(c_disp)
+        with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample_w_cut_s1'), 'r') as fh_b:
+            self.assertListEqual(ct.data, list(fh_b.readlines()))
         # No cutoff can be found
         ct = self.bdmquery_ct
-        ct.add_cutoff_info(CutoffDispenser({}))
+        ct.add_cutoff_info(ListBasedCutoffDispenser({}))
         with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample'), 'r') as fh_b:
             self.assertListEqual(ct.data, list(fh_b.readlines()))
         ct = self.bdmquery_ct
-        ct.add_cutoff_info(CutoffDispenser({'toto': deque([None, ])}))
+        ct.add_cutoff_info(ListBasedCutoffDispenser({'toto': deque([None, ])}))
         with io.open(os.path.join(DATADIR, 'dir_script_alim_bufr_sample'), 'r') as fh_b:
             self.assertListEqual(ct.data, list(fh_b.readlines()))
 

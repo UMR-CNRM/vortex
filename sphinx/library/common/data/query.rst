@@ -36,6 +36,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: StaticCutoffDispenser
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: BDMQueryContent
    :show-inheritance:
    :members:
