@@ -626,7 +626,9 @@ def diff(*args, **kw):
 
     # Fast exit in case of undefined value
     rlok = list()
-    if None in kwclean.values():
+    none_skip = {k for k, v in kwclean.items()
+                 if v is None and k in ('experiment', 'namespace')}
+    if none_skip:
         logger.warning('Skip diff because of undefined argument(s)')
         return rlok
 

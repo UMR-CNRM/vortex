@@ -431,6 +431,8 @@ class UtSimpleWorkflow(TestCase):
         descO.update(experiment='CBA1')
         descdiff = desc.copy()
         descdiff.update(experiment='ABC2')
+        voiddescdiff = desc.copy()
+        voiddescdiff.update(experiment=None)
         for namespace in ('vortex.testcache.fr', 'vortex.testmulti.fr'):
             for batch in [True, False]:
                 # Input
@@ -438,6 +440,11 @@ class UtSimpleWorkflow(TestCase):
                                     **desc)
                 rcdiff = toolbox.diff(namespace=namespace, **descdiff)
                 self.assertTrue(all(rcdiff))
+                # If namespace or experiment is None, the diff is ignored
+                rcdiff = toolbox.diff(namespace=None, **descdiff)
+                self.assertListEqual(rcdiff, [])
+                rcdiff = toolbox.diff(namespace=namespace, **voiddescdiff)
+                self.assertListEqual(rcdiff, [])
                 for rh in rhs:
                     self.assertIntegrity(rh)
                 # Output
