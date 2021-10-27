@@ -196,7 +196,7 @@ def unsafedrawingfunction(options):
 
     See the documentation of these two functions for more details.
     """
-    options['fakecheck'] = True
+    options['fakecheck'] = [True, ]
     checkedlist = _checkingfunction_dict(options)
     options['rhandler']['resource']['population'] = checkedlist
     return drawingfunction(options)
