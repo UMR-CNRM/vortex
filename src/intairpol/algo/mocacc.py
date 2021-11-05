@@ -381,8 +381,7 @@ class MocaccForecast(AbstractMocaccRoot):
 
     @property
     def _sorted_inputs_geometries(self):
-        """Build a sorted list of forcing files geometries.
-        """
+        """Build a sorted list of forcing files geometries."""
         return sorted(
             set([sec.rh.resource.geometry for sec in self._fm_inputs]),
             key=lambda x: x.resolution,
@@ -509,38 +508,16 @@ class MocaccForecast(AbstractMocaccRoot):
 
                 self.system.highlight("{0} succesfully created".format(empty_hm))
 
-    def _create_table_mocage_chem(self, cfg_content):
-        """Create table_mocage_chem.txt from complete MOCAGE.CFG."""
-        table_str = ""
-        for numpoll in range(0, cfg_content.nbpolls):
-            identstat = cfg_content[9 + numpoll * 21].strip()
-            pollname = cfg_content[11 + numpoll * 21].strip()
-            table_str += "{0:02d}, POLLUT{0:02d}, {0:02d}.210, {0:02d}.211, ".format(
-                numpoll + 1
-            )
-            table_str += "{0:02d}.212, {0:02d}.213, 0 , 0.0, ".format(numpoll + 1)
-            table_str += "true, 1, 0, 0, true, false, 222.0, 0.0, 0.0, 0.0, "
-            table_str += "'{0}', '{1}'\n".format(identstat, pollname)
-
-        self.system.highlight("table_mocage_chem.txt content")
-
-        c = fp.proxy.container(filename="table_mocage_chem.txt", mode="w+")
-        c.write(table_str)
-        c.cat()
-
     def execute(self, rh, opts):
         """Standard execution."""
-        cfg_content = self._get_single_rh("PointSourceConfig").contents
-
-        # table_mocage_chem.txt (from MOCAGE.CFG without keywords)
-        self._create_table_mocage_chem(cfg_content)
+        table_chem_contents = self._get_single_rh("TableChem").contents
 
         #  Are empty initial state required ?
         if not self.context.sequence.effective_inputs(role="HMRestart"):
-            self._init_empty_hm(cfg_content.nbpolls)
+            self._init_empty_hm(table_chem_contents.nbpolls)
 
         # namelist update
-        self._prepare_mocage_fc_namelist(cfg_content.nbpolls)
+        self._prepare_mocage_fc_namelist(table_chem_contents.nbpolls)
 
         super(MocaccForecast, self).execute(rh, opts)
 
