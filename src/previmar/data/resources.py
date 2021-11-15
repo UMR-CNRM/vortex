@@ -421,7 +421,7 @@ class Ww3IntermediateResults(GeoFlowResource):
                 values = ['ww3IntermedResult'],
             ),
             fields = dict(
-                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003'],
+                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003', 'level', 'current'],
             ),
             model = dict(
                 values = ['ww3'],

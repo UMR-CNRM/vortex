@@ -93,7 +93,8 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
         if self.promises:
             self.io_poll_sleep = 15
             sstepout = '{0:d}'.format(self.stepout.length // 3600)
-            self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh, stepout=sstepout)
+            sanaterm = '{0:d}'.format(self.anaterm.hour)
+            self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh, stepout=sstepout,anaterm=sanaterm)
             self.flyput = True
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistShel', ))
