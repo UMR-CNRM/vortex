@@ -153,15 +153,10 @@ def algo_component_deco_mixin_autodoc(cls):
                     ' \n'.join(['        ' + t if t else ''
                                 for t in extradoc.split('\n')]))
 
-        # This is a trick... create a fake __new__ method in order to be able
-        # to update its documentation.
-        orig_new = cls.__new__
-
-        def __new__(thecls, *args, **kwargs):
-            return orig_new(thecls, *args, **kwargs)
-
-        __new__.__doc__ = extradoc
-        cls.__new__ = classmethod(__new__)
+        if hasattr(cls, '__doc__'):
+            cls.__doc__ += '\n' + extradoc
+        else:
+            cls.__doc__ = extradoc
 
     return cls
 
@@ -258,7 +253,6 @@ class AlgoComponentDecoMixin(object):
     _MIXIN_EXECUTE_OVERWRITE = None
 
     def __new__(cls, *args, **kwargs):
-        """Ensure that the mixin cannot be instantiated."""
         if not issubclass(cls, AlgoComponent):
             # This class cannot be instanciated by itself !
             raise RuntimeError('< {0.__name__:s} > is a mixin class: it cannot be instantiated.'
