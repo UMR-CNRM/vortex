@@ -945,20 +945,19 @@ class EnsembleDiagScript(GnuScript):
     ]
 
 
-@gmkpack_bin_deco
-class Surfexoff(BlackBox):
-    """Multipurpose tool to build the initial states of the ensemble prediction system."""
+class DomeoForcing(BlackBox):
+    """Some binary that tweak forcing files for domeo use."""
 
     _footprint = [
         gvar,
         dict(
-            info = 'surfex offline domeo',
+            info = 'Some binary that tweak forcing files for domeo use',
             attr = dict(
                 kind = dict(
-                    values   = ['surfexoff'],
+                    values   = ['domeo_forcing'],
                 ),
                 gvar = dict(
-                    default  = 'master_surfexoff'
+                    default  = 'master_domeo_forcing'
                 ),
             )
         )
@@ -966,21 +965,25 @@ class Surfexoff(BlackBox):
 
     @property
     def realkind(self):
-        return 'surfexoff'
+        return 'domeo_forcing'
 
 
-class ScriptDataCor(Script):
-    """Class to deal with correction script."""
+class DomeoScriptDataCor(Script):
+    """Class to deal with Domeo correction script."""
+
     _footprint = [
         gvar,
         dict(
             info = 'correction script',
             attr = dict(
                 kind = dict(
-                    values = ['script_cor']
+                    values = ['domeo_cor_script']
                 ),
-                gvar=dict(
-                    values=['scr_forcing_cor', 'scr_crop_out'],
+                purpose = dict(
+                    values  = ['forcing', 'crop'],
+                ),
+                gvar = dict(
+                    default = 'scr_domeo_cor_[purpose]',
                 ),
             )
         )
@@ -988,4 +991,4 @@ class ScriptDataCor(Script):
 
     @property
     def realkind(self):
-        return 'script_cor'
+        return 'domeo_cor_script'
