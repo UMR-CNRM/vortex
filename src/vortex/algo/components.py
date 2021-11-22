@@ -153,7 +153,7 @@ def algo_component_deco_mixin_autodoc(cls):
                     ' \n'.join(['        ' + t if t else ''
                                 for t in extradoc.split('\n')]))
 
-        if hasattr(cls, '__doc__'):
+        if isinstance(getattr(cls, '__doc__', None), six.string_types):
             cls.__doc__ += '\n' + extradoc
         else:
             cls.__doc__ = extradoc
