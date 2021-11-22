@@ -116,6 +116,10 @@ def algo_component_deco_mixin_autodoc(cls):
     Decorator that adds an automatic documentation on any :class:`AlgoComponentDecoMixin`
     class.
     """
+    if six.PY2:
+        # With Python2.7, do not even try...
+        return cls
+
     extradoc = ''
 
     # Document extra footprints
