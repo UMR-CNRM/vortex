@@ -154,6 +154,7 @@ class TestDriver(object):
             self._defaults_style = dumpeddefaults.get('style', self._defaults_style)
             for dset in dumpeddefaults.get('sets', list()):
                 for expandedset in fp.util.expand(dset):
+                    expandedset = {k: v for k, v in expandedset.items() if k not in ('index_expansion', )}
                     self._defaults.append(TestParameters(expandedset))
         if 'register' in dumpeddata:
             dumpedregister = dumpeddata['register']
@@ -320,6 +321,7 @@ class TestsStack(bronx.stdtypes.catalog.Catalog):
             thetest = dumpedcommons.copy()
             thetest.update(dumpedtest)
             for expandedtest in fp.util.expand(thetest):
+                expandedtest = {k: v for k, v in expandedtest.items() if k not in ('index_expansion', )}
                 self.add(SingleTest(expandedtest))
 
     def compute_results(self, defaults):

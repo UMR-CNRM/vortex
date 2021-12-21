@@ -46,7 +46,7 @@ def list2dict(a, klist):
     return a
 
 
-def inplace(desc, key, value, globs=None):
+def inplace(desc, key, value, globs=None, globalindex=None):
     """
     Redefine the ``key`` value in a deep copy of the description ``desc``.
 
@@ -67,6 +67,8 @@ def inplace(desc, key, value, globs=None):
         for k in [x for x in newd.keys() if (x != key and isinstance(newd[x], six.string_types))]:
             for g in globs.keys():
                 newd[k] = re.sub(r'\[glob:' + g + r'\]', globs[g], newd[k])
+    if globalindex is not None:
+        newd['index_expansion'] = globalindex + 1
     return newd
 
 
@@ -164,28 +166,37 @@ def expand(desc):
 
     List expansion::
 
-        >>> expand({'test': 'alpha'}) == [{'test': 'alpha'}]
+        >>> expand({'test': 'alpha'}) == [{'test': 'alpha', 'index_expansion': 1}]
         True
 
         >>> (expand({ 'test': 'alpha', 'niv2': [ 'a', 'b', 'c' ]}) ==
-        ...  [{'test': 'alpha', 'niv2': 'a'}, {'test': 'alpha', 'niv2': 'b'}, {'test': 'alpha', 'niv2': 'c'}])
+        ...  [{'test': 'alpha', 'niv2': 'a', 'index_expansion': 1},
+        ...   {'test': 'alpha', 'niv2': 'b', 'index_expansion': 2},
+        ...   {'test': 'alpha', 'niv2': 'c', 'index_expansion': 3}])
         True
 
         >>> (expand({'test': 'alpha', 'niv2': 'x,y,z'}) ==
-        ...  [{'test': 'alpha', 'niv2': 'x'}, {'test': 'alpha', 'niv2': 'y'}, {'test': 'alpha', 'niv2': 'z'}])
+        ...  [{'test': 'alpha', 'niv2': 'x', 'index_expansion': 1},
+        ...   {'test': 'alpha', 'niv2': 'y', 'index_expansion': 2},
+        ...   {'test': 'alpha', 'niv2': 'z', 'index_expansion': 3}])
         True
 
         >>> (expand({'test': 'alpha', 'niv2': 'range(1,3)'}) ==
-        ...  [{'test': 'alpha', 'niv2': 1}, {'test': 'alpha', 'niv2': 2}, {'test': 'alpha', 'niv2': 3}])
+        ...  [{'test': 'alpha', 'niv2': 1, 'index_expansion': 1},
+        ...   {'test': 'alpha', 'niv2': 2, 'index_expansion': 2},
+        ...   {'test': 'alpha', 'niv2': 3, 'index_expansion': 3}])
         True
         >>> (expand({'test': 'alpha', 'niv2': 'range(0,6,3)'}) ==
-        ...  [{'test': u'alpha', 'niv2': 0}, {'test': 'alpha', 'niv2': 3}, {'test': 'alpha', 'niv2': 6}])
+        ...  [{'test': u'alpha', 'niv2': 0, 'index_expansion': 1},
+        ...   {'test': 'alpha', 'niv2': 3, 'index_expansion': 2},
+        ...   {'test': 'alpha', 'niv2': 6, 'index_expansion': 3}])
         True
 
     List expansion + dictionary matching::
 
         >>> (expand({'test': 'alpha', 'niv2': ['x', 'y'], 'niv3': {'niv2': {'x': 'niv2 is x', 'y': 'niv2 is y'}}}) ==
-        ...  [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x'}, {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y'}])
+        ...  [{'test': 'alpha', 'niv3': 'niv2 is x', 'niv2': 'x', 'index_expansion': 1},
+        ...   {'test': 'alpha', 'niv3': 'niv2 is y', 'niv2': 'y', 'index_expansion': 2}])
         True
 
     Globbing::
@@ -197,10 +208,10 @@ def expand(desc):
         ... # - testfile_def_3
         ... # - testfile_a_trap
         >>> expand({'fname': r'testfile_{glob:i:\w+}_{glob:n:\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
-        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1'},
-         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2'},
-         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3'},
-         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2'}]
+        [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1', 'index_expansion': 1},
+         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2', 'index_expansion': 2},
+         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3', 'index_expansion': 3},
+         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2', 'index_expansion': 4}]
 
     Explanation: The files currently in the working directory are matched using regular
     expressions. If the filename matches, some matching parts may be re-used to fill
@@ -213,6 +224,7 @@ def expand(desc):
     while todo:
         todo = False
         nbpass += 1
+        globalindex = 0
         if nbpass > 25:
             logger.error('Expansion is getting messy... (%d) ?', nbpass)
             raise MemoryError('Expand depth too high')
@@ -225,7 +237,9 @@ def expand(desc):
                     continue
                 if isinstance(v, list) or isinstance(v, tuple) or isinstance(v, set):
                     logger.debug(' > List expansion %s', v)
-                    newld.extend([inplace(d, k, x) for x in v])
+                    for x in v:
+                        newld.append(inplace(d, k, x, globalindex=globalindex))
+                        globalindex += 1
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.match(r'range\(\d+(,\d+)?(,\d+)?\)$', v, re.IGNORECASE):
@@ -234,12 +248,16 @@ def expand(desc):
                     if len(lv) < 2:
                         lv.append(lv[0])
                     lv[1] += 1
-                    newld.extend([inplace(d, k, x) for x in range(*lv)])
+                    for x in range(*lv):
+                        newld.append(inplace(d, k, x, globalindex=globalindex))
+                        globalindex += 1
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.search(r',', v):
                     logger.debug(' > Coma separated string %s', v)
-                    newld.extend([inplace(d, k, x) for x in v.split(',')])
+                    for x in v.split(','):
+                        newld.append(inplace(d, k, x, globalindex=globalindex))
+                        globalindex += 1
                     somechanges = True
                     break
                 if isinstance(v, six.string_types) and re.search(r'{glob:\w+:', v):
@@ -252,7 +270,8 @@ def expand(desc):
                             globmap = dict()
                             for g in g_names:
                                 globmap[g] = m.group(g)
-                            repld.append(inplace(d, k, filename, globmap))
+                            repld.append(inplace(d, k, filename, globmap, globalindex=globalindex))
+                            globalindex += 1
                     newld.extend(repld)
                     somechanges = True
                     break
@@ -260,14 +279,18 @@ def expand(desc):
                     for dk in [x for x in v.keys() if x in d]:
                         dv = d[dk]
                         if not(isinstance(dv, list) or isinstance(dv, tuple) or isinstance(dv, set)):
-                            newld.append(inplace(d, k, v[dk][six.text_type(dv)]))
+                            newld.append(inplace(d, k, v[dk][six.text_type(dv)], globalindex=globalindex))
+                            globalindex += 1
                             somechanges = True
                             break
                     if somechanges:
                         break
             todo = todo or somechanges
             if not somechanges:
-                newld.append(d)
+                newd = d.copy()
+                newd['index_expansion'] = globalindex + 1
+                newld.append(newd)
+                globalindex += 1
         ld = newld
 
     logger.debug('Expand in %d loops', nbpass)

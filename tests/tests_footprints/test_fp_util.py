@@ -95,31 +95,34 @@ class utExpand(TestCase):
 
     def test_expand_basics(self):
         rv = util.expand(dict(a=2, c='foo'))
-        self.assertListEqual(rv, [dict(a=2, c='foo'), ])
+        self.assertListEqual(rv, [dict(a=2, c='foo', index_expansion=1), ])
 
     def test_expand_iters(self):
         rv = util.expand(dict(arg='hop', item=(1, 2, 3)))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 1},
-            {'arg': 'hop', 'item': 2},
-            {'arg': 'hop', 'item': 3}
+            {'arg': 'hop', 'item': 1, 'index_expansion': 1},
+            {'arg': 'hop', 'item': 2, 'index_expansion': 2},
+            {'arg': 'hop', 'item': 3, 'index_expansion': 3}
         ])
 
         rv = util.expand(dict(arg='hop', item=[4, 5, 6]))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 4},
-            {'arg': 'hop', 'item': 5},
-            {'arg': 'hop', 'item': 6}
+            {'arg': 'hop', 'item': 4, 'index_expansion': 1},
+            {'arg': 'hop', 'item': 5, 'index_expansion': 2},
+            {'arg': 'hop', 'item': 6, 'index_expansion': 3}
         ])
 
         rv = util.expand(dict(arg='hop', item=set([7, 8, 9])))
         rv = sorted(rv,
                     key=lambda i: '_'.join([i['arg'], str(i['item'])]))
-        self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 7},
-            {'arg': 'hop', 'item': 8},
-            {'arg': 'hop', 'item': 9}
-        ])
+        self.assertListEqual(
+            [{k: v for k, v in rvi.items() if k not in ('index_expansion', )}
+             for rvi in rv],
+            [
+                {'arg': 'hop', 'item': 7},
+                {'arg': 'hop', 'item': 8},
+                {'arg': 'hop', 'item': 9}
+            ])
 
     def test_expend_memory_wall(self):
 
@@ -139,28 +142,28 @@ class utExpand(TestCase):
     def test_expand_strings(self):
         rv = util.expand(dict(arg='hop', item='a,b,c'))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 'a'},
-            {'arg': 'hop', 'item': 'b'},
-            {'arg': 'hop', 'item': 'c'}
+            {'arg': 'hop', 'item': 'a', 'index_expansion': 1},
+            {'arg': 'hop', 'item': 'b', 'index_expansion': 2},
+            {'arg': 'hop', 'item': 'c', 'index_expansion': 3}
         ])
 
         rv = util.expand(dict(arg='hop', item='range(2)'))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 2}
+            {'arg': 'hop', 'item': 2, 'index_expansion': 1}
         ])
 
         rv = util.expand(dict(arg='hop', item='range(2,4)'))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 2},
-            {'arg': 'hop', 'item': 3},
-            {'arg': 'hop', 'item': 4}
+            {'arg': 'hop', 'item': 2, 'index_expansion': 1},
+            {'arg': 'hop', 'item': 3, 'index_expansion': 2},
+            {'arg': 'hop', 'item': 4, 'index_expansion': 3}
         ])
 
         rv = util.expand(dict(arg='hop', item='range(1,7,3)'))
         self.assertListEqual(rv, [
-            {'arg': 'hop', 'item': 1},
-            {'arg': 'hop', 'item': 4},
-            {'arg': 'hop', 'item': 7}
+            {'arg': 'hop', 'item': 1, 'index_expansion': 1},
+            {'arg': 'hop', 'item': 4, 'index_expansion': 2},
+            {'arg': 'hop', 'item': 7, 'index_expansion': 3}
         ])
 
     def test_expand_glob(self):
@@ -193,12 +196,12 @@ class utExpand(TestCase):
             rv = sorted(rv,
                         key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
             self.assertListEqual(rv, [
-                {'arg': 'multi', 'look': tmpd + '/xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-                {'arg': 'multi', 'look': tmpd + '/xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-                {'arg': 'multi', 'look': tmpd + '/xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-                {'arg': 'multi', 'look': tmpd + '/xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-                {'arg': 'multi', 'look': tmpd + '/xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-                {'arg': 'multi', 'look': tmpd + '/xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0000', 'seta': 'hip', 'setb': '0000', 'index_expansion': 1},
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0001', 'seta': 'hip', 'setb': '0001', 'index_expansion': 2},
+                {'arg': 'multi', 'look': tmpd + '/xx_hip_0002', 'seta': 'hip', 'setb': '0002', 'index_expansion': 3},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0000', 'seta': 'hop', 'setb': '0000', 'index_expansion': 4},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0001', 'seta': 'hop', 'setb': '0001', 'index_expansion': 5},
+                {'arg': 'multi', 'look': tmpd + '/xx_hop_0002', 'seta': 'hop', 'setb': '0002', 'index_expansion': 6}
             ])
             # Jump to the tmp directory
             curdir = os.getcwd()
@@ -213,12 +216,12 @@ class utExpand(TestCase):
                 rv = sorted(rv,
                             key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
                 self.assertListEqual(rv, [
-                    {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-                    {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-                    {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-                    {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-                    {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-                    {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'}
+                    {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000', 'index_expansion': 1},
+                    {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001', 'index_expansion': 2},
+                    {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002', 'index_expansion': 3},
+                    {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000', 'index_expansion': 4},
+                    {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001', 'index_expansion': 5},
+                    {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002', 'index_expansion': 6}
                 ])
                 rv = util.expand(dict(
                     arg='multi',
@@ -228,20 +231,24 @@ class utExpand(TestCase):
                 ))
                 rv = sorted(rv,
                             key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
-                self.assertListEqual(rv, [
-                    {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
-                    {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-                    {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
-                    {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-                    {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
-                    {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-                    {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
-                    {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-                    {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
-                    {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-                    {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
-                    {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
-                ])
+                self.assertListEqual(
+                    [{k: v for k, v in rvi.items() if k not in ('index_expansion',)}
+                     for rvi in rv],
+                    [
+                        {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
+                        {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
+                        {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
+                        {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
+                        {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
+                        {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
+                        {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
+                        {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
+                        {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
+                        {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
+                        {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
+                        {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
+                    ]
+                )
                 with self.assertRaises(ValueError):
                     rv = util.expand(dict(
                         look=r'x?_{glob:a:\w+}_{glob:b:\d{4}(?::\d{2)?}',  # Unbalanced
@@ -267,69 +274,73 @@ class utExpand(TestCase):
         rv = sorted(rv,
                     key=lambda i: '_'.join([i['alist'], str(i['arange']), i['aset'], i['astr'], i['atuple']]))
         self.assertEqual(len(rv), 48)
-        self.assertListEqual(rv, [
-            {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
-            {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
-            {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'}
-        ])
+        self.assertListEqual(
+            [{k: v for k, v in rvi.items() if k not in ('index_expansion',)}
+             for rvi in rv],
+            [
+                {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'a', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 1, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 4, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'banana', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'that'},
+                {'atuple': 'one', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'},
+                {'atuple': 'two', 'alist': 'b', 'arange': 7, 'aset': 'orange', 'arg': 'hop', 'astr': 'this'}
+            ]
+        )
 
     def test_expand_dict(self):
         rv = util.expand(dict(arg=('hip', 'hop'), item=dict(arg={'hip': 'hop', 'hop': 'hip'})))
         self.assertListEqual(rv, [
-            {'arg': 'hip', 'item': 'hop'},
-            {'arg': 'hop', 'item': 'hip'},
+            {'arg': 'hip', 'item': 'hop', 'index_expansion': 1},
+            {'arg': 'hop', 'item': 'hip', 'index_expansion': 2},
         ])
 
     def test_expand_FP(self):
         rv = util.expand(dict(arg=('hip', 'hop'), item=FPList([1, 2, 3])))
         self.assertListEqual(rv, [
-            {'arg': 'hip', 'item': FPList([1, 2, 3])},
-            {'arg': 'hop', 'item': FPList([1, 2, 3])},
+            {'arg': 'hip', 'item': FPList([1, 2, 3]), 'index_expansion': 1},
+            {'arg': 'hop', 'item': FPList([1, 2, 3]), 'index_expansion': 2},
         ])
 
 
