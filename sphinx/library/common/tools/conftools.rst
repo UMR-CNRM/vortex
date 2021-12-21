@@ -19,6 +19,11 @@ Abstract class
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AbstractObjectProxyConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Classes
 -------
 
@@ -43,6 +48,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: ArpIfsForecastTermConfTool
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: TimeSlotsConfTool
    :show-inheritance:
    :members:
    :member-order: alphabetical

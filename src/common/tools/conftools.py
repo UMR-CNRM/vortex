@@ -24,6 +24,8 @@ from footprints.stdtypes import FPDict, FPList
 from footprints.util import rangex
 import footprints
 
+from common.tools.odb import TimeSlots
+
 #: No automatic export
 __all__ = []
 
@@ -41,6 +43,37 @@ class ConfTool(footprints.FootprintBase):
             kind = dict(),
         )
     )
+
+
+class AbstractObjectProxyConfTool(ConfTool):
+    """Allow transparent access to any Vortex object."""
+
+    _abstract = True
+    _footprint = dict(
+        info = 'Conf tool that find the appropriate begin/end date for an input resource.',
+        attr = dict(
+            kind = dict(
+                values      = ['objproxy', ],
+            ),
+        )
+    )
+
+    def __init__(self, *kargs, **kwargs):
+        super(AbstractObjectProxyConfTool, self).__init__(*kargs, **kwargs)
+        self._proxied_obj = self._create_proxied_obj()
+
+    def _create_proxied_obj(self):
+        """Initialise the object that will be proxied."""
+        raise NotImplementedError()
+
+    @secure_getattr
+    def __getattr__(self, item):
+        """Pass all requests to the proxied object."""
+        target = getattr(self._proxied_obj, item, None)
+        if target is None:
+            raise AttributeError('Attribute "{:s}" was not found'.format(item))
+        else:
+            return target
 
 
 #: Holds coupling's data for a particular cutoff/hour
@@ -1171,6 +1204,31 @@ class ArpIfsForecastTermConfTool(ConfTool):
         """The mapping dictionary between offline post-processing terms and domains (as a FPlist)."""
         return {k: getattr(self, '{:s}_terms_fplist'.format(k))(cutoff, hh)
                 for k in self.fpoff_items(cutoff, hh)}
+
+
+class TimeSlotsConfTool(AbstractObjectProxyConfTool):
+    """Gives easy access to a Timeslots object.
+
+    The conf tool will look like::
+
+      >>> ct = TimeSlotsConfTool(kind="objproxy",
+      ...                        timeslots_def="7/-PT3H/PT6H")
+      >>> print(ct.start)
+      -PT10800S
+
+    """
+
+    _footprint = dict(
+        info = 'Gives easy access to a Timeslots object.',
+        attr = dict(
+            timeslots_def = dict(
+                info        = "The timeslots specification",
+            ),
+        )
+    )
+
+    def _create_proxied_obj(self):
+        return TimeSlots(self.timeslots_def)
 
 
 if __name__ == '__main__':
