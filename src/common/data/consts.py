@@ -8,7 +8,7 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 import footprints
 from gco.syntax.stdattrs import gvar
-from vortex.data.contents import JsonDictContent, TextContent
+from vortex.data.contents import JsonDictContent, TextContent, DataRaw
 from vortex.data.geometries import GaussGeometry, LonlatGeometry
 from vortex.data.outflow import ModelGeoResource, ModelResource, StaticResource
 from vortex.syntax.stdattrs import month_deco
@@ -872,6 +872,9 @@ class InterChannelsCorrelations(GenvModelResource):
             ),
             gvar = dict(
                 default = 'correlations_[instrument]'
+            ),
+            clscontents = dict(
+                default = DataRaw,
             ),
         ),
     )

@@ -117,3 +117,16 @@ def insert_static_cutoffs(t, rh, base_date, cutoffs_def):
     rh.contents.add_cutoff_info(_new_static_cutoff_dispencer(base_date, cutoffs_def))
     # Actually save the result to files
     rh.save()
+
+
+def arpifs_obs_error_correl_legacy2oops(t, rh):
+    """Convert a constant file that contains observation errors correlations."""
+    if rh.resource.realkind != 'correlations':
+        raise ValueError('Incompatible resource: {!s}'.format(rh))
+    if rh.contents[0].startswith("SIGMAO"):
+        logger.warning("Non conversion is needed...")
+    else:
+        rh.contents[:0] = ["SIGMAO unused\n",
+                           "1 1.2\n",
+                           "CORRELATIONS\n"]
+        rh.save()
