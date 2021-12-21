@@ -42,6 +42,8 @@ Functions
 
 .. autofunction:: add_poles_to_reglonlat_file
 
+.. autofunction:: split_errgrib_on_shortname
+
 Classes
 -------
 
