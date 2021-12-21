@@ -25,12 +25,12 @@ logger = loggers.getLogger(__name__)
 
 
 @namebuilding_insert('src', lambda s: [s.filling, s.model])
-class Analysis(GeoFlowResource):
+class AbstractAnalysis(GeoFlowResource):
+    """Analysis resource.
+
+    It can be an atmospheric, surface or full analysis (full = atmospheric + surface).
     """
-    Class for analysis resource. It can be an atmospheric or surface or full
-    analysis (full = atmospheric + surface).
-    The analysis can be filtered (filling attribute).
-    """
+    _abstract = True
     _footprint = dict(
         info = 'Analysis',
         attr = dict(
@@ -63,6 +63,13 @@ class Analysis(GeoFlowResource):
     @property
     def realkind(self):
         return 'analysis'
+
+
+class Analysis3D(AbstractAnalysis):
+    """3D Analysis resource (i.e. the resource has no term attribute).
+
+    The data is assumed to be valid for **date** (i.e. term = 0).
+    """
 
     @property
     def term(self):
@@ -131,7 +138,13 @@ class Analysis(GeoFlowResource):
         )
 
 
-class InitialCondition(Analysis):
+class Analysis4D(AbstractAnalysis):
+    """4D Analysis resource (i.e. the resource has a term attribute)."""
+
+    _footprint = [term_deco, ]
+
+
+class InitialCondition(Analysis3D):
     """
     Class for initial condition resources : anything from which a model run can be performed.
     """
