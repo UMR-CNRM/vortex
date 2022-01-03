@@ -141,7 +141,16 @@ class Analysis3D(AbstractAnalysis):
 class Analysis4D(AbstractAnalysis):
     """4D Analysis resource (i.e. the resource has a term attribute)."""
 
-    _footprint = [term_deco, ]
+    _footprint = [
+        term_deco,
+        dict(
+            attr = dict(
+                term = dict(
+                    outcast = [Time(0), ]
+                )
+            )
+        )
+    ]
 
 
 class InitialCondition(Analysis3D):

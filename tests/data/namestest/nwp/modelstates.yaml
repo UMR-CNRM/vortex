@@ -47,7 +47,21 @@ todo:
                   - null
                   - dfi
             - model: surfex
-    # InitialCondiditions
+            - term: 0
+    # Analysis 4D
+    - commons:
+        kind: analysis
+        nativefmt: fa
+        block: minim
+        experiment: abcd
+        filling: atm
+        namespace: vortex.multi.fr
+      tests:
+        - term:
+            - 0
+            - -00:15
+            - 00:15
+    # InitialConditions
     -   commons:
             kind: ic
             nativefmt:
