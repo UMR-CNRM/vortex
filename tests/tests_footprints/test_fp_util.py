@@ -193,8 +193,6 @@ class utExpand(TestCase):
                 seta='[glob:a]',
                 setb='[glob:b]'
             ))
-            rv = sorted(rv,
-                        key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
             self.assertListEqual(rv, [
                 {'arg': 'multi', 'look': tmpd + '/xx_hip_0000', 'seta': 'hip', 'setb': '0000', 'index_expansion': 1},
                 {'arg': 'multi', 'look': tmpd + '/xx_hip_0001', 'seta': 'hip', 'setb': '0001', 'index_expansion': 2},
@@ -213,8 +211,6 @@ class utExpand(TestCase):
                     seta='[glob:a]',
                     setb='[glob:b]'
                 ))
-                rv = sorted(rv,
-                            key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
                 self.assertListEqual(rv, [
                     {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000', 'index_expansion': 1},
                     {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001', 'index_expansion': 2},
@@ -229,24 +225,21 @@ class utExpand(TestCase):
                     seta='[glob:a]',
                     setb='[glob:b]'
                 ))
-                rv = sorted(rv,
-                            key=lambda i: '_'.join([i['arg'], i['look'], i['seta'], i['setb']]))
                 self.assertListEqual(
-                    [{k: v for k, v in rvi.items() if k not in ('index_expansion',)}
-                     for rvi in rv],
+                    rv,
                     [
-                        {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00'},
-                        {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000'},
-                        {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09'},
-                        {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001'},
-                        {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18'},
-                        {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002'},
-                        {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00'},
-                        {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000'},
-                        {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09'},
-                        {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001'},
-                        {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18'},
-                        {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002'},
+                        {'arg': 'multi', 'look': 'xx_hip_0000', 'seta': 'hip', 'setb': '0000', 'index_expansion': 1},
+                        {'arg': 'multi', 'look': 'xx_hip_0000:00', 'seta': 'hip', 'setb': '0000:00', 'index_expansion': 2},
+                        {'arg': 'multi', 'look': 'xx_hip_0001', 'seta': 'hip', 'setb': '0001', 'index_expansion': 3},
+                        {'arg': 'multi', 'look': 'xx_hip_0001:09', 'seta': 'hip', 'setb': '0001:09', 'index_expansion': 4},
+                        {'arg': 'multi', 'look': 'xx_hip_0002', 'seta': 'hip', 'setb': '0002', 'index_expansion': 5},
+                        {'arg': 'multi', 'look': 'xx_hip_0002:18', 'seta': 'hip', 'setb': '0002:18', 'index_expansion': 6},
+                        {'arg': 'multi', 'look': 'xx_hop_0000', 'seta': 'hop', 'setb': '0000', 'index_expansion': 7},
+                        {'arg': 'multi', 'look': 'xx_hop_0000:00', 'seta': 'hop', 'setb': '0000:00', 'index_expansion': 8},
+                        {'arg': 'multi', 'look': 'xx_hop_0001', 'seta': 'hop', 'setb': '0001', 'index_expansion': 9},
+                        {'arg': 'multi', 'look': 'xx_hop_0001:09', 'seta': 'hop', 'setb': '0001:09', 'index_expansion': 10},
+                        {'arg': 'multi', 'look': 'xx_hop_0002', 'seta': 'hop', 'setb': '0002', 'index_expansion': 11},
+                        {'arg': 'multi', 'look': 'xx_hop_0002:18', 'seta': 'hop', 'setb': '0002:18', 'index_expansion': 12},
                     ]
                 )
                 with self.assertRaises(ValueError):

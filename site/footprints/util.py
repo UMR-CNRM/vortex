@@ -209,9 +209,10 @@ def expand(desc):
         ... # - testfile_a_trap
         >>> expand({'fname': r'testfile_{glob:i:\w+}_{glob:n:\d+}', 'id':'[glob:i]', 'n':'[glob:n]'}) # doctest: +SKIP
         [{'id': 'abc', 'fname': 'testfile_abc_1', 'n': '1', 'index_expansion': 1},
-         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2', 'index_expansion': 2},
-         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3', 'index_expansion': 3},
-         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2', 'index_expansion': 4}]
+         {'id': 'abc', 'fname': 'testfile_abc_2', 'n': '2', 'index_expansion': 2},
+         {'id': 'def', 'fname': 'testfile_def_2', 'n': '2', 'index_expansion': 3},
+         {'id': 'def', 'fname': 'testfile_def_3', 'n': '3', 'index_expansion': 4}
+         ]
 
     Explanation: The files currently in the working directory are matched using regular
     expressions. If the filename matches, some matching parts may be re-used to fill
@@ -264,7 +265,7 @@ def expand(desc):
                     logger.debug(' > Globbing from string %s', v)
                     g_names, g_re, g_glob = _parse_globs(v)
                     repld = list()
-                    for filename in glob.glob(g_glob):
+                    for filename in sorted(glob.glob(g_glob)):
                         m = g_re.match(filename)
                         if m:
                             globmap = dict()
