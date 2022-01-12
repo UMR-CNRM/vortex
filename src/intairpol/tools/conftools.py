@@ -59,7 +59,8 @@ _MocageDomainInfoBase_keys = ('source_app', 'source_conf', 'source_cutoff',
                               'source_model', 'source_geometry',
                               'atm_cpl_delta', 'chem_cpl_delta', 'surf_cpl_delta',
                               'atm_cpl_steps', 'chem_cpl_steps', 'surf_cpl_steps',
-                              'post_steps', 'post_outgrib2', 'restart_steps', 'stats_steps')
+                              'post_steps', 'post_outgrib2', 'restart_steps', 'stats_steps',
+                              'atm_cpl_fcst_steps')
 
 _PluralisedMocageDomainInfoBase_keys = [language.Pluralise('en_GB')(k)
                                         for k in _MocageDomainInfoBase_keys]
@@ -177,7 +178,8 @@ class MocageDomainsConfTool(ConfTool):
             ...                                                 post_steps='0-12-3,18-finalterm-6',
             ...                                                 post_outgrib2='0-12-3,18-finalterm-6',
             ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 stats_steps='0-finalterm-24', ),
+            ...                                                 stats_steps='0-finalterm-24',
+            ...                                                 atm_cpl_fcst_steps='0-48-1,48-72-3,72-96-6', ),
             ...                                     MACC01=dict(source_app='ifs',
             ...                                                 source_conf='determ',
             ...                                                 source_model='ifs',
@@ -190,59 +192,63 @@ class MocageDomainsConfTool(ConfTool):
             ...                                                 post_steps='',
             ...                                                 post_outgrib2='',
             ...                                                 restart_steps='0-finalterm-24',
-            ...                                                 stats_steps='0-finalterm-24', ),
+            ...                                                 stats_steps='0-finalterm-24',
+            ...                                                 atm_cpl_fcst_steps='0-48-1,48-72-3,72-96-6', ),
             ...                                     GLOB22=dict(is_like='MACC01'), ),
             ...                                 finalterms=dict(production={'00':72, 'default':48},
             ...                                                 assim=24), )
             ...                             )
             >>> print(mct.ontime_domains('assim', 0)['GLOB11'])  # doctest: +NORMALIZE_WHITESPACE
-            source_app      : arpege
-            source_conf     : 4dvarfr
-            source_cutoff   : assim
-            source_model    : arpege
-            source_geometry : global1798
-            atm_cpl_delta   : PT0S
-            chem_cpl_delta  : PT0S
-            surf_cpl_delta  : PT0S
-            atm_cpl_steps   : 0-finalterm-1
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      : 0-12-3,18-finalterm-6
-            post_outgrib2   : 0-12-3,18-finalterm-6
-            restart_steps   : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
+            source_app           : arpege
+            source_conf          : 4dvarfr
+            source_cutoff        : assim
+            source_model         : arpege
+            source_geometry      : global1798
+            atm_cpl_delta        : PT0S
+            chem_cpl_delta       : PT0S
+            surf_cpl_delta       : PT0S
+            atm_cpl_steps        : 0-finalterm-1
+            chem_cpl_steps       : 0-finalterm-3
+            surf_cpl_steps       : 0-finalterm-3
+            post_steps           : 0-12-3,18-finalterm-6
+            post_outgrib2        : 0-12-3,18-finalterm-6
+            restart_steps        : 0-finalterm-24
+            stats_steps          : 0-finalterm-24
+            atm_cpl_fcst_steps   : 0-48-1,48-72-3,72-96-6
             >>> print(mct.ontime_domains('assim', 0)['MACC01'])  # doctest: +NORMALIZE_WHITESPACE
-            source_app      : ifs
-            source_conf     : determ
-            source_cutoff   : production
-            source_model    : ifs
-            source_geometry : None
-            atm_cpl_delta   : PT43200S
-            chem_cpl_delta  : PT43200S
-            surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-6-1,9-finalterm-3
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      :
-            post_outgrib2   :
-            restart_steps   : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
+            source_app           : ifs
+            source_conf          : determ
+            source_cutoff        : production
+            source_model         : ifs
+            source_geometry      : None
+            atm_cpl_delta        : PT43200S
+            chem_cpl_delta       : PT43200S
+            surf_cpl_delta       : P1DT0S
+            atm_cpl_steps        : 0-6-1,9-finalterm-3
+            chem_cpl_steps       : 0-finalterm-3
+            surf_cpl_steps       : 0-finalterm-3
+            post_steps           :
+            post_outgrib2        :
+            restart_steps        : 0-finalterm-24
+            stats_steps          : 0-finalterm-24
+            atm_cpl_fcst_steps   : 0-48-1,48-72-3,72-96-6
             >>> print(mct.ontime_domains('assim', 0)['GLOB22'])  # doctest: +NORMALIZE_WHITESPACE
-            source_app      : ifs
-            source_conf     : determ
-            source_cutoff   : production
-            source_model    : ifs
-            source_geometry : None
-            atm_cpl_delta   : PT43200S
-            chem_cpl_delta  : PT43200S
-            surf_cpl_delta  : P1DT0S
-            atm_cpl_steps   : 0-6-1,9-finalterm-3
-            chem_cpl_steps  : 0-finalterm-3
-            surf_cpl_steps  : 0-finalterm-3
-            post_steps      :
-            post_outgrib2   :
-            restart_steps   : 0-finalterm-24
-            stats_steps     : 0-finalterm-24
+            source_app           : ifs
+            source_conf          : determ
+            source_cutoff        : production
+            source_model         : ifs
+            source_geometry      : None
+            atm_cpl_delta        : PT43200S
+            chem_cpl_delta       : PT43200S
+            surf_cpl_delta       : P1DT0S
+            atm_cpl_steps        : 0-6-1,9-finalterm-3
+            chem_cpl_steps       : 0-finalterm-3
+            surf_cpl_steps       : 0-finalterm-3
+            post_steps           :
+            post_outgrib2        :
+            restart_steps        : 0-finalterm-24
+            stats_steps          : 0-finalterm-24
+            atm_cpl_fcst_steps   : 0-48-1,48-72-3,72-96-6
 
         In **domains** definitions:
 
@@ -519,6 +525,8 @@ class MocageDomainsConfTool(ConfTool):
             post_outgrib2   : 0-12-3,18-finalterm-6
             restart_steps   : 0-finalterm-24
             stats_steps     : 0-finalterm-24
+            atm_cpl_fcst_steps: 0-48-1,48-72-3,72-96-6
+
 
         For example, to get the source_app mapping:
 
@@ -660,6 +668,7 @@ class MocageDomainsConfTool(ConfTool):
         ddef.setdefault('post_outgrib2', '')
         ddef.setdefault('restart_steps', '')
         ddef.setdefault('stats_steps', '')
+        ddef.setdefault('atm_cpl_fcst_steps', '')
         # Generic transform
         for k in ('source_app', 'source_conf', 'source_cutoff', 'source_model', 'source_geometry'):
             if k not in ddef:
@@ -670,7 +679,7 @@ class MocageDomainsConfTool(ConfTool):
             ddef[k] = self._item_transform(ddef[k], cast=Period)
         # Deal with any steps
         for k in ('post_steps', 'restart_steps', 'stats_steps', 'atm_cpl_steps',
-                  'surf_cpl_steps', 'chem_cpl_steps', 'post_outgrib2'):
+                  'surf_cpl_steps', 'chem_cpl_steps', 'post_outgrib2','atm_cpl_fcst_steps'):
             ddef[k] = self._item_transform(ddef[k],
                                            validcb=self._any_steps_validation,
                                            validmsg='any_steps should be parsable by timerangex')
@@ -793,6 +802,13 @@ class MocageDomainsConfTool(ConfTool):
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
+    def atm_cpl_fcst_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The geometry/atm_cpl_fcst_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'atm_cpl_fcst_steps', start, end,
+                                      final=final, first=first)
+
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
     def surf_cpl_steps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/surf_cpl_steps :mod:`footprints`' substitution dictionary."""
         return self._domain_any_steps(cutoff, hh, 'surf_cpl_steps', start, end,
@@ -814,11 +830,24 @@ class MocageDomainsConfTool(ConfTool):
 
     @_add_start_end_doc
     @_add_cutoff_hh_doc
+    def atm_cpl_shiftedsteps_fcst(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The geometry/shifted atm_cpl_fcst_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'atm_cpl_fcst_steps', start, end,
+                                      shift=True, final=final, first=first)
+
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
     def surf_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
         """The geometry/shifted surf_cpl_steps :mod:`footprints`' substitution dictionary."""
         return self._domain_any_steps(cutoff, hh, 'surf_cpl_steps', start, end,
                                       shift=True, final=final, first=first)
 
+    @_add_start_end_doc
+    @_add_cutoff_hh_doc
+    def chem_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
+        """The geometry/shifted chem_cpl_steps :mod:`footprints`' substitution dictionary."""
+        return self._domain_any_steps(cutoff, hh, 'chem_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
     @_add_start_end_doc
     @_add_cutoff_hh_doc
     def chem_cpl_shiftedsteps(self, cutoff, hh, start=0, end=None, final=True, first=True):
@@ -1049,6 +1078,12 @@ class MocageMixedDomainsInfo(object):
     def atm_cpl_shiftedsteps(self, start=0, end=None, final=True, first=True):
         """The sifted surf_cpl_steps of coupling data."""
         return self._domain_any_steps('atm_cpl_steps', start, end,
+                                      shift=True, final=final, first=first)
+
+    @_add_start_end_doc
+    def atm_cpl_shiftedsteps_fcst(self, start=0, end=None, final=True, first=True):
+        """The sifted surf_cpl_steps of coupling data."""
+        return self._domain_any_steps('atm_cpl_fcst_steps', start, end,
                                       shift=True, final=final, first=first)
 
     @_add_start_end_doc
