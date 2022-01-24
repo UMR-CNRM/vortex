@@ -127,7 +127,6 @@ class TestTntRecipe(unittest.TestCase):
         self._assert_syntax_error('recipe_ko1.yaml')
         self._assert_syntax_error('recipe_ko2.yaml')
         self._assert_syntax_error('recipe_ko3.yaml')
-        self._assert_syntax_error('recipe_ko4.yaml')
         self._assert_syntax_error('recipe_ko5.yaml')
         self._assert_syntax_error('recipe_ko6.yaml')
         self._assert_syntax_error('recipe_ko7.yaml')
