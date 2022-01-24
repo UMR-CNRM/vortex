@@ -306,7 +306,7 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
         info='Algo for extraction of wW3 output ounf field',
         attr = dict(
             kind = dict(
-                values = ['ww3_ounf_algo'],
+                values = ['ww3_ounf_algo', 'ww3_ounf_comp_algo'],
             ),
             anaterm = dict(
                 info='Time between the beginning of the simulation and the run date',
@@ -324,7 +324,12 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
 
     def _add_section_instructions(self, common_i, section):
         file_in = section.rh.container.localpath()
-        dateval = section.rh.resource.date + section.rh.resource.term
+        if self.kind=='ww3_ounf_algo':
+            dateval = section.rh.resource.date + section.rh.resource.term
+        elif self.kind=='ww3_ounf_comp_algo':
+            dateval = section.rh.resource.date - self.anaterm + Period('PT1H')
+        else:
+            logger.error("Odd kind of Ww3_ounfAlgo")
         self._add_instructions(common_i,
                                dict(file_in=[file_in, ],
                                     preproc=[self.preproc, ],
@@ -337,7 +342,7 @@ class _Ww3_ounfAlgoWorker(VortexWorkerBlindRun):
         info='Worker for extraction of WW3 output field',
         attr = dict(
             kind = dict(
-                values  = ['ww3_ounf_algo'],
+                values  = ['ww3_ounf_algo', 'ww3_ounf_comp_algo'],
             ),
             file_in = dict(),
             dateval = dict(
@@ -496,6 +501,24 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
             header = dict(
                 type = list,
             ),
+            list_mask = dict(
+                type = footprints.FPDict,
+            ),
+            list_maskname = dict(
+                type = footprints.FPDict,
+            ),
+            list_latmin = dict(
+                type = footprints.FPDict,
+            ),
+            list_latmax = dict(
+                type = footprints.FPDict,
+            ),
+            list_lonmin = dict(
+                type = footprints.FPDict,
+            ),
+            list_lonmax = dict(
+                type = footprints.FPDict,
+            ),
         )
     )
 
@@ -509,7 +532,13 @@ class ConvNetcdfGribAlgo(AbstractWw3ParaBlindRun):
                                dict(file_in=[file_in, ],
                                     datpivot=[self.datpivot, ],
                                     dateval=[dateval, ],
-                                    header=[self.header, ]))
+                                    header=[self.header, ],
+                                    list_mask=[self.list_mask, ],
+                                    list_maskname=[self.list_maskname, ],
+                                    list_latmin=[self.list_latmin, ],
+                                    list_latmax=[self.list_latmax, ],
+                                    list_lonmin=[self.list_lonmin, ],
+                                    list_lonmax=[self.list_lonmax, ]))
 
 
 class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
@@ -529,6 +558,24 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             ),
             header = dict(
                 type  = list,
+            ),
+            list_mask = dict(
+                type = footprints.FPDict,
+            ),
+            list_maskname = dict(
+                type = footprints.FPDict,
+            ),
+            list_latmin = dict(
+                type = footprints.FPDict,
+            ),
+            list_latmax = dict(
+                type = footprints.FPDict,
+            ),
+            list_lonmin = dict(
+                type = footprints.FPDict,
+            ),
+            list_lonmax = dict(
+                type = footprints.FPDict,
             ),
         )
     )
@@ -563,6 +610,7 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
             for fname in sh.ls('ww3.*nc'):
                 # Retrieval of param and filename without nc
                 head_filename = fname.split('_')[0]
+                dom_name = head_filename[4:]
                 param = fname.split('_')[1]
                 param = param.split('.')[0]
                 file_cst = "{0:s}_{1:s}".format(headconst, param)
@@ -580,6 +628,12 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 namcontents.setmacro('FIC_PROD', fic_prod)
                 namcontents.setmacro('START_DATE', self.dateval.ymdh)
                 namcontents.setmacro('FORECAST_DATE', self.datpivot.ymdhm)
+                namcontents.setmacro('IS_MASK', self.list_mask[dom_name])
+                namcontents.setmacro('MASK_NAME', self.list_maskname[dom_name])
+                namcontents.setmacro('LAT_MIN_C', float(self.list_latmin[dom_name]))
+                namcontents.setmacro('LAT_MAX_C', float(self.list_latmax[dom_name]))
+                namcontents.setmacro('LON_MIN_C', float(self.list_lonmin[dom_name]))
+                namcontents.setmacro('LON_MAX_C', float(self.list_lonmax[dom_name]))
                 new_nam = footprints.proxy.container(filename=nam_file, format='ascii')
                 namcontents.rewrite(new_nam)
                 new_nam.close()

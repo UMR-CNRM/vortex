@@ -468,7 +468,7 @@ class WW3Out(GeoFlowResource):
                     default = 'tar',
                 ),
                 fields = dict(
-                    values = ['out_pnt', 'out_grd', 'out_reg'],
+                    values = ['out_pnt', 'out_grd', 'out_grd_comp', 'out_reg'],
                 ),
                 model = dict(
                     values = ['ww3'],
