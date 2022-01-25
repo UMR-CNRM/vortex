@@ -34,14 +34,14 @@ models = set([
     'aearp', 'pearp', 'mocage', 'mesonh', 'surfex', 'hycom', 'psy4',
     'safran', 'ifs', 'aroifs', 'cifs', 'mfwam', 'pg1', 'alpha', 'eps',
     'postproc', 'ww3', 'sympo', 'psym', 'petaroute', 'promethee',
-    'hycom3d', 'croco'
+    'hycom3d', 'croco', 'alaro', 'harmoniearome'
 ])
 
 #: Possible values for the most common binaries.
 binaries = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
                 'ifs', 'oops', 'assistance', 'arpifs', 'mfwam', 'ww3', 'ww3_prnc',
-                'ww3_bound', 'ww3_ncgrb', 'ial'])
+                'ww3_bound', 'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome'])
 #: Possible values for the most common utility programs.
 utilities = set(['batodb'])
 
