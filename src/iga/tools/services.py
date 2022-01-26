@@ -690,7 +690,7 @@ class BdpeService(RoutingService):
                 values   = ['bdpe'],
             ),
             soprano_target = dict(
-                values   = ['piccolo', 'piccolo-int', 'piccolo-int-sine'],
+                values   = ['piccolo', 'piccolo-sine', 'piccolo-int', 'piccolo-int-sine'],
             ),
             producer = dict(
                 optional = True,
