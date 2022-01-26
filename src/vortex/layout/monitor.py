@@ -14,6 +14,7 @@ from collections import defaultdict, namedtuple, OrderedDict
 from itertools import islice, compress
 import multiprocessing
 import sys
+import threading
 import time
 import traceback
 
@@ -67,6 +68,9 @@ class _StateFull(object):
         """The entry's observer board."""
         return self._obsboard
 
+    def _state_changed(self, previous, new):
+        pass
+
     def _get_state(self):
         return self._state
 
@@ -74,6 +78,7 @@ class _StateFull(object):
         if newstate != self._state:
             previous = self._state
             self._state = newstate
+            self._state_changed(previous, self._state)
             self._obsboard.notify_upd(self, dict(state=self._state,
                                                  previous_state=previous))
 
@@ -91,6 +96,10 @@ class _StateFullMembersList(object):
         self._members = dict()
         for st in self._mstates:
             self._members[st] = self._mcontainer()
+
+    def _unregister_i(self, item):
+        item.observerboard.unregister(self)
+        return item
 
     @property
     def members(self):
@@ -426,6 +435,7 @@ class ManualInputMonitor(_StateFullMembersList):
                 self._ctx.system.highlight("The InputMonitor got news for: {!s}"
                                            .format(r['name']))
             prp(r)
+            print()
             self._key_update(r)
 
     @property
@@ -460,7 +470,7 @@ class ManualInputMonitor(_StateFullMembersList):
 
     def pop_available(self):
         """Pop an entry in the 'available' dictionary."""
-        return self.available.popitem(last=False)[1]
+        return self._unregister_i(self.available.popitem(last=False)[1])
 
     @property
     def failed(self):
@@ -487,6 +497,7 @@ class ManualInputMonitor(_StateFullMembersList):
         :param Exception exception: The exception that will be raised if a timeout occurs.
         """
         rc = False
+        self._refresh()
         if (timeout > 0) and (self.inactive_time > timeout):
             logger.error("The waiting loop timed out (%d seconds)", timeout)
             logger.error("The following files are still unaccounted for: %s",
@@ -570,6 +581,7 @@ class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
         _StateFullMembersList.__init__(self)
         self._nmembers = 0
         self.info = dict()
+        self._t_lock = threading.RLock()
 
     @property
     def nickname(self):
@@ -582,11 +594,12 @@ class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
 
     def add_member(self, *members):
         """Introduce one or several members to the Gang."""
-        for member in members:
-            member.observerboard.register(self)
-            self._members[member.state].add(member)
-            self._nmembers += 1
-        self._refresh_state()
+        with self._t_lock:
+            for member in members:
+                member.observerboard.register(self)
+                self._members[member.state].add(member)
+                self._nmembers += 1
+            self._refresh_state()
 
     def __len__(self):
         """The number of gang members."""
@@ -594,12 +607,13 @@ class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
 
     def updobsitem(self, item, info):
         """React to an observee notification."""
-        observer.Observer.updobsitem(self, item, info)
-        # Move the item around
-        self._members[info['previous_state']].remove(item)
-        self._members[info['state']].add(item)
-        # Update my own state
-        self._refresh_state()
+        with self._t_lock:
+            observer.Observer.updobsitem(self, item, info)
+            # Move the item around
+            self._members[info['previous_state']].remove(item)
+            self._members[info['state']].add(item)
+            # Update my own state
+            self._refresh_state()
 
     def _is_collectable(self):
         raise NotImplementedError
@@ -620,14 +634,6 @@ class _Gang(observer.Observer, _StateFull, _StateFullMembersList):
             self.state = self._mystates.ufo
         else:
             self.state = self._mystates.failed
-
-    # We need to refresh the state just before accessing it (since the state may
-    # be time dependant)
-    def _get_state(self):
-        self._refresh_state()
-        return super(_Gang, self)._get_state()
-
-    state = property(_get_state, _StateFull._set_state, doc="The Gang's state.")
 
 
 class BasicGang(_Gang):
@@ -657,13 +663,64 @@ class BasicGang(_Gang):
         """
         self.minsize = minsize
         self.waitlimit = waitlimit
+        self._waitlimit_timer = None
         self._firstseen = None
         super(BasicGang, self).__init__()
 
+    def _state_changed(self, previous, new):
+        super(BasicGang, self)._state_changed(previous, new)
+        # Remove the waitlimit timer
+        if self._waitlimit_timer is not None and not self._ufo_members:
+            self._waitlimit_timer.cancel()
+            logger.debug('Waitlimit Timer thread canceled: %s (Gang: %s)',
+                         self._waitlimit_timer, self.nickname)
+            self._waitlimit_timer = None
+        # Print some diagnosis data
+        if self.info and new != self._mystates.ufo:
+            msg = ("State changed from {:s} to {:s} for Gang: {:s}"
+                   .format(previous, new, self.nickname))
+            if new == self._mystates.pcollectable:
+                if self._ufo_members:
+                    logger.warning("%s\nSome of the Gang's members are still expected " +
+                                   "but the %d seconds waitlimit is exhausted.",
+                                   msg, self.waitlimit)
+                else:
+                    logger.warning("%s\nSome of the Gang's members have failed.", msg)
+            else:
+                logger.info(msg)
+
+    def _set_waitlimit_timer(self):
+        if self.waitlimit > 0:
+
+            def _waitlimit_check():
+                with self._t_lock:
+                    self._refresh_state()
+                    logger.debug('Waitlimit Timer thread done: %s (Gang: %s)',
+                                 self._waitlimit_timer, self.nickname)
+                    self._waitlimit_timer = None
+
+            self._waitlimit_timer = threading.Timer(self.waitlimit + 1,
+                                                    _waitlimit_check)
+            self._waitlimit_timer.daemon = True
+            self._waitlimit_timer.start()
+            logger.debug('Waitlimit Timer thread started: %s (Gang: %s)',
+                         self._waitlimit_timer, self.nickname)
+
+    def add_member(self, *members):
+        with self._t_lock:
+            super(BasicGang, self).add_member(*members)
+            if self._firstseen is None and any([m.state == self._mstates.available
+                                                for m in members]):
+                self._firstseen = time.time()
+                self._set_waitlimit_timer()
+
     def updobsitem(self, item, info):
-        super(BasicGang, self).updobsitem(item, info)
-        if info['previous_state'] == self._mstates.expected:
-            self._firstseen = time.time()
+        with self._t_lock:
+            super(BasicGang, self).updobsitem(item, info)
+            if (self._firstseen is None and
+                    info['state'] == self._mstates.available):
+                self._firstseen = time.time()
+                self._set_waitlimit_timer()
 
     @property
     def _eff_minsize(self):
@@ -681,8 +738,8 @@ class BasicGang(_Gang):
     def _is_pcollectable(self):
         return (len(self._members[self._mstates.available]) >= self._eff_minsize and
                 (self._ufo_members == 0 or
-                 (self.waitlimit > 0 and self._firstseen is not None and
-                  time.time() - self._firstseen > self.waitlimit)
+                 (self._firstseen is not None and
+                  time.time() - self._firstseen > self.waitlimit > 0)
                  )
                 )
 
@@ -719,14 +776,14 @@ class MetaGang(_Gang):
 
     def pop_collectable(self):
         """Retrieve a collectable member."""
-        return self._members[self._mstates.collectable].pop()
+        return self._unregister_i(self._members[self._mstates.collectable].pop())
 
     def pop_pcollectable(self):
         """Retrieve a collectable or a collectable_partial member."""
         if self.has_collectable():
             return self.pop_collectable()
         else:
-            return self._members[self._mstates.pcollectable].pop()
+            return self._unregister_i(self._members[self._mstates.pcollectable].pop())
 
     def consume_colectable(self):
         """Retriece all collectable members (as a generator)."""
@@ -747,11 +804,6 @@ class MetaGang(_Gang):
 
     def _is_undecided(self):
         return len(self._members[self._mstates.failed]) == 0
-
-    def _refresh_state(self):
-        for member in self.memberslist:
-            member.state  # Update the member's state (they might be time dependent)
-        super(MetaGang, self)._refresh_state()
 
 
 class AutoMetaGang(MetaGang):
