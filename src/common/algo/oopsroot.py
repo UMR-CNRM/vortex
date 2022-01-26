@@ -399,8 +399,11 @@ class OOPSParallel(Parallel,
                 doc_zorder      = -60,
             ),
             mpiconflabel = dict(
-                default  = 'mplbased'
-            )
+                default         = 'mplbased'
+            ),
+            binarysingle=dict(
+                default         = 'basicnwp',
+            ),
         )
     )
 
@@ -568,7 +571,7 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
                 values      = ['oorunodb'],
             ),
             binarysingle = dict(
-                default     = 'basicobsort',
+                default     = 'basicnwpobsort',
             ),
         )
     )

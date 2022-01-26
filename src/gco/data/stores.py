@@ -17,6 +17,7 @@ import collections
 import copy
 import hashlib
 import re
+import stat
 import tempfile
 
 from bronx.fancies import loggers
@@ -97,6 +98,15 @@ class _AutoExtractStoreMixin(object):
     @property
     def itemconfig(self):
         raise NotImplementedError("This is a mixin class...")
+
+    @staticmethod
+    def _extract_data(remote, local=None):
+        extract = remote['query'].get('extract', None)
+        dir_extract = bool(int(remote['query'].get('dir_extract', ['0', ])[0]))
+        if local and dir_extract and not isinstance(local, six.string_types):
+            logger.error("Cannot fetch a directory in a Virtual container.")
+            raise RuntimeError('dir_extract incompatible with this type of Container')
+        return extract, dir_extract
 
     def _dump_directory_index(self, localdir, indexname=None):
         index_file = (localdir if indexname is None else indexname) + ".index"
@@ -183,14 +193,26 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
     def itemconfig(self):
         raise NotImplementedError("This is an abstract class...")
 
-    @staticmethod
-    def _build_remote_extract(remote, what=None):
+    def _os_sep_to_uri(self, what):
+        return '/'.join([i for i in what.split(self.system.path.sep)
+                         if i and i != '.'])
+
+    def _remote_append(self, remote, what=None):
         remote_x = copy.deepcopy(remote)
         if what:
-            remote_x['path'] += '.autoextract/' + what
+            remote_x['path'] += '/' + self._os_sep_to_uri(what)
+        remote_x['query'].pop('extract', None)
+        remote_x['query'].pop('dir_extract', None)
+        return remote_x
+
+    def _build_remote_autoextract(self, remote, what=None):
+        remote_x = copy.deepcopy(remote)
+        if what:
+            remote_x['path'] += '.autoextract/' + self._os_sep_to_uri(what)
         else:
             remote_x['path'] += '.autoextract'
         remote_x['query'].pop('extract', None)
+        remote_x['query'].pop('dir_extract', None)
         return remote_x
 
     @staticmethod
@@ -208,34 +230,55 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
 
     def _gco_xcache_check(self, remote, options):
         """Gateway to :meth:`incachecheck`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
         if extract:
-            return self.incachecheck(self._build_remote_extract(remote, extract[0]),
-                                     self._build_raw_options(options))
+            rc = self.incachecheck(self._build_remote_autoextract(remote, extract[0]),
+                                   self._build_raw_options(options))
+        elif dir_extract:
+            with self._gco_xcache_get_dir_index(remote) as index_file:
+                if index_file:
+                    all_files = self._read_directory_index(index_file)
+                    rc = all({self.incachecheck(self._build_remote_autoextract(remote, f),
+                                                self._build_raw_options(options))
+                              for f in all_files})
+                else:
+                    rc = False
         else:
             rc = self.incachecheck(remote, options)
             if rc and self._ALLOW_DIR_ITEMS:
                 options_x = copy.copy(options)
                 options_x['isfile'] = True
                 if not self.incachecheck(remote, options_x):
-                    rc = self.incachecheck(self._build_remote_index(remote),
-                                           self._build_raw_options(options))
-            return rc
+                    with self._gco_xcache_get_dir_index(remote) as index_file:
+                        if index_file:
+                            all_files = self._read_directory_index(index_file)
+                            rc = all({self.incachecheck(self._remote_append(remote, f),
+                                                        self._build_raw_options(options))
+                                      for f in all_files})
+                        else:
+                            rc = False
+        return rc
 
     def _gco_xcache_locate(self, remote, options):
         """Gateway to :meth:`incachelocate`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
         if extract:
-            return self.incachelocate(self._build_remote_extract(remote, extract[0]),
+            return self.incachelocate(self._build_remote_autoextract(remote, extract[0]),
+                                      self._build_raw_options(options))
+        elif dir_extract:
+            return self.incachelocate(self._build_remote_autoextract(remote),
                                       self._build_raw_options(options))
         else:
             return self.incachelocate(remote, options)
 
     def _gco_xcache_prestageinfo(self, remote, options):
         """Gateway to :meth:`incachelocate`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
         if extract:
-            return self.incacheprestageinfo(self._build_remote_extract(remote, extract[0]),
+            return self.incacheprestageinfo(self._build_remote_autoextract(remote, extract[0]),
+                                            self._build_raw_options(options))
+        elif dir_extract:
+            return self.incacheprestageinfo(self._build_remote_autoextract(remote),
                                             self._build_raw_options(options))
         else:
             return self.incacheprestageinfo(remote, options)
@@ -280,12 +323,12 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
 
     def _gco_xcache_get(self, remote, local, options):
         """Gateway to :meth:`incacheget`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote, local)
         if extract:
             # Look for a pre-extracted source
             get_options = self._build_raw_options(options)
             get_options['silent'] = True
-            rc = self.incacheget(self._build_remote_extract(remote, extract[0]),
+            rc = self.incacheget(self._build_remote_autoextract(remote, extract[0]),
                                  local, get_options)
             if not rc:
                 # If not, get the tar, extract it and refill the extracted data in cache
@@ -304,6 +347,18 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                                                fmt=options.get('fmt', 'foo'),
                                                intent=options.get('intent',
                                                                   CACHE_GET_INTENT_DEFAULT))
+        elif dir_extract:
+            # Get the whole auto-extracted directory
+            rc = self.incacheget(self._build_remote_autoextract(remote),
+                                 local,
+                                 self._build_raw_options(options))
+            if rc and self.system.path.isdir(local):
+                if not self._gco_xcache_get_index_and_check(remote, local):
+                    logger.warning("The gname resource in MTOOL's GCO cache is incomplete. Ignoring it.")
+                    self.system.rm(local)
+                    rc = False
+            else:
+                rc = False
         else:
             rc = self.incacheget(remote, local, options)
             gname = remote['path'].lstrip('/').split('/').pop()
@@ -325,7 +380,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
                             self.system.mkdir(localdir)
                             tmpdir = tempfile.mkdtemp(suffix='.fromcache.autoextract', dir=localdir)
                             try:
-                                rcx = self.incacheget(self._build_remote_extract(remote),
+                                rcx = self.incacheget(self._build_remote_autoextract(remote),
                                                       tmpdir,
                                                       self._build_raw_options(options))
                                 if rcx:
@@ -361,7 +416,7 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
         if (self.system.path.exists(local + '.index') and
                 self.system.path.isdir(local + '.autoextract')):
             rcx = self.incacheput(local + '.autoextract',
-                                  self._build_remote_extract(remote),
+                                  self._build_remote_autoextract(remote),
                                   self._build_raw_options(options))
             rcx = rcx and self.incacheput(local + '.index',
                                           self._build_remote_index(remote),
@@ -371,21 +426,23 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
 
     def _gco_xcache_put(self, local, remote, options):
         """Gateway to :meth:`incacheputt`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
         if extract:
             rc = self.incacheput(local,
-                                 self._build_remote_extract(remote, extract[0]),
+                                 self._build_remote_autoextract(remote, extract[0]),
                                  self._build_raw_options(options))
         else:
-            rc = self.incacheput(local, remote, options)
+            if dir_extract and not self.system.path.isdir(local):
+                return False
+            rc = dir_extract or self.incacheput(local, remote, options)
             if rc and isinstance(local, six.string_types):
                 # Save the directory index + autoextract stuff
-                if self.system.path.isdir(local):
+                if dir_extract or self.system.path.isdir(local):
                     index_file = self._dump_directory_index(local)
                     rcx = self.incacheput(index_file, self._build_remote_index(remote), options)
                     if rcx:
                         # Prepare for auto-extracts
-                        rc = self.incacheput(local, self._build_remote_extract(remote), options)
+                        rc = self.incacheput(local, self._build_remote_autoextract(remote), options)
                     else:
                         self.incachedelete(remote, options)
                         rc = False
@@ -396,10 +453,15 @@ class _AutoExtractCacheStore(CacheStore, _AutoExtractStoreMixin):
 
     def _gco_xcache_delete(self, remote, options):
         """Gateway to :meth:`incachedelete`."""
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
         if extract:
-            rc = self.incachedelete(self._build_remote_extract(remote, extract[0]),
+            rc = self.incachedelete(self._build_remote_autoextract(remote, extract[0]),
                                     self._build_raw_options(options))
+        elif dir_extract:
+            rc = self.incachedelete(self._build_remote_index(remote),
+                                    self._build_raw_options(options))
+            rc = self.incachedelete(self._build_remote_autoextract(remote),
+                                    self._build_raw_options(options)) or rc
         else:
             rc = self.incachedelete(remote, options)
             if self.incachecheck(self._build_remote_index(remote),
@@ -538,7 +600,7 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
             rc = False
             p_umask = self.system.umask(0o0022)
             try:
-                logger.debug('gget command: %s', ' '.join(cmd))
+                logger.info('gget command: %s', ' '.join(cmd))
                 rc = self.system.spawn(cmd, output=True)
             finally:
                 self.system.umask(p_umask)
@@ -566,7 +628,9 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
         (gcmd, gname) = self._actualgget(remote['path'])
         sh = self.system
         fmt = options.get('fmt', 'foo')
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote)
+        logger.info('ggetget from %s://%s/%s (extract=%s, dir_extract=%s, to: %s)',
+                    self.scheme, self.netloc, remote['path'], extract, dir_extract, local)
         # Run the Gget command in a temporary directory
         if isinstance(local, six.string_types):
             localdir = self.system.path.dirname(local)
@@ -598,9 +662,16 @@ class GcoCentralStore(Store, _AutoExtractStoreMixin):
                 else:
                     actual_target = gname
                     rc = self._gspawn(gcmd + [gname])
+                    # Fix rights because sometimes gget does strange things
+                    st = sh.stat(actual_target).st_mode
+                    sh.chmod(actual_target, st & ~(stat.S_IWGRP | stat.S_IWOTH))
+                    if dir_extract and not sh.path.isdir(actual_target) and sh.is_tarfile(actual_target):
+                        _, actual_target = self._autoextract_untar(actual_target, gname)
             actual_target = sh.path.join(tmpdir, actual_target)
             if rc and sh.path.exists(actual_target):
                 rc = rc and (not isinstance(local, six.text_type) or sh.filecocoon(local))
+                if sh.path.isdir(local):
+                    sh.rm(local)
                 rc = rc and sh.mv(actual_target, local, fmt=fmt)
             else:
                 logger.warning('GCO Central Store get %s was not successful (with rc=%s)', gname, rc)
@@ -810,7 +881,7 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         remote = self._universal_remap(remote)
         xintent = options.get('intent', ARCHIVE_GET_INTENT_DEFAULT)
         # Extract what to do ?
-        extract = remote['query'].get('extract', None)
+        extract, dir_extract = self._extract_data(remote, local)
         uname = self.system.path.basename(remote['path'])
         if isinstance(local, six.text_type):
             full_uname = self.system.path.dirname(local)
@@ -819,15 +890,18 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         full_uname = self.system.path.join(full_uname, uname)
         # Actually fetch the data
         rc = self.inarchiveget(remote,
-                               full_uname if extract else local,
+                               full_uname if extract or dir_extract else local,
                                options)
         if rc:
-            if extract:
+            if extract or dir_extract:
                 if self.system.is_tarfile(full_uname):
                     unpacked, destdir_autox = self._autoextract_untar(full_uname, uname)
-                    fmt = options.get('fmt', 'foo')
-                    rc = rc and self.system.cp(destdir_autox + '/' + extract[0],
-                                               local, fmt=fmt, intent=xintent)
+                    if extract:
+                        fmt = options.get('fmt', 'foo')
+                        rc = rc and self.system.cp(destdir_autox + '/' + extract[0],
+                                                   local, fmt=fmt, intent=xintent)
+                    elif dir_extract:
+                        self.system.mv(destdir_autox, local)
                 else:
                     logger.error('Improper file type to deal with an extract query !')
                     rc = False
@@ -844,16 +918,18 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
     def ugetearlyget(self, remote, local, options):
         """Remap and inarchiveearlyget sequence."""
         remote = self._universal_remap(remote)
+        extract, dir_extract = self._extract_data(remote)
         # Deal with extract !
-        if remote['query'].get('extract', None):
+        if extract or dir_extract:
             return None  # No early-get when extract=True
         return self.inarchiveearlyget(remote, local, options)
 
     def ugetfinaliseget(self, result_id, remote, local, options):
         """Remap and inarchivefinaliseget sequence."""
         remote = self._universal_remap(remote)
+        extract, dir_extract = self._extract_data(remote)
         # Deal with extract !
-        if remote['query'].get('extract', None):
+        if extract or dir_extract:
             return False  # No early-get when extract=True
         # Actual finalise
         rc = self.inarchivefinaliseget(result_id, remote, local, options)
@@ -870,13 +946,15 @@ class UgetArchiveStore(ArchiveStore, ConfigurableArchiveStore, _AutoExtractStore
         if not self.storetrue:
             logger.info("put deactivated for %s", str(local))
             return True
-        if remote['query'].get('extract', None):
+        extract, dir_extract = self._extract_data(remote)
+        if extract or dir_extract:
             return False  # No put with extracts
         return self.inarchiveput(local, self._universal_remap(remote), options)
 
     def ugetdelete(self, remote, options):
         """Remap root dir and ftpdelete sequence."""
-        if remote['query'].get('extract', None):
+        extract, dir_extract = self._extract_data(remote)
+        if extract or dir_extract:
             return False  # No delete with extracts
         return self.inarchivedelete(self._universal_remap(remote), options)
 
@@ -1125,7 +1203,7 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
         remote = self.universal_remap(remote)
         a_remote, _ = self._alternate_source(remote, options)
         a_location = self.incachelocate(a_remote, options)
-        a_extract = a_remote['query'].get('extract', None)
+        a_extract, _ = self._extract_data(a_remote)
         if a_extract and self.system.path.isdir(a_location):
             return self.incachelocate(self._build_remote_extract(a_remote, a_extract),
                                       self._build_raw_options(options))
@@ -1136,7 +1214,7 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
         """Proxy to :meth:`incachecheck`."""
         remote = self.universal_remap(remote)
         a_remote, a_altremote = self._alternate_source(remote, options)
-        a_extract = remote['query'].get('extract', None)
+        a_extract, a_dir_extract = self._extract_data(a_remote)
         options = options.copy()
         # Also check if the data is a regular file with the notable exception
         # of expanded tarfiles (see _alternate_source above) and specific data
@@ -1156,12 +1234,16 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
         sh = self.system
         remote = self.universal_remap(remote)
         a_remote, a_altremote = self._alternate_source(remote, options)
-        a_extract = a_remote['query'].get('extract', None)
-        if a_extract:
+        a_extract, a_dir_extract = self._extract_data(a_remote, local)
+        if a_extract or a_dir_extract:
             if a_remote == a_altremote:
-                rc = self.incacheget(self._build_remote_extract(a_remote, a_extract),
-                                     local,
-                                     self._build_raw_options(options))
+                if a_extract:
+                    rc = self.incacheget(self._build_remote_extract(a_remote, a_extract),
+                                         local,
+                                         self._build_raw_options(options))
+                elif a_dir_extract:
+                    rc = self.incacheget(a_remote, local,
+                                         self._build_raw_options(options))
             else:
                 # Fetch the targeted tar file
                 uname = sh.path.basename(remote['path'])
@@ -1182,9 +1264,13 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
                             sh.mkdir(destdir)
                             untaropts = self.itemconfig.key_untar_properties(uname)
                             rc = len(sh.smartuntar(full_uname, destdir, **untaropts)) > 0
-                        rc = rc and sh.cp(sh.path.join(destdir, a_extract[0]), local,
-                                          fmt=options.get('fmt', 'foo'),
-                                          intent=options.get('intent', CACHE_GET_INTENT_DEFAULT))
+                        if a_extract:
+                            rc = rc and sh.cp(sh.path.join(destdir, a_extract[0]), local,
+                                              fmt=options.get('fmt', 'foo'),
+                                              intent=options.get('intent', CACHE_GET_INTENT_DEFAULT))
+                        elif a_dir_extract:
+                            rc = rc and sh.cp(destdir, local,
+                                              intent=options.get('intent', CACHE_GET_INTENT_DEFAULT))
                     else:
                         logger.error("'%s' should be a tarfile", full_uname)
                         rc = False
@@ -1212,8 +1298,8 @@ class UgetHackCacheStore(CacheStore, _UgetCacheStoreMixin, _AutoExtractStoreMixi
     def ugetput(self, local, remote, options):
         """Proxy to :meth:`incacheput`."""
         remote = self.universal_remap(remote)
-        extract = remote['query'].get('extract', None)
-        if extract:
+        extract, dir_extract = self._extract_data(remote)
+        if extract or dir_extract:
             logger.warning('Skip cache put with extracted %s', extract)
             return False
         else:
