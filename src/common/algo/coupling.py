@@ -7,13 +7,16 @@ AlgoComponents dedicated to the coupling between NWP models.
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import re
+import footprints
 
+from bronx.compat.functools import cached_property
 from bronx.fancies import loggers
 from bronx.stdtypes import date
 
 from common.algo.ifsroot import IFSParallel
 from common.tools.drhook import DrHookDecoMixin
-from vortex.algo.components import AlgoComponentError, BlindRun
+from vortex.algo.components import AlgoComponentError, BlindRun, Parallel
+from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from vortex.layout.dataflow import intent
 
 from .forecasts import FullPos
@@ -24,25 +27,59 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 
+coupling_basedate_fp = footprints.Footprint(
+    attr=dict(
+        basedate=dict(
+            info="The run date of the coupling generating process",
+            type=date.Date,
+            optional=True
+        )
+    )
+)
+
+
+@algo_component_deco_mixin_autodoc
+class CouplingBaseDateNamMixin(AlgoComponentDecoMixin):
+    """Add a basedate attribute and make namelist substitution."""
+
+    _MIXIN_EXTRA_FOOTPRINTS = (coupling_basedate_fp, )
+
+    def _prepare_basedate_hook(self, rh, opts):
+        """Update the namelist with date information."""
+
+        def set_nam_macro(namrh, macro, value):
+            namrh.contents.setmacro(macro, value)
+            logger.info('Setup macro %s=%s in %s', macro, str(value),
+                        namrh.container.actualpath())
+
+        for namsec in self.context.sequence.effective_inputs(kind=('namelist',)):
+            if self.basedate is not None:
+                set_nam_macro(namsec.rh, 'YYYY', int(self.basedate.year))
+                set_nam_macro(namsec.rh, 'MM', int(self.basedate.month))
+                set_nam_macro(namsec.rh, 'DD', int(self.basedate.day))
+                if namsec.rh.contents.dumps_needs_update:
+                    namsec.rh.save()
+
+    _MIXIN_PREPARE_HOOKS = (_prepare_basedate_hook, )
+
+
 class Coupling(FullPos):
     """Coupling for IFS-like LAM Models.
 
     OBSOLETE a/c cy46 (use the 903 configuration / fullpos server instead).
     """
 
-    _footprint = dict(
-        info = "Create coupling files for a Limited Area Model.",
-        attr = dict(
-            kind = dict(
-                values   = ['coupling'],
-            ),
-            basedate = dict(
-                info     = "The run date of the coupling generating process",
-                type     = date.Date,
-                optional = True
-            ),
+    _footprint = [
+        coupling_basedate_fp,
+        dict(
+            info = "Create coupling files for a Limited Area Model.",
+            attr = dict(
+                kind = dict(
+                    values   = ['coupling'],
+                ),
+            )
         )
-    )
+    ]
 
     @property
     def realkind(self):
@@ -223,48 +260,72 @@ class CouplingLAM(Coupling):
         return opts
 
 
-class Prep(BlindRun, DrHookDecoMixin):
+@algo_component_deco_mixin_autodoc
+class PrepMixin(AlgoComponentDecoMixin):
     """Coupling/Interpolation of Surfex files."""
 
-    _footprint = dict(
-        info = "Coupling/Interpolation of Surfex files.",
-        attr = dict(
-            kind = dict(
-                values   = ['prep'],
+    _MIXIN_EXTRA_FOOTPRINTS = (footprints.Footprint(
+        info="Coupling/Interpolation of Surfex files.",
+        attr=dict(
+            kind=dict(
+                values=['prep'],
             ),
-            underlyingformat = dict(
-                values   = ['fa', 'lfi'],
-                optional = True,
-                default  = 'fa'
-            )
+            underlyingformat=dict(
+                info="The format of input data (as expected by the PREP executable).",
+                values=['fa', 'lfi', 'netcdf'],
+                optional=True,
+                default='fa'
+            ),
+            underlyingoutputformat=dict(
+                info=("The format of output data (as expected by the PREP executable)." +
+                      "If omited, *underlyingformat* is used."),
+                values=['fa', 'lfi', 'netcdf'],
+                optional=True,
+            ),
+            outputformat=dict(
+                info=("The format of output data (as expected by the user)." +
+                      "If omited, same as input data."),
+                values=['fa', 'lfi', 'netcdf'],
+                optional=True,
+            ),
         )
-    )
+    ), )
 
-    def __init__(self, *kargs, **kwargs):
-        super(Prep, self).__init__(*kargs, **kwargs)
-        self._addon_checked = None
+    @cached_property
+    def _actual_u_output_format(self):
+        return (self.underlyingoutputformat
+                if self.underlyingoutputformat is not None else
+                self.underlyingformat)
 
-    def _check_addons(self):
-        if self._addon_checked is None:
-            self._addon_checked = ('sfx' in self.system.loaded_addons() and
-                                   'lfi' in self.system.loaded_addons())
-        if not self._addon_checked:
+    def _actual_output_format(self, in_format):
+        return (self.outputformat if self.outputformat is not None
+                else in_format)
+
+    @staticmethod
+    def _sfx_fmt_remap(fmt):
+        return dict(netcdf='nc').get(fmt, fmt)
+
+    @cached_property
+    def _has_sfx_lfi(self):
+        addon_checked = ('sfx' in self.system.loaded_addons() and
+                         'lfi' in self.system.loaded_addons())
+        if not addon_checked:
             raise RuntimeError("The sfx addon is needed... please load it.")
+        return addon_checked
 
-    def _do_input_format_change(self, section, output_name):
+    def _do_input_format_change(self, section, output_name, output_fmt):
         (localpath, infmt) = (section.rh.container.localpath(),
                               section.rh.container.actualfmt)
-        self.system.subtitle("Processing inputs")
-        if section.rh.container.actualfmt != self.underlyingformat:
-            if infmt == 'fa' and self.underlyingformat == 'lfi':
+        self.system.subtitle("Processing inputs/climatologies")
+        if section.rh.container.actualfmt != output_fmt:
+            if infmt == 'fa' and output_fmt == 'lfi' and self._has_sfx_lfi:
                 if self.system.path.exists(output_name):
                     raise IOError("The file {!r} already exists.".format(output_name))
-                self._check_addons()
                 logger.info("Calling sfxtools' fa2lfi from %s to %s.", localpath, output_name)
                 self.system.sfx_fa2lfi(localpath, output_name)
             else:
                 raise RuntimeError("Format conversion from {!r} to {!r} is not possible".format(
-                                   infmt, self.underlyingformat))
+                                   infmt, output_fmt))
         else:
             if not self.system.path.exists(output_name):
                 logger.info("Linking %s to %s", localpath, output_name)
@@ -272,51 +333,66 @@ class Prep(BlindRun, DrHookDecoMixin):
 
     def _process_outputs(self, binrh, section, output_clim, output_name):
         (radical, outfmt) = (self.system.path.splitext(section.rh.container.localpath())[0],
-                             section.rh.container.actualfmt)
+                             self._actual_output_format(section.rh.container.actualfmt))
         finaloutput = '{:s}_interpolated.{:s}'.format(radical, outfmt)
         finallisting = '{:s}_listing'.format(radical)
         self.system.subtitle("Processing outputs")
-        if outfmt != self.underlyingformat:
+        if outfmt != self._actual_u_output_format:
             # There is a need for a format change
-            if outfmt == 'fa' and self.underlyingformat == 'lfi':
-                self._check_addons()
+            if outfmt == 'fa' and self._actual_u_output_format == 'lfi' and self._has_sfx_lfi:
                 logger.info("Calling lfitools' faempty from %s to %s.", output_clim, finaloutput)
                 self.system.fa_empty(output_clim, finaloutput)
                 logger.info("Calling sfxtools' lfi2fa from %s to %s.", output_name, finaloutput)
                 self.system.sfx_lfi2fa(output_name, finaloutput)
-                finallfi = '{:s}_interpolated.{:s}'.format(radical, self.underlyingformat)
+                finallfi = '{:s}_interpolated.{:s}'.format(radical, self._actual_u_output_format)
                 self.system.mv(output_name, finallfi)
             else:
                 raise RuntimeError("Format conversion from {!r} to {!r} is not possible".format(
-                                   outfmt, self.underlyingformat))
+                                   self._actual_u_output_format, outfmt))
         else:
             # No format change needed
             logger.info("Moving %s to %s", output_name, finaloutput)
             self.system.mv(output_name, finaloutput, fmt=outfmt)
         # Also rename the listing :-)
         if binrh.resource.cycle < 'cy48t1':
-            self.system.mv('LISTING_PREP.txt', finallisting)
+            try:
+                self.system.mv('LISTING_PREP.txt', finallisting)
+            except OSError:
+                self.system.mv('LISTING_PREP0.txt', finallisting)
         else:
             self.system.mv('LISTING_PREP0.txt', finallisting)
         return finaloutput
 
-    def prepare(self, rh, opts):
+    def _prepare_prep_hook(self, rh, opts):
         """Default pre-link for namelist file and domain change."""
-        super(Prep, self).prepare(rh, opts)
         # Convert the initial clim if needed...
         iniclim = self.context.sequence.effective_inputs(role=('InitialClim',))
         if not (len(iniclim) == 1):
             raise AlgoComponentError("One Initial clim have to be provided")
-        self._do_input_format_change(iniclim[0], 'PGD1.' + self.underlyingformat)
+        self._do_input_format_change(iniclim[0],
+                                     'PGD1.' + self._sfx_fmt_remap(self.underlyingformat),
+                                     self.underlyingformat)
         # Convert the target clim if needed...
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         if not (len(targetclim) == 1):
             raise AlgoComponentError("One Target clim have to be provided")
-        self._do_input_format_change(targetclim[0], 'PGD2.' + self.underlyingformat)
+        self._do_input_format_change(targetclim[0],
+                                     'PGD2.' + self._sfx_fmt_remap(self._actual_u_output_format),
+                                     self._actual_u_output_format)
 
-    def execute(self, rh, opts):
+    _MIXIN_PREPARE_HOOKS = (_prepare_prep_hook, )
+
+    def _spawn_hook_prep_hook(self):
+        """Dump the namelists."""
+        for namsec in self.context.sequence.effective_inputs(kind=('namelist', )):
+            self.system.subtitle("Here is the content of the {:s} namelist"
+                                 .format(namsec.rh.container.actualpath()))
+            namsec.rh.container.cat()
+
+    _MIXIN_SPAWN_HOOKS = (_spawn_hook_prep_hook, )
+
+    def _execute_prep_common(self, rh, opts):
         """Loop on the various initial conditions provided."""
-
         sh = self.system
 
         cplsec = self.context.sequence.effective_inputs(
@@ -324,8 +400,8 @@ class Prep(BlindRun, DrHookDecoMixin):
             kind=('historic', 'analysis')
         )
         cplsec.sort(key=lambda s: s.rh.resource.term)
-        infile = 'PREP1.{:s}'.format(self.underlyingformat)
-        outfile = 'PREP2.{:s}'.format(self.underlyingformat)
+        infile = 'PREP1.{:s}'.format(self._sfx_fmt_remap(self.underlyingformat))
+        outfile = 'PREP2.{:s}'.format(self._sfx_fmt_remap(self._actual_u_output_format))
         targetclim = self.context.sequence.effective_inputs(role=('TargetClim',))
         targetclim = targetclim[0].rh.container.localpath()
 
@@ -339,10 +415,10 @@ class Prep(BlindRun, DrHookDecoMixin):
             # Set the actual init file
             if sh.path.exists(infile):
                 logger.critical('Cannot process input files if %s exists.', infile)
-            self._do_input_format_change(sec, infile)
+            self._do_input_format_change(sec, infile, self.underlyingformat)
 
             # Standard execution
-            super(Prep, self).execute(rh, opts)
+            super(self.__class__, self).execute(rh, opts)
             sh.subtitle("Listing after PREP")
             sh.dir(output=False, fatal=False)
 
@@ -358,6 +434,18 @@ class Prep(BlindRun, DrHookDecoMixin):
             # Some cleaning
             sh.rmall('*.des')
             sh.rmall('PREP1.*')
+
+    _MIXIN_EXECUTE_OVERWRITE = _execute_prep_common
+
+
+class Prep(BlindRun, PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+    """Coupling/Interpolation of Surfex files (non-MPI version)."""
+    pass
+
+
+class ParallelPrep(Parallel, PrepMixin, CouplingBaseDateNamMixin, DrHookDecoMixin):
+    """Coupling/Interpolation of Surfex files (MPI version)."""
+    pass
 
 
 class C901(IFSParallel):
@@ -504,3 +592,19 @@ class C901(IFSParallel):
             # Remove unneeded files
             sh.rmall(deleted_spectral_file_SH, deleted_gridpoint_file_GG, deleted_gridpoint_file_UA,
                      'std*', self.OUTPUT_LISTING_NAME)
+
+
+class DomeoForcingAtmo(BlindRun, CouplingBaseDateNamMixin):
+    """Correct the Domeo forcing file."""
+
+    _footprint = dict(
+        info='Domeo Forcing Atmo',
+        attr=dict(
+            kind=dict(
+                values=['domeo_forcing'],
+            ),
+            basedate=dict(
+                optional=False,
+            ),
+        )
+    )

@@ -19,6 +19,8 @@ class PGDRaw(ModelGeoResource):
     """
     SURFEX climatological resource.
     A Genvkey can be provided.
+
+    :note: OBSOLETE classes do not use.
     """
     _abstract = True
     _footprint = [
@@ -57,6 +59,8 @@ class PGDLFI(PGDRaw):
     """
     SURFEX climatological resource in lfi format.
     A Genvkey can be provided.
+
+    :note: OBSOLETE classes do not use.
     """
     _footprint = dict(
         info = 'Grid-point data consts',
@@ -75,6 +79,8 @@ class PGDFA(PGDRaw):
     """
     SURFEX climatological resource in fa format.
     A Genvkey can be provided.
+
+    :note: OBSOLETE classes do not use.
     """
     _footprint = dict(
         info = 'Grid-point data consts',
@@ -93,6 +99,8 @@ class PGDNC(PGDRaw):
     """
     SURFEX climatological resource in netcdf format.
     A Genvkey can be provided.
+
+    :note: OBSOLETE classes do not use.
     """
     _footprint = dict(
         info = 'Grid-point data consts',
@@ -122,7 +130,7 @@ class PGDWithGeo(ModelGeoResource):
                     values  = ['pgd', ],
                 ),
                 nativefmt = dict(
-                    values = ['fa', 'lfi', 'netcdf'],
+                    values = ['fa', 'lfi', 'netcdf', 'txt'],
                     default = 'fa',
                 ),
             )
