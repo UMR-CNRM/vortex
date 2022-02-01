@@ -876,11 +876,13 @@ class SurfexWorker(_S2MWorker):
                 info = 'work in this particular subdirectory',
                 optional = False
             ),
-            geometry = dict(
-                info = "Area information in case of an execution on a massif geometry",
-                type = footprints.stdtypes.FPList,
-                optional = True,
-                default = None
+            geometry_in=dict(
+                info="Area information in case of an execution on a massif geometry",
+                type=footprints.stdtypes.FPList,
+            ),
+            geometry_out=dict(
+                info="The resource's massif geometry.",
+                type=str,
             ),
             daily = dict(
                 info = "If True, split simulations in daily runs",
@@ -983,10 +985,10 @@ class SurfexWorker(_S2MWorker):
                     # determinstic case: the forcing file(s) is/are in the only directory
                     forcingdir = thisdir
 
-                if len(self.geometry) > 1:
+                if len(self.geometry_in) > 1:
                     print("FORCING AGGREGATION")
                     forcinglist = []
-                    for massif in self.geometry:
+                    for massif in self.geometry_in:
                         try:
                             dateforcbegin, dateforcend = get_file_period(
                                 "FORCING",
@@ -1030,9 +1032,9 @@ class SurfexWorker(_S2MWorker):
                         return rdict
                     print("FORCING FOUND")
 
-                    if self.geometry[0] in ["alp", "pyr", "cor"]:
+                    if "flat" in self.geometry_in[0] and "allslopes" in self.geometry_out:
                         print("FORCING EXTENSION")
-                        liste_massifs = infomassifs().dicArea[self.geometry[0]]
+                        liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
                         liste_aspect = infomassifs().get_list_aspect(8, ["0", "20", "40"])
                         self.mv_if_exists("FORCING.nc", "FORCING_OLD.nc")
                         forcinput_select('FORCING_OLD.nc', 'FORCING.nc', liste_massifs, 0, 5000,
@@ -1209,11 +1211,14 @@ class PrepareForcingWorker(TaylorVortexWorker):
                                                                  datebegin_this_run, self.dateend)
                     print("FORCING FOUND")
 
-                    if self.geometry_in[0] in ["alp", "pyr", "cor"]:
-                        if "allslopes" in self.geometry_out:
-                            list_slopes = ["0", "20", "40"]
-                        elif "flat" in self.geometry_out:
-                            list_slopes = ["0"]
+                    print ("flat" in self.geometry_in[0])
+                    print ("allslopes" in self.geometry_out)
+
+                    print (self.geometry_in[0], self.geometry_out)
+
+                    if "flat" in self.geometry_in[0] and "allslopes" in self.geometry_out:
+
+                        list_slopes = ["0", "20", "40"]
 
                         print("FORCING EXTENSION")
                         liste_massifs = infomassifs().dicArea[self.geometry_in[0]]
@@ -1667,11 +1672,13 @@ class SurfexComponent(S2MComponent):
                 values = ["E1", "E2", "Crocus", "E2open", "E2MIP", "E2tartes", "E2MIPtartes"],
                 optional = True,
             ),
-            geometry = dict(
-                info = "Area information in case of an execution on a massif geometry",
-                type = footprints.stdtypes.FPList,
-                optional = True,
-                default = None
+            geometry_in=dict(
+                info="Area information in case of an execution on a massif geometry",
+                type=footprints.stdtypes.FPList,
+            ),
+            geometry_out=dict(
+                info="The resource's massif geometry.",
+                type=str,
             ),
             daily = dict(
                 info = "If True, split simulations in daily runs",
@@ -1720,7 +1727,7 @@ class SurfexComponent(S2MComponent):
         else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
 
-            if len(self.geometry) > 1:
+            if len(self.geometry_in) > 1:
                 # In the case of a postes geometry, there are 3 effective inputs with forcing file role
                 # (They are concatenated)
                 # Therefore it is necessary to reduce subdirs to 1 single element for each member
