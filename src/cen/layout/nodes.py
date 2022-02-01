@@ -219,12 +219,12 @@ class S2MTaskMixIn(object):
                 if self.conf.geometry.area == "postes":
                     return self.conf.geometry.list.split(",")
                 else:
-                    for suffix in list_suffix:
-                        if suffix in self.conf.geometry.area:
-                            return [self.conf.geometry.area.replace(suffix, '')]
-                    return [self.conf.geometry.area]  # for cases with meteo=safran but unknown area
+                    if self.conf.geometry.slopes:
+                        return [self.conf.geometry.tag.replace('allslopes', 'flat')]
+                    else:
+                        return [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
             else:
-                return [self.conf.geometry.area]
+                return [self.conf.geometry.tag]
 
     def get_alternate_safran(self):
         if self.conf.geometry.area == 'postes':
