@@ -130,7 +130,7 @@ class TestMkjobDetect(unittest.TestCase):
                  'loadedmods': "'common','gco','olive','common.tools.addons','common.util.usepygram',",
                  'mail': 'False',
                  'manydates': '2019010100-2019010200-PT6H',
-                 'mem': '250000',
+                 'mem': '247000',
                  'member': 1,
                  'mtool_args': '--language=python --shell=python --cleanmode=olive',
                  'mtool_dir': '--mtooldir=/scratch/mtool/{user:s}',
