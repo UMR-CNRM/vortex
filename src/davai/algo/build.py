@@ -147,16 +147,16 @@ class GitDecoMixin(AlgoComponentDecoMixin):
             yield
 
 
-class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
-                                     _CrashWitnessDecoMixin):
-    """Make an incremental pack (gmkpack) with sources from a IA4H Git ref."""
+class IAL_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                                    _CrashWitnessDecoMixin):
+    """Make an incremental pack (gmkpack) with sources from a IAL Git ref."""
 
     _footprint = [
         dict(
-            info = "Make an incremental pack (gmkpack) with sources from a IA4H Git ref.",
+            info = "Make an incremental pack (gmkpack) with sources from a IAL Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_gitref2incrpack'],
+                    values   = ['ia4h_gitref2incrpack', 'ial_gitref2incrpack'],
                 ),
                 compiler_label = dict(
                     info = "Gmkpack compiler label.",
@@ -199,30 +199,30 @@ class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMix
                 self._attributes['rootpack'] = rootpack
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_incrpack  # @UnresolvedImport
+        from ial_build.algos import IAL_gitref_to_incrpack  # @UnresolvedImport
         with self._with_potential_ssh_tunnel():
-            IA4H_gitref_to_incrpack(self.repository,
-                                    self.git_ref,
-                                    self.compiler_label,
-                                    start_ref=self.start_ref,
-                                    packname=self.packname,
-                                    compiler_flag=self.compiler_flag,
-                                    preexisting_pack=self.preexisting_pack,
-                                    clean_if_preexisting=self.cleanpack,
-                                    rootpack=self.rootpack,
-                                    homepack=self.homepack)
+            IAL_gitref_to_incrpack(self.repository,
+                                   self.git_ref,
+                                   self.compiler_label,
+                                   start_ref=self.start_ref,
+                                   packname=self.packname,
+                                   compiler_flag=self.compiler_flag,
+                                   preexisting_pack=self.preexisting_pack,
+                                   clean_if_preexisting=self.cleanpack,
+                                   rootpack=self.rootpack,
+                                   homepack=self.homepack)
 
 
-class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
-                              _CrashWitnessDecoMixin):
-    """Make a main pack (gmkpack) with sources from a IA4H Git ref."""
+class IAL_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                             _CrashWitnessDecoMixin):
+    """Make a main pack (gmkpack) with sources from a IAL Git ref."""
 
     _footprint = [
         dict(
-            info = "Make a main pack (gmkpack) with sources from a IA4H Git ref.",
+            info = "Make a main pack (gmkpack) with sources from a IAL Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_gitref2mainpack'],
+                    values   = ['ia4h_gitref2mainpack', 'ial_gitref2mainpack'],
                 ),
                 compiler_label = dict(
                     info = "Gmkpack compiler label.",
@@ -235,7 +235,7 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                 populate_filter_file = dict(
                     info = ("File of files to be filtered at populate time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inconfig__' will read according file in config of ial_build package; " +
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -243,7 +243,7 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                 link_filter_file = dict(
                     info = ("File of symbols to be filtered at link time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inconfig__' will read according file in config of ial_build package; " +
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -253,15 +253,15 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_main_pack  # @UnresolvedImport
+        from ial_build.algos import IAL_gitref_to_main_pack  # @UnresolvedImport
         with self._with_potential_ssh_tunnel():
-            IA4H_gitref_to_main_pack(self.repository,
-                                     self.git_ref,
-                                     self.compiler_label,
-                                     compiler_flag=self.compiler_flag,
-                                     homepack=self.homepack,
-                                     populate_filter_file=self.populate_filter_file,
-                                     link_filter_file=self.link_filter_file)
+            IAL_gitref_to_main_pack(self.repository,
+                                    self.git_ref,
+                                    self.compiler_label,
+                                    compiler_flag=self.compiler_flag,
+                                    homepack=self.homepack,
+                                    populate_filter_file=self.populate_filter_file,
+                                    link_filter_file=self.link_filter_file)
 
 
 class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
@@ -286,7 +286,7 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
                 populate_filter_file = dict(
                     info = ("File of files to be filtered at populate time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inconfig__' will read according file in config of ial_build package; " +
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -294,7 +294,7 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
                 link_filter_file = dict(
                     info = ("File of symbols to be filtered at link time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; "
+                            "'__inconfig__' will read according file in config of ial_build package; "
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -324,7 +324,7 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import bundle_to_main_pack  # @UnresolvedImport
+        from ial_build.algos import bundle_to_main_pack  # @UnresolvedImport
         bundle = [s for s in self.context.sequence.effective_inputs(role=('Bundle',))]
         bundle_path = bundle[0].rh.container.localpath()
         bundle_to_main_pack(bundle_path,
@@ -380,7 +380,7 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import pack_build_executables  # @UnresolvedImport
+        from ial_build.algos import pack_build_executables  # @UnresolvedImport
         pack_build_executables(self.packname,
                                programs=self.programs,
                                silent=True,  # so that output goes in a file

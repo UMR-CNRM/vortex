@@ -64,7 +64,7 @@ def guess_packname(git_ref,
     :param homepack: home of pack
     :param to_bin: True if the path to binaries subdirectory is requested
     """
-    from ia4h_scm.algos import guess_packname  # @UnresolvedImport
+    from ial_build.algos import guess_packname  # @UnresolvedImport
     return guess_packname(git_ref,
                           compiler_label,
                           packtype,
@@ -92,7 +92,7 @@ def bundle_guess_packname(bundle,
     :param homepack: home of pack
     :param to_bin: True if the path to binaries subdirectory is requested
     """
-    from ia4h_scm.algos import bundle_guess_packname  # @UnresolvedImport
+    from ial_build.algos import bundle_guess_packname  # @UnresolvedImport
     return bundle_guess_packname(bundle,
                                  compiler_label,
                                  packtype,
@@ -109,7 +109,7 @@ def send_task_to_DAVAI_server(davai_server_post_url, xpid, jsonData, kind,
 
     :param xpid: experiment identifier
     :param jsonData: data to be sent, formatted as output from json.dumps(...)
-    :param kind: kind of data, among 'xpinfo' or 'taskinfo'
+    :param kind: kind of data, among 'xpinfo' or 'taskinfo'/'statictaskinfo'
     :param fatal: raise errors (or log them and ignore)
 
     Additional kwargs are passed to requests.post()
@@ -146,7 +146,7 @@ class SummariesStack(object):
     unhandled_flag = 'unhandled_items.whitness'
     trolleytar = 'trolley.tar'
     xpinfo = 'xpinfo.json'
-    # syntax: taskinfo.scope.json
+    # syntax: taskinfo.scope.json or statictaskinfo.scope.json
     _re_tasksummary = re.compile(r'(?P<task>.+)\.(?P<scope>' +
                                  '|'.join(('itself', 'consistency', 'continuity')) +
                                  r')\.json$')
@@ -229,3 +229,33 @@ class SummariesStack(object):
         if local is None:
             local = self.trolleytar
         return self.cache.retrieve(self.trolleytar, local, intent=intent, format='tar')
+
+    def tasks_status(self, print_it=False):
+        """Get summarized tasks status."""
+        XP_status = {}
+        for f in sorted(self.cache.list('')):
+            match = self._re_tasksummary.match(f)
+            if match:
+                task = match.group('task')
+                with open(self.cache.fullpath(f), 'r') as _f:
+                    ts = json.load(_f)
+                scope = match.group('scope')
+                if scope == 'consistency':  # IGNORED for now
+                    continue
+                else:
+                    status = XP_status.get(task, {})
+                    if scope == 'itself':
+                        status['Status'] = ts['Status']['short']
+                    elif scope == 'continuity':
+                        status['continuity'] = ts['comparisonStatus']['short']
+                    XP_status[task] = status
+        if print_it:
+            fmt = '{:<60} {:10} {:>10}'
+            print("In summaries stack:", self.cache.fullpath(''))
+            print("-"*82)
+            print(fmt.format("Task", "Status", "continuity"))
+            print("-"*82)
+            for task, status in XP_status.items():
+                print(fmt.format(task, status['Status'], status.get('continuity', '-')))
+            print("-"*82)
+        return XP_status

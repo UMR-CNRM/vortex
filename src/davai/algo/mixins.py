@@ -17,9 +17,24 @@ from common.algo.forecasts import (Forecast, LAMForecast, DFIForecast,
                                    FullPosBDAP, FullPosGeo)
 from common.algo.clim import (BuildPGD, BuildPGD_MPI)
 from common.algo.coupling import (Prep, Coupling)
+from common.algo.fpserver import FullPosServer
 
 #: No automatic export
 __all__ = []
+
+
+def context_info_for_task_summary(context):
+    """Get some infos from context for task summary."""
+    info = {'rundir':context.rundir}
+    for k in ('MTOOL_STEP_ABORT', 'MTOOL_STEP_DEPOT', 'MTOOL_STEP_SPOOL'):
+        v = context.env.get(k, None)
+        if v:
+            info[k] = v
+    if context.rundir and 'MTOOL_STEP_ABORT' in info and 'MTOOL_STEP_SPOOL' in info:
+        abort_dir = context.system.path.join(info['MTOOL_STEP_ABORT'],
+                                             context.rundir[len(info['MTOOL_STEP_SPOOL'])+1:])
+        info['(if aborted)'] = abort_dir
+    return info
 
 
 class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
@@ -41,15 +56,18 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
         ),
     )
 
+    @property
+    def context_info_for_task_summary(self):
+        return context_info_for_task_summary(self.context)
+
     def crash_witness_fail_execute(self, e, rh, kw):  # @UnusedVariables
-        from davai_tbx.expertise import task_status  # @UnresolvedImport
-        from davai_tbx.util import context_info_for_task_summary  # @UnresolvedImport
+        from ial_expertise.task import task_status  # @UnresolvedImport
         status = task_status['X']
         # check reference and mention if reference was crashed too
         ref_summary = [s for s in self.context.sequence.effective_inputs(role=('Reference',
                                                                                'ContinuityReference',
                                                                                'ConsistencyReference'))
-                       if s.rh.resource.kind == 'taskinfo']
+                       if s.rh.resource.kind in ('taskinfo', 'statictaskinfo')]
         if len(ref_summary) == 1:
             ref_summary = ref_summary[0].rh.contents.data  # slurp
             ref_status = ref_summary.get('Status')
@@ -59,7 +77,7 @@ class _CrashWitnessDecoMixin(AlgoComponentDecoMixin):
             status = task_status.get('X:R?', task_status['X'])
         # then write summary in promise
         summary = {'Status': status,
-                   'Context': context_info_for_task_summary(self.context),
+                   'Context': self.context_info_for_task_summary,
                    'Exception': str(e),
                    'Updated': date.utcnow().isoformat().split('.')[0]}
         promise = [x for x in self.promises
@@ -126,6 +144,10 @@ class FullPosBDAP_CrashWitness(FullPosBDAP, _CrashWitnessDecoMixin):
 
 
 class FullPosGeo_CrashWitness(FullPosGeo, _CrashWitnessDecoMixin):
+    pass
+
+
+class FullPosServer_CrashWitness(FullPosServer, _CrashWitnessDecoMixin):
     pass
 
 

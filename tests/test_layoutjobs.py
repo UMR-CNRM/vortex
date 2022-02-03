@@ -124,6 +124,7 @@ class TestMkjobDetect(unittest.TestCase):
                  'inovativedate': '2019010100',
                  'jeeves': 'True',
                  'jobconf': self.sh.path.join(fullp, 'conf', 'arpege_4dvarfr.ini'),
+                 'jroute': 'route',
                  'ldlibs': '',
                  'loadedaddons': "'nwp',",
                  'loadedjaplugins': '',
