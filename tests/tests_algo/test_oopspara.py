@@ -6,7 +6,7 @@ from bronx.fancies.loggers import unittestGlobalLevel
 from bronx.stdtypes.date import Date, Time, Period
 
 from vortex.algo.components import AlgoComponentError
-from common.algo.oopsroot import OOPSMemberDetectDecoMixin
+from common.algo.oopsroot import OOPSMembersTermsDetectDecoMixin
 
 tloglevel = 'ERROR'
 
@@ -67,8 +67,8 @@ class TestOopsParallel(unittest.TestCase):
                         d_members=None, o_members=None, r_members=None,
                         r_effterms=None,
                         **kwargs):
-        md = OOPSMemberDetectDecoMixin._stateless_members_detect
-        ms, mds, mos, ts, lms, rms, rts = md(kwargs, Date('2019010106'))
+        md = OOPSMembersTermsDetectDecoMixin._stateless_members_detect
+        ms, mds, mos, ts, lms, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get')
         self.assertEqual(ms, members)
         self.assertEqual(ts, [Time(t) for t in terms])
         self.assertEqual(lms, lagged)
@@ -83,15 +83,15 @@ class TestOopsParallel(unittest.TestCase):
             self.assertEqual(rts, r_effterms)
 
     def assert_mdectect_ko(self, **kwargs):
-        md = OOPSMemberDetectDecoMixin._stateless_members_detect
+        md = OOPSMembersTermsDetectDecoMixin._stateless_members_detect
         with self.assertRaises(AlgoComponentError):
-            md(kwargs, Date('2019010106'))
+            md(kwargs, Date('2019010106'), lambda s: s.stage == 'get')
 
     def assert_mdectect_p(self, members, terms, minsize, lagged=False,
                           r_members=None, r_effterms=None,
                           **kwargs):
-        md = OOPSMemberDetectDecoMixin._stateless_members_detect
-        ms, _, _, ts, lms, rms, rts = md(kwargs, Date('2019010106'),
+        md = OOPSMembersTermsDetectDecoMixin._stateless_members_detect
+        ms, _, _, ts, lms, rms, rts = md(kwargs, Date('2019010106'), lambda s: s.stage == 'get',
                                          ensminsize=minsize, utest=True)
         self.assertEqual(ms, members)
         self.assertEqual(ts, [Time(t) for t in terms])
