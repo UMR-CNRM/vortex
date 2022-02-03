@@ -1,23 +1,31 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 from copy import deepcopy
+import os
+import tempfile
 import unittest
 
 from bronx.stdtypes.date import Date, Time
+from bronx.fancies.loggers import unittestGlobalLevel
 import footprints as fp
 
 import vortex.data.providers  # @UnusedImport
 import olive.data.providers  # @UnusedImport
 from vortex.data import geometries
+from vortex.syntax.stdattrs import LegacyXPid, FreeXPid
 from vortex.tools.net import uriparse
+
+DATAPATHTEST = os.path.join(os.path.dirname(__file__), 'data')
+
+TLOGLEVEL = 9999
 
 
 class DummyRessource(object):
 
     def __init__(self, realkind='dummy', bname='dummyres', cutoff='assim',
-                 term=0, model='arpege'):
+                 date=Date(2000, 1, 1, 0, 0, 0), term=0, model='arpege'):
         self.model = model
-        self.date = Date(2000, 1, 1, 0, 0, 0)
+        self.date = date
         self.term = Time(term)
         self.geometry = geometries.get(tag='glob25')
         self.cutoff = cutoff
@@ -176,6 +184,149 @@ class TestProviderVortexStd(unittest.TestCase):
                                   '/arpege/4dvar/VOID/20000101T0000A/dummy/dummyres' +
                                   '?setaside_n=vsop.cache.fr' +
                                   '&setaside_p=arpege%2F4dvar%2FOPER%2F20000101T0000A%2Fdummy%2Fdummyres'))
+
+
+@unittestGlobalLevel(TLOGLEVEL)
+class TestProviderVortexFree(unittest.TestCase):
+
+    def setUp(self):
+        # Generate a temporary directory
+        self.t = vortex.sessions.current()
+        self.sh = self.t.system()
+        self.sh.target(hostname='unittest', inetname='unittest',
+                       inifile=os.path.join(DATAPATHTEST, 'target-test.ini'),
+                       sysname='Local')  # Trick the vortex's system !
+        self.tmpdir = self.sh.path.realpath(tempfile.mkdtemp(suffix='_test_providers'))
+        self.oldpwd = self.sh.pwd()
+        self.sh.cd(self.tmpdir)
+        # various utility things
+        self.t_res = DummyRessource()
+
+        self.sh.symlink(self.sh.path.join(DATAPATHTEST, 'provider-vortex-free_ok.ini'),
+                        'provider-vortex-free_ok.ini')
+        for i in range(4):
+            self.sh.symlink(self.sh.path.join(DATAPATHTEST,
+                                              'provider-vortex-free_ko{:d}.ini'.format(i + 1)),
+                            'provider-vortex-free_ko{:d}.ini'.format(i + 1))
+        self.sh.touch('provider-vortex-free_empty.ini')
+
+        self.sh.symlink(self.sh.path.join(DATAPATHTEST, 'test_provider_vtx_free0.ini'),
+                        'test_provider_vtx_free0.ini')
+        #
+        vortex.data.providers.logger.setLevel('DEBUG')
+
+    def tearDown(self):
+        self.sh.target()
+        self.sh.cd(self.oldpwd)
+        self.sh.remove(self.tmpdir)
+
+    @staticmethod
+    def deal(**kwargs):
+        p_opts = dict(vapp='arpege',
+                      vconf='4dvar',
+                      block='dummy',
+                      experiment='GRUIK@unittestonly',
+                      namespace='vortex.cache.fr',
+                      provider_global_config='provider-vortex-free_ok.ini')
+        p_opts.update(kwargs)
+        return fp.proxy.provider(** p_opts)
+
+    def ds_check(self, data=None, **kwargs):
+        d_id = vortex.data.providers.VortexFreeStd._datastore_id
+        self.assertTrue(self.t.datastore.check(d_id, kwargs))
+        if data is not None:
+            self.assertEqual(self.t.datastore.get(d_id, kwargs), data)
+
+    def test_vortex_free_configuration_parser(self):
+        # Empty configuration file
+        pr = self.deal(provider_global_config='provider-vortex-free_empty.ini')
+        self.assertEqual(pr.experiment_conf, dict())
+        # The data store should be fed
+        self.ds_check(data=list(), conf_target='provider-vortex-free_empty.ini')
+
+        # Configuration file with a default section -> forbidden
+        pr = self.deal(provider_global_config='provider-vortex-free_ko1.ini')
+        with self.assertRaises(ValueError):
+            pr.experiment_conf
+
+        # Configuration file with a failing regex -> the corresponding section is ignored
+        pr = self.deal(provider_global_config='provider-vortex-free_ko2.ini')
+        self.assertEqual(pr.experiment_conf, dict())
+        # The data store should be fed
+        self.ds_check(data=list(), conf_target='provider-vortex-free_ko2.ini')
+
+        # Configuration file with a failing regex -> the remote configuration file is missing
+        pr = self.deal(provider_global_config='provider-vortex-free_ko3.ini')
+        with self.assertRaises(OSError):
+            self.assertEqual(pr.experiment_conf, dict())
+
+        # Configuration file with a default section -> no generic_restrict
+        pr = self.deal(provider_global_config='provider-vortex-free_ko4.ini')
+        with self.assertRaises(ValueError):
+            pr.experiment_conf
+
+    def test_vortex_free_configurable_paths(self):
+        # 4dvar baseline
+        pr = self.deal()
+        self.assertEqual(pr.actual_experiment(self.t_res), 'DBLE')
+        self.ds_check(conf_target='provider-vortex-free_ok.ini',
+                      experiment='GRUIK@unittestonly')
+        self.assertEqual(pr.netloc(self.t_res), 'vsop.cache.fr')
+        r_prod = DummyRessource(cutoff='production')
+        self.assertEqual(pr.actual_experiment(r_prod), 'ABC1')
+        self.assertEqual(pr.netloc(r_prod), 'vortex.cache.fr')
+        r_prod = DummyRessource(cutoff='production', date=Date(2005, 1, 1))
+        self.assertEqual(pr.actual_experiment(r_prod), 'ABC2')
+        self.assertEqual(pr.netloc(r_prod), 'vortex.cache.fr')
+        with self.assertRaises(ValueError):
+            # No suitable configuration for very old things
+            self.assertEqual(pr.netloc(DummyRessource(date=Date(1990, 1, 1))), 'vsop.cache.fr')
+
+        # Unlisted experiment
+        pr = self.deal(experiment='unlisted@unittestonly')
+        self.assertEqual(pr.actual_experiment(self.t_res), 'unlisted@unittestonly')
+
+        # Dump/Undump the datastore (check that everything is picklable)
+        self.t.datastore.pickle_dump()
+        self.t.datastore.pickle_load()
+        # Check the list os redirections stored in the pickled datastore
+        xp_conf = self.t.datastore.get(
+            vortex.data.providers.VortexFreeStd._datastore_id,
+            dict(conf_target='provider-vortex-free_ok.ini',
+                 experiment='GRUIK@unittestonly')
+        )
+        redirections = set()
+        for redirection_d in xp_conf.values():
+            redirections.update(redirection_d.keys())
+        self.assertSetEqual(redirections,
+                            {LegacyXPid('DBLE'),
+                             LegacyXPid('ABC1'), LegacyXPid('ABC2'),
+                             LegacyXPid('ENS1'), LegacyXPid('ENS2'),
+                             FreeXPid('ENS1@special'), FreeXPid('ENS2@special'),
+                             FreeXPid('ENS1@ko')})
+
+        # Arpege ensembles
+        pr = self.deal(vconf='pearp')
+        self.assertEqual(pr.actual_experiment(self.t_res), 'ENS1')
+        self.assertEqual(pr.netloc(self.t_res), 'vortex.cache.fr')
+        # Very old stuff
+        self.assertEqual(pr.actual_experiment(DummyRessource(date=Date(1990, 1, 1))), 'ENS1')
+        # PEAPR member 0
+        pr = self.deal(vconf='pearp', member=0)
+        self.assertEqual(pr.actual_experiment(self.t_res), 'ENS1@special')
+        self.assertEqual(pr.netloc(self.t_res), 'vortex-free.cache.fr')
+        # AEARP
+        pr = self.deal(vconf='aearp', member=0)
+        self.assertEqual(pr.actual_experiment(self.t_res), 'ENS1')
+        self.assertEqual(pr.netloc(self.t_res), 'vortex.cache.fr')
+
+        # Arome ensembles
+        pr = self.deal(vapp='arome', vconf='pefrance')
+        self.assertEqual(pr.actual_experiment(self.t_res), 'ENS2')
+        self.assertEqual(pr.netloc(self.t_res), 'vortex.cache.fr')
+        pr = self.deal(vapp='arome', vconf='pefrance', block='other')
+        self.assertEqual(pr.actual_experiment(self.t_res), 'ENS2@special')
+        self.assertEqual(pr.netloc(self.t_res), 'vortex-free.cache.fr')
 
 
 class TestProviderVortexOp(unittest.TestCase):
@@ -400,7 +551,7 @@ class TestProviderOpArchiveCourt(unittest.TestCase):
 
     def test_oparchivecourt_strangenames(self):
         for nc in self.t_vconfs:
-            # Uggly things for the production cutoff :-(
+            # Ugly things for the production cutoff :-(
             t_res = DummyRessource(realkind='gridpoint', cutoff='production',
                                    bname='(gribfix:igakey)_toto')
             pr = fp.proxy.provider(suite='oper', vconf=nc, ** self.fp_defaults)
