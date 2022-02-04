@@ -64,14 +64,14 @@ def guess_packname(git_ref,
     :param homepack: home of pack
     :param to_bin: True if the path to binaries subdirectory is requested
     """
-    from ial_build.algos import guess_packname  # @UnresolvedImport
-    return guess_packname(git_ref,
-                          compiler_label,
-                          packtype,
-                          compiler_flag=compiler_flag,
-                          abspath=abspath,
-                          homepack=homepack,
-                          to_bin=to_bin)
+    from ial_build.pygmkpack import GmkpackTool  # @UnresolvedImport
+    return GmkpackTool.guess_pack_name(git_ref,
+                                       compiler_label,
+                                       compiler_flag,
+                                       packtype,
+                                       abspath=abspath,
+                                       homepack=homepack,
+                                       to_bin=to_bin)
 
 
 def bundle_guess_packname(bundle,

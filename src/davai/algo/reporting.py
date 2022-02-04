@@ -45,6 +45,32 @@ class XPsetup(AlgoComponent):
         xpm.write()
 
 
+class CiboulaiXPsetup_mkjob(AlgoComponent):
+    """Collect metadata about the experiment."""
+
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the tested experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['ciboulai_xpsetup_mkjob'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+                conf = dict(
+                    type = FPDict
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        from davai_taskutil.experiment import gather_mkjob_xp_conf  # @UnresolvedImport
+        gather_mkjob_xp_conf(self.experiment, self.conf)
+
+
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
     """
     Extend Expertise algo to catch exceptions in the parsing/summary/comparison,
