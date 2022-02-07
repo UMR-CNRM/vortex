@@ -495,7 +495,7 @@ class LiteralParser(object):
 
 class NamelistBlock(collections_abc.MutableMapping):
     """
-    This class represent a FORTRAN namelist block.
+    This class represents a FORTRAN namelist block.
 
     This class defines all the methods of a usual Python's dictionary. The
     keys being the namelist's variable names.
@@ -510,7 +510,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         >>> nb1 # doctest: +ELLIPSIS
         <bronx.datagrip.namelist.NamelistBlock object at 0x... | name=MYNAM len=0>
 
-        From now and on, it's possible to play arround with the namelist block:
+        From now and on, it's possible to play around with the namelist block:
 
         >>> nb1['A'] = 1
         >>> nb1.B = 2.
@@ -536,7 +536,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         Entry TEXT: Value is [...'MyBad']
         >>> del nb1.B
 
-        An exemple of namelist blocks merge:
+        An example of namelist blocks merge:
 
         >>> nb2 = NamelistBlock('MYNAM')
         >>> nb2.A = 3
@@ -548,7 +548,7 @@ class NamelistBlock(collections_abc.MutableMapping):
          /
         <BLANKLINE>
 
-        Macros can be defined in a namelist blocks using the __MACRONAME__ syntax.
+        Macros can be defined in a namelist block using the __MACRONAME__ syntax.
         They can be substituted at anytime:
 
         >>> nb3 = NamelistBlock('MYNAM')
@@ -599,7 +599,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         return self._name
 
     def __repr__(self):
-        """Returns a formated id of the current namelist block, including number of items."""
+        """Returns a formatted id of the current namelist block, including number of items."""
         parent_repr = super(NamelistBlock, self).__repr__().rstrip('>')
         return '{0:s} | name={1:s} len={2:d}>'.format(parent_repr,
                                                       self.name,
@@ -723,7 +723,7 @@ class NamelistBlock(collections_abc.MutableMapping):
     def iteritems(self):
         """Iterate over the namelist block's variables."""
         for k in self._keys:
-            yield (k, self._pool[k])
+            yield k, self._pool[k]
 
     def pool(self):
         """Returns the reference of the internal pool of variables."""
@@ -756,11 +756,11 @@ class NamelistBlock(collections_abc.MutableMapping):
         return self._dels
 
     def macros(self):
-        """Returns list of used macros in this block."""
+        """Returns the list of the macros used in this block."""
         return self._subs.keys()
 
     def declaredmacros(self):
-        """Returns list of old-style declared macros in this block."""
+        """Returns the list of old-style declared macros in this block."""
         return self._declared_subs
 
     def addmacro(self, macro, value=None):
@@ -801,7 +801,7 @@ class NamelistBlock(collections_abc.MutableMapping):
         return self.possible_macroname(itemli)
 
     def nice(self, item, literal=None):
-        """Nice encoded value of the item, possibly substitute with macros."""
+        """Nice encoded value of the item, possibly substituted with macros."""
         if literal is None:
             if self._literal is None:
                 self.__dict__['_literal'] = LiteralParser()
