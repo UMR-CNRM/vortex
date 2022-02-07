@@ -42,7 +42,12 @@ Real-Life AlgoComponents
 AlgoComponents' mixin classes
 *****************************
 
-.. autoclass:: OOPSMemberDetectDecoMixin
+.. autoclass:: OOPSMemberDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: OOPSMembersTermsDetectDecoMixin
    :show-inheritance:
    :members:
    :member-order: alphabetical

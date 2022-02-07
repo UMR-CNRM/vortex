@@ -673,6 +673,19 @@ class UtSimpleWorkflow(TestCase):
             desc.update(kind='utest1', local='utest1_get{:d}'.format(i), model='safran')
             rhs2 = toolbox.input(alternate=therole, now=True, fatal=True, verbose=False, batch=batch, **desc)
             self.assertTrue(rhs2)
+            nominaltoto = list(self.sequence.filtered_inputs(role=therole, no_alternates=True))
+            self.assertEqual(len(nominaltoto), 2)
+            alltoto = list(self.sequence.filtered_inputs(role=therole))
+            self.assertEqual(len(alltoto), 5)
+            for s in alltoto:
+                if s.role is not None:
+                    if s.rh.container.localpath() == 'utest1_get{:d}'.format(i):
+                        self.assertIs(self.sequence.is_somehow_viable(s).rh, rhs1[0])
+                    else:
+                        self.assertIs(self.sequence.is_somehow_viable(s), None)
+                else:
+                    with self.assertRaises(ValueError):
+                        self.sequence.is_somehow_viable(s)
             efftoto = self.sequence.effective_inputs(role=therole)
             self.assertEqual(len(efftoto), 1)
             self.assertEqual(efftoto[0].rh.resource.model, 'arpege')

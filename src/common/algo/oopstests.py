@@ -10,7 +10,7 @@ import footprints
 
 from vortex.algo.components import AlgoComponentDecoMixin, algo_component_deco_mixin_autodoc
 from common.syntax.stdattrs import oops_test_type, oops_expected_target
-from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMemberDetectDecoMixin
+from .oopsroot import OOPSParallel, OOPSODB, OOPSMembersTermsDecoMixin, OOPSMembersTermsDetectDecoMixin
 
 #: No automatic export
 __all__ = []
@@ -111,7 +111,7 @@ class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
 
 
 class OOPSTest(OOPSParallel, _OOPSTestDecoMixin, _OOPSTestExpTargetDecoMixin,
-               OOPSMemberDetectDecoMixin):
+               OOPSMembersTermsDetectDecoMixin):
     """OOPS Tests without ODB."""
 
     _footprint = dict(
@@ -144,7 +144,7 @@ class OOPSTestEnsBuild(OOPSParallel, _OOPSTestDecoMixin, OOPSMembersTermsDecoMix
 
 
 class OOPSObsOpTest(OOPSODB, _OOPSTestDecoMixin, _OOPSTestExpTargetDecoMixin,
-                    OOPSMemberDetectDecoMixin):
+                    OOPSMembersTermsDetectDecoMixin):
     """OOPS Obs Operators Tests."""
 
     _footprint = dict(
