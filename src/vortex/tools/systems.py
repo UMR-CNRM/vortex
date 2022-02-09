@@ -767,7 +767,7 @@ class OSExtended(System):
         self._rmtreemin = kw.pop('rmtreemin', 3)
         self._cmpaftercp = kw.pop('cmpaftercp', True)
         # Switches for rawft* methods
-        self.ftraw = kw.pop('ftraw', False)
+        self._ftraw = kw.pop('ftraw', None)
         self.ftputcmd = kw.pop('ftputcmd', None)
         self.ftgetcmd = kw.pop('ftgetcmd', None)
         # FTP stuff again
@@ -788,6 +788,24 @@ class OSExtended(System):
 
         # Initialise the signal handler object
         self._signal_intercept_init()
+
+    @property
+    def ftraw(self):
+        """Use the system's FTP service (e.g. ftserv)."""
+        if self._ftraw is None:
+            return self.default_target.ftraw_default
+        else:
+            return self._ftraw
+
+    @ftraw.setter
+    def ftraw(self, value):
+        """Use the system's FTP service (e.g. ftserv)."""
+        self._ftraw = bool(value)
+
+    @ftraw.deleter
+    def ftraw(self):
+        """Use the system's FTP service (e.g. ftserv)."""
+        self._ftraw = None
 
     def target(self, **kw):
         """
