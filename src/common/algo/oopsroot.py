@@ -21,7 +21,7 @@ from vortex.algo.components import algo_component_deco_mixin_autodoc
 from vortex.data import geometries
 from vortex.tools import grib
 from gco.syntax.stdattrs import ArpIfsSimplifiedCycle as IfsCycle
-from common.syntax.stdattrs import oops_members_terms_lists
+from common.syntax.stdattrs import algo_member, oops_members_terms_lists
 from common.tools import drhook, odb, satrad
 
 #: No automatic export
@@ -34,7 +34,24 @@ OOPSMemberInfos = namedtuple('OOPSMemberInfos', ('member', 'date'))
 
 
 @algo_component_deco_mixin_autodoc
-class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
+class OOPSMemberDecoMixin(AlgoComponentDecoMixin):
+    """Add a member footprints' attribute and use it in the configuration files."""
+
+    _MIXIN_EXTRA_FOOTPRINTS = (algo_member, )
+
+    def _algo_member_deco_setup(self, rh, opts):  # @UnusedVariable
+        """Update the configuration files."""
+        if self.member is not None:
+            self._generic_config_subs['member'] = self.member
+            for namrh in self.updatable_namelists:
+                namrh.contents.setmacro('MEMBER', self.member)
+                namrh.contents.setmacro('PERTURB', self.member)
+
+    _MIXIN_PREPARE_HOOKS = (_algo_member_deco_setup, )
+
+
+@algo_component_deco_mixin_autodoc
+class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
     """Tries to detect a members/terms list using the sequence's inputs
 
     This mixin class is intended to be used with AlgoComponnent classes. It will
@@ -77,7 +94,7 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
     ),)
 
     @staticmethod
-    def _stateless_members_detect(smap, basedate, ensminsize=None, utest=False):
+    def _stateless_members_detect(smap, basedate, section_check_cb, ensminsize=None, utest=False):
         """
         This method does not really need to be static but this way it allows for
         unit-testing (see ``tests.tests_algo.test_oopspara.py``).
@@ -194,7 +211,7 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
                     broken.extend([(s, arole)
                                    for t, slist in allmembers[arole][mb].items()
                                    for s in slist
-                                   if (s.stage != 'get' or not s.rh.container.exists())])
+                                   if not section_check_cb(s)])
                 for s, arole in broken:
                     if not utest:
                         logger.warning('Missing items: %s (role: %s).',
@@ -222,7 +239,7 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
 
     def members_detect(self):
         """Detect the members/terms list and update the substitution dictionary."""
-        sectionsmap = {r: self.context.sequence.filtered_inputs(role=r)
+        sectionsmap = {r: self.context.sequence.filtered_inputs(role=r, no_alternates=True)
                        for r in self._membersdetect_roles}
         try:
             (self._ens_members_num,
@@ -231,7 +248,9 @@ class OOPSMemberDetectDecoMixin(AlgoComponentDecoMixin):
              self._ens_effterms,
              self._ens_is_lagged,
              _, _) = self._stateless_members_detect(sectionsmap,
-                                                    self.date, self.ens_minsize)
+                                                    self.date,
+                                                    self.context.sequence.is_somehow_viable,
+                                                    self.ens_minsize)
         except AlgoComponentError as e:
             if self.strict_mbdetect:
                 raise
@@ -275,7 +294,7 @@ class OOPSMembersTermsDecoMixin(AlgoComponentDecoMixin):
     _MIXIN_EXTRA_FOOTPRINTS = (oops_members_terms_lists, )
 
     def _membersterms_deco_setup(self, rh, opts):  # @UnusedVariable
-        """Setup the ODB object."""
+        """Setup the configuration file."""
         actualmembers = [m if isinstance(m, int) else int(m)
                          for m in self.members]
         actualterms = [t if isinstance(t, Time) else Time(t)
@@ -632,7 +651,11 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
         self._generic_config_subs['timeslot_centers'] = self.slots.as_centers_fromstart()
 
 
-class OOPSAnalysis(OOPSODB, OOPSTimestepDecoMixin, OOPSIncrementalDecoMixin, OOPSMemberDetectDecoMixin):
+class OOPSAnalysis(OOPSODB,
+                   OOPSTimestepDecoMixin,
+                   OOPSIncrementalDecoMixin,
+                   OOPSMemberDecoMixin,
+                   OOPSMembersTermsDetectDecoMixin):
     """Any kind of OOPS analysis (screening/thining step excluded)."""
 
     _footprint = dict(
