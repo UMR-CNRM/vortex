@@ -154,7 +154,7 @@ class SopranoStore(Store):
             ),
             storage = dict(
                 optional = True,
-                values   = ['piccolo.meteo.fr', 'piccolo-int.meteo.fr'],
+                values   = ['piccolo.meteo.fr', 'piccolo-sine.meteo.fr', 'piccolo-int.meteo.fr', 'piccolo-int-sine.meteo.fr'],
                 default  = 'piccolo.meteo.fr',
             ),
             storeroot = dict(
