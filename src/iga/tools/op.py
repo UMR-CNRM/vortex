@@ -129,10 +129,16 @@ class OpJobAssistantTest(JobAssistant):
             else:
                 rundate = bronx.stdtypes.date.Date(anydate)
                 if t.env.OP_VAPP == 'mocage':
-                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana']:
-                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
-                    elif t.env.OP_VCONF == 'surfana':
-                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
+                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana', 'surfana']:
+                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + self.conf.delta_rundate)
+#                    if t.env.OP_VCONF in ['camsfcst', 'fcst', 'altana']:
+#                        altanatask = re.compile('.*altpart.*')
+#                        if re.match(altanatask, t.env.OP_DISP_NAME):
+#                            rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-PT12H')
+#                        else:
+#                            rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/+PT12H')
+#                    elif t.env.OP_VCONF == 'surfana':
+#                        rundate = bronx.stdtypes.date.Date(rundate.ymdh + '/-P1D')
 
             t.env.OP_RUNDATE = rundate
         t.env.OP_RUNTIME = t.env.OP_RUNDATE.time()
