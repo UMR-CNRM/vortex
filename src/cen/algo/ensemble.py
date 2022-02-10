@@ -315,10 +315,13 @@ class _SafranWorker(_S2MWorker):
         missing_files = False
         for filename in filenames:
             if not self.system.path.exists(filename):
-                missing_files = True
+                # SAFRAN guess files can be named 'PYYMMDDHH' or 'EYYMMDDHH'
+                if not (filename.startswith('P') and self.system.path.exists('E' + filename[1:])):
+                    missing_files = True
         if missing_files:
             if self.execution not in ['reforecast', ]:
-                rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
+                rdict['rc'] = InputCheckerError('The mandatory flow resource "{filename}" is missing.')
+                # TODO : Faire planter maintenant sans essayer de lancer SAFRAN ?
             # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
             # a climatological guess that is corrected by the observations
             if self.execution not in ['analysis', 'reanalysis']:
