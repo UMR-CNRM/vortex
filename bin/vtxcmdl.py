@@ -242,8 +242,9 @@ def main():
                         help="comma-separated list of modules to be imported to setup more footprints [default: %(default)s]")
     parser.add_argument('--any_attribute', dest='dummyattribute',
                         metavar='any_value...', action='append')
-    parser.add_argument('--ftraw', dest='ftraw', action = 'store_true', help="Use ftput/ftget to perform transfers")
-                        
+    parser.add_argument('--ftraw', dest='ftraw', action ='store_true', help="Enable the use of ftput/ftget methods to perform transfers")
+    parser.add_argument('--noftraw', dest='noftraw', action='store_false', help="Disable the use of ftget/ftput methods to perform transfers")              parser.set_defaults(ftraw=None)
+
     # Process arguments
     args = process_remaining(*parser.parse_known_args())
     del args.dummyattribute
@@ -290,9 +291,9 @@ def main():
     for key, value in vars(args).items():
         logger.debug('  + {} = {!s}'.format(key, value))
     if args.ftraw:
-        if not sh.default_target.istransfertnode:
+        if not t.sh.default_target.istransfertnode:
             raise ValueError("Transfert Nodes are mandatory for ftraw option")
-        sh.ftraw = True
+        t.sh.ftraw = True
     try:
         with interrupt.SignalInterruptHandler(emitlogs=False):
             vortex_delayed_init(t, loadedmods=args.loadedmods)
