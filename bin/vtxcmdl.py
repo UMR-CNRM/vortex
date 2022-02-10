@@ -290,9 +290,9 @@ def main():
     for key, value in vars(args).items():
         logger.debug('  + {} = {!s}'.format(key, value))
     if args.ftraw:
-        if sh.default_target.istransfertnode:
-            sh.ftraw = True
-        raise ValueError("Transfert Nodes are mandatory for ftraw option")
+        if not sh.default_target.istransfertnode:
+            raise ValueError("Transfert Nodes are mandatory for ftraw option")
+        sh.ftraw = True
     try:
         with interrupt.SignalInterruptHandler(emitlogs=False):
             vortex_delayed_init(t, loadedmods=args.loadedmods)
