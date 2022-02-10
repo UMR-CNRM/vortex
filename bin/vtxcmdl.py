@@ -243,8 +243,8 @@ def main():
     parser.add_argument('--any_attribute', dest='dummyattribute',
                         metavar='any_value...', action='append')
     parser.add_argument('--ftraw', dest='ftraw', action ='store_true', help="Enable the use of ftput/ftget methods to perform transfers")
-    parser.add_argument('--noftraw', dest='noftraw', action='store_false', help="Disable the use of ftget/ftput methods to perform transfers")              parser.set_defaults(ftraw=None)
-
+    parser.add_argument('--noftraw', dest='noftraw', action='store_false', help="Disable the use of ftget/ftput methods to perform transfers")
+    parser.set_defaults(ftraw=None)
     # Process arguments
     args = process_remaining(*parser.parse_known_args())
     del args.dummyattribute
