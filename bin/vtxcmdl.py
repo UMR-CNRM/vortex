@@ -290,7 +290,7 @@ def main():
     logger.debug('Detailed list or arguments')
     for key, value in vars(args).items():
         logger.debug('  + {} = {!s}'.format(key, value))
-    if args.ftraw:
+    if args.ftraw and args.ftraw == True:
         if not t.sh.default_target.istransfertnode:
             raise ValueError("Transfert Nodes are mandatory for ftraw option")
         t.sh.ftraw = True
