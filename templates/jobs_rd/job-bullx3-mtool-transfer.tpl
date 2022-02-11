@@ -81,7 +81,7 @@ try:
     sh.ftraw = True # To activate ftserv
 
     opts = dict(jobassistant=ja,
-                steps=('refill', ) if rd_refill else ja.mtool_steps,
+                steps=ja.mtool_steps if not (rd_warmstart or rd_refill) else (),
                 mstep_job_last=ja.is_last)
     driver = todo.setup(t, **opts)
     driver.setup()
