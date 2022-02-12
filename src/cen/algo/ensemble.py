@@ -341,10 +341,12 @@ class _SafranWorker(_S2MWorker):
 
     def get_guess(self, dates, prefix='P', fatal=False, dt=3):
         """Try to guess the corresponding input file."""
-        # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
-        # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
-        for date in dates:
+        # Control de cohérence sur les cumuls : on ne doit pas mélanger des cumuls sur 6h 
+        # avec des cumuls sur 24h. Le bool cumul permet de forcer la recherche de guess
+        # de précipittion cumulées dès lors qu'une échéance 6h est absente.
+        cumul = False
+        for i, date in enumerate(dates):
             p = '{0:s}{1:s}'.format(prefix, date.yymdh)
             # Cas d'un fichier P ou E unique par echeance et utilisable par SAFRAN
             if self.system.path.exists(p) and not self.system.path.islink(p):
@@ -369,21 +371,36 @@ class _SafranWorker(_S2MWorker):
                     #        The 'deterministic member' takes the 6h ARPEGE analysis
                     #        All PEARP members take the forecasts from the 6h J lead time
                     #     2) From J 6h to J+4 6h
-                    #        The deterministic member takes the forecasts from the 0h J lead time
-                    #        All PEARP members take the forecats froms the 18h J-1 lead time
+                    #        The deterministic member takes the forecasts from the (D, 0:00)  lead time
+                    #        All PEARP members now also take the forecats from the (D, 0:00) lead time
+                    #        but used to take he forecasts from (D-1, 18:00) lead time before the 2022
+                    #        PNT DBLE chain. This code works for both cases
                     d = date - Period(hours=6)
                     oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
-                    if self.system.path.exists(oldp):
+                    if self.system.path.exists(oldp) and not cumul:
+                        # This part is still necessary for the ARPEGE-based member that uses 6h assimilation guess
+                        # from (D-1, 6:00) to (D, 6:00)
                         self.link_in(oldp, p)
                         actual_dates.append(date)
                     else:
-                        if dates[0] == self.datebegin:
+                        cumul = True # If no 6h forecast is available at 1 ech, SAFRAN needs 24h cumulates 
+                                     # precipitation guess for the whole day
+                        # The goal here is to find the first ech "t" that could be available
+                        # for the current date
+                        if dates[0] == self.datebegin: # Cas de la pseudo prévision de J-1 6h à J 6h
+                            # t = number of hours since self.datebegin (D-1 at 6:00)
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600)
-                        else:
+                                    (date - self.datebegin).seconds / 3600) # (date - self.datebegin).seconds
+                                                                            # returns the number of hours since
+                                                                            # last 6:00
+                        else: # Cas de la prévision dec J 6h à J+4 6h
+                            # t = number of hours since (D-1) at 18:00 (PEARP lead time used until the 2022 PNT
+                            # DBLE chain. This works also with the (D, 6:00) lead time used for ARPEGE (and PEARP
+                            # from the 2022 PNT DBLE chain on).
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600) - 18
-                else:
+                                    (date - self.datebegin).seconds / 3600) - 18 # 18 is the difference between
+                                                                                 # D-1 (6:00) and D (0:00)
+                else: # Analysis execution
                     if date == dates[-1]:
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
