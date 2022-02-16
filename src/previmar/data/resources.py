@@ -421,7 +421,8 @@ class Ww3IntermediateResults(GeoFlowResource):
                 values = ['ww3IntermedResult'],
             ),
             fields = dict(
-                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003', 'level', 'current'],
+                values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003',
+                         'level', 'current'],
             ),
             model = dict(
                 values = ['ww3'],
@@ -481,6 +482,7 @@ class WW3Out(GeoFlowResource):
     def realkind(self):
         return 'WW3Out'
 
+
 @namebuilding_append('src', lambda s: s.fields)
 class DatedBathy(GeoFlowResource):
     """Class for bathymetry with a date.
@@ -495,7 +497,7 @@ class DatedBathy(GeoFlowResource):
                 ),
                 nativefmt = dict(
                     values  = ['grib'],
-                    default = 'grib',
+                    default = 'grib', 
                 ),
                 fields = dict(
                     values = ['bathy',],

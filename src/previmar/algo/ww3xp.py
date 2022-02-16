@@ -94,7 +94,7 @@ class Ww3(Parallel, grib.EcGribDecoMixin):
             self.io_poll_sleep = 15
             sstepout = '{0:d}'.format(self.stepout.length // 3600)
             sanaterm = '{0:d}'.format(self.anaterm.hour)
-            self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh, stepout=sstepout,anaterm=sanaterm)
+            self.io_poll_kwargs = dict(datpivot=self.datpivot.ymdh, stepout=sstepout, anaterm=sanaterm)
             self.flyput = True
         # Tweak Namelist parameters
         namcandidate = self.context.sequence.effective_inputs(role=('NamelistShel', ))
@@ -324,9 +324,9 @@ class Ww3_ounfAlgo(AbstractWw3ParaBlindRun):
 
     def _add_section_instructions(self, common_i, section):
         file_in = section.rh.container.localpath()
-        if self.kind=='ww3_ounf_algo':
+        if self.kind == 'ww3_ounf_algo':
             dateval = section.rh.resource.date + section.rh.resource.term
-        elif self.kind=='ww3_ounf_comp_algo':
+        elif self.kind == 'ww3_ounf_comp_algo':
             dateval = section.rh.resource.date - self.anaterm + Period('PT1H')
         else:
             logger.error("Odd kind of Ww3_ounfAlgo")
@@ -650,7 +650,7 @@ class _ConvNetcdfGribAlgoWorker(VortexWorkerBlindRun):
                 if self.dateval.ymdh == self.datpivot.ymdh and len(bathycandidate) > 0:
                     for bathy in bathycandidate:
                         if bathy.rh.resource.header == dom:
-                            sh.mv(sh.path.join(cwd,bathy.rh.container.localpath()),"ww3.{0:s}_bathy.grb".format(dom))
+                            sh.mv(sh.path.join(cwd, bathy.rh.container.localpath()), "ww3.{0:s}_bathy.grb".format(dom))
 
                 sh.cat('ww3.{0:s}*grb'.format(dom), output=sh.path.join(cwd, fic_prod))
                 output_files.add(fic_prod)

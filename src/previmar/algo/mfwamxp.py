@@ -263,7 +263,7 @@ class MfwamGauss2Grib(ParaBlindRun):
         # case of PE
         if len(namcandidate) > 0:
             namcontents = namcandidate[0].rh.contents
-            namcontents.setmacro('MEMBER', self.member) 
+            namcontents.setmacro('MEMBER', self.member)
             namcandidate[0].rh.save()
             with io.open('fort.3', 'w') as fhnam:
                 fhnam.write(namcontents.dumps())
@@ -338,9 +338,9 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         # verification of the namelists
         namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),)
         if len(namcandidate) > 0:
-            isnam=True
+            isnam = True
         else:
-            isnam=False
+            isnam = False
 
         # Prepare the working directory
         cwd = sh.pwd()
@@ -352,7 +352,7 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
                 if isnam:
-                    sh.cp(sh.path.join(cwd,"fort.2"), 'fort.2')
+                    sh.cp(sh.path.join(cwd, "fort.2"), 'fort.2')
 
                 else:
                     sh.cp(sh.path.join(cwd, "grids", dom + ".nam"), 'fort.2')
