@@ -82,8 +82,8 @@ indicates where to look for detailed configuration. Here is an example:
     [mf-reforecast]
     generic_uri=ftp://hendrix.meteo.fr/home/m/marp/marp999/vortex/provider-vortex-free-reforecast.ini
     generic_restrict=@mf-reforecast$
-    belenos_uri=file://home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
-    taranis_uri=file://home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
+    belenos_uri=file:///home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
+    taranis_uri=file:///home/mf/dp/marp/verolive/vortex/provider-vortex-free-reforecast.ini
 
 In this example, the **experiment** identifiers ending with ``@mf-reforecast``
 are declared as potential "proxy" experiments. For such experiments, the associated
@@ -143,7 +143,8 @@ Here are some explanations on this example:
 The list of criteria:
 
 * may target the following resource-provider pair characteristics: *vapp*,
-  *vconf*, *block*, *member*, *scenario*, *date@flow* and *shortcutoff@flow*.
+  *vconf*, *block*, *member*, *scenario*, *date@flow*, *shortcutoff@flow*,
+  *radical*, *index0@src*, ..., *indexN@src*.
 * each criterion name must be suffixed by '_' and two letters. The two letters
   designate which comparison operation is performed. The usual following usual
   comparison operator are allowed: *eq*, *ne*, *lt*, *le*, *gt* and *ge*.
