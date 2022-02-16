@@ -510,7 +510,10 @@ class VortexFreeStd(Vortex):
                 # Is there actually a specific configuration for this experiment ?
                 conf_uri = None
                 for restrict_re, uri in global_conf_stack:
-                    if restrict_re.search(self.experiment):
+                    restrict_match = restrict_re.search(self.experiment)
+                    if restrict_match:
+                        for k, v in restrict_match.groupdict().items():
+                            uri = uri.replace('{{' + k + '}}', v)
                         conf_uri = uri
                         break
                 if conf_uri:
@@ -591,7 +594,6 @@ class VortexFreeStd(Vortex):
             member=self.member,
             scenario=self.scenario,
         )
-        print(xinfo)
         return xinfo
 
     def _match_experiment_filter(self, r_filter, xinfo):

@@ -143,7 +143,8 @@ Here are some explanations on this example:
 The list of criteria:
 
 * may target the following resource-provider pair characteristics: *vapp*,
-  *vconf*, *block*, *member*, *scenario*, *date@flow* and *shortcutoff@flow*.
+  *vconf*, *block*, *member*, *scenario*, *date@flow*, *shortcutoff@flow*,
+  *radical*, *index0@src*, ..., *indexN@src*.
 * each criterion name must be suffixed by '_' and two letters. The two letters
   designate which comparison operation is performed. The usual following
   comparison operators are allowed: *eq*, *ne*, *lt*, *le*, *gt* and *ge*.
