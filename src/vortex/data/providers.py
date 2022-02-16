@@ -575,21 +575,30 @@ class VortexFreeStd(Vortex):
                           self._experiment_conf, readonly=True)
         return self._experiment_conf
 
-    def _match_experiment_filter(self, r_filter, resource):
-        """
-        Compare the filter specified in a configuration section with the
-        Resource/Provider characteristics.
-        """
-        # Resource/Provider characteristics
+    def _match_experiment_xinfo(self, resource):
+        """Resource/Provider characteristics."""
         rinfo = resource.namebuilding_info()
+        rinfo_src = rinfo.get('src', None)
+        if rinfo_src is not None:
+            rinfo_src = [{'index{:d}'.format(i): v} for i, v in enumerate(rinfo_src)]
         xinfo = dict(
+            radical=rinfo.get('radical', None),
             flow=rinfo.get('flow', None),
+            src=rinfo_src,
             vapp=self.vapp,
             vconf=self.vconf,
             block=self.block,
             member=self.member,
             scenario=self.scenario,
         )
+        print(xinfo)
+        return xinfo
+
+    def _match_experiment_filter(self, r_filter, xinfo):
+        """
+        Compare the filter specified in a configuration section with the
+        Resource/Provider characteristics.
+        """
         # Actually compare r_filter to xinfo
         outcome = True
         for f_entry, f_value in r_filter.items():
@@ -633,11 +642,12 @@ class VortexFreeStd(Vortex):
         if self.experiment_conf:
             if resource not in self._actual_experiment_cache:
                 logger.debug('Starting actual_experiment lookup for resource: %s', resource)
+                xinfo = self._match_experiment_xinfo(resource)
                 for priority in sorted(self.experiment_conf.keys(), reverse=True):
                     for target in sorted(self.experiment_conf[priority].keys()):
                         logger.debug('Checking redirection to %s (priority=%d)', target, priority)
                         r_filter = self.experiment_conf[priority][target]
-                        if not r_filter or self._match_experiment_filter(r_filter, resource):
+                        if not r_filter or self._match_experiment_filter(r_filter, xinfo):
                             self._actual_experiment_cache[resource] = target
                             break
                     if resource in self._actual_experiment_cache:
