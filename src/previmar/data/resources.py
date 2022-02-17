@@ -422,7 +422,7 @@ class Ww3IntermediateResults(GeoFlowResource):
             ),
             fields = dict(
                 values = ['nest', 'wind', 'restart', 'out_pnt', 'out_grd', 'restart001', 'restart002', 'restart003',
-                         'level', 'current'],
+                          'level', 'current'],
             ),
             model = dict(
                 values = ['ww3'],
@@ -497,10 +497,10 @@ class DatedBathy(GeoFlowResource):
                 ),
                 nativefmt = dict(
                     values  = ['grib'],
-                    default = 'grib', 
+                    default = 'grib',
                 ),
                 fields = dict(
-                    values = ['bathy',],
+                    values = ['bathy', ],
                 ),
                 model = dict(
                     values = ['ww3'],
