@@ -1297,6 +1297,14 @@ class Guess(ParaExpresso):
         ddict['reforecast'] = self.reforecast
         return ddict
 
+    def _default_pre_execute(self, rh, opts):
+        """Add concatenation of the 'METADATA' grib file here since it is a common ressource"""
+        concat = self.system.forcepack(source='METADATA.grib', fmt='grib')
+        if concat != 'METADATA.grib':
+            self.system.rm('METADATA.grib', fmt='grib')
+            self.system.mv(concat, 'METADATA.grib', fmt='grib')
+        super(Guess, self)._default_pre_execute(rh, opts)
+
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
         self._default_pre_execute(rh, opts)
