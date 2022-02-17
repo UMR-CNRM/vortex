@@ -233,10 +233,10 @@ class _SafranWorker(_S2MWorker):
     def set_actual_period(self):
         """Guess the dates that are to be covered by the forecast."""
         if self.datebegin.hour > self.day_begins_at:
-            self.datebegin.day = self.datebegin.day + 1
+            self.datebegin = self.datebegin + Period(days=1)
         self.datebegin.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
         if self.dateend.hour < self.day_begins_at:
-            self.dateend.day = self.dateend.day - 1
+            self.dateend.day = self.dateend.day - Period(days=1)
         self.dateend.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
 
     @property
