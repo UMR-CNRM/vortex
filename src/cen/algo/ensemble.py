@@ -1431,8 +1431,6 @@ class S2MComponent(ParaBlindRun):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        # Note: The number of members and the name of the subdirectories could be
-        # auto-detected using the sequence
         cpl_model = self.get_origin(rh, opts)
         subdirs = self.get_subdirs(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs, deterministic=cpl_model))
@@ -1636,10 +1634,8 @@ class S2MReforecast(S2MComponent):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        # Note: The number of members and the name of the subdirectories could be
-        # auto-detected using the sequence
         subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
-        deterministic = [True] * len(subdirs)
+        deterministic = [True] * len(subdirs) # Each simulation day is important
         self._add_instructions(common_i, dict(subdir=subdirs,
                                               datebegin=list_dates_begin,
                                               dateend=list_dates_end,
@@ -1654,8 +1650,11 @@ class S2MReforecast(S2MComponent):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                list_dates_begin.append(am.rh.resource.date + Period(hours=12))
-                list_dates_end.append(am.rh.resource.date + Period(hours=108))
+                # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
+                list_dates_begin.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour))
+                # The last ech in the corresponding footprint must correspond to 6:00 at day D+4
+                # WARNING : There is no check that this resource is effectively here...
+                list_dates_end.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour) + Period(days=4))
 
         return subdirs, list_dates_begin, list_dates_end
 
