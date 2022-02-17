@@ -1616,6 +1616,12 @@ class S2MReforecast(S2MComponent):
                 values   = ['reforecast'],
                 optional = False,
             ),
+            datebegin = dict(
+                optional = True,
+            ),
+            dateend   = dict(
+                optional = True,
+            ),
         ),
     )
 
