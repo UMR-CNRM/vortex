@@ -779,7 +779,7 @@ class Period(datetime.timedelta):
 
     @property
     def pseconds(self):
-        """The period expressed in seconds (interger)"""
+        """The period expressed in seconds (integer)"""
         return int(self.total_seconds())
 
     @property

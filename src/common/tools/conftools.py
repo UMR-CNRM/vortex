@@ -785,7 +785,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
       ...                                 ),
       ...      )
 
-    The forecast term ca be retrieved:
+    The forecast term can be retrieved:
 
       >>> print(ct.fcterm('assim', 6))
       6
