@@ -190,8 +190,8 @@ class S2MTaskMixIn(object):
         return rundate_prep, alternates
 
     def get_list_members(self, sytron=True):
-        if not self.conf.nmembers:
-            raise ValueError
+        if 'nmembers' not in self.conf.keys() or self.conf.nmembers == 0:
+            return list(), list() # Return empty lists to indicate only a deterministic run must be considered
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
