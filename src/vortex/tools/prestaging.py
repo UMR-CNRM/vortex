@@ -75,7 +75,7 @@ class PrestagingTool(footprints.FootprintBase, Catalog):
             res += '  * {:s}: {!s}\n'.format(k, v)
         if fulldump:
             res += '\n  * Todo list:\n'
-            res += '\n'.join(['    - {:s}'.format(item) for item in self.items()])
+            res += '\n'.join(['    - {:s}'.format(item) for item in sorted(self.items())])
         return res
 
     def flush(self, email=None):
@@ -99,7 +99,13 @@ class PrivatePrestagingHub(object):
     def __init__(self, sh, email=None):
         self._email = email
         self._sh = sh
+        self._prestagingtools_default_opts = dict()
         self._prestagingtools = set()
+
+    @property
+    def prestagingtools_default_opts(self):
+        """The dictionary of defaults that will be used when creating prestagingtool objects."""
+        return self._prestagingtools_default_opts
 
     def record(self, location, priority=prestaging_p.normal, **kwargs):
         """Take into consideration a pre-staging request.
@@ -109,8 +115,10 @@ class PrivatePrestagingHub(object):
         :param dict kwargs: Any argument that will be used to create the :class:`PrestagingTool` object
         """
         # Prestaging tool descriptions
-        myptool_desc = dict(priority=priority, system=self._sh)
+        myptool_desc = self.prestagingtools_default_opts.copy()
         myptool_desc.update(kwargs)
+        myptool_desc['priority'] = priority
+        myptool_desc['system'] = self._sh
         myptool = None
         # Scan pre-existing prestaging tools to find a suitable one
         for ptool in self._prestagingtools:
@@ -154,6 +162,7 @@ class PrivatePrestagingHub(object):
             will be sent.
         """
         for ptool in self._get_ptools(priority_threshold):
+            print()
             rc = ptool.flush(email=self._email)
             if rc:
                 self._prestagingtools.discard(ptool)

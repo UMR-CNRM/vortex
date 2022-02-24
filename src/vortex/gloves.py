@@ -125,13 +125,14 @@ class Glove(footprints.FootprintBase):
         if domain is None:
             from vortex import sessions
             domain = sessions.system().getfqdn()
-        self.email = '@'.join((self.user, domain))
+        return '@'.join((self.user, domain))
 
     @property
     def xmail(self):
         if self.email is None:
-            self.setmail()
-        return self.email
+            return self.setmail()
+        else:
+            return self.email
 
     def safedirs(self):
         """Protected paths as a list a tuples (path, depth)."""
