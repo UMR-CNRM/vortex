@@ -1,8 +1,8 @@
-:mod:`sandbox.algo.stdpost` --- Fake post-processing AlgoComponnents
+:mod:`sandbox.algo.stdpost` --- Fake post-processing AlgoComponents
 ====================================================================
 
 .. automodule:: sandbox.algo.stdpost
-   :synopsis: Fake post-processing AlgoComponnents
+   :synopsis: Fake post-processing AlgoComponents
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

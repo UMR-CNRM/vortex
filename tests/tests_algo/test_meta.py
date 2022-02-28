@@ -12,35 +12,35 @@ from vortex.algo.components import AlgoComponent, AlgoComponentDecoMixin, algo_c
 tloglevel = 'ERROR'
 
 
-class BaseTestAlgoComponnentForMeta(AlgoComponent):
+class BaseTestAlgoComponentForMeta(AlgoComponent):
 
     _footprint = dict(attr = dict(
         kind = dict(values = ['base_test_algo_for_meta', ]),
     ))
 
     def __init__(self, *kargs, **kwargs):
-        super(BaseTestAlgoComponnentForMeta, self).__init__(*kargs, **kwargs)
+        super(BaseTestAlgoComponentForMeta, self).__init__(*kargs, **kwargs)
         self.prepare_stack = []
         self.execute_stack = []
         self.postfix_stack = []
 
     def prepare(self, rh, opts):
         self.prepare_stack.append('base')
-        super(BaseTestAlgoComponnentForMeta, self).prepare(rh, opts)
+        super(BaseTestAlgoComponentForMeta, self).prepare(rh, opts)
 
     def execute(self, rh, opts):
         self.execute_stack.append('base')
-        super(BaseTestAlgoComponnentForMeta, self).execute(rh, opts)
+        super(BaseTestAlgoComponentForMeta, self).execute(rh, opts)
 
     def postfix(self, rh, opts):
         self.postfix_stack.append('base')
-        super(BaseTestAlgoComponnentForMeta, self).postfix(rh, opts)
+        super(BaseTestAlgoComponentForMeta, self).postfix(rh, opts)
 
     def postfix_post_dirlisting(self):
         pass
 
     def spawn_command_options(self):
-        rv = super(BaseTestAlgoComponnentForMeta, self).spawn_command_options()
+        rv = super(BaseTestAlgoComponentForMeta, self).spawn_command_options()
         rv['base'] = True
         return rv
 
@@ -85,7 +85,7 @@ class TestAlgoMetaClass(unittest.TestCase):
 
         with self.assertRaises(AssertionError):
             # Because _MIXIN_EXTRA_FOOTPRINTS is not a valid footprints
-            class A_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin):
+            class A_TestAlgoComponentForMeta(BaseTestAlgoComponentForMeta, A_TestMixin):
                 _footprint = dict(attr=dict(
                     kind=dict(values=['a_base_test_algo_for_meta', ]),
                 ))
@@ -94,14 +94,14 @@ class TestAlgoMetaClass(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             # Because two mixin class with _MIXIN_EXECUTE_OVERWRITE are provided
-            class B_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin, BaseTestMixin):
+            class B_TestAlgoComponentForMeta(BaseTestAlgoComponentForMeta, A_TestMixin, BaseTestMixin):
                 _footprint = dict(attr=dict(
                     kind=dict(values=['b_base_test_algo_for_meta', ]),
                 ))
 
         with self.assertRaises(RuntimeError):
             # Because execute is already defined
-            class C_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, A_TestMixin):
+            class C_TestAlgoComponentForMeta(BaseTestAlgoComponentForMeta, A_TestMixin):
                 _footprint = dict(attr=dict(
                     kind=dict(values=['c_base_test_algo_for_meta', ]),
                 ))
@@ -113,7 +113,7 @@ class TestAlgoMetaClass(unittest.TestCase):
             pass
 
         with self.assertRaises(RuntimeError):
-            # Fake is not an AlgoComponnent
+            # Fake is not an AlgoComponent
             A_TestMixin.mixin_algo_deco(Fake)
 
     @staticmethod
@@ -141,19 +141,19 @@ class TestAlgoMetaClass(unittest.TestCase):
                 )
             ]
 
-        class Full_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, Full_TestMixin):
+        class Full_TestAlgoComponentForMeta(BaseTestAlgoComponentForMeta, Full_TestMixin):
 
             _footprint = dict(attr=dict(
                 kind=dict(values=['full_base_test_algo_for_meta', ]),
             ))
 
             def prepare(self, rh, opts):
-                super(Full_TestAlgoComponnentForMeta, self).prepare(rh, opts)
+                super(Full_TestAlgoComponentForMeta, self).prepare(rh, opts)
                 self.prepare_stack.append('inter')
 
-        algot = Full_TestAlgoComponnentForMeta(kind='full_base_test_algo_for_meta',
-                                               engine='algo',
-                                               fakeattr='gruik')
+        algot = Full_TestAlgoComponentForMeta(kind='full_base_test_algo_for_meta',
+                                              engine='algo',
+                                              fakeattr='gruik')
         self.assertTrue(hasattr(algot, 'fakeattr'))
         self.assertTrue('fakeattr' in algot.footprint_retrieve().attr)
         self.assertEqual(algot.fakeattr, 'gruik')
@@ -170,15 +170,15 @@ class TestAlgoMetaClass(unittest.TestCase):
 
             MIXIN_AUTO_DECO = False
 
-        class Half_TestAlgoComponnentForMeta(BaseTestAlgoComponnentForMeta, Half_TestMixin):
+        class Half_TestAlgoComponentForMeta(BaseTestAlgoComponentForMeta, Half_TestMixin):
 
             _footprint = dict(attr=dict(
                 kind=dict(values=['half_base_test_algo_for_meta', ]),
             ))
 
-        algot = Half_TestAlgoComponnentForMeta(kind='half_base_test_algo_for_meta',
-                                               engine='algo',
-                                               fakeattr='gruik')
+        algot = Half_TestAlgoComponentForMeta(kind='half_base_test_algo_for_meta',
+                                              engine='algo',
+                                              fakeattr='gruik')
         self.assertTrue(not hasattr(algot, 'fakeattr'))
 
         self._run_algo(algot)

@@ -8,7 +8,7 @@ It provides shell addons to deal with:
     * Splitted GRIB files (as produced by the Arpege/IFS IO server)
     * The ability to compare GRIB files
 
-It also provdes an AlgoComponnent's Mixin to properly setup the environment
+It also provdes an AlgoComponent's Mixin to properly setup the environment
 when using the grib_api or ecCodes libraries.
 """
 
@@ -342,10 +342,10 @@ class GRIB_Tool(addons.FtrawEnableAddon):
 class EcGribDecoMixin(AlgoComponentDecoMixin):
     """Extend Algo Components with EcCodes/GribApi features."
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically set up the ecCodes/GribApi environment variable given the
     path to the EcCodes/GribApi library (which is found by performing a ``ldd``
-    on the AlgoComponnent's target binary).
+    on the AlgoComponent's target binary).
     """
 
     _ECGRIB_SETUP_COMPAT = True

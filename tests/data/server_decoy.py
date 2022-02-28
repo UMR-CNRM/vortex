@@ -48,7 +48,7 @@ def server(sleep, crash, verb):
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Fake server to test the abstract AlgoComponnent.")
+    parser = argparse.ArgumentParser(description="Fake server to test the abstract AlgoComponent.")
     parser.add_argument("-v", "--verbose", dest="verbose", action="count",
                         help="set verbosity level [default: %(default)s]")
     parser.add_argument("--sleep", dest="sleep", action="store", default=5., type=float,

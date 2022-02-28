@@ -404,7 +404,7 @@ is used to create Resource, Provider, Container and AlgoComponent objects.
    * A "generic" *footprints* documents: :ref:`footprints_doc`
    * An "NWP oriented" *footprints* tutorial: :ref:`nbook-01b_ResourceHandlingFootprints`
    * In Vortex, the footprint's catalogue of available *resources*, *providers*, *containers*
-     and *algo-componnents* is browsable with `Vortex-Help <_static/vortex-help/index.html#http://>`_
+     and *algo-components* is browsable with `Vortex-Help <_static/vortex-help/index.html#http://>`_
 
 .. _getting-started-example:
 

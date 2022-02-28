@@ -2,7 +2,7 @@
 ====================================
 
 .. automodule:: previmar
-   :synopsis: Additional Resources, AlgoComponnent, etc for PreviMAR use
+   :synopsis: Additional Resources, AlgoComponent, etc for PreviMAR use
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

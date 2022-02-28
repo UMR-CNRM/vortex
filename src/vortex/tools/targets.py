@@ -257,7 +257,7 @@ class Target(fp.FootprintBase):
 
     @contextlib.contextmanager
     def algo_run_context(self, ticket, *kmappings):
-        """Specific target hook before any componnent run."""
+        """Specific target hook before any component run."""
         yield
 
     def _init_supernodes(self, main_re, rangeid='range', baseid='base',):
