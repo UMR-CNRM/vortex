@@ -71,11 +71,13 @@ class S2MTaskMixIn(object):
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
-        nerrors = len(list(enumerate(exc)))
-        warning["nfail"] = nerrors
-        accept_errors = nerrors < 5
-        if accept_errors:
-            print(self.warningmessage(nerrors, exc))
+        accept_errors = False
+        if isinstance(exc, DelayedAlgoComponentError):
+            nerrors = len(list(enumerate(exc)))
+            warning["nfail"] = nerrors
+            accept_errors = nerrors < 5
+            if accept_errors:
+                print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):

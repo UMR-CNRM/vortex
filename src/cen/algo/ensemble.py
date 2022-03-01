@@ -1858,14 +1858,13 @@ class SurfexComponentMultiDates(SurfexComponent):
     )
 
     def get_dates(self, subdirs):
-        listdatebegin_str = map(self.system.path.dirname, subdirs)
 
         # Pour l'instant je fais le porc parce que le passage de dateend ne marche pas du tout
         duration = Period(days=4)
 
         listdatebegin = []
         listdateend = []
-        for datebegin_str in listdatebegin_str:
+        for datebegin_str in subdirs:
             datebegin = Date(datebegin_str)
             listdatebegin.append(datebegin)
             listdateend.append(datebegin + duration)
