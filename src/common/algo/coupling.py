@@ -279,13 +279,13 @@ class PrepMixin(AlgoComponentDecoMixin):
             underlyingoutputformat=dict(
                 info=("The format of output data (as expected by the PREP executable)." +
                       "If omited, *underlyingformat* is used."),
-                values=['fa', 'lfi', 'netcdf','txt'],
+                values=['fa', 'lfi', 'netcdf', 'txt'],
                 optional=True,
             ),
             outputformat=dict(
                 info=("The format of output data (as expected by the user)." +
                       "If omited, same as input data."),
-                values=['fa', 'lfi', 'netcdf','txt'],
+                values=['fa', 'lfi', 'netcdf', 'txt'],
                 optional=True,
             ),
         )
