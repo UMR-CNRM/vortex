@@ -1865,7 +1865,7 @@ class SurfexComponentMultiDates(SurfexComponent):
         listdatebegin = []
         listdateend = []
         for datebegin_str in subdirs:
-            datebegin = Date(datebegin_str)
+            datebegin = Date(datebegin_str.split('/')[0])
             listdatebegin.append(datebegin)
             listdateend.append(datebegin + duration)
 
