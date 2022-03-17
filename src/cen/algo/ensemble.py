@@ -130,6 +130,12 @@ class _S2MWorker(VortexWorkerBlindRun):
             if self.system.path.isfile(local):
                 self.system.symlink(local, dest)
 
+    def copy_ifnotprovided(self, local, dest):
+        """Link a file if the target does not already exist."""
+        if not self.system.path.islink(dest) and not self.system.path.isfile(dest):
+            if self.system.path.isfile(local):
+                self.system.cp(local, dest)
+
     def postfix(self):
         self.system.subtitle('{0:s} : directory listing (post-run)'.format(self.kind))
 
@@ -931,7 +937,12 @@ class SurfexWorker(_S2MWorker):
             list_files_copy = ["OPTIONS.nam"]
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
-        list_files_link_ifnotprovided = ["PREP.nc"]
+        if self.kind == 'escroc' and (self.datebegin != self.dateinit or self.threshold > 0):
+            list_files_copy_ifnotprovided = ["PREP.nc"]
+            list_files_link_ifnotprovided = []
+        else:
+            list_files_copy_ifnotprovided = []
+            list_files_link_ifnotprovided = ["PREP.nc"]
 
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)
@@ -942,6 +953,10 @@ class SurfexWorker(_S2MWorker):
             # For reforecast:
             self.link_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_link),
                                     required_link)
+        for required_copy in list_files_copy_ifnotprovided:
+            self.copy_ifnotprovided(self.system.path.join(rundir, required_copy), required_copy)
+            self.copy_ifnotprovided(self.system.path.join(self.system.path.dirname(thisdir), required_copy),
+                                    required_link)
 
         rdict = self._surfex_task(rundir, thisdir, rdict)
         self.postfix()
@@ -949,7 +964,7 @@ class SurfexWorker(_S2MWorker):
 
     def _surfex_task(self, rundir, thisdir, rdict):
         # ESCROC cases: each member will need to have its own namelist
-        # meteo ensemble cases: the forcing modification must be applied to all members and the namelist
+        # meteo ensemble cases: the forcin<g modification must be applied to all members and the namelist
         # generation requires that the forcing generation has already be done. Therefore, preprocessing
         # is done in the offline algo in all these cases
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
@@ -1070,8 +1085,6 @@ class SurfexWorker(_S2MWorker):
                     newnam.close()
                 if self.daily:
                     updateloc = True
-                else:
-                    namelist_ready = True
 
             if changenamelistdaily:
                 # Change the namelist
