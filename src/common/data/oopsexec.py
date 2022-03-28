@@ -28,7 +28,7 @@ class OOPSBinary(NWPModel):
                     values = ['oopsbinary', ],
                 ),
                 gvar = dict(
-                    default = 'binary_[run]',
+                    default = 'master_[run]',
                 ),
                 run = dict(
                     outcast = ['ootestcomponent', ]
