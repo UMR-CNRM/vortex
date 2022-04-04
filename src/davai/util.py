@@ -13,6 +13,7 @@ import io
 import re
 import tarfile
 import tempfile
+import json
 
 from bronx.fancies import loggers
 
@@ -237,7 +238,7 @@ class SummariesStack(object):
             match = self._re_tasksummary.match(f)
             if match:
                 task = match.group('task')
-                with open(self.cache.fullpath(f), 'r') as _f:
+                with io.open(self.cache.fullpath(f), 'r') as _f:
                     ts = json.load(_f)
                 scope = match.group('scope')
                 if scope == 'consistency':  # IGNORED for now
@@ -252,10 +253,28 @@ class SummariesStack(object):
         if print_it:
             fmt = '{:<60} {:10} {:>10}'
             print("In summaries stack:", self.cache.fullpath(''))
-            print("-"*82)
+            print("-" * 82)
             print(fmt.format("Task", "Status", "continuity"))
-            print("-"*82)
+            print("-" * 82)
             for task, status in XP_status.items():
                 print(fmt.format(task, status['Status'], status.get('continuity', '-')))
-            print("-"*82)
+            print("-" * 82)
         return XP_status
+
+    def task_summary_fullpath(self, task):
+        """Print fullpath of a task summaries in cache."""
+        t = sessions.current()
+        kind_desc = {'itself': "Execution summary",
+                     'consistency': "Potential comparison to other task of the same XP",
+                     'continuity': "Comparison to reference"}
+        print("=" * 80)
+        print("Task: {}".format(task))
+        print("-" * (len(task) + 6) + "\n")
+        for k in ['itself', 'consistency', 'continuity']:
+            f = '.'.join([task, k, 'json'])
+            fp = self.cache.fullpath(f)
+            assert t.sh.path.exists(fp)
+            print("* {}:".format(kind_desc[k]))
+            print("  " + "-" * len(kind_desc[k]))
+            print("  => {}\n".format(fp))
+        print("=" * 80)

@@ -23,9 +23,10 @@ JoTable check succeeded for: SCREENING JOB    T1198 NCONF=     1 NSIM4D=     0 N
 
 _BIGDIFFS = """\
 Norms   check succeeded for steps:
+  (NSIM4D=None, subroutine=SUGRIDF, NSTEP=None)
   (NSIM4D=None, subroutine=OPENFA, NSTEP=None, FILENAME=ICMSHSCREINIT)
   (NSIM4D=None, subroutine=STEPO, NSTEP=0, CDCONF=T00000000)
-  (NSIM4D=None, subroutine=OPENFA, NSTEP=60, FILENAME=ICMSHSCRESURF)
+  (NSIM4D=None, subroutine=SUGRIDF, NSTEP=60)
   (NSIM4D=0, subroutine=CNT4, NSTEP=0 (None))
 Norms   check FAILED    for steps:
   (NSIM4D=None, subroutine=WRMLPPA, NSTEP=30, CDCONF=A)

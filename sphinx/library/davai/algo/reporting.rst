@@ -33,3 +33,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: CiboulaiXPsetup_mkjob
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

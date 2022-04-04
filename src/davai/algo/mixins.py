@@ -26,14 +26,14 @@ __all__ = []
 
 def context_info_for_task_summary(context):
     """Get some infos from context for task summary."""
-    info = {'rundir':context.rundir}
+    info = {'rundir': context.rundir}
     for k in ('MTOOL_STEP_ABORT', 'MTOOL_STEP_DEPOT', 'MTOOL_STEP_SPOOL'):
         v = context.env.get(k, None)
         if v:
             info[k] = v
     if context.rundir and 'MTOOL_STEP_ABORT' in info and 'MTOOL_STEP_SPOOL' in info:
         abort_dir = context.system.path.join(info['MTOOL_STEP_ABORT'],
-                                             context.rundir[len(info['MTOOL_STEP_SPOOL'])+1:])
+                                             context.rundir[len(info['MTOOL_STEP_SPOOL']) + 1:])
         info['(if aborted)'] = abort_dir
     return info
 

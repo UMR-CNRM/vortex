@@ -697,6 +697,6 @@ class OOPSAnalysisWithScreening(OOPSAnalysis):
 
     def prepare(self, rh, opts):
         if self.withscreening:
-          self._OOPSODB_CCMA_DIRECT = True
+            self._OOPSODB_CCMA_DIRECT = True
         """Setup ODB stuff."""
         super(OOPSMinim, self).prepare(rh, opts)

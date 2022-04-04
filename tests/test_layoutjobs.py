@@ -72,6 +72,7 @@ class TestMkjobDetect(unittest.TestCase):
         self.assertDictEqual(opts, dict(xpid='ABCD', target_appbase='truc'))
 
     def test_detect2(self):
+        self.maxDiff = None
         for opts in ({'xpid': 'ABCD', 'name': 'montest_20180101T0000P_mb001',
                       'inovativedate': '2019010100', 'newstuff': 'toto',
                       'manydates': '2019010100-2019010200-PT6H'},

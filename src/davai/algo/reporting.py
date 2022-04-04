@@ -10,8 +10,6 @@ from bronx.fancies import loggers
 from vortex.syntax import stdattrs
 from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
                                     AlgoComponentError)
-from gco.tools import uenv, genv
-
 from davai import util
 from davai.algo.mixins import context_info_for_task_summary
 
