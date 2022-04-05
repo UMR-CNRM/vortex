@@ -147,16 +147,19 @@ class GitDecoMixin(AlgoComponentDecoMixin):
             yield
 
 
-class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
-                                     _CrashWitnessDecoMixin):
-    """Make an incremental pack (gmkpack) with sources from a IA4H Git ref."""
+class IAL_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                                    _CrashWitnessDecoMixin):
+    """
+    DEPRECATED
+    Make an incremental pack (gmkpack) with sources from a IAL Git ref.
+    """
 
     _footprint = [
         dict(
-            info = "Make an incremental pack (gmkpack) with sources from a IA4H Git ref.",
+            info = "Make an incremental pack (gmkpack) with sources from a IAL Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_gitref2incrpack'],
+                    values   = ['ia4h_gitref2incrpack', 'ial_gitref2incrpack'],
                 ),
                 compiler_label = dict(
                     info = "Gmkpack compiler label.",
@@ -199,30 +202,35 @@ class IA4H_gitref_to_IncrementalPack(AlgoComponent, GmkpackDecoMixin, GitDecoMix
                 self._attributes['rootpack'] = rootpack
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_incrpack  # @UnresolvedImport
-        with self._with_potential_ssh_tunnel():
-            IA4H_gitref_to_incrpack(self.repository,
-                                    self.git_ref,
-                                    self.compiler_label,
-                                    start_ref=self.start_ref,
-                                    packname=self.packname,
-                                    compiler_flag=self.compiler_flag,
-                                    preexisting_pack=self.preexisting_pack,
-                                    clean_if_preexisting=self.cleanpack,
-                                    rootpack=self.rootpack,
-                                    homepack=self.homepack)
+        from ial_build.algos import IALgitref2pack  # @UnresolvedImport
+        if self.start_ref is not None:
+            raise NotImplementedError("Deprecated argument: 'start_ref'")
+        if self.packname not in (None, '__guess__'):
+            raise NotImplementedError("Deprecated argument: 'packname'")
+        IALgitref2pack(self.git_ref,
+                       self.repository,
+                       pack_type='incr',
+                       preexisting_pack=self.preexisting_pack,
+                       clean_if_preexisting=self.cleanpack,
+                       compiler_label=self.compiler_label,
+                       compiler_flag=self.compiler_flag,
+                       homepack=self.homepack,
+                       rootpack=self.rootpack)
 
 
-class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
-                              _CrashWitnessDecoMixin):
-    """Make a main pack (gmkpack) with sources from a IA4H Git ref."""
+class IAL_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                             _CrashWitnessDecoMixin):
+    """
+    DEPRECATED
+    Make a main pack (gmkpack) with sources from a IAL Git ref.
+    """
 
     _footprint = [
         dict(
-            info = "Make a main pack (gmkpack) with sources from a IA4H Git ref.",
+            info = "Make a main pack (gmkpack) with sources from a IAL Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['ia4h_gitref2mainpack'],
+                    values   = ['ia4h_gitref2mainpack', 'ial_gitref2mainpack'],
                 ),
                 compiler_label = dict(
                     info = "Gmkpack compiler label.",
@@ -235,7 +243,7 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                 populate_filter_file = dict(
                     info = ("File of files to be filtered at populate time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inconfig__' will read according file in config of ial_build package; " +
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -243,7 +251,7 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
                 link_filter_file = dict(
                     info = ("File of symbols to be filtered at link time. " +
                             "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
+                            "'__inconfig__' will read according file in config of ial_build package; " +
                             "'__inview__' will read according file in Git view."),
                     optional = True,
                     default = '__inconfig__'
@@ -253,51 +261,123 @@ class IA4H_gitref_to_MainPack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import IA4H_gitref_to_main_pack  # @UnresolvedImport
-        with self._with_potential_ssh_tunnel():
-            IA4H_gitref_to_main_pack(self.repository,
-                                     self.git_ref,
-                                     self.compiler_label,
-                                     compiler_flag=self.compiler_flag,
-                                     homepack=self.homepack,
-                                     populate_filter_file=self.populate_filter_file,
-                                     link_filter_file=self.link_filter_file)
+        from ial_build.algos import IALgitref2pack  # @UnresolvedImport
+        if self.populate_filter_file not in (None, '__inconfig__'):
+            raise NotImplementedError("Deprecated argument: 'populate_filter_file'")
+        if self.link_filter_file not in (None, '__inconfig__'):
+            raise NotImplementedError("Deprecated argument: 'link_filter_file'")
+        IALgitref2pack(self.git_ref,
+                       self.repository,
+                       pack_type=self.pack_type,
+                       preexisting_pack=self.preexisting_pack,
+                       clean_if_preexisting=self.cleanpack,
+                       compiler_label=self.compiler_label,
+                       compiler_flag=self.compiler_flag,
+                       homepack=self.homepack)
 
 
-class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
-                         _CrashWitnessDecoMixin):
-    """Make a main pack (gmkpack) with sources from a bundle."""
+class IALgitref2Pack(AlgoComponent, GmkpackDecoMixin, GitDecoMixin,
+                     _CrashWitnessDecoMixin):
+    """Make a pack (gmkpack) with sources from a IAL Git ref."""
 
     _footprint = [
         dict(
-            info = "Make a main pack (gmkpack) with sources from a bundle.",
+            info = "Make a pack (gmkpack) with sources from a IAL Git ref.",
             attr = dict(
                 kind = dict(
-                    values   = ['bundle2mainpack'],
+                    values   = ['ialgitref2pack'],
+                ),
+                pack_type = dict(
+                    info = "Pack type, whether main (full) or incremental.",
+                    values = ['incr', 'main'],
+                    optional = True,
+                    default = 'incr',
                 ),
                 compiler_label = dict(
                     info = "Gmkpack compiler label.",
+                    optional = True,
+                    default = None
                 ),
                 compiler_flag = dict(
                     info = "Gmkpack compiler flag.",
                     optional = True,
                     default = None
                 ),
-                populate_filter_file = dict(
-                    info = ("File of files to be filtered at populate time. " +
-                            "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; " +
-                            "'__inview__' will read according file in Git view."),
+                preexisting_pack = dict(
+                    info = "Set to True if the pack preexists.",
+                    type = bool,
                     optional = True,
-                    default = '__inconfig__'
+                    default = False,
                 ),
-                link_filter_file = dict(
-                    info = ("File of symbols to be filtered at link time. " +
-                            "Special values: " +
-                            "'__inconfig__' will read according file in config of ia4h_scm package; "
-                            "'__inview__' will read according file in Git view."),
+                rootpack = dict(
+                    info = "Directory in which to find rootpack(s).",
                     optional = True,
-                    default = '__inconfig__'
+                    default = None,
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        from ial_build.algos import IALgitref2pack  # @UnresolvedImport
+        IALgitref2pack(self.git_ref,
+                       self.repository,
+                       pack_type=self.pack_type,
+                       preexisting_pack=self.preexisting_pack,
+                       clean_if_preexisting=self.cleanpack,
+                       compiler_label=self.compiler_label,
+                       compiler_flag=self.compiler_flag,
+                       homepack=self.homepack,
+                       rootpack=self.rootpack)
+
+
+class Bundle2Pack(AlgoComponent, GmkpackDecoMixin,
+                  _CrashWitnessDecoMixin):
+    """Make a pack (gmkpack) with sources from a bundle."""
+
+    _footprint = [
+        dict(
+            info = "Make a pack (gmkpack) with sources from a bundle.",
+            attr = dict(
+                engine = dict(
+                    values = ['algo'],
+                    optional = True,
+                    default = 'algo',
+                ),
+                kind = dict(
+                    values = ['bundle2pack'],
+                ),
+                bundle_file = dict(
+                    info = "Path to bundle file. If not provided, look up resources.",
+                    optional = True,
+                    default = None
+                ),
+                pack_type = dict(
+                    info = "Pack type, whether main (full) or incremental.",
+                    values = ['incr', 'main'],
+                    optional = True,
+                    default = 'incr',
+                ),
+                compiler_label = dict(
+                    info = "Gmkpack compiler label.",
+                    optional = True,
+                    default = None
+                ),
+                compiler_flag = dict(
+                    info = "Gmkpack compiler flag.",
+                    optional = True,
+                    default = None
+                ),
+                preexisting_pack = dict(
+                    info = "Set to True if the pack preexists.",
+                    type = bool,
+                    optional = True,
+                    default = False,
+                ),
+                rootpack = dict(
+                    info = "Directory in which to find rootpack(s).",
+                    optional = True,
+                    default = None,
                 ),
                 bundle_cache_dir = dict(
                     info = ("Cache directory in which to download/update repositories. " +
@@ -307,7 +387,9 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
                 ),
                 update_git_repositories = dict(
                     info = ("If False, take git repositories as they are, " +
-                            "without trying to update (fetch/checkout/pull)"),
+                            "without trying to update (fetch/checkout/pull). " +
+                            "(!) Required to get uncommited code from a repo (with according bundle_cache_dir), " +
+                            "but projects versions may not be consistent with versions requested in bundle file."),
                     optional = True,
                     type = bool,
                     default = True
@@ -324,18 +406,26 @@ class Bundle_to_MainPack(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import bundle_to_main_pack  # @UnresolvedImport
-        bundle = [s for s in self.context.sequence.effective_inputs(role=('Bundle',))]
-        bundle_path = bundle[0].rh.container.localpath()
-        bundle_to_main_pack(bundle_path,
-                            self.compiler_label,
-                            compiler_flag=self.compiler_flag,
-                            bundle_cache_dir=self.bundle_cache_dir,
-                            homepack=self.homepack,
-                            populate_filter_file=self.populate_filter_file,
-                            link_filter_file=self.link_filter_file,
-                            update_git_repositories=self.update_git_repositories,
-                            bundle_download_threads=self.bundle_download_threads)
+        from ial_build.algos import bundle2pack  # @UnresolvedImport
+        if self.bundle_file is None:
+            bundle_r = [s for s in self.context.sequence.effective_inputs(role=('Bundle',))]
+            if len(bundle_r) > 1:
+                raise ValueError("Too many bundle resources found.")
+            elif len(bundle_r) == 0:
+                raise ValueError("No bundle resources found, nor is bundle file explicitly provided.")
+            bundle_file = bundle_r[0].rh.container.localpath()
+        else:
+            bundle_file = self.bundle_file
+        bundle2pack(bundle_file,
+                    pack_type=self.pack_type,
+                    update=self.update_git_repositories,
+                    preexisting_pack=self.preexisting_pack,
+                    clean_if_preexisting=self.cleanpack,
+                    bundle_cache_dir=self.bundle_cache_dir,
+                    compiler_label=self.compiler_label,
+                    compiler_flag=self.compiler_flag,
+                    homepack=self.homepack,
+                    rootpack=self.rootpack)
 
 
 class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
@@ -380,7 +470,7 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        from ia4h_scm.algos import pack_build_executables  # @UnresolvedImport
+        from ial_build.algos import pack_build_executables  # @UnresolvedImport
         pack_build_executables(self.packname,
                                programs=self.programs,
                                silent=True,  # so that output goes in a file
@@ -390,3 +480,15 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
                                homepack=self.homepack,
                                fatal_build_failure=self.fatal_build_failure,
                                dump_build_report=True)
+
+    def postfix(self, rh, kw):  # @UnusedVariable
+        from ial_build.pygmkpack import GmkpackTool  # @UnresolvedImport
+        bindir = self.system.path.join(GmkpackTool.get_homepack(self.homepack), self.packname, 'bin')
+        b2kind = {'MASTERODB': 'ifsmodel', 'PGD': 'buildpgd',
+                  'OOTESTVAR': 'oopsbinary-ootestcomponent',
+                  'OOVAR': 'oopsbinary-oovar'}
+        # copy binaries on workdir
+        for p in self.system.listdir(bindir):
+            self.system.copyfile(self.system.path.join(bindir, p),
+                                 'justbuilt.{}.x'.format(b2kind.get(p, p.lower()))
+                                 )

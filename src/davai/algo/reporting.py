@@ -10,92 +10,13 @@ from bronx.fancies import loggers
 from vortex.syntax import stdattrs
 from vortex.algo.components import (AlgoComponent, AlgoComponentDecoMixin,
                                     AlgoComponentError)
-from gco.tools import uenv, genv
-
 from davai import util
+from davai.algo.mixins import context_info_for_task_summary
 
 #: No automatic export
 __all__ = []
 
 logger = loggers.getLogger(__name__)
-
-
-class XpidRegister(AlgoComponent):
-    """
-    Register metadata about the experiment.
-    """
-
-    _footprint = [
-        stdattrs.xpid,
-        dict(
-            info = "Save characteristics of the testing experiment.",
-            attr = dict(
-                kind = dict(
-                    values   = ['xpid_register'],
-                ),
-                experiment = dict(
-                    alias = ('xpid', )
-                ),
-                ref_xpid = dict(
-                    info = "Identifier of the Reference Experiment",
-                    type = stdattrs.XPid,
-                    optional = True,
-                    default = None,
-                    access = 'rwx'
-                ),
-                appenv = dict(
-                    info = "genv or uenv used for app-specific consts.",
-                ),
-                commonenv = dict(
-                    info = 'genv or uenv used for binaries and so - common consts.',
-                ),
-                input_store = dict(
-                    info = "The store in which to pick initial resources"
-                ),
-                usecase = dict(
-                    info = ("Usecase: ELP vs. NRV // Exploration and Localization of Problems vs. " +
-                            "Non-Regression Validation."),
-                ),
-            )
-        )
-    ]
-
-    def prepare(self, rh, opts):  # @UnusedVariable
-        if self.ref_xpid == self.experiment:
-            self.ref_xpid = None
-
-    def execute(self, rh, kw):  # @UnusedVariable
-        import davai_tbx  # @UnresolvedImport
-        davai_tbx.util.write_xpinfo(user=self.env['USER'],
-                                    xpid=self.experiment,
-                                    ref_xpid=self.ref_xpid,
-                                    appenv=self.appenv,
-                                    commonenv=self.commonenv,
-                                    input_store=self.input_store,
-                                    usecase=self.usecase,
-                                    appenv_details=self.appenv_details,
-                                    commonenv_details=self.commonenv_details)
-
-    @property
-    def appenv_details(self):
-        return self._get_env(self.appenv)
-
-    @property
-    def commonenv_details(self):
-        return self._get_env(self.commonenv)
-
-    @classmethod
-    def _get_env(cls, env):
-        if any([env.startswith(scheme) for scheme in ('uget:', 'uenv:')]):
-            # uenv
-            details = uenv.nicedump(env,
-                                    scheme='uget',
-                                    netloc='uget.multi.fr')
-        else:
-            # genv
-            details = ['%s="%s"' % (k, v)
-                       for (k, v) in genv.autofill(env).items()]
-        return details
 
 
 class XPsetup(AlgoComponent):
@@ -117,9 +38,35 @@ class XPsetup(AlgoComponent):
     ]
 
     def execute(self, rh, kw):  # @UnusedVariable
-        import davai_tbx  # @UnresolvedImport
-        xpm = davai_tbx.util.XPMetadata(self.experiment)
+        from davai_taskutil.experiment import XPMetadata  # @UnresolvedImport
+        xpm = XPMetadata(self.experiment)
         xpm.write()
+
+
+class CiboulaiXPsetup_mkjob(AlgoComponent):
+    """Collect metadata about the experiment."""
+
+    _footprint = [
+        stdattrs.xpid,
+        dict(
+            info = "Save characteristics of the tested experiment.",
+            attr = dict(
+                kind = dict(
+                    values   = ['ciboulai_xpsetup_mkjob'],
+                ),
+                experiment = dict(
+                    alias = ('xpid', )
+                ),
+                conf = dict(
+                    type = FPDict
+                ),
+            )
+        )
+    ]
+
+    def execute(self, rh, kw):  # @UnusedVariable
+        from davai_taskutil.experiment import gather_mkjob_xp_conf  # @UnresolvedImport
+        gather_mkjob_xp_conf(self.experiment, self.conf)
 
 
 class _FailedExpertiseDecoMixin(AlgoComponentDecoMixin):
@@ -192,15 +139,14 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
     ]
 
     def prepare(self, rh, opts):  # @UnusedVariable
-        import davai_tbx  # @UnresolvedImport
+        from ial_expertise.task import ExpertBoard  # @UnresolvedImport
         # io_poll if needed
         for p in ('ICMSH', 'PF', 'GRIBPF'):
             if self.system.path.exists('io_poll.todo.{}'.format(p)):
                 self.system.io_poll(p)
         for e in self.experts:
             e.setdefault('fatal_exceptions', self.fatal_exceptions)
-        self._inner = davai_tbx.expertise.ExpertBoard(self.experts,
-                                                      lead_expert=self.lead_expert)
+        self._inner = ExpertBoard(self.experts, lead_expert=self.lead_expert)
 
     def execute(self, rh, kw):  # @UnusedVariable
         if self.ignore_reference:
@@ -215,7 +161,7 @@ class Expertise(AlgoComponent, _FailedExpertiseDecoMixin):
             consistency_resources = self._prepare_ref_resources(consistency_resources, 'Consistency')
             continuity_resources = self._prepare_ref_resources(continuity_resources, 'Continuity')
         if hasattr(self._inner, 'remember_context'):
-            self._inner.remember_context(self.context)
+            self._inner.remember_context(context_info_for_task_summary(self.context))
         self._inner.remember_listings(self.promises, continuity_resources)
         self._inner.process(consistency_resources, continuity_resources)
 

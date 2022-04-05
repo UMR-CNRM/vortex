@@ -56,6 +56,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: StaticTaskInfo
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: SectionsSlice
    :show-inheritance:
    :members:

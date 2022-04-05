@@ -7,13 +7,15 @@ Various Resources for executables used by the OOPS software.
 from __future__ import print_function, absolute_import, division, unicode_literals
 
 from vortex.data.executables import NWPModel
-from gco.syntax.stdattrs import gvar, arpifs_cycle
-from common.syntax.stdattrs import oops_run
+from gco.syntax.stdattrs import gvar, arpifs_cycle, executable_flavour_deco
+from common.syntax.stdattrs import oops_run, known_oops_testcomponent_runs
+from vortex.syntax.stddeco import namebuilding_append
 
 #: No automatic export
 __all__ = []
 
 
+@namebuilding_append('src', lambda self: self.run)
 class OOPSBinary(NWPModel):
     """Yet an other OOPS Binary."""
 
@@ -21,6 +23,7 @@ class OOPSBinary(NWPModel):
         arpifs_cycle,
         gvar,
         oops_run,
+        executable_flavour_deco,
         dict(
             info = 'OOPS Binary: an OOPS binary, dedicated to a task (a run in OOPS namespace).',
             attr = dict(
@@ -31,7 +34,7 @@ class OOPSBinary(NWPModel):
                     default = 'master_[run]',
                 ),
                 run = dict(
-                    outcast = ['ootestcomponent', ]
+                    outcast = known_oops_testcomponent_runs,
                 ),
             )
         )
@@ -56,7 +59,7 @@ class OOPSTestComponent(OOPSBinary):
         info = 'OOPS Component Test: can run a sub-test or a family of sub-tests',
         attr = dict(
             run = dict(
-                values   = ['ootestcomponent', ],
+                values   = known_oops_testcomponent_runs,
                 outcast  = [],
             ),
         ),

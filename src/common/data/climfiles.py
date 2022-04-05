@@ -95,7 +95,7 @@ class ClimLAM(GenericClim):
         info = 'Model climatology for Local Area Models',
         attr = dict(
             model = dict(
-                values = ['aladin', 'arome']
+                values = ['aladin', 'arome', 'alaro', 'harmoniearome']
             ),
             gdomain = dict(
                 type = GenvDomain,

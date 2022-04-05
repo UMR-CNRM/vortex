@@ -266,5 +266,5 @@ executable_flavour = footprints.Footprint(
 executable_flavour_deco = footprints.DecorativeFootprint(
     executable_flavour,
     decorator=[genv_executable_flavour,
-               namebuilding_append('src', lambda self: [self.flavour])]
+               namebuilding_append('src', lambda self: [self.flavour], none_discard=True)]
 )
