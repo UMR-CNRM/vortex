@@ -239,10 +239,10 @@ class _SafranWorker(_S2MWorker):
     def set_actual_period(self):
         """Guess the dates that are to be covered by the forecast."""
         if self.datebegin.hour > self.day_begins_at:
-            self.datebegin.day = self.datebegin.day + 1
+            self.datebegin = self.datebegin + Period(days=1)
         self.datebegin.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
         if self.dateend.hour < self.day_begins_at:
-            self.dateend.day = self.dateend.day - 1
+            self.dateend.day = self.dateend.day - Period(days=1)
         self.dateend.replace(hour=self.day_begins_at, minute=0, second=0, microsecond=0)
 
     @property
@@ -321,10 +321,13 @@ class _SafranWorker(_S2MWorker):
         missing_files = False
         for filename in filenames:
             if not self.system.path.exists(filename):
-                missing_files = True
+                # SAFRAN guess files can be named 'PYYMMDDHH' or 'EYYMMDDHH'
+                if not (filename.startswith('P') and self.system.path.exists('E' + filename[1:])):
+                    missing_files = True
         if missing_files:
             if self.execution not in ['reforecast', ]:
-                rdict['rc'] = InputCheckerError('Some mandatory flow resources are missing.')
+                rdict['rc'] = InputCheckerError(f'The mandatory flow resource "{filename}" is missing.')
+                # TODO : Faire planter maintenant sans essayer de lancer SAFRAN ?
             # In analysis cases (oper or research) missing guess are not fatal since SAFRAN uses
             # a climatological guess that is corrected by the observations
             if self.execution not in ['analysis', 'reanalysis']:
@@ -344,10 +347,12 @@ class _SafranWorker(_S2MWorker):
 
     def get_guess(self, dates, prefix='P', fatal=False, dt=3):
         """Try to guess the corresponding input file."""
-        # TODO : Ajouter un control de cohérence sur les cumuls : on ne doit pas
-        # mélanger des cumuls sur 6h avec des cumuls sur 24h
         actual_dates = list()
-        for date in dates:
+        # Control de cohérence sur les cumuls : on ne doit pas mélanger des cumuls sur 6h 
+        # avec des cumuls sur 24h. Le bool cumul permet de forcer la recherche de guess
+        # de précipittion cumulées dès lors qu'une échéance 6h est absente.
+        cumul = False
+        for i, date in enumerate(dates):
             p = '{0:s}{1:s}'.format(prefix, date.yymdh)
             # Cas d'un fichier P ou E unique par echeance et utilisable par SAFRAN
             if self.system.path.exists(p) and not self.system.path.islink(p):
@@ -372,21 +377,36 @@ class _SafranWorker(_S2MWorker):
                     #        The 'deterministic member' takes the 6h ARPEGE analysis
                     #        All PEARP members take the forecasts from the 6h J lead time
                     #     2) From J 6h to J+4 6h
-                    #        The deterministic member takes the forecasts from the 0h J lead time
-                    #        All PEARP members take the forecats froms the 18h J-1 lead time
+                    #        The deterministic member takes the forecasts from the (D, 0:00)  lead time
+                    #        All PEARP members now also take the forecats from the (D, 0:00) lead time
+                    #        but used to take he forecasts from (D-1, 18:00) lead time before the 2022
+                    #        PNT DBLE chain. This code works for both cases
                     d = date - Period(hours=6)
                     oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, 6)
-                    if self.system.path.exists(oldp):
+                    if self.system.path.exists(oldp) and not cumul:
+                        # This part is still necessary for the ARPEGE-based member that uses 6h assimilation guess
+                        # from (D-1, 6:00) to (D, 6:00)
                         self.link_in(oldp, p)
                         actual_dates.append(date)
                     else:
-                        if dates[0] == self.datebegin:
+                        cumul = True # If no 6h forecast is available at 1 ech, SAFRAN needs 24h cumulates 
+                                     # precipitation guess for the whole day
+                        # The goal here is to find the first ech "t" that could be available
+                        # for the current date
+                        if dates[0] == self.datebegin: # Cas de la pseudo prévision de J-1 6h à J 6h
+                            # t = number of hours since self.datebegin (D-1 at 6:00)
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600)
-                        else:
+                                    (date - self.datebegin).seconds / 3600) # (date - self.datebegin).seconds
+                                                                            # returns the number of hours since
+                                                                            # last 6:00
+                        else: # Cas de la prévision dec J 6h à J+4 6h
+                            # t = number of hours since (D-1) at 18:00 (PEARP lead time used until the 2022 PNT
+                            # DBLE chain. This works also with the (D, 6:00) lead time used for ARPEGE (and PEARP
+                            # from the 2022 PNT DBLE chain on).
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600) - 18
-                else:
+                                    (date - self.datebegin).seconds / 3600) - 18 # 18 is the difference between
+                                                                                 # D-1 (6:00) and D (0:00)
+                else: # Analysis execution
                     if date == dates[-1]:
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
@@ -1290,6 +1310,14 @@ class Guess(ParaExpresso):
         ddict['reforecast'] = self.reforecast
         return ddict
 
+    def _default_pre_execute(self, rh, opts):
+        """Add concatenation of the 'METADATA' grib file here since it is a common ressource"""
+        concat = self.system.forcepack(source='METADATA.grib', fmt='grib')
+        if concat != 'METADATA.grib':
+            self.system.rm('METADATA.grib', fmt='grib')
+            self.system.mv(concat, 'METADATA.grib', fmt='grib')
+        super(Guess, self)._default_pre_execute(rh, opts)
+
     def execute(self, rh, opts):
         """Loop on the various initial conditions provided."""
         self._default_pre_execute(rh, opts)
@@ -1424,8 +1452,6 @@ class S2MComponent(ParaBlindRun):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        # Note: The number of members and the name of the subdirectories could be
-        # auto-detected using the sequence
         cpl_model = self.get_origin(rh, opts)
         subdirs = self.get_subdirs(rh, opts)
         self._add_instructions(common_i, dict(subdir=subdirs, deterministic=cpl_model))
@@ -1611,6 +1637,12 @@ class S2MReforecast(S2MComponent):
                 values   = ['reforecast'],
                 optional = False,
             ),
+            datebegin = dict(
+                optional = True,
+            ),
+            dateend   = dict(
+                optional = True,
+            ),
         ),
     )
 
@@ -1629,10 +1661,8 @@ class S2MReforecast(S2MComponent):
         self._default_pre_execute(rh, opts)
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
-        # Note: The number of members and the name of the subdirectories could be
-        # auto-detected using the sequence
         subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
-        deterministic = [True] * len(subdirs)
+        deterministic = [True] * len(subdirs) # Each simulation day is important
         self._add_instructions(common_i, dict(subdir=subdirs,
                                               datebegin=list_dates_begin,
                                               dateend=list_dates_end,
@@ -1647,8 +1677,11 @@ class S2MReforecast(S2MComponent):
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
-                list_dates_begin.append(am.rh.resource.date + Period(hours=12))
-                list_dates_end.append(am.rh.resource.date + Period(hours=108))
+                # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
+                list_dates_begin.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour))
+                # The last ech in the corresponding footprint must correspond to 6:00 at day D+4
+                # WARNING : There is no check that this resource is effectively here...
+                list_dates_end.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour) + Period(days=4))
 
         return subdirs, list_dates_begin, list_dates_end
 
@@ -1838,15 +1871,14 @@ class SurfexComponentMultiDates(SurfexComponent):
     )
 
     def get_dates(self, subdirs):
-        listdatebegin_str = map(self.system.path.dirname, subdirs)
 
         # Pour l'instant je fais le porc parce que le passage de dateend ne marche pas du tout
         duration = Period(days=4)
 
         listdatebegin = []
         listdateend = []
-        for datebegin_str in listdatebegin_str:
-            datebegin = Date(datebegin_str)
+        for datebegin_str in subdirs:
+            datebegin = Date(datebegin_str.split('/')[0])
             listdatebegin.append(datebegin)
             listdateend.append(datebegin + duration)
 
