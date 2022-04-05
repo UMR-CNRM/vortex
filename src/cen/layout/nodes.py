@@ -230,7 +230,12 @@ class S2MTaskMixIn(object):
         if self.conf.geometry.area == 'postes':
             return "safran", "postes", self.conf.geometry.list.split(",")
         else:
-            return "safran", "massifs", [self.conf.geometry.area[0:3]]
+            if self.conf.geometry.slopes:
+                alternate_geo = [self.conf.geometry.tag.replace('allslopes', 'flat')]
+            else:
+                alternate_geo =  [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
+
+            return "safran", "massifs", alternate_geo
 
     def get_block_safran_from_geometry(self):
         if self.conf.geometry.area == 'postes':
