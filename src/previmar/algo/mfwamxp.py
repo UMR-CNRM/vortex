@@ -152,7 +152,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             datefin = (rhgrib.resource.date + fcterm).compact()
             datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             if self.isana:
-                datefinana = rhgrib.resource.date
+                datefinana = datefin
             else:
                 datefinana = datedebana
         else:
