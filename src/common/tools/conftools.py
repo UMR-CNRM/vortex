@@ -779,8 +779,11 @@ class ArpIfsForecastTermConfTool(ConfTool):
       ...                                 extra_fp_terms_def=dict(
       ...                                     aero=dict(production={0:"0-48-3"}),
       ...                                     foo=dict(default={"default":"2,3"})
-      ...                                     )
-      ...                                 )
+      ...                                 ),
+      ...                                 secondary_diag_terms_def=dict(
+      ...                                     labo=dict(production={0: "0-12-1"})
+      ...                                 ),
+      ...      )
 
     The forecast term ca be retrieved:
 
@@ -818,7 +821,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
       >>> print(','.join([str(t) for t in ct.inline_terms('assim', 6)]))
       0,3,6
       >>> print(','.join([str(t) for t in ct.inline_terms('production', 0)]))
-      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
+      0,1,2,3,4,5,6,7,8,9,10,11,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
       >>> print(','.join([str(t) for t in ct.inline_terms('production', 12)]))
       0,3,6,9,12,15,18,21,24
 
@@ -831,7 +834,7 @@ class ArpIfsForecastTermConfTool(ConfTool):
       >>> print(','.join([str(t) for t in ct.no_inline.inline_terms('production', 0)]))
       <BLANKLINE>
       >>> print(','.join([str(t) for t in ct.no_inline.diag_terms('production', 0)]))
-      0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
+      0,1,2,3,4,5,6,7,8,9,10,11,12,15,18,21,24,27,30,33,36,39,42,45,48,54,60,66,72,78,84,90,96,102
 
     The list of terms when some offline fullpos job is needed (for any of the
     domains):
@@ -902,6 +905,15 @@ class ArpIfsForecastTermConfTool(ConfTool):
       aero: 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48
       foo: 2,3
 
+    The list of terms associated to secondary diagnostics can be obtained
+    ("secondary diagnostics" stands for diagnostics that are based on files
+    pre-calculated by the inline/offline fullpos):
+
+      >>> print(','.join([str(t) for t in ct.labo_terms('production', 0)]))
+      0,1,2,3,4,5,6,7,8,9,10,11,12
+      >>> print(','.join([str(t) for t in ct.labo_terms('production', 12)]))
+      <BLANKLINE>
+
     """
 
     _footprint = dict(
@@ -953,6 +965,15 @@ class ArpIfsForecastTermConfTool(ConfTool):
                 type=dict,
                 optional=True,
             ),
+            secondary_diag_terms_def=dict(
+                info=("The forecast's terms when secondary diagnostics are computed. " +
+                      "Secondary dignostics are based on diagnostics previously created by " +
+                      "the inline/offline diag fullpos (see diag_fp_terms_def)." +
+                      "The dictionary has an additional level (describing the 'name' of the " +
+                      "secondary diags"),
+                type=dict,
+                optional=True,
+            ),
             use_inline_fp = dict(
                 info = 'Use inline Fullpos to compute "core_fp_terms"',
                 type = bool,
@@ -985,6 +1006,17 @@ class ArpIfsForecastTermConfTool(ConfTool):
                                                                      'extra_fp_terms_def[{:s}]'.format(k),
                                                                      cast=self._cast_timerangex)
                                   for k, v in self._x_extra_fp_terms.items()}
+        self._x_secondary_diag_terms_def = (dict()
+                                            if self.secondary_diag_terms_def is None
+                                            else self.secondary_diag_terms_def)
+        if not all([isinstance(v, dict) for v in self._x_secondary_diag_terms_def.values()]):
+            raise ValueError("extra_fp_terms values need to be dictionaries")
+        self._x_secondary_diag_terms_def = {
+            k: self._check_data_keys_and_times(v,
+                                               'secondary_diag_terms_def[{:s}]'.format(k),
+                                               cast=self._cast_timerangex)
+            for k, v in self._x_secondary_diag_terms_def.items()
+        }
         self._lookup_cache = dict()
         self._lookup_rangex_cache = dict()
         self._no_inline_cache = None
@@ -1117,7 +1149,10 @@ class ArpIfsForecastTermConfTool(ConfTool):
     def inline_terms(self, cutoff, hh):
         """The list of terms for inline diagnostics."""
         if self.use_inline_fp:
-            return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
+            return sorted(
+                set(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)) |
+                self._secondary_diag_terms_set(cutoff, hh)
+            )
         else:
             return list()
 
@@ -1126,7 +1161,10 @@ class ArpIfsForecastTermConfTool(ConfTool):
         if self.use_inline_fp:
             return list()
         else:
-            return self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)
+            return sorted(
+                set(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh)) |
+                self._secondary_diag_terms_set(cutoff, hh)
+            )
 
     def diag_terms_fplist(self, cutoff, hh):
         """The list of terms for offline diagnostics (as a FPlist)."""
@@ -1137,6 +1175,12 @@ class ArpIfsForecastTermConfTool(ConfTool):
         flist = self._cutoff_hh_rangex_lookup('extra_fp_terms[{:s}]'.format(item),
                                               cutoff, hh,
                                               rawdata=self._x_extra_fp_terms[item])
+        return FPList(flist) if flist else []
+
+    def _secondary_diag_terms_item_fplist(self, item, cutoff, hh):
+        flist = self._cutoff_hh_rangex_lookup('secondary_diag_terms[{:s}]'.format(item),
+                                              cutoff, hh,
+                                              rawdata=self._x_secondary_diag_terms_def[item])
         return FPList(flist) if flist else []
 
     @secure_getattr
@@ -1150,6 +1194,13 @@ class ArpIfsForecastTermConfTool(ConfTool):
         elif actual_fplist_m and actual_fplist_m.group(1) in self._x_extra_fp_terms.keys():
             return functools.partial(self._extra_fp_terms_item_fplist,
                                      actual_fplist_m.group(1))
+        elif actual_m and actual_m.group(1) in self._x_secondary_diag_terms_def.keys():
+            return functools.partial(self._cutoff_hh_rangex_lookup,
+                                     'secondary_diag_terms[{:s}]'.format(actual_m.group(1)),
+                                     rawdata=self._x_secondary_diag_terms_def[actual_m.group(1)])
+        elif actual_fplist_m and actual_fplist_m.group(1) in self._x_secondary_diag_terms_def.keys():
+            return functools.partial(self._secondary_diag_terms_item_fplist,
+                                     actual_fplist_m.group(1))
         else:
             raise AttributeError('Attribute "{:s}" was not found'.format(item))
 
@@ -1160,7 +1211,15 @@ class ArpIfsForecastTermConfTool(ConfTool):
                                                              cutoff, hh, rawdata=v))
         if not self.use_inline_fp:
             fpoff_terms.update(self._cutoff_hh_rangex_lookup('diag_fp_terms', cutoff, hh))
+            fpoff_terms.update(self._secondary_diag_terms_set(cutoff, hh))
         return fpoff_terms
+
+    def _secondary_diag_terms_set(self, cutoff, hh):
+        sec_terms = set()
+        for k, v in self._x_secondary_diag_terms_def.items():
+            sec_terms.update(self._cutoff_hh_rangex_lookup('secondary_diag_terms[{:s}]'.format(k),
+                                                           cutoff, hh, rawdata=v))
+        return sec_terms
 
     def extra_hist_terms(self, cutoff, hh):
         """The list of terms for historical file terms solely produced for fullpos use."""
