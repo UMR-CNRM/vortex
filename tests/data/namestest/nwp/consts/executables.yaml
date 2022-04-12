@@ -41,7 +41,7 @@ todo:
             - kind: oopsbinary
               run:
                   - oovar
-                  - testvar
+                  - ootestvar
               flavour:
                   - null
                   - singleprecision
