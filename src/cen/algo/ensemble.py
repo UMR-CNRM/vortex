@@ -1715,7 +1715,7 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus", "E2open", "E2MIP", "E2tartes", "E2MIPtartes"],
+                values = ["E1", "E2", "Crocus", "E2open", "E2MIP", "E2tartes", "E2MIPtartes", "E2B21", "E2MIPB21"],
                 optional = True,
             ),
             geometry_in=dict(
