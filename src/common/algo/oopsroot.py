@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -609,7 +608,6 @@ class OOPSODB(OOPSParallel, odb.OdbComponentDecoMixin):
         # Looking for input observations
         allodb = self.lookupodb()
         allcma = [x for x in allodb if x.rh.resource.layout.lower() == self.virtualdb]
-        logger.info('OOPSODB.prepare called: %s', self.virtualdb.lower())
         if self.virtualdb.lower() == 'ccma':
             self.algoassert(len(allcma) == 1, 'A unique CCMA database is to be provided.')
             self.algoassert(not self._OOPSODB_CCMA_DIRECT,
@@ -659,7 +657,7 @@ class OOPSAnalysis(OOPSODB,
     """Any kind of OOPS analysis (screening/thining step excluded)."""
 
     _footprint = dict(
-        info = "OOPS minimisation",
+        info = "OOPS minimisation.",
         attr = dict(
             kind = dict(
                 values   = ['ooanalysis', 'oominim'],
@@ -694,9 +692,3 @@ class OOPSAnalysisWithScreening(OOPSAnalysis):
             ),
         )
     )
-
-    def prepare(self, rh, opts):
-        if self.withscreening:
-            self._OOPSODB_CCMA_DIRECT = True
-        """Setup ODB stuff."""
-        super(OOPSMinim, self).prepare(rh, opts)
