@@ -193,7 +193,7 @@ class S2MTaskMixIn(object):
 
     def get_list_members(self, sytron=True):
         if 'nmembers' not in self.conf.keys() or self.conf.nmembers == 0:
-            return list(), list() # Return empty lists to indicate only a deterministic run must be considered
+            return list(), list()  # Return empty lists to indicate only a deterministic run must be considered
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
@@ -235,7 +235,7 @@ class S2MTaskMixIn(object):
             if self.conf.geometry.slopes:
                 alternate_geo = [self.conf.geometry.tag.replace('allslopes', 'flat')]
             else:
-                alternate_geo =  [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
+                alternate_geo = [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
 
             return "safran", "massifs", alternate_geo
 

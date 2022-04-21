@@ -284,9 +284,9 @@ class _SafranWorker(_S2MWorker):
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
-            # In case no observation file is found at the given path, SAFRAN also check if it is 
+            # In case no observation file is found at the given path, SAFRAN also check if it is
             # in the current repository, so the following is optionnal (that's the reason the
-            # "reanalysis_with_rr_arpege" works even if the execution is "analysis" and 
+            # "reanalysis_with_rr_arpege" works even if the execution is "analysis" and
             # observation files are individual ones).
             _OP_files_common.extend(['OPA', 'OPR', 'OPS', 'OPT'])
 
@@ -348,7 +348,7 @@ class _SafranWorker(_S2MWorker):
     def get_guess(self, dates, prefix='P', fatal=False, dt=3):
         """Try to guess the corresponding input file."""
         actual_dates = list()
-        # Control de cohérence sur les cumuls : on ne doit pas mélanger des cumuls sur 6h 
+        # Control de cohérence sur les cumuls : on ne doit pas mélanger des cumuls sur 6h
         # avec des cumuls sur 24h. Le bool cumul permet de forcer la recherche de guess
         # de précipittion cumulées dès lors qu'une échéance 6h est absente.
         cumul = False
@@ -389,24 +389,23 @@ class _SafranWorker(_S2MWorker):
                         self.link_in(oldp, p)
                         actual_dates.append(date)
                     else:
-                        cumul = True # If no 6h forecast is available at 1 ech, SAFRAN needs 24h cumulates 
-                                     # precipitation guess for the whole day
-                        # The goal here is to find the first ech "t" that could be available
+                        cumul = True    # If no 6h forecast is available at 1 ech, SAFRAN needs 24h cumulates
+                        # precipitation guess for the whole day.
+                        # The goal of the following is to find the first ech "t" that could be available
                         # for the current date
-                        if dates[0] == self.datebegin: # Cas de la pseudo prévision de J-1 6h à J 6h
+                        if dates[0] == self.datebegin:  # Cas de la pseudo prévision de J-1 6h à J 6h
                             # t = number of hours since self.datebegin (D-1 at 6:00)
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600) # (date - self.datebegin).seconds
-                                                                            # returns the number of hours since
-                                                                            # last 6:00
-                        else: # Cas de la prévision dec J 6h à J+4 6h
+                                    (date - self.datebegin).seconds / 3600)  # (date - self.datebegin).seconds
+                        # returns the number of hours since last 6:00.
+                        else:  # Cas de la prévision dec J 6h à J+4 6h
                             # t = number of hours since (D-1) at 18:00 (PEARP lead time used until the 2022 PNT
                             # DBLE chain. This works also with the (D, 6:00) lead time used for ARPEGE (and PEARP
                             # from the 2022 PNT DBLE chain on).
                             t = int((date - self.datebegin).days * 24 +
-                                    (date - self.datebegin).seconds / 3600) - 18 # 18 is the difference between
-                                                                                 # D-1 (6:00) and D (0:00)
-                else: # Analysis execution
+                                    (date - self.datebegin).seconds / 3600) - 18  # 18 is the difference between
+                            # D-1 (6:00) and D (0:00)
+                else:  # Analysis execution
                     if date == dates[-1]:
                         # Avoid to take the first P file of the next day
                         # Check for a 6-hour analysis
@@ -1244,10 +1243,10 @@ class PrepareForcingWorker(TaylorVortexWorker):
                                                                  datebegin_this_run, self.dateend)
                     print("FORCING FOUND")
 
-                    print ("flat" in self.geometry_in[0])
-                    print ("allslopes" in self.geometry_out)
+                    print("flat" in self.geometry_in[0])
+                    print("allslopes" in self.geometry_out)
 
-                    print (self.geometry_in[0], self.geometry_out)
+                    print(self.geometry_in[0], self.geometry_out)
 
                     if "flat" in self.geometry_in[0] and "allslopes" in self.geometry_out:
 
@@ -1333,7 +1332,7 @@ class Guess(ParaExpresso):
     def get_subdirs(self, rh, opts):
         """Get the subdirectories from the effective inputs"""
         avail_members = self.context.sequence.effective_inputs(role=self.role_ref_namebuilder())
-        subdirs  = list()
+        subdirs = list()
         gribnames = list()
         for am in avail_members:
             if am.rh.container.dirname not in subdirs:
@@ -1662,7 +1661,7 @@ class S2MReforecast(S2MComponent):
         # Update the common instructions
         common_i = self._default_common_instructions(rh, opts)
         subdirs, list_dates_begin, list_dates_end = self.get_individual_instructions(rh, opts)
-        deterministic = [True] * len(subdirs) # Each simulation day is important
+        deterministic = [True] * len(subdirs)  # Each simulation day is important
         self._add_instructions(common_i, dict(subdir=subdirs,
                                               datebegin=list_dates_begin,
                                               dateend=list_dates_end,
