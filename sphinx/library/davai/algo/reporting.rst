@@ -14,11 +14,6 @@
 Classes
 -------
 
-.. autoclass:: XpidRegister
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: LoadStackInTrolley
    :show-inheritance:
    :members:

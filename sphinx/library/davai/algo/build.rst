@@ -19,11 +19,6 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Bundle_to_MainPack
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: Bundle2Pack
    :show-inheritance:
    :members:

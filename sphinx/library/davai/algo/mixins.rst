@@ -116,7 +116,7 @@ Mixed AlgoComponents
 .. autoclass:: FullPosServer_CrashWitness
    :show-inheritance:
    :members:
-   :member-order: alphabeticala
+   :member-order: alphabetical
 
 Functions
 ---------
