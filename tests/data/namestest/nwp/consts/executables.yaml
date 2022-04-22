@@ -38,6 +38,13 @@ todo:
               cycle:
                   - cy46t1_op1.05
                   - cy48
+            - kind: oopsbinary
+              run:
+                  - oovar
+                  - ootestvar
+              flavour:
+                  - null
+                  - singleprecision
     # Diag PI/Labo Diagnostic
     -   commons:
             kind: masterdiag

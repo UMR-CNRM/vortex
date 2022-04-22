@@ -112,3 +112,13 @@ Mixed AlgoComponents
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: FullPosServer_CrashWitness
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+Functions
+---------
+
+.. autofunction:: context_info_for_task_summary

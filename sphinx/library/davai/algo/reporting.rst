@@ -14,11 +14,6 @@
 Classes
 -------
 
-.. autoclass:: XpidRegister
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
 .. autoclass:: LoadStackInTrolley
    :show-inheritance:
    :members:
@@ -30,6 +25,11 @@ Classes
    :member-order: alphabetical
 
 .. autoclass:: XPsetup
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: CiboulaiXPsetup_mkjob
    :show-inheritance:
    :members:
    :member-order: alphabetical

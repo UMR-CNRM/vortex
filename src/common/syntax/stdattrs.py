@@ -25,6 +25,9 @@ a_algo_member = dict(
 #: Usual Footprint of the ``outputid`` attribute.
 algo_member = footprints.Footprint(attr=dict(member=a_algo_member))
 
+#: Known OOPS testcomponent ``run``
+known_oops_testcomponent_runs = ['ootestcomponent', 'testcomponent', 'testvar']
+
 #: Usual definition of the ``run`` attribute for OOPS binaries.
 a_oops_run = dict(
     info="The OOPS run (== task).",
