@@ -102,6 +102,18 @@ class OopsJsonConfig(JsonConfig):
     )
 
 
+class YamlConfig(GenericConfig):
+    """Generic class to access a pack of YAML configuration files."""
+    _footprint = dict(
+        info = 'YAML Configuration file from a pack',
+        attr = dict(
+            nativefmt = dict(
+                values = ['yaml', ]
+            ),
+        )
+    )
+
+
 class Bundle(StaticResource):
     """Contains bundling of source codes."""
     _footprint = [

@@ -29,6 +29,11 @@ Classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: YamlConfig
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: OopsJsonConfig
    :show-inheritance:
    :members:
