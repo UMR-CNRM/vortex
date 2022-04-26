@@ -999,12 +999,13 @@ class OSExtended(System):
             p = subprocess.Popen(args, stdin=stdin, stdout=cmdout, stderr=cmderr,
                                  shell=shell, env=localenv)
             p_out, p_err = p.communicate()
-        except ValueError:
+        except ValueError as e:
             logger.critical(
                 'Weird arguments to Popen ({!s}, stdout={!s}, stderr={!s}, shell={!s})'.format(
                     args, cmdout, cmderr, shell
                 )
             )
+            logger.critical('Caught exception: %s', e)
             if fatal:
                 raise
             else:
@@ -1060,8 +1061,10 @@ class OSExtended(System):
                         p.stdout.close()
                     if p.stderr:
                         p.stderr.close()
-            elif not isinstance(output, bool):
+            elif isinstance(output, six.string_types):
                 output.close()
+            elif isinstance(output, io.IOBase):
+                output.flush()
             del p
 
         return rc
@@ -1724,13 +1727,38 @@ class OSExtended(System):
                 tmpio.writelines(['{:s} {:s}\n'.format(s, d).encode(plocale)
                                   for s, d in zip(source, destination)])
                 tmpio.seek(0)
-                try:
-                    rc = self.spawn([ftcmd, ] + extras, output=False, stdin=tmpio)
-                except ExecutionError:
-                    rc = False
+                with tempfile.TemporaryFile(dir=self.path.dirname(self.path.abspath(destination[0])),
+                                            mode='w+b') as tmpoutput:
+                    try:
+                        rc = self.spawn([ftcmd, ] + extras, output=tmpoutput, stdin=tmpio)
+                    except ExecutionError:
+                        rc = False
+                    # Process output data
+                    tmpoutput.seek(0)
+                    ft_outputs = tmpoutput.read()
+            ft_outputs = ft_outputs.decode(locale.getdefaultlocale()[1] or 'ascii', 'replace')
+            logger.info('Here is the ftget command output: \n%s', ft_outputs)
+            # Expand the return codes
+            if rc:
+                x_rc = [True, ] * len(source)
+            else:
+                ack_re = re.compile(r'.*FT_(OK|ABORT)\s*:\s*GET\s+(.*)$')
+                ack_lines = dict()
+                for line in ft_outputs.split('\n'):
+                    ack_match = ack_re.match(line)
+                    if ack_match:
+                        ack_lines[ack_match.group(2)] = ack_match.group(1) == 'OK'
+                x_rc = []
+                for a_source in source:
+                    my_rc = None
+                    for ack_globish, ack_rc in ack_lines.items():
+                        if a_source in ack_globish:
+                            my_rc = ack_rc
+                            break
+                    x_rc.append(my_rc)
         else:
             raise IOError('Source or destination is not a plain file path: {!r}'.format(source))
-        return rc
+        return x_rc
 
     def rawftput_worthy(self, source, destination):
         """Is it allowed to use FtServ given **source** and **destination**."""

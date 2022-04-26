@@ -797,9 +797,9 @@ class Handler(object):
                             self.container.iotarget(),
                             st_options,
                         )
-                        if not rst:
+                        if rst is None:
                             # Delayed get failed... attempt the usual get
-                            logger.warning('Delayed get failed ! Reverting to the usual get.')
+                            logger.warning('Delayed get result was unclear ! Reverting to the usual get.')
                             e_opts = self._latest_earlyget_opts.copy()
                             e_opts['insitu'] = False
                             return self._get_proxy(self._actual_get, **e_opts)
