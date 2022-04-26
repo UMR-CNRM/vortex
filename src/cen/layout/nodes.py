@@ -23,7 +23,7 @@ class S2MTaskMixIn(object):
     secondassimruntime = Time(hour=9, minute=0)
     monthly_analysis_time = Time(hour=12, minute=0)
 
-    ref_reanalysis = "reanalysis2020.2@lafaysse"  # Current version of S2M reanalysis
+    ref_reanalysis = "reanalysis2020.2@prep_reanalysis_CEN"  # Current version of S2M reanalysis
 
     def s2moper_filter_execution_error(self, exc):
         """Define the behaviour in case of errors.
