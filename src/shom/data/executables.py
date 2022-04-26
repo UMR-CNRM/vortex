@@ -17,10 +17,11 @@ class Hycom3dIBCRegridcdfBinary(Binary):
 
     _footprint = [
         gvar,
+        gdomain,
         dict(
             info="Binary that regrids initial conditions netcdf files",
             attr=dict(
-                gvar=dict(default="master_hycom3d_ibc_regridcdf"),
+                gvar=dict(default="master_hycom3d_ibc_regridcdf_[gdomain]"),
                 kind=dict(values=["horizontal_regridder"]),
                 model=dict(values=["hycom3d"])
             ),
@@ -32,10 +33,7 @@ class Hycom3dIBCRegridcdfBinary(Binary):
         return "hycom3d_ibc_regridcdf_binary"
 
     def command_line(self, **opts):
-        varname = opts["varname"]
-        method = opts.get("method", 0)
-        cstep = int(opts.get("cstep", 1))
-        return "{varname} {method} {cstep:03d}".format(varname, method, cstep)
+        return "{varname} {method} {density_corr} {bathy_corr} {cstep:03d}".format(**opts)
 
 
 class Hycom3dIBCIniconBinary(Binary):
@@ -43,10 +41,11 @@ class Hycom3dIBCIniconBinary(Binary):
 
     _footprint = [
         gvar,
+        gdomain,
         dict(
             info="Binary that computes initial conditions for HYCOM",
             attr=dict(
-                gvar=dict(default="master_hycom3d_ibc_inicon"),
+                gvar=dict(default="master_hycom3d_ibc_inicon_[gdomain]"),
                 kind=dict(values=["vertical_regridder"]),
                 model=dict(values=["hycom3d"])
             ),
@@ -58,9 +57,10 @@ class Hycom3dIBCIniconBinary(Binary):
         return "hycom3d_ibc_inicon_binary"
 
     def command_line(self, **opts):
-        return ("{datadir} {sshfile} {tempfile} {salnfile} "
-                "{nx} {ny} {nz} {cmoy} "
-                "{sshmin} {cstep}").format(**opts)
+        return ("{datadir} {sshfile} {tempfile} {salnfile} "+
+                 "{nx} {ny} {nz} {cmoy} {sshmin} "+
+                 "{bathy_corr} {cstep}").format(**opts)
+
 
 
 class Hycom3dSpNudgeDemerliacBinary(Binary):
@@ -294,6 +294,18 @@ class Hycom3dModelPreprocScript(Script):
         return "--rank {rank} --mode {mode} --restart {restart} --delday {delday} --mpiname {mpiname}".format(**opts)
 
 
+class Hycom3dModelPostprocScript(Script):
+    """TODO Class Documentation."""
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_model_postproc_script"]))
+    )
+
+    def command_line(self, **opts):
+        return "--model-log {log_file}".format(**opts)
+
+
 class Hycom3dSpnudgePrepostScript(Script):
     """TODO Class Documentation."""
 
@@ -317,7 +329,6 @@ class Hycom3dSpnudgeSpectralPreprocScript(Script):
     def command_line(self, **opts):
         return "{nchycom3d} {ncmercator}".format(**opts)
 
-
 class Hycom3dPostprodPreprocScript(Script):
     """TODO Class Documentation."""
 
@@ -328,3 +339,14 @@ class Hycom3dPostprodPreprocScript(Script):
 
     def command_line(self, **opts):
         return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate}".format(**opts)
+
+class Hycom3dPostprodConcatScript(Script):
+    """TODO Class Documentation."""
+
+    _footprint = dict(
+        info="Python script ",
+        attr=dict(kind=dict(values=["hycom3d_postprod_concat_script"]))
+    )
+
+    def command_line(self, **opts):
+        return "{ncins} --rank {rank} --postprod {postprod} --rundate {rundate} --vapp {vapp} --vconf {vconf}".format(**opts)

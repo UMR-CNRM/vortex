@@ -6,10 +6,11 @@ Hycom3d files.
 
 from bronx.stdtypes.date import Date
 from vortex.data.flow import FlowResource
-from common.data.modelstates import Analysis, InitialCondition
+from common.data.modelstates import InitialCondition, Analysis
 from vortex.data.flow import GeoFlowResource
-# from vortex.data.outflow import StaticGeoResource
 from vortex.syntax.stddeco import namebuilding_append
+from vortex.syntax.stdattrs import term_deco
+from previmar.data.resources import SurgesResultNative
 
 __all__ = []
 
@@ -37,31 +38,6 @@ class CmemsRivers(FlowResource):
     @property
     def realkind(self):
         return 'rivers'
-
-# Note LFM: This is un-acceptable & and won't enter an official branch.
-#           In the "HycomAtmFrc" operational task, this resource is fetch,
-#           then archived. Since it has no date/cutoff attributes it overwrites
-#           itself from one day to another
-
-# @namebuilding_append('src', lambda self: self.grids)
-# class Hycom3dAtmFrcInterpWeights(StaticGeoResource):
-#     """TODO Class Documentation."""
-#
-#     _footprint = [
-#         dict(
-#             info="Hycom3d atmfrc interpolation weights nc file",
-#             attr=dict(
-#                 kind=dict(values=["interp_weights"]),
-#                 nativefmt=dict(values=['netcdf','nc']),
-#                 grids=dict(values=["a2o","o2a"], optional=False, default='a2o'),
-#             ),
-#         )
-#     ]
-#
-#     @property
-#     def realkind(self):
-#         return self.kind
-
 
 # %% Pre-processing intermediate files
 
@@ -98,7 +74,7 @@ class Hycom3dInterpOutput(GeoFlowResource):
 
     @property
     def realkind(self):
-        return "hycom3d_interp"
+        return "interp"
 
 
 # %% Model inputs
@@ -122,6 +98,9 @@ class Hycom3dModelInput(GeoFlowResource):
                 values=["a", "b", "nc", "binary", "ascii", "netcdf"],
                 remap={"a": "binary", "b": "ascii", "nc": "netcdf"}
             ),
+            format=dict(
+                values=["a", "b", "nc"],
+            ),
             model=dict(
                 values=["hycom3d"],
             ),
@@ -130,7 +109,7 @@ class Hycom3dModelInput(GeoFlowResource):
 
     @property
     def realkind(self):
-        return "hycom3d_model_input"
+        return "model_input"
 
 
 class Hycom3dRiversModelInput(Hycom3dModelInput):
@@ -144,11 +123,18 @@ class Hycom3dRiversModelInput(Hycom3dModelInput):
             ),
             field=dict(
                 values=["Adour", "Gironde", "Loire", "Seine",
-                        "Rhone", "Nile", "Po", "Ebro", "Marma"],
+                        "Rhone", "Nile", "Po", "Ebro", "Marma",
+                        "Narmada", "Indus", "Shatt-al-Arab"],
             ),
             nativefmt=dict(
-                values=['r', 'nc', "ascii", "netcdf"],
-                remap={'r': 'ascii', 'nc': 'netcdf'}
+                values=['r', 'nc', 'ascii', 'netcdf'],
+                remap={'r':'ascii', 'nc':'netcdf'}
+            ),
+            format=dict(
+                values=['r', 'nc'],
+            ),
+            model=dict(
+                values=["hycom3d"],
             ),
         ),
     )
@@ -164,11 +150,14 @@ class Hycom3dInitialCondition(InitialCondition):
         attr=dict(
             field=dict(
                 values=["saln", "temp", "th3d", "u", "v", "ut", "vt",
-                        "h", "dpmixl", "restdate"],
+                        "h", "dpmixl", "restdate", "umbbiais", "vmbbiais", "ptide"],
             ),
             nativefmt=dict(
                 remap={"cdf": "netcdf", "res": "binary"},
                 values=["cdf", "res", "netcdf", "binary"],
+            ),
+            format=dict(
+                values=["cdf", "res", "binary"],
             ),
             model=dict(
                 values=["hycom3d"],
@@ -176,15 +165,11 @@ class Hycom3dInitialCondition(InitialCondition):
         ),
     )
 
-
 # %% Model outputs
 
-@namebuilding_append('src', lambda self: [self.field, self.dim])
-# Note LFM: self.area (and others) may not be defined (it is optional) consequently
-# none_discard=True needs to be define to avoid crashes
-@namebuilding_append('src', lambda self: [self.filtering, self.ppdate, self.source, self.interp],
+@namebuilding_append('src', lambda self: [self.field, self.filtering])
+@namebuilding_append('src', lambda self: [self.source, self.interp],
                      none_discard=True)
-@namebuilding_append('geo', lambda self: [self.area], none_discard=True)
 class Hycom3dModelOutput(Analysis):
     """Model output."""
 
@@ -199,13 +184,9 @@ class Hycom3dModelOutput(Analysis):
                         "h", "saln", "sigma", "temp", "tempis", "all",
                         "t", "s"],
             ),
-            dim=dict(
+            filling=dict(
                 values=["3D", "2D"],
                 default="3D",
-            ),
-            ppdate=dict(
-                type=Date,
-                optional=True,
             ),
             filtering=dict(
                 values=["none", "mean", "demerliac", "godin", "spectral"],
@@ -214,12 +195,6 @@ class Hycom3dModelOutput(Analysis):
             interp=dict(
                 values=["zlevel"],
                 optional=True
-            ),
-            area=dict(
-                # Note LFM: There is already a geometry attribute. Consequently the area
-                #           attribute makes no sense to me (and should not exists).
-                values=["MANGA", "BretagneSud"],
-                optional=True,
             ),
             source=dict(
                 values=["hycom3d", "mercator"],
@@ -237,3 +212,24 @@ class Hycom3dModelOutput(Analysis):
     @property
     def realkind(self):
         return "hycom3d_model_output"
+
+
+class Hycom3dPostprodOutput(Hycom3dModelOutput):
+    """Postprod outputs."""
+
+    _footprint = [
+        term_deco,
+        dict(
+            info="Model output",
+            attr=dict(
+                kind=dict(
+                    values=["postprod"],
+                ) 
+            )
+        )
+    ]   
+
+    @property
+    def realkind(self):
+        return "hycom3d_postprod_output"
+
