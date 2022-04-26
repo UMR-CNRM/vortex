@@ -78,10 +78,14 @@ __all__ = []
 logger = loggers.getLogger(__name__)
 
 #: Definition of a named tuple DelayedActionStatusTuple
-DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple', ['void', 'failed', 'done'])
+DelayedActionStatusTuple = namedtuple('DelayedActionStatusTuple',
+                                      ['void', 'failed', 'done', 'unclear'])
 
-#: Predefined DelayedActionStatus values (void=Not ready yet, failed=processed but KO, done=processed)
-d_action_status = DelayedActionStatusTuple(void=0, failed=-1, done=1)
+#: Predefined DelayedActionStatus values (void=Not ready yet,
+#                                         failed=processed but KO,
+#                                         done=processed and OK,
+#                                         unclear=processed but cannot tell whether it is KO or OK)
+d_action_status = DelayedActionStatusTuple(void=0, failed=-1, done=1, unclear=-2)
 
 
 # Module Interface
@@ -145,18 +149,26 @@ class DelayedAction(object):
         for k, v in d_action_status._asdict().items():
             if self._status == v:
                 return k
-        logger.warning('What is this idiotic status (%s) ???', str(self.status))
+        logger.warning('What is this idiotic status (%s) ???', self.status)
         return str(self.status)
 
     def mark_as_failed(self):
         """Change the status to ``failed``."""
-        logger.info('Marking early-get as failed for: %s', str(self.request))
+        logger.info('Marking early-get %s as failed (request=%s)',
+                    self.id, self.request)
         self._set_status(d_action_status.failed)
 
     def mark_as_done(self):
         """Change the status to ``done``."""
-        logger.debug('Marking early-get as done for: %s', str(self.request))
+        logger.debug('Marking early-get %s as done (request=%s)',
+                     self.id, self.request)
         self._set_status(d_action_status.done)
+
+    def mark_as_unclear(self):
+        """Change the status to ``unclear``."""
+        logger.info('Marking early-get %s as unclear/unconclusive (request=%s)',
+                    self.id, self.request)
+        self._set_status(d_action_status.unclear)
 
     def __str__(self):
         return 'id={0._id}: {0.statustext:6s} result={0.result!s}'.format(self)
@@ -295,14 +307,18 @@ class AbstractDelayedActionsHandler(footprints.FootprintBase, observer.Observer)
             res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
                               for r_id, a in self._resultsmap.items()
                               if a.status == d_action_status.void])
-            res += '\n  * Done (i.e waiting to be retrieved):\n\n'
+            res += '\n  * Done (i.e the delayed action succeeded):\n\n'
             res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
                               for r_id, a in self._resultsmap.items()
                               if a.status == d_action_status.done])
-            res += '\n  * Failed (i.e waiting to be retrieved):\n\n'
+            res += '\n  * Failed (i.e the delayed action failed):\n\n'
             res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
                               for r_id, a in self._resultsmap.items()
                               if a.status == d_action_status.failed])
+            res += '\n  * Unclear (i.e processed but the result is unclear):\n\n'
+            res += '\n'.join(['{:48s}:\n      request: {!s}'.format(r_id, a.request)
+                              for r_id, a in self._resultsmap.items()
+                              if a.status == d_action_status.unclear])
         return res
 
 
@@ -495,12 +511,14 @@ class RawFtpDelayedGetHandler(AbstractFtpArchiveDelayedGetHandler):
                                                    hostname=hostname, logname=self.logname, port=port,
                                                    ** extras)
                 except (OSError, IOError):
-                    rc = False
-                for k in a_todolist:
-                    if rc:
+                    rc = [None, ] * len(sources)
+                for i, k in enumerate(a_todolist):
+                    if rc[i] is True:
                         self._resultsmap[k].mark_as_done()
-                    else:
+                    elif rc[i] is False:
                         self._resultsmap[k].mark_as_failed()
+                    else:
+                        self._resultsmap[k].mark_as_unclear()
         return rc
 
 

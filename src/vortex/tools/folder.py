@@ -279,13 +279,13 @@ class FolderShell(addons.FtrawEnableAddon):
 
             rc = self.sh.ftserv_batchget(actualsources, tmpdestinations, hostname,
                                          logname, port=port)
-            if rc:
-                for d, t in zip(actualdestinations, tmpdestinations):
+            for i, (d, t) in enumerate(zip(actualdestinations, tmpdestinations)):
+                if rc[i]:
                     loctmp = self.sh.path.dirname(t)
                     self.sh.cd(loctmp)
                     try:
                         try:
-                            rc = rc and self.sh.untar(self.sh.path.basename(t), autocompress=False)
+                            rc[i] = rc[i] and bool(self.sh.untar(self.sh.path.basename(t), autocompress=False))
                         finally:
                             self.sh.rm(t)
                     finally:
