@@ -3,8 +3,8 @@
 from __future__ import print_function, absolute_import, unicode_literals, division
 
 """
-Demonstrate the "on_error" feature of the Node objects (e.g Task, Family, ...)
-and the use of a custom JobAssistant plugin.
+Demonstrate the "on_error" and "delay_component_errors" features of the Node
+objects (e.g Task, Family, ...) + the use of a custom JobAssistant plugin.
 """
 
 from vortex.layout.nodes import Driver, Family
@@ -38,12 +38,20 @@ def setup(t, **kw):
                    ], ticket=t, on_error='delayed_fail', **kw),
             #                   ^^^^^^^^^^^^^^^^^^^^^^^
             # However, since on_error='delayed_fail' on the 'on_error_f2', this
-            # won't break the execution sequence of the driver and 'on_error_t3'
-            # will be executed.
+            # won't break the execution sequence of the driver and the following
+            # will be executed...
             Beacon(tag='on_error_t3', ticket=t, **kw),
+            Beacon(tag='on_error_t4', ticket=t, failer=True,
+                   delay_component_errors=True, on_error='delayed_fail', **kw),
+            #      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+            # The 'on_error_t4' will fail ('failer=True'). However, since
+            # 'delay_component_errors=True', the output file of 'on_error_t4' is
+            # archived in cache (since it is produced by the AlgoComponent just
+            # before crashing).
         ],
         # At the end of the Driver's run, the error on 'on_error1_f1' is completely ignored
-        # but the error on 'on_error_f2' will cause the Driver to raise an exception since
-        # on_error='delayed_fail' (that's why it is called "delayed" fail).
+        # but the error on 'on_error_f2' and 'on_error_t4' will cause the Driver to raise
+        # an exception since on_error='delayed_fail' (that's why it is called "delayed"
+        # fail).
         options=kw
     )

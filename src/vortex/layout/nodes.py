@@ -63,6 +63,14 @@ class PreviousFailureError(RuntimeError):
     pass
 
 
+class RequestedFailureError(RuntimeError):
+    """
+    This exception is raised, when a Node finishes, if the `fail_at_the_end`
+    property is True.
+    """
+    pass
+
+
 class NiceLayout(observer.Observer):
     """Some nice method to share between layout items."""
 
@@ -109,6 +117,14 @@ class NiceLayout(observer.Observer):
             print()
         else:
             print(" + ...\n")
+
+    def _print_traceback(self):
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        print('Exception type: {!s}'.format(exc_type))
+        print('Exception values: {!s}'.format(exc_value))
+        self.header('Traceback Error / BEGIN')
+        print("\n".join(traceback.format_tb(exc_traceback)))
+        self.header('Traceback Error / END')
 
     @property
     def _ds_extra(self):
@@ -224,6 +240,13 @@ class NiceLayout(observer.Observer):
         """Return True if self or any of the subnodes failed."""
         failure = self.status == NODE_STATUS.FAILED
         return failure or any([k.any_failure for k in self.contents])
+
+    @property
+    def any_currently_running(self):
+        """Return True if self or any of the subnodes is running."""
+        running = (self.status == NODE_STATUS.RUNNING and
+                   self.status_mstep_counter == self.mstep_counter)
+        return running or any([k.any_currently_running for k in self.contents])
 
     def __str__(self):
         """Print the node's tree."""
@@ -359,6 +382,18 @@ class Node(getbytag.GetByTag, NiceLayout):
         for node in self.contents:
             yield node
 
+    @property
+    def fail_at_the_end(self):
+        """Tells whether the Node should fail when it reaches the end of 'run'."""
+        return self.ticket.datastore.get('layout_fail_at_the_end', self._ds_extra,
+                                         default_payload=False, readonly=False)
+
+    @fail_at_the_end.setter
+    def fail_at_the_end(self, value):
+        """Tells whether the Node should fail when it reaches the end of 'run'."""
+        self.ticket.datastore.insert('layout_fail_at_the_end', self._ds_extra,
+                                     bool(value), readonly=False)
+
     def build_context(self):
         """Build the context and subcontexts of the current node."""
         if self.activenode:
@@ -415,13 +450,8 @@ class Node(getbytag.GetByTag, NiceLayout):
             self.status = NODE_STATUS.FAILED
             if extra_verbose or self.on_error != NODE_ON_ERROR.FAIL:
                 # Mask the exception
-                exc_type, exc_value, exc_traceback = sys.exc_info()
                 self.subtitle('An exception occured (on_error={:s})'.format(self.on_error))
-                print('Exception type: {!s}'.format(exc_type))
-                print('Exception values: {!s}'.format(exc_value))
-                self.header('Traceback Error / BEGIN')
-                print("\n".join(traceback.format_tb(exc_traceback)))
-                self.header('Traceback Error / END')
+                self._print_traceback()
             if self.on_error == NODE_ON_ERROR.FAIL:
                 raise
         else:
@@ -578,7 +608,17 @@ class Node(getbytag.GetByTag, NiceLayout):
     def run(self, sjob_activated=True):
         """Execution driver: setup, run, complete... (if needed)."""
         if self.activenode:
-            self._actual_run(sjob_activated)
+            try:
+                self._actual_run(sjob_activated)
+            except Exception:
+                self.fail_at_the_end = False
+                raise
+            else:
+                if self.fail_at_the_end:
+                    raise RequestedFailureError(
+                        'An error occured in {:s}. '.format(self.tag) +
+                        'Please dive into the present log to understand why.'
+                    )
 
     def filter_execution_error(self, exc):  # @UnusedVariable
         """
@@ -622,6 +662,19 @@ class Node(getbytag.GetByTag, NiceLayout):
         :note: Do not re-raised the **exc** exception in this method.
         """
         pass
+
+    def delay_execution_error(self, exc, **kw_infos):  # @UnusedVariable
+        """
+        Tells whether the execution error needs to be ignored temporarily
+        (an exception will still be raised when the Node exits).
+
+        :param Exception exc: The exception that triggered the call
+        :param dict kw_infos: Any kind of extra informations provided by the
+            :meth:`filter_execution_error`.
+
+        :note: Do not re-raised the **exc** exception in this method.
+        """
+        return self.conf.get('delay_component_errors', False)
 
     def component_runner(self, tbalgo, tbx=(None,), **kwargs):
         """Run the binaries listed in tbx using the tbalgo algo component.
@@ -670,13 +723,20 @@ class Node(getbytag.GetByTag, NiceLayout):
                         tbalgo.run(binary, mpiopts=mpiopts, **kwargs)
                     except (Exception, SignalInterruptError, KeyboardInterrupt) as e:
                         mask_delayed, f_infos = self.filter_execution_error(e)
-                        if mask_delayed:
+                        if isinstance(e, Exception) and mask_delayed:
                             logger.warning("The delayed exception is masked:\n%s", str(f_infos))
                             self.report_execution_warning(e, **f_infos)
                         else:
                             logger.error("Un-filtered execution error:\n%s", str(f_infos))
                             self.report_execution_error(e, **f_infos)
-                            raise
+                            if isinstance(e, Exception) and self.delay_execution_error(e, **f_infos):
+                                self.subtitle('An exception occured but the crash is delayed until the end of the Node')
+                                self._print_traceback()
+                                # Actually delay the crash
+                                self.fail_at_the_end = True
+                                print()
+                            else:
+                                raise
 
 
 class Family(Node):
@@ -1117,7 +1177,8 @@ class Task(Node):
         """Execution driver: build, setup, refill, process, complete."""
         sjob_activated = sjob_activated or self._subjobtag == self.tag
         if sjob_activated:
-            if self.status == NODE_STATUS.RUNNING:
+            if (self.status == NODE_STATUS.RUNNING or
+                    (self.status == NODE_STATUS.FAILED and self.fail_at_the_end)):
                 try:
                     self.build()
                     self.setup()
@@ -1286,12 +1347,22 @@ class Driver(getbytag.GetByTag, NiceLayout):
                     node.run(sjob_activated=self._subjob_tag is None)
             if self._mstep_job_last:
                 self.status = NODE_STATUS.DONE
+        except Exception:
+            if not self._mstep_job_last and self.any_currently_running:
+                self.sh.title("Handling of the job failure in a multi-job context.")
+                self._print_traceback()
+                print()
+                print("Since it is not the last step of this multi-step job, " +
+                      "the job failure is ignored... for now.")
+            else:
+                raise
+        else:
+            if self.delayed_error_flag and self._subjob_tag is None and self._mstep_job_last:
+                # Test on _subjob_tag because we do not want to crash in subjobs
+                raise RuntimeError("One or several error occured during the Driver execution. " +
+                                   "The exceptions were delayed but now that the Driver ended let's crash !")
         finally:
             if self.any_failure:
                 self.sh.title('An error occured during job...')
                 print('Here is the tree-view of the present Driver:')
                 print(self)
-            if self.delayed_error_flag and self._subjob_tag is None and self._mstep_job_last:
-                # Test on _subjob_tag because we do not want to crash in subjobs
-                raise RuntimeError("One or several error occured during the Driver execution. " +
-                                   "The exceptions were delayed but now that the Driver ended let's crash !")
