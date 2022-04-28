@@ -323,7 +323,7 @@ class _SafranWorker(_S2MWorker):
             if not self.system.path.exists(filename):
                 # SAFRAN guess files can be named 'PYYMMDDHH' or 'EYYMMDDHH'
                 if not (filename.startswith('P') and self.system.path.exists('E' + filename[1:])):
-                    missing_files.append(filenmae)
+                    missing_files.append(filename)
         if len(missing_files) > 0:
             if self.execution not in ['reforecast', ]:
                 rdict['rc'] = InputCheckerError('The following mandatory flow resource are missing : \n' +
