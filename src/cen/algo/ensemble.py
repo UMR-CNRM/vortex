@@ -93,7 +93,6 @@ class _S2MWorker(VortexWorkerBlindRun):
             thisdir = self.system.path.join(rundir, self.subdir)
             with self.system.cdcontext(self.subdir, create=True):
                 rdict = self._commons(rundir, thisdir, rdict, **kwargs)
-
         else:
             thisdir = rundir
             rdict = self._commons(rundir, thisdir, rdict, **kwargs)
@@ -769,9 +768,21 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
-                            'liste_obs*')
-        self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
+            # Ensure that at least one listing file has been created, otherwise the tar command raises an 
+            # ExecutionError that isn't filtered by the DelayedAlgoError mecanism and make the algo component 
+            # (even other workers that were fine) crash.
+            # This issue has been identified when trying the #2079 vortex issue that should allow the task
+            # to go on until produced resources are archived even if some members have crashed.
+            if len(self.system.ffind('liste_obs*')) > 0:
+                self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                                'liste_obs*')
+        # Ensure that at least one listing file has been created, otherwise the tar command raises an 
+        # ExecutionError that isn't filtered by the DelayedAlgoError mecanism and make the algo component 
+        # (even other workers that were fine) crash.
+        # This issue has been identified when trying the #2079 vortex issue that should allow the task
+        # to go on until produced resources are archived even if some members have crashed.
+        if len(self.system.ffind('*.out')) > 0:
+            self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
 
         super(SytistWorker, self).postfix()
 
