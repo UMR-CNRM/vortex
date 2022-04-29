@@ -144,8 +144,9 @@ def system_route(pnum, ask, config, logger, **opts):
                     route_source = outfile
 
             # put the mandatory variable(s) back in the async environment
-            e = vwork.session.env
-            e.dmt_date_pivot = data.dmt_date_pivot
+            if 'dmt_date_pivot' in data:
+                e = vwork.session.env
+                e.dmt_date_pivot = data.dmt_date_pivot
 
             # activate services or not according to jeeves' configuration
             if route_on:
