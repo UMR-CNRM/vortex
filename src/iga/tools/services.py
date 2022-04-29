@@ -569,7 +569,7 @@ class RoutingService(Service):
             route_opts=route_opts,
             original=self._actual_filename,
             filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
-            dmt_date_pivot = self.dmt_date_pivot,
+            dmt_date_pivot=self.dmt_date_pivot,
         )
 
         # post the request to jeeves
@@ -902,7 +902,7 @@ class DayfileReportService(FileReportService):
                 default  = False,
                 alias    = ['async', ],
             ),
-            jname=dict(
+            jname = dict(
                 optional = True,
                 default  = 'test',
             ),

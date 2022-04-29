@@ -28,25 +28,25 @@ class IgaGcoCacheStore(CacheStore):
     _footprint = dict(
         info = 'OPGCO cache access',
         attr = dict(
-            strategy=dict(
-                default='mtool',
+            strategy = dict(
+                default = 'mtool',
             ),
-            headdir=dict(
-                default='gco',
-                outcast=['xp', 'vortex'],
+            headdir = dict(
+                default = 'gco',
+                outcast = ['xp', 'vortex'],
             ),
-            rootdir=dict(
-                default=DelayedEnvValue('op_gcocache'),
+            rootdir = dict(
+                default = DelayedEnvValue('op_gcocache'),
             ),
-            scheme=dict(
-                values=['gget'],
+            scheme = dict(
+                values  = ['gget'],
             ),
-            netloc=dict(
-                values=['opgco.cache.fr'],
+            netloc = dict(
+                values  = ['opgco.cache.fr'],
             ),
-            readonly=dict(
-                values=[True],
-                default=True
+            readonly = dict(
+                values  = [True],
+                default = True
             )
         )
     )
@@ -154,7 +154,8 @@ class SopranoStore(Store):
             ),
             storage = dict(
                 optional = True,
-                values   = ['piccolo.meteo.fr', 'piccolo-sine.meteo.fr', 'piccolo-int.meteo.fr', 'piccolo-int-sine.meteo.fr'],
+                values   = ['piccolo.meteo.fr', 'piccolo-sine.meteo.fr',
+                            'piccolo-int.meteo.fr', 'piccolo-int-sine.meteo.fr'],
                 default  = 'piccolo.meteo.fr',
             ),
             storeroot = dict(
