@@ -569,11 +569,11 @@ class RoutingService(Service):
             route_opts=route_opts,
             original=self._actual_filename,
             filterdefinition=self.filterdefinition.data if self.filterdefinition else None,
+            dmt_date_pivot = self.dmt_date_pivot,
         )
 
-        logger.debug('posting to jeeves with jeeves_opts:\n\t%s', pformat(jeeves_opts))
-
         # post the request to jeeves
+        logger.debug('posting to jeeves with jeeves_opts:\n%s', pformat(jeeves_opts))
         return ad.jeeves(**jeeves_opts)
 
     def __call__(self):
@@ -804,6 +804,7 @@ class TransmetService(BdpeService):
             transmet = dict(
                 optional  = True,
                 type      = FPDict,
+                default   = dict(),
             ),
             version_header = dict(
                 values    = ['TTAAII', 'gfnc'],
@@ -831,9 +832,10 @@ class TransmetService(BdpeService):
     def routing_name(self):
         if self._filename_transmet is None:
             if self.version_header == 'TTAAII':
-                actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
+                if 'ECHEANCE' not in self.transmet:
+                    self.transmet['ECHEANCE'] = self.term.fmth
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
-                                                                 actual_transmet, self.filename,
+                                                                 self.transmet, self.filename,
                                                                  self.scriptdir, self.header_infile)
                 logger.debug('filename transmet : %s', self._filename_transmet)
             else:
@@ -843,7 +845,10 @@ class TransmetService(BdpeService):
 
     def __call__(self):
         """Actual service execution."""
-        if self.routing_name:
+
+        # don't call property routing_name in defer mode : it makes an expensive
+        # copy of the file being routed, better left to the jeeves async context
+        if self.defer or self.routing_name:
             return super(TransmetService, self).__call__()
         return False
 

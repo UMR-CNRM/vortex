@@ -23,7 +23,12 @@ class FootprintTestBuiltins(FootprintBase):
             ),
             thetuple = dict(
                 type = FPTuple,
-            )
+            ),
+            theemptydict=dict(
+                type=FPDict,
+                optional=True,
+                default=dict(),
+            ),
         )
     )
 
@@ -81,6 +86,11 @@ class utFootprintBuiltins(TestCase):
         self.assertIsInstance(rv.thedict, dict)
         self.assertDictEqual(rv.thedict, dict(foo=2))
         self.assertSequenceEqual(list(rv.thedict.items()), [('foo', 2)])
+
+        self.assertIsInstance(rv.theemptydict, FPDict)
+        self.assertIsInstance(rv.theemptydict, dict)
+        self.assertDictEqual(rv.theemptydict, dict())
+        self.assertSequenceEqual(list(rv.theemptydict.items()), [])
 
         self.assertIsInstance(rv.thelist, FPList)
         self.assertIsInstance(rv.thelist, list)
