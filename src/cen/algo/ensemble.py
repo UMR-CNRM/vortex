@@ -420,7 +420,7 @@ class _SafranWorker(_S2MWorker):
                             t = 24
                     else:
                         t = 0
-                while not self.system.path.islink(p) and (t <= 108):
+                while not self.system.path.islink(p) and (t <= 102):
                     d = date - Period(hours=t)
                     oldp = '{0:s}{1:s}_{2!s}'.format(prefix, d.yymdh, t)
                     if self.system.path.exists(oldp):
@@ -1559,7 +1559,7 @@ class S2MComponent(ParaBlindRun):
 
     def role_members_namebuilder(self):
         """
-        Defines the role of the effective inputs to take as reference te define
+        Defines the role of the effective inputs to take as reference to define
         the different members.
         """
         return 'Ebauche'
@@ -1688,7 +1688,16 @@ class S2MReforecast(S2MComponent):
         list_dates_begin = list()
         list_dates_end = list()
         for am in avail_members:
-            if am.rh.container.dirname not in subdirs:
+            # Guess files are now stored in a tar archive
+            if self.system.is_tarfile(am.rh.container.basename):
+                for fic in self.system.untar(am.rh.container.basename): 
+                    # fic = YYYYMMDD00/mbXXX/PYYMMDDHH
+                    dirname = self.system.path.dirname(fic) # YYYYMMDD00/mbXXX
+                    if dirname not in subdirs:
+                        subdirs.append(dirname)
+                        list_dates_begin.append(Date(fic.split('/')[0]) + Period(hours=6))
+                        list_dates_end.append(Date(fic.split('/')[0]) + Period(hours=6) + Period(days=4))
+            elif am.rh.container.dirname not in subdirs:
                 subdirs.append(am.rh.container.dirname)
                 # WARNING : The first ech in the corresponding footprint must correspond to 6:00 at day D
                 list_dates_begin.append(am.rh.resource.date + Period(hours=am.rh.resource.cumul.hour))
