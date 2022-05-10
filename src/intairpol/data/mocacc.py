@@ -102,7 +102,7 @@ class CtbtoOuputs(FlowResource):
 
 
 class MocaccTableChemContent(AlmostListContent):
-    """Content of MocaccTableChem"""
+    """Content of MocaccTableChem."""
 
     @property
     def nbpolls(self):
