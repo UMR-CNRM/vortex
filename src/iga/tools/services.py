@@ -804,7 +804,6 @@ class TransmetService(BdpeService):
             transmet = dict(
                 optional  = True,
                 type      = FPDict,
-                default   = dict(),
             ),
             version_header = dict(
                 values    = ['TTAAII', 'gfnc'],
@@ -832,10 +831,11 @@ class TransmetService(BdpeService):
     def routing_name(self):
         if self._filename_transmet is None:
             if self.version_header == 'TTAAII':
-                if 'ECHEANCE' not in self.transmet:
-                    self.transmet['ECHEANCE'] = self.term.fmth
+                actual_transmet = self.transmet if isinstance(self.transmet, dict) else dict()
+                if 'ECHEANCE' not in actual_transmet:
+                    actual_transmet['ECHEANCE'] = self.term.fmth
                 self._filename_transmet = get_ttaaii_transmet_sh(self.sh, self.transmet_cmd,
-                                                                 self.transmet, self.filename,
+                                                                 actual_transmet, self.filename,
                                                                  self.scriptdir, self.header_infile)
                 logger.debug('filename transmet : %s', self._filename_transmet)
             else:
