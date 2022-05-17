@@ -16,6 +16,4 @@ Functions
 
 .. autofunction:: ttaaii_actual_command
 
-.. autofunction:: execute_cmd_sh
-
 .. autofunction:: get_ttaaii_transmet_sh

@@ -429,8 +429,6 @@ def oproute_hook_factory(kind, productid, sshhost=None, optfilter=None, soprano_
             kwargs['domain'] = rh.resource.geometry.area
         if hasattr(rh.resource, 'term') and 'term' not in kwargs:
             kwargs['term'] = rh.resource.term.export_dict()
-            if kwargs['transmet']:
-                kwargs['transmet']['ECHEANCE'] = rh.resource.term.fmth
 
         kwargs['rhandler_uri'] = rh.location()
 

@@ -23,7 +23,21 @@ class FootprintTestBuiltins(FootprintBase):
             ),
             thetuple = dict(
                 type = FPTuple,
-            )
+            ),
+            thedefaultdict=dict(
+                type=FPDict,
+                optional=True,
+                default=dict(),
+            ),
+            thedefaultfpdict=dict(
+                type=FPDict,
+                optional=True,
+                default=FPDict(),
+            ),
+            thenodefaultdict=dict(
+                type=FPDict,
+                optional=True,
+            ),
         )
     )
 
@@ -81,6 +95,32 @@ class utFootprintBuiltins(TestCase):
         self.assertIsInstance(rv.thedict, dict)
         self.assertDictEqual(rv.thedict, dict(foo=2))
         self.assertSequenceEqual(list(rv.thedict.items()), [('foo', 2)])
+
+        self.assertIsInstance(rv.thedefaultdict, FPDict)
+        self.assertIsInstance(rv.thedefaultdict, dict)
+        self.assertDictEqual(rv.thedefaultdict, dict())
+        self.assertSequenceEqual(list(rv.thedefaultdict.items()), [])
+
+        self.assertIsInstance(rv.thedefaultfpdict, FPDict)
+        self.assertIsInstance(rv.thedefaultfpdict, dict)
+        self.assertDictEqual(rv.thedefaultfpdict, dict())
+        self.assertSequenceEqual(list(rv.thedefaultfpdict.items()), [])
+
+        self.assertEqual(rv.thenodefaultdict, None)
+
+        rv.thedefaultdict['TUTU'] = 1
+        rv.thedefaultfpdict['TOTO'] = 1
+        # rv.thenodefaultdict is readonly unless explicitely messing with permissions
+
+        rv2 = footprints.proxy.garbage(
+            thedict=FPDict(foo=2),
+            thelist=FPList(['one', 'two', 3]),
+            theset=FPSet([1, 2, 'three']),
+            thetuple=FPTuple(('one', 'two', 3))
+        )
+        self.assertDictEqual(rv2.thedefaultdict, dict())
+        self.assertDictEqual(rv2.thedefaultfpdict, dict(TOTO=1))
+        self.assertEqual(rv2.thenodefaultdict, None)
 
         self.assertIsInstance(rv.thelist, FPList)
         self.assertIsInstance(rv.thelist, list)

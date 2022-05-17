@@ -54,19 +54,6 @@ def ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir):
     return 'export {}; {}'.format(options, sh.path.join(scriptdir, transmet_cmd))
 
 
-def execute_cmd_sh(sh, cmd):
-    """Execute shell command.
-
-    :param sh: The vortex shell that will be used
-    :param cmd: commmand
-    :return: returncode of the command
-    :rtype: int
-    """
-
-    logger.info('excute command : %s', cmd)
-    return sh.spawn(cmd, shell=True, output=True)
-
-
 def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir, header_infile):
     """Create a file with transmet header and returns the filename used for routing.
 
@@ -80,7 +67,7 @@ def get_ttaaii_transmet_sh(sh, transmet_cmd, transmet_dict, filename, scriptdir,
     :rtype: str
     """
     cmd = ttaaii_actual_command(sh, transmet_cmd, transmet_dict, scriptdir)
-    filename_ttaaii = execute_cmd_sh(sh, cmd)[0]
+    filename_ttaaii = sh.spawn(cmd, shell=True, output=True)[0]
     filename_ttaaii = sh.path.join(sh.path.dirname(filename), filename_ttaaii)
     if header_infile:
         sh.rename('entete', filename_ttaaii)
