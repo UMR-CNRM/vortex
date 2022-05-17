@@ -397,14 +397,14 @@ odbmix_attributes = footprints.Footprint(
 
 @algo_component_deco_mixin_autodoc
 class OdbComponentDecoMixin(AlgoComponentDecoMixin):
-    """Handle ODB settings in AlgoComponnents.
+    """Handle ODB settings in AlgoComponents.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add footprints' arguments related to ODB
     (see :data:`odbmix_attributes`), set up generic ODB environment variables
     (:meth:`_odbobj_setup`) and provides a :attr:`odb` property that gives
     access to a properly initialised :class:`OdbDriver` object that can be used
-    directly in AlgoComponnents.
+    directly in AlgoComponents.
 
     In addition it provides directly some utility methods that can be called
     manually if needed.

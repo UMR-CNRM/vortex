@@ -50,7 +50,7 @@ class OpTask(Task):
 class MissingObsMixin(object):
     """This mixin can be added to any bator-like task.
 
-    It provides functions to alter the componnent_runner behaviour when the
+    It provides functions to alter the component_runner behaviour when the
     processing of one or several ODB fails
     """
 

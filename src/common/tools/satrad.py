@@ -22,7 +22,7 @@ logger = loggers.getLogger(__name__)
 class SatRadDecoMixin(AlgoComponentDecoMixin):
     """RTTOV settings + Satellites related stuffs.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically set up the path to RTTOV coefficient files
     (:meth:`_satrad_coeffdir_setup`).
 

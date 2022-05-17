@@ -53,7 +53,7 @@ class OOPSMemberDecoMixin(AlgoComponentDecoMixin):
 class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
     """Tries to detect a members/terms list using the sequence's inputs
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add footprints' attributes related to this feature, crawl into
     the sequence's input after the ``prepare`` step and, depending on the result
     of the members/terms detection add ``members`` and ``effterms`` entries into
@@ -78,7 +78,7 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
         info="Abstract mbdetect footprint",
         attr=dict(
             ens_minsize=dict(
-                info="For a multi-member algocomponnent, the minimum of the ensemble.",
+                info="For a multi-member algocomponent, the minimum of the ensemble.",
                 optional=True,
                 type=int
             ),
@@ -284,7 +284,7 @@ class OOPSMembersTermsDetectDecoMixin(AlgoComponentDecoMixin):
 class OOPSMembersTermsDecoMixin(AlgoComponentDecoMixin):
     """Adds members/terms footprints' attributes and use them in configuration files.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add footprints' attributes ``members`` and ``terms`` and add
     the corresponding ``members`` and ``effterms`` entries into
     the configuration file substitutions dictionary ``_generic_config_subs``.

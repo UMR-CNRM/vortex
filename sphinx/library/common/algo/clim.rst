@@ -1,8 +1,8 @@
-:mod:`common.algo.clim` --- Common AlgoComponnent to build model's climatology files
+:mod:`common.algo.clim` --- Common AlgoComponent to build model's climatology files
 ====================================================================================
 
 .. automodule:: common.algo.clim
-   :synopsis: Common AlgoComponnent to build model's climatology files
+   :synopsis: Common AlgoComponent to build model's climatology files
 
 .. moduleauthor:: The Vortex Team
 .. sectionauthor:: The Vortex Team

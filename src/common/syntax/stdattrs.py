@@ -14,7 +14,7 @@ import footprints
 #: Export a set of attributes :data:`a_run`, etc..
 __all__ = []
 
-#: Usual Footprint for a single member (in an algo componnent)
+#: Usual Footprint for a single member (in an algo Component)
 a_algo_member = dict(
     info=("The current member's number " +
           "(may be omitted in deterministic configurations)."),

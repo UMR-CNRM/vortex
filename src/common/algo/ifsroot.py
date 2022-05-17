@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Abstract base class for any AlgoComponnent leveraging the Arpege/IFS code.
+Abstract base class for any AlgoComponent leveraging the Arpege/IFS code.
 """
 
 from __future__ import print_function, absolute_import, unicode_literals, division

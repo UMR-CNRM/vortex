@@ -22,7 +22,7 @@ logger = footprints.loggers.getLogger(__name__)
 class _OOPSTestDecoMixin(AlgoComponentDecoMixin):
     """Extend OOPSParallel Algo Components with OOPS Tests features.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add the ``test_type`` footprints' attribute and extend the
     the dictionary that is used to build the binary' command line.
     """
@@ -41,7 +41,7 @@ class _OOPSTestDecoMixin(AlgoComponentDecoMixin):
 class _OOPSTestExpTargetDecoMixin(AlgoComponentDecoMixin):
     """Extend OOPSParallel Algo Components with OOPS Tests verification features.
 
-    This mixin class is intended to be used with AlgoComponnent classes. It will
+    This mixin class is intended to be used with AlgoComponent classes. It will
     automatically add the ``expected_target`` footprints' attribute and use it
     to setup the associated environment variable
     (see :meth:`set_expected_target`).

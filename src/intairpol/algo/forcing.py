@@ -75,7 +75,7 @@ class CorrOmegaSurf(Parallel):
 
 
 class AbstractSumoForcing(Parallel):
-    """Abstract AlgoComponnent for any forcing execution based on Sumo."""
+    """Abstract AlgoComponent for any forcing execution based on Sumo."""
 
     _abstract = True
     _footprint = [
@@ -162,7 +162,7 @@ class AbstractSumoForcing(Parallel):
 
 
 class AbstractSumoForcingWithMeteo(AbstractSumoForcing):
-    """Abstract AlgoComponnent for any forcing execution based on Sumo.
+    """Abstract AlgoComponent for any forcing execution based on Sumo.
 
     With a cplmto attribute.
     """
