@@ -28,3 +28,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: AlphaWeightFile
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
