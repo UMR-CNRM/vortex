@@ -13,17 +13,22 @@
 Classes
 -------
 
+.. autoclass:: MocaccTableChem
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: MocaccTableChemContent
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: ExtraConfMocacc
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: ExtraConfMocaccContent
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-
-.. autoclass:: MocaccDateEch
    :show-inheritance:
    :members:
    :member-order: alphabetical

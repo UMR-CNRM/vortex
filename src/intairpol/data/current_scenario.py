@@ -32,7 +32,7 @@ class CurrentScenarioContent(JsonDictContent):
 
     @property
     def started_at(self):
-        """When the scenario starts"""
+        """When did the scenario start ?"""
         return self._data["started_at"]
 
     def is_running(self):
@@ -40,23 +40,23 @@ class CurrentScenarioContent(JsonDictContent):
         return self.state == "running"
 
     def is_done(self):
-        """Is the scenarion has finished."""
+        """Is the scenario finished ?"""
         return self.state == "done"
 
     def has_failed(self):
-        """Has the scenarion failed."""
-        return self.state == "done"
+        """Has the scenario failed ?"""
+        return self.state == "failed"
 
     def mark_running(self):
-        """Is the scenario already running."""
+        """Mark the scenario as running."""
         self._data["state"] = "running"
 
     def mark_done(self):
-        """Is the scenarion has finished."""
+        """Mark the scenario as finished."""
         self._data["state"] = "done"
 
     def mark_failed(self):
-        """Has the scenarion failed."""
+        """Mark the scenario as failed."""
         self._data["state"] = "failed"
 
 
