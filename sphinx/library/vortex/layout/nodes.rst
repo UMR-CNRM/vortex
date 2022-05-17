@@ -59,6 +59,11 @@ Exceptions
    :members:
    :member-order: alphabetical
 
+.. autoclass:: RequestedFailureError
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 Utility classes
 ---------------
 

@@ -23,7 +23,7 @@ class S2MTaskMixIn(object):
     secondassimruntime = Time(hour=9, minute=0)
     monthly_analysis_time = Time(hour=12, minute=0)
 
-    ref_reanalysis = "reanalysis2020.2@lafaysse"  # Current version of S2M reanalysis
+    ref_reanalysis = "reanalysis2020.2@prep_reanalysis_CEN"  # Current version of S2M reanalysis
 
     def s2moper_filter_execution_error(self, exc):
         """Define the behaviour in case of errors.
@@ -71,11 +71,13 @@ class S2MTaskMixIn(object):
 
     def reforecast_filter_execution_error(self, exc):
         warning = {}
-        nerrors = len(list(enumerate(exc)))
-        warning["nfail"] = nerrors
-        accept_errors = nerrors < 5
-        if accept_errors:
-            print(self.warningmessage(nerrors, exc))
+        accept_errors = False
+        if isinstance(exc, DelayedAlgoComponentError):
+            nerrors = len(list(enumerate(exc)))
+            warning["nfail"] = nerrors
+            accept_errors = nerrors < 5
+            if accept_errors:
+                print(self.warningmessage(nerrors, exc))
         return accept_errors, warning
 
     def warningmessage(self, nerrors, exc):
@@ -190,8 +192,8 @@ class S2MTaskMixIn(object):
         return rundate_prep, alternates
 
     def get_list_members(self, sytron=True):
-        if not self.conf.nmembers:
-            raise ValueError
+        if 'nmembers' not in self.conf.keys() or self.conf.nmembers == 0:
+            return list(), list()  # Return empty lists to indicate only a deterministic run must be considered
         startmember = int(self.conf.startmember) if hasattr(self.conf, "startmember") else 0
         lastmember = int(self.conf.nmembers) + startmember - 1
 
@@ -219,18 +221,23 @@ class S2MTaskMixIn(object):
                 if self.conf.geometry.area == "postes":
                     return self.conf.geometry.list.split(",")
                 else:
-                    for suffix in list_suffix:
-                        if suffix in self.conf.geometry.area:
-                            return [self.conf.geometry.area.replace(suffix, '')]
-                    return [self.conf.geometry.area]  # for cases with meteo=safran but unknown area
+                    if self.conf.geometry.slopes:
+                        return [self.conf.geometry.tag.replace('allslopes', 'flat')]
+                    else:
+                        return [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
             else:
-                return [self.conf.geometry.area]
+                return [self.conf.geometry.tag]
 
     def get_alternate_safran(self):
         if self.conf.geometry.area == 'postes':
             return "safran", "postes", self.conf.geometry.list.split(",")
         else:
-            return "safran", "massifs", [self.conf.geometry.area[0:3]]
+            if self.conf.geometry.slopes:
+                alternate_geo = [self.conf.geometry.tag.replace('allslopes', 'flat')]
+            else:
+                alternate_geo = [self.conf.geometry.tag]  # for cases with meteo=safran but unknown area
+
+            return "safran", "massifs", alternate_geo
 
     def get_block_safran_from_geometry(self):
         if self.conf.geometry.area == 'postes':

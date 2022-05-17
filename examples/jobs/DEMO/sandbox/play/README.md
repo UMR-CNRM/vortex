@@ -22,7 +22,7 @@ of the Vortex's job creation system. To do so, the "fake" task `Beacon` is used
 the cache. For demonstration purposes, the `Beacon` tasks can be asked to fail
 (by setting `failer=True` in the configuration file or at object creation time)  
 
-## Demonstration of the `on_error` feature and of the use of a custom JobAssistant plugin
+## Demonstration of the `on_error` and `delay_component_errors` features
 
 To launch the demo:
     
@@ -33,7 +33,7 @@ To launch the demo:
     python ./on_error_feature_job.py
 
 Look at the code in `tasks/on_error_feature.py` in order to get some
-explanations on the `on_error` feature.
+explanations on the `on_error` and `delay_component_errors` features.
 
 In this job, the `ConfigFileAccessJobAssistantPlugin` JobAssistant's plugin
 is used (because `loadedjaplugins = configfile_access` in the configuration)
