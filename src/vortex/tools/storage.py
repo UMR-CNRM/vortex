@@ -526,11 +526,10 @@ class Cache(Storage):
         return rc, dict(fmt=fmt)
 
 
-class Archive(Storage):
-    """The default class to handle storage to a remote location."""
+class AbstractArchive(Storage):
+    """The default class to handle storage to some kind if Archive."""
 
-    _default_usejeeves = False
-
+    _abstract = True
     _collector = ('archive',)
     _footprint = dict(
         info = 'Default archive description',
@@ -553,15 +552,6 @@ class Archive(Storage):
     @property
     def realkind(self):
         return 'archive'
-
-    @property
-    def default_usejeeves(self):
-        """This archive sync_insert default value."""
-        if self._actual_config.has_option(self.kind, 'usejeeves'):
-            conf_value = self._actual_config.get(self.kind, 'usejeeves')
-        else:
-            conf_value = self.sh.default_target.get('stores:archive_usejeeves', None)
-        return self._default_usejeeves if conf_value is None else bool(istruedef.match(conf_value))
 
     def _formatted_path(self, rawpath, **kwargs):
         root = kwargs.get('root', None)
@@ -612,6 +602,30 @@ class Archive(Storage):
             return self._actual_proxy_method(pmethod)(item, local, retrieve_id, **kwargs)
         else:
             return None, dict()
+
+
+class Archive(AbstractArchive):
+    """The default class to handle storage to a remote location."""
+
+    _default_usejeeves = False
+
+    _footprint = dict(
+        info = 'Default archive description',
+        attr = dict(
+            tube = dict(
+                values   = ['ftp'],
+            ),
+        )
+    )
+
+    @property
+    def default_usejeeves(self):
+        """This archive sync_insert default value."""
+        if self._actual_config.has_option(self.kind, 'usejeeves'):
+            conf_value = self._actual_config.get(self.kind, 'usejeeves')
+        else:
+            conf_value = self.sh.default_target.get('stores:archive_usejeeves', None)
+        return self._default_usejeeves if conf_value is None else bool(istruedef.match(conf_value))
 
     @property
     def _ftp_hostinfos(self):
@@ -814,6 +828,96 @@ class Archive(Storage):
             else:
                 logger.error('Try to remove a non-existing resource <%s>', item)
         return rc, dict()
+
+
+class LocalArchive(AbstractArchive):
+    """The default class to handle storage to the same host."""
+
+    _footprint = dict(
+        info = 'Default local archive description',
+        attr = dict(
+            storage = dict(
+                value    = ['localhost', ],
+            ),
+            tube = dict(
+                values   = ['inplace', ],
+            ),
+            auto_self_expand = dict(
+                info     = ('Automatically expand the current user home if ' +
+                            'a relative path is given (should always be True ' +
+                            'except during unit-testing)'),
+                type     = bool,
+                default  = True,
+                optional = True,
+            ),
+        )
+    )
+
+    def _formatted_path(self, rawpath, **kwargs):
+        rawpath = self.sh.path.expanduser(rawpath)
+        if '~' in rawpath:
+            raise OSError('User expansion failed for "{:s}"'.format(rawpath))
+        if self.auto_self_expand and not self.sh.path.isabs(rawpath):
+            rawpath = self.sh.path.expanduser(self.sh.path.join('~', rawpath))
+        return super(LocalArchive, self)._formatted_path(rawpath, **kwargs)
+
+    def _inplacefullpath(self, item, **kwargs):
+        """Actual _fullpath."""
+        return item, dict()
+
+    def _inplacecheck(self, item, **kwargs):
+        """Actual _check."""
+        try:
+            st = self.sh.stat(item)
+        except OSError:
+            rc = None
+        else:
+            rc = st.st_size
+        return rc, dict()
+
+    def _inplacelist(self, item, **kwargs):
+        """Actual _list."""
+        if self.sh.path.exists(item):
+            if self.sh.path.isdir(item):
+                return self.sh.listdir(item), dict()
+            else:
+                return True, dict()
+        else:
+            return None, dict()
+
+    def _inplaceretrieve(self, item, local, **kwargs):
+        """Actual _retrieve using ftp."""
+        logger.info('inplaceget on file:///%s (to: %s)', item, local)
+        fmt = kwargs.get('fmt', 'foo')
+        cpipeline = kwargs.get('compressionpipeline', None)
+        if cpipeline:
+            rc = cpipeline.file2uncompress(item, local)
+        else:
+            # Do not use fmt=... on purpose (otherwise "forceunpack" may be called twice)
+            rc = self.sh.cp(item, local, intent='in')
+        rc = rc and self.sh.forceunpack(local, fmt=fmt)
+        return rc, dict(fmt=fmt, cpipeline=cpipeline)
+
+    def _inplaceinsert(self, item, local, **kwargs):
+        """Actual _insert using ftp."""
+        logger.info('inplaceput to file:///%s (from: %s)', item, local)
+        cpipeline = kwargs.get('compressionpipeline', None)
+        fmt = kwargs.get('fmt', 'foo')
+        local_packed = self.sh.forcepack(local, fmt=fmt)
+        if cpipeline:
+            rc = cpipeline.compress2file(local_packed, item)
+        else:
+            # Do not use fmt=... on purpose (otherwise "forcepack" may be called twice)
+            rc = self.sh.cp(local_packed, item, intent='in')
+        return rc, dict(fmt=fmt, cpipeline=cpipeline)
+
+    def _inplacedelete(self, item, **kwargs):
+        """Actual _delete using ftp."""
+        fmt = kwargs.get('fmt', 'foo')
+        rc = None
+        if self._inplacecheck(item, **kwargs)[0]:
+            rc = self.sh.rm(item, fmt=fmt)
+        return rc, dict(fmt=fmt)
 
 
 # Concrete cache implementations

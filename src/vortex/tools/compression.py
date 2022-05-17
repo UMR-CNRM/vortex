@@ -152,6 +152,14 @@ class CompressionPipeline(object):
                 yield lstream
             self._genericstream_close(processes)
 
+    def _xcopyfileobj(self, in_fh, out_fh):
+        try:
+            self._sh.copyfileobj(in_fh, out_fh)
+        except OSError:
+            return False
+        else:
+            return True
+
     def compress2file(self, local, destination):
         """Compress *local* into a file (named *destination*)
 
@@ -160,7 +168,7 @@ class CompressionPipeline(object):
         """
         with io.open(destination, 'wb') as fhout:
             with self.compress2stream(local) as fhcompressed:
-                return self._sh.copyfileobj(fhcompressed, fhout)
+                return self._xcopyfileobj(fhcompressed, fhout)
 
     def compress2rawftp(self, local):
         """
@@ -206,7 +214,7 @@ class CompressionPipeline(object):
         """
         with self.stream2uncompress(destination) as fhuncompressed:
             with io.open(local, 'rb') as fhcompressed:
-                return self._sh.copyfileobj(fhcompressed, fhuncompressed)
+                return self._xcopyfileobj(fhcompressed, fhuncompressed)
 
 
 class CompressionUnit(footprints.FootprintBase):

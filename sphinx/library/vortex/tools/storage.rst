@@ -34,7 +34,17 @@ Generic Cache and Archive management classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: AbstractArchive
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: Archive
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: LocalArchive
    :show-inheritance:
    :members:
    :member-order: alphabetical
