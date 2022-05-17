@@ -152,7 +152,7 @@ class Mfwam(Parallel, grib.EcGribDecoMixin):
             datefin = (rhgrib.resource.date + fcterm).compact()
             datedebana = rhgrib.resource.date - self.anabegin + self.deltabegin
             if self.isana:
-                datefinana = rhgrib.resource.date
+                datefinana = rhgrib.resource.date + fcterm
             else:
                 datefinana = datedebana
         else:
@@ -233,6 +233,10 @@ class MfwamGauss2Grib(ParaBlindRun):
                 type = FPList,
                 default = FPList(["glob02", ])
             ),
+            member = dict(
+                type = int,
+                optional = True,
+            ),
             refreshtime = dict(
                 type = int,
                 optional = True,
@@ -241,7 +245,7 @@ class MfwamGauss2Grib(ParaBlindRun):
             timeout = dict(
                 type = int,
                 optional = True,
-                default = 600,
+                default = 900,
             ),
         )
     )
@@ -255,9 +259,19 @@ class MfwamGauss2Grib(ParaBlindRun):
         tmout = False
 
         # verification of the namelists
-        for dom in self.grid:
-            if not self.system.path.exists("./grids/" + dom + ".nam"):
-                raise IOError("./grids/" + dom + ".nam must exist.")
+        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),)
+        # case of PE
+        if len(namcandidate) > 0:
+            namcontents = namcandidate[0].rh.contents
+            namcontents.setmacro('MEMBER', self.member)
+            namcandidate[0].rh.save()
+            with io.open('fort.3', 'w') as fhnam:
+                fhnam.write(namcontents.dumps())
+        # case of determinist
+        else:
+            for dom in self.grid:
+                if not self.system.path.exists("./grids/" + dom + ".nam"):
+                    raise IOError("./grids/" + dom + ".nam must exist.")
 
         # Monitor for the input files
         bm = BasicInputMonitor(self.context, caching_freq=self.refreshtime,
@@ -321,6 +335,13 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
         sh = self.system
         logger.info("Post-processing of %s", self.file_in)
 
+        # verification of the namelists
+        namcandidate = self.context.sequence.effective_inputs(role=('Namelist'),)
+        if len(namcandidate) > 0:
+            isnam = True
+        else:
+            isnam = False
+
         # Prepare the working directory
         cwd = sh.pwd()
         output_files = set()
@@ -330,7 +351,11 @@ class _MfwamGauss2GribWorker(VortexWorkerBlindRun):
             for dom in self.grid:
                 sh.title('domain : {:s}'.format(dom))
                 # copy of namelist
-                sh.cp(sh.path.join(cwd, "grids", dom + ".nam"), 'fort.2')
+                if isnam:
+                    sh.cp(sh.path.join(cwd, "fort.2"), 'fort.2')
+
+                else:
+                    sh.cp(sh.path.join(cwd, "grids", dom + ".nam"), 'fort.2')
                 # execution
                 self.local_spawn("output.{:s}.log".format(dom))
                 # copie output

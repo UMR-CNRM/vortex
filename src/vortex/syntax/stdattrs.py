@@ -40,8 +40,9 @@ models = set([
 #: Possible values for the most common binaries.
 binaries = set(['arpege', 'aladin', 'arome', 'batodb', 'peace', 'mocage', 'sumo',
                 'corromegasurf', 'mesonh', 'safran', 'surfex', 'macc', 'mktopbd',
-                'ifs', 'oops', 'assistance', 'arpifs', 'mfwam', 'ww3', 'ww3_prnc',
-                'ww3_bound', 'ww3_ncgrb', 'ial', 'alaro', 'harmoniearome'])
+                'ifs', 'oops', 'assistance', 'arpifs', 'mfwam', 'mfwam_interp',
+                'ww3', 'ww3_prnc', 'ww3_bound', 'ww3_ncgrb', 'ial', 'alaro',
+                'harmoniearome'])
 #: Possible values for the most common utility programs.
 utilities = set(['batodb'])
 
