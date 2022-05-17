@@ -23,6 +23,8 @@ from bronx.fancies import loggers
 from bronx.stdtypes.tracking import Tracker
 
 from . import addons
+
+from vortex.layout import contexts
 from vortex.tools.net import DEFAULT_FTP_PORT
 
 #: Export nothing
@@ -155,14 +157,15 @@ class LFI_Tool_Raw(addons.FtrawEnableAddon):
     def __init__(self, *args, **kw):
         """LFI tools initialisation."""
         super(LFI_Tool_Raw, self).__init__(*args, **kw)
-        self._lfitools_path = None
+        self._lfitools_path = dict()
 
     @property
     def lfitools_path(self):
-        if self._lfitools_path is None:
-            self._lfitools_path = self.actual_path + '/' + self.actual_cmd
-            self.sh.xperm(self._lfitools_path, force=True)
-        return self._lfitools_path
+        ctxtag = contexts.Context.tag_focus()
+        if ctxtag not in self._lfitools_path:
+            self._lfitools_path[ctxtag] = self.sh.path.join(self.actual_path, self.actual_cmd)
+            self.sh.xperm(self._lfitools_path[ctxtag], force=True)
+        return self._lfitools_path[ctxtag]
 
     def _spawn(self, cmd, **kw):
         """Tube to set LFITOOLS env variable."""
