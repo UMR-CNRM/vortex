@@ -256,7 +256,7 @@ class ArpifsListingsFormatAdapter(FormatAdapterAbstractImplementation):
         return len(self.lines)
 
 
-class CutoffDispenser(object):
+class ListBasedCutoffDispenser(object):
     """
     From a dictionary of cutoff times (probably read from an extraction listing,
     see :class:`BdmBufrListingsFormatAdapter`), for a given *obstype*, find the
@@ -359,5 +359,5 @@ class BdmBufrListingsFormatAdapter(FormatAdapterAbstractImplementation):
 
     def cutoffs_dispenser(self, fuse_per_obstype=False):
         """Return a new :class:`CutoffDispenser` object."""
-        return CutoffDispenser(copy.deepcopy(self.cutoffs),
-                               fuse_per_obstype=fuse_per_obstype)
+        return ListBasedCutoffDispenser(copy.deepcopy(self.cutoffs),
+                                        fuse_per_obstype=fuse_per_obstype)

@@ -11,16 +11,6 @@ default:
             gnamespace: 'gco.multi.fr'
             vapp: arpege
             vconf: 4dvarfr
-        # Arome world
-        -   date: 2018010100
-            geometry: franmgsp
-            cutoff: assim
-            model: arome
-            namespace: vortex.multi.fr
-            cycle: al42_arome-op2.40
-            gnamespace: 'gco.multi.fr'
-            vapp: arome
-            vconf: 3dvarfr
 
 register:
     genv:
@@ -33,4 +23,14 @@ todo:
             genv: '[cycle]'
         tests:
             - kind: gpslist
-            
+            - kind: config
+              scope: void
+              nativefmt:
+                  - yaml
+                  - json
+                  - ascii
+              source: toto.[nativefmt]
+            - kind: config
+              scope: oops
+              nativefmt: json
+              objects: model

@@ -14,12 +14,12 @@
 Classes
 -------
 
-.. autoclass:: IA4H_gitref_to_MainPack
+.. autoclass:: IAL_gitref_to_MainPack
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
-.. autoclass:: Bundle_to_MainPack
+.. autoclass:: Bundle2Pack
    :show-inheritance:
    :members:
    :member-order: alphabetical
@@ -34,12 +34,17 @@ Classes
    :members:
    :member-order: alphabetical
 
-.. autoclass:: IA4H_gitref_to_IncrementalPack
+.. autoclass:: IAL_gitref_to_IncrementalPack
    :show-inheritance:
    :members:
    :member-order: alphabetical
 
 .. autoclass:: GmkpackDecoMixin
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: IALgitref2Pack
    :show-inheritance:
    :members:
    :member-order: alphabetical

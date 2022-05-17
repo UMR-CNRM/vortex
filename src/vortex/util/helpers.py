@@ -66,6 +66,13 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
             keylist.append(value)
         rhgroups[tuple(keylist)].append(rh)
 
+    candidateslist = [
+        fp.stdtypes.FPDict({k: v
+                            for k, v in zip(grouping_keys, group)
+                            if v is not None})
+        for group in rhgroups.keys()
+    ]
+
     # Activate FTP connections pooling (for enhanced performances)
     t = sessions.current()
     with t.sh.ftppool():
@@ -101,7 +108,7 @@ def generic_input_checker(grouping_keys, min_items, *rhandlers, **kwargs):
         raise InputCheckerError("The number of input groups is too small " +
                                 "({:d} < {:d})".format(len(outputlist), min_items))
 
-    return fp.stdtypes.FPList(outputlist)
+    return fp.stdtypes.FPList(outputlist), fp.stdtypes.FPList(candidateslist)
 
 
 def members_input_checker(min_items, *rhandlers, **kwargs):
@@ -110,7 +117,7 @@ def members_input_checker(min_items, *rhandlers, **kwargs):
     considered and the return values corresponds to a list of members.
     """
     mlist = [desc['member'] for desc in generic_input_checker(('member', ), min_items,
-                                                              *rhandlers, **kwargs)]
+                                                              *rhandlers, **kwargs)[0]]
     return fp.stdtypes.FPList(sorted(mlist))
 
 

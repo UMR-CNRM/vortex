@@ -104,18 +104,28 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                     self.assertTrue(
                         stA.get(uriparse('uget://uget.archive.fr/data/rrtm.const.02b.tgz@huguette'),
                                 self.sh.path.join('rrtm_arch', 'rrtm_full.tgz'), dict()))
-                    with self.sh.cdcontext('rrtm_arch'):
-                        for i in range(1, 4):
-                            with io.open('file{:d}'.format(i)) as fhm:
-                                self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
+                    # Get a tar file and expand it because of dir_extract
+                    self.assertTrue(
+                        stA.get(uriparse('uget://uget.archive.fr/data/rrtm.const.02b.tgz@huguette?dir_extract=1'),
+                                'rrtm_arch_bis', dict()))
+                    # Check extracted content
+                    for where in ('rrtm_arch', 'rrtm_arch_bis'):
+                        with self.sh.cdcontext(where):
+                            for i in range(1, 4):
+                                with io.open('file{:d}'.format(i)) as fhm:
+                                    self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
                     self.assertTrue(
                         stA.get(uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette'),
                                 self.sh.path.join('nam_arch', 'nam_full.tgz'), dict()))
-                    with self.sh.cdcontext('nam_arch'):
-                        for i in range(1, 4):
-                            with io.open('file{:d}'.format(i)) as fhm:
-                                self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
-                        self.assertTrue(self.sh.path.islink('link1'))
+                    self.assertTrue(
+                        stA.get(uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?dir_extract=1'),
+                                'nam_arch_bis', dict()))
+                    for where in ('nam_arch', 'nam_arch_bis'):
+                        with self.sh.cdcontext(where):
+                            for i in range(1, 4):
+                                with io.open('file{:d}'.format(i)) as fhm:
+                                    self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
+                            self.assertTrue(self.sh.path.islink('link1'))
                     # Namelist with extract
                     self.assertTrue(
                         stA.get(uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?extract=file1'),
@@ -129,6 +139,10 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                                 cont.iotarget(), dict()))
                     cont.rewind()
                     self.assertEqual(cont.readline().rstrip(b'\n'), b'archive')
+                    # An impossible request...
+                    with self.assertRaises(RuntimeError):
+                        stA.get(uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?dir_extract=1'),
+                                cont.iotarget(), dict())
                     # Put a file in the archive
                     stAbis = fp.proxy.store(scheme='uget', netloc='uget.archive.fr',
                                             storetube='ftp', readonly=False)
@@ -138,6 +152,11 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                     self.assertFalse(stAbis.put(
                         self.sh.path.join('nam_ext1', 'nam_ext_arch1'),
                         uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?extract=fileX'),
+                        dict(delayed=False)
+                    ))
+                    self.assertFalse(stAbis.put(
+                        'nam_arch_bis',
+                        uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?dir_extract=1'),
                         dict(delayed=False)
                     ))
                     with io.open(self.sh.path.join(self.udir, 'uget', 'data', 'c', 'mask.atms.02')) as fhm:
@@ -160,6 +179,13 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                                                   dict()))
                     self.assertFalse(stA.check(uriparse('uget://uget.archive.fr/data/mask.atms.02@huguette'),
                                                dict()))
+                    # Failing deletes
+                    self.assertFalse(stAbis.delete(
+                        uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?dir_extract=1'),
+                        dict()))
+                    self.assertFalse(stAbis.delete(
+                        uriparse('uget://uget.archive.fr/data/cy99t1.00.nam.tgz@huguette?extract=toto'),
+                        dict()))
 
                 # Test some refill
                 stM = fp.proxy.store(scheme='uget', netloc='uget.multi.fr', storetube='ftp')
@@ -168,14 +194,14 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
                             'mask2', dict())
                     with io.open('mask2') as fhm:
                         self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
-                    # Get a tar file but do not expand it because of its name (from hack)
+                    # Get a tar file but do not expand it because of its name (from archive)
                     self.assertTrue(
                         stM.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette'),
                                 'nam_nope2', dict()))
-                    # Get a tar file and expand it because of its name (from hack)
+                    # Get a tar file and expand it because of its dir_extract (from archive)
                     self.assertTrue(
-                        stM.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette'),
-                                self.sh.path.join('rrtm_arch2', 'rrtm_full.tgz'), dict()))
+                        stM.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?dir_extract=1'),
+                                'rrtm_arch2', dict()))
                     with self.sh.cdcontext('rrtm_arch2'):
                         for i in range(1, 4):
                             with io.open('file{:d}'.format(i)) as fhm:
@@ -225,8 +251,12 @@ class TestGcoArchiveStore(ftpunittests.MtoolNetrcFtpBasedTestCase):
             self.assertTrue(
                 stC.get(uriparse('uget://uget.cache.fr/data/cy99t1.00.nam.tgz@huguette'),
                         self.sh.path.join('nam_arch3', 'nam_full.tgz'), dict()))
-            with self.sh.cdcontext('nam_arch3'):
-                for i in range(1, 4):
-                    with io.open('file{:d}'.format(i)) as fhm:
-                        self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
-                self.assertTrue(self.sh.path.islink('link1'))
+            self.assertTrue(
+                stC.get(uriparse('uget://uget.cache.fr/data/cy99t1.00.nam.tgz@huguette?dir_extract=1'),
+                        'nam_arch4', dict()))
+            for where in ('nam_arch3', 'nam_arch4'):
+                with self.sh.cdcontext(where):
+                    for i in range(1, 4):
+                        with io.open('file{:d}'.format(i)) as fhm:
+                            self.assertEqual(fhm.readline().rstrip("\n"), 'archive')
+                    self.assertTrue(self.sh.path.islink('link1'))

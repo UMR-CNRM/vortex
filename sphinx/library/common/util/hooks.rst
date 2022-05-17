@@ -19,3 +19,7 @@ Functions
 .. autofunction:: concatenate
 
 .. autofunction:: insert_cutoffs
+
+.. autofunction:: insert_static_cutoffs
+
+.. autofunction:: arpifs_obs_error_correl_legacy2oops

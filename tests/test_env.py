@@ -8,7 +8,7 @@ import os
 
 from unittest import TestCase, main
 
-from common.data.modelstates import Analysis
+from common.data.modelstates import Analysis3D
 from vortex.data import geometries
 from vortex.tools.env import Environment
 
@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.ERROR)
 class UtEnv(TestCase):
 
     def setUp(self):
-        self.res = Analysis(
+        self.res = Analysis3D(
             geometry=geometries.get(tag='global798'),
             model='arpege',
             date='201304231500',

@@ -27,6 +27,8 @@ Pre-defined attributes as abstract footprints
 
 .. autodata:: oops_members_terms_lists
 
+.. autodata:: algo_member
+
 .. autodata:: outputid
 
 Pre-defined attributes as dictionaries
@@ -37,6 +39,8 @@ Pre-defined attributes as dictionaries
 .. autodata:: a_oops_test_type
 
 .. autodata:: an_oops_expected_target
+
+.. autodata:: a_algo_member
 
 .. autodata:: a_outputid
 

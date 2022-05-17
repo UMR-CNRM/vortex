@@ -195,3 +195,13 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: DomeoForcing
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
+.. autoclass:: DomeoScriptDataCor
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical

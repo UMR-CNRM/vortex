@@ -487,8 +487,14 @@ class FullPosServer(IFSParallel):
                 outputpath = self._o_raw_fmt.format(
                     self._o_auto_prefix(irh.container.actualfmt), self.append_domain, i, ''
                 )
-                self.system.cp(sourcepath, outputpath, intent='inout', fmt=irh.container.actualfmt)
-                logger.info('output file prepared: %s copied (rw) to %s.', sourcepath, outputpath)
+
+                if self.outdirectories:
+                    todo = [self.system.path.join(d, outputpath) for d in self.outdirectories]
+                else:
+                    todo = [outputpath, ]
+                for a_outputpath in todo:
+                    self.system.cp(sourcepath, a_outputpath, intent='inout', fmt=irh.container.actualfmt)
+                    logger.info('output file prepared: %s copied (rw) to %s.', sourcepath, a_outputpath)
 
     def _move_output_guess(self, iguess, i):
         """Move the output file guesses to their final location."""

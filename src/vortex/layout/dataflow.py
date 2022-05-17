@@ -445,11 +445,14 @@ class Sequence(observer.Observer):
             return list(sections)
         inrole = list()
         inkind = list()
+        with_alternates = not kw.get('no_alternates', False)
         if 'role' in kw and kw['role'] is not None:
             selectrole = mktuple(kw['role'])
             inrole = [x for x in sections if (
                 (x.role is not None and self._fuzzy_match(x.role, selectrole)) or
-                (x.alternate is not None and self._fuzzy_match(x.alternate, selectrole))
+                (with_alternates and
+                 x.alternate is not None and
+                 self._fuzzy_match(x.alternate, selectrole))
             )]
         if not inrole and 'kind' in kw:
             selectkind = mktuple(kw['kind'])
@@ -477,11 +480,8 @@ class Sequence(observer.Observer):
         Similar to :meth:`filtered_inputs` but only walk through the inputs of
         that reached the 'get' or 'expected' stage.
         """
-        return self._section_list_filter(
-            [x for x in self.inputs()
-             if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()
-             ],
-            **kw)
+        return [x for x in self._section_list_filter(list(self.inputs()), **kw)
+                if (x.stage == 'get' or x.stage == 'expected') and x.rh.container.exists()]
 
     def filtered_inputs(self, **kw):
         """Walk through the inputs of the current sequence.
@@ -497,6 +497,21 @@ class Sequence(observer.Observer):
         of the string).
         """
         return self._section_list_filter(list(self.inputs()), **kw)
+
+    def is_somehow_viable(self, section):
+        """Tells wether *section* is ok or has a viable alternate."""
+        if section.role is None:
+            raise ValueError('An alternate section was given ; this is incorrect...')
+        if section.stage in ('get', 'expected') and section.rh.container.exists():
+            return section
+        else:
+            for isec in self.inputs():
+                if (isec.alternate == section.role and
+                        isec.stage in ('get', 'expected') and
+                        isec.rh.container.localpath() == section.rh.container.localpath() and
+                        isec.rh.container.exists()):
+                    return isec
+        return None
 
     def executables(self):
         """Return a list of current sequence sections with ``ixo.EXEC`` kind."""

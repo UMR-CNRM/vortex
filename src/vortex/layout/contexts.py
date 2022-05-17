@@ -364,7 +364,8 @@ class Context(getbytag.GetByTag, observer.Observer):
         """
         if self._prestaging_hub is None:
             self._prestaging_hub = vortex.tools.prestaging.get_hub(tag='contextbound_{:s}'.format(self.tag),
-                                                                   sh=self.system)
+                                                                   sh=self.system,
+                                                                   email=self.session.glove.email)
         return self._prestaging_hub
 
     @property

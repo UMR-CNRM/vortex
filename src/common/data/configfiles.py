@@ -102,19 +102,37 @@ class OopsJsonConfig(JsonConfig):
     )
 
 
-class Bundle(StaticResource):
-    """Contains bundling of source codes."""
+class YamlConfig(GenericConfig):
+    """Generic class to access a pack of YAML configuration files."""
     _footprint = dict(
-        info = 'Contains bundling of source codes.',
+        info = 'YAML Configuration file from a pack',
         attr = dict(
-            kind = dict(
-                values = ['bundle']
-            ),
             nativefmt = dict(
-                values = ['yml', 'yaml']
+                values = ['yaml', ]
             ),
         )
     )
+
+
+class Bundle(StaticResource):
+    """Contains bundling of source codes."""
+    _footprint = [
+        gvar,
+        dict(
+            info = 'Contains bundling of source codes.',
+            attr = dict(
+                kind = dict(
+                    values = ['bundle']
+                ),
+                gvar = dict(
+                    default = 'bundle',
+                ),
+                nativefmt = dict(
+                    values = ['yml', 'yaml']
+                ),
+            )
+        )
+    ]
 
     @property
     def realkind(self):

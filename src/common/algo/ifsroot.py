@@ -14,6 +14,7 @@ from vortex.syntax.stdattrs import model
 from vortex.tools import grib
 
 from common.algo import ifsnaming  # @UnusedImport
+from common.syntax.stdattrs import algo_member
 from common.tools import satrad, drhook
 
 #: No automatic export
@@ -28,7 +29,7 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
 
     _abstract = True
     _footprint = [
-        model,
+        model, algo_member,
         dict(
             info = 'Abstract AlgoComponent for anything based on Arpege/IFS.',
             attr = dict(
@@ -93,12 +94,6 @@ class IFSParallel(Parallel, ParallelIoServerMixin,
                     optional        = True,
                     default         = 'XPVT',
                     doc_visibility  = footprints.doc.visibility.ADVANCED,
-                ),
-                member = dict(
-                    info            = ("The current member's number " +
-                                       "(may be omitted in deterministic configurations)."),
-                    optional        = True,
-                    type            = int,
                 ),
                 mpiconflabel = dict(
                     default  = 'mplbased'

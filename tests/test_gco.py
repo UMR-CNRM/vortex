@@ -111,12 +111,17 @@ class TestGcoGget(PrivateCocoonGcoTest):
                                'somefile01', dict()))
         self.assert_mantra('somefile01')
         # Directory
-        self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01'),
+        self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01?dir_extract=0'),
                                'somedir01', dict()))
-        self.assert_mantra(os.path.join('somedir01', 'file1'))
-        self.assert_mantra(os.path.join('somedir01', 'file4'))
-        self.assertTrue(os.path.islink(os.path.join('somedir01', 'file4')))
-        self.assertTrue(os.path.isdir(os.path.join('somedir01', 'subdir')))
+        self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01?dir_extract=1'),
+                               'somedir02', dict()))
+        self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakearchive.01.tgz?dir_extract=1'),
+                               'tar_as_dir', dict()))
+        for where in ('somedir01', 'somedir02', 'tar_as_dir'):
+            self.assert_mantra(os.path.join(where, 'file1'))
+            self.assert_mantra(os.path.join(where, 'file4'))
+            self.assertTrue(os.path.islink(os.path.join(where, 'file4')))
+            self.assertTrue(os.path.isdir(os.path.join(where, 'subdir')))
         # Directory with extract
         self.assertTrue(st.get(uriparse('gget://gco.meteo.fr/fakedir.01?extract=file4'),
                                'extracted', dict()))
@@ -154,15 +159,20 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assertTrue(st.get(uriparse('gget://gco.multi.fr/fakedir.01?extract=file4'),
                                    'extracted', dict()))
             self.assert_mantra('extracted')
-            self.assertTrue(st.get(uriparse('gget://gco.multi.fr/fakedir.02'),
+            self.assertTrue(st.get(uriparse('gget://gco.multi.fr/fakedir.02?dir_extract=1'),
                                    'somedir01', dict()))
+            self.assertTrue(st.get(uriparse('gget://gco.multi.fr/fakedir.02'),
+                                   'somedir02', dict()))
             self.assertTrue(st.check(uriparse('gget://gco.multi.fr/fakedir.02'), dict()))
-            self.assert_mantra(self.sh.path.join('somedir01', 'file1'))
-            self.assert_mantra(self.sh.path.join('somedir01', 'file4'))
-            self.assertTrue(self.sh.path.islink(self.sh.path.join('somedir01', 'file4')))
-            self.assertTrue(self.sh.path.isdir(self.sh.path.join('somedir01', 'subdir')))
+            self.assertTrue(st.check(uriparse('gget://gco.multi.fr/fakedir.02?dir_extract=1'),
+                                     dict()))
+            for where in ('somedir01', 'somedir02'):
+                self.assert_mantra(self.sh.path.join(where, 'file1'))
+                self.assert_mantra(self.sh.path.join(where, 'file4'))
+                self.assertTrue(self.sh.path.islink(self.sh.path.join(where, 'file4')))
+                self.assertTrue(self.sh.path.isdir(self.sh.path.join(where, 'subdir')))
             self.assertTrue(st.get(uriparse('gget://gco.multi.fr/fakearchive.01.tgz'),
-                                   'totofull', dict()))
+                            'totofull', dict()))
         # Refill should be ok...
         with self.sh.cdcontext('fromcache', create=True):
             st = fp.proxy.store(scheme='gget', netloc='gco.cache.fr')
@@ -173,18 +183,32 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assert_mantra('extracted')
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakedir.02'),
                                    'somedir01', dict()))
-            self.assert_mantra(self.sh.path.join('somedir01', 'file1'))
-            self.assert_mantra(self.sh.path.join('somedir01', 'file4'))
-            self.assertTrue(self.sh.path.islink(self.sh.path.join('somedir01', 'file4')))
-            self.assertTrue(self.sh.path.isdir(self.sh.path.join('somedir01', 'subdir')))
-            # Stess the check/locate/delete methods
+            self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'),
+                                   'somedir02', dict()))
+            for where in ('somedir01', 'somedir02'):
+                self.assert_mantra(self.sh.path.join(where, 'file1'))
+                self.assert_mantra(self.sh.path.join(where, 'file4'))
+                self.assertTrue(self.sh.path.islink(self.sh.path.join(where, 'file4')))
+                self.assertTrue(self.sh.path.isdir(self.sh.path.join(where, 'subdir')))
+            # Stress the check/locate/delete methods
             self.assertTrue(st.check(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
+            self.assertTrue(st.check(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict()))
             fdir_location = st.locate(uriparse('gget://gco.cache.fr/fakedir.02'), dict())
             self.assertEqual(self.sh.path.join(gcocache, 'fakedir.02'),
                              fdir_location)
+            fdir_locationE = st.locate(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict())
+            self.assertEqual(self.sh.path.join(gcocache, 'fakedir.02.autoextract'),
+                             fdir_locationE)
+            # Remove one of the files the .autoextract
+            self.sh.rm(self.sh.path.join(fdir_locationE, 'file4'))
+            self.assertTrue(st.check(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
+            self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict()))
+            self.assertFalse(st.get(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'),
+                                    'somedir02ko', dict()))
             # Remove the index and check again...
             self.sh.mv(fdir_location + '.index', fdir_location + '.indexold')
             self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
+            self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict()))
             self.assertFalse(st.get(uriparse('gget://gco.cache.fr/fakedir.02'),
                                     'somedir01ko', dict()))
             self.assertFalse(self.sh.path.exists('somedir01ko'))
@@ -196,22 +220,31 @@ class TestGcoGget(PrivateCocoonGcoTest):
             self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02?extract=file1'), dict()))
             self.assertTrue(st.check(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
             self.assertTrue(st.delete(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
+            self.assertTrue(st.delete(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict()))
+            self.assertFalse(self.sh.path.exists(fdir_locationE))
             self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02'), dict()))
+            self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakedir.02?dir_extract=1'), dict()))
             # The tar should be available in cache...
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz'),
                                    'toto.tgz', dict(intent='inout')))
             # Trash file1...
             with io.open('file1', 'a') as fh1:
                 fh1.write(' + ExtraStuff')
+            # The changed file1 file should not affect things...
+            self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz?dir_extract=1'),
+                                   'fakearchive_dir', dict()))
             # Is the extracted tar in the cache directory ?
             edir_location = os.path.join(gcocache, 'fakearchive.01.tgz.autoextract')
-            self.assert_mantra(self.sh.path.join(edir_location, 'file1'))
-            self.assert_mantra(self.sh.path.join(edir_location, 'file4'))
-            self.assertTrue(self.sh.path.islink(self.sh.path.join(edir_location, 'file4')))
-            self.assertTrue(self.sh.path.isdir(self.sh.path.join(edir_location, 'subdir')))
+            for edir_location in (self.sh.path.join(gcocache, 'fakearchive.01.tgz.autoextract'),
+                                  'fakearchive_dir'):
+                self.assert_mantra(self.sh.path.join(edir_location, 'file1'))
+                self.assert_mantra(self.sh.path.join(edir_location, 'file4'))
+                self.assertTrue(self.sh.path.islink(self.sh.path.join(edir_location, 'file4')))
+                self.assertTrue(self.sh.path.isdir(self.sh.path.join(edir_location, 'subdir')))
             # Try to trash the index file
             self.sh.rm(self.sh.path.join(gcocache, 'fakearchive.01.tgz.index'))
             self.assertTrue(st.check(uriparse('gget://gco.cache.fr/fakearchive.01.tgz'), dict()))
+            self.assertFalse(st.check(uriparse('gget://gco.cache.fr/fakearchive.01.tgz?dir_extract=1'), dict()))
             self.assertTrue(st.get(uriparse('gget://gco.cache.fr/fakearchive.01.tgz'),
                                    self.sh.path.join('the_ko_test', 'toto.tgz'), dict()))
             self.assertTrue(self.sh.path.exists(self.sh.path.join('the_ko_test', 'file1')))
@@ -272,9 +305,12 @@ class TestGcoGget(PrivateCocoonGcoTest):
                 self.assertEqual(fhf.read(), 'opgco\n')
             self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/extract.mars.ifs.01.tgz'),
                                    self.sh.path.join('sub1', 'extract.mars.ifs.01.tgz'), dict()))
-            for what in ('extr_fc_00_vv', 'extr_fc_06_vv', 'extr_fc_12_vv', 'extr_fc_18_vv'):
-                self.assertTrue(self.sh.path.isfile(self.sh.path.join('sub1', what)))
-                self.assertFalse(self.sh.wperm(self.sh.path.join('sub1', what)))
+            self.assertTrue(st.get(uriparse('gget://opgco.cache.fr/tampon/extract.mars.ifs.01.tgz?dir_extract=1'),
+                                   'sub2', dict()))
+            for where in ('sub1', 'sub2'):
+                for what in ('extr_fc_00_vv', 'extr_fc_06_vv', 'extr_fc_12_vv', 'extr_fc_18_vv'):
+                    self.assertTrue(self.sh.path.isfile(self.sh.path.join(where, what)))
+                    self.assertFalse(self.sh.wperm(self.sh.path.join(where, what)))
             self.assertTrue(self.sh.path.exists(self.sh.path.join('sub1', 'extract.mars.ifs.01.tgz')))
             self.assertTrue(st.get(
                 uriparse('gget://opgco.cache.fr/tampon/al43t2_arome@ifs-op5.01.nam?extract=namel_diag'),
@@ -286,6 +322,11 @@ class TestGcoGget(PrivateCocoonGcoTest):
                 'nam_prep', dict(intent='inout')))
             self.assertTrue(self.sh.path.isfile('nam_prep'))
             self.assertTrue(self.sh.wperm('nam_prep'))
+            self.assertTrue(st.get(
+                uriparse('gget://opgco.cache.fr/tampon/al43t2_arome@ifs-op5.01.nam?dir_extract=1'),
+                'many_nam', dict()))
+            self.assertTrue(self.sh.path.isfile(self.sh.path.join('many_nam', 'namel_prep')))
+            self.assertTrue(self.sh.path.isfile(self.sh.path.join('many_nam', 'namel_diag')))
         finally:
             # Because ggetall enforce very strict rights...
             self.sh.wperm(self.sh.path.join(frozencache, 'gco', 'tampon', 'al43t2_arome@ifs-op5.01.nam'),
@@ -415,9 +456,14 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette'),
                'rrtm_hack/rrtm_full.tgz', dict())
         self.assertTrue(self.sh.path.isfile('rrtm_hack/rrtm_full.tgz'))
-        for i in range(1, 4):
-            self.assertTrue(self.sh.path.isfile('rrtm_hack/file{:d}'.format(i)))
-        self.assertTrue(self.sh.path.islink('rrtm_hack/link1'))
+        # Get a tar file and expand it because of dir_extract
+        st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?dir_extract=1'),
+               'rrtm_hack_bis', dict())
+        # Check the tar content
+        for a_dir in ('rrtm_hack', 'rrtm_hack_bis'):
+            for i in range(1, 4):
+                self.assertTrue(self.sh.path.isfile(self.sh.path.join(a_dir, 'file{:d}'.format(i))))
+            self.assertTrue(self.sh.path.islink(self.sh.path.join(a_dir, 'link1')))
         # Get a tar file and extract some stuff (from hack)
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?extract=file1'),
                'rrtm_hack/rrtm_f1', dict())
@@ -435,9 +481,13 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         st.get(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette'),
                'nam_hack/nam_full.tgz', dict())
         self.assertTrue(self.sh.path.isdir('nam_hack/nam_full.tgz'))
-        for i in range(1, 4):
-            self.assertTrue(self.sh.path.isfile('nam_hack/file{:d}'.format(i)))
-        self.assertTrue(self.sh.path.islink('nam_hack/link1'))
+        # Get a tar file and expand it because of dir_extract
+        st.get(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?dir_extract=1'),
+               'nam_hack_bis', dict(intent='inout'))
+        for a_dir in ('nam_hack', 'nam_hack_bis'):
+            for i in range(1, 4):
+                self.assertTrue(self.sh.path.isfile(self.sh.path.join(a_dir, 'file{:d}'.format(i))))
+            self.assertTrue(self.sh.path.islink(self.sh.path.join(a_dir, 'link1')))
         # Get a tar file but do not expand it because of its name but autorepack (from hack)
         self.assertTrue(sthack.get(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette'),
                                    'nam_nope_repack', dict(auto_repack=True)))
@@ -456,10 +506,13 @@ class TestUgetUenv(PrivateCocoonGcoTest):
                 a_st.check(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette'),
                            dict()))
             self.assertTrue(
+                a_st.check(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?dir_extract=1'),
+                           dict()))
+            self.assertTrue(
                 a_st.check(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?extract=file1'),
                            dict()))
             self.assertTrue(
-                a_st.check(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette'),
+                a_st.check(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?dir_extract=0'),
                            dict()))
             self.assertTrue(
                 a_st.check(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?extract=file1'),
@@ -474,6 +527,10 @@ class TestUgetUenv(PrivateCocoonGcoTest):
                           dict()),
             self.sh.path.join(ugetdatahack, 'cy99t1.01.nam'))
         self.assertEqual(
+            sthack.locate(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?dir_extract=1'),
+                          dict()),
+            self.sh.path.join(ugetdatahack, 'cy99t1.01.nam'))
+        self.assertEqual(
             sthack.locate(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?extract=file1'),
                           dict()),
             self.sh.path.join(ugetdatahack, 'cy99t1.01.nam', 'file1'))
@@ -482,12 +539,16 @@ class TestUgetUenv(PrivateCocoonGcoTest):
                           dict()),
             self.sh.path.join(ugetdatahack, 'rrtm.const.03hack.tgz'))
         self.assertEqual(
+            sthack.locate(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?dir_extract=1'),
+                          dict()),
+            self.sh.path.join(ugetdatahack, 'rrtm.const.03hack.tgz'))
+        self.assertEqual(
             sthack.locate(uriparse('uget://uget.multi.fr/data/rrtm.const.03hack.tgz@huguette?extract=file1'),
                           dict()),
             self.sh.path.join(ugetdatahack, 'rrtm.const.03hack.tgz'))
         # Delete some files in the hack cache
         sthack = fp.proxy.store(scheme='uget', netloc='uget.hack.fr', readonly=False)
-        self.assertTrue(sthack.delete(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette'),
+        self.assertTrue(sthack.delete(uriparse('uget://uget.multi.fr/data/cy99t1.01.nam.tgz@huguette?dir_extract=1'),
                                       dict()))
         self.assertFalse(self.sh.path.isfile(self.sh.path.join(ugetdatahack,
                                                                'cy99t1.01.nam.tgz')))
@@ -507,8 +568,16 @@ class TestUgetUenv(PrivateCocoonGcoTest):
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette'),
                'rrtm/rrtm_full.tgz', dict())
         self.assertTrue(self.sh.path.isfile('rrtm/rrtm_full.tgz'))
-        for i in range(1, 4):
-            self.assertTrue(self.sh.path.isfile('rrtm/file{:d}'.format(i)))
+        # Get a tar file and expand it because of dir_extract
+        st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?dir_extract=1'),
+               'rrtm_bis', dict())
+        for a_dir in ('rrtm', 'rrtm_bis'):
+            for i in range(1, 4):
+                self.assertTrue(self.sh.path.isfile(self.sh.path.join(a_dir, 'file{:d}'.format(i))))
+        # Put back:
+        self.assertTrue(st.put('rrtm_bis',
+                               uriparse('uget://uget.multi.fr/data/rrtm.const.02c.tgz@huguette?dir_extract=1'),
+                               dict()))
         # Idem with extract ?
         st.get(uriparse('uget://uget.multi.fr/data/rrtm.const.02b.tgz@huguette?extract=file1'),
                'file1_extra', dict())

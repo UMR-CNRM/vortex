@@ -508,7 +508,7 @@ class JeevesService(Service):
                 user=self.juser,
                 jtag=self.sh.path.join(self.jpath, self.jfile),
                 todo=self.todo,
-                mail=data.pop('mail', self.glove.email),
+                mail=data.pop('mail', self.glove.xmail),
                 apps=data.pop('apps', (self.glove.vapp,)),
                 conf=data.pop('conf', (self.glove.vconf,)),
                 task=self.env.get('JOBNAME') or self.env.get('SMSNAME', 'interactif'),

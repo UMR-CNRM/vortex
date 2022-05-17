@@ -44,6 +44,7 @@ from bronx.stdtypes.history import History
 from bronx.syntax.decorators import nicedeco
 from vortex import sessions
 from vortex.tools.actions import actiond as ad
+from vortex.tools.delayedactions import d_action_status
 from vortex.tools.systems import istruedef
 from vortex.util.config import GenericConfigParser
 
@@ -304,7 +305,7 @@ class Storage(footprints.FootprintBase):
         :note: **local** may be a path to a file or any kind of file like objects.
         """
         rc, idict = self._actual_finaliseretrieve(retrieve_id, item, local, **kwargs)
-        if rc is not False:
+        if rc is not None:
             infos = self._findout_record_infos(kwargs)
             infos.update(idict)
             self.addrecord('RETRIEVE', item, status=rc, **infos)
@@ -312,7 +313,7 @@ class Storage(footprints.FootprintBase):
 
     def _actual_finaliseretrieve(self, retrieve_id, item, local, **kwargs):  # @UnusedVariable
         """No delayedretrieve implemented by default."""
-        return False, dict()
+        return None, dict()
 
     @enforce_readonly
     @do_recording('DELETE')
@@ -610,7 +611,7 @@ class Archive(Storage):
         if pmethod:
             return self._actual_proxy_method(pmethod)(item, local, retrieve_id, **kwargs)
         else:
-            return False, dict()
+            return None, dict()
 
     @property
     def _ftp_hostinfos(self):
@@ -739,14 +740,17 @@ class Archive(Storage):
         :meth:`_ftpearlyretrieve` method.
         """
         extras = dict(fmt=kwargs.get('fmt', 'foo'), )
-        tmplocal = self.context.delayedactions_hub.retrieve(retrieve_id)
-        if tmplocal:
+        d_action = self.context.delayedactions_hub.retrieve(retrieve_id, bareobject=True)
+        if d_action.status == d_action_status.done:
             if self.sh.filecocoon(local):
-                rc = self.sh.mv(tmplocal, local, **extras)
+                rc = self.sh.mv(d_action.result, local, **extras)
             else:
                 raise IOError('Could not cocoon: {!s}'.format(local))
-        else:
+        elif d_action.status == d_action_status.failed:
+            logger.info('The earlyretrieve failed (retrieve_id=%s)', retrieve_id)
             rc = False
+        else:
+            rc = None
         return rc, extras
 
     def _ftpinsert(self, item, local, **kwargs):
