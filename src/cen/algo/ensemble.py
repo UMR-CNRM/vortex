@@ -878,7 +878,7 @@ class SurfexWorker(_S2MWorker):
             dateend   = a_date,
             dateinit  = a_date,
             kind = dict(
-                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc'],
+                values = ['deterministic', 'escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc', 'croco'],
             ),
             threshold = dict(
                 info = "Threshold to initialise snowdepth",
@@ -963,6 +963,7 @@ class SurfexWorker(_S2MWorker):
         else:
             list_files_copy_ifnotprovided = []
             list_files_link_ifnotprovided = ["PREP.nc"]
+# here Bertrand also created links towards the forcings but in a non-standard way --> to be checked
 
         for required_copy in list_files_copy:
             self.copy_if_exists(self.system.path.join(rundir, required_copy), required_copy)
@@ -1011,7 +1012,7 @@ class SurfexWorker(_S2MWorker):
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
                 elif sytron:
-                    # ensmeteo+sytron: the forcing files are supposed to be in the subdirectories
+                    # ensmeteo+sytron or croco: the forcing files are supposed to be in the subdirectories
                     # of each member except for the sytron member
                     forcingdir = rundir + "/mb035"
                 else:
@@ -1696,7 +1697,7 @@ class SurfexComponent(S2MComponent):
         info = 'AlgoComponent that runs several executions in parallel.',
         attr = dict(
             kind = dict(
-                values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'ensmeteo+escroc', 'prepareforcing']
+                values = ['escroc', 'ensmeteo', 'ensmeteonodet', 'ensmeteo+sytron', 'croco', 'ensmeteo+escroc', 'prepareforcing']
             ),
             dateinit = dict(
                 info = "The initialization date if different from the starting date.",
@@ -1717,7 +1718,7 @@ class SurfexComponent(S2MComponent):
             ),
             subensemble = dict(
                 info = "Name of the escroc subensemble (define which physical options are used)",
-                values = ["E1", "E2", "Crocus", "E2open", "E2MIP", "E2tartes", "E2MIPtartes", "E2B21", "E2MIPB21"],
+                values = ["E1", "E2", "Crocus", "E1tartes", "E1notartes", "E2open", "E2MIP", "E2tartes", "E2MIPtartes", "E2B21", "E2MIPB21"],
                 optional = True,
             ),
             geometry_in=dict(
@@ -1746,7 +1747,13 @@ class SurfexComponent(S2MComponent):
                 optional = True,
                 default = False,
                 values = [False]
-            )
+            ),
+            startmbnode = dict(
+                info = 'first member rep of the node for example 1,41,81 etc.',
+                type = int,
+                optional = True,
+                default = 1,
+            ),
         )
     )
 
@@ -1771,7 +1778,9 @@ class SurfexComponent(S2MComponent):
 
     def get_subdirs(self, rh, opts):
         if self.kind == "escroc":
-            return ['mb{0:04d}'.format(m) for m in self.members]
+            subdirs = ['mb{0:04d}'.format(m) for m in self.members]
+        elif self.kind == 'croco':  # in croco case, self. members is a (sometimes random) subselection of members but we don't want fancy subdirs
+            subdirs = ['mb{0:04d}'.format(m) for m in range(self.startmbnode, self.startmbnode + len(self.members))]
         else:
             subdirs = super(SurfexComponent, self).get_subdirs(rh, opts)
 

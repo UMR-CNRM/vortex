@@ -15,9 +15,15 @@ import footprints
 from footprints.util import rangex
 from vortex.data.flow import GeoFlowResource
 from vortex.data.geometries import UnstructuredGeometry, HorizontalGeometry
+from vortex.data.resources import Resource
 from vortex.syntax.stdattrs import a_date
 from vortex.syntax.stddeco import namebuilding_append, namebuilding_delete, namebuilding_insert
 
+from common.data.modelstates import InitialCondition
+from common.data.obs         import ObsRaw
+
+from vortex.syntax.stdattrs import a_date
+from cen.syntax.stdattrs     import cendateperiod_deco
 
 #: No automatic export
 __all__ = []
@@ -246,7 +252,13 @@ class Prep(InitialCondition):
                 # ambiguous also in other cases)
                 cutoff = dict(
                     optional = True
-                )
+                ),
+                stage = dict(
+                    info = "specify for SODA if prep is background or analyzed",
+                    values = ['_an', '_bg', ''],
+                    default= '',
+                    optional = True,
+                ),
             )
         )
     ]
@@ -258,22 +270,19 @@ class Prep(InitialCondition):
         return 'PREP'
 
 
-@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class SnowObs(GeoFlowResource):
 
     _footprint = [
         cendateperiod_deco,
         dict(
-            info = 'Observations of snow for model evaluation',
+            info = 'Observations of snow',
             attr = dict(
                 kind = dict(
                     values = ['SnowObservations'],
                 ),
-
                 model = dict(
                     values = ['obs']
                 ),
-
                 nativefmt = dict(
                     values  = ['netcdf', 'nc'],
                     default = 'netcdf',
@@ -283,11 +292,10 @@ class SnowObs(GeoFlowResource):
                     info = "The resource's massif geometry.",
                     type = HorizontalGeometry,
                 ),
-                datebegin = dict(
-                    info = "First date of the forcing file",
-                ),
-                dateend = dict(
-                    info = "Last date of the forcing file",
+                nature = dict(
+                    optional=True,
+                    info = "Free description of the obs (var, sensor,location...)",
+                    default = 'insitu',
                 ),
                 # This notion does not mean anything in our case (and seems to be rather
                 # ambiguous also in other cases)
@@ -302,7 +310,77 @@ class SnowObs(GeoFlowResource):
 
     @property
     def realkind(self):
-        return "obs_insitu"
+        return "obs_" + str(self.nature)
+
+
+@namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
+class Snowobs_Period(SnowObs):
+    _footprint = [
+        dict(
+            info = 'Time series of snow observations of snow for model evaluation',
+            attr = dict(
+                datebegin = dict(
+                    info = "First date of the observation file",
+                ),
+                dateend = dict(
+                    info = "Last date of the observation file",
+                ),
+            )
+        )
+    ]
+
+
+@namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
+class Snowobs_1date(SnowObs):
+    """
+    @author : B. Cluzet
+    Class for snow obs. (any geom, any sensor) at one date.
+    For that, enforce stage = 1date and set datebegin/dateend to the same value, the date of observation.
+    """
+
+    _footprint = [
+        dict(
+            info='Instantaneous snow observations for assimilation',
+            attr=dict(
+                datevalidity=dict(
+                    info="Validity date of the observation file",
+                ),
+            )
+        )
+    ]
+
+
+class PfSample(SurfaceIO):
+    """
+    @author : B. Cluzet
+    (SODA): Class for Particle filter files text files (at each assim step)
+    either distributed (bound to a geom) or semi-distrib (no point dependency)
+    in any case, child of Resource makes it much more simple to handle
+    """
+
+    _footprint = [
+        dict(
+            info = 'pf sample file',
+            attr = dict(
+                # This notion does not mean anything in our case (and seems to be rather ambiguous also in other cases)
+                cutoff = dict(
+                    optional = True
+                ),
+                model = dict(
+                    values = ['PART', 'BG_CORR', 'IMASK', 'ALPHA']
+                ),
+                dateassim = dict(
+                    info = "date of the analysis",
+                    type = Date,
+                ),
+            )
+        )
+    ]
+    _extension_remap = dict(netcdf='.txt')  # BC to check this shit
+
+    @property
+    def realkind(self):
+        return str(self.model) + '_' + self.dateassim.ymdh + '.txt'
 
 
 class ScoresSnow(SurfaceIO):
