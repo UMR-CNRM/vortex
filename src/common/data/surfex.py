@@ -149,7 +149,7 @@ class PGDWithGeo(ModelGeoResource):
     def genv_basename(self):
         """Customise the Genv key..."""
         if self.gvar:
-            return gvar
+            return self.gvar
         else:
             if self.geometry.lam:
                 geotag = '{0.area}_{0.rnice}'.format(self.geometry)
