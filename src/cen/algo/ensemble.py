@@ -277,9 +277,9 @@ class _SafranWorker(_S2MWorker):
             # Un-comment the following lines to run a re-analysis without observation assimilation.
             # It is also necessary to modify the safran_reanalysis task to force the execution
             # of syrpluie and prevent the execution of sypluie
-#            import glob
-#            for obs in glob.glob('S????????') + glob.glob('T????????') + glob.glob('R????????'):
-#                self.system.remove(obs)
+            # import glob
+            # for obs in glob.glob('S????????') + glob.glob('T????????') + glob.glob('R????????'):
+            #     self.system.remove(obs)
             # Add 'weather type' normals
             _OP_files_common.extend(['OPNOot', 'OPNOmt'])
         else:
@@ -768,21 +768,22 @@ class SytistWorker(_SafranWorker):
                           'FORCING_postes_{0:s}_{1:s}.nc'.format(self.datebegin.ymd6h, self.dateend.ymd6h))
 
         if self.execution in ['analysis', 'reanalysis']:
-            # Ensure that at least one listing file has been created, otherwise the tar command raises an 
-            # ExecutionError that isn't filtered by the DelayedAlgoError mecanism and make the algo component 
+            # Ensure that at least one listing file has been created, otherwise the tar command raises an
+            # ExecutionError that isn't filtered by the DelayedAlgoError mechanism and make the algo component
             # (even other workers that were fine) crash.
             # This issue has been identified when trying the #2079 vortex issue that should allow the task
             # to go on until produced resources are archived even if some members have crashed.
             if len(self.system.ffind('liste_obs*')) > 0:
                 self.system.tar('liste_obs_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
                                 'liste_obs*')
-        # Ensure that at least one listing file has been created, otherwise the tar command raises an 
-        # ExecutionError that isn't filtered by the DelayedAlgoError mecanism and make the algo component 
+        # Ensure that at least one listing file has been created, otherwise the tar command raises an
+        # ExecutionError that isn't filtered by the DelayedAlgoError mechanism and make the algo component
         # (even other workers that were fine) crash.
         # This issue has been identified when trying the #2079 vortex issue that should allow the task
         # to go on until produced resources are archived even if some members have crashed.
         if len(self.system.ffind('*.out')) > 0:
-            self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h), '*.out')
+            self.system.tar('listings_safran_{0:s}_{1:s}.tar.gz'.format(self.datebegin.ymd6h, self.dateend.ymd6h),
+                            '*.out')
 
         super(SytistWorker, self).postfix()
 
@@ -995,7 +996,7 @@ class SurfexWorker(_S2MWorker):
 
     def _surfex_task(self, rundir, thisdir, rdict):
         # ESCROC cases: each member will need to have its own namelist
-        # meteo ensemble cases: the forcin<g modification must be applied to all members and the namelist
+        # meteo ensemble cases: the forcing modification must be applied to all members and the namelist
         # generation requires that the forcing generation has already be done. Therefore, preprocessing
         # is done in the offline algo in all these cases
         # Determinstic cases : the namelist is prepared in the preprocess algo component in order to allow
@@ -1690,9 +1691,9 @@ class S2MReforecast(S2MComponent):
         for am in avail_members:
             # Guess files are now stored in a tar archive
             if self.system.is_tarfile(am.rh.container.basename):
-                for fic in self.system.untar(am.rh.container.basename): 
+                for fic in self.system.untar(am.rh.container.basename):
                     # fic = YYYYMMDD00/mbXXX/PYYMMDDHH
-                    dirname = self.system.path.dirname(fic) # YYYYMMDD00/mbXXX
+                    dirname = self.system.path.dirname(fic)  # YYYYMMDD00/mbXXX
                     if dirname not in subdirs:
                         subdirs.append(dirname)
                         list_dates_begin.append(Date(fic.split('/')[0]) + Period(hours=6))
