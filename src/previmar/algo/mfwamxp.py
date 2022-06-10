@@ -245,7 +245,7 @@ class MfwamGauss2Grib(ParaBlindRun):
             timeout = dict(
                 type = int,
                 optional = True,
-                default = 900,
+                default = 1200,
             ),
         )
     )
