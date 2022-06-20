@@ -109,14 +109,16 @@ def system_route(pnum, ask, config, logger, **opts):
                 return pnum, False, dict(rpool='error')
 
             # decide on an informative target name pattern (for AGT logs)
-            if 'fallback_uri' in data:
+            if 'fallback_uri' in data and data.fallback_uri is not None:
                 uri = uriparse(data.fallback_uri)
                 info_path = uri['path']
             else:
                 info_path = data.original
             prefix = re.sub(r'\.{}$'.format(data.fmt), '',
                             sh.path.basename(info_path), flags=re.I)
-            outfile_fmt = prefix + '_{filtername:s}.' + data.fmt
+            outfile_fmt = prefix + '_{filtername:s}'
+            if data.fmt is not None:
+                outfile_fmt += '.' + data.fmt
 
             # apply filtering or concatenate
             if data.filterdefinition:

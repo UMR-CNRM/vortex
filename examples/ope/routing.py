@@ -16,11 +16,13 @@ import footprints
 import vortex
 from bronx.stdtypes import date
 from iga.tools import actions, services
-from vortex import toolbox
 from vortex.tools.actions import actiond as ad
 
 # prevent IDEs from removing seemingly unused imports
 assert any([actions, services])
+
+# join stderr and stdout for a more interpretable output
+# sys.stderr = sys.stdout
 
 t = vortex.ticket()
 e = t.env
@@ -80,6 +82,7 @@ def test_route():
         agt_pa_cmd='agt_fake_cmd',
         agt_pe_cmd='agt_fake_cmd',
         soprano_target='piccolo',
+        defer=True,
     )
 
     if sh.sysname == 'Darwin':
@@ -96,23 +99,35 @@ def test_route():
         # and have the minimal mandatory soprano env variables
         e.DMT_DATE_PIVOT = date.synop().ymdhms  # e.g. 20210528120000
 
-    with open('tempo.dta', 'wt') as fp:
+    datafile = 'tempo.dta'
+    sh.rm(datafile)
+    with open(datafile, 'wt') as fp:
         contents = "Test VORTEX - " + stime + '\n'
         fp.write(contents)
     print("contents:", contents)
     print("md5 =", hashlib.md5(contents.encode()).hexdigest())
 
     sh.subtitle('BDAP')
-    ad.route(kind='bdap', filename='tempo.dta', productid=147, domain='ATOUR10',
-             term=84, targetname='exemple_bdap.dta', **fake_opts)
+    ad.route(kind='bdap', filename=datafile, productid=147, domain='ATOUR10',
+             term=14, targetname='exemple_bdap.dta', **fake_opts)
+    ad.route(kind='bdap', filename=datafile, productid=147, domain='ATOUR20',
+             term=18, **fake_opts)
+
+    sh.subtitle('FTPPRO')
+    ad.route(kind='ftppro', filename=datafile, productid=42, domain='ARIEGE',
+             term=24, targetname='exemple_ftppro.dta', **fake_opts)
+    ad.route(kind='ftppro', filename=datafile, productid=43, domain='ALLIER',
+             term=28, **fake_opts)
 
     # This BDPE call should succeed (to piccolo, not to piccolo-int).
     sh.subtitle('BDPE')
-    ad.route(kind='bdpe', filename='tempo.dta', productid=43, routingkey='bdpe',
-             term=36, targetname='exemple_bdpe.dta', **fake_opts)
+    ad.route(kind='bdpe', filename=datafile, productid=43, routingkey='bdpe',
+             term=34, targetname='exemple_bdpe.dta', **fake_opts)
+    ad.route(kind='bdpe', filename=datafile, productid=44, routingkey='bdpe',
+             term=38, **fake_opts)
 
     sh.subtitle('BDM')
-    ad.route(kind='bdm', filename='tempo.dta', productid=4242, **fake_opts)
+    ad.route(kind='bdm', filename=datafile, productid=4242, **fake_opts)
 
     sh.subtitle('results')
     print("log files were created in", resuldir)
