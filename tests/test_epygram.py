@@ -167,17 +167,17 @@ class TestEpygramAdvanced(_LocDirEpyTestBase):
         rh1 = _FakeRH(self.demofile('historic.light.fa'), 'fa')
         rh2 = _FakeRH('historic.verylight.fa', 'fa')
         with rh1.contents as rh1_ct:
-            f1_ref = rh1_ct.data.readfield('SURFTEMPERATURE').getdata()
+            f1_ref = rh1_ct.data.readfield('SURFTEMPERATURE').data
         uepy.copyfield(self.t, rh2, rh1, 'SURFTEMPERATURE', 'SURFTEMPERATURE')
         # Check that the copy went fine
         with rh2.contents as rh2_ct:
-            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').getdata(),
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').data,
                                            f1_ref))
         # Overwrite but change compression
         uepy.overwritefield(self.t, rh2, rh1, 'SURFTEMPERATURE', None, dict(KNBPDG=12))
         # ...bits the result remain the same since we are increasing the number of bits
         with rh2.contents as rh2_ct:
-            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').getdata(),
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTEMPERATURE').data,
                                            f1_ref))
         # Addfield (add 2 fields at once)
         uepy.addfield(self.t, rh2,
@@ -188,6 +188,18 @@ class TestEpygramAdvanced(_LocDirEpyTestBase):
                              0)
             self.assertEqual(rh2_ct.data.readfield('SURFTITI').quadmean(),
                              0)
+        # Updatefield
+        uepy.updatefield(self.t, rh2, rh1,
+                         ['SURFTEMPERATURE', ], ['SURFTITI', ],
+                         'none')
+        uepy.updatefield(self.t, rh2, rh1,
+                         ['SURFTEMPERATURE', ], ['SURFTOTO', ],
+                         'np.ma.masked')
+        with rh2.contents as rh2_ct:
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTOTO').data,
+                                           f1_ref))
+            self.assertTrue(np.ma.allequal(rh2_ct.data.readfield('SURFTITI').data,
+                                           f1_ref))
 
 
 @loggers.unittestGlobalLevel(tloglevel)

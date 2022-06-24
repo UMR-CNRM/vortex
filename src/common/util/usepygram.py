@@ -40,17 +40,21 @@ with epygram_checker as ec_register:
     except AttributeError:
         hasGRIB = False
     ec_register.update(needGRIB=hasGRIB)
-    logger.info('Epygram %s loaded.', str(epygram.__version__))
+    logger.info('Epygram %s loaded (GRIB support=%s, FA support=%s).',
+                epygram.__version__, hasGRIB, hasFA)
+
+np_checker = ExternalCodeImportChecker('numpy')
+with np_checker as npregister:
+    import numpy as np
+    npregister.update(version=np.__version__)
 
 footprints.proxy.containers.discard_package('epygram', verbose=False)
 
 __all__ = []
 
 
-@epygram_checker.disabled_if_unavailable
-def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
-    """Clone any existing fields ending with``source`` to some new field."""
-    datain.open()
+def _sources_and_names_fixup(sources, names=None):
+    """Fix **sources** and **names** lists."""
     # Prepare sources names
     if not isinstance(sources, (list, tuple, set)):
         sources = [sources, ]
@@ -67,6 +71,14 @@ def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, ov
         sources *= len(names)
     if len(sources) != len(names):
         raise ValueError('Sizes of sources and names do not fit the requirements.')
+    return sources, names
+
+
+@epygram_checker.disabled_if_unavailable
+def clone_fields(datain, dataout, sources, names=None, value=None, pack=None, overwrite=False):
+    """Clone any existing fields ending with``source`` to some new field."""
+    datain.open()
+    sources, names = _sources_and_names_fixup(sources, names)
 
     tablein = datain.listfields()
     tableout = dataout.listfields()
@@ -160,6 +172,73 @@ def overwritefield(t, rh, rhsource, fieldsource, fieldtarget, pack=None):
         with epy_env_prepare(t):
             clone_fields(rhsource.contents.data, rh.contents.data,
                          fieldsource, fieldtarget, overwrite=True, pack=pack)
+    else:
+        logger.warning('Try to copy field on a missing resource <%s>',
+                       rh.container.localpath())
+
+
+@np_checker.disabled_if_unavailable
+@epygram_checker.disabled_if_unavailable
+def updatefield(t, rh, rhsource, fieldsource, fieldtarget, masktype, *kargs):
+    """
+    Provider hook for updating fields in the **rh** FA files.
+
+    The content (not the field itself) of **fieldsource** will be copied to
+    **fieldtarget**. Some kind of masking is performed. Depending on
+    **masktype**, only a subset of the field content might be updated.
+    **masktype** can take the following values:
+
+        * ``none``: no mask, the whole content is copied;
+        * ``np.ma.masked``: masked values are ignored during the copy.
+
+    """
+    if rh.container.exists():
+        with epy_env_prepare(t):
+            # Various initialisations
+            fieldsource, fieldtarget = _sources_and_names_fixup(fieldsource, fieldtarget)
+            datain = rhsource.contents.data
+            datain.open()
+            dataout = rh.contents.data
+            dataout.close()
+            dataout.open(openmode='a')
+            tablein = datain.listfields()
+            tableout = dataout.listfields()
+            updatedfields = 0
+
+            # Function that creates the subset of elements to update
+            if masktype == 'none':
+
+                def subsetfunc(epyobj):
+                    return Ellipsis
+
+            elif masktype == 'np.ma.masked':
+
+                def subsetfunc(epyobj):
+                    if np.ma.is_masked(epyobj.data):
+                        return np.logical_not(epyobj.data.mask)
+                    else:
+                        return Ellipsis
+
+            else:
+                raise ValueError('Unsupported masktype in the updatefield hook.')
+
+            # Look for the input fields and update them
+            for source, target in zip(fieldsource, fieldtarget):
+                for fieldname in [x for x in sorted(tablein) if x.endswith(source)]:
+                    targetfield = fieldname.replace(source, '') + target
+                    if targetfield in tableout:
+                        fx = datain.readfield(fieldname)
+                        fy = dataout.readfield(targetfield)
+                        subset = subsetfunc(fx)
+                        fy.data[subset] = fx.data[subset]
+                        dataout.writefield(fy)
+                        updatedfields += 1
+                    else:
+                        logger.warning('Field <%s> is missing in the output file', targetfield)
+
+            dataout.close()
+            datain.close()
+            return updatedfields
     else:
         logger.warning('Try to copy field on a missing resource <%s>',
                        rh.container.localpath())
@@ -460,6 +539,7 @@ def add_poles_to_reglonlat_file(filename):
         rout.writefield(fld, **write_args)
 
 
+@epygram_checker.disabled_if_unavailable()
 def split_errgrib_on_shortname(t, rh):
     """Split a Background Error GRIB file into pieces (based on the GRIB shortName)."""
     # Sanity checks

@@ -32,6 +32,8 @@ Functions
 
 .. autofunction:: overwritefield
 
+.. autofunction:: updatefield
+
 .. autofunction:: mk_pgdfa923_from_pgdlfi
 
 .. autofunction:: empty_fa
