@@ -7,8 +7,8 @@ system.
 
 from __future__ import print_function, absolute_import, unicode_literals, division
 
+import math
 import re
-from operator import attrgetter
 
 from bronx.fancies import loggers
 from bronx.stdtypes.date import Month, Time
@@ -98,10 +98,24 @@ class IFSEdaEnsembleAbstractAlgo(IFSEdaAbstractAlgo):
         """The minimum number of effective members that are mandatory to go one."""
         return self.nbmin
 
+    @staticmethod
+    def _members_sorting_key(s):
+        """Return the sorting key for the **s** section."""
+        member = getattr(s.rh.provider, 'member', None)
+        member = - math.inf if member is None else member
+        block = getattr(s.rh.provider, 'block', '')
+        filename = getattr(s.rh.container, 'basename', '')
+        return member, block, filename
+
     def _members_effective_inputs(self):
         """The list of effective sections representing input data."""
         return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
-                      key=attrgetter('rh.provider.member'))
+                      key=self._members_sorting_key)
+
+    def _members_all_inputs(self):
+        """The list of sections representing input data."""
+        return sorted(self.context.sequence.filtered_inputs(role=self._INPUTS_ROLE),
+                      key=self._members_sorting_key)
 
     def _check_members_list_numbering(self, rh, mlist, mformats):
         """Check if, for the **mlist** members list, some renaming id needed."""
@@ -229,15 +243,12 @@ class IFSEdaLaggedEnsembleAbstractAlgo(IFSEdaEnsembleAbstractAlgo):
         """The minimum number of effective members that are mandatory to go one."""
         return self.nbmin * self.actual_nresx if self.padding else self.nbmin
 
-    def _members_effective_inputs(self):
-        """The list of effective sections representing input data."""
-        return sorted(self.context.sequence.effective_inputs(role=self._INPUTS_ROLE),
-                      key=attrgetter('rh.resource.date', 'rh.provider.member'))
-
-    def _members_all_inputs(self):
-        """The list of sections representing input data."""
-        return sorted(self.context.sequence.filtered_inputs(role=self._INPUTS_ROLE),
-                      key=attrgetter('rh.resource.date', 'rh.provider.member'))
+    def _members_sorting_key(self, s):
+        """Return the sorting key for the **s** section."""
+        stuple = list(super(IFSEdaLaggedEnsembleAbstractAlgo, self)._members_sorting_key(s))
+        rdate = getattr(s.rh.resource, 'date')
+        stuple.insert(0, rdate)
+        return tuple(stuple)
 
     def modelstate_needs_renumbering(self, rh):
         """Check if, for the **mlist** members list, some renaming id needed."""
@@ -508,7 +519,7 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
             super(IFSInflationLike, self).execute(rh, opts)
 
     def postfix(self, rh, opts):
-        """Post processing cleaning."""
+        """Post-processing cleaning."""
         self.system.title('Finalising the execution...')
         for afile in self._outputs_shelf:
             logger.info("Output found: %s", self.system.path.basename(afile))
@@ -591,7 +602,7 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
         super(IFSCovB, self).prepare(rh, opts)
         # Legacy...
         for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='Rawfiles'),
-                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                         key=self._members_sorting_key),
                                   start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_D{:03d}_L{:s}'
@@ -602,7 +613,7 @@ class IFSCovB(IFSEdaLaggedEnsembleAbstractAlgo):
                                          radical.format(num, level.group(1)))
         # Legacy...
         for num, sec in enumerate(sorted(self.context.sequence.effective_inputs(role='LaggedEnsemble'),
-                                         key=attrgetter('rh.resource.date', 'rh.provider.member')),
+                                         key=self._members_sorting_key),
                                   start=1):
             repname = sec.rh.container.localpath()
             radical = repname.split('_')[0] + '_{:03d}'
