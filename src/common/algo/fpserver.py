@@ -686,6 +686,10 @@ class FullPosServer(IFSParallel):
             else:
                 logger.warning('The NAMFPOBJ namelist in "%s" is not empty. Leaving it as it is',
                                namlocal)
+        # Just in case FP_CMODEL is defined in the main namelist
+        if self.outputid is not None and any(['FP_CMODEL' in nam_b.macros()
+                                              for nam_b in namcontents.values()]):
+            self._set_nam_macro(namcontents, namlocal, 'FP_CMODEL', self.outputid)
         return True
 
     def spawn_pre_dirlisting(self):
