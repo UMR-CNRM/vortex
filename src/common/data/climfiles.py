@@ -10,7 +10,7 @@ from vortex.data.geometries import LonlatGeometry
 from vortex.data.outflow import StaticGeoResource, ModelGeoResource
 from vortex.syntax.stdattrs import month_deco
 from vortex.syntax.stddeco import namebuilding_insert, namebuilding_append
-from gco.syntax.stdattrs import gvar, GenvDomain
+from gco.syntax.stdattrs import gvar, gdomain
 
 #: No automatic export
 __all__ = []
@@ -65,7 +65,7 @@ class GlobalClim(GenericClim):
                 values = ['arpege']
             ),
             gvar = dict(
-                default = 'clim_[model]_t[geometry::truncation]'
+                default = 'clim_[model]_[geometry::gco_grid_def]'
             ),
         )
     )
@@ -91,22 +91,20 @@ class ClimLAM(GenericClim):
     A SpectralGeometry object is needed. A Genvkey can be given
     with a default name retrieved thanks to a GenvDomain object.
     """
-    _footprint = dict(
-        info = 'Model climatology for Local Area Models',
-        attr = dict(
-            model = dict(
-                values = ['aladin', 'arome', 'alaro', 'harmoniearome']
-            ),
-            gdomain = dict(
-                type = GenvDomain,
-                optional = True,
-                default = '[geometry::area]'
-            ),
-            gvar = dict(
-                default = 'clim_[gdomain]_[geometry::rnice]'
-            ),
+    _footprint = [
+        gdomain,
+        dict(
+            info = 'Model climatology for Local Area Models',
+            attr = dict(
+                model = dict(
+                    values = ['aladin', 'arome', 'alaro', 'harmoniearome']
+                ),
+                gvar = dict(
+                    default = 'clim_[geometry::gco_grid_def]'
+                ),
+            )
         )
-    )
+    ]
 
 
 class MonthlyClimLAM(ClimLAM):
@@ -131,6 +129,7 @@ class ClimBDAP(GenericClim):
     with a default name retrieved thanks to a GenvDomain object.
     """
     _footprint = [
+        gdomain,
         dict(
             info = 'Bdap climatology',
             attr = dict(
@@ -139,11 +138,6 @@ class ClimBDAP(GenericClim):
                 ),
                 geometry = dict(
                     type = LonlatGeometry,
-                ),
-                gdomain = dict(
-                    type = GenvDomain,
-                    optional = True,
-                    default = '[geometry::area]'
                 ),
                 gvar = dict(
                     default = 'clim_dap_[gdomain]'

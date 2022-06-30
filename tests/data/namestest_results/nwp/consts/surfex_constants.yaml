@@ -144,11 +144,38 @@
     description: !test_names.core.TestParameters
       block: clim
       genv: '[cycle]'
+      geometry: franmgsp07cubic
+      kind: pgd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_franmg.cubic.00km70.04.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
       geometry: global1198
       kind: pgd
     results: !test_names.core.TestResults
     - default: *id001
       location: gget://gco.multi.fr/tampon/pgd_arpege.t1198.01.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: global1280co
+      kind: pgd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_arpege.tco1280.01.fa
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: clim
+      genv: '[cycle]'
+      geometry: global1799cubic
+      kind: pgd
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: gget://gco.multi.fr/tampon/pgd_arpege.tc1198.01.fa
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       genv: cy42_op2.67

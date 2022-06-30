@@ -21,13 +21,13 @@ interface methods, :func:`get`, :func:`keys`, :func:`values` and :func:`items`::
 
     >>> from vortex.data import geometries
     >>> print(geometries.get(tag="global798"))
-    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' tl=798 c=2.4>
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE TL798 stretched-rotated geometry' tl=798 c=2.4>
 
 It is also possible to retrieve an existing geometry using the :class:`Geometry`
 class constructor::
 
     >>> print(geometries.Geometry("global798"))
-    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE T798 stretched-rotated geometry' tl=798 c=2.4>
+    <vortex.data.geometries.GaussGeometry | tag='global798' id='ARPEGE TL798 stretched-rotated geometry' tl=798 c=2.4>
 
 To build a new geometry, you need to pick the concrete geometry class that fits
 your needs. Currently available concrete geometries are:
@@ -267,6 +267,10 @@ class HorizontalGeometry(Geometry):
     def rnice_u(self):
         return self.rnice.upper()
 
+    @property
+    def gco_grid_def(self):
+        return ('{0.area}' + ('_{0.rnice}' if self.runit is not None else '')).format(self)
+
     def anonymous_info(self, *args):  # @UnusedVariable
         """Try to build a meaningful information from an anonymous geometry."""
         return '{0!s}, {1:s}'.format(self.area, self.rnice)
@@ -321,6 +325,28 @@ class HorizontalGeometry(Geometry):
         return coordinates
 
 
+class SpectralAwareHorizontalGeometry(HorizontalGeometry):
+    """Additional check and support for the **truncationtype** attribute."""
+
+    _tag_topcls = False
+
+    def _check_attributes(self):
+        super(SpectralAwareHorizontalGeometry, self)._check_attributes()
+        if self.truncationtype is None:
+            self.truncationtype = 'linear'
+        if self.truncationtype not in ('linear', 'quadratic', 'cubic'):
+            raise ValueError("Improper value {:s} for *truncationtype*"
+                             .format(self.truncationtype))
+
+    @property
+    def short_truncationtype(self):
+        return self.truncationtype[0]
+
+    @property
+    def xtruncationtype(self):
+        return dict(quadratic='quad').get(self.truncationtype, self.truncationtype)
+
+
 # Combined geometry (not used at the present time)
 
 class CombinedGeometry(Geometry):
@@ -345,7 +371,7 @@ class CombinedGeometry(Geometry):
 
 # Concrete geometry classes
 
-class GaussGeometry(HorizontalGeometry):
+class GaussGeometry(SpectralAwareHorizontalGeometry):
     """
     Gaussian grid (stretched or not, rotated or not) associated with a spectral
     represention.
@@ -374,26 +400,26 @@ class GaussGeometry(HorizontalGeometry):
 
     def _check_attributes(self):
         self.lam = False  # Always false for gaussian grid
+        super(GaussGeometry, self)._check_attributes()
         if self.truncation is None or self.stretching is None:
             raise AttributeError("Some mandatory arguments are missing")
         if self.gridtype is None:
             self.gridtype = 'rgrid'
-        if self.truncationtype is None:
-            self.truncationtype = 'linear'
-        if self.truncationtype not in ('linear', 'quadratic', 'cubic'):
-            raise ValueError("Improper value {:s} for *truncationtype*"
-                             .format(self.truncationtype))
         if self.gridtype not in ('rgrid', 'octahedral'):
             raise ValueError("Improper value {:s} for *gridtype*"
                              .format(self.gridtype))
 
     @property
-    def short_truncationtype(self):
-        return self.truncationtype[0]
-
-    @property
     def short_gridtype(self):
         return self.gridtype[0] if self.gridtype != 'rgrid' else ''
+
+    @property
+    def gco_grid_def(self):
+        geotag_f = 't'
+        if self.truncationtype != 'linear' or self.gridtype != 'rgrid':
+            geotag_f += '{0.short_truncationtype}'
+        geotag_f += '{0.short_gridtype}{0.truncation:d}'
+        return geotag_f.format(self)
 
     def __str__(self):
         """Standard formatted print representation."""
@@ -413,7 +439,7 @@ class GaussGeometry(HorizontalGeometry):
                            self.truncation, self.stretching, self.area)
 
 
-class ProjectedGeometry(HorizontalGeometry):
+class ProjectedGeometry(SpectralAwareHorizontalGeometry):
     """Geometry defined by a geographical projection on a plane."""
 
     _tag_topcls = False
@@ -438,17 +464,25 @@ class ProjectedGeometry(HorizontalGeometry):
         if self.resolution is None:
             raise AttributeError("Some mandatory arguments are missing")
 
+    @property
+    def gco_grid_def(self):
+        geotag_f = ('{0.area}_{0.rnice}' if self.truncationtype == 'linear' else
+                    '{0.area}_{0.xtruncationtype}_{0.rnice}')
+        return geotag_f.format(self)
+
     def __str__(self):
         """Standard formatted print representation."""
-        return '<{0:s} r=\'{1:s}\'>'.format(self.strheader(), self.rnice)
+        return '<{0:s} r=\'{1:s}\' {2:s}>'.format(self.strheader(),
+                                                  self.rnice,
+                                                  self.truncationtype)
 
     def doc_export(self):
         """Relevant informations to print in the documentation."""
         if self.lam:
-            fmts = 'kind={0:s}, r={1:s}, limited-area={2:s}'
+            fmts = 'kind={0:s}, r={1:s}, truncationtype={2:s}, limited-area={3:s}'
         else:
-            fmts = 'kind={0:s}, r={1:s}, global'
-        return fmts.format(self.kind, self.rnice, self.area)
+            fmts = 'kind={0:s}, r={1:s}, truncationtype={2:s}, global'
+        return fmts.format(self.kind, self.rnice, self.truncationtype, self.area)
 
 
 class LonlatGeometry(HorizontalGeometry):
@@ -613,6 +647,9 @@ def _add_geo2basename_info(cls):
                 lgeo.append({'stretching': self.geometry.stretching})
         elif isinstance(self.geometry, (ProjectedGeometry, RedgridGeometry)):
             lgeo = [self.geometry.area, self.geometry.rnice]
+            if (self.geometry.truncationtype is not None and
+                    self.geometry.truncationtype != 'linear'):
+                lgeo.append(self.geometry.xtruncationtype)
         else:
             lgeo = self.geometry.area  # Default: always defined
         return lgeo

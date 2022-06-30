@@ -2802,6 +2802,96 @@
       location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.gpatm.tco1280-c10+0024:00.grib
 - - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      geometry: franmgsp07cubic
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.franmg-00km70-cubic+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.franmg-00km70-cubic+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.franmg-00km70-cubic+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.franmg-00km70-cubic+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      geometry: franmgsp13
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.franmg-01km30+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.franmg-01km30+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.franmg-01km30+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.franmg-01km30+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      geometry: global1280co
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.tco1280-c10+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.tco1280-c10+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.tco1280-c10+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.tco1280-c10+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      geometry: global1798
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.tl1798-c22+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.tl1798-c22+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.tl1798-c22+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.tl1798-c22+0024:00.grib
+  - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
+      block: forecast
+      experiment: abcd
+      geometry: global1799cubic
+      kind: historic
+      namespace: vortex.multi.fr
+      nativefmt: grib
+      term: 24
+    results: !test_names.core.TestResults
+    - default: *id001
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.tc1799-c22+0024:00.grib
+    - default: *id002
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.tc1799-c22+0024:00.grib
+    - default: *id003
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.tc1799-c22+0024:00.grib
+    - default: *id004
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.tc1799-c22+0024:00.grib
+- - !test_names.core.SingleTest
+    description: !test_names.core.TestParameters
       block: screening
       experiment: abcd
       kind: biasdfi

@@ -85,6 +85,11 @@ Abstract geometry classes
    :members:
    :member-order: alphabetical
 
+.. autoclass:: SpectralAwareHorizontalGeometry
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
+
 .. autoclass:: VerticalGeometry
    :show-inheritance:
    :members:

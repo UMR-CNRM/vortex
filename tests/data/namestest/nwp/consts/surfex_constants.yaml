@@ -48,7 +48,10 @@ todo:
             - genv: '[cycle]'
               geometry:
                   - franmgsp
+                  - franmgsp07cubic
                   - global1198
+                  - global1799cubic
+                  - global1280co
             - namespace:
                   - olive.multi.fr
                   - vortex.multi.fr

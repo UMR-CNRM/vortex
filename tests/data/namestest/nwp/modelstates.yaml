@@ -123,6 +123,22 @@ todo:
             - subset:
                 - null
                 - gpatm
+  # Historic With Various Geometries
+    - commons:
+        kind: historic
+        geometry: global1280co
+        nativefmt: grib
+        block: forecast
+        experiment: abcd
+        namespace: vortex.multi.fr
+        term: 24
+      tests:
+        - geometry:
+            - global1798
+            - global1280co
+            - global1799cubic
+            - franmgsp13
+            - franmgsp07cubic
     # DFI Bias
     -   commons:
             kind: biasdfi

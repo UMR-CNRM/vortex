@@ -130,8 +130,11 @@ class PGDWithGeo(ModelGeoResource):
                     values  = ['pgd', ],
                 ),
                 nativefmt = dict(
-                    values = ['fa', 'lfi', 'netcdf', 'txt'],
+                    values  = ['fa', 'lfi', 'netcdf', 'txt'],
                     default = 'fa',
+                ),
+                gvar = dict(
+                    default = 'pgd_[geometry::gco_grid_def]_[nativefmt]',
                 ),
             )
         )
@@ -145,17 +148,6 @@ class PGDWithGeo(ModelGeoResource):
     def olive_basename(self):
         """OLIVE specific naming convention."""
         return 'PGDFILE-' + self.geometry.area + '.' + self.nativefmt
-
-    def genv_basename(self):
-        """Customise the Genv key..."""
-        if self.gvar:
-            return self.gvar
-        else:
-            if self.geometry.lam:
-                geotag = '{0.area}_{0.rnice}'.format(self.geometry)
-            else:
-                geotag = 't{0.truncation:d}'.format(self.geometry)
-            return 'pgd_{:s}_{:s}'.format(geotag, self.nativefmt)
 
 
 class CoverParams(ModelGeoResource):
