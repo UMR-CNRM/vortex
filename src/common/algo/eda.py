@@ -463,6 +463,11 @@ class IFSInflationLike(IFSEdaAbstractAlgo):
                 targetnc = dict(kind='edainput', variant='infl', rh=rh, number=1)
                 _, _, mstate = self._link_stuff_in('ModelState', actualterm, targetnc,
                                                    wastebasket=wastebasket)
+                # Control ?
+                control_number = 0 if self.model == 'arome' else 2
+                targetnc = dict(kind='edainput', variant='infl', rh=rh, number=control_number)
+                self._link_stuff_in('Control', actualterm, targetnc,
+                                    wastebasket=wastebasket)
                 # Guess ?
                 targetnc = dict(kind='edaoutput', variant='infl', rh=rh, number=1, term=Time(0))
                 outnc, _, _ = self._link_stuff_in('Guess', actualterm, targetnc,
