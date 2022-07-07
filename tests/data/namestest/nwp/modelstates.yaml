@@ -138,7 +138,7 @@ todo:
             - global1280co
             - global1799cubic
             - franmgsp13
-            - franmgsp07cubic
+            - franmgsp075cubic
     # DFI Bias
     -   commons:
             kind: biasdfi

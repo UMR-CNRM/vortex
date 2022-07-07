@@ -48,7 +48,7 @@ todo:
             - genv: '[cycle]'
               geometry:
                   - franmgsp
-                  - franmgsp07cubic
+                  - franmgsp075cubic
                   - global1198
                   - global1799cubic
                   - global1280co

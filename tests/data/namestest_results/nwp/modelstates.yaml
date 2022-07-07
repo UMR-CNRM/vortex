@@ -2804,20 +2804,20 @@
     description: !test_names.core.TestParameters
       block: forecast
       experiment: abcd
-      geometry: franmgsp07cubic
+      geometry: franmgsp075cubic
       kind: historic
       namespace: vortex.multi.fr
       nativefmt: grib
       term: 24
     results: !test_names.core.TestResults
     - default: *id001
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.franmg-00km70-cubic+0024:00.grib
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000A/forecast/historic.arome.franmg-00km75-cubic+0024:00.grib
     - default: *id002
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.franmg-00km70-cubic+0024:00.grib
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000A/forecast/historic.arpege.franmg-00km75-cubic+0024:00.grib
     - default: *id003
-      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.franmg-00km70-cubic+0024:00.grib
+      location: vortex://vortex.multi.fr/arome/3dvarfr/ABCD/20180101T0000P/forecast/historic.arome.franmg-00km75-cubic+0024:00.grib
     - default: *id004
-      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.franmg-00km70-cubic+0024:00.grib
+      location: vortex://vortex.multi.fr/arpege/4dvarfr/ABCD/20180101T0000P/forecast/historic.arpege.franmg-00km75-cubic+0024:00.grib
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: forecast

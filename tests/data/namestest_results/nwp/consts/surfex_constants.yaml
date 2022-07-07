@@ -144,11 +144,11 @@
     description: !test_names.core.TestParameters
       block: clim
       genv: '[cycle]'
-      geometry: franmgsp07cubic
+      geometry: franmgsp075cubic
       kind: pgd
     results: !test_names.core.TestResults
     - default: *id001
-      location: gget://gco.multi.fr/tampon/pgd_franmg.cubic.00km70.04.fa
+      location: gget://gco.multi.fr/tampon/pgd_franmg.cubic.00km75.04.fa
   - !test_names.core.SingleTest
     description: !test_names.core.TestParameters
       block: clim
