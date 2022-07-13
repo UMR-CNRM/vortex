@@ -273,7 +273,6 @@ class Prep(InitialCondition):
 class SnowObs(GeoFlowResource):
 
     _footprint = [
-        cendateperiod_deco,
         dict(
             info = 'Observations of snow',
             attr = dict(
@@ -316,20 +315,14 @@ class SnowObs(GeoFlowResource):
 @namebuilding_insert('cen_period', lambda self: [self.datebegin.y, self.dateend.y])
 class Snowobs_Period(SnowObs):
     _footprint = [
+        cendateperiod_deco,
         dict(
             info = 'Time series of snow observations of snow for model evaluation',
-            attr = dict(
-                datebegin = dict(
-                    info = "First date of the observation file",
-                ),
-                dateend = dict(
-                    info = "Last date of the observation file",
-                ),
-            )
         )
     ]
 
-
+@namebuilding_delete('src')
+@namebuilding_delete('geo')
 @namebuilding_insert('cen_period', lambda self: [self.datevalidity.ymdh, ])
 class Snowobs_1date(SnowObs):
     """
@@ -344,6 +337,8 @@ class Snowobs_1date(SnowObs):
             attr=dict(
                 datevalidity=dict(
                     info="Validity date of the observation file",
+                    type=Date,
+                    default='[date]',
                 ),
             )
         )
