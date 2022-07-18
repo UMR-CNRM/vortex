@@ -800,11 +800,15 @@ class BdpeService(RoutingService):
             "@{0.filename}@{0.realkind}_{0.producer}"
         return s.format(self, now=date.now().compact())
 
+    @property
+    def absolute_routing_name(self):
+        return self.sh.path.abspath(self.routing_name)
+
     def get_cmdline(self):
         """Complete command line that runs the Transfer Agent."""
         if self.actual_routingkey is None:
             return None
-        options = "{0.routing_name} {0.actual_routingkey} -p {0.producer}" \
+        options = "{0.absolute_routing_name} {0.actual_routingkey} -p {0.producer}" \
                   " -n {0.productid} -e {0.term.fmtraw} -d {0.dmt_date_pivot}" \
                   " -q {0.quality} -r {0.soprano_target}".format(self)
         return agt_actual_command(self.sh, self.agt_pe_cmd, options)
