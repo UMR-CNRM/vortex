@@ -271,10 +271,12 @@ class SummariesStack(object):
         print("Task: {}".format(task))
         print("-" * (len(task) + 6) + "\n")
         for k in ['itself', 'consistency', 'continuity']:
-            f = '.'.join([task, k, 'json'])
-            fp = self.cache.fullpath(f)
-            assert t.sh.path.exists(fp)
             print("* {}:".format(kind_desc[k]))
             print("  " + "-" * len(kind_desc[k]))
-            print("  => {}\n".format(fp))
+            f = '.'.join([task, k, 'json'])
+            fp = self.cache.fullpath(f)
+            if t.sh.path.exists(fp):
+                print("  => {}\n".format(fp))
+            else:
+                print("  => N/A")
         print("=" * 80)
