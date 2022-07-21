@@ -113,9 +113,8 @@ class ExternalCodeImportChecker(object):
         else:
             if issubclass(exc_type, ImportError):
                 logger.warning('The %s package is unavailable.', str(self.nickname))
-                logger.warning(''.join(traceback.format_exception(exc_type,
-                                                                  exc_value,
-                                                                  exc_traceback)))
+                logger.info('Associated ' +
+                            ''.join(traceback.format_exception(exc_type, exc_value, exc_traceback)))
                 self._checked_out = False
                 return True
 
