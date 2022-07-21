@@ -22,6 +22,8 @@ __all__ = []
 
 logger = loggers.getLogger(__name__)
 
+binaries_syntax_in_workdir = 'justbuilt.{}.x'
+
 
 @algo_component_deco_mixin_autodoc
 class GmkpackDecoMixin(AlgoComponentDecoMixin):
@@ -421,7 +423,7 @@ class Bundle2Pack(AlgoComponent, GmkpackDecoMixin,
                     update=self.update_git_repositories,
                     preexisting_pack=self.preexisting_pack,
                     clean_if_preexisting=self.cleanpack,
-                    bundle_cache_dir=self.bundle_cache_dir,
+                    cache_dir=self.bundle_cache_dir,
                     compiler_label=self.compiler_label,
                     compiler_flag=self.compiler_flag,
                     homepack=self.homepack,
@@ -488,7 +490,9 @@ class PackBuildExecutables(AlgoComponent, GmkpackDecoMixin,
                   'OOTESTVAR': 'oopsbinary-ootestcomponent',
                   'OOVAR': 'oopsbinary-oovar'}
         # copy binaries on workdir
+        print("Copy binaries on workdir:")
         for p in self.system.listdir(bindir):
+            outname = binaries_syntax_in_workdir.format(b2kind.get(p, p.lower()))
+            print(' + {} -> {}'.format(self.system.path.join(bindir, p), outname))
             self.system.copyfile(self.system.path.join(bindir, p),
-                                 'justbuilt.{}.x'.format(b2kind.get(p, p.lower()))
-                                 )
+                                 outname)
