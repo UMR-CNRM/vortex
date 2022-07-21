@@ -93,8 +93,9 @@ class TestMkjobDetect(unittest.TestCase):
             jobconf = dict(montest={'cutoff': 'production', 'xpid': 'FAKE', 'suitebg': 'oper',
                                     'extrapythonpath': 'blop1,blop2', 'task': 'gruik',
                                     'hasmember': True, 'auto_options_filter': 'hasmember'})
+            jobconf_defaults = dict()
 
-            tr_opts, auto_opts = _mkjob_opts_detect_2(self.t, tplconf, jobconf,
+            tr_opts, auto_opts = _mkjob_opts_detect_2(self.t, tplconf, jobconf, jobconf_defaults,
                                                       tr_opts, auto_opts, ** opts1)
             del tr_opts['create']
             del tr_opts['home']

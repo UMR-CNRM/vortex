@@ -96,7 +96,7 @@ def _mkjob_opts_detect_1(t, ** opts):
     return tr_opts, auto_opts, opts
 
 
-def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
+def _mkjob_opts_detect_2(t, tplconf, jobconf, jobconf_defaults, tr_opts, auto_opts, ** opts):
     """Detect options that depend on the configuration file."""
 
     # Fix the task's name
@@ -133,9 +133,9 @@ def _mkjob_opts_detect_2(t, tplconf, jobconf, tr_opts, auto_opts, ** opts):
     # Get the job's configuration
     p_jobconf = jobconf.get(name, None)
     if p_jobconf is None:
-        logger.error('No job configuration for job name=%s', name)
-        logger.warning('Going on with an emtpy job configuration... probably a bad idea !')
-        p_jobconf = dict()
+        logger.warning('No job configuration for job name=%s', name)
+        logger.info('The job configuration build from the [DEFAULT] section... This may be a bad idea !')
+        p_jobconf = jobconf_defaults
 
     # The mkjob profile and associated conf
     profile = opts.pop('profile',
@@ -330,6 +330,7 @@ def mkjob(t, **kw):
         try:
             jobparser = ExtendedReadOnlyConfigParser(inifile=tr_opts['jobconf'])
             jobconf = jobparser.as_dict()
+            jobconf_default = jobparser.defaults()
         except Exception as pb:
             emsg = 'Could not read the << {:s} >> config file: {!s}'.format(tr_opts['jobconf'], pb)
             logger.critical(emsg)
@@ -340,7 +341,7 @@ def mkjob(t, **kw):
         raise ValueError(emsg)
 
     # Detect most of the options that depend on the configuration file
-    tr_opts, auto_opts = _mkjob_opts_detect_2(t, tplconf, jobconf,
+    tr_opts, auto_opts = _mkjob_opts_detect_2(t, tplconf, jobconf, jobconf_default,
                                               tr_opts, auto_opts, ** r_kw)
 
     # Dump auto_exported options
