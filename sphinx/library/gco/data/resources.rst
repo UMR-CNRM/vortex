@@ -17,9 +17,3 @@ Package
 
 Classes
 -------
-
-.. autoclass:: MiscGenv
-   :show-inheritance:
-   :members:
-   :member-order: alphabetical
-

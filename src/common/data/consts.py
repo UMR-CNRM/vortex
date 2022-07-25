@@ -882,3 +882,27 @@ class InterChannelsCorrelations(GenvModelResource):
     @property
     def realkind(self):
         return 'correlations'
+
+
+class SunMoonPositionCoeff(StaticResource):
+    """
+    Coefficients of the Chebyshev polynomials used to calculate the position of the moon and the sun.
+    """
+    _footprint = [
+        gvar,
+        dict(
+            info='Chebyshev polynomials for the moon and sun position',
+            attr=dict(
+                kind=dict(
+                    values  = ['sunmoonpositioncoeffs', ],
+                ),
+                gvar=dict(
+                    default = 'sun_moon_position_tgz',
+                ),
+            )
+        )
+    ]
+
+    @property
+    def realkind(self):
+        return 'sunmoonpositioncoeffs'

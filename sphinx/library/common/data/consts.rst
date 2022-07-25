@@ -196,3 +196,8 @@ Classes
    :show-inheritance:
    :members:
    :member-order: alphabetical
+
+.. autoclass:: SunMoonPositionCoeff
+   :show-inheritance:
+   :members:
+   :member-order: alphabetical
