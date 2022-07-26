@@ -22,7 +22,7 @@ def _double_ssh(sh, loginnode, transfernode):
 
     May return None when network problems occur.
     """
-    cmd = ['ssh', '-x', loginnode, 'ssh', '-x', transfernode, 'hostname']
+    cmd = ['ssh', '-x', loginnode, 'ssh', '-x', transfernode, 'hostname', '-s']
     rc = sh.spawn(cmd, shell=False, output=True, fatal=False)
     if not rc:
         return None
