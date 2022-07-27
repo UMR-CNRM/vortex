@@ -1023,6 +1023,9 @@ class SurfexWorker(_S2MWorker):
                 if self.kind == "escroc":
                     # ESCROC only: the forcing files are in the father directory (same forcing for all members)
                     forcingdir = rundir
+                elif self.kind == 'croco':
+                    # CROCO: more complex structure (see Bertrand's doc)
+                    forcingdir = thisdir + '/../../../../common/' + self.subdir
                 elif sytron:
                     # ensmeteo+sytron or croco: the forcing files are supposed to be in the subdirectories
                     # of each member except for the sytron member
