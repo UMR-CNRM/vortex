@@ -969,7 +969,7 @@ class SurfexWorker(_S2MWorker):
             list_files_copy = ["OPTIONS.nam"]
         list_files_link = ["PGD.nc", "METADATA.xml", "ecoclimapI_covers_param.bin",
                            "ecoclimapII_eu_covers_param.bin", "drdt_bst_fit_60.nc"]
-        if self.kind == 'escroc' and (self.datebegin != self.dateinit or self.threshold > 0):
+        if self.kind in ['escroc', 'croco'] and (self.datebegin != self.dateinit or self.threshold > 0):
             list_files_copy_ifnotprovided = ["PREP.nc"]
             list_files_link_ifnotprovided = []
         else:
